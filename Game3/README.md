@@ -13,9 +13,8 @@ fullscreen icon. Landscape only.
 **Touch (iPad)**
 
 - Throttle is automatic.
-- **Steer**: hold the ◀ ▶ buttons bottom-left, or touch anywhere on the left
-  half of the screen and drag left or right (the slider floats to wherever
-  your thumb lands).
+- **Steer**: touch anywhere on the left half of the screen and drag left or
+  right. The slider floats to wherever your thumb lands.
 - Hold the device sideways; in portrait the game shows a rotate prompt.
 - **AIRBRAKE** (pink button): hold through hairpins to turn much tighter. You
   lose a little speed.
