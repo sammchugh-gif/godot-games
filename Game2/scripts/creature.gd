@@ -274,6 +274,7 @@ func _animate(delta: float) -> void:
 
 
 func _spit(to_player: Vector3) -> void:
+	Sfx.play("spit", -10.0)
 	var b := Area3D.new()
 	b.set_script(ProjectileScript)
 	b.setup(1.0, Color(0.5, 0.95, 0.6), 20.0, false, 0.18)

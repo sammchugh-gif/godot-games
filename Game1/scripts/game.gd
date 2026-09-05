@@ -40,6 +40,7 @@ func _ready() -> void:
 	add_to_group("game")
 	_headless = DisplayServer.get_name() == "headless"
 	_register_input()
+	add_child(Sfx.new())
 	_build_environment()
 
 	world = VoxelWorld.new()
@@ -62,7 +63,9 @@ func _ready() -> void:
 	add_child(player)
 	player.health_changed.connect(_on_player_health)
 	player.died.connect(_on_player_died)
-	player.build_rejected.connect(func(msg: String) -> void: hud.toast(msg))
+	player.build_rejected.connect(func(msg: String) -> void:
+		hud.toast(msg)
+		Sfx.play("deny", -8.0))
 
 	hud = HUD.new()
 	hud.name = "HUD"
@@ -152,6 +155,7 @@ func _register_input() -> void:
 		"pause_toggle": [KEY_ESCAPE],
 		"confirm": [KEY_ENTER, KEY_KP_ENTER],
 		"toggle_touch": [KEY_F9],
+		"toggle_mute": [KEY_M],
 	}
 	for i in 9:
 		binds["slot_%d" % (i + 1)] = [KEY_1 + i]
@@ -181,6 +185,9 @@ func _build_environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 
+	# Hand-picked sky colours, kept deliberately: a physical/atmospheric sky
+	# scatters to a pale grey at this sun angle, and ACES then desaturates the
+	# highlights further. Both look markedly worse than these values.
 	var sky := Sky.new()
 	var sky_mat := ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color(0.24, 0.44, 0.78)
@@ -189,12 +196,14 @@ func _build_environment() -> void:
 	sky_mat.ground_horizon_color = Color(0.72, 0.82, 0.92)
 	sky_mat.sun_angle_max = 24.0
 	sky.sky_material = sky_mat
+	sky.radiance_size = Sky.RADIANCE_SIZE_128
 	env.sky = sky
 
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_sky_contribution = 1.0
-	env.ambient_light_energy = 0.7
+	env.ambient_light_energy = 0.85
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.0
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.68, 0.78, 0.9)
 	env.fog_density = 0.0022
@@ -212,9 +221,58 @@ func _build_environment() -> void:
 	sun.directional_shadow_max_distance = 90.0
 	sun.shadow_bias = 0.06
 	sun.shadow_normal_bias = 1.6
+	# Contact-hardening shadows: sharp where a block meets the ground, softer
+	# further from the caster. Ignored by the Compatibility renderer.
+	sun.light_angular_distance = 0.55
+	sun.shadow_blur = 1.1
 	add_child(sun)
 
+	_apply_desktop_polish(env)
 	_apply_platform_quality(sun, env)
+
+
+# Everything here is Forward+ only, and every one of these is either ignored or
+# unaffordable on the WebGL path -- _apply_platform_quality strips them back out
+# on tablets. Split out so the mobile build's look stays exactly as it was.
+func _apply_desktop_polish(env: Environment) -> void:
+	if _headless:
+		return
+	if OS.has_feature("web") or OS.has_feature("mobile"):
+		return
+
+	# Contact darkening in the creases where blocks meet. Subtle on purpose:
+	# past about 1.5 intensity the shadowed faces crush to black, because the
+	# only fill light here is the sky.
+	env.ssao_enabled = true
+	env.ssao_radius = 1.1
+	env.ssao_intensity = 1.2
+	env.ssao_power = 1.2
+	env.ssao_detail = 0.6
+
+	# Bloom, restrained -- enough to bleed the sky at the horizon and lift the
+	# TNT and turret emissives, not enough to wash the scene out.
+	env.glow_enabled = true
+	env.glow_intensity = 0.45
+	env.glow_bloom = 0.03
+	env.glow_strength = 1.0
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	env.glow_hdr_threshold = 1.1
+
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.03
+	env.adjustment_saturation = 1.12
+	env.adjustment_brightness = 1.0
+
+	# SDFGI, SSIL, SSR and volumetric fog were all tried here and all removed.
+	# The world is remeshed constantly as blocks are placed and broken, so the
+	# GI probes never settle; SSR does nothing on surfaces this rough; and the
+	# volumetrics just greyed out the sky. They cost frame time for no gain.
+
+	var vp := get_viewport()
+	if vp != null:
+		vp.msaa_3d = Viewport.MSAA_4X
+		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+		vp.positional_shadow_atlas_size = 4096
 
 
 # Tablets run the WebGL path on a mobile GPU. Shadow range and MSAA are the two
@@ -329,6 +387,7 @@ func _finish_building() -> void:
 	timer = 4.0
 	_set_phase(Phase.PREP)
 	hud.banner("IT IS COMING", "Get behind your walls.", 2.0)
+	Sfx.play("roar")
 	_spawn_boss()
 
 
@@ -359,6 +418,8 @@ func _spawn_boss() -> void:
 
 	boss.health_changed.connect(func(c: float, m: float) -> void: hud.set_boss_health(c, m))
 	boss.died.connect(_on_boss_died)
+	boss.smashed.connect(func(_p: Vector3) -> void: Sfx.play("stomp", -3.0))
+	boss.telegraph.connect(func(_k: String) -> void: Sfx.play("roar", -5.0))
 	boss.smashed.connect(_on_boss_smashed)
 	boss.telegraph.connect(func(kind: String) -> void: hud.boss_telegraph(kind))
 
@@ -385,6 +446,8 @@ func _fort_centre() -> Vector3:
 # --------------------------------------------------------------- loop -----
 
 func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("toggle_mute"):
+		hud.toast("Sound off" if Sfx.toggle_mute() else "Sound on")
 	if player.frozen and world.pending_rebuilds() == 0:
 		# Re-seat on the finished terrain, then hand control over.
 		var gx := clampi(floori(player.global_position.x), 0, VoxelWorld.SX - 1)
@@ -450,6 +513,7 @@ func _tick_turrets(delta: float) -> void:
 			_turret_cool[i] = 0.2
 			continue
 		_turret_cool[i] = 1.1
+		Sfx.play("turret", -9.0)
 		var proj := ProjectileScript.new()
 		proj.setup(7.0, Color(0.4, 0.95, 1.0), 62.0, true, 0.14)
 		proj.world = world
@@ -485,6 +549,7 @@ func _detonate(centre: Vector3, chain: bool) -> void:
 	on_blast(centre, broken)
 	debris.emit_burst(centre, Color(1.0, 0.72, 0.25), 40, 11.0, 0.22)
 	_shake(0.55)
+	Sfx.play("explosion")
 
 	if is_instance_valid(boss):
 		var d := boss.global_position.distance_to(centre)
@@ -558,6 +623,7 @@ func _on_boss_died() -> void:
 		return
 	_set_phase(Phase.ROUND_WON)
 	hud.show_boss(false)
+	Sfx.play("win")
 	var bonus: int = 60 + 20 * round_no
 	credits += bonus
 	hud.set_credits(credits)
@@ -592,6 +658,7 @@ func _end_game(won: bool, reason: String = "") -> void:
 	if phase == Phase.GAME_OVER:
 		return
 	_set_phase(Phase.GAME_OVER)
+	Sfx.play("win" if won else "lose")
 	hud.show_boss(false)
 	if reason != "":
 		hud.toast(reason)

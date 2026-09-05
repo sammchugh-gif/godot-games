@@ -353,6 +353,7 @@ func swing() -> void:
 	_swinging = true
 	_swing_t = 0.0
 	_swing_hit_done = false
+	Sfx.play("swing", -7.0, 0.12)
 
 
 func _update_swing(delta: float) -> void:
@@ -430,6 +431,7 @@ func _mine(hit: Dictionary) -> void:
 		return
 	var was_placed: bool = world.placed.has(VoxelWorld.idx(b.x, b.y, b.z))
 	world.set_block(b.x, b.y, b.z, Blocks.AIR)
+	Sfx.play("break", -2.0)
 	if was_placed and game != null and game.has_method("refund"):
 		game.refund(Blocks.cost(id))
 	if game != null and game.has_method("spawn_break_particles"):
@@ -505,6 +507,7 @@ func _try_place() -> void:
 			emit_signal("build_rejected", "Not enough credits for %s." % Blocks.name_of(id))
 			return
 	world.set_block(target.x, target.y, target.z, id, true)
+	Sfx.play("place", -5.0)
 
 
 func _would_trap_self(target: Vector3i) -> bool:
@@ -535,6 +538,8 @@ func take_damage(amount: float) -> void:
 		return
 	health -= amount
 	_regen_delay = 4.0
+	if amount > 0.5:
+		Sfx.play("hit", -2.0)
 	emit_signal("health_changed", maxf(health, 0.0), MAX_HEALTH)
 	if health <= 0.0:
 		alive = false

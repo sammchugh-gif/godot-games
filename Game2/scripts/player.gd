@@ -302,10 +302,12 @@ func _dig(delta: float) -> void:
 	var id := world.get_blockv(p)
 	_swing = 1.0
 	if world.damage_block(p.x, p.y, p.z, DIG_POWER * delta, true):
+		Sfx.play("break", -3.0)
 		if debris != null:
 			debris.emit_burst(Vector3(p) + Vector3(0.5, 0.5, 0.5),
 				Blocks.color_of(id), 10, 4.5, 0.16)
 	elif debris != null and randf() < 0.28:
+		Sfx.play("dig", -12.0, 0.2)
 		debris.emit_burst(Vector3(p) + Vector3(0.5, 0.5, 0.5),
 			Blocks.color_of(id), 1, 2.2, 0.08)
 
@@ -315,6 +317,7 @@ func _zap() -> void:
 		return
 	_fire_timer = FIRE_COOLDOWN
 	_recoil = 1.0
+	Sfx.play("zap", -6.0)
 	var dir := -camera.global_transform.basis.z
 	var b := Area3D.new()
 	b.set_script(ProjectileScript)
@@ -343,6 +346,7 @@ func take_hit(dir: Vector3) -> void:
 	if not alive or invuln > 0.0:
 		return
 	invuln = INVULN
+	Sfx.play("hit")
 	velocity += dir.normalized() * 7.0 + Vector3.UP * 3.5
 	emit_signal("hit_taken")
 
@@ -362,6 +366,7 @@ func recall() -> void:
 	global_position = Vector3(float(x) + 0.5, float(y) + 0.3, float(z) + 0.5)
 	velocity = Vector3.ZERO
 	recall_cool = RECALL_COOLDOWN
+	Sfx.play("recall", -4.0)
 	if debris != null:
 		debris.emit_burst(global_position, Color(0.6, 0.9, 1.0), 18, 5.0, 0.14)
 	emit_signal("recalled")

@@ -1,5 +1,10 @@
-# Block definitions plus a procedurally generated texture atlas.
-# No external art assets: every tile is painted in code at startup.
+# Block definitions plus the block texture atlas.
+#
+# Two atlases exist. The painted one is generated in code at startup and needs
+# no files at all. The photo one, res://textures/block_atlas.png, is baked by
+# tools/bake_atlas.gd from real CC0 textures and is used whenever it is
+# present. Everything downstream reads the tile size from atlas_tile_px so
+# either can be swapped in without touching the mesher or the HUD.
 class_name Blocks
 extends RefCounted
 
@@ -127,7 +132,26 @@ static func _fill_noise(img: Image, tile: int, base: Color, amp: float, seed_v: 
 			var n: float = (_hash2(x, y, seed_v) - 0.5) * 2.0 * amp
 			_paint(img, tile, x, y, _shade(base, n))
 
+const PHOTO_ATLAS := "res://textures/block_atlas.png"
+
+# Pixels per tile of whichever atlas build_atlas() returned last.
+static var atlas_tile_px: int = TILE_PX
+
+
 static func build_atlas() -> ImageTexture:
+	if ResourceLoader.exists(PHOTO_ATLAS):
+		var tex: Texture2D = load(PHOTO_ATLAS)
+		if tex != null and tex.get_width() % ATLAS_TILES == 0:
+			atlas_tile_px = tex.get_width() / ATLAS_TILES
+			var img := tex.get_image()
+			if img.is_compressed():
+				img.decompress()
+			return ImageTexture.create_from_image(img)
+	atlas_tile_px = TILE_PX
+	return build_painted_atlas()
+
+
+static func build_painted_atlas() -> ImageTexture:
 	var img := Image.create_empty(ATLAS_PX, ATLAS_PX, false, Image.FORMAT_RGBA8)
 	img.fill(Color(1, 0, 1, 1))
 
@@ -247,12 +271,21 @@ static func build_atlas() -> ImageTexture:
 static func atlas_uv(tile: int) -> Rect2:
 	var s := 1.0 / float(ATLAS_TILES)
 	# Quarter-texel inset stops neighbouring tiles bleeding in at glancing angles.
-	var inset := 0.25 / float(ATLAS_PX)
+	var inset := 0.25 / float(ATLAS_TILES * atlas_tile_px)
 	var u := float(tile % ATLAS_TILES) * s
 	var v := float(tile / ATLAS_TILES) * s
 	return Rect2(u + inset, v + inset, s - inset * 2.0, s - inset * 2.0)
 
 static func atlas_region_px(tile: int) -> Rect2:
+	return Rect2(
+		float((tile % ATLAS_TILES) * atlas_tile_px),
+		float((tile / ATLAS_TILES) * atlas_tile_px),
+		float(atlas_tile_px), float(atlas_tile_px))
+
+
+# Region within the painted 16px atlas specifically, regardless of which atlas
+# is active. Used by the bake tool to lift pixel-art tiles.
+static func atlas_region_px_painted(tile: int) -> Rect2:
 	return Rect2(
 		float((tile % ATLAS_TILES) * TILE_PX),
 		float((tile / ATLAS_TILES) * TILE_PX),

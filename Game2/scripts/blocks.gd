@@ -135,7 +135,28 @@ static func _star_shape(img: Image, tile: int, cx: float, cy: float, r: float, c
 			if dx + dy <= r and dx * dy <= r * r * 0.16:
 				_paint(img, tile, x, y, c)
 
+const PHOTO_ATLAS := "res://textures/block_atlas.png"
+
+# Pixels per tile of whichever atlas build_atlas() returned last. The photo
+# atlas is baked by tools/bake_atlas.gd from real CC0 textures and is used
+# whenever it exists; the painted one needs no files at all.
+static var atlas_tile_px: int = TILE_PX
+
+
 static func build_atlas() -> ImageTexture:
+	if ResourceLoader.exists(PHOTO_ATLAS):
+		var tex: Texture2D = load(PHOTO_ATLAS)
+		if tex != null and tex.get_width() % ATLAS_TILES == 0:
+			atlas_tile_px = tex.get_width() / ATLAS_TILES
+			var img := tex.get_image()
+			if img.is_compressed():
+				img.decompress()
+			return ImageTexture.create_from_image(img)
+	atlas_tile_px = TILE_PX
+	return build_painted_atlas()
+
+
+static func build_painted_atlas() -> ImageTexture:
 	var img := Image.create_empty(ATLAS_PX, ATLAS_PX, false, Image.FORMAT_RGBA8)
 	img.fill(Color(1, 0, 1, 1))
 
@@ -247,12 +268,20 @@ static func build_atlas() -> ImageTexture:
 static func atlas_uv(tile: int) -> Rect2:
 	var s := 1.0 / float(ATLAS_TILES)
 	# Quarter-texel inset stops neighbouring tiles bleeding in at glancing angles.
-	var inset := 0.25 / float(ATLAS_PX)
+	var inset := 0.25 / float(ATLAS_TILES * atlas_tile_px)
 	var u := float(tile % ATLAS_TILES) * s
 	var v := float(tile / ATLAS_TILES) * s
 	return Rect2(u + inset, v + inset, s - inset * 2.0, s - inset * 2.0)
 
 static func atlas_region_px(tile: int) -> Rect2:
+	return Rect2(
+		float((tile % ATLAS_TILES) * atlas_tile_px),
+		float((tile / ATLAS_TILES) * atlas_tile_px),
+		float(atlas_tile_px), float(atlas_tile_px))
+
+
+# Region within the painted 16px atlas, regardless of which atlas is active.
+static func atlas_region_px_painted(tile: int) -> Rect2:
 	return Rect2(
 		float((tile % ATLAS_TILES) * TILE_PX),
 		float((tile / ATLAS_TILES) * TILE_PX),

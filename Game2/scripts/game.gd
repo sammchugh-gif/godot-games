@@ -32,6 +32,8 @@ var touch: TouchControls
 var phase: int = Phase.LOADING
 var level := 1
 var stars_required := 0
+var _star_rocks: Array[Vector3i] = []
+var _finder_t := 0.0
 var stars_found := 0
 var lives := 0
 var _creatures: Array[Creature] = []
@@ -50,6 +52,7 @@ func _ready() -> void:
 	if "--lightweight" in OS.get_cmdline_args() or "--lightweight" in OS.get_cmdline_user_args():
 		Quality.force(true)
 	_register_input()
+	add_child(Sfx.new())
 	_build_environment()
 
 	world = VoxelWorld.new()
@@ -143,6 +146,7 @@ func _run_soak() -> void:
 
 func _register_input() -> void:
 	var binds := {
+		"toggle_mute": [KEY_M],
 		"move_forward": [KEY_W, KEY_UP],
 		"move_back": [KEY_S, KEY_DOWN],
 		"move_left": [KEY_A, KEY_LEFT],
@@ -213,6 +217,8 @@ func _build_environment() -> void:
 
 	# Mobile WebGL path: shorter shadows and no MSAA. The lights on stars,
 	# creatures and bolts are dropped separately, in their own scripts.
+	if not _headless and not Quality.lightweight():
+		_apply_desktop_polish(env)
 	if not _headless and Quality.lightweight():
 		sun.directional_shadow_max_distance = 34.0
 		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
@@ -257,11 +263,15 @@ func start_level(n: int) -> void:
 
 	stars_found = 0
 	lives = 3
-	stars_required = SURFACE_STARS + CAVE_STARS + STAR_ROCKS + _creature_count()
 
-	_place_star_rocks()
-	_spawn_stars()
+	# Count what was actually placed rather than what was asked for. A level
+	# short on spawn spots would otherwise demand stars that do not exist, and
+	# the seal could only be broken by farming creatures.
+	_star_rocks.clear()
+	var rocks := _place_star_rocks()
+	var loose := _spawn_stars()
 	_spawn_creatures()
+	stars_required = loose + rocks + _creature_count()
 
 	var spawn := _surface_spawn()
 	player.global_position = spawn
@@ -311,7 +321,7 @@ func _clear_actors() -> void:
 
 
 # Star Rock is buried inside solid stone, so the only way to it is to dig.
-func _place_star_rocks() -> void:
+func _place_star_rocks() -> int:
 	var placed := 0
 	var attempts := 0
 	while placed < STAR_ROCKS and attempts < 4000:
@@ -333,19 +343,25 @@ func _place_star_rocks() -> void:
 		if not exposed and attempts < 3000:
 			continue
 		world.set_block(x, y, z, Blocks.STARROCK)
+		_star_rocks.append(Vector3i(x, y, z))
 		placed += 1
+	return placed
 
 
-func _spawn_stars() -> void:
+func _spawn_stars() -> int:
 	var used := {}
+	var made := 0
 	for i in SURFACE_STARS:
 		var p = _take_spot(world.surface_spots, used, 6)
 		if p != null:
 			_make_star(Vector3(p) + Vector3(0.5, 0.9, 0.5), false)
+			made += 1
 	for i in CAVE_STARS:
 		var p2 = _take_spot(world.cave_spots, used, 8)
 		if p2 != null:
 			_make_star(Vector3(p2) + Vector3(0.5, 0.7, 0.5), false)
+			made += 1
+	return made
 
 
 # Pops a spot at least min_gap away from everything already taken.
@@ -416,6 +432,8 @@ func _make_creature(pos: Vector3) -> void:
 
 func _on_block_broken(pos: Vector3i, id: int, by_player: bool) -> void:
 	if id == Blocks.STARROCK:
+		_star_rocks.erase(pos)
+		Sfx.play("starrock")
 		var s := _make_star(Vector3(pos) + Vector3(0.5, 0.5, 0.5), true)
 		s.toss(Vector3(randf() - 0.5, 0, randf() - 0.5).normalized() * 0.4)
 		debris.emit_burst(Vector3(pos) + Vector3(0.5, 0.5, 0.5), Color(1.0, 0.85, 0.35), 18, 5.0, 0.15)
@@ -426,6 +444,7 @@ func _on_block_broken(pos: Vector3i, id: int, by_player: bool) -> void:
 
 func _on_star_collected(s: Star) -> void:
 	s.queue_free()
+	Sfx.play("star")
 	lives += 1
 	if stars_found < stars_required:
 		stars_found += 1
@@ -443,6 +462,7 @@ func _on_star_collected(s: Star) -> void:
 func _on_creature_died(pos: Vector3, by_player: bool) -> void:
 	_creatures = _creatures.filter(func(c: Creature) -> bool: return is_instance_valid(c))
 	if by_player:
+		Sfx.play("pop", -4.0)
 		var s := _make_star(pos, true)
 		s.toss(Vector3(randf() - 0.5, 0, randf() - 0.5).normalized())
 	# Creatures come back, so stars (and therefore lives) are always farmable.
@@ -453,6 +473,7 @@ func _on_player_hit() -> void:
 	if phase == Phase.LEVEL_WON or phase == Phase.LEVEL_LOST or phase == Phase.VICTORY:
 		return
 	lives = maxi(0, lives - 1)
+	Sfx.play("hit")
 	hud.set_lives(lives)
 	hud.flash_damage()
 	if lives <= 0:
@@ -472,6 +493,7 @@ func _bounce_to_surface() -> void:
 
 
 func _unlock_seal() -> void:
+	Sfx.play("seal")
 	phase = Phase.UNLOCKED
 	world.open_seal()
 	_beam.visible = true
@@ -489,6 +511,7 @@ func _descend() -> void:
 		return
 	var c := world.arena_centre()
 	player.teleport(c + Vector3(float(VoxelWorld.ARENA_R) - 3.0, 1.4, 0))
+	Sfx.play("recall", -3.0)
 	_start_boss()
 
 
@@ -511,6 +534,9 @@ func _start_boss() -> void:
 	boss.died.connect(_win_level)
 	boss.telegraph.connect(hud.boss_telegraph)
 	boss.wants_minions.connect(_spawn_minions)
+	boss.slammed.connect(func(_p: Vector3) -> void: Sfx.play("stomp", -2.0))
+	boss.telegraph.connect(func(_t: String) -> void: Sfx.play("roar", -6.0))
+	Sfx.play("roar")
 
 	hud.show_boss(boss.boss_name)
 	hud.set_boss_health(boss.health, boss.max_health)
@@ -528,6 +554,7 @@ func _spawn_minions(count: int) -> void:
 
 func _win_level() -> void:
 	boss = null
+	Sfx.play("win")
 	hud.hide_boss()
 	if level >= FINAL_LEVEL:
 		phase = Phase.VICTORY
@@ -546,6 +573,7 @@ func _win_level() -> void:
 
 func _lose_level() -> void:
 	phase = Phase.LEVEL_LOST
+	Sfx.play("lose")
 	hud.hide_boss()
 	if boss != null and is_instance_valid(boss):
 		boss.queue_free()
@@ -641,6 +669,9 @@ func _release_mouse() -> void:
 # ------------------------------------------------------------------ tick ---
 
 func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("toggle_mute"):
+		hud.toast("Sound off" if Sfx.toggle_mute() else "Sound on")
+	_update_finder(delta)
 	if player.frozen and world.pending_rebuilds() == 0:
 		# Re-seat on the finished terrain, then hand control over.
 		player.global_position = _surface_spawn()
@@ -768,3 +799,92 @@ func _in_arena(p: Vector3) -> bool:
 	if p.y > float(VoxelWorld.ARENA_TOP) or p.y < float(VoxelWorld.ARENA_FLOOR) - 1.0:
 		return false
 	return Vector2(p.x - c.x, p.z - c.z).length() < float(VoxelWorld.ARENA_R)
+
+
+# Forward+ only. Glow is the big one here: stars, crystal, magma and the boss
+# core are all emissive, and bloom is what makes them read as light sources in
+# a dark cave rather than flat bright paint. The tablet path skips all of it.
+func _apply_desktop_polish(env: Environment) -> void:
+	env.glow_enabled = true
+	env.glow_intensity = 0.7
+	env.glow_bloom = 0.04
+	env.glow_strength = 1.05
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	env.glow_hdr_threshold = 1.0
+	env.ssao_enabled = true
+	env.ssao_radius = 1.0
+	env.ssao_intensity = 1.1
+	env.ssao_power = 1.2
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.03
+	env.adjustment_saturation = 1.08
+	var vp := get_viewport()
+	if vp != null:
+		vp.msaa_3d = Viewport.MSAA_4X
+		vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA
+
+
+# ---------------------------------------------------------- star finder ---
+
+# Every star is reachable by digging, but a star sealed in a cave pocket, or
+# a Star Rock buried in stone, cannot be seen from where the player stands.
+# This keeps a compass line on the HUD pointing at the nearest one so a level
+# can never stall on "I cannot find the last star".
+func _update_finder(delta: float) -> void:
+	if phase != Phase.EXPLORE:
+		hud.set_finder("")
+		return
+	_finder_t -= delta
+	if _finder_t > 0.0:
+		return
+	_finder_t = 0.2
+
+	var pp := player.global_position
+	var best_d := INF
+	var best := Vector3.ZERO
+	var what := ""
+	for s in get_tree().get_nodes_in_group("stars"):
+		var d: float = pp.distance_to(s.global_position)
+		if d < best_d:
+			best_d = d
+			best = s.global_position
+			what = "star"
+	for r in _star_rocks:
+		var c := Vector3(r) + Vector3(0.5, 0.5, 0.5)
+		var d := pp.distance_to(c)
+		if d < best_d:
+			best_d = d
+			best = c
+			what = "Star Rock"
+	if best_d == INF:
+		hud.set_finder("No stars left to find - zap a creature for one")
+		return
+
+	var to := best - pp
+	var flat := Vector3(to.x, 0, to.z)
+	var dir := ""
+	if flat.length() > 1.5:
+		var fwd := -player.camera.global_transform.basis.z
+		fwd.y = 0.0
+		fwd = fwd.normalized()
+		var f := flat.normalized()
+		var dot := fwd.dot(f)
+		var side := fwd.cross(f).y
+		if dot > 0.7:
+			dir = "ahead"
+		elif dot < -0.7:
+			dir = "behind you"
+		else:
+			dir = "to your right" if side < 0.0 else "to your left"
+	var vert := ""
+	if to.y < -2.5:
+		vert = "%dm below" % int(-to.y)
+	elif to.y > 2.5:
+		vert = "%dm above" % int(to.y)
+	var parts: Array[String] = []
+	if dir != "":
+		parts.append(dir)
+	if vert != "":
+		parts.append(vert)
+	var where := ", ".join(parts) if not parts.is_empty() else "right here"
+	hud.set_finder("Nearest %s: %dm %s" % [what, int(best_d), where])

@@ -15,6 +15,7 @@ const GOOD := Color(0.5, 0.88, 0.45)
 var _level_label: Label
 var _depth_label: Label
 var _hint_label: Label
+var _finder_label: Label
 var _progress_label: Label
 var _progress_bar: ProgressBar
 var _lives_row: Control
@@ -136,6 +137,10 @@ func _build() -> void:
 	_progress_bar = _bar(GOLD, 14)
 	_progress_bar.custom_minimum_size = Vector2(380, 14)
 	top.add_child(_progress_bar)
+	_finder_label = _label("", 16, Color(0.98, 0.9, 0.6))
+	_finder_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_finder_label.custom_minimum_size = Vector2(380, 0)
+	top.add_child(_finder_label)
 
 	# --- top right: lives, drawn as star pips ---
 	_lives_row = Control.new()
@@ -401,6 +406,10 @@ func set_dig(progress: float) -> void:
 
 func set_hint(text: String) -> void:
 	_hint_label.text = text
+
+
+func set_finder(text: String) -> void:
+	_finder_label.text = text
 
 
 func banner(title: String, sub: String, seconds: float = 2.6) -> void:

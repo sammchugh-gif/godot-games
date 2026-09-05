@@ -88,8 +88,8 @@ func _build_materials() -> void:
 	_mat_opaque.albedo_texture = atlas
 	_mat_opaque.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_mat_opaque.vertex_color_use_as_albedo = true
-	_mat_opaque.roughness = 0.95
-	_mat_opaque.metallic_specular = 0.1
+	_mat_opaque.roughness = 0.82
+	_mat_opaque.metallic_specular = 0.3
 
 	_mat_alpha = StandardMaterial3D.new()
 	_mat_alpha.albedo_texture = atlas
