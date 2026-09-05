@@ -91,6 +91,11 @@ func _center_box() -> VBoxContainer:
 func _build_title() -> Control:
 	var c := _panel()
 	var v := _center_box()
+	v.name = "Box"
+	v.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	v.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	v.grow_vertical = Control.GROW_DIRECTION_END
+	v.position.y = 40.0
 	c.add_child(v)
 	var logo := _label("SONIC SPIN", 88, Color(1.0, 0.95, 0.85), 10)
 	logo.name = "Logo"
@@ -98,14 +103,14 @@ func _build_title() -> Control:
 	var sub := _label("EMERALD SHORE  •  ACT 1", 26, Color(0.85, 0.95, 1.0), 5)
 	v.add_child(sub)
 	var sp := Control.new()
-	sp.custom_minimum_size = Vector2(0, 30)
+	sp.custom_minimum_size = Vector2(0, 6)
 	v.add_child(sp)
+	var sp2 := Control.new()
+	sp2.custom_minimum_size = Vector2(0, 330)
+	v.add_child(sp2)
 	var go := _label("PRESS SPACE OR TAP TO START", 24, Color(1.0, 0.9, 0.3), 5)
 	go.name = "Go"
 	v.add_child(go)
-	var sp2 := Control.new()
-	sp2.custom_minimum_size = Vector2(0, 24)
-	v.add_child(sp2)
 	var help := _label("MOVE: WASD / arrows / stick      JUMP: Space (again in the air: homing attack)\nSPIN / ROLL / SPIN DASH: X or C      BOOST: Shift      DRIFT: Q / E      PAUSE: Esc      RESTART: R", 16, Color(0.9, 0.95, 1.0), 4)
 	help.name = "Help"
 	v.add_child(help)
@@ -154,8 +159,8 @@ func show_title() -> void:
 	_pause.visible = false
 	running = false
 	if _touch:
-		(_title.get_node("Go") as Label).text = "TAP TO START"
-		(_title.get_node("Help") as Label).text = "Left thumb: move.   Right: JUMP (tap again in the air to home in), SPIN, BOOST, DRIFT."
+		(_title.get_node("Box/Go") as Label).text = "TAP TO START"
+		(_title.get_node("Box/Help") as Label).text = "Left thumb: move.   Right: JUMP (tap again in the air to home in), SPIN, BOOST, DRIFT."
 
 
 func show_game() -> void:
@@ -204,9 +209,9 @@ func _process(dt: float) -> void:
 	_ring_pulse = maxf(_ring_pulse - dt * 4.0, 0.0)
 	_blink += dt
 	if _title.visible:
-		var go := _title.get_node("Go") as Label
+		var go := _title.get_node("Box/Go") as Label
 		go.modulate.a = 0.55 + 0.45 * absf(sin(_blink * 3.0))
-		var logo := _title.get_node("Logo") as Label
+		var logo := _title.get_node("Box/Logo") as Label
 		logo.rotation = sin(_blink * 1.2) * 0.02
 		logo.scale = Vector2.ONE * (1.0 + 0.02 * sin(_blink * 2.4))
 		logo.pivot_offset = logo.size * 0.5
@@ -230,19 +235,27 @@ func _draw_hud() -> void:
 	_shadow_text(Vector2(rx + 24.0, ry + 12.0), "%d" % rings, 34, rcol)
 	# Timer under it.
 	_shadow_text(Vector2(22.0, 82.0), _fmt_time(time_s), 26, Color(0.95, 0.97, 1.0))
-	# Speed, bottom-right, with the boost gauge above it.
+	# Speed, bottom-right, with the boost gauge above it. With touch controls
+	# the buttons own the bottom corners, so both move to the bottom centre.
 	var kmh := int(round(speed * 3.6))
 	var sx := vp.x - 30.0
 	var sy := vp.y - 30.0
+	if _touch:
+		sx = vp.x * 0.5 + 150.0
+		sy = vp.y - 26.0
 	var stxt := "%d" % kmh
 	var w := f.get_string_size(stxt, HORIZONTAL_ALIGNMENT_RIGHT, -1, 46).x
-	_shadow_text(Vector2(sx - w, sy), stxt, 46, Color(1.0, 1.0, 1.0) if not boosting else Color(0.6, 0.9, 1.0))
-	_shadow_text(Vector2(sx - w - 4.0 - f.get_string_size("km/h", HORIZONTAL_ALIGNMENT_RIGHT, -1, 18).x, sy), "km/h", 18, Color(0.85, 0.9, 1.0))
+	_shadow_text(Vector2(sx - w - 52.0, sy), stxt, 46, Color(1.0, 1.0, 1.0) if not boosting else Color(0.6, 0.9, 1.0))
+	_shadow_text(Vector2(sx - 46.0, sy), "km/h", 18, Color(0.85, 0.9, 1.0))
 	# Boost gauge.
 	var gw := 220.0
 	var gh := 14.0
 	var gx := vp.x - 30.0 - gw
 	var gy := vp.y - 86.0
+	if _touch:
+		gw = 260.0
+		gx = vp.x * 0.5 - gw * 0.5 - 60.0
+		gy = vp.y - 40.0
 	_root.draw_rect(Rect2(gx - 2, gy - 2, gw + 4, gh + 4), Color(0, 0.05, 0.15, 0.6))
 	_root.draw_rect(Rect2(gx, gy, gw * boost / 100.0, gh), Color(0.35, 0.75, 1.0) if not boosting else Color(0.75, 0.95, 1.0))
 	for i in 5:

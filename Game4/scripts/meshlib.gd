@@ -19,15 +19,17 @@ class Builder:
 			st.set_normal(n)
 		st.add_vertex(p)
 
-	# Counter-clockwise when seen from the front.
+	# Callers list vertices counter-clockwise as seen from the front; Godot's
+	# front faces are clockwise, so the emit order is flipped here (and in
+	# quad_n) for both rendering and one-sided trimesh collision.
 	func tri(a: Vector3, b: Vector3, c: Vector3, ua: Vector2 = Vector2.ZERO, ub: Vector2 = Vector2.ZERO, uc: Vector2 = Vector2.ZERO) -> void:
 		var n := (b - a).cross(c - a)
 		if n.length_squared() < 1e-12:
 			return
 		n = n.normalized()
 		v(a, ua, n)
-		v(b, ub, n)
 		v(c, uc, n)
+		v(b, ub, n)
 
 	func quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, ua: Vector2 = Vector2(0, 0), ub: Vector2 = Vector2(1, 0), uc: Vector2 = Vector2(1, 1), ud: Vector2 = Vector2(0, 1)) -> void:
 		tri(a, b, c, ua, ub, uc)
@@ -36,8 +38,8 @@ class Builder:
 	# Smooth quad: caller supplies per-vertex normals.
 	func quad_n(a: Vector3, b: Vector3, c: Vector3, d: Vector3, na: Vector3, nb: Vector3, nc: Vector3, nd: Vector3,
 			ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2, ca: Color = Color.WHITE, cb: Color = Color.WHITE, cc: Color = Color.WHITE, cd: Color = Color.WHITE) -> void:
-		_cv(a, na, ua, ca); _cv(b, nb, ub, cb); _cv(c, nc, uc, cc)
-		_cv(a, na, ua, ca); _cv(c, nc, uc, cc); _cv(d, nd, ud, cd)
+		_cv(a, na, ua, ca); _cv(c, nc, uc, cc); _cv(b, nb, ub, cb)
+		_cv(a, na, ua, ca); _cv(d, nd, ud, cd); _cv(c, nc, uc, cc)
 
 	func _cv(p: Vector3, n: Vector3, uv: Vector2, c: Color) -> void:
 		st.set_color(c)
@@ -216,15 +218,29 @@ static func basis_from_y(y: Vector3) -> Basis:
 	return Builder._basis_from_y(y)
 
 
+# Direction slerp that stays quiet when the vectors are (anti)parallel.
+static func safe_slerp(a: Vector3, b: Vector3, t: float) -> Vector3:
+	a = a.normalized()
+	b = b.normalized()
+	var d := a.dot(b)
+	if d > 0.9995 or d < -0.9995:
+		var r := a.lerp(b, t)
+		return r.normalized() if r.length_squared() > 1e-8 else a
+	return a.slerp(b, t).normalized()
+
+
 # Look-at style basis where -Z points along `dir` and Y is as close to `up` as possible.
 static func basis_forward(dir: Vector3, up: Vector3 = Vector3.UP) -> Basis:
-	dir = dir.normalized()
-	var x := up.cross(dir)
+	# Right-handed: x = up x z, y = z x x, so the determinant is +1 (a
+	# mirrored basis would flip every face to back-facing).
+	var z := -dir.normalized()
+	var x := up.cross(z)
 	if x.length_squared() < 1e-6:
-		x = Vector3.RIGHT
+		x = Vector3.RIGHT if absf(z.x) < 0.9 else Vector3.FORWARD
+		x = x - z * x.dot(z)
 	x = x.normalized()
-	var y := dir.cross(x).normalized()
-	return Basis(x, y, -dir)
+	var y := z.cross(x).normalized()
+	return Basis(x, y, z)
 
 
 # Trimesh collision from an ArrayMesh (concave; used for the road).

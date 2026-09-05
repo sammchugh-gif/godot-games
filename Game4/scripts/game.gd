@@ -297,10 +297,109 @@ func _run_selftest() -> void:
 	Input.action_press("move_up")
 	for i in 240:
 		await get_tree().physics_frame
+		if i % 30 == 0:
+			print("selftest: t=%.1f pos=%s st=%d spd=%.1f gn=%s vel=%s" % [i / 60.0, player.global_position, player.st, player.speed, player.gnorm, player.velocity])
 	Input.action_release("move_up")
 	var moved := start.distance_to(player.global_position)
 	print("selftest: moved %.1f m, speed %.1f m/s, state %d, y %.1f" % [moved, player.speed, player.st, player.global_position.y])
 	if moved < 40.0 or player.st == Player.St.DEAD:
 		ok = false
 	print("SELFTEST " + ("PASS" if ok else "FAIL"))
+	var di := OS.get_cmdline_user_args().find("--drive")
+	if di >= 0:
+		await _drive(float(OS.get_cmdline_user_args()[di + 1]) if di + 1 < OS.get_cmdline_user_args().size() else 60.0)
 	get_tree().quit(0 if ok else 1)
+
+
+func _dist_near(p: Vector3, s_center: float, window: float) -> float:
+	var best := 1e18
+	var bs := s_center
+	for fr in level.track.frames:
+		var s: float = fr["s"]
+		if absf(s - s_center) > window:
+			continue
+		var d2: float = (fr["p"] as Vector3).distance_squared_to(p)
+		if d2 < best:
+			best = d2
+			bs = s
+	return bs
+
+
+# Diagnostic driver: steers along the route, boosts every few seconds and
+# logs where Sonic is, so the level can be tuned without a display.
+#   godot --headless --path Game4 -- --selftest --drive 120 [--spawn N] [--offset X] [--noboost]
+func _drive(secs: float) -> void:
+	state = S.PLAY
+	var args := OS.get_cmdline_user_args()
+	var si := args.find("--spawn")
+	if si >= 0 and si + 1 < args.size():
+		checkpoint = int(args[si + 1])
+		level.respawn(checkpoint)
+		var oi := args.find("--offset")
+		if oi >= 0 and oi + 1 < args.size():
+			player.global_position += Vector3(float(args[oi + 1]), 0, 0)
+	Input.action_press("move_up")
+	Player.debug_probe = true
+	var stuck := 0
+	var prev := player.global_position
+	var s_bot := level.track.dist_of(player.global_position)
+	var prev_st := player.st
+	var frames := int(secs * 60.0)
+	var far := 0.0
+	var deaths := [0]
+	var s_reset := [-1.0]
+	player.died.connect(func():
+		deaths[0] += 1
+		s_reset[0] = level.track.dist_of((level.checkpoints[checkpoint] as Dictionary)["pos"]))
+	for i in frames:
+		await get_tree().physics_frame
+		if i % 240 == 0 and not ("--noboost" in args):
+			Input.action_press("boost")
+		elif i % 240 == 90:
+			Input.action_release("boost")
+		# Steer toward a point ahead on the route, camera-relative. Progress
+		# is tracked in a window so stacked geometry (loops) cannot confuse it.
+		if s_reset[0] >= 0.0:
+			s_bot = s_reset[0]
+			s_reset[0] = -1.0
+		var d := _dist_near(player.global_position, s_bot, 60.0)
+		if d > s_bot:
+			s_bot = d
+		var target := level.track.pos_at(s_bot + 14.0)
+		if player.st != prev_st:
+			if player.st == Player.St.AIR and prev_st == Player.St.GROUND:
+				print("drive: left ground at t=%.2f s=%.0f spd=%.1f: %s" % [i / 60.0, s_bot, player.speed, player.leave_reason])
+			prev_st = player.st
+		var to := target - player.global_position
+		to.y = 0.0
+		var cb := player.cam_basis
+		var f := Vector3(-cb.z.x, 0, -cb.z.z).normalized()
+		var r := Vector3(cb.x.x, 0, cb.x.z).normalized()
+		var stick := Vector2(to.normalized().dot(r), -to.normalized().dot(f))
+		Input.action_press("move_right", maxf(stick.x, 0.0))
+		Input.action_press("move_left", maxf(-stick.x, 0.0))
+		Input.action_press("move_up", maxf(-stick.y, 0.0))
+		Input.action_press("move_down", maxf(stick.y, 0.0))
+		var moved := player.global_position.distance_to(prev)
+		prev = player.global_position
+		if player.visual_speed() > 10.0 and moved < 0.03 and player.st == Player.St.GROUND:
+			stuck += 1
+			if stuck < 6 or stuck % 60 == 0:
+				var cols := player.get_slide_collision_count()
+				var cn := ""
+				for k in cols:
+					cn += "%s n=%s " % [player.get_slide_collision(k).get_collider().name, player.get_slide_collision(k).get_normal()]
+				print("stuck #%d pos=%s heading=%s gn=%s vel=%s cols=%d %s" % [stuck, player.global_position, player.heading, player.gnorm, player.velocity, cols, cn])
+		else:
+			stuck = 0
+		if i % 60 == 0:
+			far = maxf(far, d)
+			print("drive: t=%4.1f s=%6.1f pos=%s st=%d spd=%5.1f rings=%d cp=%d" % [i / 60.0, d, player.global_position.round(), player.st, player.visual_speed(), player.rings, checkpoint])
+		if i == 120:
+			var m := player.model
+			var vis := 0
+			for c in m._limbs:
+				if c.visible:
+					vis += 1
+			print("drive: model visible=%s limbs_visible=%d/%d ball=%s model_pos=%s player_pos=%s aabb=%s" % [m.visible, vis, m._limbs.size(), m.ball.visible, m.global_position, player.global_position, (m._limbs[0] as MeshInstance3D).get_aabb()])
+	print("drive: farthest %.0f m of %.0f, deaths %d, rings %d" % [far, level.track.length, deaths[0], player.rings])

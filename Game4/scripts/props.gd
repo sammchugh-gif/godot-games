@@ -416,9 +416,9 @@ static func goal_gate(parent: Node3D, pos: Vector3, fwd: Vector3) -> void:
 	var cellw := 0.42
 	var start_x := -6.0
 	for gi in glyphs.size():
-		for r in glyphs[gi]:
-			var cx := start_x + gi * 3.2 + (r[0] + r[2] * 0.5) * cellw
-			var cy := 11.0 + (r[1] + r[3] * 0.5) * cellw
+		for r: Array in glyphs[gi]:
+			var cx: float = start_x + gi * 3.2 + (r[0] + r[2] * 0.5) * cellw
+			var cy: float = 11.0 + (r[1] + r[3] * 0.5) * cellw
 			lb.box(pos + right * cx + Vector3(0, cy, 0) - fwd * 0.2, Vector3(r[2] * cellw, r[3] * cellw, 0.15), MeshLib.basis_forward(fwd))
 	parent.add_child(lb.commit(Mats.glow(Color.WHITE, 0.8, 0.5), "Letters"))
 

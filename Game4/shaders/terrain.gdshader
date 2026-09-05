@@ -7,8 +7,8 @@ shader_type spatial;
 render_mode cull_back, depth_draw_opaque, specular_schlick_ggx;
 
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
-uniform vec3 grass_a : source_color = vec3(0.22, 0.62, 0.18);
-uniform vec3 grass_b : source_color = vec3(0.42, 0.80, 0.22);
+uniform vec3 grass_a : source_color = vec3(0.16, 0.50, 0.14);
+uniform vec3 grass_b : source_color = vec3(0.34, 0.70, 0.18);
 uniform vec3 rock_a : source_color = vec3(0.72, 0.38, 0.12);
 uniform vec3 rock_b : source_color = vec3(0.92, 0.60, 0.22);
 uniform vec3 sand_a : source_color = vec3(0.95, 0.86, 0.62);

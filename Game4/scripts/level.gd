@@ -62,6 +62,7 @@ func build(p: Player, sfx: Sfx) -> void:
 	_set_pieces()
 	_objects()
 	_vegetation()
+	p.track = track
 	add_child(p)
 	respawn(0)
 
@@ -94,10 +95,10 @@ func _route() -> Array:
 	P.append_array(Track.loop_points(Vector3(-40, 40, -400), FWD, 14.0, 15.0, 12.0))
 	P.append(Track.cp(Vector3(-25, 40, -400), 12))
 	P.append(Track.cp(Vector3(-25, 40, -422), 12))
-	P.append(Track.cp(Vector3(-25, 40, -440), 12))
-	P.append_array(Track.corkscrew_points(Vector3(-25, 40, -440), FWD, 70.0, 5.0, 11.0))
-	P.append(Track.cp(Vector3(-25, 40, -510), 12))
-	P.append(Track.cp(Vector3(-25, 40, -530), 12))
+	P.append(Track.cp(Vector3(-25, 40, -436), 12))
+	P.append_array(Track.corkscrew_points(Vector3(-25, 40, -436), FWD, 90.0, 7.0, 12.0, 36))
+	P.append(Track.cp(Vector3(-25, 40, -526), 12))
+	P.append(Track.cp(Vector3(-25, 40, -534), 12))
 	# 4. Ramp to the rails.
 	P.append(Track.cp(Vector3(-25, 40, -548), 12))
 	P.append(Track.cp(Vector3(-25, 42, -556), 12, "ramp", null, 3.0))
@@ -169,20 +170,20 @@ func _shape_terrain() -> void:
 	t.dig(Vector3(-2, 0, -198), Vector3(-2, 0, -238), 9.0, 60.0, 12.0)
 	# Keep the ground clear under the loop and corkscrew.
 	t.dig(Vector3(-33, 0, -395), Vector3(-33, 0, -418), 18.0, 38.5, 22.0)
-	t.dig(Vector3(-25, 0, -445), Vector3(-25, 0, -505), 12.0, 38.5, 20.0)
+	t.dig(Vector3(-25, 0, -441), Vector3(-25, 0, -521), 14.0, 38.5, 20.0)
 	# The bay under the rails.
 	t.dig(Vector3(-25, 0, -600), Vector3(-95, 0, -850), 48.0, -12.0, 34.0)
 	# Beach under the homing chain.
 	t.dig(Vector3(-108, 0, -900), Vector3(-118, 0, -960), 22.0, 4.0, 18.0)
 	# Hill the tunnel bores through.
-	t.raise(Vector3(-120, 0, -1000), Vector3(-160, 0, -1092), 14.0, 52.0, 14.0)
+	t.raise(Vector3(-127, 0, -1022), Vector3(-154, 0, -1084), 16.0, 34.0, 16.0)
 	# Flat ground under the wall run, the cliff behind it, and the ridge
 	# that carries the river to the waterfall lip.
 	t.dig(Vector3(-236, 0, -1150), Vector3(-330, 0, -1150), 16.0, 14.5, 8.0)
 	t.raise(Vector3(-240, 0, -1198), Vector3(-330, 0, -1198), 10.0, 60.0, 20.0)
 	t.raise(Vector3(-330, 0, -1262), Vector3(-420, 0, -1262), 8.0, 46.5, 6.0)
 	# Lagoon and its beach: a sheer drop from the lip.
-	t.dig(Vector3(-372, 0, -1300), Vector3(-372, 0, -1330), 22.0, -2.5, 6.0)
+	t.dig(Vector3(-372, 0, -1300), Vector3(-372, 0, -1330), 22.0, -1.0, 6.0)
 	# Ruin courtyard: flat.
 	t.raise(Vector3(-178, 0, -1112), Vector3(-200, 0, -1132), 20.0, 14.6, 20.0)
 
@@ -207,13 +208,13 @@ func _sky() -> void:
 	e.sky = sky
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	e.ambient_light_sky_contribution = 1.0
-	e.ambient_light_energy = 1.0
+	e.ambient_light_energy = 0.75
 	e.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	e.tonemap_mode = Environment.TONE_MAPPER_ACES
 	e.tonemap_exposure = 1.0
 	e.tonemap_white = 1.6
 	e.adjustment_enabled = true
-	e.adjustment_saturation = 1.12
+	e.adjustment_saturation = 1.08
 	e.adjustment_contrast = 1.03
 	e.fog_enabled = true
 	e.fog_light_color = Color(0.78, 0.88, 1.0)
@@ -224,10 +225,10 @@ func _sky() -> void:
 	e.fog_height = -20.0
 	e.fog_height_density = 0.0
 	e.glow_enabled = true
-	e.glow_intensity = 0.45
-	e.glow_strength = 0.9
+	e.glow_intensity = 0.3
+	e.glow_strength = 0.8
 	e.glow_bloom = 0.05
-	e.glow_hdr_threshold = 1.05
+	e.glow_hdr_threshold = 1.2
 	e.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	e.set_glow_level(2, 0.6)
 	e.set_glow_level(4, 0.8)
@@ -250,7 +251,7 @@ func _sky() -> void:
 	add_child(env)
 	sun = DirectionalLight3D.new()
 	sun.light_color = Color(1.0, 0.96, 0.88)
-	sun.light_energy = 1.45
+	sun.light_energy = 1.05
 	sun.rotation_degrees = Vector3(-48.0, 38.0, 0.0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
@@ -317,8 +318,8 @@ func _set_pieces() -> void:
 
 	# --- 4. Rails over the bay.
 	var rail_a := Rail.make([
-		Vector3(-25, 52, -585), Vector3(-25, 42, -625), Vector3(-26, 31, -668), Vector3(-31, 22, -708),
-		Vector3(-41, 17, -745), Vector3(-56, 15.5, -780), Vector3(-72, 17, -806), Vector3(-84, 21, -826),
+		Vector3(-25, 52, -585), Vector3(-25, 42, -625), Vector3(-25, 31, -668), Vector3(-25, 22, -712),
+		Vector3(-33, 17, -748), Vector3(-50, 15.5, -780), Vector3(-70, 17, -806), Vector3(-84, 21, -826),
 		Vector3(-92, 24.5, -841), Vector3(-96, 26.5, -852),
 	], true, -14.0)
 	_add(rail_a)
@@ -410,7 +411,7 @@ func _set_pieces() -> void:
 	# Camera zones.
 	_zone(Vector3(0, 125, -25), Vector3(60, 30, 70), "reveal")
 	_zone(Vector3(-33, 55, -400), Vector3(60, 60, 50), "loop")
-	_zone(Vector3(-25, 46, -475), Vector3(40, 40, 76), "loop")
+	_zone(Vector3(-25, 48, -481), Vector3(44, 44, 96), "loop")
 	_zone(Vector3(-60, 40, -710), Vector3(160, 90, 300), "rail")
 	_zone(Vector3(-286, 25, -1150), Vector3(110, 50, 40), "wall")
 	_zone(Vector3(-372, 30, -1290), Vector3(120, 90, 110), "waterfall")
@@ -537,9 +538,9 @@ func _objects() -> void:
 	var s_loop := _s(Vector3(-40, 40, -385))
 	_pad(s_loop - 3.0, 50.0)
 	_ring_along(s_loop + 12.0, _s(Vector3(-25, 40, -400)) - 4.0, 5.0, 0.0, 1.2)
-	var s_ck := _s(Vector3(-25, 40, -440))
+	var s_ck := _s(Vector3(-25, 40, -436))
 	_pad(s_ck - 12.0, 52.0)
-	_ring_along(s_ck + 5.0, _s(Vector3(-25, 40, -510)) - 3.0, 5.0, 0.0, 1.2)
+	_ring_along(s_ck + 5.0, _s(Vector3(-25, 40, -526)) - 3.0, 5.0, 0.0, 1.2)
 	# 4. Ramp pad.
 	_pad(_s(Vector3(-25, 40, -548)) - 6.0, 54.0)
 	# Landing platform.
@@ -594,7 +595,7 @@ func _vegetation() -> void:
 			var p: Vector3 = fr["p"]
 			var r: Vector3 = fr["r"]
 			var half: float = fr["w"] * 0.5
-			for side in [-1.0, 1.0]:
+			for side: float in [-1.0, 1.0]:
 				if rng.randf() < (0.22 if lw else 0.34):
 					var lat := side * (half + rng.randf_range(4.0, 13.0))
 					var q := p + Vector3(r.x, 0, r.z).normalized() * lat
@@ -651,6 +652,8 @@ func _vegetation() -> void:
 func respawn(idx: int) -> void:
 	var c: Dictionary = checkpoints[clampi(idx, 0, checkpoints.size() - 1)]
 	player.reset_at(c["pos"], c["dir"])
+	player.track_s = 0.0
+	player.track_i = -1
 	if collapse:
 		collapse.reset()
 	for t in _obj_parent.get_children():

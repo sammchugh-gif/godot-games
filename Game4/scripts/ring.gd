@@ -19,7 +19,7 @@ static func mesh() -> ArrayMesh:
 		var prof := []
 		for i in 9:
 			var a := TAU * float(i) / 8.0
-			prof.append(Vector2(0.55 + cos(a) * 0.09, sin(a) * 0.09))
+			prof.append(Vector2(0.75 + cos(a) * 0.11, sin(a) * 0.11))
 		b.lathe(prof, 24, Vector3.ZERO, Basis(Vector3.RIGHT, PI * 0.5), false)
 		_mesh = b.commit_mesh()
 	return _mesh
@@ -40,10 +40,10 @@ static func material() -> StandardMaterial3D:
 func _ready() -> void:
 	collision_layer = 8
 	collision_mask = 2
-	monitorable = false
+	set_deferred("monitorable", false)
 	var cs := CollisionShape3D.new()
 	var sh := SphereShape3D.new()
-	sh.radius = 1.1
+	sh.radius = 1.4
 	cs.shape = sh
 	add_child(cs)
 	_mi = MeshInstance3D.new()

@@ -11,6 +11,8 @@ var level: Level
 var mode := ""
 var _pos := Vector3.ZERO
 var _look := Vector3.ZERO
+var _off := Vector3.ZERO
+var _look_off := Vector3.ZERO
 var _up := Vector3.UP
 var _fwd := Vector3.FORWARD
 var _roll := 0.0
@@ -36,8 +38,10 @@ func snap() -> void:
 		return
 	_fwd = player.heading
 	_up = Vector3.UP
-	_pos = player.global_position - _fwd * 7.0 + Vector3(0, 2.6, 0)
+	_pos = player.global_position - _fwd * 5.0 + Vector3(0, 1.8, 0)
 	_look = player.global_position + Vector3(0, 1.0, 0)
+	_off = _pos - player.global_position
+	_look_off = _look - player.global_position
 	global_position = _pos
 	look_at(_look, _up)
 	player.cam_basis = global_basis
@@ -94,26 +98,26 @@ func _physics_process(dt: float) -> void:
 		turn_rate = 7.0
 	if player.drifting:
 		turn_rate = 2.4
-	_fwd = _fwd.slerp(fwd_h, 1.0 - exp(-turn_rate * dt)).normalized() if _fwd.dot(fwd_h) > -0.99 else fwd_h
-	_up = _up.slerp(want_up, 1.0 - exp(-4.0 * dt)).normalized()
+	_fwd = MeshLib.safe_slerp(_fwd, fwd_h, 1.0 - exp(-turn_rate * dt))
+	_up = MeshLib.safe_slerp(_up, want_up, 1.0 - exp(-4.0 * dt))
 	var right := _fwd.cross(_up).normalized()
 	if right.length_squared() < 1e-4:
 		right = Vector3.RIGHT
 
 	# Framing per mode.
-	var dist := lerpf(6.4, 9.6, sp_t)
-	var height := lerpf(2.3, 2.9, sp_t)
+	var dist := lerpf(4.2, 6.2, sp_t)
+	var height := lerpf(1.6, 2.1, sp_t)
 	var look_h := 1.0
-	var ahead := lerpf(2.0, 8.0, sp_t)
-	var fov_t := 72.0 + 13.0 * sp_t + (7.0 if player.boosting else 0.0)
+	var ahead := lerpf(1.5, 5.0, sp_t)
+	var fov_t := 70.0 + 10.0 * sp_t + (5.0 if player.boosting else 0.0)
 	var side := 0.0
 	match mode:
 		"reveal":
-			dist = 13.0
-			height = 6.5
-			ahead = 16.0
-			look_h = -2.0
-			fov_t += 6.0
+			dist = 8.5
+			height = 4.0
+			ahead = 14.0
+			look_h = -1.0
+			fov_t += 8.0
 		"loop":
 			dist = 12.5
 			height = 3.2
@@ -161,12 +165,16 @@ func _physics_process(dt: float) -> void:
 		var hit := space.intersect_ray(q)
 		if not hit.is_empty():
 			desired = hit.position + hit.normal * 0.4
+	# Smooth the offset from Sonic rather than the world position, so the
+	# camera has no speed-proportional lag and Sonic stays the same size.
 	var follow_rate := lerpf(9.0, 16.0, sp_t)
 	if player.st == Player.St.HOMING:
 		follow_rate = 6.0
-	_pos = _pos.lerp(desired, 1.0 - exp(-follow_rate * dt))
+	_off = _off.lerp(desired - p, 1.0 - exp(-follow_rate * dt))
+	_pos = p + _off
 	var look_t := p + _fwd * ahead + _up * look_h
-	_look = _look.lerp(look_t, 1.0 - exp(-14.0 * dt))
+	_look_off = _look_off.lerp(look_t - p, 1.0 - exp(-14.0 * dt))
+	_look = p + _look_off
 
 	# Banking from turn input and drift.
 	var lat := 0.0
@@ -201,10 +209,11 @@ func _physics_process(dt: float) -> void:
 func _attract(dt: float) -> void:
 	_attract_t += dt
 	var p := player.global_position
-	var a := _attract_t * 0.12
-	var desired := p + Vector3(sin(a) * 9.0, 2.5 + sin(_attract_t * 0.3) * 0.6, cos(a) * 9.0)
+	# Start in front of Sonic (he faces -Z) and drift slowly round to his side.
+	var a := PI + 0.9 - _attract_t * 0.08
+	var desired := p + Vector3(sin(a) * 4.0, 1.2 + sin(_attract_t * 0.3) * 0.25, cos(a) * 4.0)
 	_pos = _pos.lerp(desired, 1.0 - exp(-2.0 * dt))
-	_look = _look.lerp(p + Vector3(0, 0.9, 0) + Vector3(0, 0, -1) * 2.0, 1.0 - exp(-2.0 * dt))
+	_look = _look.lerp(p + Vector3(0.6, 0.7, 0), 1.0 - exp(-2.0 * dt))
 	global_position = _pos
 	look_at(_look, Vector3.UP)
 	_fov_cur = lerpf(_fov_cur, 55.0, 1.0 - exp(-2.0 * dt))

@@ -114,12 +114,31 @@ func prepare(track: Track) -> void:
 	for k in acc:
 		_alt[k] = [acc[k][0] / acc[k][2], acc[k][1] / acc[k][2]]
 	# Rasterise ground frames into the road height / weight grids. Ramps
-	# get a tight fade so the land drops away sheer at their lip.
+	# get a tight fade so the land drops away sheer at their lip, and are
+	# done in a second pass so they win under their own footprint.
+	# Tunnel frames embed like road: the hill over a bore is a separate
+	# shell mesh (see Track), because a heightfield cannot be under the road
+	# and over the tunnel at the same place.
+	var nfr := track.frames.size()
+	var ordered := []
+	for i in nfr:
+		var fr: Dictionary = track.frames[i]
+		if fr["kind"] == "ground" or fr["kind"] == "tunnel":
+			# A run start after a gap gets a flat apron in front of it, so a
+			# landing that falls a little short meets level ground and not
+			# the end cap.
+			var apron := 0.0
+			if i == 0 or track.frames[i - 1]["kind"] == "gap":
+				apron = 10.0
+			ordered.append([fr, apron])
 	for fr in track.frames:
+		if fr["kind"] == "ramp":
+			ordered.append([fr, 0.0])
+	for entry in ordered:
+		var fr: Dictionary = entry[0]
+		var apron: float = entry[1]
 		var kind: String = fr["kind"]
-		if kind != "ground" and kind != "ramp":
-			continue
-		var fade := 18.0 if kind == "ground" else 4.0
+		var fade := 4.0 if kind == "ramp" else 18.0
 		var p: Vector3 = fr["p"]
 		var r: Vector3 = fr["r"]
 		var half: float = fr["w"] * 0.5
@@ -127,7 +146,7 @@ func prepare(track: Track) -> void:
 		if rh.length() < 0.05:
 			continue
 		rh = rh.normalized()
-		var reach := half + fade
+		var reach := half + fade + apron
 		var ix0 := maxi(int((p.x - reach - x0) / cell), 0)
 		var ix1 := mini(int((p.x + reach - x0) / cell) + 1, nx - 1)
 		var iz0 := maxi(int((p.z - reach - z0) / cell), 0)
@@ -141,40 +160,27 @@ func prepare(track: Track) -> void:
 				var lat := d2.dot(rh)
 				var along := d2.dot(fh)
 				var d := maxf(absf(lat) - half, 0.0)
-				d = maxf(d, absf(along) - 1.0)
+				if along < 0.0:
+					d = maxf(d, -along - 1.0 - apron)
+				else:
+					d = maxf(d, along - 1.0)
 				if d > fade:
 					continue
 				var w := 1.0 - smoothstep(0.0, fade, d)
 				var idx := iz * nx + ix
-				if w > road_w[idx]:
+				if w > road_w[idx] or (kind == "ramp" and w >= road_w[idx] - 0.001):
 					road_w[idx] = w
 					var y_off := r.y * clampf(lat, -half, half)
-					road_h[idx] = p.y - 0.4 + y_off
-	# Tunnels: pull the heightfield up to a ridge over the tube so the bore
-	# is always inside the hill (the raise regions add the bulk around it).
-	for fr in track.frames:
-		if fr["kind"] != "tunnel":
-			continue
-		var p: Vector3 = fr["p"]
-		var half: float = fr["w"] * 0.5 + 4.0
-		var reach := half + 10.0
-		var ix0 := maxi(int((p.x - reach - x0) / cell), 0)
-		var ix1 := mini(int((p.x + reach - x0) / cell) + 1, nx - 1)
-		var iz0 := maxi(int((p.z - reach - z0) / cell), 0)
-		var iz1 := mini(int((p.z + reach - z0) / cell) + 1, nz - 1)
-		for iz in range(iz0, iz1 + 1):
-			for ix in range(ix0, ix1 + 1):
-				var wx := x0 + ix * cell
-				var wz := z0 + iz * cell
-				var d := Vector2(wx - p.x, wz - p.z).length()
-				var dd := maxf(d - half, 0.0)
-				if dd > 10.0:
-					continue
-				var w := 1.0 - smoothstep(0.0, 10.0, dd)
-				var idx := iz * nx + ix
-				if w > road_w[idx]:
-					road_w[idx] = w
-					road_h[idx] = p.y + 15.0
+					# Flush with the verge at the edge, then well below the
+					# running surface under the road so nothing can sit
+					# between the terrain and the one-sided road top. The
+					# skirts (2.5 m deep) hide the hollow.
+					var inner := smoothstep(half - 1.5, half, absf(lat))
+					road_h[idx] = p.y + y_off - lerpf(2.0, 0.12, inner)
+					if along < -1.0:
+						# The apron in front of a run start sits level with the
+						# road top, so the sphere rolls over the cap's edge.
+						road_h[idx] = p.y + y_off + 0.02
 	# Heights. Coast and route altitude only vary with z, so they are
 	# evaluated once per row.
 	for iz in nz:
@@ -217,7 +223,7 @@ func _height(x: float, z: float, idx: int, a: float, rx: float, cx: float) -> fl
 	# and above the beach.
 	var w := road_w[idx]
 	var step := 9.0
-	var q := floor(h / step) * step
+	var q := floorf(h / step) * step
 	var f := (h - q) / step
 	var terr := q + smoothstep(0.30, 0.70, f) * step
 	var terr_amt := (1.0 - w) * smoothstep(4.0, 12.0, h) * 0.75
@@ -307,11 +313,11 @@ func _build_chunk(parent: Node3D, ix0: int, iz0: int, ix1: int, iz1: int, mat: M
 			var i01 := i00 + w
 			var i11 := i01 + 1
 			st.add_index(i00)
-			st.add_index(i01)
-			st.add_index(i10)
 			st.add_index(i10)
 			st.add_index(i01)
+			st.add_index(i10)
 			st.add_index(i11)
+			st.add_index(i01)
 	var mesh := st.commit()
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh

@@ -120,29 +120,29 @@ func _build() -> void:
 	# Connected eyes: two tall white ovals that overlap at the bridge.
 	b = MeshLib.Builder.new()
 	for s in [-1.0, 1.0]:
-		var eb := Basis(Vector3.UP, -0.35 * s) * Basis(Vector3.RIGHT, 0.12)
-		b.ellipsoid(Vector3(0.085 * s, 1.06, -0.27), Vector3(0.105, 0.17, 0.115), 16, 12, eb)
+		var eb := Basis(Vector3.UP, -0.42 * s) * Basis(Vector3.RIGHT, 0.10)
+		b.ellipsoid(Vector3(0.10 * s, 1.07, -0.285), Vector3(0.125, 0.19, 0.115), 16, 12, eb)
 	_attach(head, b, eye_white, "Eyes")
 	# Irises and pupils, slightly toed-in.
 	b = MeshLib.Builder.new()
 	for s in [-1.0, 1.0]:
-		var eb := Basis(Vector3.UP, -0.35 * s)
-		b.ellipsoid(Vector3(0.10 * s, 1.045, -0.365), Vector3(0.048, 0.078, 0.035), 12, 8, eb)
+		var eb := Basis(Vector3.UP, -0.42 * s)
+		b.ellipsoid(Vector3(0.125 * s, 1.05, -0.385), Vector3(0.055, 0.085, 0.035), 12, 8, eb)
 	_attach(head, b, green, "Irises")
 	b = MeshLib.Builder.new()
 	for s in [-1.0, 1.0]:
-		var eb := Basis(Vector3.UP, -0.35 * s)
-		b.ellipsoid(Vector3(0.105 * s, 1.04, -0.392), Vector3(0.024, 0.04, 0.02), 10, 6, eb)
+		var eb := Basis(Vector3.UP, -0.42 * s)
+		b.ellipsoid(Vector3(0.13 * s, 1.045, -0.412), Vector3(0.028, 0.045, 0.02), 10, 6, eb)
 		# Catchlight.
-		b.ellipsoid(Vector3(0.115 * s, 1.07, -0.405), Vector3(0.010, 0.012, 0.008), 6, 4, eb)
+		b.ellipsoid(Vector3(0.14 * s, 1.075, -0.425), Vector3(0.011, 0.013, 0.008), 6, 4, eb)
 	_attach(head, b, black, "Pupils")
 	# Eyelids: blue caps that drop over the eyes for blinks (scaled in Y).
 	for s in [-1.0, 1.0]:
 		b = MeshLib.Builder.new()
-		var eb := Basis(Vector3.UP, -0.35 * s) * Basis(Vector3.RIGHT, 0.12)
-		b.ellipsoid(Vector3.ZERO, Vector3(0.112, 0.172, 0.12), 14, 10, eb)
+		var eb := Basis(Vector3.UP, -0.42 * s) * Basis(Vector3.RIGHT, 0.10)
+		b.ellipsoid(Vector3.ZERO, Vector3(0.132, 0.192, 0.12), 14, 10, eb)
 		var lid := b.commit(blue, "Lid")
-		lid.position = Vector3(0.085 * s, 1.06, -0.27) - Vector3(0, HEAD_Y, 0)
+		lid.position = Vector3(0.10 * s, 1.07, -0.285) - Vector3(0, HEAD_Y, 0)
 		lid.scale = Vector3(1, 0.02, 1)
 		head.add_child(lid)
 		_eyelids.append(lid)
@@ -251,7 +251,7 @@ func _build() -> void:
 	b = MeshLib.Builder.new()
 	for i in 5:
 		var y := -0.32 + i * 0.16
-		var r := sqrt(max(0.0, 0.45 * 0.45 - y * y))
+		var r := sqrt(maxf(0.0, 0.45 * 0.45 - y * y))
 		b.lathe([Vector2(r, y - 0.025), Vector2(r + 0.012, y), Vector2(r, y + 0.025)], 24, Vector3.ZERO, Basis(Vector3.FORWARD, PI * 0.5), false)
 	var bands := b.commit(Mats.skin(BLUE_DARK, 0.4, 0.3), "Bands")
 	ball.add_child(bands)
@@ -425,7 +425,7 @@ func animate(a: Dictionary) -> void:
 			var ph := _run_phase
 			var amp := lerpf(0.55, 1.05, sprint)
 			var lean := lerpf(0.12, 0.62, sprint) + over * 0.25
-			var bob := abs(sin(ph * 2.0)) * lerpf(0.02, 0.05, sprint) * (1.0 - over)
+			var bob := absf(sin(ph * 2.0)) * lerpf(0.02, 0.05, sprint) * (1.0 - over)
 			body_pos = Vector3(0, bob - lerpf(0.0, 0.10, sprint), 0)
 			var bank := -turn * lerpf(0.15, 0.45, sprint)
 			var drift_amt := 1.0 if state == "drift" else 0.0

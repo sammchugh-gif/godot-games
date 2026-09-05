@@ -24,6 +24,7 @@ signal dashed()
 enum St { GROUND, AIR, RAIL, HOMING, HURT, DEAD, VICTORY }
 
 const RADIUS := 0.45
+const MODEL_SCALE := 1.3
 const MAX_RUN := 40.0
 const MAX_BOOST := 68.0
 const ACCEL := 26.0
@@ -89,6 +90,12 @@ var _boost_was := false
 var _prev_pos := Vector3.ZERO
 var ground_kind := "road"
 var wall_run_t := 0.0
+var leave_reason := ""
+var track: Track
+static var debug_probe := false
+var track_s := 0.0
+var track_i := -1
+var _stall := 0
 
 
 func _ready() -> void:
@@ -104,6 +111,7 @@ func _ready() -> void:
 	add_child(cs)
 	model = SonicModel.new()
 	model.position = Vector3(0, -RADIUS, 0)
+	model.scale = Vector3.ONE * MODEL_SCALE
 	add_child(model)
 	add_to_group("player")
 	_prev_pos = global_position
@@ -127,7 +135,7 @@ func reset_at(pos: Vector3, dir: Vector3) -> void:
 	invuln_t = 1.0
 	rail = null
 	model_basis = MeshLib.basis_forward(heading, Vector3.UP)
-	model.global_transform = Transform3D(model_basis, global_position + Vector3(0, -RADIUS, 0))
+	model.global_transform = Transform3D(model_basis.scaled(Vector3.ONE * MODEL_SCALE), global_position + Vector3(0, -RADIUS, 0))
 	_prev_pos = pos
 	frozen = false
 
@@ -168,6 +176,7 @@ func add_boost(v: float) -> void:
 
 func _physics_process(dt: float) -> void:
 	if frozen:
+		invuln_t = maxf(invuln_t - dt, 0.0)
 		_update_model(dt)
 		return
 	_read_input()
@@ -196,7 +205,7 @@ func _physics_process(dt: float) -> void:
 		St.DEAD:
 			pass
 
-	if global_position.y < -6.0 and st != St.DEAD:
+	if global_position.y < -1.4 and st != St.DEAD:
 		_die()
 	_update_model(dt)
 	RenderingServer.global_shader_parameter_set("player_pos", global_position)
@@ -251,14 +260,41 @@ func _ground(dt: float) -> void:
 	var wall := gnorm.y < 0.25
 	wall_run_t = wall_run_t + dt if wall else 0.0
 
-	# Desired direction on the surface.
+	# Desired direction on the surface. Auto-run engages on steep ground and
+	# anywhere the route is a loop / corkscrew / wall (including their
+	# gently banked entries and exits, so the exit does not fling you off).
 	var d := _project(input_dir, gnorm)
-	if steep and speed > 6.0:
+	var near := {}
+	if track and speed > 6.0:
+		near = _nearest_frame()
+	# Ramps auto-aim too, so a launch always lines up with what it targets.
+	var auto_run: bool = steep or (not near.is_empty() and str(near["kind"]) in ["loop", "ramp"])
+	if auto_run and speed > 6.0:
 		# On loops and walls we only allow accelerating / braking along the
-		# heading, so a nudge on the stick cannot walk Sonic off the track.
+		# heading, so a nudge on the stick cannot walk Sonic off the track,
+		# and the heading follows the road: loops are helices, so keeping a
+		# fixed heading would walk you off the outer edge by the top.
 		var along := d.dot(heading)
 		d = heading * along
 		mag = absf(along)
+		if not near.is_empty():
+			var fr := near
+			if true:
+				var rf := _project(fr["f"], gnorm)
+				if rf.length_squared() > 1e-4:
+					rf = rf.normalized()
+					if rf.dot(heading) < 0.0:
+						rf = -rf
+					# Auto-run: the heading is the road's direction (a helix
+					# climbs along its own forward vector), and Sonic is drawn
+					# back to the centre line quickly enough to beat any drift
+					# at boost speed.
+					heading = MeshLib.safe_slerp(heading, rf, 1.0 - exp(-30.0 * dt))
+					var lat := (global_position - (fr["p"] as Vector3)).dot(fr["r"])
+					var rr := _project(fr["r"], gnorm)
+					if rr.length_squared() > 1e-4:
+						rr = rr.normalized()
+						global_position -= rr * lat * minf(6.0 * dt, 1.0)
 	if d.length_squared() > 1e-4:
 		d = d.normalized()
 
@@ -319,6 +355,8 @@ func _ground(dt: float) -> void:
 			speed = move_toward(speed, 0.0, BRAKE * dt)
 			if speed < 1.0:
 				heading = d
+		elif cosang < -0.35 and steep:
+			pass  # no braking on loops and walls: momentum carries you round
 		else:
 			var ang := acos(cosang)
 			var step := minf(ang, turn_rate * dt * (0.5 + mag * 0.5))
@@ -364,6 +402,7 @@ func _ground(dt: float) -> void:
 
 	# Detach when too slow on a steep surface.
 	if steep and speed < MIN_STEEP_SPEED and gnorm.y < 0.7:
+		leave_reason = "too slow on steep"
 		_leave_ground(true)
 		return
 
@@ -376,9 +415,36 @@ func _ground(dt: float) -> void:
 	_finish_ground_move(dt)
 
 
+# Nearest route frame within a window of the last known distance (loops
+# stack geometry vertically, so a global nearest search is ambiguous).
+func _nearest_frame() -> Dictionary:
+	var best := 1e18
+	var bi := -1
+	var frames := track.frames
+	var n := frames.size()
+	# First call (or after a respawn): global search; then a window of
+	# frame indices around the last hit.
+	var lo := 0
+	var hi := n - 1
+	if track_i >= 0:
+		lo = maxi(track_i - 60, 0)
+		hi = mini(track_i + 60, n - 1)
+	for i in range(lo, hi + 1):
+		var d2: float = (frames[i]["p"] as Vector3).distance_squared_to(global_position)
+		if d2 < best:
+			best = d2
+			bi = i
+	if bi < 0 or best > 30.0 * 30.0:
+		track_i = -1
+		return {}
+	track_i = bi
+	track_s = frames[bi]["s"]
+	return frames[bi]
+
+
 func _finish_ground_move(dt: float) -> void:
 	velocity = heading * speed
-	var pre := velocity
+	var pre_pos := global_position
 	move_and_slide()
 	# Wall hits.
 	var hit_wall := false
@@ -404,38 +470,81 @@ func _finish_ground_move(dt: float) -> void:
 				heading = side.normalized()
 			speed *= 1.0 - into * 0.55
 			hit_wall = true
+	# Stall guard: at speed, with only ground-like contacts, and yet no
+	# motion, the sphere has caught a trimesh edge (this happens at the end
+	# of a ramp). Pop off with the current momentum rather than freeze.
+	var moved := global_position.distance_to(pre_pos)
+	if speed > 8.0 and not hit_wall and moved < speed * dt * 0.15:
+		_stall += 1
+		if _stall >= 2:
+			_stall = 0
+			global_position += gnorm * 0.12
+			leave_reason = "stall pop"
+			_leave_ground(false)
+			return
+	else:
+		_stall = 0
 	# Ground probe: from the centre, along -normal, a little ahead too.
 	var space := get_world_3d().direct_space_state
 	var best: Dictionary = {}
 	var probes := [Vector3.ZERO, heading * 0.35, -heading * 0.2]
 	var accum_n := Vector3.ZERO
 	var count := 0
+	var above := RADIUS + 0.6
 	for off in probes:
 		var from: Vector3 = global_position + off
-		var q := PhysicsRayQueryParameters3D.create(from + gnorm * 0.2, from - gnorm * (RADIUS + SNAP + speed * dt * 1.2), 1, [get_rid()])
+		# Start well above the centre: at boost speed the sphere can sink
+		# half a metre into a loop wall between frames, and a ray that starts
+		# inside the road shell sees nothing. Hits further above than that
+		# are ceilings and are ignored.
+		var q := PhysicsRayQueryParameters3D.create(from + gnorm * above, from - gnorm * (RADIUS + SNAP + speed * dt * 1.2), 1, [get_rid()])
 		var hit := space.intersect_ray(q)
 		if hit.is_empty():
+			continue
+		if (hit.position - from).dot(gnorm) > above - 0.02:
 			continue
 		accum_n += hit.normal
 		count += 1
 		if best.is_empty() or off == Vector3.ZERO:
 			best = hit
 	if best.is_empty():
+		leave_reason = "no ground under %s gn=%s" % [global_position, gnorm]
+		if debug_probe:
+			var q2 := PhysicsRayQueryParameters3D.create(global_position + gnorm * 3.0, global_position - gnorm * 4.0, 1, [get_rid()])
+			q2.hit_back_faces = true
+			var excl: Array[RID] = [get_rid()]
+			for k in 6:
+				q2.exclude = excl
+				var h2 := space.intersect_ray(q2)
+				if h2.is_empty():
+					break
+				leave_reason += "\n      backface-ray hit %s at %s (along gn %.2f) n=%s" % [h2.collider.name, h2.position, (h2.position - global_position).dot(gnorm), h2.normal]
+				excl.append(h2.rid)
 		_leave_ground(false)
 		return
 	var new_n: Vector3 = (accum_n / count).normalized()
 	# Reject "ground" that is really a wall we just bumped.
 	if new_n.dot(gnorm) < -0.2:
+		leave_reason = "normal flipped %s -> %s" % [gnorm, new_n]
 		_leave_ground(false)
 		return
 	# Sudden upward kinks (ramp lips) become launches: keep going.
 	var kink := gnorm.angle_to(new_n)
 	if kink > 0.9 and speed > 18.0 and new_n.y > gnorm.y:
+		leave_reason = "kink %.2f %s -> %s" % [kink, gnorm, new_n]
 		_leave_ground(false)
 		return
 	gnorm = new_n
 	var hp: Vector3 = best.position
-	global_position = hp + gnorm * RADIUS
+	# Snap to the surface, but never drop more than a step in one frame: a
+	# ray that passed through a rising surface and found the ground under
+	# the road must not pull Sonic inside the road shell.
+	var target_pos := hp + gnorm * RADIUS
+	var drop := (global_position - target_pos).dot(gnorm)
+	var max_drop := 0.12 + speed * dt * 0.7
+	if drop > max_drop:
+		target_pos = global_position - gnorm * max_drop
+	global_position = target_pos
 	heading = _project(heading, gnorm)
 	if heading.length_squared() < 1e-4:
 		heading = _project(-cam_basis.z, gnorm)
@@ -444,7 +553,7 @@ func _finish_ground_move(dt: float) -> void:
 		speed = 0.0
 	if not hit_wall:
 		last_ground_pos = global_position
-	var col := best.get("collider")
+	var col: Variant = best.get("collider")
 	if col and col.has_meta("ground_kind"):
 		ground_kind = col.get_meta("ground_kind")
 	else:
@@ -653,7 +762,7 @@ func _homing(dt: float) -> void:
 	var to := homing_target.global_position - global_position
 	var dist := to.length()
 	var dirn := to / maxf(dist, 0.001)
-	velocity = velocity.normalized().slerp(dirn, 1.0 - exp(-14.0 * dt)) * HOMING_SPEED
+	velocity = MeshLib.safe_slerp(velocity.normalized(), dirn, 1.0 - exp(-14.0 * dt)) * HOMING_SPEED
 	heading = velocity.normalized()
 	move_and_slide()
 	to = homing_target.global_position - global_position
@@ -687,9 +796,14 @@ func _try_grab_rail() -> bool:
 		var off := rl.curve.get_closest_offset(local)
 		var p := rl.to_global(rl.curve.sample_baked(off, true))
 		var dv := global_position - p
-		if dv.length() < 1.1 and dv.y > -0.4 and velocity.y < 6.0:
+		var dh := Vector2(dv.x, dv.z).length()
+		if dh < 2.2 and dv.y > -0.5 and dv.y < 1.8 and velocity.y < 6.0:
 			_attach_rail(rl, off)
 			return true
+		# Magnetism: falling toward a rail within a few metres, drift onto it.
+		if dh < 7.0 and dv.y > 0.0 and dv.y < 10.0 and velocity.y < 2.0:
+			var pull := Vector3(-dv.x, 0, -dv.z)
+			global_position += pull * minf(5.0 * get_physics_process_delta_time(), 1.0)
 	return false
 
 
@@ -944,7 +1058,7 @@ func _update_model(dt: float) -> void:
 	var q0 := model_basis.get_rotation_quaternion()
 	var q1 := target.get_rotation_quaternion()
 	model_basis = Basis(q0.slerp(q1, 1.0 - exp(-rate * dt)))
-	model.global_transform = Transform3D(model_basis, global_position - up * RADIUS)
+	model.global_transform = Transform3D(model_basis.scaled(Vector3.ONE * MODEL_SCALE), global_position - up * RADIUS)
 	# Blink while invulnerable.
 	if invuln_t > 0.0 and st != St.VICTORY:
 		model.visible = fmod(invuln_t, 0.16) > 0.06

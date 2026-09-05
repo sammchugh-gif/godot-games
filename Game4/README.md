@@ -5,9 +5,9 @@ coastal act, Emerald Shore, built around speed, momentum and traversal.
 Sonic himself, the island, the road, every material, effect and sound are
 generated in code at start-up. There are no imported art assets at all.
 
-Play it at <https://sammchugh-gif.github.io/godot-games/sonic-spin/> once
-the web build has been exported (see **Building** below). Until then, open
-`Game4/project.godot` in Godot 4.7 and press F5.
+Play it at <https://sammchugh-gif.github.io/godot-games/sonic-spin/>. On the
+iPad, open the link in Safari, then Share → Add to Home Screen for a
+fullscreen icon. Or open `Game4/project.godot` in Godot 4.7 and press F5.
 
 ## Controls
 
@@ -89,6 +89,17 @@ one. Results give a rank by time (S under 1:35).
   foam), waterfall, foliage sway that bends away from Sonic, speed lines,
   rail pulse, boost aura, trail.
 - `tools/gen_audio.py` — synthesises every WAV, including the music loop.
+- `tools/dump_frames.gd`, `tools/dump_terrain.gd` — headless inspection of
+  the baked route and the terrain heightfield.
+
+Notes from building it blind and then testing headless: Godot's front faces
+are clockwise, so every generated triangle is emitted flipped; one-sided
+trimesh tops need closed shells (skirts, end caps) and the terrain drops away
+under the road so the sphere can never get between the two; loops and the
+corkscrew are helices, so on steep ground the controller follows the route's
+own forward vector (auto-run) and pulls to the centre line; and the ground
+probe starts well above the sphere centre because at boost speed the body
+sinks half a metre into a loop wall between frames.
 
 Desktop runs Forward+ with SSAO, volumetric fog, glow and soft cascaded
 shadows. Web and mobile use the Compatibility renderer with fewer particles,
@@ -104,6 +115,14 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 
 # Headless smoke test: builds the world and runs Sonic down the hill
 "$GODOT" --headless --path Game4 -- --selftest
+
+# Headless test drive: an automatic driver follows the route for 120 s and
+# logs progress, detaches and stalls (--spawn N starts at checkpoint N)
+"$GODOT" --headless --path Game4 -- --selftest --drive 120 --spawn 3
+
+# Route / terrain inspection
+"$GODOT" --headless --path Game4 --script tools/dump_frames.gd -- 600 640
+"$GODOT" --headless --path Game4 --script tools/dump_terrain.gd -- -1000 -140 -100
 
 # Web build for the site (then copy build/web/* to docs/sonic-spin/)
 "$GODOT" --headless --path Game4 --export-release "Web" build/web/index.html

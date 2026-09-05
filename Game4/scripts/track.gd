@@ -88,17 +88,31 @@ func bake(points: Array) -> void:
 	var n := points.size()
 	var s := 0.0
 	var prev_up := Vector3.UP
+	# Cubic Hermite with Catmull-Rom tangents clamped to the length of the
+	# shorter neighbouring segment: uniform Catmull-Rom overshoots badly
+	# where a 5 m ramp segment meets a 40 m gap marker.
+	var tangents := []
+	for i in n:
+		var pa: Vector3 = points[max(i - 1, 0)]["p"]
+		var pb: Vector3 = points[min(i + 1, n - 1)]["p"]
+		var m := (pb - pa) * 0.5
+		var l_prev: float = (points[i]["p"] as Vector3).distance_to(pa) if i > 0 else 1e9
+		var l_next: float = (points[i]["p"] as Vector3).distance_to(pb) if i < n - 1 else 1e9
+		var cap := minf(l_prev, l_next)
+		if m.length() > cap and cap < 1e8:
+			m = m.normalized() * cap
+		tangents.append(m)
 	for i in n - 1:
-		var p0: Vector3 = points[max(i - 1, 0)]["p"]
 		var p1: Vector3 = points[i]["p"]
 		var p2: Vector3 = points[i + 1]["p"]
-		var p3: Vector3 = points[min(i + 2, n - 1)]["p"]
+		var m1: Vector3 = tangents[i]
+		var m2: Vector3 = tangents[i + 1]
 		var seg_len := p1.distance_to(p2)
 		var steps := maxi(int(ceil(seg_len / STEP)), 1)
 		for k in steps:
 			var u := float(k) / steps
-			var pos := _catmull(p0, p1, p2, p3, u)
-			var tan := _catmull_tan(p0, p1, p2, p3, u)
+			var pos := _hermite(p1, m1, p2, m2, u)
+			var tan := _hermite_tan(p1, m1, p2, m2, u)
 			if tan.length_squared() < 1e-6:
 				tan = (p2 - p1)
 			tan = tan.normalized()
@@ -201,15 +215,15 @@ func _slerp_dir(a: Vector3, b: Vector3, t: float) -> Vector3:
 	return a.rotated(axis2, ang * t)
 
 
-static func _catmull(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
+static func _hermite(p1: Vector3, m1: Vector3, p2: Vector3, m2: Vector3, t: float) -> Vector3:
 	var t2 := t * t
 	var t3 := t2 * t
-	return 0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+	return p1 * (2.0 * t3 - 3.0 * t2 + 1.0) + m1 * (t3 - 2.0 * t2 + t) + p2 * (-2.0 * t3 + 3.0 * t2) + m2 * (t3 - t2)
 
 
-static func _catmull_tan(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
+static func _hermite_tan(p1: Vector3, m1: Vector3, p2: Vector3, m2: Vector3, t: float) -> Vector3:
 	var t2 := t * t
-	return 0.5 * ((-p0 + p2) + 2.0 * (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t + 3.0 * (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t2)
+	return p1 * (6.0 * t2 - 6.0 * t) + m1 * (3.0 * t2 - 4.0 * t + 1.0) + p2 * (-6.0 * t2 + 6.0 * t) + m2 * (3.0 * t2 - 2.0 * t)
 
 
 func frame_at(dist: float) -> Dictionary:
@@ -272,6 +286,71 @@ func dist_of(p: Vector3) -> float:
 
 # --- Geometry ----------------------------------------------------------------
 
+# Is segment (i, i+1) part of the built road?
+func _built(i: int) -> bool:
+	if i < 0 or i + 1 >= frames.size():
+		return false
+	var a: Dictionary = frames[i]
+	var b: Dictionary = frames[i + 1]
+	if a["kind"] == "gap" or b["kind"] == "gap":
+		return false
+	if a["kind"] == "collapse" and b["kind"] == "collapse":
+		return false
+	return true
+
+
+func _collapse_seg(i: int) -> bool:
+	if i < 0 or i + 1 >= frames.size():
+		return false
+	return frames[i]["kind"] == "collapse" and frames[i + 1]["kind"] == "collapse"
+
+
+# The annulus between the tube and the hill shell at a tunnel mouth: a
+# vertical stone face the bore punches through.
+func _mouth_face(hill: MeshLib.Builder, fr: Dictionary, start: bool) -> void:
+	var p: Vector3 = fr["p"]
+	var r: Vector3 = fr["r"]
+	var u: Vector3 = fr["u"]
+	var f: Vector3 = fr["f"]
+	var w: float = fr["w"] * 0.5
+	var rad := w * 1.15
+	var hr := w * 2.4
+	var segs := 12
+	var c := Color(0.85, 0, 0)
+	var n := -f if start else f
+	for k in segs:
+		var a0 := PI * float(k) / segs
+		var a1 := PI * float(k + 1) / segs
+		var i0 := p + r * (cos(a0) * rad) + u * (sin(a0) * rad * 0.9 + 0.5)
+		var i1 := p + r * (cos(a1) * rad) + u * (sin(a1) * rad * 0.9 + 0.5)
+		var o0 := p + r * (cos(a0) * hr) + u * (sin(a0) * hr * 0.85 - 1.0)
+		var o1 := p + r * (cos(a1) * hr) + u * (sin(a1) * hr * 0.85 - 1.0)
+		if start:
+			hill.quad_n(i0, o0, o1, i1, n, n, n, n, Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), c, c, c, c)
+		else:
+			hill.quad_n(i0, i1, o1, o0, n, n, n, n, Vector2(0, 0), Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), c, c, c, c)
+
+
+# A vertical face across the road at a frame, facing backward (start) or
+# forward (end), from the top edge down to the skirt depth.
+func _cap(side: MeshLib.Builder, fr: Dictionary, start: bool) -> void:
+	var p: Vector3 = fr["p"]
+	var r: Vector3 = fr["r"]
+	var u: Vector3 = fr["u"]
+	var f: Vector3 = fr["f"]
+	var half: float = fr["w"] * 0.5
+	var d: float = fr["depth"]
+	var l := p - r * half + u * 0.06
+	var rt := p + r * half + u * 0.06
+	var ld := l - u * d
+	var rd := rt - u * d
+	var c := Color(0.7, 0, 0)
+	if start:
+		# Front faces -f (toward where the road came from).
+		side.quad_n(rt, l, ld, rd, -f, -f, -f, -f, Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), c, c, c, c)
+	else:
+		side.quad_n(l, rt, rd, ld, f, f, f, f, Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), c, c, c, c)
+
 # Builds road meshes + colliders under `parent`. Frames with kind "gap" or
 # "collapse" are skipped (something else fills them).
 func build(parent: Node3D) -> void:
@@ -288,14 +367,22 @@ func _build_chunk(parent: Node3D, i0: int, i1: int) -> void:
 	var top := MeshLib.Builder.new()
 	var side := MeshLib.Builder.new()
 	var tube := MeshLib.Builder.new()
+	var hill := MeshLib.Builder.new()
 	var any_top := false
 	var any_side := false
 	var any_tube := false
+	var any_hill := false
 	for i in range(i0, i1):
 		var a: Dictionary = frames[i]
 		var b: Dictionary = frames[i + 1]
-		if a["kind"] in ["gap", "collapse"] or b["kind"] in ["gap", "collapse"]:
+		if not _built(i):
 			continue
+		# An end cap closes the shell where a run of road stops, so the sphere
+		# can never slip under a one-sided top from the open end. Run starts
+		# get a level terrain apron instead (see Terrain.prepare): a cap
+		# there would be a lip that stops the sphere.
+		if i + 1 >= frames.size() - 1 or not _built(i + 1) and not _collapse_seg(i + 1):
+			_cap(side, b, false)
 		var ap: Vector3 = a["p"]
 		var bp: Vector3 = b["p"]
 		var ar: Vector3 = a["r"]
@@ -362,6 +449,31 @@ func _build_chunk(parent: Node3D, i0: int, i1: int) -> void:
 				tube.quad_n(q00, q10, q11, q01, n00, n10, n11, n01,
 					Vector2(float(k) / tsegs, sa), Vector2(float(k) / tsegs, sb), Vector2(float(k + 1) / tsegs, sb), Vector2(float(k + 1) / tsegs, sa), cc_a, cc_b, cc_b, cc_a)
 				any_tube = true
+			# The hill over the bore: a wide outer arch with outward normals,
+			# grassed by the terrain shader; the heightfield stays below.
+			var hsegs := 12
+			var hr_a := aw * 2.4
+			var hr_b := bw * 2.4
+			var hc := Color(1, 0, 0)
+			for k in hsegs:
+				var a0 := PI * float(k) / hsegs
+				var a1 := PI * float(k + 1) / hsegs
+				var h00 := ap + ar * (cos(a0) * hr_a) + au * (sin(a0) * hr_a * 0.85 - 1.0)
+				var h01 := ap + ar * (cos(a1) * hr_a) + au * (sin(a1) * hr_a * 0.85 - 1.0)
+				var h10 := bp + br * (cos(a0) * hr_b) + bu * (sin(a0) * hr_b * 0.85 - 1.0)
+				var h11 := bp + br * (cos(a1) * hr_b) + bu * (sin(a1) * hr_b * 0.85 - 1.0)
+				var m00 := (ar * cos(a0) + au * sin(a0)).normalized()
+				var m01 := (ar * cos(a1) + au * sin(a1)).normalized()
+				var m10 := (br * cos(a0) + bu * sin(a0)).normalized()
+				var m11 := (br * cos(a1) + bu * sin(a1)).normalized()
+				hill.quad_n(h00, h01, h11, h10, m00, m01, m11, m10,
+					Vector2(float(k) / hsegs, sa), Vector2(float(k + 1) / hsegs, sa), Vector2(float(k + 1) / hsegs, sb), Vector2(float(k) / hsegs, sb), hc, hc, hc, hc)
+				any_hill = true
+			# Stone faces where the bore enters and leaves the hill.
+			if i == 0 or frames[i - 1]["kind"] != "tunnel":
+				_mouth_face(hill, a, true)
+			if i + 2 >= frames.size() or frames[i + 2]["kind"] != "tunnel":
+				_mouth_face(hill, b, false)
 	if any_top:
 		var top_mesh := top.commit_mesh()
 		var mi := MeshLib.mesh_node(top_mesh, Mats.road())
@@ -379,6 +491,15 @@ func _build_chunk(parent: Node3D, i0: int, i1: int) -> void:
 		var col2 := MeshLib.collider(side_mesh, "SkirtCol%d" % i0)
 		col2.collision_layer = 1
 		parent.add_child(col2)
+	if any_hill:
+		var hill_mesh := hill.commit_mesh()
+		var mih := MeshLib.mesh_node(hill_mesh, Mats.terrain())
+		mih.name = "Hill%d" % i0
+		parent.add_child(mih)
+		var colh := MeshLib.collider(hill_mesh, "HillCol%d" % i0)
+		colh.collision_layer = 1
+		colh.set_meta("ground_kind", "grass")
+		parent.add_child(colh)
 	if any_tube:
 		var tube_mesh := tube.commit_mesh()
 		var mi3 := MeshLib.mesh_node(tube_mesh, Mats.checker(Color(0.45, 0.30, 0.18), Color(0.62, 0.45, 0.28), 2.0))

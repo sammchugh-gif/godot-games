@@ -8,8 +8,8 @@ render_mode cull_back, depth_draw_opaque, specular_schlick_ggx;
 uniform sampler2D noise_tex : filter_linear_mipmap, repeat_enable;
 uniform vec3 path_a : source_color = vec3(0.90, 0.74, 0.46);
 uniform vec3 path_b : source_color = vec3(0.78, 0.58, 0.34);
-uniform vec3 grass_a : source_color = vec3(0.24, 0.64, 0.19);
-uniform vec3 grass_b : source_color = vec3(0.44, 0.82, 0.24);
+uniform vec3 grass_a : source_color = vec3(0.17, 0.52, 0.15);
+uniform vec3 grass_b : source_color = vec3(0.36, 0.72, 0.20);
 uniform float verge = 0.16;
 uniform float grass_mix = 1.0;
 

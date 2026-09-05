@@ -95,16 +95,16 @@ func update(dt: float, speed: float, on_rail: bool, boosting: bool, in_air: bool
 	var wind_t := clampf((speed - 18.0) / 45.0, 0.0, 1.0)
 	var wind_db := lerpf(-80.0, -10.0, sqrt(wind_t)) if wind_t > 0.0 else -80.0
 	_wind_v = lerpf(_wind_v, wind_db, 1.0 - exp(-4.0 * dt))
-	_set(_wind, _wind_v, 0.8 + wind_t * 0.6)
+	_set_loop(_wind, _wind_v, 0.8 + wind_t * 0.6)
 	var rail_db := -14.0 if on_rail and speed > 4.0 else -80.0
 	_rail_v = lerpf(_rail_v, rail_db, 1.0 - exp(-10.0 * dt))
-	_set(_rail, _rail_v, 0.8 + clampf(speed / 60.0, 0.0, 1.0) * 0.7)
+	_set_loop(_rail, _rail_v, 0.8 + clampf(speed / 60.0, 0.0, 1.0) * 0.7)
 	var boost_db := -12.0 if boosting else -80.0
 	_boost_v = lerpf(_boost_v, boost_db, 1.0 - exp(-8.0 * dt))
-	_set(_boost, _boost_v, 1.0)
+	_set_loop(_boost, _boost_v, 1.0)
 
 
-func _set(p: AudioStreamPlayer, db: float, pitch: float) -> void:
+func _set_loop(p: AudioStreamPlayer, db: float, pitch: float) -> void:
 	if p.stream == null:
 		return
 	p.volume_db = db
