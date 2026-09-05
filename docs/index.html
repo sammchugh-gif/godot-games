@@ -5,73 +5,147 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Godot Games</title>
+<title>Sophia, Rory and Dylan Games, Inc</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     min-height: 100vh;
-    padding: 3rem 1.25rem 4rem;
+    padding: 2.5rem 1.25rem 4rem;
     background: #0b0d12;
+    background-image: radial-gradient(ellipse at top, #1a2236 0%, #0b0d12 60%);
     color: #e8ecf4;
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     -webkit-text-size-adjust: 100%;
   }
-  main { max-width: 40rem; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .35rem; letter-spacing: -.01em; }
-  .sub { color: #94a2bb; margin: 0 0 2.25rem; font-size: .95rem; }
+  main { max-width: 62rem; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 2.25rem; }
+  h1 {
+    font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+    margin: 0 0 .35rem;
+    letter-spacing: -.01em;
+    line-height: 1.15;
+  }
+  h1 span { color: #ffd166; }
+  .sub { color: #94a2bb; margin: 0; font-size: 1rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: 1.25rem;
+  }
   a.game {
-    display: block;
-    padding: 1.15rem 1.25rem;
-    margin-bottom: .85rem;
+    display: flex;
+    flex-direction: column;
     background: #151a24;
     border: 1px solid #232b3a;
-    border-radius: 12px;
+    border-radius: 16px;
+    overflow: hidden;
     text-decoration: none;
     color: inherit;
-    transition: background .15s, border-color .15s;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    -webkit-tap-highlight-color: transparent;
   }
-  a.game:hover, a.game:active { background: #1b2230; border-color: #33405a; }
-  .name { font-size: 1.12rem; font-weight: 600; margin-bottom: .3rem; }
-  .desc { color: #94a2bb; font-size: .9rem; }
+  a.game:hover, a.game:active {
+    border-color: #4a5a7c;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.45);
+  }
+  .shot {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: #0e1119 center / cover no-repeat;
+  }
+  .shot::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(8,10,16,.85) 0%, rgba(8,10,16,0) 55%);
+  }
+  .shot .name {
+    position: absolute; left: 1rem; right: 1rem; bottom: .8rem;
+    font-size: 1.35rem; font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,.7);
+    z-index: 1;
+  }
+  .shot .play {
+    position: absolute; top: .8rem; right: .8rem; z-index: 1;
+    padding: .3rem .8rem;
+    border-radius: 999px;
+    background: #ffd166; color: #1a1408;
+    font-size: .85rem; font-weight: 700; letter-spacing: .04em;
+  }
+  .desc { padding: .9rem 1.1rem 1.1rem; color: #b3bfd4; font-size: .93rem; }
   .tip {
-    margin-top: 2.25rem; padding-top: 1.25rem;
+    margin-top: 2.5rem; padding-top: 1.25rem;
     border-top: 1px solid #1e2530;
     color: #7d8ba3; font-size: .85rem;
   }
   .tip b { color: #a9b6cc; font-weight: 600; }
+  footer { margin-top: 2rem; text-align: center; color: #5c6a85; font-size: .8rem; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Godot Games</h1>
-  <p class="sub">Four games. Tap one to play in the browser.</p>
+  <header>
+    <h1>Sophia, Rory and Dylan <span>Games, Inc</span></h1>
+    <p class="sub">Six games. Tap one to play in the browser.</p>
+  </header>
 
-  <a class="game" href="sonic-spin/">
-    <div class="name">Sonic Spin</div>
-    <div class="desc">A 3D Sonic vertical slice: one tropical act built on speed and momentum. Loop, corkscrew, rails over the bay, homing chains, a torch-lit ruin, a wall run and a waterfall jump to the beach sprint. Keyboard, gamepad or touch.</div>
-  </a>
+  <div class="grid">
+    <a class="game" href="sonic-spin/">
+      <div class="shot" style="background-image:url('shots/sonic-spin.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Sonic Spin</div>
+      </div>
+      <div class="desc">A 3D Sonic act built on speed: loop, corkscrew, rails over the bay, homing chains, a torch-lit ruin, a wall run and a waterfall jump to the beach sprint. Keyboard, gamepad or touch.</div>
+    </a>
 
-  <a class="game" href="velocity-zero/">
-    <div class="name">Velocity Zero</div>
-    <div class="desc">Anti-gravity racing in the spirit of the original WipEout. Eight ships, three circuits, boost pads, rockets, missiles, mines and shields. Built for the iPad with touch controls.</div>
-  </a>
+    <a class="game" href="paws-of-fury/">
+      <div class="shot" style="background-image:url('shots/paws-of-fury.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Paws of Fury 64</div>
+      </div>
+      <div class="desc">A 3D dog platformer. Ten open worlds, all of them wrong. Three dogs, triple jumps, ground pounds, and seven bones to sniff out in every world.</div>
+    </a>
 
-  <a class="game" href="blockfort/">
-    <div class="name">Blockfort: Boss Siege</div>
-    <div class="desc">Build a fort against the clock, then survive the golem that comes to tear it down. Ten rounds.</div>
-  </a>
+    <a class="game" href="lizard-rocket/">
+      <div class="shot" style="background-image:url('shots/lizard-rocket.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Lizard Rocket</div>
+      </div>
+      <div class="desc">Swipe arrows onto the floor to steer the lizards into the rocket, past the snakes and around the holes. Twelve puzzles and a 90-second Stampede.</div>
+    </a>
 
-  <a class="game" href="star-digger/">
-    <div class="name">Star Digger: Deep Boss</div>
-    <div class="desc">Dig down, collect every star, break the seal. Your stars are your lives against the boss below.</div>
-  </a>
+    <a class="game" href="velocity-zero/">
+      <div class="shot" style="background-image:url('shots/velocity-zero.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Velocity Zero</div>
+      </div>
+      <div class="desc">Anti-gravity racing. Eight ships, three circuits, boost pads, rockets, missiles, mines and shields. Hold the iPad sideways.</div>
+    </a>
+
+    <a class="game" href="blockfort/">
+      <div class="shot" style="background-image:url('shots/blockfort.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Blockfort: Boss Siege</div>
+      </div>
+      <div class="desc">Build a fort against the clock, then survive the golem that comes to tear it down. Ten rounds.</div>
+    </a>
+
+    <a class="game" href="star-digger/">
+      <div class="shot" style="background-image:url('shots/star-digger.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Star Digger: Deep Boss</div>
+      </div>
+      <div class="desc">Dig down, collect every star, break the seal. Your stars are your lives against the boss below.</div>
+    </a>
+  </div>
 
   <p class="tip">
     <b>On an iPad:</b> open a game, then Share &rarr; Add to Home Screen for a fullscreen icon.
-    Touch controls turn themselves on automatically. In Sonic Spin, the left thumb is a floating stick and the right thumb has JUMP, SPIN, BOOST and DRIFT. In Velocity Zero, hold the phone or iPad sideways, drag on the left half of the screen to steer and use the AIRBRAKE and FIRE buttons on the right; in the voxel games, drag the MOVE pad to walk and drag elsewhere to look.
+    Touch controls turn themselves on automatically. In Sonic Spin, the left thumb is a floating stick and the right thumb has JUMP (tap again in the air to home in), SPIN, BOOST and DRIFT. In Paws of Fury, the left thumb is the stick, the right thumb has JUMP, BITE and POUND, and dragging the middle of the screen swings the camera. In Lizard Rocket, swipe across a tile to lay an arrow and tap an arrow to pick it up. In Velocity Zero, hold the phone or iPad sideways, drag on the left half of the screen to steer and use the AIRBRAKE and FIRE buttons on the right; in the voxel games, drag the MOVE pad to walk and drag elsewhere to look.
   </p>
+  <footer>Sophia, Rory and Dylan Games, Inc</footer>
 </main>
 </body>
 </html>
