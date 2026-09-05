@@ -158,7 +158,7 @@ func _draw_debug() -> void:
 		"FPS %d   3D scale %.2f   state %s" % [Engine.get_frames_per_second(), vp.scaling_3d_scale, S.keys()[state]],
 		"window %dx%d px   dpr %.2f   design %s" % [win.x, win.y, DisplayServer.screen_get_scale(), vp.get_visible_rect().size],
 		"touchscreen %s   touch_mode %s   web %s" % [DisplayServer.is_touchscreen_available(), touch_mode, OS.has_feature("web")],
-		"touch downs %d  drags %d  ups %d  last %s %s" % [touch.stat_downs, touch.stat_drags, touch.stat_ups, touch.stat_last_kind, touch.stat_last],
+		"touch downs %d  drags %d  ups %d  js moves %d  last %s %s" % [touch.stat_downs, touch.stat_drags, touch.stat_ups, touch.stat_js_moves, touch.stat_last_kind, touch.stat_last],
 		"steer %.2f  brake %.1f  fire %s" % [touch.steer(), touch.brake(), touch.fire_held()],
 	]
 	if race != null and race.player != null:

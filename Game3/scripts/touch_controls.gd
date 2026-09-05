@@ -38,6 +38,8 @@ var stat_drags := 0
 var stat_ups := 0
 var stat_last := Vector2.ZERO
 var stat_last_kind := ""
+var stat_js_moves := 0
+var _js := false
 
 
 func _ready() -> void:
@@ -52,6 +54,77 @@ func _ready() -> void:
 	_layout()
 	visible = false
 	set_process(false)
+	_install_js_touch()
+
+
+# iPhone Safari sometimes stops delivering touchmove to the engine (it
+# treats the moving finger as a page pan) while taps still arrive. As a
+# second source of truth we track finger positions ourselves in the page
+# with non-passive listeners that also cancel the pan, and poll them every
+# frame for the steering finger. Where the engine's drags work the two agree.
+func _install_js_touch() -> void:
+	if not OS.has_feature("web"):
+		return
+	JavaScriptBridge.eval("""
+(function () {
+	if (window.__vz) { return; }
+	var t = {};
+	window.__vz = { t: t, moves: 0 };
+	function canvasPos(k) {
+		var c = document.getElementById('canvas') || document.querySelector('canvas');
+		if (!c) { return null; }
+		var r = c.getBoundingClientRect();
+		return [(k.clientX - r.left) * c.width / r.width, (k.clientY - r.top) * c.height / r.height];
+	}
+	function upd(e) {
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			var k = e.changedTouches[i];
+			var p = canvasPos(k);
+			if (p) { t[k.identifier] = p; }
+		}
+	}
+	function rem(e) {
+		for (var i = 0; i < e.changedTouches.length; i++) { delete t[e.changedTouches[i].identifier]; }
+	}
+	window.addEventListener('touchstart', upd, { passive: false, capture: true });
+	window.addEventListener('touchmove', function (e) {
+		upd(e);
+		window.__vz.moves++;
+		if (e.cancelable) { e.preventDefault(); }
+	}, { passive: false, capture: true });
+	window.addEventListener('touchend', rem, { capture: true });
+	window.addEventListener('touchcancel', rem, { capture: true });
+})();
+""", true)
+	_js = true
+
+
+func _poll_js_touch() -> void:
+	if not _js or _steer_finger < 0:
+		return
+	var raw = JavaScriptBridge.eval("JSON.stringify([window.__vz.moves, window.__vz.t])", true)
+	if raw == null:
+		return
+	var data = JSON.parse_string(str(raw))
+	if not (data is Array) or data.size() != 2:
+		return
+	stat_js_moves = int(data[0])
+	var touches: Dictionary = data[1]
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0:
+		return
+	var to_design := _size / win
+	for key in touches.keys():
+		# The engine reports the browser identifier wrapped to a signed 32-bit int.
+		var id := int(str(key).to_float())
+		if id > 2147483647:
+			id -= 4294967296
+		if id == _steer_finger:
+			var p: Array = touches[key]
+			var pos := Vector2(float(p[0]), float(p[1])) * to_design
+			if pos.distance_to(_steer_pos) > 0.5:
+				_on_drag(_steer_finger, pos)
+			return
 
 
 func enable(on: bool) -> void:
@@ -169,6 +242,7 @@ func _forget(finger: int) -> void:
 
 
 func _process(delta: float) -> void:
+	_poll_js_touch()
 	_fire_glow = maxf(_fire_glow - delta * 3.0, 0.0)
 	_brake_glow = maxf(_brake_glow - delta * 3.0, 0.0)
 	_hint_t = maxf(_hint_t - delta, 0.0)
