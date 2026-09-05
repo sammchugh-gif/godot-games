@@ -32,11 +32,6 @@ var _fire_glow := 0.0
 var _brake_glow := 0.0
 var _hint_t := 6.0
 var _font: Font
-var _left_rect := Rect2()
-var _right_rect := Rect2()
-var _left_finger := -1
-var _right_finger := -1
-var _digital := 0.0
 # Diagnostics (shown by the ?debug overlay).
 var stat_downs := 0
 var stat_drags := 0
@@ -73,9 +68,6 @@ func _release_all() -> void:
 	_steer_finger = -1
 	_fire_finger = -1
 	_brake_finger = -1
-	_left_finger = -1
-	_right_finger = -1
-	_digital = 0.0
 
 
 func _layout() -> void:
@@ -85,18 +77,15 @@ func _layout() -> void:
 	var bottom := 52.0
 	_fire_rect = Rect2(w - 2.0 * FIRE_R - 34.0, h - 2.0 * FIRE_R - bottom, 2.0 * FIRE_R, 2.0 * FIRE_R)
 	_brake_rect = Rect2(w - 2.0 * FIRE_R - 34.0 - 24.0 - 200.0, h - 130.0 - bottom, 200.0, 130.0)
-	_left_rect = Rect2(34.0, h - 130.0 - bottom, 150.0, 130.0)
-	_right_rect = Rect2(34.0 + 150.0 + 18.0, h - 130.0 - bottom, 150.0, 130.0)
 	_pause_rect = Rect2(18.0, 18.0, 62.0, 62.0)
 	if _canvas != null:
 		_canvas.queue_redraw()
 
 
 func steer() -> float:
-	var v := 0.0
-	if _steer_finger >= 0:
-		v = clampf((_steer_pos.x - _steer_origin.x) / STEER_RANGE, -1.0, 1.0)
-	return clampf(v + _digital, -1.0, 1.0)
+	if _steer_finger < 0:
+		return 0.0
+	return clampf((_steer_pos.x - _steer_origin.x) / STEER_RANGE, -1.0, 1.0)
 
 
 func brake() -> float:
@@ -138,17 +127,6 @@ func _on_down(finger: int, pos: Vector2) -> void:
 		_brake_glow = 1.0
 		_canvas.queue_redraw()
 		return
-	# Digital steer buttons: work with plain taps and holds, no dragging needed.
-	if _left_rect.grow(8.0).has_point(pos):
-		_left_finger = finger
-		_hint_t = 0.0
-		_canvas.queue_redraw()
-		return
-	if _right_rect.grow(8.0).has_point(pos):
-		_right_finger = finger
-		_hint_t = 0.0
-		_canvas.queue_redraw()
-		return
 	# Floating slider. The newest touch always takes over, so a finger
 	# resting on the screen edge can never block steering.
 	if pos.x < _size.x * 0.5 or pos.y < _brake_rect.position.y - 20.0:
@@ -163,13 +141,6 @@ func _on_drag(finger: int, pos: Vector2) -> void:
 	stat_drags += 1
 	stat_last = pos
 	stat_last_kind = "drag"
-	# A thumb that slides off a steer button onto the other one swaps sides.
-	if finger == _left_finger and _right_rect.has_point(pos):
-		_left_finger = -1
-		_right_finger = finger
-	elif finger == _right_finger and _left_rect.has_point(pos):
-		_right_finger = -1
-		_left_finger = finger
 	if finger == _steer_finger:
 		_steer_pos = pos
 		# Let the origin follow if the thumb runs off the range, so the
@@ -195,16 +166,9 @@ func _forget(finger: int) -> void:
 		_fire_finger = -1
 	if finger == _brake_finger:
 		_brake_finger = -1
-	if finger == _left_finger:
-		_left_finger = -1
-	if finger == _right_finger:
-		_right_finger = -1
 
 
 func _process(delta: float) -> void:
-	# Held steer buttons ramp up over ~0.2 s so taps give gentle corrections.
-	var target := (-1.0 if _left_finger >= 0 else 0.0) + (1.0 if _right_finger >= 0 else 0.0)
-	_digital = move_toward(_digital, target, delta * (5.0 if target != 0.0 else 12.0))
 	_fire_glow = maxf(_fire_glow - delta * 3.0, 0.0)
 	_brake_glow = maxf(_brake_glow - delta * 3.0, 0.0)
 	_hint_t = maxf(_hint_t - delta, 0.0)
@@ -227,20 +191,11 @@ func _draw_controls() -> void:
 		c.draw_line(Vector2(o.x, o.y - 18.0), Vector2(o.x, o.y + 18.0), Color(1, 1, 1, 0.6), 2.0)
 	elif _hint_t > 0.0:
 		var a := clampf(_hint_t, 0.0, 1.0) * 0.8
-		var p := Vector2(_size.x * 0.22, _size.y * 0.5)
+		var p := Vector2(_size.x * 0.22, _size.y * 0.62)
 		c.draw_circle(p, 34.0, Color(cyan, 0.15 * a))
 		c.draw_circle(p, 34.0, Color(cyan, 0.6 * a), false, 3.0)
 		_label(c, "<  STEER  >", p + Vector2(0, 66), 22, Color(1, 1, 1, a), true)
-		_label(c, "drag here, or hold the arrow buttons", p + Vector2(0, 92), 16, Color(1, 1, 1, a * 0.8), true)
-	# Steer buttons.
-	for side in [-1, 1]:
-		var r := _left_rect if side < 0 else _right_rect
-		var down := (_left_finger if side < 0 else _right_finger) >= 0
-		c.draw_rect(r, Color(cyan, 0.4 if down else 0.14))
-		c.draw_rect(r, Color(cyan, 0.95 if down else 0.7), false, 3.0)
-		var cc := r.get_center()
-		var tri := PackedVector2Array([cc + Vector2(26 * side, 0), cc + Vector2(-16 * side, -30), cc + Vector2(-16 * side, 30)])
-		c.draw_colored_polygon(tri, Color(1, 1, 1, 0.95 if down else 0.8))
+		_label(c, "touch and drag anywhere here", p + Vector2(0, 92), 16, Color(1, 1, 1, a * 0.8), true)
 	# Airbrake.
 	var br := _brake_rect
 	var held := _brake_finger >= 0
