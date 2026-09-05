@@ -1,5 +1,5 @@
 # Debug: bake the route and print the frames between two distances.
-#   godot --headless --path Game4 --script tools/dump_frames.gd -- 1070 1110
+#   godot --headless --path Game5 --script tools/dump_frames.gd -- 1070 1110
 extends SceneTree
 
 func _init() -> void:

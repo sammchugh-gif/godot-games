@@ -1,5 +1,5 @@
 # Debug: bake the level's terrain and print a height profile across the road
-# at a given z.   godot --headless --path Game4 --script tools/dump_terrain.gd -- -1000 -140 -100
+# at a given z.   godot --headless --path Game5 --script tools/dump_terrain.gd -- -1000 -140 -100
 extends SceneTree
 
 func _init() -> void:

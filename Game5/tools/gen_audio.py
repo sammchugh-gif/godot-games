@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Synthesises every sound in assets/audio with nothing but the Python
-standard library: 22.05 kHz 16-bit mono WAVs. Run from the Game4 folder:
+standard library: 22.05 kHz 16-bit mono WAVs. Run from the Game5 folder:
 
     python3 tools/gen_audio.py
 

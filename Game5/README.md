@@ -7,7 +7,7 @@ generated in code at start-up. There are no imported art assets at all.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/sonic-spin/>. On the
 iPad, open the link in Safari, then Share → Add to Home Screen for a
-fullscreen icon. Or open `Game4/project.godot` in Godot 4.7 and press F5.
+fullscreen icon. Or open `Game5/project.godot` in Godot 4.7 and press F5.
 
 ## Controls
 
@@ -111,24 +111,24 @@ coarser terrain and a lower 3D scale (`scripts/quality.gd`).
 GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 
 # Play
-"$GODOT" --path Game4
+"$GODOT" --path Game5
 
 # Headless smoke test: builds the world and runs Sonic down the hill
-"$GODOT" --headless --path Game4 -- --selftest
+"$GODOT" --headless --path Game5 -- --selftest
 
 # Headless test drive: an automatic driver follows the route for 120 s and
 # logs progress, detaches and stalls (--spawn N starts at checkpoint N)
-"$GODOT" --headless --path Game4 -- --selftest --drive 120 --spawn 3
+"$GODOT" --headless --path Game5 -- --selftest --drive 120 --spawn 3
 
 # Route / terrain inspection
-"$GODOT" --headless --path Game4 --script tools/dump_frames.gd -- 600 640
-"$GODOT" --headless --path Game4 --script tools/dump_terrain.gd -- -1000 -140 -100
+"$GODOT" --headless --path Game5 --script tools/dump_frames.gd -- 600 640
+"$GODOT" --headless --path Game5 --script tools/dump_terrain.gd -- -1000 -140 -100
 
 # Web build for the site (then copy build/web/* to docs/sonic-spin/)
-"$GODOT" --headless --path Game4 --export-release "Web" build/web/index.html
+"$GODOT" --headless --path Game5 --export-release "Web" build/web/index.html
 
 # Regenerate the sounds
-python3 Game4/tools/gen_audio.py
+python3 Game5/tools/gen_audio.py
 ```
 
 The first run builds the island, which takes a few seconds; a "BUILDING

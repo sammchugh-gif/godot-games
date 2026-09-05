@@ -1,7 +1,7 @@
 # Root node and state machine: loading, the title (Sonic idling on the
 # cliff while the camera orbits), the run with HUD + touch controls, pause,
 # and results. Also the headless self-test:
-#   godot --headless --path Game4 -- --selftest
+#   godot --headless --path Game5 -- --selftest
 extends Node
 
 enum S { LOADING, TITLE, PLAY, PAUSE, RESULTS }
@@ -327,7 +327,7 @@ func _dist_near(p: Vector3, s_center: float, window: float) -> float:
 
 # Diagnostic driver: steers along the route, boosts every few seconds and
 # logs where Sonic is, so the level can be tuned without a display.
-#   godot --headless --path Game4 -- --selftest --drive 120 [--spawn N] [--offset X] [--noboost]
+#   godot --headless --path Game5 -- --selftest --drive 120 [--spawn N] [--offset X] [--noboost]
 func _drive(secs: float) -> void:
 	state = S.PLAY
 	var args := OS.get_cmdline_user_args()
