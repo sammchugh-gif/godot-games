@@ -1,0 +1,7 @@
+# macOS / Windows cruft
+.DS_Store
+Thumbs.db
+
+# Godot import cache and export output live under each project; see
+# Game1/.gitignore and Game2/.gitignore. The copies under docs/ are the
+# published GitHub Pages build and ARE tracked on purpose.
