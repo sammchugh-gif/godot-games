@@ -13,8 +13,10 @@ fullscreen icon. Landscape only.
 **Touch (iPad)**
 
 - Throttle is automatic.
-- **Steer**: touch anywhere on the left half of the screen and drag left or
-  right. The slider floats to wherever your thumb lands.
+- **Steer**: hold the ◀ ▶ buttons bottom-left, or touch anywhere on the left
+  half of the screen and drag left or right (the slider floats to wherever
+  your thumb lands).
+- Hold the device sideways; in portrait the game shows a rotate prompt.
 - **AIRBRAKE** (pink button): hold through hairpins to turn much tighter. You
   lose a little speed.
 - **FIRE** (round button): fires the weapon you are carrying.
@@ -92,7 +94,19 @@ build locally it has to be served over http, e.g.
 `cd Game3/build/web && python3 -m http.server 8060`, then open
 <http://localhost:8060>.
 
+Append `?debug` to the URL (for example
+`https://sammchugh-gif.github.io/godot-games/velocity-zero/?debug`) to show a
+diagnostics overlay: frame rate, render scale, canvas size and pixel ratio,
+and a live count of touch presses / drags with the current steer value. A
+screenshot of that overlay is enough to diagnose input or performance
+problems on a device.
+
+On touch devices the render scale adapts: it starts at 0.66 (0.55 on phone-
+density screens) and steps down when the frame rate falls below 40, back up
+when it is comfortably above 57.
+
 The web export uses the Compatibility renderer without threads, so it runs on
 GitHub Pages without cross-origin isolation headers and on iPad Safari. On
 touch devices the 3D view renders at two thirds of the canvas resolution to
-keep the frame rate up on retina screens (`Quality.lightweight()`).
+keep the frame rate up on retina screens (`Quality.lightweight()`), and the
+frame-rate governor above adjusts from there.
