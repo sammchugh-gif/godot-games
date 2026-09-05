@@ -27,6 +27,15 @@ var _shots_mode := false
 var _shots_dir := ""
 var _shots_t := 0.0
 var _shots_n := 0
+var _debug := false
+var _debug_layer: CanvasLayer
+var _debug_canvas: Control
+var _rotate_layer: CanvasLayer
+var _portrait := false
+var _fps_acc := 0.0
+var _fps_n := 0
+var _fps_t := 0.0
+var _scale_base := 1.0
 
 
 func _ready() -> void:
@@ -39,7 +48,12 @@ func _ready() -> void:
 	touch_mode = DisplayServer.is_touchscreen_available() or OS.has_feature("web") or OS.has_feature("mobile")
 	if "--desktop" in args:
 		touch_mode = false
+	if "--touch" in args:
+		touch_mode = true
+	# The root keeps processing while the tree is paused so the pause menu,
+	# touch layer and rotate prompt stay alive; races are explicitly pausable.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_debug = "--debug" in args or _url_has("debug")
 	_apply_quality()
 	_load_settings()
 	sfx = Sfx.new()
@@ -65,6 +79,7 @@ func _ready() -> void:
 		music_on = on
 		sfx.set_music_enabled(on)
 		_save_settings())
+	_build_overlays()
 	_start_attract()
 	menu.show_title()
 	sfx.music("music_menu")
@@ -82,14 +97,107 @@ func _ready() -> void:
 func _apply_quality() -> void:
 	var vp := get_viewport()
 	if Quality.lightweight():
-		# iPad retina canvases are huge; render 3D at a fraction and let the
+		# Retina canvases are huge; render 3D at a fraction and let the
 		# compositor scale. MSAA stays on because edges matter at speed.
+		# Phones (3x density, 3M+ pixels) start lower; the frame-rate
+		# governor in _process adjusts from there.
+		var px := vp.get_visible_rect().size.x * vp.get_visible_rect().size.y
+		var win := DisplayServer.window_get_size()
+		_scale_base = 0.66 if win.x * win.y < 2600000 else 0.55
 		vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
-		vp.scaling_3d_scale = 0.66
+		vp.scaling_3d_scale = _scale_base
 		vp.msaa_3d = Viewport.MSAA_2X
 	else:
 		vp.msaa_3d = Viewport.MSAA_4X
 	Engine.max_fps = 60
+
+
+func _url_has(key: String) -> bool:
+	if not OS.has_feature("web"):
+		return false
+	var q = JavaScriptBridge.eval("String(window.location.search) + String(window.location.hash)", true)
+	print("velocity-zero url flags: ", q)
+	return q != null and str(q).find(key) >= 0
+
+
+func _build_overlays() -> void:
+	_rotate_layer = CanvasLayer.new()
+	_rotate_layer.layer = 25
+	_rotate_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.02, 0.03, 0.06, 0.92)
+	_rotate_layer.add_child(bg)
+	var l := Label.new()
+	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+	l.text = "TURN YOUR DEVICE\nSIDEWAYS\n\nVelocity Zero is a\nlandscape game"
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 64)
+	l.add_theme_color_override("font_color", Color(0.0, 0.95, 1.0))
+	_rotate_layer.add_child(l)
+	_rotate_layer.visible = false
+	add_child(_rotate_layer)
+	if _debug:
+		_debug_layer = CanvasLayer.new()
+		_debug_layer.layer = 30
+		_debug_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		_debug_canvas = Control.new()
+		_debug_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_debug_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_debug_canvas.draw.connect(_draw_debug)
+		_debug_layer.add_child(_debug_canvas)
+		add_child(_debug_layer)
+
+
+func _draw_debug() -> void:
+	var f := ThemeDB.fallback_font
+	var vp := get_viewport()
+	var win := DisplayServer.window_get_size()
+	var lines := [
+		"FPS %d   3D scale %.2f   state %s" % [Engine.get_frames_per_second(), vp.scaling_3d_scale, S.keys()[state]],
+		"window %dx%d px   dpr %.2f   design %s" % [win.x, win.y, DisplayServer.screen_get_scale(), vp.get_visible_rect().size],
+		"touchscreen %s   touch_mode %s   web %s" % [DisplayServer.is_touchscreen_available(), touch_mode, OS.has_feature("web")],
+		"touch downs %d  drags %d  ups %d  last %s %s" % [touch.stat_downs, touch.stat_drags, touch.stat_ups, touch.stat_last_kind, touch.stat_last],
+		"steer %.2f  brake %.1f  fire %s" % [touch.steer(), touch.brake(), touch.fire_held()],
+	]
+	if race != null and race.player != null:
+		lines.append("ship s %.0f x %.1f v %.1f yaw %.2f  in_steer %.2f" % [race.player.s, race.player.x, race.player.v, race.player.yaw, race.player.in_steer])
+	var y := 140.0
+	for ln in lines:
+		_debug_canvas.draw_string_outline(f, Vector2(24, y), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, 4, Color(0, 0, 0, 0.9))
+		_debug_canvas.draw_string(f, Vector2(24, y), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(1, 1, 0.3))
+		y += 26.0
+
+
+func _update_orientation() -> void:
+	var sz := get_viewport().get_visible_rect().size
+	var portrait := sz.y > sz.x * 1.05 and touch_mode
+	if portrait == _portrait:
+		return
+	_portrait = portrait
+	_rotate_layer.visible = portrait
+	if state == S.RACE:
+		get_tree().paused = portrait
+		if not portrait:
+			touch.enable(touch_mode)
+
+
+func _govern_resolution(delta: float) -> void:
+	if not Quality.lightweight() or state != S.RACE:
+		return
+	_fps_t += delta
+	_fps_n += 1
+	if _fps_t < 2.0:
+		return
+	var fps := _fps_n / _fps_t
+	_fps_t = 0.0
+	_fps_n = 0
+	var vp := get_viewport()
+	if fps < 40.0 and vp.scaling_3d_scale > 0.42:
+		vp.scaling_3d_scale = maxf(vp.scaling_3d_scale - 0.08, 0.4)
+	elif fps > 57.0 and vp.scaling_3d_scale < _scale_base:
+		vp.scaling_3d_scale = minf(vp.scaling_3d_scale + 0.04, _scale_base)
 
 
 func _load_settings() -> void:
@@ -229,13 +337,17 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if _shots_mode:
 		_shots_step(delta)
+	_update_orientation()
+	_govern_resolution(delta)
+	if _debug_canvas != null:
+		_debug_canvas.queue_redraw()
 	if _pending_race:
 		_pending_frames -= 1
 		if _pending_frames <= 0:
 			_pending_race = false
 			_build_race()
 		return
-	if state == S.RACE and race != null:
+	if state == S.RACE and race != null and not get_tree().paused:
 		var steer := Input.get_axis("steer_left", "steer_right")
 		var brake := 1.0 if Input.is_action_pressed("airbrake") else 0.0
 		var thrust := 1.0
