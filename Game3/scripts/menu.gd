@@ -267,7 +267,7 @@ func show_help() -> void:
 	panel.add_child(v)
 	var lines := [
 		"Your ship hovers and accelerates by itself. Eight ships, three laps.",
-		"STEER: hold the < > buttons bottom-left, or touch the left half of the screen and drag.",
+		"STEER: touch the left half of the screen and drag left or right.",
 		"AIRBRAKE: hold the pink button to turn much tighter (you lose a little speed).",
 		"FIRE: the round button fires whatever weapon you are carrying.",
 		"Fly over glowing ARROWS for a speed boost. Cross a pink strip to pick up a weapon:",
