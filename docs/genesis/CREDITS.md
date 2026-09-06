@@ -3,8 +3,8 @@
 This page runs a Sega Mega Drive / Genesis emulator in the browser and ships a
 shelf of homebrew games that their authors released for free. Nothing here is a
 commercial Sega, Nintendo or third-party cartridge. If you own a Genesis game
-you can also load your own ROM file from the shelf; it stays in your browser and
-is never uploaded anywhere.
+you can add its ROM file under "My cartridges"; it is stored in the browser's
+own database on that device and is never uploaded or published anywhere.
 
 ## Emulator
 
@@ -50,4 +50,4 @@ issue on this repository and it will be done.
 - Fan remakes of commercial games (Rick Dangerous, Barbarian, IK+, Fix-It Felix
   Jr., Bare Knuckle Princess and the like), and paid games or their demos
   (Papi Commando, Bomb on Basic City, T-Gun II and others).
-- Commercial Sega cartridges. Use "Load your own ROM" for games you own.
+- Commercial Sega cartridges. Use "Add a cartridge" for games you own; they stay on your device.
