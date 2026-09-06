@@ -293,3 +293,157 @@ class Stilt extends Capturable:
 		head.position.y = 1.5 + leg
 		var wob := sin(anim_t * 3.0) * 0.03
 		head.rotation.z = wob
+
+
+# Cabbie the taxi: fast, drifts round corners, honks. Uncaptured it patrols
+# a street and knocks the kid over.
+class Taxi extends Capturable:
+	var patrol_a := Vector3.ZERO
+	var patrol_b := Vector3.ZERO
+	var speed := 0.0
+	var _to_b := true
+	var _wheel := 0.0
+	var _honk := 0.0
+	var _tilt := 0.0
+
+	func _ready() -> void:
+		kind = "taxi"
+		focus_height = 1.3
+		cam_distance = 10.5
+		capture_radius = 2.4
+		add_capsule(1.05, 2.3, 1.05)
+		floor_max_angle = deg_to_rad(50.0)
+		model = Models.taxi()
+		add_child(model)
+
+	func release_point() -> Vector3:
+		var right := Vector3(cos(facing), 0, -sin(facing))
+		return global_position + right * 2.4 + Vector3(0, 0.6, 0)
+
+	func on_capture() -> void:
+		Sfx.play("boing", -4.0)
+
+	func _forward() -> Vector3:
+		return Vector3(-sin(facing), 0, -cos(facing))
+
+	func ai(dt: float) -> void:
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		var target := patrol_b if _to_b else patrol_a
+		var d := target - global_position
+		d.y = 0.0
+		if d.length() < 3.0:
+			_to_b = not _to_b
+		else:
+			face(d, dt, 3.0)
+		speed = move_toward(speed, 7.0, 6.0 * dt)
+		var f := _forward()
+		velocity.x = f.x * speed
+		velocity.z = f.z * speed
+		move_and_slide()
+		if is_on_wall():
+			_to_b = not _to_b
+		_wheel += speed * dt
+		if player and not player.capture and not player.dead:
+			var to_p := player.global_position - global_position
+			to_p.y = 0.0
+			if to_p.length() < 2.4 and absf(player.global_position.y - global_position.y) < 2.0:
+				player.damage(global_position)
+
+	func drive(dt: float) -> void:
+		var inp := player.move_input()
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		var f := _forward()
+		var want := inp.length()
+		if want > 0.1:
+			var goal := atan2(-inp.x, -inp.z)
+			var diff := wrapf(goal - facing, -PI, PI)
+			var rate := 1.2 + 2.2 * clampf(speed / 18.0, 0.0, 1.0)
+			facing += clampf(diff, -1.0, 1.0) * rate * dt
+			_tilt = lerpf(_tilt, -clampf(diff, -1.0, 1.0) * 0.12 * clampf(speed / 18.0, 0.0, 1.0), dt * 6.0)
+			# Only drive forward when the stick points roughly the way we face.
+			var ahead := inp.normalized().dot(f)
+			speed = move_toward(speed, 18.0 * want * maxf(ahead, 0.2), 13.0 * dt)
+		else:
+			speed = move_toward(speed, 0.0, 18.0 * dt)
+			_tilt = lerpf(_tilt, 0.0, dt * 6.0)
+		f = _forward()
+		velocity.x = f.x * speed
+		velocity.z = f.z * speed
+		_honk = maxf(_honk - dt, 0.0)
+		if player.jump_pressed() and _honk <= 0.0:
+			_honk = 0.5
+			Sfx.play("honk")
+			if is_on_floor():
+				velocity.y = 6.5
+		move_and_slide()
+		if is_on_wall() and speed > 8.0:
+			speed *= 0.4
+			Sfx.play("land", -4.0)
+			if player.cam:
+				player.cam.shake = 0.4
+		_wheel += speed * dt
+		if speed > 5.0 and level and level.has_method("taxi_bump"):
+			level.taxi_bump(global_position + f * 2.4 + Vector3(0, 0.6, 0), 1.9)
+
+	func animate(_dt: float) -> void:
+		var body: Node3D = model.get_node("body")
+		body.rotation.z = _tilt
+		body.position.y = 0.45 + (0.12 if _honk > 0.35 else 0.0)
+		for n in ["wheelFL", "wheelFR", "wheelBL", "wheelBR"]:
+			(model.get_node(n) as Node3D).rotation.x = -_wheel / 0.42
+
+
+# Sherman the tank: slow, and JUMP fires a shell that breaks metal.
+class Tank extends Capturable:
+	var _cool := 0.0
+	var _recoil := 0.0
+	var _scan := 0.0
+
+	func _ready() -> void:
+		kind = "tank"
+		focus_height = 1.8
+		cam_distance = 9.5
+		capture_radius = 2.4
+		add_capsule(1.3, 1.5, 1.1)
+		model = Models.tank()
+		add_child(model)
+
+	func release_point() -> Vector3:
+		return global_position + Vector3(-sin(facing), 0, -cos(facing)) * -2.8 + Vector3(0, 0.8, 0)
+
+	func ai(dt: float) -> void:
+		_scan += dt
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+
+	func drive(dt: float) -> void:
+		var inp := player.move_input()
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		velocity.x = move_toward(velocity.x, inp.x * 4.5, 10.0 * dt)
+		velocity.z = move_toward(velocity.z, inp.z * 4.5, 10.0 * dt)
+		face(inp, dt, 2.5)
+		_cool = maxf(_cool - dt, 0.0)
+		_recoil = maxf(_recoil - dt * 3.0, 0.0)
+		if player.jump_pressed() and _cool <= 0.0:
+			_cool = 0.7
+			_recoil = 1.0
+			var f := Vector3(-sin(facing), 0, -cos(facing))
+			if level and level.has_method("tank_fire"):
+				level.tank_fire(global_position + Vector3(0, 1.85, 0) + f * 3.2, f + Vector3(0, -0.05, 0))
+			if player.cam:
+				player.cam.shake = 0.35
+		move_and_slide()
+
+	func animate(_dt: float) -> void:
+		var turret: Node3D = model.get_node("body/turret")
+		if captured:
+			turret.rotation.y = 0.0
+			turret.position.z = 0.2 + _recoil * 0.35
+		else:
+			turret.rotation.y = sin(_scan * 0.7) * 0.6

@@ -1,12 +1,13 @@
 # Root node and state machine: loading, title, play, pause, shop, panels.
-# Also owns the save file and the headless test hooks:
-#   godot --headless --path Game6 -- --selftest
-#   xvfb-run godot --path Game6 -- --shots /tmp/shots
+# Also owns the save file, the kingdom choice and the headless test hooks:
+#   godot --headless --path Game6 -- --selftest [--kingdom city]
+#   xvfb-run godot --path Game6 -- --shots /tmp/shots [--kingdom city]
 extends Node
 
 enum S { LOADING, TITLE, PLAY, PAUSE, PANEL, DEAD }
 
-const SAVE_PATH := "user://hattrick.cfg"
+const SAVE_PATH := "user://dylans_odyssey.cfg"
+const KINGDOMS := ["ridge", "city"]
 const SHOP_ITEMS := [
 	{"id": "moon", "label": "Power Moon", "price": 100},
 	{"id": "cap:blue", "label": "Blue Cap", "price": 30},
@@ -43,6 +44,7 @@ var _selftest := false
 var _shots := ""
 var _mouse_down := false
 var _shop_open := false
+var _kingdom := "ridge"
 
 
 func _ready() -> void:
@@ -61,6 +63,16 @@ func _ready() -> void:
 	var si := args.find("--shots")
 	if si >= 0 and si + 1 < args.size():
 		_shots = args[si + 1]
+	if _selftest or _shots != "":
+		var da := DirAccess.open("user://")
+		if da and da.file_exists("dylans_odyssey.cfg"):
+			da.remove("dylans_odyssey.cfg")
+	_kingdom = _saved_kingdom()
+	var ki := args.find("--kingdom")
+	if ki >= 0 and ki + 1 < args.size() and args[ki + 1] in KINGDOMS:
+		_kingdom = args[ki + 1]
+	level = CityLevel.new() if _kingdom == "city" else RidgeLevel.new()
+	level.name = "Level"
 	_apply_quality()
 	sfx = Sfx.new()
 	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -79,10 +91,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	_build_world()
-	if _selftest or _shots != "":
-		var da := DirAccess.open("user://")
-		if da and da.file_exists("hattrick.cfg"):
-			da.remove("hattrick.cfg")
 	_load()
 	_show_loading(false)
 	if _selftest:
@@ -146,7 +154,7 @@ func _show_loading(on: bool) -> void:
 		bg.color = Color(0.18, 0.45, 0.8)
 		layer.add_child(bg)
 		_loading_label = Label.new()
-		_loading_label.text = "BUILDING DINO RIDGE..."
+		_loading_label.text = level.loading_text
 		var ls := LabelSettings.new()
 		ls.font = ThemeDB.fallback_font
 		ls.font_size = 34
@@ -172,8 +180,6 @@ func _build_world() -> void:
 	player.hat = hat
 	cam = CameraRig.new()
 	cam.name = "Camera"
-	level = Level.new()
-	level.name = "Level"
 	add_child(level)
 	level.build(player, cam, hat)
 	player.level = level
@@ -193,7 +199,8 @@ func _build_world() -> void:
 	player.hearts_changed.connect(func(n): hud.set_hearts(n))
 	player.captured_changed.connect(_on_captured)
 	hud.set_moons(0, level.total_moons())
-	print("world built in %d ms" % (Time.get_ticks_msec() - t0))
+	hud.set_kingdom(level.kingdom_index, level.kingdom_title, 0)
+	print("world built in %d ms (%s)" % [Time.get_ticks_msec() - t0, level.kingdom_id])
 
 
 # ---------------------------------------------------------------- states --
@@ -205,6 +212,7 @@ func _enter_title() -> void:
 	touch.enable(false)
 	_title_yaw = cam.yaw
 	hud.set_moons(level.moon_count(), level.total_moons())
+	hud.set_kingdom(level.kingdom_index, level.kingdom_title, _saved_total_moons())
 	hud.set_counts(level.coins, level.purple)
 
 
@@ -216,7 +224,7 @@ func _start_play() -> void:
 	cam.manual_t = 0.0
 	Sfx.music(true)
 	if level.moon_count() == 0:
-		hud.toast("Find Power Moons, %s! The balloon needs %d of them." % [Player.HERO_NAME, Level.NEEDED], 5.0)
+		hud.toast("Find Power Moons, %s! The balloon needs %d of them." % [Player.HERO_NAME, level.needed], 5.0)
 
 
 func _toggle_pause() -> void:
@@ -246,8 +254,8 @@ func _on_ui(action: String, _arg: String) -> void:
 			_resume()
 		"moons":
 			var list := []
-			for id in Level.MOON_NAMES:
-				list.append({"name": Level.MOON_NAMES[id] + ("  (x3)" if id in Level.MULTI else ""), "got": level.moons_got.has(id)})
+			for id in level.moon_names:
+				list.append({"name": level.moon_names[id] + ("  (x3)" if id in level.multi else ""), "got": level.moons_got.has(id)})
 			hud.show_panel("moons", {"count": level.moon_count(), "total": level.total_moons(), "list": list})
 		"mute":
 			muted = Sfx.toggle_mute()
@@ -255,6 +263,8 @@ func _on_ui(action: String, _arg: String) -> void:
 			_save()
 		"reset":
 			_reset_save()
+		"fly":
+			_fly()
 		_:
 			if action.begins_with("buy:"):
 				_buy(action.substr(4))
@@ -341,7 +351,7 @@ func _on_moon(_id: String, name: String, count: int, multi: bool) -> void:
 	player.frozen = true
 	_celebrate = 2.4
 	_save()
-	if count >= Level.NEEDED and not level.cleared:
+	if count >= level.needed and not level.cleared:
 		hud.toast("That's enough moons to power the balloon!", 5.0)
 
 
@@ -355,6 +365,10 @@ func _on_captured(kind: String) -> void:
 			hud.toast("Rocket! Steer with the stick, push forward to climb. HAT to bail out.", 5.0)
 		"stilt":
 			hud.toast("Hold JUMP to stretch up. Let go with HAT at the top to hop off.", 5.0)
+		"taxi":
+			hud.toast("You drive the taxi! Push the stick to go, JUMP to honk. HAT to get out.", 5.0)
+		"tank":
+			hud.toast("Tank time! JUMP fires a shell. Shells smash metal crates. HAT to get out.", 5.0)
 
 
 func _on_balloon() -> void:
@@ -362,18 +376,35 @@ func _on_balloon() -> void:
 		return
 	var n := level.moon_count()
 	if level.cleared:
+		if _balloon_toast_t <= 0.0 and level.next_kingdom != "":
+			_balloon_toast_t = 2.0
+			state = S.PANEL
+			get_tree().paused = true
+			touch.enable(false)
+			hud.show_panel("travel", {"next": level.next_kingdom_title})
 		return
-	if n >= Level.NEEDED:
+	if n >= level.needed:
 		level.cleared = true
 		Sfx.play("cleared")
 		_save()
 		state = S.PANEL
 		get_tree().paused = true
 		touch.enable(false)
-		hud.show_panel("cleared", {"left": level.total_moons() - n})
+		hud.show_panel("cleared", {"left": level.total_moons() - n, "title": level.kingdom_title.capitalize(),
+			"next": level.next_kingdom_title, "final": level.kingdom_id == "city"})
 	elif _balloon_toast_t <= 0.0:
-		hud.toast("The balloon needs %d more moons to fly." % (Level.NEEDED - n), 3.0)
+		hud.toast("The balloon needs %d more moons to fly." % (level.needed - n), 3.0)
 		_balloon_toast_t = 4.0
+
+
+func _fly() -> void:
+	if level.next_kingdom == "":
+		_resume()
+		return
+	_save(level.next_kingdom)
+	Sfx.play("cleared")
+	get_tree().paused = false
+	get_tree().reload_current_scene()
 
 var _balloon_toast_t := 0.0
 
@@ -381,7 +412,7 @@ var _balloon_toast_t := 0.0
 func _on_boss_event(kind: String, hp: int) -> void:
 	match kind:
 		"start":
-			hud.set_boss(hp)
+			hud.set_boss(hp, level.boss_name)
 			hud.banner("KING RAPTOR", "Dodge his charge, %s, then hit his crown when he is dizzy!" % Player.HERO_NAME, 3.5)
 		"hit":
 			hud.set_boss(hp)
@@ -453,11 +484,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # ------------------------------------------------------------------ save --
 
-func _save() -> void:
+func _save(current_override: String = "") -> void:
 	var cf := ConfigFile.new()
+	cf.load(SAVE_PATH)   # keep the other kingdom's section
 	var st := level.state()
+	var sec := "k_" + level.kingdom_id
 	for k in st:
-		cf.set_value("level", k, st[k])
+		if k != "coins":
+			cf.set_value(sec, k, st[k])
+	cf.set_value("global", "coins", level.coins)
+	cf.set_value("global", "current", current_override if current_override != "" else level.kingdom_id)
 	cf.set_value("costume", "cap", cap_id)
 	cf.set_value("costume", "shirt", shirt_id)
 	cf.set_value("costume", "owned", owned.keys())
@@ -465,14 +501,39 @@ func _save() -> void:
 	cf.save(SAVE_PATH)
 
 
+func _saved_kingdom() -> String:
+	var cf := ConfigFile.new()
+	if cf.load(SAVE_PATH) != OK:
+		return "ridge"
+	var k := str(cf.get_value("global", "current", "ridge"))
+	return k if k in KINGDOMS else "ridge"
+
+
+func _saved_total_moons() -> int:
+	var cf := ConfigFile.new()
+	if cf.load(SAVE_PATH) != OK:
+		return level.moon_count()
+	var n := 0
+	for k in KINGDOMS:
+		var sec: String = "k_" + str(k)
+		if k == level.kingdom_id:
+			n += level.moon_count()
+		elif cf.has_section_key(sec, "moons"):
+			for id in cf.get_value(sec, "moons", []):
+				n += 3 if str(id) == "boss" else 1
+	return n
+
+
 func _load() -> void:
 	var cf := ConfigFile.new()
 	if cf.load(SAVE_PATH) != OK:
 		return
 	var d := {}
-	for k in ["coins", "purple", "moons", "purples", "bonks", "cleared", "cp", "bell"]:
-		if cf.has_section_key("level", k):
-			d[k] = cf.get_value("level", k)
+	var sec := "k_" + level.kingdom_id
+	for k in ["purple", "moons", "purples", "bonks", "cleared", "cp", "bell"]:
+		if cf.has_section_key(sec, k):
+			d[k] = cf.get_value(sec, k)
+	d["coins"] = cf.get_value("global", "coins", 0)
 	level.restore(d)
 	cap_id = str(cf.get_value("costume", "cap", "red"))
 	shirt_id = str(cf.get_value("costume", "shirt", "red"))
@@ -494,7 +555,7 @@ func _load() -> void:
 func _reset_save() -> void:
 	var da := DirAccess.open("user://")
 	if da:
-		da.remove("hattrick.cfg")
+		da.remove("dylans_odyssey.cfg")
 	get_tree().paused = false
 	get_tree().reload_current_scene()
 
@@ -559,6 +620,112 @@ func _run_selftest() -> void:
 	level.spawn_coins(player.global_position, 4)
 	await _step(10)
 	check.call(level.coins > c0, "coins collected on contact (%d -> %d)" % [c0, level.coins])
+	if level.kingdom_id == "city":
+		await _selftest_city(check)
+	else:
+		await _selftest_ridge(check)
+	# Boss: wake, get him dazed, hit him three times.
+	var boss := level.boss
+	_unfreeze()
+	player.global_position = level.arena_center + Vector3(8, 0.5, 0)
+	player.velocity = Vector3.ZERO
+	await _step(20)
+	check.call(boss.state != Boss.S.SLEEP, "boss wakes when you enter the arena")
+	var hits := 0
+	for round in 6:
+		var t := 0
+		while boss.state != Boss.S.DAZED and t < 400 and boss.state != Boss.S.DEAD:
+			player.global_position = level.arena_center + Vector3(8, 0.5, 0)
+			player.velocity = Vector3.ZERO
+			player.invuln = 1.0
+			_unfreeze()
+			await _step(1)
+			t += 1
+		if boss.state == Boss.S.DAZED:
+			if boss.hat_hit():
+				hits += 1
+			await _step(5)
+		if boss.state == Boss.S.DEAD:
+			break
+	check.call(boss.state == Boss.S.DEAD, "boss goes down after %d hits" % hits)
+	await _step(30)
+	player.global_position = level.arena_center + Vector3(0, 0.5, 0)
+	await _step(90)
+	check.call(level.moons_got.has("boss"), "multi moon collected (count=%d)" % level.moon_count())
+	# Save / load round trip.
+	_save()
+	var cf := ConfigFile.new()
+	check.call(cf.load(SAVE_PATH) == OK, "save file written")
+	check.call(cf.get_value("global", "coins", -1) == level.coins, "saved coins match")
+	check.call(cf.get_value("k_" + level.kingdom_id, "moons", []).size() == level.moons_got.size(), "saved moons match")
+	_save(level.next_kingdom)
+	check.call(_saved_kingdom() == level.next_kingdom, "balloon travel saves the destination kingdom (%s)" % _saved_kingdom())
+	var other: Level = CityLevel.new() if level.next_kingdom == "city" else RidgeLevel.new()
+	check.call(other.kingdom_id == level.next_kingdom and other.moon_names.size() > 15, "destination kingdom class builds its config")
+	Terrain.city = level.kingdom_id == "city"
+	print("SELFTEST(%s): %d checks, %d failures" % [level.kingdom_id, st["checks"], st["fails"]])
+	get_tree().quit(1 if st["fails"] > 0 else 0)
+
+
+func _selftest_city(check: Callable) -> void:
+	var taxi: Capturable = null
+	var tank: Capturable = null
+	for c in level.capturables:
+		if c.kind == "taxi":
+			taxi = c
+		if c.kind == "tank":
+			tank = c
+	check.call(taxi != null, "taxi exists")
+	check.call(tank != null, "tank exists")
+	if taxi:
+		player.global_position = taxi.global_position + Vector3(4, 0.5, 0)
+		await _step(5)
+		level.hat_touch(hat, taxi.global_position + Vector3(0, 0.6, 0))
+		await _step(5)
+		check.call(player.capture == taxi, "hat on the taxi captures it")
+		var p0 := taxi.global_position
+		cam.yaw = taxi.facing
+		cam.manual_t = 5.0
+		_press("move_up")
+		await _step(90)
+		_release("move_up")
+		check.call(taxi.global_position.distance_to(p0) > 10.0, "taxi drives %.1f m in 1.5 s" % taxi.global_position.distance_to(p0))
+		_unfreeze()
+		_press("hat")
+		await _step(2)
+		_release("hat")
+		await _step(5)
+		check.call(player.capture == null, "out of the taxi")
+	if tank:
+		var nm := level.metal.size()
+		check.call(nm > 0, "metal crates exist (%d)" % nm)
+		player.global_position = tank.global_position + Vector3(4, 0.5, 0)
+		await _step(5)
+		level.hat_touch(hat, tank.global_position + Vector3(0, 1.0, 0))
+		await _step(5)
+		check.call(player.capture == tank, "hat on the tank captures it")
+		if nm > 0:
+			var m: Node3D = level.metal[0]
+			var d := m.global_position - tank.global_position
+			d.y = 0.0
+			tank.facing = atan2(-d.x, -d.z)
+			var tp := m.global_position - d.normalized() * 8.0
+			tank.global_position = Vector3(tp.x, Terrain.height(tp.x, tp.z) + 0.6, tp.z)
+			await _step(3)
+			_press("jump")
+			await _step(2)
+			_release("jump")
+			await _step(60)
+			check.call(level.metal.size() < nm, "tank shell breaks a metal crate (%d -> %d)" % [nm, level.metal.size()])
+		_unfreeze()
+		_press("hat")
+		await _step(2)
+		_release("hat")
+		await _step(5)
+		check.call(player.capture == null, "out of the tank")
+
+
+func _selftest_ridge(check: Callable) -> void:
 	# Capture a frog by placing the hat on it.
 	var frog: Capturable = null
 	for c in level.capturables:
@@ -599,7 +766,7 @@ func _run_selftest() -> void:
 		level.hat_touch(hat, rex.global_position + Vector3(0, 1.5, 0))
 		await _step(5)
 		check.call(player.capture == rex, "rex captured")
-		rex.global_position = Vector3(10.0, Level.g(10.0, -74.0) + 0.6, -74.0)
+		rex.global_position = Vector3(10.0, Terrain.height(10.0, -74.0) + 0.6, -74.0)
 		rex.facing = 0.0
 		cam.yaw = 0.0
 		cam.manual_t = 5.0
@@ -632,41 +799,6 @@ func _run_selftest() -> void:
 		check.call(level.moons_got.has("slab"), "and gets collected (moons=%d)" % level.moon_count())
 		_celebrate = 0.0
 		player.frozen = false
-	# Boss: wake, get him dazed, hit him three times.
-	var boss := level.boss
-	_unfreeze()
-	player.global_position = level.arena_center + Vector3(8, 0.5, 0)
-	player.velocity = Vector3.ZERO
-	await _step(20)
-	check.call(boss.state != Boss.S.SLEEP, "boss wakes when you enter the arena")
-	var hits := 0
-	for round in 6:
-		var t := 0
-		while boss.state != Boss.S.DAZED and t < 400 and boss.state != Boss.S.DEAD:
-			player.global_position = level.arena_center + Vector3(8, 0.5, 0)
-			player.velocity = Vector3.ZERO
-			player.invuln = 1.0
-			_unfreeze()
-			await _step(1)
-			t += 1
-		if boss.state == Boss.S.DAZED:
-			if boss.hat_hit():
-				hits += 1
-			await _step(5)
-		if boss.state == Boss.S.DEAD:
-			break
-	check.call(boss.state == Boss.S.DEAD, "boss goes down after %d hits" % hits)
-	await _step(30)
-	player.global_position = level.arena_center + Vector3(0, 0.5, 0)
-	await _step(90)
-	check.call(level.moons_got.has("boss"), "multi moon collected (count=%d)" % level.moon_count())
-	# Save / load round trip.
-	_save()
-	var cf := ConfigFile.new()
-	check.call(cf.load(SAVE_PATH) == OK, "save file written")
-	check.call(cf.get_value("level", "coins", -1) == level.coins, "saved coins match")
-	print("SELFTEST: %d checks, %d failures" % [st["checks"], st["fails"]])
-	get_tree().quit(1 if st["fails"] > 0 else 0)
 
 
 func _run_shots() -> void:
@@ -674,20 +806,7 @@ func _run_shots() -> void:
 	state = S.PLAY
 	touch.enable(touch_mode)
 	player.frozen = false
-	var scenes := [
-		{"name": "01_title", "pos": Vector3(0, 0.3, 15), "yaw": 0.0, "pitch": 0.2, "title": true},
-		{"name": "02_meadow", "pos": Vector3(0, 0.3, 10), "yaw": 0.0, "pitch": 0.3},
-		{"name": "03_shop", "pos": Vector3(14, 0.3, 17), "yaw": PI, "pitch": 0.25},
-		{"name": "04_frogs", "pos": Vector3(-30, 0.5, 0), "yaw": 0.6, "pitch": 0.3},
-		{"name": "05_waterfall", "pos": Vector3(-4, 0.5, -12), "yaw": 0.2, "pitch": 0.25},
-		{"name": "06_rex", "pos": Vector3(24, 12.5, -66), "yaw": 0.6, "pitch": 0.3},
-		{"name": "07_cave", "pos": Vector3(10, 12.5, -72), "yaw": 0.0, "pitch": 0.25},
-		{"name": "08_cannon", "pos": Vector3(50, 0.5, 15), "yaw": -PI * 0.5, "pitch": 0.3},
-		{"name": "09_arena", "pos": Vector3(12, 26.5, -108), "yaw": PI * 0.5, "pitch": 0.3},
-		{"name": "10_stilt", "pos": Vector3(-50, 0.5, 30), "yaw": 0.6, "pitch": 0.3},
-		{"name": "11_overview", "pos": Vector3(44, 26.5, -100), "yaw": PI, "pitch": 0.55},
-		{"name": "12_peak", "pos": Vector3(-30, 26.5, -104), "yaw": -0.8, "pitch": 0.35},
-	]
+	var scenes: Array = level.shot_scenes
 	for sc in scenes:
 		if sc.get("title", false):
 			_enter_title()

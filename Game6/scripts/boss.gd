@@ -24,7 +24,7 @@ var _dir := Vector3.FORWARD
 var _step := 0.0
 
 
-func setup(lvl: Node, p: Player, c: Vector3, r: float) -> void:
+func setup(lvl: Node, p: Player, c: Vector3, r: float, colour: Color = Color(0.85, 0.45, 0.2), metal: bool = false) -> void:
 	level = lvl
 	player = p
 	center = c
@@ -36,7 +36,7 @@ func setup(lvl: Node, p: Player, c: Vector3, r: float) -> void:
 	col.shape = cap
 	col.position = Vector3(0, 2.8, 0)
 	add_child(col)
-	model = Models.rex(1.35, Color(0.85, 0.45, 0.2), true)
+	model = Models.rex(1.35, colour, true, metal)
 	add_child(model)
 	floor_max_angle = deg_to_rad(50.0)
 

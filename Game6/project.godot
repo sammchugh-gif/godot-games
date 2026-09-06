@@ -1,10 +1,10 @@
-; Hat Trick - Godot 4.7 project (3D hat-throwing collect-a-thon for the iPad)
+; Dylan's Odyssey - Godot 4.7 project (3D hat-throwing collect-a-thon for the iPad)
 
 config_version=5
 
 [application]
 
-config/name="Hat Trick"
+config/name="Dylan's Odyssey"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

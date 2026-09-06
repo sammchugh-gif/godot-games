@@ -219,32 +219,37 @@ static func frog() -> Node3D:
 	return root
 
 
-static func rex(scale: float = 1.0, colour: Color = Color(0.36, 0.62, 0.3), crown: bool = false) -> Node3D:
+static func rex(scale: float = 1.0, colour: Color = Color(0.36, 0.62, 0.3), crown: bool = false, metal: bool = false) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Rex"
 	root.scale = Vector3.ONE * scale
 	var belly := colour.lerp(Color(0.9, 0.9, 0.6), 0.45)
+	if metal:
+		belly = colour.lerp(Color(0.3, 0.35, 0.4), 0.5)
+	var m_body: Material = Mats.pbr(colour, 0.4, 0.5) if metal else Mats.skin(colour)
+	var m_belly: Material = Mats.pbr(belly, 0.45, 0.45) if metal else Mats.skin(belly)
+	var m_dark: Material = Mats.pbr(colour.darkened(0.12), 0.4, 0.5) if metal else Mats.skin(colour.darkened(0.1))
 	var body := pivot(root, "body", Vector3(0, 2.1, 0))
 	var b := MeshLib.Builder.new()
 	b.ellipsoid(Vector3(0, 0, 0.2), Vector3(0.95, 1.0, 1.5), 16, 12)
-	part(body, b, Mats.skin(colour), "torso")
+	part(body, b, m_body, "torso")
 	var bb := MeshLib.Builder.new()
 	bb.ellipsoid(Vector3(0, -0.3, 0.0), Vector3(0.7, 0.75, 1.3), 14, 10)
-	part(body, bb, Mats.skin(belly), "belly")
+	part(body, bb, m_belly, "belly")
 	var tail := MeshLib.Builder.new()
 	tail.spike(Vector3(0, 0.1, 1.4), Vector3(0, 0.6, 4.6), 0.8, 12, 8, Vector3(0, 0.5, 0))
-	part(body, tail, Mats.skin(colour), "tail")
+	part(body, tail, m_body, "tail")
 	var neck := MeshLib.Builder.new()
 	neck.cylinder(Vector3(0, 0.3, -1.1), Vector3(0, 1.0, -1.8), 0.6, 0.5, 12)
-	part(body, neck, Mats.skin(colour), "neck")
+	part(body, neck, m_body, "neck")
 	var head := pivot(body, "head", Vector3(0, 1.1, -1.9))
 	var h := MeshLib.Builder.new()
 	h.ellipsoid(Vector3(0, 0.15, -0.5), Vector3(0.62, 0.55, 1.05), 16, 12)
-	part(head, h, Mats.skin(colour), "skull")
+	part(head, h, m_body, "skull")
 	var jaw := pivot(head, "jaw", Vector3(0, -0.15, -0.2))
 	var j := MeshLib.Builder.new()
 	j.box(Vector3(0, -0.12, -0.7), Vector3(0.9, 0.3, 1.3))
-	part(jaw, j, Mats.skin(belly), "jaw")
+	part(jaw, j, m_belly, "jaw")
 	for i in 6:
 		for s in [-1.0, 1.0]:
 			var t := MeshLib.Builder.new()
@@ -268,17 +273,17 @@ static func rex(scale: float = 1.0, colour: Color = Color(0.36, 0.62, 0.3), crow
 		var arm := MeshLib.Builder.new()
 		arm.cylinder(Vector3(0.7 * s, -0.1, -0.9), Vector3(0.85 * s, -0.5, -1.4), 0.16, 0.12, 8)
 		arm.ellipsoid(Vector3(0.85 * s, -0.5, -1.45), Vector3(0.16, 0.14, 0.2), 8, 6)
-		part(body, arm, Mats.skin(colour), "arm")
+		part(body, arm, m_body, "arm")
 		var leg := pivot(root, "legL" if s < 0 else "legR", Vector3(0.75 * s, 2.0, 0.5))
 		var l := MeshLib.Builder.new()
 		l.ellipsoid(Vector3(0, -0.2, 0), Vector3(0.5, 0.75, 0.7), 12, 10)
 		l.cylinder(Vector3(0, -0.8, 0.1), Vector3(0, -1.75, -0.15), 0.33, 0.3, 10)
-		part(leg, l, Mats.skin(colour.darkened(0.08)), "thigh")
+		part(leg, l, m_dark, "thigh")
 		var foot := MeshLib.Builder.new()
 		foot.box(Vector3(0, -1.85, -0.35), Vector3(0.75, 0.32, 1.1))
 		for k in 3:
 			foot.spike(Vector3(-0.25 + 0.25 * k, -1.85, -0.9), Vector3(-0.28 + 0.28 * k, -1.9, -1.25), 0.1, 6, 2)
-		part(leg, foot, Mats.skin(colour.darkened(0.15)), "foot")
+		part(leg, foot, m_dark, "foot")
 	return root
 
 
@@ -388,6 +393,96 @@ static func spiny() -> Node3D:
 		f.ellipsoid(Vector3(0, 0, -0.05), Vector3(0.14, 0.09, 0.2), 10, 6)
 		part(foot, f, Mats.skin(Color(0.9, 0.6, 0.2)), "foot")
 	return root
+
+
+# The living taxi. Faces -Z. Pivots: body, wheelFL, wheelFR, wheelBL, wheelBR.
+static func taxi() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Taxi"
+	var yellow := Color(0.98, 0.78, 0.12)
+	var body := pivot(root, "body", Vector3(0, 0.45, 0))
+	var b := MeshLib.Builder.new()
+	b.box(Vector3(0, 0.45, 0), Vector3(2.0, 0.8, 4.3))
+	b.box(Vector3(0, 1.15, 0.1), Vector3(1.75, 0.7, 2.3))
+	part(body, b, Mats.skin(yellow, 0.4), "shell")
+	var glass := MeshLib.Builder.new()
+	glass.box(Vector3(0, 1.17, -0.75), Vector3(1.6, 0.55, 0.9))
+	glass.box(Vector3(0, 1.17, 1.0), Vector3(1.6, 0.55, 0.6))
+	glass.box(Vector3(0, 1.17, 0.1), Vector3(1.8, 0.5, 1.4))
+	part(body, glass, Mats.pbr(Color(0.15, 0.25, 0.4), 0.2, 0.3), "glass")
+	var trim := MeshLib.Builder.new()
+	trim.box(Vector3(0, 0.15, -2.15), Vector3(2.1, 0.3, 0.2))
+	trim.box(Vector3(0, 0.15, 2.15), Vector3(2.1, 0.3, 0.2))
+	trim.box(Vector3(0, 0.6, 0), Vector3(2.06, 0.12, 3.6))
+	part(body, trim, Mats.pbr(Color(0.15, 0.15, 0.17), 0.5), "trim")
+	var sign := MeshLib.Builder.new()
+	sign.box(Vector3(0, 1.62, 0.1), Vector3(0.9, 0.24, 0.35))
+	part(body, sign, Mats.glow(Color(1.0, 0.95, 0.6), 1.2), "sign")
+	for sx in [-0.65, 0.65]:
+		var hl := MeshLib.Builder.new()
+		hl.ellipsoid(Vector3(sx, 0.55, -2.15), Vector3(0.18, 0.14, 0.08), 8, 6)
+		part(body, hl, Mats.glow(Color(1.0, 0.98, 0.85), 2.0), "headlight")
+		var tl := MeshLib.Builder.new()
+		tl.box(Vector3(sx, 0.55, 2.16), Vector3(0.3, 0.16, 0.06))
+		part(body, tl, Mats.glow(Color(1.0, 0.2, 0.15), 1.5), "taillight")
+	eyes(body, Vector3(0, 1.22, -1.18), 0.32, 0.15, Vector3.FORWARD, 0.5)
+	for w in [["wheelFL", -1.0, -1.35], ["wheelFR", 1.0, -1.35], ["wheelBL", -1.0, 1.35], ["wheelBR", 1.0, 1.35]]:
+		var wp := pivot(root, w[0], Vector3(0.95 * w[1], 0.42, w[2]))
+		var wb := MeshLib.Builder.new()
+		wb.cylinder(Vector3(-0.18, 0, 0), Vector3(0.18, 0, 0), 0.42, 0.42, 12)
+		part(wp, wb, Mats.pbr(Color(0.1, 0.1, 0.12), 0.8), "tyre")
+		var hub := MeshLib.Builder.new()
+		hub.cylinder(Vector3(-0.19, 0, 0), Vector3(0.19, 0, 0), 0.22, 0.22, 8)
+		part(wp, hub, Mats.pbr(Color(0.75, 0.75, 0.78), 0.3, 0.7), "hub")
+	return root
+
+
+# Sherman the tank. Faces -Z. Pivots: body, turret (barrel is a child).
+static func tank() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Tank"
+	var olive := Color(0.42, 0.5, 0.3)
+	var body := pivot(root, "body", Vector3.ZERO)
+	var b := MeshLib.Builder.new()
+	b.box(Vector3(0, 0.95, 0), Vector3(2.4, 0.8, 3.6))
+	b.box(Vector3(0, 1.35, 0.6), Vector3(1.6, 0.3, 1.6))
+	part(body, b, Mats.pbr(olive, 0.7), "hull")
+	var tracks := MeshLib.Builder.new()
+	for sx in [-1.35, 1.35]:
+		tracks.box(Vector3(sx, 0.55, 0), Vector3(0.7, 1.1, 3.9))
+		for i in 5:
+			tracks.cylinder(Vector3(sx - 0.4, 0.5, -1.4 + i * 0.7), Vector3(sx + 0.4, 0.5, -1.4 + i * 0.7), 0.3, 0.3, 8)
+	part(body, tracks, Mats.pbr(Color(0.18, 0.18, 0.2), 0.9), "tracks")
+	var turret := pivot(body, "turret", Vector3(0, 1.45, 0.2))
+	var t := MeshLib.Builder.new()
+	t.lathe([Vector2(0.0, 0.0), Vector2(0.95, 0.0), Vector2(0.9, 0.55), Vector2(0.6, 0.75), Vector2(0.0, 0.75)], 14)
+	part(turret, t, Mats.pbr(olive.darkened(0.1), 0.7), "dome")
+	var barrel := MeshLib.Builder.new()
+	barrel.cylinder(Vector3(0, 0.4, -0.5), Vector3(0, 0.4, -3.0), 0.16, 0.2, 10)
+	barrel.cylinder(Vector3(0, 0.4, -2.6), Vector3(0, 0.4, -3.0), 0.26, 0.26, 10)
+	part(turret, barrel, Mats.pbr(Color(0.25, 0.28, 0.25), 0.6), "barrel")
+	eyes(turret, Vector3(0, 0.42, -0.72), 0.3, 0.13, Vector3.FORWARD, 0.5)
+	var brow := MeshLib.Builder.new()
+	brow.box(Vector3(0, 0.62, -0.72), Vector3(0.9, 0.06, 0.06))
+	part(turret, brow, Mats.pbr(EYE_BLACK), "brow")
+	return root
+
+
+static func shell_mesh() -> ArrayMesh:
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3.ZERO, Vector3(0.22, 0.22, 0.32), 8, 6)
+	return b.commit_mesh()
+
+
+# A ring standing upright in the XY plane (normal along Z).
+static func torus_mesh(R: float, r: float, segs: int = 24) -> ArrayMesh:
+	var b := MeshLib.Builder.new()
+	var prof := []
+	for i in 13:
+		var a := TAU * i / 12.0
+		prof.append(Vector2(R + r * cos(a), r * sin(a)))
+	b.lathe(prof, segs, Vector3.ZERO, Basis(Vector3.RIGHT, PI * 0.5), false)
+	return b.commit_mesh()
 
 
 # ------------------------------------------------------------- props -----

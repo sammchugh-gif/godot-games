@@ -1,4 +1,4 @@
-# Hat Trick: Dino Ridge
+# Dylan's Odyssey
 
 A 3D hat-throwing collect-a-thon in the spirit of Super Mario Odyssey, built
 in Godot 4.7 for the iPad's browser. You play Dylan, a kid with a living cap. One big kingdom, Dino Ridge, with 22
@@ -7,7 +7,7 @@ ridge top, coins, purple coins and a cap shop. Every model, the terrain, the
 water and every sound are generated in code at start-up: there are no art or
 audio files.
 
-Play it at <https://sammchugh-gif.github.io/godot-games/hat-trick/>. On the
+Play it at <https://sammchugh-gif.github.io/godot-games/dylans-odyssey/>. On the
 iPad, open the link in Safari, then Share → Add to Home Screen for a
 fullscreen icon. Landscape. Or open `Game6/project.godot` in Godot 4.7 and
 press F5.
@@ -40,17 +40,32 @@ Jump into a wall and press JUMP again to **wall jump**.
 
 Throw the hat at these and you become them.
 
-| Creature | What you get |
-| --- | --- |
-| Frog | A gigantic jump |
-| Rex the T-Rex | Slow, huge, smashes boulders and squashes everything. JUMP to roar |
-| Rocket | Fired from the cannon tower. Steer with the stick, push forward to climb, HAT to bail out |
-| Stilt plant | Hold JUMP to stretch up to nine metres, then HAT to hop off at the top |
+| Creature | Where | What you get |
+| --- | --- | --- |
+| Frog | Both kingdoms | A gigantic jump |
+| Rex the T-Rex | Dino Ridge | Slow, huge, smashes boulders and squashes everything. JUMP to roar |
+| Rocket | Dino Ridge | Fired from the cannon tower. Steer with the stick, push forward to climb, HAT to bail out |
+| Stilt plant | Both kingdoms | Hold JUMP to stretch up to nine metres, then HAT to hop off at the top |
+| Taxi | Skyline City | Fast, drifty, JUMP honks. Drive through the glowing rings for a time trial |
+| Tank | Skyline City | Slow; JUMP fires a shell. Only shells break the metal crates on the bank vault |
+
+## The kingdoms
+
+**Dino Ridge** is where you land: cliffs, a waterfall, a fossil cave, a
+gorge with a rocket cannon, and King Raptor on the ridge top.
+
+**Skyline City** is a city at night: neon windows, a park with a fountain,
+rooftops to hop, an elevated rail line, a harbour with a lighthouse, an
+alley to wall-jump, Skyline Tower with a fire escape spiralling up to its
+roof, and Robo Raptor waiting there.
+
+The balloon needs **12** moons in a kingdom to fly. Touch it once it is
+powered and it offers to fly you to the other kingdom; each kingdom keeps
+its own moons and purple coins, coins are shared.
 
 ## The moons
 
-The balloon in the landing meadow needs **12** moons to fly; there are 22
-(the boss multi moon counts as three). Some are simply somewhere high; the
+Each kingdom has about 22 moons (the boss multi moon counts as three). Some are simply somewhere high; the
 rest come from ground-pounding a cracked slab, the red switch and the glowing
 spots, ringing the bell three times, putting a hat on the scarecrow, opening
 the chest in the ring of trees, bashing six Bonks, dashing along the river for
@@ -71,13 +86,16 @@ the last checkpoint flag. Progress is saved in the browser.
 - `scripts/capturable.gd`, `scripts/captures.gd` — the capture base class
   and Frog, Rex, Rocket and Stilt, each with an idle AI and a driven mode.
 - `scripts/enemies.gd`, `scripts/boss.gd` — Bonks, Spinies and King Raptor.
-- `scripts/level.gd` — Dino Ridge: environment, water, trees and rocks, all
-  the set pieces, coins, moons, checkpoints, the shop zone, the balloon and
-  every interaction (hat hits, pounds, Rex smashes, rocket explosions).
-  Coins, trees and rocks are multimeshes, so the whole kingdom is a few
-  hundred draw calls: that is what keeps WebGL on an iPad at speed.
-- `scripts/terrain.gd` — the heightfield function, vertex-coloured mesh and
-  trimesh collider.
+- `scripts/level.gd` — the shared kingdom runtime: build helpers (boxes,
+  cylinders, crates, coins, moons, trees, the balloon and shop), pickups,
+  checkpoints, the shop zone and every interaction (hat hits, pounds, Rex
+  smashes, explosions, tank shells). Coins, trees and rocks are multimeshes,
+  so a kingdom is a few hundred draw calls: that keeps WebGL on an iPad fast.
+- `scripts/ridge_level.gd`, `scripts/city_level.gd` — the two kingdoms:
+  environment, water, set pieces, pickups, creatures, moons, checkpoints,
+  hints, and kingdom-specific logic (the rocket cannon, the taxi race).
+- `scripts/terrain.gd` — the heightfield functions for both kingdoms,
+  vertex-coloured mesh and trimesh collider.
 - `scripts/models.gd` — every character and pickup from primitives.
 - `scripts/sfx.gd` — synthesised sound effects and the music loop.
 - `scripts/camera_rig.gd`, `scripts/hud.gd`, `scripts/touch_controls.gd`,
@@ -92,17 +110,18 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 # Play
 "$GODOT" --path Game6
 
-# Headless self-test: jumps, the hat, a frog and Rex capture, the slab,
-# the boss fight and the save file
+# Headless self-test: jumps, the hat, the captures, the boss fight and the
+# save file, for either kingdom
 "$GODOT" --headless --path Game6 -- --selftest
+"$GODOT" --headless --path Game6 -- --selftest --kingdom city
 
-# Screenshots of a dozen spots around the kingdom (needs a display or xvfb)
-"$GODOT" --path Game6 -- --shots /tmp/shots --touch
+# Screenshots of a dozen spots around a kingdom (needs a display or xvfb)
+"$GODOT" --path Game6 -- --shots /tmp/shots --touch --kingdom city
 
-# Web build for the site (then copy build/web/* to docs/hat-trick/)
+# Web build for the site (then copy build/web/* to docs/dylans-odyssey/)
 "$GODOT" --headless --path Game6 --export-release "Web" build/web/index.html
 ```
 
 The hero's name is `Player.HERO_NAME` in `scripts/player.gd`.
 `--lightweight` forces the tablet quality path, `--desktop` / `--touch`
-force the control scheme.
+force the control scheme, `--kingdom ridge|city` picks the kingdom.

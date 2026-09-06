@@ -100,6 +100,7 @@ func _build_all() -> void:
 	_streams["rocket"] = _wav(_mix([_noise(0.9, 0.6, 1.1), _tone(0.9, 100.0, 500.0, 0.3, 0.6)]))
 	_streams["boing"] = _wav(_tone(0.35, 200.0, 900.0, 0.45, 0.9))
 	_streams["stretch"] = _wav(_tone(0.3, 300.0, 700.0, 0.3, 0.8))
+	_streams["honk"] = _wav(_mix([_tone(0.28, 440.0, 440.0, 0.4, 0.4), _tone(0.28, 554.0, 554.0, 0.3, 0.4)]))
 	_streams["heart"] = _wav(_arp([659.3, 784.0, 987.8, 1318.5], 0.06, 0.6))
 	_streams["switch"] = _wav(_mix([_tone(0.1, 700.0, 300.0, 0.5, 1.0), _tone(0.12, 1000.0, 1200.0, 0.3, 1.0)]))
 	_streams["tick"] = _wav(_tone(0.04, 1000.0, 1000.0, 0.35, 0.3))
