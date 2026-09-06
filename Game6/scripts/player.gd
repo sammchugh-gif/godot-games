@@ -1,8 +1,10 @@
-# The kid. A capsule with Odyssey's moveset: run, triple jump, long jump,
+# Dylan, the hero. A capsule with Odyssey's moveset: run, triple jump, long jump,
 # ground pound, wall jump, hat throw and cap jump. When a capture is active
 # the capture drives itself and this body just rides along invisibly.
 class_name Player
 extends CharacterBody3D
+
+const HERO_NAME := "Dylan"
 
 signal died()
 signal pounded(pos: Vector3)

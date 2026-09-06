@@ -166,7 +166,7 @@ func _show_loading(on: bool) -> void:
 func _build_world() -> void:
 	var t0 := Time.get_ticks_msec()
 	player = Player.new()
-	player.name = "Player"
+	player.name = Player.HERO_NAME
 	hat = Hat.new()
 	hat.name = "Hat"
 	player.hat = hat
@@ -216,7 +216,7 @@ func _start_play() -> void:
 	cam.manual_t = 0.0
 	Sfx.music(true)
 	if level.moon_count() == 0:
-		hud.toast("Find Power Moons! The balloon needs %d of them." % Level.NEEDED, 5.0)
+		hud.toast("Find Power Moons, %s! The balloon needs %d of them." % [Player.HERO_NAME, Level.NEEDED], 5.0)
 
 
 func _toggle_pause() -> void:
@@ -382,7 +382,7 @@ func _on_boss_event(kind: String, hp: int) -> void:
 	match kind:
 		"start":
 			hud.set_boss(hp)
-			hud.banner("KING RAPTOR", "Dodge his charge, then hit his crown when he is dizzy!", 3.5)
+			hud.banner("KING RAPTOR", "Dodge his charge, %s, then hit his crown when he is dizzy!" % Player.HERO_NAME, 3.5)
 		"hit":
 			hud.set_boss(hp)
 		"down":

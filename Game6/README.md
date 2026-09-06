@@ -1,7 +1,7 @@
 # Hat Trick: Dino Ridge
 
 A 3D hat-throwing collect-a-thon in the spirit of Super Mario Odyssey, built
-in Godot 4.7 for the iPad's browser. One big kingdom, Dino Ridge, with 22
+in Godot 4.7 for the iPad's browser. You play Dylan, a kid with a living cap. One big kingdom, Dino Ridge, with 22
 Power Moons to find, four creatures to capture with the hat, a boss on the
 ridge top, coins, purple coins and a cap shop. Every model, the terrain, the
 water and every sound are generated in code at start-up: there are no art or
@@ -65,7 +65,7 @@ the last checkpoint flag. Progress is saved in the browser.
 
 ## How it is built
 
-- `scripts/player.gd` — the kid: a capsule with run, triple jump, long jump,
+- `scripts/player.gd` — Dylan: a capsule with run, triple jump, long jump,
   ground pound, wall jump, hat throw, cap jump, damage and captures.
 - `scripts/hat.gd` — the thrown cap: out, hover, back, and what it touches.
 - `scripts/capturable.gd`, `scripts/captures.gd` — the capture base class
@@ -103,5 +103,6 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 "$GODOT" --headless --path Game6 --export-release "Web" build/web/index.html
 ```
 
+The hero's name is `Player.HERO_NAME` in `scripts/player.gd`.
 `--lightweight` forces the tablet quality path, `--desktop` / `--touch`
 force the control scheme.

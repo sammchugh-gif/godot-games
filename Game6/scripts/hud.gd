@@ -190,7 +190,7 @@ func _draw_title(size: Vector2) -> void:
 	var bob := sin(_title_t * 2.0) * 6.0
 	_text(Vector2(size.x * 0.5 + 4, cy + 4 + bob), "HAT TRICK", 92, Color(0.1, 0.05, 0.05), HORIZONTAL_ALIGNMENT_CENTER, 0)
 	_text(Vector2(size.x * 0.5, cy + bob), "HAT TRICK", 92, Color(1.0, 0.85, 0.25), HORIZONTAL_ALIGNMENT_CENTER, 8)
-	_text(Vector2(size.x * 0.5, cy + 56), "KINGDOM 1: DINO RIDGE", 30, Color(0.9, 0.95, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
+	_text(Vector2(size.x * 0.5, cy + 56), "STARRING " + Player.HERO_NAME.to_upper() + "     KINGDOM 1: DINO RIDGE", 30, Color(0.9, 0.95, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
 	_text(Vector2(size.x * 0.5, cy + 100), "Sophia, Rory and Dylan Games, Inc", 18, Color(0.8, 0.85, 0.95), HORIZONTAL_ALIGNMENT_CENTER)
 	if fmod(_dot, 1.0) < 0.65:
 		_text(Vector2(size.x * 0.5, size.y * 0.78), "TAP TO PLAY" if touch else "PRESS SPACE TO PLAY", 34, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
@@ -263,11 +263,11 @@ func show_panel(kind: String, data: Dictionary = {}) -> void:
 			_button(box, "BACK", "resume")
 		"cleared":
 			_label(box, "KINGDOM CLEARED!", 52, Color(1.0, 0.85, 0.25))
-			_label(box, "The balloon is powered up. Dino Ridge is yours.", 24, Color(1, 1, 1))
+			_label(box, "The balloon is powered up. Dino Ridge is yours, " + Player.HERO_NAME + "!", 24, Color(1, 1, 1))
 			_label(box, "Keep exploring: %d moons are still out there." % data.get("left", 0), 20, Color(0.9, 0.93, 1.0))
 			_button(box, "KEEP PLAYING", "resume")
 		"dead":
-			_label(box, "OUCH!", 46, Color(1.0, 0.5, 0.4))
+			_label(box, "OUCH, " + Player.HERO_NAME.to_upper() + "!", 46, Color(1.0, 0.5, 0.4))
 			_label(box, "Back to the last checkpoint. Lost 10 coins.", 22, Color(1, 1, 1))
 
 

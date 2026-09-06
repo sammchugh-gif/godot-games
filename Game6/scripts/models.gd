@@ -80,7 +80,7 @@ static func cap(colour: Color, with_eyes: bool = true, scale: float = 1.0) -> No
 
 # ----------------------------------------------------------------- hero ---
 
-# The kid. Origin at the feet, faces -Z. Pivots: body, head, armL, armR,
+# Dylan. Origin at the feet, faces -Z. Pivots: body, head, armL, armR,
 # legL, legR, cap (child of head).
 static func hero(shirt: Color, cap_colour: Color) -> Node3D:
 	var root := Node3D.new()
