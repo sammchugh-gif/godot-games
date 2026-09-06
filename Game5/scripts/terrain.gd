@@ -12,7 +12,7 @@ extends RefCounted
 
 var x0 := -600.0
 var x1 := 220.0
-var z0 := -1850.0
+var z0 := -1990.0
 var z1 := 150.0
 var cell := 4.0
 var nx := 0

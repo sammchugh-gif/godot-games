@@ -13,6 +13,7 @@ var time_s := 0.0
 var speed := 0.0
 var boost := 0.0
 var boosting := false
+var boss_hp := -1.0   # 0..1 while the boss fight is on, negative to hide
 var running := false
 var _root: Control
 var _title: Control
@@ -261,6 +262,16 @@ func _draw_hud() -> void:
 	for i in 5:
 		_root.draw_line(Vector2(gx + gw * (i + 1) / 5.0, gy), Vector2(gx + gw * (i + 1) / 5.0, gy + gh), Color(0, 0.05, 0.15, 0.5), 2.0)
 	_shadow_text(Vector2(gx, gy - 6.0), "BOOST", 16, Color(0.85, 0.92, 1.0))
+	# Boss health, top centre.
+	if boss_hp >= 0.0:
+		var bw := minf(vp.x * 0.5, 520.0)
+		var bx := vp.x * 0.5 - bw * 0.5
+		var by := 26.0
+		_shadow_text(Vector2(bx, by - 4.0), "EGG MOBILE", 18, Color(1.0, 0.85, 0.8))
+		_root.draw_rect(Rect2(bx - 2, by, bw + 4, 18), Color(0, 0.02, 0.08, 0.7))
+		_root.draw_rect(Rect2(bx, by + 2, bw * boss_hp, 14), Color(1.0, 0.25, 0.2))
+		for i in 8:
+			_root.draw_line(Vector2(bx + bw * (i + 1) / 8.0, by + 2), Vector2(bx + bw * (i + 1) / 8.0, by + 16), Color(0, 0.02, 0.08, 0.6), 2.0)
 	# Message.
 	if _msg_t > 0.0:
 		var a := clampf(_msg_t * 2.0, 0.0, 1.0)

@@ -49,10 +49,18 @@ top-right. Landscape.
 7. **Wall run.** A dash pad rolls the road 90° up a cliff face for 44 m.
 8. **Waterfall jump.** The ridge road climbs over the river and launches you
    across the falls into the lagoon beach. A slow jump lands in the shallows.
-9. **Beach sprint.** S-curves, dash pads, badniks and the goal ring.
+9. **Beach sprint.** S-curves, dash pads, badniks, then the boss.
+10. **Egg Mobile.** Energy walls seal the wide beach and the Egg Mobile
+    comes down: it patrols overhead, swoops through you, and below half
+    health drops to head height and swings a spiked wrecking ball. Hit the
+    pod eight times with a jump, homing attack, roll or boost; the ball
+    always hurts. Beat it and the walls drop for the goal ring.
 
-Checkpoints are the star posts; falling into the sea returns you to the last
-one. Results give a rank by time (S under 1:35).
+Checkpoints are the star posts. You never drown: touching the sea or the
+lagoon fires Sonic back onto the nearest stretch of route (minus five
+rings). Badniks are Motobugs on the verges, crabs scuttling across the road
+and Buzz Bombers hovering over the jumps, placed so they chain. Results give
+a rank by time (S under 1:35).
 
 ## How it is built
 
@@ -79,7 +87,11 @@ one. Results give a rank by time (S under 1:35).
   regions, and the road embedded into the land. Vertex AO and wetness.
 - `scripts/level.gd` — the act: control points, terrain shaping, sky, sun and
   environment, rails, springs, pads, badniks, rings along the racing line,
-  ruins, waterfalls, birds, camera zones, checkpoints and burst effects.
+  ruins, waterfalls, birds, camera zones, checkpoints, the boss arena with
+  its energy walls, and burst effects.
+- `scripts/boss.gd` — the Egg Mobile: hover, swoop, wrecking-ball and hit
+  phases, eight hit points, procedural pod, Eggman and chain.
+- `scripts/enemy.gd` — Motobug, Buzz Bomber and crab badniks.
 - `scripts/camera_rig.gd` — chase camera with speed-dependent distance,
   look-ahead and FOV, banking, surface-normal following on loops and walls,
   zone framing (reveal, loop profile, rail, waterfall, finale) and probing.
@@ -117,8 +129,9 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 "$GODOT" --headless --path Game5 -- --selftest
 
 # Headless test drive: an automatic driver follows the route for 120 s and
-# logs progress, detaches and stalls (--spawn N starts at checkpoint N)
-"$GODOT" --headless --path Game5 -- --selftest --drive 120 --spawn 3
+# logs progress, detaches, splashes and boss hits (--spawn N starts at
+# checkpoint N; 7 is the arena). In the web build ?spawn=N does the same.
+"$GODOT" --headless --path Game5 -- --selftest --drive 120 --spawn 7
 
 # Route / terrain inspection
 "$GODOT" --headless --path Game5 --script tools/dump_frames.gd -- 600 640
