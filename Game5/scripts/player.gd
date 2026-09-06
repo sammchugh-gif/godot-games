@@ -36,8 +36,8 @@ const ROLL_FRICTION := 1.3
 const GRAVITY := 38.0
 const JUMP := 15.5
 const AIR_ACCEL := 20.0
-const TURN_SLOW := 11.0
-const TURN_FAST := 2.4
+const TURN_SLOW := 7.5
+const TURN_FAST := 1.5
 const DRIFT_TURN := 2.6
 const STEEP_Y := 0.55
 const MIN_STEEP_SPEED := 11.0
@@ -222,7 +222,12 @@ func _physics_process(dt: float) -> void:
 
 
 func _read_input() -> void:
-	input_raw = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	# Smooth the stick over a few frames: thumbs and keys both jitter, and
+	# at speed a one-frame twitch should not become a swerve.
+	var raw := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	input_raw = input_raw.lerp(raw, 1.0 - exp(-18.0 * get_physics_process_delta_time()))
+	if input_raw.length() < 0.03 and raw == Vector2.ZERO:
+		input_raw = Vector2.ZERO
 	var f := -cam_basis.z
 	f.y = 0.0
 	f = f.normalized() if f.length_squared() > 0.001 else Vector3.FORWARD
@@ -367,7 +372,8 @@ func _ground(dt: float) -> void:
 			pass  # no braking on loops and walls: momentum carries you round
 		else:
 			var ang := acos(cosang)
-			var step := minf(ang, turn_rate * dt * (0.5 + mag * 0.5))
+			# Turn speed follows how far the stick is pushed, not just whether.
+			var step := minf(ang, turn_rate * dt * (0.15 + mag * 0.85))
 			var axis := heading.cross(d)
 			if axis.length_squared() > 1e-6 and step > 0.0:
 				heading = heading.rotated(axis.normalized(), step).normalized()
