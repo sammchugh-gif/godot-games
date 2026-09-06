@@ -1,0 +1,12 @@
+# Godot's import/shader cache. Regenerated on first open, and full of
+# machine-specific paths -- never move this between computers.
+.godot/
+
+# Build output. All rebuildable from source.
+build/
+_shots/
+*.zip
+
+# macOS / Windows cruft
+.DS_Store
+Thumbs.db
