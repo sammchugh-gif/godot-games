@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Sega Genesis Arcade</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: #0b0d12;
+    color: #e8ecf4;
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  body { display: flex; flex-direction: column; min-height: 100%; }
+  a { color: inherit; }
+
+  /* top bar */
+  #top {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: .75rem;
+    padding: calc(.5rem + env(safe-area-inset-top)) 1rem .5rem;
+    background: #0b0d12;
+    border-bottom: 1px solid #1e2530;
+    font-size: .9rem;
+  }
+  #top a.back { color: #94a2bb; text-decoration: none; white-space: nowrap; }
+  #top a.back:hover { color: #e8ecf4; }
+  #top .title { font-weight: 700; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #top .title b { color: #ffd166; }
+  #top button {
+    appearance: none; border: 1px solid #3a4459; background: #151a24; color: #e8ecf4;
+    border-radius: 999px; padding: .3rem .9rem; font: inherit; font-size: .85rem; cursor: pointer;
+  }
+  #top button:hover { border-color: #ffd166; }
+
+  /* shelf */
+  #shelf { flex: 1 1 auto; max-width: 62rem; width: 100%; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  #shelf h1 { font-size: clamp(1.4rem, 4vw, 2.1rem); margin: 0 0 .25rem; letter-spacing: -.01em; }
+  #shelf h1 span { color: #ffd166; }
+  #shelf .sub { color: #94a2bb; margin: 0 0 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; }
+  .card {
+    display: flex; flex-direction: column; text-align: left;
+    background: #151a24; border: 1px solid #232b3a; border-radius: 14px; overflow: hidden;
+    color: inherit; font: inherit; padding: 0; cursor: pointer;
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .card:hover, .card:active { border-color: #4a5a7c; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0,0,0,.45); }
+  .card .shot {
+    position: relative; aspect-ratio: 4 / 3; background: #000 center / cover no-repeat;
+    image-rendering: pixelated;
+  }
+  .card .shot::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,10,16,.85), rgba(8,10,16,0) 55%); }
+  .card .shot .name { position: absolute; left: .8rem; right: .8rem; bottom: .6rem; z-index: 1; font-size: 1.1rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+  .card .shot .play { position: absolute; top: .6rem; right: .6rem; z-index: 1; padding: .2rem .65rem; border-radius: 999px; background: #ffd166; color: #1a1408; font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
+  .card .body { padding: .7rem .9rem .9rem; font-size: .88rem; color: #b3bfd4; }
+  .card .by { color: #7d8ba3; font-size: .78rem; margin-bottom: .3rem; }
+  .card .keys { margin-top: .5rem; color: #8fa0bf; font-size: .78rem; }
+  .card .keys b { color: #c9d3e6; font-weight: 600; }
+  .card.own { border-style: dashed; align-items: center; justify-content: center; text-align: center; min-height: 12rem; padding: 1.2rem; background: #10141c; }
+  .card.own .big { font-size: 2rem; }
+  .card.own .body { color: #94a2bb; }
+  .card.own input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+  #shelf h2 { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; color: #7d8ba3; margin: 1.6rem 0 .7rem; font-weight: 600; }
+  #shelf h2:first-of-type { margin-top: .5rem; }
+  .card.cart .shot { background: radial-gradient(ellipse at 30% 20%, #2a3550 0%, #12172a 60%, #0b0d12 100%); display: flex; align-items: center; justify-content: center; }
+  .card.cart .shot .label { position: relative; z-index: 1; margin: 0 1rem 1.4rem; padding: .6rem .8rem; border-radius: 6px; background: #ffd166; color: #1a1408; font-weight: 800; font-size: 1rem; line-height: 1.2; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,.5); max-width: 90%; }
+  .card.cart .shot .label small { display: block; font-weight: 600; font-size: .68rem; letter-spacing: .1em; opacity: .75; margin-bottom: .2rem; }
+  .card.cart .body { display: flex; align-items: center; gap: .6rem; }
+  .card.cart .meta { flex: 1 1 auto; color: #8fa0bf; font-size: .8rem; }
+  .card.cart .rm { appearance: none; border: 1px solid #3a4459; background: transparent; color: #94a2bb; border-radius: 999px; padding: .2rem .7rem; font: inherit; font-size: .75rem; cursor: pointer; }
+  .card.cart .rm:hover { border-color: #ff7b7b; color: #ffb0b0; }
+  .card.own .note { margin-top: .5rem; font-size: .75rem; color: #6f7d97; }
+  .tip { margin-top: 2rem; padding-top: 1.1rem; border-top: 1px solid #1e2530; color: #7d8ba3; font-size: .85rem; }
+  .tip b { color: #a9b6cc; font-weight: 600; }
+  footer { margin-top: 1.5rem; color: #5c6a85; font-size: .8rem; }
+  footer a { color: #7d8ba3; }
+
+  /* stage */
+  #stage { flex: 1 1 auto; position: relative; display: none; background: #000; min-height: 0; }
+  #game { position: absolute; inset: 0; }
+  body.playing { height: 100%; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body.playing #shelf { display: none; }
+  body.playing #stage { display: block; }
+  #keys { flex: 0 0 auto; text-align: center; font-size: 11px; color: #4c4c5c; letter-spacing: 1px; padding: 3px 0 calc(3px + env(safe-area-inset-bottom)); display: none; }
+  body.playing:not(.touch) #keys { display: block; }
+  #err { position: fixed; left: 0; right: 0; top: 0; z-index: 99; background: #3a0d12; color: #ffb0b0; font: 12px/1.5 ui-monospace, monospace; padding: 10px 14px; white-space: pre-wrap; display: none; }
+</style>
+</head>
+<body>
+
+<div id="top">
+  <a class="back" href="../">&larr; All games</a>
+  <div class="title"><b>Sega Genesis</b> <span id="nowPlaying">Arcade</span></div>
+  <button id="changeBtn" type="button" hidden>Change game</button>
+</div>
+
+<main id="shelf">
+  <h1>Sega <span>Genesis</span> Arcade</h1>
+  <p class="sub">Eight free homebrew Mega Drive games running in a real Genesis emulator. Tap one to play, or load your own cartridge file.</p>
+  <h2>My cartridges</h2>
+  <div class="grid" id="carts"></div>
+
+  <h2>Free homebrew games</h2>
+  <div class="grid" id="grid"></div>
+
+  <p class="tip">
+    <b>How it works:</b> pick a game, then press its big <b>Start</b> button. On an iPad the controller appears on screen: D-pad on the left, A B C on the right, Start in the middle. On a keyboard the arrows are the D-pad, <b>Z X C</b> are <b>A B C</b>, <b>A S D</b> are <b>X Y Z</b>, <b>Enter</b> is Start and <b>V</b> is Mode. Real gamepads work too.
+    The menu at the bottom of the game has save states, fullscreen, volume and controller settings. Saves live in this browser.
+  </p>
+  <p class="tip">
+    <b>Your own cartridges:</b> tap <b>Add a cartridge</b> and pick a .bin, .md, .gen, .smd or .zip file of a game you own. It is copied into this browser's own storage on this device, not to the internet, and shows up under My cartridges from then on.
+    To get a file onto the iPad, AirDrop it from a Mac or save it to iCloud Drive, then pick it from Files. If you add this page to the Home Screen, iPad Safari keeps the cartridges and saves for good; in a normal tab it may clear them after a week without use.
+  </p>
+  <footer>Emulation by <a href="https://github.com/EmulatorJS/EmulatorJS">EmulatorJS</a> with the Genesis Plus GX core. Every game here was released free by its author. <a href="CREDITS.md">Credits and licences</a>.</footer>
+</main>
+
+<div id="stage"><div id="game"></div></div>
+<div id="keys">ARROWS d-pad &nbsp;·&nbsp; Z X C = A B C &nbsp;·&nbsp; A S D = X Y Z &nbsp;·&nbsp; ENTER start &nbsp;·&nbsp; V mode</div>
+<div id="err"></div>
+
+<script>
+window.__err = [];
+window.onerror = function (m, s, l, c) {
+  window.__err.push(m + ' @' + (s || '').split('/').pop() + ':' + l + ':' + c);
+  var e = document.getElementById('err');
+  e.style.display = 'block'; e.textContent = window.__err.join('\n');
+};
+// Lock the page against iPhone/iPad Safari pinch-zoom and panning while playing.
+document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', function (e) {
+  if (document.body.classList.contains('playing') && e.cancelable) e.preventDefault();
+}, { passive: false });
+document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+if (('ontouchstart' in window) || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
+</script>
+
+<script>
+"use strict";
+var GAMES = [
+  { slug: 'dragons-castle', title: "Dragon's Castle", by: 'Sik, 2016', file: 'dragons-castle.bin',
+    desc: 'Merlina the young witch takes her broom into the dragon’s castle. A crisp arcade platformer with traps, ghosts and spiders.',
+    keys: '<b>D-pad</b> move · <b>A</b> magic · <b>B</b> attack · <b>C</b> jump' },
+  { slug: 'miniplanets', title: 'Miniplanets', by: 'Sik, REMIX Ver.', file: 'miniplanets.bin',
+    desc: 'Run and jump around tiny spinning 3D planets to rescue Qisha’s children. Forty-five planets plus a secret set.',
+    keys: '<b>D-pad</b> walk · <b>A B C</b> jump · <b>Start</b> pause' },
+  { slug: 'old-towers', title: 'Old Towers', by: 'RetroSouls, 2019', file: 'old-towers.bin',
+    desc: 'Little explorers slide through towers full of traps and skulls. Think ahead: you only stop when you hit a wall.',
+    keys: '<b>D-pad</b> slide · <b>A</b> switch explorer · <b>B</b> free camera · <b>C</b> restart' },
+  { slug: 'mega-cheril-perils', title: 'Mega Cheril Perils', by: 'The Mojon Twins, 2017', file: 'mega-cheril-perils.bin',
+    desc: 'Cheril head-butts coconuts and swings through the jungle of Badajoz in this big, silly, colourful platformer.',
+    keys: '<b>D-pad</b> move · <b>A B C</b> jump · <b>Start</b> pause' },
+  { slug: 'gravity-pig', title: 'Gravity Pig', by: 'ComradeOj, 2015', file: 'gravity-pig.bin',
+    desc: 'A pig who flips gravity instead of jumping. Walk on the ceiling, dodge the spikes, find the exit.',
+    keys: '<b>D-pad</b> move · <b>A B C</b> flip gravity · <b>Start</b> pause' },
+  { slug: 'break-an-egg', title: 'Break An Egg', by: 'Dr. Ludos, 2018', file: 'break-an-egg.bin',
+    desc: 'Eggs rain from the sky. Slide your chicken under them so they bounce into the basket. One miss and it is over.',
+    keys: '<b>D-pad</b> left / right · <b>Start</b> begin' },
+  { slug: 'star-chaser', title: 'Star Chaser', by: 'Sik, 2014', file: 'star-chaser.bin',
+    desc: 'Up to four balls race around a maze to grab the stars as they form. Fast and silent: this build never got sound.',
+    keys: '<b>D-pad</b> steer · <b>Start</b> begin · 1 to 4 players' },
+  { slug: 'project-md', title: 'Project MD', by: 'Sik, 2012', file: 'project-md.bin',
+    desc: 'Stephany builds herself a virtual world to play in, and it is not all friendly. An early, unfinished jump-and-run.',
+    keys: '<b>D-pad</b> move · <b>A B C</b> jump and act' }
+];
+
+var grid = document.getElementById('grid');
+GAMES.forEach(function (g) {
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'card'; b.dataset.slug = g.slug;
+  b.innerHTML =
+    '<div class="shot" style="background-image:url(\'shots/' + g.slug + '.jpg\')"><span class="play">PLAY</span><div class="name">' + g.title + '</div></div>' +
+    '<div class="body"><div class="by">by ' + g.by + '</div>' + g.desc + '<div class="keys">' + g.keys + '</div></div>';
+  b.addEventListener('click', function () { play(g); });
+  grid.appendChild(b);
+});
+/* ---------- My cartridges: ROM files the player picks are kept in IndexedDB on this device ---------- */
+var cartsGrid = document.getElementById('carts');
+var DB_NAME = 'genesis-arcade', STORE = 'carts';
+function openDb() {
+  return new Promise(function (res, rej) {
+    if (!window.indexedDB) return rej(new Error('no IndexedDB'));
+    var r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = function () {
+      var db = r.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+    };
+    r.onsuccess = function () { res(r.result); };
+    r.onerror = function () { rej(r.error); };
+  });
+}
+function dbAll() {
+  return openDb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var out = [];
+      var cur = db.transaction(STORE, 'readonly').objectStore(STORE).openCursor();
+      cur.onsuccess = function () { var c = cur.result; if (c) { out.push(c.value); c.continue(); } else res(out); };
+      cur.onerror = function () { rej(cur.error); };
+    });
+  });
+}
+function dbPut(rec) {
+  return openDb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var tx = db.transaction(STORE, 'readwrite');
+      var rq = tx.objectStore(STORE).put(rec);
+      rq.onsuccess = function () { res(rq.result); };
+      tx.onerror = function () { rej(tx.error); };
+    });
+  });
+}
+function dbDel(id) {
+  return openDb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = function () { res(); };
+      tx.onerror = function () { rej(tx.error); };
+    });
+  });
+}
+function niceTitle(name) {
+  return name.replace(/\.[^.]+$/, '').replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '').replace(/[_.]+/g, ' ').trim() || name;
+}
+function fmtSize(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; }
+function cartFile(rec) { return new File([rec.blob], rec.name, { type: rec.blob.type || 'application/octet-stream' }); }
+function escapeHtml(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+function renderCarts() {
+  return dbAll().catch(function () { return []; }).then(function (list) {
+    list.sort(function (a, b) { return a.added - b.added; });
+    cartsGrid.innerHTML = '';
+    list.forEach(function (rec) {
+      var title = niceTitle(rec.name);
+      var d = document.createElement('div');
+      d.className = 'card cart'; d.setAttribute('role', 'button'); d.tabIndex = 0; d.dataset.cart = rec.id;
+      d.innerHTML =
+        '<div class="shot"><span class="play">PLAY</span><div class="label"><small>CARTRIDGE</small>' + escapeHtml(title) + '</div></div>' +
+        '<div class="body"><div class="meta">' + escapeHtml(rec.name) + '<br>' + fmtSize(rec.size) + ' · on this device</div>' +
+        '<button type="button" class="rm" title="Remove from this device">Remove</button></div>';
+      d.addEventListener('click', function (e) {
+        if (e.target.closest('.rm')) return;
+        play({ slug: 'cart', id: rec.id, title: title, file: cartFile(rec) });
+      });
+      d.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); d.click(); } });
+      d.querySelector('.rm').addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Remove "' + title + '" from this device?')) return;
+        dbDel(rec.id).then(renderCarts);
+      });
+      cartsGrid.appendChild(d);
+    });
+    var own = document.createElement('label');
+    own.className = 'card own';
+    own.innerHTML = '<div class="big">📼</div><div class="body"><b>Add a cartridge</b><br>Pick a .bin, .md, .gen, .smd or .zip file of a Genesis game you own. It is kept in this browser, on this device only.' +
+      '<div class="note">' + (list.length ? list.length + (list.length === 1 ? ' cartridge' : ' cartridges') + ' stored here' : 'Nothing stored yet') + '</div></div>' +
+      '<input type="file" multiple accept=".bin,.md,.gen,.smd,.zip,.7z,application/zip,application/octet-stream">';
+    own.querySelector('input').addEventListener('change', function (e) { addCarts(Array.prototype.slice.call(e.target.files || [])); });
+    cartsGrid.appendChild(own);
+    return list;
+  });
+}
+function addCarts(files) {
+  if (!files.length) return;
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+  dbAll().catch(function () { return []; }).then(function (existing) {
+    var ids = [];
+    return files.reduce(function (p, f) {
+      return p.then(function () {
+        var dup = existing.filter(function (r) { return r.name === f.name && r.size === f.size; })[0];
+        var rec = { name: f.name, size: f.size, added: Date.now(), blob: f };
+        if (dup) rec.id = dup.id;
+        return dbPut(rec).then(function (id) { ids.push(id); }, function (err) {
+          // Storage refused (private mode, quota): still let the game run this once.
+          console.warn('Could not store cartridge', err);
+          ids.push(null);
+        });
+      });
+    }, Promise.resolve()).then(function () {
+      if (files.length === 1) {
+        play({ slug: 'cart', id: ids[0], title: niceTitle(files[0].name), file: files[0] });
+      } else {
+        renderCarts();
+      }
+    });
+  });
+}
+var cartsReady = renderCarts();
+
+document.getElementById('changeBtn').addEventListener('click', function () {
+  location.href = location.pathname; // fresh page: EmulatorJS only boots once per document
+});
+
+var booted = false;
+function play(g) {
+  if (booted) return;
+  booted = true;
+  document.body.classList.add('playing');
+  document.getElementById('nowPlaying').textContent = '· ' + g.title;
+  document.getElementById('changeBtn').hidden = false;
+  document.title = g.title + ' · Sega Genesis Arcade';
+  try {
+    if (g.slug === 'cart') history.replaceState(null, '', g.id ? '?cart=' + g.id : location.pathname);
+    else history.replaceState(null, '', '?game=' + g.slug);
+  } catch (e) {}
+
+  window.EJS_player = '#game';
+  window.EJS_core = 'segaMD';
+  window.EJS_pathtodata = 'data/';
+  window.EJS_gameUrl = (g.file instanceof File) ? g.file : 'roms/' + g.file;
+  window.EJS_gameName = g.title;
+  window.EJS_color = '#ffd166';
+  window.EJS_backgroundColor = '#000000';
+  window.EJS_startButtonName = 'Start ' + g.title;
+  window.EJS_threads = false;
+  window.EJS_disableAutoLang = false;   // only en-US is shipped
+  window.EJS_defaultOptions = { 'save-state-location': 'browser' };
+  window.EJS_Buttons = { netplay: false, cheat: false, cacheManager: false, screenRecord: false, exitEmulation: false };
+  // Friendlier keyboard: Z X C are A B C, A S D are X Y Z, Enter Start, V Mode.
+  window.EJS_defaultControls = {
+    0: {
+      0: { value: 'x', value2: 'BUTTON_2' },       // B
+      1: { value: 'z', value2: 'BUTTON_4' },       // A
+      2: { value: 'v', value2: 'SELECT' },         // Mode
+      3: { value: 'enter', value2: 'START' },
+      4: { value: 'up arrow', value2: 'DPAD_UP' },
+      5: { value: 'down arrow', value2: 'DPAD_DOWN' },
+      6: { value: 'left arrow', value2: 'DPAD_LEFT' },
+      7: { value: 'right arrow', value2: 'DPAD_RIGHT' },
+      8: { value: 'c', value2: 'BUTTON_1' },       // C
+      9: { value: 's', value2: 'BUTTON_3' },       // Y
+      10: { value: 'a', value2: 'LEFT_TOP_SHOULDER' },   // X
+      11: { value: 'd', value2: 'RIGHT_TOP_SHOULDER' },  // Z
+      24: { value: 'space', value2: 'FAST_FORWARD' }
+    },
+    1: {}, 2: {}, 3: {}
+  };
+  var s = document.createElement('script');
+  s.src = 'data/loader.js';
+  document.body.appendChild(s);
+}
+
+// Deep links: ?game=slug (built-in) or ?cart=id (a stored cartridge on this device)
+var params = new URLSearchParams(location.search);
+var want = params.get('game'), wantCart = parseInt(params.get('cart'), 10);
+if (want) {
+  var g = GAMES.filter(function (x) { return x.slug === want; })[0];
+  if (g) play(g);
+} else if (wantCart) {
+  cartsReady.then(function (list) {
+    var rec = list.filter(function (r) { return r.id === wantCart; })[0];
+    if (rec) play({ slug: 'cart', id: rec.id, title: niceTitle(rec.name), file: cartFile(rec) });
+  });
+}
+</script>
+</body>
+</html>
