@@ -22,6 +22,10 @@ var _toast_t := 0.0
 var _toast := ""
 var _prompt := ""
 var _boss_hp := -1
+var _boss_name := "KING RAPTOR"
+var _kingdom_index := 1
+var _kingdom_title := "DINO RIDGE"
+var _total_moons := 0
 var _panel: Control
 var _panel_kind := ""
 var _dot := 0.0
@@ -61,8 +65,16 @@ func set_timer(t: float) -> void:
 	_timer = t
 
 
-func set_boss(hp: int) -> void:
+func set_boss(hp: int, name: String = "") -> void:
 	_boss_hp = hp
+	if name != "":
+		_boss_name = name
+
+
+func set_kingdom(index: int, title: String, total_moons: int) -> void:
+	_kingdom_index = index
+	_kingdom_title = title
+	_total_moons = total_moons
 
 
 func banner(text: String, sub: String = "", t: float = 2.6) -> void:
@@ -162,7 +174,7 @@ func _draw_hud() -> void:
 		_text(Vector2(size.x * 0.5, 60), "%.1f" % _timer, 40, Color(1.0, 0.5, 0.4) if _timer < 5.0 else Color(1, 1, 1), HORIZONTAL_ALIGNMENT_CENTER)
 	# Boss health.
 	if _boss_hp >= 0:
-		_text(Vector2(size.x * 0.5, size.y - 46), "KING RAPTOR", 22, Color(1.0, 0.75, 0.4), HORIZONTAL_ALIGNMENT_CENTER)
+		_text(Vector2(size.x * 0.5, size.y - 46), _boss_name, 22, Color(1.0, 0.75, 0.4), HORIZONTAL_ALIGNMENT_CENTER)
 		for i in 3:
 			var c := Vector2(size.x * 0.5 - 40 + i * 40, size.y - 24)
 			_root.draw_circle(c, 12.0, Color(1.0, 0.35, 0.2) if i < _boss_hp else Color(0.25, 0.2, 0.2, 0.7))
@@ -188,9 +200,10 @@ func _draw_title(size: Vector2) -> void:
 	var cy := size.y * 0.34
 	_root.draw_rect(Rect2(0, cy - 90, size.x, 210), Color(0.05, 0.05, 0.15, 0.45))
 	var bob := sin(_title_t * 2.0) * 6.0
-	_text(Vector2(size.x * 0.5 + 4, cy + 4 + bob), "HAT TRICK", 92, Color(0.1, 0.05, 0.05), HORIZONTAL_ALIGNMENT_CENTER, 0)
-	_text(Vector2(size.x * 0.5, cy + bob), "HAT TRICK", 92, Color(1.0, 0.85, 0.25), HORIZONTAL_ALIGNMENT_CENTER, 8)
-	_text(Vector2(size.x * 0.5, cy + 56), "STARRING " + Player.HERO_NAME.to_upper() + "     KINGDOM 1: DINO RIDGE", 30, Color(0.9, 0.95, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
+	var ts := 84 if size.x > 1100 else 68
+	_text(Vector2(size.x * 0.5 + 4, cy + 4 + bob), "DYLAN'S ODYSSEY", ts, Color(0.1, 0.05, 0.05), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_text(Vector2(size.x * 0.5, cy + bob), "DYLAN'S ODYSSEY", ts, Color(1.0, 0.85, 0.25), HORIZONTAL_ALIGNMENT_CENTER, 8)
+	_text(Vector2(size.x * 0.5, cy + 56), "KINGDOM %d: %s" % [_kingdom_index, _kingdom_title], 30, Color(0.9, 0.95, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
 	_text(Vector2(size.x * 0.5, cy + 100), "Sophia, Rory and Dylan Games, Inc", 18, Color(0.8, 0.85, 0.95), HORIZONTAL_ALIGNMENT_CENTER)
 	if fmod(_dot, 1.0) < 0.65:
 		_text(Vector2(size.x * 0.5, size.y * 0.78), "TAP TO PLAY" if touch else "PRESS SPACE TO PLAY", 34, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
@@ -199,8 +212,8 @@ func _draw_title(size: Vector2) -> void:
 	var hs := 17 if size.x > 1100 else 15
 	_text(Vector2(size.x * 0.5, size.y * 0.88), help1, hs, Color(0.85, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
 	_text(Vector2(size.x * 0.5, size.y * 0.88 + hs + 8), help2, hs, Color(0.85, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
-	if _moons > 0:
-		_text(Vector2(size.x * 0.5, size.y * 0.66), "Saved game: %d moons, %d coins" % [_moons, _coins], 20, Color(1.0, 0.92, 0.5), HORIZONTAL_ALIGNMENT_CENTER)
+	if _total_moons > 0:
+		_text(Vector2(size.x * 0.5, size.y * 0.66), "Saved game: %d moons in this kingdom, %d in all, %d coins" % [_moons, _total_moons, _coins], 20, Color(1.0, 0.92, 0.5), HORIZONTAL_ALIGNMENT_CENTER)
 
 
 # ------------------------------------------------------------- panels ----
@@ -263,9 +276,18 @@ func show_panel(kind: String, data: Dictionary = {}) -> void:
 			_button(box, "BACK", "resume")
 		"cleared":
 			_label(box, "KINGDOM CLEARED!", 52, Color(1.0, 0.85, 0.25))
-			_label(box, "The balloon is powered up. Dino Ridge is yours, " + Player.HERO_NAME + "!", 24, Color(1, 1, 1))
+			_label(box, "The balloon is powered up. %s is yours, %s!" % [data.get("title", "This kingdom"), Player.HERO_NAME], 24, Color(1, 1, 1))
+			if data.get("final", false):
+				_label(box, "You have finished Dylan's Odyssey... for now. More kingdoms are coming!", 20, Color(1.0, 0.92, 0.5))
 			_label(box, "Keep exploring: %d moons are still out there." % data.get("left", 0), 20, Color(0.9, 0.93, 1.0))
-			_button(box, "KEEP PLAYING", "resume")
+			if data.get("next", "") != "":
+				_button(box, "FLY TO " + str(data["next"]), "fly")
+			_button(box, "KEEP EXPLORING", "resume")
+		"travel":
+			_label(box, "THE BALLOON", 46, Color(1.0, 0.85, 0.25))
+			_label(box, "Fly to %s?" % data.get("next", "the next kingdom"), 26, Color(1, 1, 1))
+			_button(box, "FLY TO " + str(data.get("next", "")), "fly")
+			_button(box, "STAY HERE", "resume")
 		"dead":
 			_label(box, "OUCH, " + Player.HERO_NAME.to_upper() + "!", 46, Color(1.0, 0.5, 0.4))
 			_label(box, "Back to the last checkpoint. Lost 10 coins.", 22, Color(1, 1, 1))

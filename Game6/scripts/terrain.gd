@@ -17,6 +17,12 @@ const CELL := 2.0
 const N := int(SIZE / CELL) + 1
 const WATER_Y := -0.35
 const GORGE_WATER_Y := -12.0
+const HARBOUR_Y := -2.5
+const STREETS_X := [-100.0, -60.0, -20.0, 20.0, 60.0, 100.0]
+const STREETS_Z := [-100.0, -60.0, -20.0, 20.0, 60.0]
+
+# Which kingdom's ground function is live. Set by the level's _init().
+static var city := false
 
 static var _noise: FastNoiseLite
 
@@ -50,6 +56,8 @@ static func ramp_mask(x: float) -> float:
 
 
 static func height(x: float, z: float) -> float:
+	if city:
+		return city_height(x, z)
 	var ramp := ramp_mask(x)
 	var w := lerpf(3.2, 30.0, ramp)
 	var h := 12.0 * stepz(z, -40.0, w)
@@ -81,7 +89,46 @@ static func normal(x: float, z: float) -> Vector3:
 	return Vector3(-dx, 2.0 * e, -dz).normalized()
 
 
+# Skyline City: flat streets, a mound in the park, a quay dropping into the
+# harbour along the south edge.
+static func city_height(x: float, z: float) -> float:
+	var h := 2.2 * gauss((x + 40.0) * (x + 40.0) + z * z, 13.0)
+	h += 0.25 * _n().get_noise_2d(x * 2.0, z * 2.0)
+	h -= 12.0 * s01((z - 91.0) / 5.0)
+	return h
+
+
+static func on_street(x: float, z: float, w: float = 6.0) -> bool:
+	for sx in STREETS_X:
+		if absf(x - sx) < w:
+			return true
+	for sz in STREETS_Z:
+		if absf(z - sz) < w:
+			return true
+	return false
+
+
+static func in_park(x: float, z: float) -> bool:
+	return x > -58.0 and x < -22.0 and z > -18.0 and z < 18.0
+
+
+static func city_colour(x: float, z: float, h: float, n: Vector3) -> Color:
+	var nz := _n().get_noise_2d(x * 3.0 + 100.0, z * 3.0)
+	if h < -2.0:
+		return Color(0.12, 0.16, 0.24)
+	if z > 84.0:
+		return Color(0.58, 0.55, 0.5).lerp(Color(0.5, 0.48, 0.45), 0.5 + 0.5 * nz)
+	if in_park(x, z):
+		var grass := Color(0.2, 0.45, 0.18).lerp(Color(0.28, 0.55, 0.2), 0.5 + 0.5 * nz)
+		return grass.lerp(Color(0.4, 0.35, 0.3), 1.0 - s01((n.y - 0.7) / 0.2))
+	if on_street(x, z):
+		return Color(0.17, 0.17, 0.2).lerp(Color(0.22, 0.22, 0.25), 0.5 + 0.5 * nz)
+	return Color(0.5, 0.5, 0.52).lerp(Color(0.44, 0.44, 0.47), 0.5 + 0.5 * nz)
+
+
 static func colour(x: float, z: float, h: float, n: Vector3) -> Color:
+	if city:
+		return city_colour(x, z, h, n)
 	var nz := _n().get_noise_2d(x * 3.0 + 100.0, z * 3.0)
 	var grass := Color(0.3, 0.6, 0.2).lerp(Color(0.45, 0.72, 0.24), 0.5 + 0.5 * nz)
 	if h > 20.0:
