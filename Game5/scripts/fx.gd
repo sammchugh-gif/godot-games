@@ -19,6 +19,7 @@ var _trails: Array = []
 var _trail_hist: Array = []
 var _intensity := 0.0
 var _puff_t := 0.0
+var _trail_active := false
 
 
 func setup(p: Player, c: CameraRig) -> void:
@@ -162,10 +163,10 @@ func _process(dt: float) -> void:
 	var p := player.global_position
 	var back := -player.heading
 
-	# Speed lines.
-	var want := smoothstep(30.0, 62.0, spd) * 0.75
+	# Speed lines: only near boost speed, so plain running stays clean.
+	var want := smoothstep(46.0, 68.0, spd) * 0.6
 	if player.boosting:
-		want = maxf(want, 0.55)
+		want = maxf(want, 0.45)
 	if player.st == Player.St.HOMING:
 		want = maxf(want, 0.5)
 	_intensity = lerpf(_intensity, want, 1.0 - exp(-6.0 * dt))
@@ -228,8 +229,14 @@ func _process(dt: float) -> void:
 		_charge.direction = back
 		_charge.initial_velocity_max = 4.0 + player.charge * 10.0
 
-	# Wind trails: sample behind Sonic's hands.
-	var trail_on := (spd > 34.0 or player.boosting) and player.st != Player.St.VICTORY
+	# Wind trails: boost speed only, with hysteresis so they do not flicker
+	# around the threshold.
+	if _trail_active:
+		if (spd < 46.0 and not player.boosting) or player.st == Player.St.VICTORY:
+			_trail_active = false
+	elif (spd > 54.0 or player.boosting) and player.st != Player.St.VICTORY:
+		_trail_active = true
+	var trail_on := _trail_active
 	var basis := player.model_basis
 	for i in 2:
 		var hist: Array = _trail_hist[i]
@@ -244,7 +251,7 @@ func _process(dt: float) -> void:
 				hist.pop_back()
 			if hist.size() > 0:
 				hist.pop_back()
-		_draw_trail(i, hist, clampf((spd - 30.0) / 30.0, 0.2, 1.0) if trail_on else 0.5)
+		_draw_trail(i, hist, clampf((spd - 44.0) / 24.0, 0.25, 1.0) if trail_on else 0.4)
 
 
 func _draw_trail(i: int, hist: Array, strength: float) -> void:
