@@ -16,6 +16,7 @@ signal rail_changed(on: bool)
 signal ring_collected(total: int)
 signal took_hit()
 signal died()
+signal splashed(pos: Vector3)
 signal victory_started()
 signal drift_changed(on: bool)
 signal sprang()
@@ -24,6 +25,7 @@ signal dashed()
 enum St { GROUND, AIR, RAIL, HOMING, HURT, DEAD, VICTORY }
 
 const RADIUS := 0.45
+const WATER_Y := 0.25
 const MODEL_SCALE := 1.3
 const MAX_RUN := 40.0
 const MAX_BOOST := 68.0
@@ -91,6 +93,7 @@ var _prev_pos := Vector3.ZERO
 var ground_kind := "road"
 var wall_run_t := 0.0
 var leave_reason := ""
+var _rescue_t := 0.0
 var track: Track
 static var debug_probe := false
 var track_s := 0.0
@@ -205,7 +208,12 @@ func _physics_process(dt: float) -> void:
 		St.DEAD:
 			pass
 
-	if global_position.y < -1.4 and st != St.DEAD:
+	# Water: Sonic never drowns. Touching the sea (or the lagoon) fires him
+	# back onto the route ahead in a high arc; only the void below kills.
+	if global_position.y < WATER_Y and st != St.DEAD and st != St.VICTORY and _rescue_t <= 0.0:
+		_water_rescue()
+	_rescue_t = maxf(_rescue_t - dt, 0.0)
+	if global_position.y < -40.0 and st != St.DEAD:
 		_die()
 	_update_model(dt)
 	RenderingServer.global_shader_parameter_set("player_pos", global_position)
@@ -231,7 +239,7 @@ func _project(v: Vector3, n: Vector3) -> Vector3:
 
 
 func _boost_common(dt: float, on_ground: bool) -> void:
-	var want := Input.is_action_pressed("boost") and boost_gauge > 0.0 and stumble_t <= 0.0
+	var want := Input.is_action_pressed("boost") and boost_gauge > 0.0 and stumble_t <= 0.0 and spring_t <= 0.0
 	if want and not boosting:
 		boosting = true
 		if on_ground:
@@ -962,6 +970,51 @@ func _die() -> void:
 	st = St.DEAD
 	velocity = Vector3.ZERO
 	died.emit()
+
+
+# Fired out of the water toward the next stretch of route. The target is the
+# first ground frame ahead of the last place Sonic was running (so a fall
+# from the rails aims at the landing platform, a lagoon dunk at the beach).
+func _water_rescue() -> void:
+	_rescue_t = 2.0
+	splashed.emit(global_position)
+	var target := Vector3.ZERO
+	var found := false
+	if track:
+		# Nearest solid stretch of route, with a preference for the road
+		# ahead of where Sonic was last running. A fall from the rails goes
+		# back to the launch cliff; a lagoon dunk goes on to the beach.
+		var frames := track.frames
+		var best := 1e18
+		var bi := -1
+		for i in frames.size():
+			var fr: Dictionary = frames[i]
+			if fr["kind"] != "ground" or (fr["p"] as Vector3).y < 2.0:
+				continue
+			var d: float = (fr["p"] as Vector3).distance_to(global_position)
+			if d < 8.0:
+				continue
+			var score := d * (0.6 if (track_i >= 0 and i > track_i) else 1.0)
+			if score < best:
+				best = score
+				bi = i
+		if bi >= 0:
+			# A few metres along the stretch so the landing is on the road.
+			var j := mini(bi + 4, frames.size() - 1)
+			target = frames[j]["p"] if frames[j]["kind"] == "ground" else frames[bi]["p"]
+			found = true
+	if not found:
+		target = last_ground_pos if last_ground_pos.y > 2.0 else global_position + Vector3(0, 20, -20)
+	# Ballistic launch that lands on the target with a comfortable arc.
+	var d := target - global_position
+	var flat := Vector2(d.x, d.z).length()
+	var t := clampf(flat / 34.0, 1.1, 3.2)
+	var v := Vector3(d.x / t, (d.y + 0.5 * GRAVITY * t * t) / t + 2.0, d.z / t)
+	global_position.y = WATER_Y + 0.6
+	launch(v, t - 0.2)
+	rail_cooldown = 0.0
+	rings = maxi(rings - 5, 0)
+	ring_collected.emit(rings)
 
 
 func start_victory() -> void:

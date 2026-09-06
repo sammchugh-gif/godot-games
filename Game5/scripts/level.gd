@@ -14,6 +14,9 @@ class_name Level
 extends Node3D
 
 signal goal_reached()
+signal boss_started()
+signal boss_hit(hp: int)
+signal boss_defeated()
 signal checkpoint_reached(index: int)
 
 const FWD := Vector3(0, 0, -1)
@@ -30,6 +33,9 @@ var _bursts: Array = []
 var _sfx: Sfx
 var rails: Array = []
 var stats := {"rings_total": 0}
+var boss: Boss
+var _barriers: Array = []
+var _boss_trigger: Trigger
 var _ring_parent: Node3D
 var _obj_parent: Node3D
 
@@ -152,9 +158,12 @@ func _route() -> Array:
 	P.append(Track.cp(Vector3(-372, 4, -1570), 20))
 	P.append(Track.cp(Vector3(-380, 4, -1610), 20))
 	P.append(Track.cp(Vector3(-372, 4, -1650), 20))
-	P.append(Track.cp(Vector3(-372, 4, -1700), 20))
-	P.append(Track.cp(Vector3(-372, 4, -1740), 20))
-	P.append(Track.cp(Vector3(-372, 4, -1775), 20))
+	P.append(Track.cp(Vector3(-372, 4, -1690), 26))
+	P.append(Track.cp(Vector3(-372, 4, -1740), 30))
+	P.append(Track.cp(Vector3(-372, 4, -1790), 30))
+	P.append(Track.cp(Vector3(-372, 4, -1830), 22))
+	P.append(Track.cp(Vector3(-372, 4, -1870), 20))
+	P.append(Track.cp(Vector3(-372, 4, -1905), 20))
 	return P
 
 
@@ -174,7 +183,7 @@ func _shape_terrain() -> void:
 	# The bay under the rails.
 	t.dig(Vector3(-25, 0, -600), Vector3(-95, 0, -850), 48.0, -12.0, 34.0)
 	# Beach under the homing chain.
-	t.dig(Vector3(-108, 0, -900), Vector3(-118, 0, -960), 22.0, 4.0, 18.0)
+	t.dig(Vector3(-108, 0, -900), Vector3(-118, 0, -960), 22.0, 4.0, 34.0)
 	# Hill the tunnel bores through.
 	t.raise(Vector3(-127, 0, -1022), Vector3(-154, 0, -1084), 16.0, 34.0, 16.0)
 	# Flat ground under the wall run, the cliff behind it, and the ridge
@@ -397,11 +406,36 @@ func _set_pieces() -> void:
 	Props.pool(rp, Vector3(-372, 0.05, -1310), Vector2(110, 70))
 	_ring_arc(Vector3(-372, 50, -1272), Vector3(0, 0, -1), 46.0, 24.0, 10)
 
-	# --- 9. Goal.
-	var gs := _s(Vector3(-372, 4, -1700))
+	# --- 9. Boss arena on the wide beach, then the goal.
+	var bs := _s(Vector3(-372, 4, -1740))
+	boss = Boss.make(track.pos_at(bs, 0, 7.0), track.fwd_at(bs))
+	boss.name = "Boss"
+	_add(boss)
+	boss.hit.connect(func(h): boss_hit.emit(h))
+	boss.defeated.connect(_on_boss_defeated)
+	_boss_trigger = Trigger.make(track.pos_at(_s(Vector3(-372, 4, -1690)) - 6.0, 0, 4.0), Vector3(30, 12, 3), MeshLib.basis_forward(track.fwd_at(bs)))
+	_boss_trigger.fired.connect(func(p):
+		boss.activate(p)
+		call_deferred("_set_barriers", true)
+		boss_started.emit())
+	_add(_boss_trigger)
+	# The arena is sealed both ways until the boss is down.
+	_barrier(_s(Vector3(-372, 4, -1690)) - 16.0, true)
+	_barrier(_s(Vector3(-372, 4, -1790)) + 6.0, false)
+	_zone(Vector3(-372, 10, -1740), Vector3(90, 40, 120), "boss")
+
+	# Rock wall past the goal so the beach ends on stone, not open sea.
+	Props.cliff(rp, Vector3(-372, 12, -1918), Vector3(140, 34, 14))
+	Props.cliff(rp, Vector3(-300, 10, -1880), Vector3(14, 30, 80))
+	Props.cliff(rp, Vector3(-444, 10, -1880), Vector3(14, 30, 80))
+	var gs := _s(Vector3(-372, 4, -1870))
 	Props.goal_gate(rp, track.pos_at(gs), track.fwd_at(gs))
-	var gt := Trigger.make(track.pos_at(gs, 0, 4.0), Vector3(16, 12, 3), MeshLib.basis_forward(track.fwd_at(gs)))
-	gt.fired.connect(func(_p): goal_reached.emit())
+	var gt := Trigger.make(track.pos_at(gs, 0, 5.0), Vector3(34, 14, 4), MeshLib.basis_forward(track.fwd_at(gs)))
+	gt.fired.connect(func(_p):
+		if is_instance_valid(boss) and boss.hp > 0:
+			gt.reset()   # the goal only counts once the boss is beaten
+			return
+		goal_reached.emit())
 	rp.add_child(gt)
 
 	# Birds.
@@ -415,7 +449,7 @@ func _set_pieces() -> void:
 	_zone(Vector3(-60, 40, -710), Vector3(160, 90, 300), "rail")
 	_zone(Vector3(-286, 25, -1150), Vector3(110, 50, 40), "wall")
 	_zone(Vector3(-372, 30, -1290), Vector3(120, 90, 110), "waterfall")
-	_zone(Vector3(-372, 8, -1720), Vector3(80, 30, 90), "finale")
+	_zone(Vector3(-372, 8, -1870), Vector3(80, 30, 70), "finale")
 
 	# Checkpoints.
 	_checkpoint(Vector3(0, 120, 0), FWD, false)
@@ -425,6 +459,7 @@ func _set_pieces() -> void:
 	_checkpoint(Vector3(-170, 17, -1104), Vector3(-0.7, 0, -0.7))
 	_checkpoint(Vector3(-350, 16, -1155), Vector3(-0.5, 0, -0.85))
 	_checkpoint(Vector3(-372, 4, -1372), FWD)
+	_checkpoint(Vector3(-372, 4, -1660), FWD)
 
 
 func _sea_stack(base: Vector3, h: float) -> void:
@@ -564,7 +599,96 @@ func _objects() -> void:
 	_add(Enemy.make(track.pos_at(_s(Vector3(-352, 4, -1530)), 0.0, 6.0), Enemy.Kind.BUZZ, Vector3(0, 0, -1), 7.0))
 	_add(Enemy.make(track.pos_at(_s(Vector3(-380, 4, -1610)), 0.0, 6.5), Enemy.Kind.BUZZ, Vector3(0, 0, -1), 5.0))
 	_add(Enemy.make(track.pos_at(_s(Vector3(-372, 4, -1650)), 5.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 7.0))
-	_ring_along(_s(Vector3(-372, 4, -1650)) + 4.0, _s(Vector3(-372, 4, -1700)) - 6.0, 5.0, 0.0, 1.2)
+	_ring_along(_s(Vector3(-372, 4, -1650)) + 4.0, _s(Vector3(-372, 4, -1690)) - 6.0, 5.0, 0.0, 1.2)
+	_ring_along(_s(Vector3(-372, 4, -1830)) + 4.0, _s(Vector3(-372, 4, -1870)) - 6.0, 5.0, 0.0, 1.2, 4.0)
+	_badniks()
+
+
+# Extra badniks along the racing line: crabs scuttling across the road,
+# Motobugs on the verges and Buzz Bombers over the jumps, spaced so a
+# rolling or boosting Sonic can chain them.
+func _badniks() -> void:
+	var placements := [
+		# [x, y, z of a route point, lateral, kind, patrol]
+		[Vector3(0, 119, -60), 0.0, Enemy.Kind.CRAB, 4.0],
+		[Vector3(-4, 114, -90), -3.5, Enemy.Kind.MOTOBUG, 5.0],
+		[Vector3(-16, 96, -160), 3.0, Enemy.Kind.CRAB, 3.5],
+		[Vector3(-16, 70, -275), 0.0, Enemy.Kind.CRAB, 4.0],
+		[Vector3(-34, 58, -305), -3.0, Enemy.Kind.MOTOBUG, 4.0],
+		[Vector3(-40, 41, -360), 3.0, Enemy.Kind.MOTOBUG, 5.0],
+		[Vector3(-25, 40, -422), 0.0, Enemy.Kind.CRAB, 4.0],
+		[Vector3(-25, 40, -530), -3.0, Enemy.Kind.MOTOBUG, 4.0],
+		[Vector3(-102, 25, -878), 0.0, Enemy.Kind.CRAB, 4.5],
+		[Vector3(-120, 26, -990), 3.0, Enemy.Kind.MOTOBUG, 5.0],
+		[Vector3(-126, 24, -1030), 0.0, Enemy.Kind.CRAB, 3.5],
+		[Vector3(-150, 20, -1078), -2.5, Enemy.Kind.MOTOBUG, 4.0],
+		[Vector3(-196, 15, -1130), 4.0, Enemy.Kind.CRAB, 5.0],
+		[Vector3(-212, 15, -1142), -3.0, Enemy.Kind.MOTOBUG, 4.0],
+		[Vector3(-340, 15, -1147), 0.0, Enemy.Kind.CRAB, 4.0],
+		[Vector3(-364, 20, -1178), 3.0, Enemy.Kind.MOTOBUG, 5.0],
+		[Vector3(-372, 26, -1205), -3.0, Enemy.Kind.CRAB, 3.5],
+		[Vector3(-372, 4, -1370), 0.0, Enemy.Kind.CRAB, 6.0],
+		[Vector3(-368, 4, -1410), 4.0, Enemy.Kind.MOTOBUG, 6.0],
+		[Vector3(-338, 4, -1490), 0.0, Enemy.Kind.CRAB, 6.0],
+		[Vector3(-372, 4, -1570), -4.0, Enemy.Kind.MOTOBUG, 6.0],
+		[Vector3(-380, 4, -1610), 4.0, Enemy.Kind.CRAB, 5.0],
+		[Vector3(-372, 4, -1830), 0.0, Enemy.Kind.CRAB, 5.0],
+		[Vector3(-372, 4, -1830), 5.0, Enemy.Kind.MOTOBUG, 6.0],
+	]
+	for pl in placements:
+		var s: float = _s(pl[0])
+		var fr := track.frame_at(s)
+		var pos := track.pos_at(s, pl[1], 0.1)
+		_add(Enemy.make(pos, pl[2], fr["f"], pl[3]))
+	# Buzz Bombers hovering over the road in pairs, for airborne chains.
+	for sp in [Vector3(-14, 105, -125), Vector3(-40, 48, -335), Vector3(-25, 40, -510), Vector3(-178, 16, -1112), Vector3(-352, 16, -1156), Vector3(-352, 4, -1450), Vector3(-372, 4, -1650)]:
+		var s: float = _s(sp)
+		var fr := track.frame_at(s)
+		_add(Enemy.make(track.pos_at(s, -4.0, 5.5), Enemy.Kind.BUZZ, fr["f"], 3.0))
+		_add(Enemy.make(track.pos_at(s + 12.0, 4.0, 6.5), Enemy.Kind.BUZZ, fr["f"], 3.0))
+
+
+# A glowing energy wall across the road. `rear` walls appear when the boss
+# starts; the front wall drops when it is beaten.
+func _barrier(s: float, rear: bool) -> void:
+	var fr := track.frame_at(s)
+	var p: Vector3 = fr["p"]
+	var f: Vector3 = fr["f"]
+	var w: float = fr["w"]
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.name = "BarrierRear" if rear else "BarrierFront"
+	var cs := CollisionShape3D.new()
+	var sh := BoxShape3D.new()
+	sh.size = Vector3(w + 70.0, 18.0, 1.0)
+	cs.shape = sh
+	body.add_child(cs)
+	var b := MeshLib.Builder.new()
+	b.box(Vector3.ZERO, Vector3(w + 70.0, 18.0, 0.3))
+	var mat := Mats.unshaded(Color(1.0, 0.35, 0.2, 0.28), true)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var mi := b.commit(mat, "Wall")
+	body.add_child(mi)
+	body.transform = Transform3D(MeshLib.basis_forward(f), p + Vector3(0, 9.0, 0))
+	body.visible = false
+	body.process_mode = Node.PROCESS_MODE_DISABLED
+	cs.disabled = true
+	body.set_meta("rear", rear)
+	_barriers.append(body)
+	_add(body)
+
+
+func _set_barriers(on: bool) -> void:
+	for bdy in _barriers:
+		var cs := bdy.get_child(0) as CollisionShape3D
+		bdy.visible = on
+		bdy.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+		cs.set_deferred("disabled", not on)
+
+
+func _on_boss_defeated() -> void:
+	call_deferred("_set_barriers", false)
+	boss_defeated.emit()
 
 
 func _pad(s: float, spd: float) -> void:

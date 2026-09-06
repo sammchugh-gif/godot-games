@@ -21,6 +21,7 @@ var _dying := false
 var _victory_t := 0.0
 var _loading_label: Label
 var _selftest := false
+var _spawn_at := -1
 
 
 func _ready() -> void:
@@ -34,6 +35,11 @@ func _ready() -> void:
 	if "--touch" in args:
 		touch_mode = true
 	_selftest = "--selftest" in args
+	# Debug: ?spawn=N in the web build starts the run at checkpoint N.
+	if OS.has_feature("web"):
+		var q = JavaScriptBridge.eval("String(window.location.search)", true)
+		if q != null and str(q).find("spawn=") >= 0:
+			_spawn_at = int(str(q).split("spawn=")[1].split("&")[0])
 	_apply_quality()
 	sfx = Sfx.new()
 	sfx.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -136,6 +142,23 @@ func _build_world() -> void:
 		if on:
 			sfx.play("drift", -10.0))
 	level.goal_reached.connect(_on_goal)
+	level.boss_started.connect(func():
+		hud.boss_hp = 1.0
+		hud.message("EGG MOBILE", 1.6)
+		sfx.play("crumble", -4.0, 1.4))
+	level.boss_hit.connect(func(h):
+		hud.boss_hp = float(h) / Boss.MAX_HP
+		cam.shake(0.8)
+		sfx.play("pop", -2.0, 0.8))
+	level.boss_defeated.connect(func():
+		hud.boss_hp = -1.0
+		hud.message("BOSS DOWN!", 2.0)
+		cam.shake(1.5)
+		sfx.play("goal", -2.0))
+	player.splashed.connect(func(p):
+		level.splash(p)
+		hud.message("BACK ON TRACK!", 1.2)
+		cam.shake(0.6))
 	level.checkpoint_reached.connect(func(i):
 		checkpoint = i
 		hud.message("CHECKPOINT"))
@@ -154,6 +177,10 @@ func _enter_title() -> void:
 
 func _start_run() -> void:
 	state = S.PLAY
+	hud.boss_hp = -1.0
+	if _spawn_at >= 0:
+		checkpoint = _spawn_at
+		level.respawn(checkpoint)
 	time_s = 0.0
 	checkpoint = 0
 	player.frozen = false
@@ -348,6 +375,9 @@ func _drive(secs: float) -> void:
 	var far := 0.0
 	var deaths := [0]
 	var s_reset := [-1.0]
+	player.splashed.connect(func(p): print("drive: SPLASH at %s, rescued toward the route" % p))
+	level.boss_hit.connect(func(h): print("drive: BOSS HIT, hp left %d" % h))
+	level.boss_defeated.connect(func(): print("drive: BOSS DEFEATED"))
 	player.died.connect(func():
 		deaths[0] += 1
 		s_reset[0] = level.track.dist_of((level.checkpoints[checkpoint] as Dictionary)["pos"]))
@@ -366,6 +396,19 @@ func _drive(secs: float) -> void:
 		if d > s_bot:
 			s_bot = d
 		var target := level.track.pos_at(s_bot + 14.0)
+		# Boss fight: run at the boss, jump when close, press again in the air
+		# to home in.
+		var fighting := is_instance_valid(level.boss) and level.boss.active and level.boss.phase != Boss.Ph.DEAD
+		if fighting:
+			var to_boss := level.boss.global_position - player.global_position
+			target = level.boss.global_position
+			var flat := Vector2(to_boss.x, to_boss.z).length()
+			if player.st == Player.St.GROUND and flat < 14.0 and i % 15 == 0:
+				Input.action_press("jump")
+			elif player.st == Player.St.AIR and player.air_time > 0.25 and i % 10 == 0 and to_boss.length() < 22.0:
+				Input.action_press("jump")
+			elif i % 5 == 2:
+				Input.action_release("jump")
 		if player.st != prev_st:
 			if player.st == Player.St.AIR and prev_st == Player.St.GROUND:
 				print("drive: left ground at t=%.2f s=%.0f spd=%.1f: %s" % [i / 60.0, s_bot, player.speed, player.leave_reason])

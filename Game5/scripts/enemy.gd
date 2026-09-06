@@ -4,7 +4,7 @@
 class_name Enemy
 extends Area3D
 
-enum Kind { MOTOBUG, BUZZ }
+enum Kind { MOTOBUG, BUZZ, CRAB }
 
 var kind := Kind.MOTOBUG
 var patrol := 0.0
@@ -75,6 +75,24 @@ func _ready() -> void:
 		b.cylinder(Vector3(-0.4, 0.75, 0.6), Vector3(-0.5, 0.95, 1.2), 0.08, 0.1, 8)
 		b.cylinder(Vector3(0.4, 0.75, 0.6), Vector3(0.5, 0.95, 1.2), 0.08, 0.1, 8)
 		_body.add_child(b.commit(grey, "Pipes"))
+	elif kind == Kind.CRAB:
+		var b := MeshLib.Builder.new()
+		b.ellipsoid(Vector3(0, 0.55, 0), Vector3(0.9, 0.35, 0.6), 16, 10)
+		_body.add_child(b.commit(red, "Shell"))
+		b = MeshLib.Builder.new()
+		for s in [-1.0, 1.0]:
+			# Claws out front, legs to the sides.
+			b.ellipsoid(Vector3(0.75 * s, 0.5, -0.65), Vector3(0.3, 0.2, 0.35), 10, 8)
+			b.cylinder(Vector3(0.6 * s, 0.5, -0.2), Vector3(0.75 * s, 0.5, -0.5), 0.08, 0.08, 6)
+			for k in 3:
+				b.cylinder(Vector3(0.7 * s, 0.45, -0.3 + k * 0.3), Vector3(1.15 * s, 0.05, -0.35 + k * 0.3), 0.06, 0.04, 6)
+		_body.add_child(b.commit(grey, "Claws"))
+		b = MeshLib.Builder.new()
+		b.ellipsoid(Vector3(-0.22, 0.9, -0.3), Vector3(0.09, 0.09, 0.06), 8, 6)
+		b.ellipsoid(Vector3(0.22, 0.9, -0.3), Vector3(0.09, 0.09, 0.06), 8, 6)
+		b.cylinder(Vector3(-0.22, 0.7, -0.3), Vector3(-0.22, 0.9, -0.3), 0.04, 0.04, 6)
+		b.cylinder(Vector3(0.22, 0.7, -0.3), Vector3(0.22, 0.9, -0.3), 0.04, 0.04, 6)
+		_body.add_child(b.commit(eye, "Eyes"))
 	else:
 		var b := MeshLib.Builder.new()
 		b.ellipsoid(Vector3(0, 0.7, 0.2), Vector3(0.38, 0.32, 0.8), 16, 12)
@@ -120,6 +138,13 @@ func _process(dt: float) -> void:
 			_wheel.rotation.x = -_spin
 		else:
 			_body.position.y = sin(_t * 3.0) * 0.02
+	elif kind == Kind.CRAB:
+		# Scuttles sideways, with a little hop at each turn.
+		var ph := _t * 1.3
+		var side := sin(ph) * (patrol if patrol > 0.0 else 3.0)
+		global_position = _origin + global_basis.x * side
+		_body.position.y = absf(sin(ph * 6.0)) * 0.06
+		_body.rotation.z = cos(ph) * 0.08
 	else:
 		var bob := sin(_t * 2.1) * 0.35
 		var sway := sin(_t * 0.8) * (patrol if patrol > 0.0 else 0.8)

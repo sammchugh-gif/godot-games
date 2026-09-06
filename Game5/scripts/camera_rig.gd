@@ -139,6 +139,13 @@ func _physics_process(dt: float) -> void:
 			ahead = 10.0
 			look_h = 0.0
 			fov_t += 8.0
+		"boss":
+			dist = 9.5
+			height = 3.2
+			ahead = 2.0
+			look_h = 1.4
+			side = 0.0
+			fov_t += 6.0
 		"finale":
 			dist = 8.0
 			height = 1.5
