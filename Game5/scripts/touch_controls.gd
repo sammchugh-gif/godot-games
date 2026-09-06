@@ -13,7 +13,7 @@ extends CanvasLayer
 
 signal pause_pressed()
 
-const STICK_RANGE := 70.0
+const STICK_RANGE := 110.0
 
 var active := false
 var _canvas: Control
@@ -137,12 +137,14 @@ func _update_stick() -> void:
 	if d.length() > STICK_RANGE:
 		d = d.normalized() * STICK_RANGE
 	var v := d / STICK_RANGE
-	# Dead zone with a smooth ramp.
+	# Dead zone with a smooth ramp, then a squared response so small thumb
+	# movements steer gently and only a big push turns hard.
 	var l := v.length()
-	if l < 0.12:
+	if l < 0.2:
 		v = Vector2.ZERO
 	else:
-		v = v.normalized() * clampf((l - 0.12) / 0.88, 0.0, 1.0)
+		var m := clampf((l - 0.2) / 0.8, 0.0, 1.0)
+		v = v.normalized() * (m * m * 0.75 + m * 0.25)
 	_set_stick(v)
 	_canvas.queue_redraw()
 
