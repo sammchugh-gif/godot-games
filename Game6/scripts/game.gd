@@ -552,7 +552,7 @@ func _run_selftest() -> void:
 	_release("hat")
 	await _step(5)
 	check.call(hat.is_out(), "hat is out after throwing")
-	await _step(80)
+	await _step(130)
 	check.call(not hat.is_out(), "hat comes back")
 	# Coins.
 	var c0 := level.coins

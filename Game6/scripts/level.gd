@@ -40,9 +40,61 @@ const MOON_NAMES := {
 }
 const MULTI := ["boss"]
 
+# A multimesh of identical pickups or props: one draw call for hundreds of
+# coins. Items are dictionaries; hidden ones are parked far underground.
+class Batch:
+	var mm: MultiMesh
+	var items: Array = []
+	var cap: int
+	var kind: String
+	var upright: bool
+
+	func _init(parent: Node3D, mesh: Mesh, mat: Material, capacity: int, k: String, up: bool) -> void:
+		kind = k
+		cap = capacity
+		upright = up
+		mm = MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = capacity
+		mm.custom_aabb = AABB(Vector3(-140, -60, -140), Vector3(280, 160, 280))
+		for i in capacity:
+			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 0.001), Vector3(0, -1000, 0)))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.material_override = mat
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(mmi)
+
+	func add(pos: Vector3, idx: int) -> Dictionary:
+		if items.size() >= cap:
+			return {}
+		var it := {"kind": kind, "idx": idx, "base": pos, "pos": pos, "visible": true, "slot": items.size()}
+		items.append(it)
+		return it
+
+	func update(spin: float) -> void:
+		for it in items:
+			var slot: int = it["slot"]
+			if not it["visible"]:
+				mm.set_instance_transform(slot, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * 0.001), Vector3(0, -1000, 0)))
+				continue
+			var base: Vector3 = it["base"]
+			var pos := base + Vector3(0, sin(spin + base.x) * 0.08, 0)
+			it["pos"] = pos
+			var b := Basis(Vector3.UP, spin)
+			if upright:
+				b = b * Basis(Vector3.RIGHT, PI * 0.5)
+			mm.set_instance_transform(slot, Transform3D(b, pos))
+
+
 var player: Player
 var cam: CameraRig
 var hat: Hat
+var _batches := {}
+var _tree_xf: Array = [[], [], []]
+var _rock_xf: Array = []
+var _hearts: Array = []
 var coins := 0
 var purple := 0
 var moons_got := {}
@@ -79,6 +131,7 @@ var cannon_pos := Vector3.ZERO
 var cannon_t := 2.0
 var rng := RandomNumberGenerator.new()
 var hints: Array = [
+	{"pos": Vector3(12, 0, -8), "r": 7.0, "text": "Jump three times in a row to go higher. Or throw your hat and jump on it!"},
 	{"pos": Vector3(-34, 0, -6), "r": 12.0, "text": "Throw your HAT at a frog to become it!"},
 	{"pos": Vector3(30, 12, -72), "r": 12.0, "text": "A sleeping T-Rex! Throw your HAT at it."},
 	{"pos": Vector3(-55, 0, 34), "r": 10.0, "text": "Throw your HAT at the plant, then hold JUMP to stretch."},
@@ -134,9 +187,13 @@ func build(p: Player, c: CameraRig, h: Hat) -> void:
 	_environment()
 	add_child(Terrain.build())
 	_water()
+	_batches["coin"] = Batch.new(_dyn, _coin_mesh, Mats.glow(Color(1.0, 0.85, 0.2), 0.6, 0.3), 420, "coin", true)
+	_batches["purple"] = Batch.new(_dyn, _purple_mesh, Mats.glow(Color(0.7, 0.3, 0.95), 0.8, 0.3), 24, "purple", true)
+	_batches["blue"] = Batch.new(_dyn, _coin_mesh, Mats.glow(Color(0.25, 0.55, 1.0), 0.9, 0.3), 12, "blue", true)
 	_dressing()
 	_landing_zone()
 	_set_pieces()
+	_finish_dressing()
 	_pickups()
 	_creatures()
 	_moons()
@@ -168,11 +225,22 @@ func build(p: Player, c: CameraRig, h: Hat) -> void:
 	add_child(_dust)
 
 
+var _bursts: Array = []
+var _burst_i := 0
+
+
 func burst(pos: Vector3, col: Color = Color(1.0, 0.95, 0.7)) -> void:
-	_dust.global_position = pos
-	_dust.material_override = Mats.unshaded(col)
-	_dust.restart()
-	_dust.emitting = true
+	if _bursts.is_empty():
+		for i in 6:
+			var d := _dust.duplicate() as CPUParticles3D
+			add_child(d)
+			_bursts.append(d)
+	var d: CPUParticles3D = _bursts[_burst_i]
+	_burst_i = (_burst_i + 1) % _bursts.size()
+	d.global_position = pos
+	d.material_override = Mats.unshaded(col)
+	d.restart()
+	d.emitting = true
 
 
 func _environment() -> void:
@@ -311,7 +379,7 @@ func _dressing() -> void:
 		Vector3(-40, 0, -112), Vector3(44, 0, -58), Vector3(44, 0, -104), Vector3(104, 0, 12), Vector3(100, 0, 20)]
 	var trees := 0
 	var tries := 0
-	var tree_n := Quality.scale(110, 70)
+	var tree_n := Quality.scale(120, 85)
 	while trees < tree_n and tries < 3000:
 		tries += 1
 		var x := rng.randf_range(-125.0, 125.0)
@@ -324,38 +392,70 @@ func _dressing() -> void:
 			kind = 2
 		elif h > 8.0:
 			kind = 1 if rng.randf() < 0.7 else 0
-		var t := Models.tree(kind, rng)
-		t.position = Vector3(x, h - 0.2, z)
-		t.rotation.y = rng.randf() * TAU
-		var s := rng.randf_range(0.85, 1.3)
-		t.scale = Vector3(s, s, s)
-		add_child(t)
-		var body := StaticBody3D.new()
-		var cs := CollisionShape3D.new()
-		var c := CylinderShape3D.new()
-		c.radius = 0.4 * s
-		c.height = 3.0
-		cs.shape = c
-		cs.position = Vector3(0, 1.5, 0)
-		body.add_child(cs)
-		body.position = Vector3(x, h, z)
-		add_child(body)
+		_tree(kind, Vector3(x, h - 0.2, z), rng.randf_range(0.8, 1.3))
 		trees += 1
-	# Rocks.
-	for i in Quality.scale(70, 45):
+	for i in Quality.scale(80, 55):
 		var x := rng.randf_range(-125.0, 125.0)
 		var z := rng.randf_range(-125.0, 125.0)
 		if not _clear_spot(x, z, avoid, 7.0, 0.5):
 			continue
-		var size := rng.randf_range(0.5, 1.6)
-		var mi := MeshInstance3D.new()
-		mi.mesh = Models.rock(rng, size)
-		mi.material_override = Mats.pbr(ROCK.lerp(ROCK_DARK, rng.randf()), 0.95)
-		mi.position = Vector3(x, g(x, z) - 0.1, z)
-		add_child(mi)
+		_rock(Vector3(x, g(x, z) - 0.1, z), rng.randf_range(0.5, 1.6))
 	# Flowers and grass tufts as one multimesh each.
 	_scatter(Quality.scale(700, 380), 0.14, [Color(0.95, 0.85, 0.3), Color(0.95, 0.4, 0.5), Color(0.98, 0.98, 0.98), Color(0.6, 0.5, 0.95)], avoid)
 	_scatter(Quality.scale(900, 500), 0.22, [Color(0.35, 0.7, 0.25), Color(0.5, 0.8, 0.3)], avoid, true)
+
+
+func _tree(kind: int, pos: Vector3, scale: float) -> void:
+	var t := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(scale, scale * rng.randf_range(0.9, 1.15), scale)), pos)
+	_tree_xf[kind].append(t)
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var c := CylinderShape3D.new()
+	c.radius = 0.4 * scale
+	c.height = 3.0
+	cs.shape = c
+	cs.position = Vector3(0, 1.5, 0)
+	body.add_child(cs)
+	body.position = pos
+	add_child(body)
+
+
+func _rock(pos: Vector3, size: float) -> void:
+	var sc := Vector3(size * rng.randf_range(0.8, 1.2), size * rng.randf_range(0.7, 1.1), size * rng.randf_range(0.8, 1.2))
+	_rock_xf.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(sc), pos))
+
+
+func _finish_dressing() -> void:
+	for kind in 3:
+		var xs: Array = _tree_xf[kind]
+		if xs.is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = Models.tree_mesh(kind)
+		mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, xs[i])
+			var tint := rng.randf_range(0.85, 1.1)
+			mm.set_instance_color(i, Color(tint, tint * rng.randf_range(0.95, 1.08), tint))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.material_override = Mats.vertex_painted(0.85)
+		add_child(mmi)
+	if not _rock_xf.is_empty():
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.mesh = Models.rock(rng, 1.0)
+		mm.instance_count = _rock_xf.size()
+		for i in _rock_xf.size():
+			mm.set_instance_transform(i, _rock_xf[i])
+			mm.set_instance_color(i, ROCK.lerp(ROCK_DARK, rng.randf()))
+		var mmi := MultiMeshInstance3D.new()
+		mmi.multimesh = mm
+		mmi.material_override = Mats.vertex_painted(0.95)
+		add_child(mmi)
 
 
 func _clear_spot(x: float, z: float, avoid: Array, r: float, min_ny: float) -> bool:
@@ -478,11 +578,7 @@ func _rock_pile(center: Vector3, count: int, size: float) -> void:
 	for i in count:
 		var a := rng.randf() * TAU
 		var d := rng.randf() * size * 0.8
-		var mi := MeshInstance3D.new()
-		mi.mesh = Models.rock(rng, size * rng.randf_range(0.6, 1.1))
-		mi.material_override = Mats.pbr(ROCK.lerp(ROCK_DARK, rng.randf()), 0.95)
-		mi.position = center + Vector3(cos(a) * d, 0, sin(a) * d)
-		add_child(mi)
+		_rock(center + Vector3(cos(a) * d, 0, sin(a) * d), size * rng.randf_range(0.6, 1.1))
 
 
 func _set_pieces() -> void:
@@ -557,9 +653,7 @@ func _set_pieces() -> void:
 	chest.add_child(lid.commit(Mats.pbr(Color(0.85, 0.7, 0.25), 0.4, 0.6), "Lid"))
 	for i in 7:
 		var a := TAU * i / 7.0
-		var t := Models.tree(0, rng)
-		t.position = Vector3(-30.0 + cos(a) * 5.0, g(-30.0 + cos(a) * 5.0, 60.0 + sin(a) * 5.0) - 0.2, 60.0 + sin(a) * 5.0)
-		add_child(t)
+		_tree(0, Vector3(-30.0 + cos(a) * 5.0, g(-30.0 + cos(a) * 5.0, 60.0 + sin(a) * 5.0) - 0.2, 60.0 + sin(a) * 5.0), 1.1)
 	# 12. Pound switch near the top of the ramp.
 	switch_node = _cyl(Vector3(38.0, g(38.0, -52.0), -52.0), 1.0, 0.5, Color(0.85, 0.15, 0.15), 12)
 	switch_node.name = "Switch"
@@ -654,31 +748,23 @@ func _boulder(pos: Vector3, size: float) -> void:
 
 # --------------------------------------------------------------- pickups --
 
-func _pickup(kind: String, pos: Vector3, idx: int = -1) -> Node3D:
-	if kind == "purple" and purple_got.has(idx):
-		return null
-	var mi := MeshInstance3D.new()
-	match kind:
-		"coin":
-			mi.mesh = _coin_mesh
-			mi.material_override = Mats.glow(Color(1.0, 0.85, 0.2), 0.6, 0.3)
-		"purple":
-			mi.mesh = _purple_mesh
-			mi.material_override = Mats.glow(Color(0.7, 0.3, 0.95), 0.8, 0.3)
-		"blue":
-			mi.mesh = _coin_mesh
-			mi.material_override = Mats.glow(Color(0.25, 0.55, 1.0), 0.9, 0.3)
-		"heart":
-			mi.mesh = _heart_mesh
-			mi.material_override = Mats.glow(Color(1.0, 0.3, 0.4), 0.8, 0.3)
-	mi.rotation.x = PI * 0.5 if kind != "heart" else 0.0
-	mi.position = pos
-	mi.set_meta("kind", kind)
-	mi.set_meta("idx", idx)
-	mi.set_meta("base", pos)
-	_dyn.add_child(mi)
-	pickups.append(mi)
-	return mi
+func _pickup(kind: String, pos: Vector3, idx: int = -1) -> Dictionary:
+	if kind == "heart":
+		var mi := MeshInstance3D.new()
+		mi.mesh = _heart_mesh
+		mi.material_override = Mats.glow(Color(1.0, 0.3, 0.4), 0.8, 0.3)
+		mi.position = pos
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_dyn.add_child(mi)
+		var it := {"kind": "heart", "idx": idx, "base": pos, "pos": pos, "visible": true, "node": mi}
+		_hearts.append(it)
+		pickups.append(it)
+		return it
+	var b: Batch = _batches[kind]
+	var it := b.add(pos, idx)
+	if not it.is_empty():
+		pickups.append(it)
+	return it
 
 
 func spawn_coins(pos: Vector3, n: int) -> void:
@@ -821,13 +907,8 @@ func _moon_node(id: String, pos: Vector3) -> Node3D:
 	var multi := id in MULTI
 	mi.material_override = Mats.glow(Color(1.0, 0.9, 0.3) if not multi else Color(1.0, 0.75, 0.2), 1.6, 0.25)
 	mi.scale = Vector3.ONE * (1.6 if multi else 1.0)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	m.add_child(mi)
-	var lt := OmniLight3D.new()
-	lt.light_color = Color(1.0, 0.9, 0.5)
-	lt.light_energy = 1.2
-	lt.omni_range = 5.0
-	lt.shadow_enabled = false
-	m.add_child(lt)
 	m.position = pos
 	m.set_meta("id", id)
 	m.set_meta("base", pos)
@@ -917,10 +998,9 @@ func restore(d: Dictionary) -> void:
 		if moons_got.has(m.get_meta("id")):
 			moons.erase(m)
 			m.queue_free()
-	for p in pickups.duplicate():
-		if p.get_meta("kind") == "purple" and purple_got.has(int(p.get_meta("idx"))):
-			pickups.erase(p)
-			p.queue_free()
+	for it in pickups:
+		if it["kind"] == "purple" and purple_got.has(int(it["idx"])):
+			it["visible"] = false
 	if moons_got.has("rex"):
 		for b in boulders:
 			b.queue_free()
@@ -1030,9 +1110,7 @@ func _physics_process(dt: float) -> void:
 		if blue_t <= 0.0:
 			timer_changed.emit(0.0)
 			for b in blue_coins:
-				if is_instance_valid(b):
-					b.visible = true
-					b.set_meta("taken", false)
+				b["visible"] = true
 			message.emit("Blue coins reset. Try again!")
 			Sfx.play("deny")
 	# Camera zone for the boss.
@@ -1043,12 +1121,14 @@ func _physics_process(dt: float) -> void:
 func _process(dt: float) -> void:
 	# Spin pickups and moons (cheap: they are plain nodes).
 	var spin := _anim_t * 2.4
-	for p in pickups:
-		if not is_instance_valid(p):
-			continue
-		p.rotation.y = spin
-		var base: Vector3 = p.get_meta("base")
-		p.position.y = base.y + sin(spin + base.x) * 0.08
+	for k in _batches:
+		(_batches[k] as Batch).update(spin)
+	for it in _hearts:
+		var n: Node3D = it["node"]
+		n.visible = it["visible"]
+		n.rotation.y = spin
+		var base: Vector3 = it["base"]
+		n.position.y = base.y + sin(spin + base.x) * 0.08
 	for m in moons:
 		if not is_instance_valid(m):
 			continue
@@ -1066,15 +1146,12 @@ func _process(dt: float) -> void:
 
 
 func _collect_at(p: Vector3, r: float) -> void:
-	for i in range(pickups.size() - 1, -1, -1):
-		var pk: Node3D = pickups[i]
-		if not is_instance_valid(pk):
-			pickups.remove_at(i)
+	for it in pickups:
+		if not it["visible"]:
 			continue
-		if not pk.visible:
-			continue
-		if pk.position.distance_to(p) < r:
-			_take_pickup(pk)
+		var pos: Vector3 = it["pos"]
+		if pos.distance_to(p) < r:
+			_take_pickup(it)
 	for i in range(moons.size() - 1, -1, -1):
 		var m: Node3D = moons[i]
 		if not is_instance_valid(m):
@@ -1084,40 +1161,38 @@ func _collect_at(p: Vector3, r: float) -> void:
 			_take_moon(m)
 
 
-func _take_pickup(pk: Node3D) -> void:
-	var kind: String = pk.get_meta("kind")
+func _take_pickup(it: Dictionary) -> void:
+	var kind: String = it["kind"]
+	it["visible"] = false
+	var pos: Vector3 = it["pos"]
 	match kind:
 		"coin":
 			coins += 1
 			Sfx.play("coin", -4.0)
-			pickups.erase(pk)
-			pk.queue_free()
+			burst(pos, Color(1.0, 0.9, 0.4))
 		"purple":
 			purple += 1
-			purple_got[int(pk.get_meta("idx"))] = true
+			purple_got[int(it["idx"])] = true
 			Sfx.play("purple", -2.0)
-			pickups.erase(pk)
-			pk.queue_free()
+			burst(pos, Color(0.8, 0.5, 1.0))
 		"heart":
 			player.heal(1)
 			Sfx.play("heart")
-			pickups.erase(pk)
-			pk.queue_free()
+			burst(pos, Color(1.0, 0.5, 0.6))
 		"blue":
-			pk.visible = false
-			pk.set_meta("taken", true)
 			Sfx.play("purple", -2.0, 0.0)
+			burst(pos, Color(0.5, 0.7, 1.0))
 			if blue_t <= 0.0:
 				blue_t = 16.0
 				message.emit("Grab all 8 blue coins!")
 			var left := 0
 			for b in blue_coins:
-				if is_instance_valid(b) and b.visible:
+				if b["visible"]:
 					left += 1
 			if left == 0:
 				blue_t = -1.0
 				timer_changed.emit(0.0)
-				spawn_moon("bluecoins", pk.position + Vector3(0, 1.0, 0))
+				spawn_moon("bluecoins", pos + Vector3(0, 1.0, 0))
 	coins_changed.emit(coins, purple)
 
 

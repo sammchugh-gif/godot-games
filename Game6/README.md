@@ -19,17 +19,20 @@ press F5.
 - Left thumb anywhere on the left of the screen: a floating stick.
 - **JUMP** (big blue button). Jump again as you land to chain a double and a
   triple jump.
-- **HAT** (red): throw the cap. Hold the button and the cap hovers so you can
-  jump on it for a **cap jump**. Throw it at a creature to **capture** it;
-  press HAT again to let go.
-- **POUND** (yellow): hold on the ground to crouch (crouch + JUMP while
-  running is a **long jump**); press in the air to **ground pound**.
+- **HAT** (red): throw the cap. It floats for a second at the end of its
+  flight so you can jump on it for a **cap jump**; tap HAT again to call it
+  back early. Throw it at a creature to **capture** it; press HAT again to
+  let go.
+- **POUND** (yellow): tap it on the ground and then JUMP while running for a
+  **long jump** (or hold it to crouch); press it in the air to **ground
+  pound**. Everything works with one thumb: no button needs holding while
+  another is pressed.
 - Drag a finger on the right side of the screen to turn the camera.
 - Pause chip at the top centre.
 
 **Keyboard (desktop browser)**: WASD / arrows move, Space jump, X hat, C or
 Shift pound and crouch, Q / E or mouse drag turn the camera, P pauses.
-A gamepad works too.
+A gamepad works too. In portrait the game asks you to turn the iPad.
 
 Jump into a wall and press JUMP again to **wall jump**.
 
@@ -71,6 +74,8 @@ the last checkpoint flag. Progress is saved in the browser.
 - `scripts/level.gd` — Dino Ridge: environment, water, trees and rocks, all
   the set pieces, coins, moons, checkpoints, the shop zone, the balloon and
   every interaction (hat hits, pounds, Rex smashes, rocket explosions).
+  Coins, trees and rocks are multimeshes, so the whole kingdom is a few
+  hundred draw calls: that is what keeps WebGL on an iPad at speed.
 - `scripts/terrain.gd` — the heightfield function, vertex-coloured mesh and
   trimesh collider.
 - `scripts/models.gd` — every character and pickup from primitives.

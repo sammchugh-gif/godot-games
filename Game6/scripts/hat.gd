@@ -23,7 +23,7 @@ var _spin := 0.0
 const RANGE := 7.0
 const OUT_T := 0.32
 const BACK_T := 0.3
-const HOVER_MAX := 1.4
+const HOVER_MAX := 1.15
 
 
 func _ready() -> void:
@@ -94,7 +94,7 @@ func _physics_process(dt: float) -> void:
 		S.HOVER:
 			_hover_t += dt
 			global_position.y = _to.y + sin(_hover_t * 6.0) * 0.08
-			if not _hold or _hover_t > HOVER_MAX:
+			if _hover_t > HOVER_MAX:
 				_begin_return()
 		S.BACK:
 			_t += dt / BACK_T

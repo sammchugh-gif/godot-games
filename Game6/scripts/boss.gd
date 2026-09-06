@@ -75,13 +75,13 @@ func _physics_process(dt: float) -> void:
 			velocity.z = move_toward(velocity.z, 0.0, 20.0 * dt)
 			_face(to_p, dt, 5.0)
 			_t += dt
-			if _t > (1.1 if hp == 3 else 0.8):
+			if _t > (1.3 if hp == 3 else 1.0):
 				state = S.CHARGE
 				_t = 0.0
 				_dir = Vector3(-sin(facing), 0, -cos(facing))
 				Sfx.play("roar", -4.0)
 		S.CHARGE:
-			var sp := 17.0 + (3 - hp) * 3.0
+			var sp := 14.0 + (3 - hp) * 2.5
 			velocity.x = _dir.x * sp
 			velocity.z = _dir.z * sp
 			_t += dt

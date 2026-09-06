@@ -59,7 +59,7 @@ func _layout() -> void:
 		"pound": {"rect": Rect2(_size.x - m - jr * 2 + 8, _size.y - m - jr * 2 - 18 - 92, 108, 92), "action": "pound", "finger": -1,
 			"color": Color(1.0, 0.75, 0.2), "label": "POUND", "glow": 0.0},
 	}
-	_pause_rect = Rect2(_size.x * 0.5 - 30, 14, 60, 40)
+	_pause_rect = Rect2(_size.x * 0.5 - 40, 12, 80, 50)
 	_canvas.queue_redraw()
 
 
@@ -194,5 +194,5 @@ func _draw_controls() -> void:
 		_canvas.draw_string(_font, r.get_center() + Vector2(-w * 0.5, 7), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(1, 1, 1, 0.9))
 	_canvas.draw_rect(_pause_rect, Color(0, 0, 0, 0.35))
 	_canvas.draw_rect(_pause_rect, Color(1, 1, 1, 0.45), false, 2.0)
-	_canvas.draw_rect(Rect2(_pause_rect.position + Vector2(21, 11), Vector2(6, 18)), Color(1, 1, 1, 0.9))
-	_canvas.draw_rect(Rect2(_pause_rect.position + Vector2(33, 11), Vector2(6, 18)), Color(1, 1, 1, 0.9))
+	_canvas.draw_rect(Rect2(_pause_rect.position + Vector2(29, 14), Vector2(7, 22)), Color(1, 1, 1, 0.9))
+	_canvas.draw_rect(Rect2(_pause_rect.position + Vector2(44, 14), Vector2(7, 22)), Color(1, 1, 1, 0.9))

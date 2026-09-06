@@ -419,6 +419,32 @@ static func tree(kind: int, rng: RandomNumberGenerator) -> Node3D:
 	return root
 
 
+# One tree of each kind as a single vertex-coloured mesh (for multimeshes).
+# Height 4; instances scale it.
+static func tree_mesh(kind: int) -> ArrayMesh:
+	var b := MeshLib.Builder.new()
+	var h := 4.0
+	b.color = Color(0.45, 0.3, 0.16)
+	b.cylinder(Vector3.ZERO, Vector3(0, h * 0.55, 0), 0.32, 0.22, 8)
+	b.color = Color(0.3, 0.64, 0.24)
+	if kind == 0:
+		b.ellipsoid(Vector3(0, h * 0.65, 0), Vector3(1.6, 1.4, 1.6), 12, 8)
+		b.ellipsoid(Vector3(0.7, h * 0.5, 0.3), Vector3(1.1, 0.9, 1.1), 10, 6)
+		b.ellipsoid(Vector3(-0.6, h * 0.55, -0.4), Vector3(1.0, 0.9, 1.0), 10, 6)
+	elif kind == 1:
+		b.color = Color(0.22, 0.55, 0.26)
+		for i in 3:
+			var y := h * 0.35 + i * h * 0.2
+			b.spike(Vector3(0, y, 0), Vector3(0, y + h * 0.35, 0), 1.5 - i * 0.35, 10, 3, Vector3.ZERO, 1.0)
+	else:
+		b.color = Color(0.36, 0.7, 0.26)
+		for i in 6:
+			var a := TAU * i / 6.0
+			var d := Vector3(cos(a), 0, sin(a))
+			b.spike(Vector3(0, h * 0.55, 0), Vector3(0, h * 0.55 - 0.6, 0) + d * 2.4, 0.35, 6, 4, Vector3(0, 0.9, 0))
+	return b.commit_mesh()
+
+
 static func rock(rng: RandomNumberGenerator, size: float) -> ArrayMesh:
 	var b := MeshLib.Builder.new()
 	b.ellipsoid(Vector3(0, size * 0.25, 0), Vector3(size * rng.randf_range(0.8, 1.2), size * 0.7, size * rng.randf_range(0.8, 1.2)), 8, 5, Basis(Vector3.UP, rng.randf() * TAU))

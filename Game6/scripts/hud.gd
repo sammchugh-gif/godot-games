@@ -127,6 +127,12 @@ func _moon_icon(c: Vector2, r: float, col: Color) -> void:
 
 func _draw_hud() -> void:
 	var size := _root.size
+	if touch and size.y > size.x * 1.02:
+		_root.draw_rect(Rect2(Vector2.ZERO, size), Color(0.08, 0.2, 0.45, 0.96))
+		_text(Vector2(size.x * 0.5, size.y * 0.45), "TURN YOUR iPAD", 44, Color(1.0, 0.85, 0.25), HORIZONTAL_ALIGNMENT_CENTER)
+		_text(Vector2(size.x * 0.5, size.y * 0.45 + 50), "SIDEWAYS TO PLAY", 44, Color(1.0, 0.85, 0.25), HORIZONTAL_ALIGNMENT_CENTER)
+		_root.draw_rect(Rect2(size.x * 0.5 - 60, size.y * 0.6, 120, 80), Color(1, 1, 1, 0.9), false, 5.0)
+		return
 	if _panel_kind == "title":
 		_draw_title(size)
 		return
@@ -188,8 +194,11 @@ func _draw_title(size: Vector2) -> void:
 	_text(Vector2(size.x * 0.5, cy + 100), "Sophia, Rory and Dylan Games, Inc", 18, Color(0.8, 0.85, 0.95), HORIZONTAL_ALIGNMENT_CENTER)
 	if fmod(_dot, 1.0) < 0.65:
 		_text(Vector2(size.x * 0.5, size.y * 0.78), "TAP TO PLAY" if touch else "PRESS SPACE TO PLAY", 34, Color.WHITE, HORIZONTAL_ALIGNMENT_CENTER)
-	var help := "Left thumb: move    JUMP    HAT: throw, hold to hover, tap again to let go    POUND: hold to crouch, in the air: slam" if touch else "WASD move   SPACE jump   X hat   C pound/crouch   Q/E or mouse drag: camera   P pause"
-	_text(Vector2(size.x * 0.5, size.y * 0.9), help, 17, Color(0.85, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
+	var help1 := "Left thumb: move.  JUMP: tap again as you land for bigger jumps." if touch else "WASD move   SPACE jump   X hat   C pound / crouch"
+	var help2 := "HAT: throw it, jump on it, tap again to call it back.  POUND: tap, then JUMP for a long jump. In the air: slam." if touch else "Q / E or mouse drag: camera   P pause"
+	var hs := 17 if size.x > 1100 else 15
+	_text(Vector2(size.x * 0.5, size.y * 0.88), help1, hs, Color(0.85, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
+	_text(Vector2(size.x * 0.5, size.y * 0.88 + hs + 8), help2, hs, Color(0.85, 0.9, 1.0), HORIZONTAL_ALIGNMENT_CENTER)
 	if _moons > 0:
 		_text(Vector2(size.x * 0.5, size.y * 0.66), "Saved game: %d moons, %d coins" % [_moons, _coins], 20, Color(1.0, 0.92, 0.5), HORIZONTAL_ALIGNMENT_CENTER)
 

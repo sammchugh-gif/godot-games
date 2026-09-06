@@ -41,6 +41,8 @@ var wall_sliding := false
 var long_jumping := false
 var in_water := false
 var _pound_pause := 0.0
+var _crouch_t := 0.0
+var _prev_vy := 0.0
 var _jump_count := 0
 var _chain_t := 99.0
 var _coyote := 0.0
@@ -294,7 +296,12 @@ func _physics_process(dt: float) -> void:
 		_hazards()
 		return
 
-	crouching = on_floor and pound_held()
+	# A tap of POUND on the ground leaves a short crouch window, so JUMP right
+	# after it is a long jump without holding two buttons at once.
+	_crouch_t = maxf(_crouch_t - dt, 0.0)
+	if on_floor and pound_pressed():
+		_crouch_t = 0.45
+	crouching = on_floor and (pound_held() or _crouch_t > 0.0)
 	var speed_mul := 1.0
 	if crouching:
 		speed_mul = 0.4
@@ -332,6 +339,7 @@ func _physics_process(dt: float) -> void:
 	if _buffer > 0.0 and _coyote > 0.0 and not wall_sliding:
 		var hspeed := Vector2(velocity.x, velocity.z).length()
 		if crouching and hspeed > 2.5:
+			_crouch_t = 0.0
 			var d := Vector3(velocity.x, 0, velocity.z).normalized()
 			velocity = d * LONG_H + Vector3.UP * LONG_V
 			long_jumping = true
@@ -365,21 +373,25 @@ func _physics_process(dt: float) -> void:
 
 	# Hat.
 	var in_shop: bool = level != null and level.get("shop_inside") == true
-	if hat_pressed() and hat and not hat.is_out() and not in_shop:
-		var d := Vector3(-sin(facing), 0, -cos(facing))
-		if inp.length() > 0.2:
-			d = inp.normalized()
-		hat.throw(global_position + Vector3(0, 1.15, 0), d)
-	if hat and not Input.is_action_pressed("hat"):
-		hat.release_hold()
+	if hat_pressed() and hat and not in_shop:
+		if hat.is_out():
+			hat.recall()
+		else:
+			var d := Vector3(-sin(facing), 0, -cos(facing))
+			if inp.length() > 0.2:
+				d = inp.normalized()
+			hat.throw(global_position + Vector3(0, 1.15, 0), d)
 
+	_prev_vy = velocity.y
 	move_and_slide()
 	var now_floor := is_on_floor()
 	if now_floor and not _was_floor:
 		_chain_t = 0.0
 		long_jumping = false
-		if velocity.y < -4.0 or true:
-			Sfx.play("land", -10.0)
+		_crouch_t = 0.0
+		Sfx.play("land", -10.0)
+		if _prev_vy < -16.0 and level and level.has_method("burst"):
+			level.burst(global_position, Color(0.95, 0.9, 0.75))
 	_was_floor = now_floor
 	_hazards()
 	_animate(dt)
