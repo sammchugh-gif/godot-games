@@ -36,14 +36,14 @@ const ROLL_FRICTION := 1.3
 const GRAVITY := 38.0
 const JUMP := 15.5
 const AIR_ACCEL := 20.0
-const TURN_SLOW := 7.5
-const TURN_FAST := 1.5
+const TURN_SLOW := 7.0
+const TURN_FAST := 1.6
 const DRIFT_TURN := 2.6
 const STEEP_Y := 0.55
 const MIN_STEEP_SPEED := 11.0
 const SNAP := 1.0
 const HOMING_SPEED := 62.0
-const HOMING_RANGE := 22.0
+const HOMING_RANGE := 26.0
 const BOOST_DRAIN := 20.0
 const RAIL_MAX := 58.0
 
@@ -55,8 +55,10 @@ var rolling := false
 var spindash := false
 var charge := 0.0
 var boosting := false
-var boost_gauge := 45.0
+var boost_gauge := 60.0
 var rings := 0
+var rings_lost := 0
+var _assist_k := 0.0
 var drifting := false
 var drift_side := 0.0
 var air_dash_used := false
@@ -167,7 +169,7 @@ func horizontal_speed() -> float:
 
 func add_rings(n: int) -> void:
 	rings += n
-	boost_gauge = minf(boost_gauge + 3.0 * n, 100.0)
+	boost_gauge = minf(boost_gauge + 4.0 * n, 100.0)
 	ring_collected.emit(rings)
 
 
@@ -225,7 +227,7 @@ func _read_input() -> void:
 	# Smooth the stick over a few frames: thumbs and keys both jitter, and
 	# at speed a one-frame twitch should not become a swerve.
 	var raw := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	input_raw = input_raw.lerp(raw, 1.0 - exp(-18.0 * get_physics_process_delta_time()))
+	input_raw = input_raw.lerp(raw, 1.0 - exp(-11.0 * get_physics_process_delta_time()))
 	if input_raw.length() < 0.03 and raw == Vector2.ZERO:
 		input_raw = Vector2.ZERO
 	var f := -cam_basis.z
@@ -310,6 +312,11 @@ func _ground(dt: float) -> void:
 						global_position -= rr * lat * minf(6.0 * dt, 1.0)
 	if d.length_squared() > 1e-4:
 		d = d.normalized()
+	# Road assist: on ordinary road, holding 'forward' means 'follow the
+	# road', and the edges push back unless the stick is pushed hard sideways.
+	_assist_k = 0.0
+	if not auto_run and not near.is_empty() and speed > 6.0 and stumble_t <= 0.0 and not drifting and mag > 0.1:
+		d = _road_assist(near, d)
 
 	# Spin dash: crouch and rev while nearly still.
 	var spin_held := Input.is_action_pressed("spin")
@@ -357,6 +364,8 @@ func _ground(dt: float) -> void:
 		turn_rate *= DRIFT_TURN
 	if boosting:
 		turn_rate *= 1.35
+	# Assisted turns (toward the road) may be quicker: they cannot be twitchy.
+	turn_rate *= 1.0 + 1.6 * _assist_k
 	if mag > 0.1 and d.length_squared() > 0.5 and stumble_t <= 0.0:
 		var cosang := clampf(heading.dot(d), -1.0, 1.0)
 		if speed < 1.0:
@@ -373,13 +382,14 @@ func _ground(dt: float) -> void:
 		else:
 			var ang := acos(cosang)
 			# Turn speed follows how far the stick is pushed, not just whether.
-			var step := minf(ang, turn_rate * dt * (0.15 + mag * 0.85))
+			# Progressive: a light touch turns gently, full lock turns hard.
+			var step := minf(ang, turn_rate * dt * (0.12 + mag * mag * 0.88))
 			var axis := heading.cross(d)
 			if axis.length_squared() > 1e-6 and step > 0.0:
 				heading = heading.rotated(axis.normalized(), step).normalized()
 			heading = _project(heading, gnorm).normalized()
 			# Speed lost through sharp turns, less while drifting.
-			var loss := ang * speed * (0.10 if drifting else 0.28) * dt
+			var loss := ang * speed * (0.08 if drifting else 0.16) * (1.0 - 0.8 * _assist_k) * dt
 			speed = maxf(speed - loss, 0.0)
 			if not rolling:
 				var target := MAX_RUN * mag
@@ -431,6 +441,47 @@ func _ground(dt: float) -> void:
 
 # Nearest route frame within a window of the last known distance (loops
 # stack geometry vertically, so a global nearest search is ambiguous).
+# Road assist on ordinary road. With the stick near neutral sideways, the
+# desired direction is blended toward the road's direction (angled back to
+# the centre line when off-line); near an edge and heading outward it is
+# steered back in unless the player is pushing hard sideways. A firm push
+# always wins, so leaving the road on purpose still works. Returns the
+# shaped desired direction and records the assist strength in _assist_k.
+func _road_assist(fr: Dictionary, d: Vector3) -> Vector3:
+	var kind := str(fr["kind"])
+	if kind == "gap" or kind == "collapse":
+		return d
+	var rf := _project(fr["f"], gnorm)
+	if rf.length_squared() < 1e-4:
+		return d
+	rf = rf.normalized()
+	if rf.dot(d) < 0.0:
+		return d
+	var rr := _project(fr["r"], gnorm)
+	if rr.length_squared() < 1e-4:
+		return d
+	rr = rr.normalized()
+	var half: float = float(fr["w"]) * 0.5
+	var lat := (global_position - (fr["p"] as Vector3)).dot(rr)
+	var li := absf(input_raw.x)
+	var k := 0.0
+	if li < 0.4:
+		k = 0.85 * (1.0 - li / 0.4)
+	var margin := half - 1.6
+	var outward := signf(lat) * d.dot(rr)
+	if absf(lat) > margin and outward > 0.0 and li < 0.75:
+		k = maxf(k, clampf((absf(lat) - margin) / 1.6, 0.0, 1.0))
+	if k <= 0.0:
+		return d
+	var target := rf - rr * clampf(lat / maxf(half, 1.0), -1.0, 1.0) * 0.45
+	if target.length_squared() < 1e-4:
+		return d
+	_assist_k = k
+	var out := MeshLib.safe_slerp(d, target.normalized(), k)
+	out = _project(out, gnorm)
+	return out.normalized() if out.length_squared() > 1e-4 else d
+
+
 func _nearest_frame() -> Dictionary:
 	var best := 1e18
 	var bi := -1
@@ -949,7 +1000,10 @@ func take_hit(from: Vector3) -> void:
 	gnorm = Vector3.UP
 	anim_state = "hurt"
 	took_hit.emit()
-	rings = 0
+	# Lose a handful of rings, not the whole bank: harsh enough to matter,
+	# never enough to feel like starting over.
+	rings_lost = mini(rings, 20)
+	rings -= rings_lost
 	ring_collected.emit(rings)
 
 

@@ -274,8 +274,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _scatter_rings() -> void:
 	# The classic ring spill: nothing to spill if empty.
-	var n := mini(player.rings, 14)
-	# (player.rings is already zeroed by take_hit; hud shows 0.)
+	var n := mini(player.rings_lost, 14)
 	var floor_y := player.global_position.y - 0.5
 	for i in n:
 		var r := Ring.new()
