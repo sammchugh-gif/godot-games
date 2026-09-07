@@ -42,6 +42,7 @@ var crouching := false
 var wall_sliding := false
 var long_jumping := false
 var in_water := false
+var on_ice := false
 var _pound_pause := 0.0
 var _crouch_t := 0.0
 var _prev_vy := 0.0
@@ -313,6 +314,8 @@ func _physics_process(dt: float) -> void:
 	var acc := ACC if on_floor else AIR_ACC
 	if long_jumping and not on_floor:
 		acc = 6.0
+	if on_ice and on_floor:
+		acc = 7.0
 	velocity.x = move_toward(velocity.x, target.x, acc * dt)
 	velocity.z = move_toward(velocity.z, target.z, acc * dt)
 

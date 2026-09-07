@@ -17,6 +17,8 @@ var _wander_t := 0.0
 var _die_t := 0.0
 var _stun := 0.0
 var rng := RandomNumberGenerator.new()
+var _ghost_t := 0.0
+var solid_now := true
 
 
 func setup(k: String, lvl: Node, p: Player) -> void:
@@ -33,8 +35,18 @@ func setup(k: String, lvl: Node, p: Player) -> void:
 	col.position = Vector3(0, 0.45, 0)
 	add_child(col)
 	floor_max_angle = deg_to_rad(50.0)
-	model = Models.bonk() if kind == "bonk" else Models.spiny()
+	match kind:
+		"bonk":
+			model = Models.bonk()
+		"snowbonk":
+			model = Models.bonk(Color(0.95, 0.95, 1.0), Color(0.3, 0.3, 0.4))
+		"ghost":
+			model = Models.ghost()
+		_:
+			model = Models.spiny()
 	add_child(model)
+	if kind == "ghost":
+		_ghost_t = rng.randf() * 3.5
 	_wander_t = rng.randf_range(0.5, 2.0)
 
 
@@ -57,6 +69,9 @@ func _physics_process(dt: float) -> void:
 			queue_free()
 		return
 	_stun = maxf(_stun - dt, 0.0)
+	if kind == "ghost":
+		_ghost_step(dt)
+		return
 	if not is_on_floor():
 		velocity.y -= 30.0 * dt
 	var speed := 0.0
@@ -98,15 +113,52 @@ func _physics_process(dt: float) -> void:
 		body.rotation.z = sin(anim_t * 30.0) * 0.2
 
 
+# Ghosts float, drift at the kid, and fade out for a while every few
+# seconds. Faded, they cannot hurt and cannot be hit.
+func _ghost_step(dt: float) -> void:
+	_ghost_t += dt
+	var ph := fmod(_ghost_t, 3.5)
+	solid_now = ph < 2.3
+	model.position.y = 0.8 + sin(_ghost_t * 2.0) * 0.25
+	if not is_instance_valid(player):
+		return
+	var to_p := player.actor_pos() - global_position
+	to_p.y = 0.0
+	var dist := to_p.length()
+	var sp := 0.0
+	if dist < 16.0 and dist > 0.1 and solid_now and not player.dead:
+		_dir = to_p / dist
+		sp = 2.8
+	velocity.x = move_toward(velocity.x, _dir.x * sp, 6.0 * dt)
+	velocity.z = move_toward(velocity.z, _dir.z * sp, 6.0 * dt)
+	velocity.y = 0.0
+	if sp > 0.0:
+		facing = lerp_angle(facing, atan2(-_dir.x, -_dir.z), 1.0 - exp(-dt * 4.0))
+	move_and_slide()
+	model.rotation.y = facing
+	var torso := model.get_node("body/torso") as MeshInstance3D
+	torso.transparency = 0.0 if solid_now else 0.75
+
+
+func hurts() -> bool:
+	return kind != "ghost" or solid_now
+
+
 func stomp() -> bool:
 	if kind == "spiny":
+		return false
+	if kind == "ghost" and not solid_now:
 		return false
 	_kill("stomp")
 	return true
 
 
 func hat_hit() -> bool:
-	if kind == "bonk":
+	if kind == "ghost":
+		if solid_now:
+			_kill("stomp")
+		return true
+	if kind == "bonk" or kind == "snowbonk":
 		_kill("stomp")
 		return true
 	_stun = 1.2

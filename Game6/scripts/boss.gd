@@ -24,7 +24,12 @@ var _dir := Vector3.FORWARD
 var _step := 0.0
 
 
-func setup(lvl: Node, p: Player, c: Vector3, r: float, colour: Color = Color(0.85, 0.45, 0.2), metal: bool = false) -> void:
+var max_hp := 3
+
+
+func setup(lvl: Node, p: Player, c: Vector3, r: float, colour: Color = Color(0.85, 0.45, 0.2), metal: bool = false, extra_hp: int = 0) -> void:
+	max_hp = 3 + extra_hp
+	hp = max_hp
 	level = lvl
 	player = p
 	center = c
@@ -75,13 +80,13 @@ func _physics_process(dt: float) -> void:
 			velocity.z = move_toward(velocity.z, 0.0, 20.0 * dt)
 			_face(to_p, dt, 5.0)
 			_t += dt
-			if _t > (1.3 if hp == 3 else 1.0):
+			if _t > (1.3 if hp == max_hp else 1.0):
 				state = S.CHARGE
 				_t = 0.0
 				_dir = Vector3(-sin(facing), 0, -cos(facing))
 				Sfx.play("roar", -4.0)
 		S.CHARGE:
-			var sp := 14.0 + (3 - hp) * 2.5
+			var sp := 14.0 + (max_hp - hp) * 2.5
 			velocity.x = _dir.x * sp
 			velocity.z = _dir.z * sp
 			_t += dt
