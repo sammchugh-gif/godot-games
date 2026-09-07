@@ -11,7 +11,7 @@ signal activated()
 
 enum Ph { IDLE, HOVER, SWOOP, BALL, HIT, DEAD }
 
-const MAX_HP := 8
+const MAX_HP := 6
 
 var hp := MAX_HP
 var phase := Ph.IDLE

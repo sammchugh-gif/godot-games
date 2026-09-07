@@ -53,7 +53,7 @@ top-right. Landscape.
 10. **Egg Mobile.** Energy walls seal the wide beach and the Egg Mobile
     comes down: it patrols overhead, swoops through you, and below half
     health drops to head height and swings a spiked wrecking ball. Hit the
-    pod eight times with a jump, homing attack, roll or boost; the ball
+    pod six times with a jump, homing attack, roll or boost; the ball
     always hurts. Beat it and the walls drop for the goal ring.
 
 Checkpoints are the star posts. You never drown: touching the sea or the
@@ -90,7 +90,7 @@ a rank by time (S under 1:35).
   ruins, waterfalls, birds, camera zones, checkpoints, the boss arena with
   its energy walls, and burst effects.
 - `scripts/boss.gd` — the Egg Mobile: hover, swoop, wrecking-ball and hit
-  phases, eight hit points, procedural pod, Eggman and chain.
+  phases, six hit points, procedural pod, Eggman and chain.
 - `scripts/enemy.gd` — Motobug, Buzz Bomber and crab badniks.
 - `scripts/camera_rig.gd` — chase camera with speed-dependent distance,
   look-ahead and FOV, banking, surface-normal following on loops and walls,

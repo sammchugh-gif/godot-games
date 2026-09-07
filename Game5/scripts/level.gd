@@ -565,9 +565,7 @@ func _objects() -> void:
 	# 2. Downhill lines and a couple of Motobugs.
 	_ring_along(_s(Vector3(-4, 114, -90)), _s(Vector3(-6, 86, -195)) - 4.0, 7.0, 0.0, 1.2, 3.5)
 	_add(Enemy.make(track.pos_at(_s(Vector3(-14, 105, -125)), 3.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 4.0))
-	_add(Enemy.make(track.pos_at(_s(Vector3(-16, 96, -160)), -3.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 0.0))
 	_ring_along(_s(Vector3(-4, 81, -240)) + 4.0, _s(Vector3(-40, 41, -360)), 7.0, 0.0, 1.2, 3.0)
-	_add(Enemy.make(track.pos_at(_s(Vector3(-34, 58, -305)), 0.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 5.0))
 	_add(Enemy.make(track.pos_at(_s(Vector3(-40, 48, -335)), 0.0, 6.0), Enemy.Kind.BUZZ, Vector3(0, 0, -1), 4.0))
 	# 3. Loop entry pad, rings through the loop and corkscrew.
 	var s_loop := _s(Vector3(-40, 40, -385))
@@ -595,9 +593,7 @@ func _objects() -> void:
 	_ring_along(s_b + 14.0, _s(Vector3(-372, 4, -1650)), 6.0, 0.0, 1.2, 5.0)
 	_pad(_s(Vector3(-372, 4, -1570)) - 4.0, 54.0)
 	_add(Enemy.make(track.pos_at(_s(Vector3(-352, 4, -1450)), 4.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 6.0))
-	_add(Enemy.make(track.pos_at(_s(Vector3(-338, 4, -1490)), -4.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 6.0))
 	_add(Enemy.make(track.pos_at(_s(Vector3(-352, 4, -1530)), 0.0, 6.0), Enemy.Kind.BUZZ, Vector3(0, 0, -1), 7.0))
-	_add(Enemy.make(track.pos_at(_s(Vector3(-380, 4, -1610)), 0.0, 6.5), Enemy.Kind.BUZZ, Vector3(0, 0, -1), 5.0))
 	_add(Enemy.make(track.pos_at(_s(Vector3(-372, 4, -1650)), 5.0, 0.1), Enemy.Kind.MOTOBUG, Vector3(0, 0, -1), 7.0))
 	_ring_along(_s(Vector3(-372, 4, -1650)) + 4.0, _s(Vector3(-372, 4, -1690)) - 6.0, 5.0, 0.0, 1.2)
 	_ring_along(_s(Vector3(-372, 4, -1830)) + 4.0, _s(Vector3(-372, 4, -1870)) - 6.0, 5.0, 0.0, 1.2, 4.0)
@@ -611,29 +607,20 @@ func _badniks() -> void:
 	var placements := [
 		# [x, y, z of a route point, lateral, kind, patrol]
 		[Vector3(0, 119, -60), 0.0, Enemy.Kind.CRAB, 4.0],
-		[Vector3(-4, 114, -90), -3.5, Enemy.Kind.MOTOBUG, 5.0],
 		[Vector3(-16, 96, -160), 3.0, Enemy.Kind.CRAB, 3.5],
-		[Vector3(-16, 70, -275), 0.0, Enemy.Kind.CRAB, 4.0],
 		[Vector3(-34, 58, -305), -3.0, Enemy.Kind.MOTOBUG, 4.0],
 		[Vector3(-40, 41, -360), 3.0, Enemy.Kind.MOTOBUG, 5.0],
-		[Vector3(-25, 40, -422), 0.0, Enemy.Kind.CRAB, 4.0],
 		[Vector3(-25, 40, -530), -3.0, Enemy.Kind.MOTOBUG, 4.0],
 		[Vector3(-102, 25, -878), 0.0, Enemy.Kind.CRAB, 4.5],
 		[Vector3(-120, 26, -990), 3.0, Enemy.Kind.MOTOBUG, 5.0],
-		[Vector3(-126, 24, -1030), 0.0, Enemy.Kind.CRAB, 3.5],
 		[Vector3(-150, 20, -1078), -2.5, Enemy.Kind.MOTOBUG, 4.0],
 		[Vector3(-196, 15, -1130), 4.0, Enemy.Kind.CRAB, 5.0],
-		[Vector3(-212, 15, -1142), -3.0, Enemy.Kind.MOTOBUG, 4.0],
-		[Vector3(-340, 15, -1147), 0.0, Enemy.Kind.CRAB, 4.0],
 		[Vector3(-364, 20, -1178), 3.0, Enemy.Kind.MOTOBUG, 5.0],
 		[Vector3(-372, 26, -1205), -3.0, Enemy.Kind.CRAB, 3.5],
-		[Vector3(-372, 4, -1370), 0.0, Enemy.Kind.CRAB, 6.0],
 		[Vector3(-368, 4, -1410), 4.0, Enemy.Kind.MOTOBUG, 6.0],
 		[Vector3(-338, 4, -1490), 0.0, Enemy.Kind.CRAB, 6.0],
-		[Vector3(-372, 4, -1570), -4.0, Enemy.Kind.MOTOBUG, 6.0],
 		[Vector3(-380, 4, -1610), 4.0, Enemy.Kind.CRAB, 5.0],
 		[Vector3(-372, 4, -1830), 0.0, Enemy.Kind.CRAB, 5.0],
-		[Vector3(-372, 4, -1830), 5.0, Enemy.Kind.MOTOBUG, 6.0],
 	]
 	for pl in placements:
 		var s: float = _s(pl[0])
@@ -641,7 +628,7 @@ func _badniks() -> void:
 		var pos := track.pos_at(s, pl[1], 0.1)
 		_add(Enemy.make(pos, pl[2], fr["f"], pl[3]))
 	# Buzz Bombers hovering over the road in pairs, for airborne chains.
-	for sp in [Vector3(-14, 105, -125), Vector3(-40, 48, -335), Vector3(-25, 40, -510), Vector3(-178, 16, -1112), Vector3(-352, 16, -1156), Vector3(-352, 4, -1450), Vector3(-372, 4, -1650)]:
+	for sp in [Vector3(-14, 105, -125), Vector3(-25, 40, -510), Vector3(-352, 16, -1156), Vector3(-372, 4, -1650)]:
 		var s: float = _s(sp)
 		var fr := track.frame_at(s)
 		_add(Enemy.make(track.pos_at(s, -4.0, 5.5), Enemy.Kind.BUZZ, fr["f"], 3.0))

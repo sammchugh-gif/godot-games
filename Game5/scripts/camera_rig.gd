@@ -105,9 +105,9 @@ func _physics_process(dt: float) -> void:
 		right = Vector3.RIGHT
 
 	# Framing per mode.
-	var dist := lerpf(4.2, 6.2, sp_t)
-	var height := lerpf(1.6, 2.1, sp_t)
-	var look_h := 1.0
+	var dist := lerpf(4.6, 6.6, sp_t)
+	var height := lerpf(2.5, 3.3, sp_t)
+	var look_h := 0.5
 	var ahead := lerpf(1.5, 5.0, sp_t)
 	var fov_t := 70.0 + 10.0 * sp_t + (5.0 if player.boosting else 0.0)
 	var side := 0.0
