@@ -23,7 +23,7 @@ var _ring_pos: Array = []
 
 
 func _init() -> void:
-	Terrain.city = true
+	Terrain.mode = "city"
 	kingdom_id = "city"
 	kingdom_title = "SKYLINE CITY"
 	kingdom_index = 2

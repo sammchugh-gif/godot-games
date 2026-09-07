@@ -5,7 +5,7 @@ extends Level
 
 
 func _init() -> void:
-	Terrain.city = false
+	Terrain.mode = "ridge"
 	kingdom_id = "ridge"
 	kingdom_title = "DINO RIDGE"
 	kingdom_index = 1
@@ -93,15 +93,6 @@ func shallow_water(pos: Vector3) -> bool:
 	var river := absf(pos.x + 10.0) < 5.5 and pos.z > -22.0
 	var pond := Vector2(pos.x + 10.0, pos.z + 28.0).length() < 11.0
 	return (river or pond) and pos.y < Terrain.WATER_Y + 0.25
-
-
-func _kingdom_physics(dt: float) -> void:
-	# Rocket cannon.
-	cannon_t -= dt
-	if cannon_t <= 0.0:
-		cannon_t = 4.5
-		if player.actor_pos().distance_to(cannon_pos) < 70.0:
-			_fire_rocket()
 
 
 func _environment() -> void:
@@ -272,13 +263,7 @@ func _set_pieces() -> void:
 	_cyl(rx + Vector3(3.5, -0.3, 0.5), 2.0, 6.2, ROCK, 10, 1.8)
 	# 7. Rocket cannon tower.
 	cannon_pos = Vector3(58.0, g(58.0, 15.0), 15.0)
-	_cyl(cannon_pos, 2.4, 4.0, ROCK_DARK, 12, 2.0)
-	var cannon := MeshLib.Builder.new()
-	cannon.cylinder(Vector3(-1.0, 5.0, 0), Vector3(2.6, 5.4, 0), 0.9, 1.0, 12)
-	cannon.ellipsoid(Vector3(-1.0, 5.0, 0), Vector3(1.1, 1.1, 1.1), 10, 8)
-	var cm := cannon.commit(Mats.pbr(Color(0.25, 0.25, 0.3), 0.5, 0.4), "Cannon")
-	cm.position = cannon_pos
-	add_child(cm)
+	_cannon(cannon_pos, Vector3.RIGHT)
 	# Island landing pad for the rocket moon, and a lookout rock for the stilt.
 	_cyl(Vector3(104.0, g(104.0, 12.0) - 0.5, 12.0), 3.0, 1.2, Color(0.75, 0.7, 0.6), 12)
 	_cyl(Vector3(108.0, g(108.0, 30.0) - 0.5, 30.0), 2.6, 9.6, ROCK, 12, 2.2)
@@ -414,17 +399,6 @@ func _creatures() -> void:
 	_capturable(Captures.Stilt.new(), Vector3(-55, 0, 34))
 	_capturable(Captures.Stilt.new(), Vector3(100, 0, 22))
 	_spawn_boss()
-
-
-func _fire_rocket() -> void:
-	var r := Captures.Rocket.new()
-	_dyn.add_child(r)
-	r.global_position = cannon_pos + Vector3(3.0, 5.4, 0)
-	r.setup(self, player)
-	r.dir = Vector3.RIGHT
-	r.facing = atan2(-1.0, 0.0)
-	capturables.append(r)
-	Sfx.play("rocket", -8.0)
 
 
 func _moons() -> void:

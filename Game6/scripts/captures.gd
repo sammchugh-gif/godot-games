@@ -447,3 +447,210 @@ class Tank extends Capturable:
 			turret.position.z = 0.2 + _recoil * 0.35
 		else:
 			turret.rotation.y = sin(_scan * 0.7) * 0.6
+
+
+# Jaxi the stone lion: fast, keeps going, jumps, and walks on poison.
+class Jaxi extends Capturable:
+	var speed := 0.0
+	var _step := 0.0
+
+	func _ready() -> void:
+		kind = "jaxi"
+		focus_height = 2.0
+		cam_distance = 11.0
+		capture_radius = 2.6
+		hazard_proof = true
+		add_capsule(0.9, 2.2, 1.3)
+		model = Models.jaxi()
+		add_child(model)
+
+	func release_point() -> Vector3:
+		var right := Vector3(cos(facing), 0, -sin(facing))
+		return global_position + right * 2.2 + Vector3(0, 1.0, 0)
+
+	func on_capture() -> void:
+		Sfx.play("roar", -8.0)
+
+	func ai(dt: float) -> void:
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+
+	func drive(dt: float) -> void:
+		var inp := player.move_input()
+		if not is_on_floor():
+			velocity.y -= 30.0 * dt
+		var want := inp.length()
+		if want > 0.1:
+			var goal := atan2(-inp.x, -inp.z)
+			var diff := wrapf(goal - facing, -PI, PI)
+			facing += clampf(diff, -1.0, 1.0) * dt * (2.2 + 1.2 * (1.0 - speed / 16.0))
+			speed = move_toward(speed, 16.0 * want, 9.0 * dt)
+		else:
+			speed = move_toward(speed, 0.0, 10.0 * dt)
+		var f := Vector3(-sin(facing), 0, -cos(facing))
+		velocity.x = f.x * speed
+		velocity.z = f.z * speed
+		if player.jump_pressed() and is_on_floor():
+			velocity.y = 13.0
+			Sfx.play("jump2")
+		var prev := _step
+		_step += dt * speed * 0.35
+		if int(prev * 2.0) != int(_step * 2.0) and is_on_floor() and speed > 4.0:
+			Sfx.play("land", -12.0)
+		move_and_slide()
+		if speed > 6.0 and level and level.has_method("taxi_bump"):
+			level.taxi_bump(global_position + f * 2.0 + Vector3(0, 0.8, 0), 1.8)
+
+	func animate(_dt: float) -> void:
+		var legs: Node3D = model.get_node("legs")
+		var body: Node3D = model.get_node("body")
+		var amt := clampf(speed / 16.0, 0.0, 1.0)
+		legs.rotation.x = sin(_step * TAU) * 0.5 * amt
+		body.position.y = 1.3 + absf(sin(_step * TAU)) * 0.12 * amt
+		body.rotation.x = -0.08 * amt
+
+
+# Skyla the bird: tap JUMP to flap, steer with the stick, land to rest.
+class Bird extends Capturable:
+	var flaps := 10
+	var _wing := 0.0
+	var _rest_t := 0.0
+
+	func _ready() -> void:
+		kind = "bird"
+		focus_height = 1.0
+		cam_distance = 9.0
+		capture_radius = 1.6
+		add_capsule(0.45, 0.5, 0.5)
+		model = Models.bird()
+		add_child(model)
+
+	func release_point() -> Vector3:
+		return global_position + Vector3(0, 0.8, 0)
+
+	func on_capture() -> void:
+		flaps = 10
+		Sfx.play("boing", -6.0)
+
+	func ai(dt: float) -> void:
+		if not is_on_floor():
+			velocity.y -= 20.0 * dt
+		velocity.x = move_toward(velocity.x, 0.0, 10.0 * dt)
+		velocity.z = move_toward(velocity.z, 0.0, 10.0 * dt)
+		_rest_t -= dt
+		if _rest_t <= 0.0 and is_on_floor():
+			_rest_t = rng.randf_range(2.0, 4.0)
+			velocity.y = 5.0
+			var a := rng.randf() * TAU
+			velocity.x = cos(a) * 2.0
+			velocity.z = sin(a) * 2.0
+			facing = atan2(-velocity.x, -velocity.z)
+		move_and_slide()
+
+	func drive(dt: float) -> void:
+		var inp := player.move_input()
+		var on_floor := is_on_floor()
+		var sp := 11.0
+		velocity.x = move_toward(velocity.x, inp.x * sp, 16.0 * dt)
+		velocity.z = move_toward(velocity.z, inp.z * sp, 16.0 * dt)
+		if on_floor:
+			flaps = 10
+		if player.jump_pressed() and flaps > 0:
+			flaps -= 1
+			velocity.y = 9.5
+			_wing = 1.0
+			Sfx.play("jump", -4.0)
+			if flaps == 0 and level:
+				level.message.emit("Out of flaps! Land to rest.")
+		if not on_floor:
+			velocity.y -= 14.0 * dt
+			velocity.y = maxf(velocity.y, -7.0)
+		face(inp, dt, 8.0)
+		move_and_slide()
+
+	func animate(dt: float) -> void:
+		_wing = maxf(_wing - dt * 4.0, 0.0)
+		var wl: Node3D = model.get_node("body/wingL")
+		var wr: Node3D = model.get_node("body/wingR")
+		var flap := sin(_wing * PI) * 0.9 if _wing > 0.0 else (sin(anim_t * 6.0) * 0.35 if not is_on_floor() else 0.0)
+		wl.rotation.z = -flap
+		wr.rotation.z = flap
+		var body: Node3D = model.get_node("body")
+		body.rotation.x = clampf(-velocity.y * 0.04, -0.4, 0.4) if not is_on_floor() else 0.0
+
+
+# Blaze the lava fireball: swims in lava, hops on rock, JUMP is a big leap.
+class Blaze extends Capturable:
+	var _bob := 0.0
+
+	func _ready() -> void:
+		kind = "blaze"
+		focus_height = 1.2
+		cam_distance = 9.0
+		capture_radius = 1.7
+		hazard_proof = true
+		add_capsule(0.55, 0.5, 0.6)
+		model = Models.blaze()
+		add_child(model)
+
+	func release_point() -> Vector3:
+		return global_position + Vector3(0, 1.2, 0)
+
+	func on_capture() -> void:
+		Sfx.play("rocket", -10.0)
+
+	func _in_lava() -> bool:
+		return level != null and level.has_method("lava_at") and level.lava_at(global_position)
+
+	func ai(dt: float) -> void:
+		_bob += dt
+		if _in_lava():
+			var ly: float = level.lava_level(global_position)
+			global_position.y = ly + 0.1 + sin(_bob * 2.0) * 0.1
+			velocity = Vector3.ZERO
+		else:
+			if not is_on_floor():
+				velocity.y -= 30.0 * dt
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+
+	func drive(dt: float) -> void:
+		var inp := player.move_input()
+		_bob += dt
+		if _in_lava():
+			var ly: float = level.lava_level(global_position)
+			velocity.x = move_toward(velocity.x, inp.x * 9.0, 30.0 * dt)
+			velocity.z = move_toward(velocity.z, inp.z * 9.0, 30.0 * dt)
+			if velocity.y <= 0.0:
+				global_position.y = ly + 0.1
+				velocity.y = 0.0
+				if player.jump_pressed():
+					velocity.y = 17.0
+					Sfx.play("boing")
+			else:
+				velocity.y -= 30.0 * dt
+		else:
+			if not is_on_floor():
+				velocity.y -= 30.0 * dt
+			velocity.x = move_toward(velocity.x, inp.x * 6.0, 20.0 * dt)
+			velocity.z = move_toward(velocity.z, inp.z * 6.0, 20.0 * dt)
+			if player.jump_pressed() and is_on_floor():
+				velocity.y = 15.0
+				Sfx.play("boing")
+		face(inp, dt, 8.0)
+		move_and_slide()
+		if level and level.has_method("rex_smash"):
+			var hs := Vector2(velocity.x, velocity.z).length()
+			if hs > 3.0:
+				level.rex_smash(global_position, 1.6)
+
+	func animate(_dt: float) -> void:
+		var body: Node3D = model.get_node("body")
+		var s := 1.0 + sin(_bob * 5.0) * 0.06
+		body.scale = Vector3(s, 1.0 / s, s)
+		var fl: Node3D = body.get_node("flames")
+		fl.rotation.y = _bob * 2.0

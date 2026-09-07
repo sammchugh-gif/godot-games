@@ -25,6 +25,7 @@ var multi: Array = ["boss"]
 var boss_name := "KING RAPTOR"
 var boss_colour := Color(0.85, 0.45, 0.2)
 var boss_metal := false
+var boss_extra_hp := 0
 var next_kingdom := ""
 var next_kingdom_title := ""
 var shot_scenes: Array = []
@@ -127,6 +128,12 @@ var rng := RandomNumberGenerator.new()
 var hints: Array = []
 var metal: Array = []          # metal crates: only tank shells and explosions
 var shells: Array = []         # tank shells in flight
+var springs: Array = []        # {pos, vy}
+var movers: Array = []         # {body, a, b, period, t}
+var updrafts: Array = []       # {pos, r, h}
+var cannons: Array = []        # {pos, dir, t}
+var _spring_mesh: ArrayMesh
+var tree_tint := Color(1, 1, 1)
 var _hint_t := 0.0
 var _dyn: Node3D
 var _anim_t := 0.0
@@ -271,11 +278,275 @@ func _kingdom_physics(_dt: float) -> void:
 	pass
 
 
+# Lava: Blaze swims in it, everyone else dies. Kingdoms with lava override.
+func lava_at(_p: Vector3) -> bool:
+	return false
+
+
+func lava_level(_p: Vector3) -> float:
+	return Terrain.LAVA_Y
+
+
+func ice_at(_p: Vector3) -> bool:
+	return false
+
+
+func _build_flags() -> void:
+	for i in checkpoints.size():
+		var c: Dictionary = checkpoints[i]
+		var p: Vector3 = c["pos"]
+		if get_node_or_null("Flag%d" % i):
+			continue
+		var pole := _cyl(Vector3(p.x + 1.6, p.y - 0.3, p.z - 1.6), 0.08, 3.2, Color(0.9, 0.9, 0.9), 6)
+		pole.name = "Flag%d" % i
+		var fb := MeshLib.Builder.new()
+		fb.tri(Vector3(0, 3.1, 0), Vector3(1.1, 2.8, 0), Vector3(0, 2.4, 0))
+		fb.tri(Vector3(0, 2.4, 0), Vector3(1.1, 2.8, 0), Vector3(0, 3.1, 0))
+		var flag := fb.commit(Mats.pbr(Color(0.4, 0.4, 0.45) if i > 0 else Color(1.0, 0.85, 0.2)), "Flag")
+		flag.name = "FlagCloth"
+		pole.add_child(flag)
+
+
+# Sky, sun, ambient and fog from a small dictionary of overrides.
+func _env_setup(c: Dictionary) -> void:
+	var env := Environment.new()
+	var sky := Sky.new()
+	var sm := ProceduralSkyMaterial.new()
+	sm.sky_top_color = c.get("top", Color(0.3, 0.55, 0.95))
+	sm.sky_horizon_color = c.get("horizon", Color(0.78, 0.88, 0.98))
+	sm.ground_bottom_color = c.get("ground", Color(0.3, 0.4, 0.3))
+	sm.ground_horizon_color = c.get("ground_h", Color(0.75, 0.85, 0.9))
+	sm.sun_angle_max = c.get("sun_size", 20.0)
+	sky.sky_material = sm
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = c.get("ambient", Color(0.55, 0.65, 0.8))
+	env.ambient_light_energy = c.get("ambient_energy", 0.55)
+	env.fog_enabled = true
+	env.fog_light_color = c.get("fog", Color(0.72, 0.82, 0.95))
+	env.fog_density = c.get("fog_density", 0.0012)
+	env.fog_sky_affect = c.get("fog_sky", 0.15)
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_white = 4.0
+	var we := WorldEnvironment.new()
+	we.environment = env
+	add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = c.get("sun_rot", Vector3(-52.0, 38.0, 0.0))
+	sun.light_energy = c.get("sun_energy", 0.95)
+	sun.light_color = c.get("sun", Color(1.0, 0.96, 0.88))
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0 if Quality.lightweight() else 100.0
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if Quality.lightweight() else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_split_1 = 0.2 if Quality.lightweight() else 0.08
+	sun.directional_shadow_split_2 = 0.22
+	sun.directional_shadow_split_3 = 0.5
+	sun.directional_shadow_fade_start = 0.85
+	sun.directional_shadow_blend_splits = true
+	sun.shadow_bias = 0.04
+	sun.shadow_normal_bias = 1.2
+	add_child(sun)
+
+
+func _omni(pos: Vector3, col: Color, energy: float, range_: float) -> void:
+	var lt := OmniLight3D.new()
+	lt.position = pos
+	lt.light_color = col
+	lt.light_energy = energy
+	lt.omni_range = range_
+	lt.shadow_enabled = false
+	add_child(lt)
+
+
+func _glow_ball(pos: Vector3, r: float, col: Color, energy: float = 2.0) -> void:
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3.ZERO, Vector3(r, r, r), 10, 8)
+	var mi := b.commit(Mats.glow(col, energy), "Glow")
+	mi.position = pos
+	add_child(mi)
+
+
+func _lantern(pos: Vector3, col: Color = Color(1.0, 0.8, 0.45)) -> void:
+	_cyl(pos, 0.1, 3.2, Color(0.15, 0.15, 0.18), 6)
+	_glow_ball(pos + Vector3(0, 3.4, 0), 0.32, col, 2.2)
+
+
+# ------------------------------------------------- generic set pieces ----
+
+func _spring(pos: Vector3, vy: float = 24.0, push: Vector3 = Vector3.ZERO) -> void:
+	var mi := MeshInstance3D.new()
+	mi.mesh = _spring_mesh
+	mi.material_override = Mats.pbr(Color(0.9, 0.3, 0.3), 0.5, 0.3)
+	mi.position = pos
+	add_child(mi)
+	var body := StaticBody3D.new()
+	var cs := CollisionShape3D.new()
+	var c := CylinderShape3D.new()
+	c.radius = 0.9
+	c.height = 0.5
+	cs.shape = c
+	cs.position = Vector3(0, 0.25, 0)
+	body.add_child(cs)
+	body.position = pos
+	add_child(body)
+	springs.append({"pos": pos, "vy": vy, "node": mi, "t": 0.0, "push": push})
+
+
+func _mover(a: Vector3, b: Vector3, size: Vector3, period: float, col: Color = Color(0.95, 0.95, 1.0)) -> AnimatableBody3D:
+	var body := AnimatableBody3D.new()
+	body.sync_to_physics = true
+	var bb := MeshLib.Builder.new()
+	bb.box(Vector3.ZERO, size)
+	body.add_child(bb.commit(Mats.pbr(col, 0.9), "Mesh"))
+	var cs := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	cs.shape = shape
+	body.add_child(cs)
+	body.position = a
+	add_child(body)
+	movers.append({"body": body, "a": a, "b": b, "period": period, "t": rng.randf() * period})
+	return body
+
+
+func _updraft(pos: Vector3, r: float, h: float) -> void:
+	updrafts.append({"pos": pos, "r": r, "h": h})
+	var p := CPUParticles3D.new()
+	p.position = pos
+	p.amount = 40
+	p.lifetime = h / 12.0
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = r * 0.8
+	p.direction = Vector3.UP
+	p.spread = 5.0
+	p.initial_velocity_min = 11.0
+	p.initial_velocity_max = 13.0
+	p.gravity = Vector3.ZERO
+	p.scale_amount_min = 0.2
+	p.scale_amount_max = 0.5
+	p.mesh = SphereMesh.new()
+	(p.mesh as SphereMesh).radius = 0.5
+	(p.mesh as SphereMesh).height = 1.0
+	p.material_override = Mats.unshaded(Color(1.0, 1.0, 1.0, 0.5))
+	add_child(p)
+
+
+func _cannon(pos: Vector3, dir: Vector3, col: Color = Color(0.25, 0.25, 0.3)) -> void:
+	_cyl(pos, 2.4, 4.0, ROCK_DARK, 12, 2.0)
+	var d := dir.normalized()
+	var cannon := MeshLib.Builder.new()
+	cannon.cylinder(Vector3(0, 5.0, 0) - d * 1.0, Vector3(0, 5.4, 0) + d * 2.6, 0.9, 1.0, 12)
+	cannon.ellipsoid(Vector3(0, 5.0, 0) - d * 1.0, Vector3(1.1, 1.1, 1.1), 10, 8)
+	var cm := cannon.commit(Mats.pbr(col, 0.5, 0.4), "Cannon")
+	cm.position = pos
+	add_child(cm)
+	cannons.append({"pos": pos, "dir": d, "t": 2.0})
+
+
+func _fire_rocket_from(pos: Vector3, dir: Vector3) -> void:
+	var r := Captures.Rocket.new()
+	_dyn.add_child(r)
+	r.global_position = pos + Vector3(0, 5.4, 0) + dir * 3.0
+	r.setup(self, player)
+	r.dir = dir
+	r.facing = atan2(-dir.x, -dir.z)
+	capturables.append(r)
+	Sfx.play("rocket", -8.0)
+
+
+func _chest_at(pos: Vector3) -> void:
+	chest = _box(pos, Vector3(1.4, 1.0, 1.0), Color(0.55, 0.32, 0.15))
+	chest.name = "Chest"
+	var lid := MeshLib.Builder.new()
+	lid.box(Vector3(0, 0.6, 0), Vector3(1.45, 0.25, 1.05))
+	lid.box(Vector3(0, 0.3, -0.52), Vector3(0.3, 0.3, 0.06))
+	chest.add_child(lid.commit(Mats.pbr(Color(0.85, 0.7, 0.25), 0.4, 0.6), "Lid"))
+
+
+func _bell_at(base: Vector3, col: Color = WOOD) -> void:
+	for s in [-1.0, 1.0]:
+		_cyl(base + Vector3(1.0 * s, 0, 0), 0.15, 5.0, col, 6)
+	_box(base + Vector3(0, 5.1, 0), Vector3(2.8, 0.3, 1.2), col)
+	bell = Node3D.new()
+	bell.position = base + Vector3(0, 4.2, 0)
+	var bb := MeshLib.Builder.new()
+	bb.lathe([Vector2(0.0, 0.8), Vector2(0.25, 0.8), Vector2(0.4, 0.4), Vector2(0.55, 0.0), Vector2(0.0, 0.0)], 14)
+	bell.add_child(bb.commit(Mats.pbr(Color(0.85, 0.7, 0.3), 0.35, 0.7), "Bell"))
+	add_child(bell)
+
+
+func _statue_at(pos: Vector3, col: Color = Color(0.75, 0.6, 0.3), head_col: Color = Color(0.95, 0.75, 0.3)) -> void:
+	scarecrow = Node3D.new()
+	scarecrow.position = pos
+	var scb := MeshLib.Builder.new()
+	scb.cylinder(Vector3.ZERO, Vector3(0, 2.4, 0), 0.12, 0.1, 6)
+	scb.cylinder(Vector3(-0.9, 1.7, 0), Vector3(0.9, 1.7, 0), 0.08, 0.08, 6)
+	scb.box(Vector3(0, 1.5, 0), Vector3(0.7, 0.9, 0.4))
+	scarecrow.add_child(scb.commit(Mats.pbr(col), "Body"))
+	var sch := MeshLib.Builder.new()
+	sch.ellipsoid(Vector3(0, 2.35, 0), Vector3(0.32, 0.36, 0.32), 10, 8)
+	scarecrow.add_child(sch.commit(Mats.pbr(head_col), "Head"))
+	Models.eyes(scarecrow, Vector3(0, 2.4, -0.24), 0.12, 0.06)
+	add_child(scarecrow)
+
+
+func _switch_at(pos: Vector3) -> void:
+	switch_node = _cyl(pos, 1.0, 0.5, Color(0.85, 0.15, 0.15), 12)
+	switch_node.name = "Switch"
+	_cyl(pos - Vector3(0, 0.3, 0), 1.4, 0.3, Color(0.4, 0.4, 0.42), 12)
+
+
+func _slab_at(pos: Vector3, col: Color = Color(0.6, 0.6, 0.58)) -> void:
+	var slab := _box(pos, Vector3(3.0, 0.4, 3.0), col)
+	slab.name = "Slab"
+	var cracks := MeshLib.Builder.new()
+	cracks.box(Vector3(0, 0.21, 0), Vector3(2.2, 0.02, 0.15), Basis(Vector3.UP, 0.6))
+	cracks.box(Vector3(0.3, 0.21, -0.2), Vector3(1.6, 0.02, 0.15), Basis(Vector3.UP, -0.9))
+	slab.add_child(cracks.commit(Mats.pbr(Color(0.2, 0.2, 0.2)), "Cracks"))
+	slabs.append(slab)
+
+
+func _arena_ring(center: Vector3, r: float, gap_angle: float, col_a: Color = ROCK, col_b: Color = ROCK_DARK, n: int = 16, h: float = 6.0) -> void:
+	for i in n:
+		var a := TAU * i / n
+		if absf(wrapf(a - gap_angle, -PI, PI)) < 0.45:
+			continue
+		var p := center + Vector3(cos(a) * (r + 1.5), -1.0, sin(a) * (r + 1.5))
+		_cyl(p, 2.6, h + sin(i * 2.0) * 1.2, col_a if i % 2 == 0 else col_b, 8, 2.0)
+
+
+func _blue_line(a: Vector3, b: Vector3, n: int = 8, lift: float = 1.0) -> void:
+	for i in n:
+		var t := float(i) / maxf(n - 1, 1)
+		var p := a.lerp(b, t)
+		var y := g(p.x, p.z) + lift
+		var bc := _pickup("blue", Vector3(p.x, y, p.z))
+		blue_coins.append(bc)
+
+
+func _hearts_at(list: Array) -> void:
+	for hp in list:
+		var p: Vector3 = hp
+		_pickup("heart", Vector3(p.x, g(p.x, p.z) + 1.0, p.z))
+
+
+func _purples_at(list: Array) -> void:
+	for i in list.size():
+		var p: Vector3 = list[i]
+		var y: float = p.y + 1.0 if p.y > 0.5 else g(p.x, p.z) + 1.0
+		_pickup("purple", Vector3(p.x, y, p.z), i)
+
+
+func _moon_on_ground(id: String, x: float, z: float, lift: float = 1.3) -> void:
+	_place_moon(id, Vector3(x, g(x, z) + lift, z))
+
+
 func _spawn_boss() -> void:
 	boss = Boss.new()
 	add_child(boss)
 	boss.global_position = arena_center + boss_pos_offset
-	boss.setup(self, player, arena_center, arena_r, boss_colour, boss_metal)
+	boss.setup(self, player, arena_center, arena_r, boss_colour, boss_metal, boss_extra_hp)
 	boss.facing = -PI * 0.5
 	boss.defeated.connect(_on_boss_defeated)
 	boss.hit.connect(func(hp): boss_event.emit("hit", hp))
@@ -294,6 +565,7 @@ func build(p: Player, c: CameraRig, h: Hat) -> void:
 	_moon_mesh = Models.moon_mesh()
 	_heart_mesh = Models.heart_mesh()
 	_shell_mesh = Models.shell_mesh()
+	_spring_mesh = Models.spring_mesh()
 	_dyn = Node3D.new()
 	_dyn.name = "Dynamic"
 	add_child(_dyn)
@@ -311,6 +583,7 @@ func build(p: Player, c: CameraRig, h: Hat) -> void:
 	_creatures()
 	_moons()
 	_checkpoints()
+	_build_flags()
 	add_child(player)
 	player.global_position = checkpoints[0]["pos"]
 	player.facing = 0.0
@@ -463,7 +736,7 @@ func _finish_dressing() -> void:
 		for i in xs.size():
 			mm.set_instance_transform(i, xs[i])
 			var tint := rng.randf_range(0.85, 1.1)
-			mm.set_instance_color(i, Color(tint, tint * rng.randf_range(0.95, 1.08), tint))
+			mm.set_instance_color(i, Color(tint, tint * rng.randf_range(0.95, 1.08), tint) * tree_tint)
 		var mmi := MultiMeshInstance3D.new()
 		mmi.multimesh = mm
 		mmi.material_override = Mats.vertex_painted(0.85)
@@ -731,7 +1004,7 @@ func respawn_player() -> void:
 	coins_changed.emit(coins, purple)
 	if boss and boss.state != Boss.S.DEAD:
 		boss.state = Boss.S.SLEEP
-		boss.hp = 3
+		boss.hp = boss.max_hp
 		boss.global_position = arena_center + boss_pos_offset
 	# Respawn crates? No: the world remembers what you broke.
 
@@ -753,6 +1026,7 @@ func _physics_process(dt: float) -> void:
 	bell_cool = maxf(bell_cool - dt, 0.0)
 	_kingdom_physics(dt)
 	_shells_step(dt)
+	_pieces_step(dt)
 	# Prune freed capturables.
 	for i in range(capturables.size() - 1, -1, -1):
 		if not is_instance_valid(capturables[i]):
@@ -937,13 +1211,13 @@ func _enemy_contact() -> void:
 				burst(ep + Vector3(0, 0.6, 0), Color(0.8, 0.6, 0.3))
 			else:
 				player.damage(ep)
-		elif pp.y < e.top() and pp.y + 1.5 > ep.y:
+		elif pp.y < e.top() and pp.y + 1.5 > ep.y and e.hurts():
 			player.damage(ep)
 
 
 func enemy_killed(e: Enemy) -> void:
 	enemies.erase(e)
-	if e.kind == "bonk":
+	if e.kind == "bonk" or e.kind == "snowbonk" or e.kind == "ghost":
 		bonk_kills += 1
 		if bonk_kills == 6:
 			spawn_moon("bonks", e.global_position + Vector3(0, 1.2, 0))
@@ -1104,8 +1378,49 @@ func _on_boss_defeated() -> void:
 	spawn_moon("boss", arena_center + Vector3(0, 2.0, 0))
 
 
+func _pieces_step(dt: float) -> void:
+	for m in movers:
+		m["t"] += dt
+		var ph: float = 0.5 - 0.5 * cos(m["t"] / m["period"] * TAU)
+		var body: AnimatableBody3D = m["body"]
+		body.global_position = (m["a"] as Vector3).lerp(m["b"], ph)
+	for c in cannons:
+		c["t"] -= dt
+		if c["t"] <= 0.0:
+			c["t"] = 4.5
+			if player and player.actor_pos().distance_to(c["pos"]) < 70.0:
+				_fire_rocket_from(c["pos"], c["dir"])
+	if player == null or player.dead:
+		return
+	var apos := player.actor_pos()
+	for s in springs:
+		s["t"] = maxf(s["t"] - dt, 0.0)
+		var sp: Vector3 = s["pos"]
+		(s["node"] as Node3D).scale = Vector3(1, 1.0 - 0.4 * sin(s["t"] * PI), 1)
+		if player.capture == null and player.velocity.y <= 0.5 and Vector2(apos.x - sp.x, apos.z - sp.z).length() < 1.1 and apos.y > sp.y - 0.4 and apos.y < sp.y + 2.2:
+			player.bounce(s["vy"])
+			var push: Vector3 = s["push"]
+			if push.length() > 0.1:
+				player.velocity.x = push.x
+				player.velocity.z = push.z
+				player.long_jumping = true
+			s["t"] = 0.5
+			Sfx.play("boing")
+			burst(sp + Vector3(0, 1.5, 0), Color(1.0, 0.6, 0.6))
+	for u in updrafts:
+		var up: Vector3 = u["pos"]
+		if Vector2(apos.x - up.x, apos.z - up.z).length() < u["r"] and apos.y > up.y - 1.0 and apos.y < up.y + u["h"]:
+			var body: Node3D = player.actor()
+			if body is CharacterBody3D:
+				var cb := body as CharacterBody3D
+				cb.velocity.y = move_toward(cb.velocity.y, 13.0, 80.0 * dt)
+				if player.capture == null:
+					player.pounding = false
+
+
 func check_hazards(p: Player) -> void:
 	var pos := p.global_position
+	p.on_ice = ice_at(pos) and p.is_on_floor()
 	if pos.y < -26.0 or deep_water(pos):
 		if pos.y >= -26.0:
 			Sfx.play("splash")

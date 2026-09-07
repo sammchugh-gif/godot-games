@@ -7,7 +7,9 @@ extends Node
 enum S { LOADING, TITLE, PLAY, PAUSE, PANEL, DEAD }
 
 const SAVE_PATH := "user://dylans_odyssey.cfg"
-const KINGDOMS := ["ridge", "city"]
+const KINGDOMS := ["ridge", "city", "sand", "snow", "lava", "sky", "ghost"]
+const KINGDOM_TITLES := {"ridge": "DINO RIDGE", "city": "SKYLINE CITY", "sand": "SUNBURN SANDS", "snow": "FROSTBITE PEAKS",
+	"lava": "VOLCANO BAY", "sky": "CLOUD ISLANDS", "ghost": "GHOST MANOR"}
 const SHOP_ITEMS := [
 	{"id": "moon", "label": "Power Moon", "price": 100},
 	{"id": "cap:blue", "label": "Blue Cap", "price": 30},
@@ -71,7 +73,7 @@ func _ready() -> void:
 	var ki := args.find("--kingdom")
 	if ki >= 0 and ki + 1 < args.size() and args[ki + 1] in KINGDOMS:
 		_kingdom = args[ki + 1]
-	level = CityLevel.new() if _kingdom == "city" else RidgeLevel.new()
+	level = _make_level(_kingdom)
 	level.name = "Level"
 	_apply_quality()
 	sfx = Sfx.new()
@@ -100,6 +102,43 @@ func _ready() -> void:
 		_run_shots()
 		return
 	_enter_title()
+
+
+func _make_level(id: String) -> Level:
+	match id:
+		"city":
+			return CityLevel.new()
+		"sand":
+			return SandLevel.new()
+		"snow":
+			return SnowLevel.new()
+		"lava":
+			return LavaLevel.new()
+		"sky":
+			return SkyLevel.new()
+		"ghost":
+			return GhostLevel.new()
+	return RidgeLevel.new()
+
+
+# Which kingdoms the balloon may fly to: the first, plus every kingdom whose
+# predecessor has been cleared.
+func _kingdom_list() -> Array:
+	var cf := ConfigFile.new()
+	cf.load(SAVE_PATH)
+	var out := []
+	var prev_cleared := true
+	for id in KINGDOMS:
+		var cleared: bool = level.cleared if id == level.kingdom_id else bool(cf.get_value("k_" + id, "cleared", false))
+		var moons := 0
+		if id == level.kingdom_id:
+			moons = level.moon_count()
+		else:
+			for m in cf.get_value("k_" + id, "moons", []):
+				moons += 3 if str(m) == "boss" else 1
+		out.append({"id": id, "title": KINGDOM_TITLES[id], "unlocked": prev_cleared or moons > 0, "current": id == level.kingdom_id, "moons": moons, "cleared": cleared})
+		prev_cleared = cleared
+	return out
 
 
 func _setup_input() -> void:
@@ -264,7 +303,11 @@ func _on_ui(action: String, _arg: String) -> void:
 		"reset":
 			_reset_save()
 		"fly":
-			_fly()
+			_fly(level.next_kingdom)
+		_:
+			if action.begins_with("fly:"):
+				_fly(action.substr(4))
+				return
 		_:
 			if action.begins_with("buy:"):
 				_buy(action.substr(4))
@@ -376,12 +419,12 @@ func _on_balloon() -> void:
 		return
 	var n := level.moon_count()
 	if level.cleared:
-		if _balloon_toast_t <= 0.0 and level.next_kingdom != "":
+		if _balloon_toast_t <= 0.0:
 			_balloon_toast_t = 2.0
 			state = S.PANEL
 			get_tree().paused = true
 			touch.enable(false)
-			hud.show_panel("travel", {"next": level.next_kingdom_title})
+			hud.show_panel("travel", {"list": _kingdom_list()})
 		return
 	if n >= level.needed:
 		level.cleared = true
@@ -391,17 +434,17 @@ func _on_balloon() -> void:
 		get_tree().paused = true
 		touch.enable(false)
 		hud.show_panel("cleared", {"left": level.total_moons() - n, "title": level.kingdom_title.capitalize(),
-			"next": level.next_kingdom_title, "final": level.kingdom_id == "city"})
+			"next": level.next_kingdom_title, "final": level.kingdom_id == "ghost"})
 	elif _balloon_toast_t <= 0.0:
 		hud.toast("The balloon needs %d more moons to fly." % (level.needed - n), 3.0)
 		_balloon_toast_t = 4.0
 
 
-func _fly() -> void:
-	if level.next_kingdom == "":
+func _fly(to: String) -> void:
+	if to == "" or not (to in KINGDOMS) or to == level.kingdom_id:
 		_resume()
 		return
-	_save(level.next_kingdom)
+	_save(to)
 	Sfx.play("cleared")
 	get_tree().paused = false
 	get_tree().reload_current_scene()
@@ -622,8 +665,10 @@ func _run_selftest() -> void:
 	check.call(level.coins > c0, "coins collected on contact (%d -> %d)" % [c0, level.coins])
 	if level.kingdom_id == "city":
 		await _selftest_city(check)
-	else:
+	elif level.kingdom_id == "ridge":
 		await _selftest_ridge(check)
+	else:
+		await _selftest_generic(check)
 	# Boss: wake, get him dazed, hit him three times.
 	var boss := level.boss
 	_unfreeze()
@@ -660,11 +705,72 @@ func _run_selftest() -> void:
 	check.call(cf.get_value("k_" + level.kingdom_id, "moons", []).size() == level.moons_got.size(), "saved moons match")
 	_save(level.next_kingdom)
 	check.call(_saved_kingdom() == level.next_kingdom, "balloon travel saves the destination kingdom (%s)" % _saved_kingdom())
-	var other: Level = CityLevel.new() if level.next_kingdom == "city" else RidgeLevel.new()
+	var other: Level = _make_level(level.next_kingdom)
 	check.call(other.kingdom_id == level.next_kingdom and other.moon_names.size() > 15, "destination kingdom class builds its config")
 	Terrain.city = level.kingdom_id == "city"
 	print("SELFTEST(%s): %d checks, %d failures" % [level.kingdom_id, st["checks"], st["fails"]])
 	get_tree().quit(1 if st["fails"] > 0 else 0)
+
+
+func _selftest_generic(check: Callable) -> void:
+	var kinds := {}
+	for c in level.capturables:
+		kinds[c.kind] = c
+	check.call(kinds.size() >= 2, "captures present: " + str(kinds.keys()))
+	check.call(level.moon_names.size() >= 15, "%d moons defined" % level.moon_names.size())
+	check.call(level.checkpoints.size() >= 5, "%d checkpoints" % level.checkpoints.size())
+	# Capture the first non-rocket creature and drive it for a second.
+	var pick: Capturable = null
+	for k in ["jaxi", "bird", "blaze", "frog", "stilt"]:
+		if kinds.has(k):
+			pick = kinds[k]
+			break
+	if pick:
+		_unfreeze()
+		if pick.kind == "blaze":
+			player.global_position = level.checkpoints[0]["pos"] + Vector3(0, 0.3, 0)
+		else:
+			player.global_position = pick.global_position + Vector3(3, 0.5, 0)
+		player.velocity = Vector3.ZERO
+		player.invuln = 3.0
+		await _step(5)
+		level.hat_touch(hat, pick.global_position + Vector3(0, pick.focus_height * 0.5, 0))
+		await _step(5)
+		check.call(player.capture == pick, "captured the %s (dead=%s cap=%s pos=%s)" % [pick.kind, player.dead, player.capture, player.global_position])
+		var p0 := pick.global_position
+		cam.yaw = 0.0
+		cam.manual_t = 5.0
+		_press("move_up")
+		_press("jump")
+		await _step(3)
+		_release("jump")
+		await _step(50)
+		_release("move_up")
+		check.call(pick.global_position.distance_to(p0) > 2.0, "%s moves (%.1f m)" % [pick.kind, pick.global_position.distance_to(p0)])
+		_unfreeze()
+		_press("hat")
+		await _step(2)
+		_release("hat")
+		await _step(5)
+		check.call(player.capture == null, "released the " + pick.kind)
+	# Springs, if any, launch the kid.
+	if level.springs.size() > 0:
+		_unfreeze()
+		var sp: Vector3 = level.springs[0]["pos"]
+		player.global_position = sp + Vector3(0, 1.0, 0)
+		player.velocity = Vector3.ZERO
+		await _step(3)
+		var top := player.global_position.y
+		for i in 60:
+			await _step(1)
+			top = maxf(top, player.global_position.y)
+		check.call(top - sp.y > 6.0, "spring launches to %.1f m" % (top - sp.y))
+	# Moving platforms move.
+	if level.movers.size() > 0:
+		var body: Node3D = level.movers[0]["body"]
+		var a := body.global_position
+		await _step(60)
+		check.call(body.global_position.distance_to(a) > 0.5, "moving platform travels %.1f m in a second" % body.global_position.distance_to(a))
 
 
 func _selftest_city(check: Callable) -> void:
