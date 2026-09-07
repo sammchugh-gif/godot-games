@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agent Rory">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Agent Rory: Operation Eclipse</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#05070c;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+body{position:fixed;inset:0}
+canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+#gl{z-index:0}#ui{z-index:1}
+#boot{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#dfe6f2;z-index:2;background:#05070c;font-size:18px;letter-spacing:.08em}
+#boot b{font-size:34px;letter-spacing:.04em;color:#ffd166;margin-bottom:12px}
+#boot small{opacity:.6;margin-top:10px}
+</style></head><body>
+<canvas id="gl"></canvas><canvas id="ui"></canvas>
+<div id="boot"><b>AGENT RORY</b>OPERATION ECLIPSE<small id="bootmsg">loading...</small></div>
+<script>
+// Keep iPad Safari from panning, zooming or selecting anything.
+document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+document.addEventListener("contextmenu",e=>e.preventDefault(),{passive:false});
+window.addEventListener("error",e=>{const m=document.getElementById("bootmsg");if(m&&document.getElementById("boot").style.display!=="none"){m.textContent="error: "+e.message;}});
+</script>
+<script type="module" src="js/main.js"></script>
+</body></html>
