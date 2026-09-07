@@ -48,20 +48,37 @@ Throw the hat at these and you become them.
 | Stilt plant | Both kingdoms | Hold JUMP to stretch up to nine metres, then HAT to hop off at the top |
 | Taxi | Skyline City | Fast, drifty, JUMP honks. Drive through the glowing rings for a time trial |
 | Tank | Skyline City | Slow; JUMP fires a shell. Only shells break the metal crates on the bank vault |
+| Jaxi the stone lion | Sunburn Sands | Fast, keeps going, jumps, and walks on poison |
+| Skyla the bird | Frostbite Peaks, Cloud Islands | Tap JUMP to flap, ten flaps, land to rest |
+| Blaze the fireball | Volcano Bay | Swims in lava, hops on rock, JUMP is a huge leap |
 
 ## The kingdoms
 
-**Dino Ridge** is where you land: cliffs, a waterfall, a fossil cave, a
-gorge with a rocket cannon, and King Raptor on the ridge top.
-
-**Skyline City** is a city at night: neon windows, a park with a fountain,
-rooftops to hop, an elevated rail line, a harbour with a lighthouse, an
-alley to wall-jump, Skyline Tower with a fire escape spiralling up to its
-roof, and Robo Raptor waiting there.
+1. **Dino Ridge**: cliffs, a waterfall, a fossil cave, a gorge with a rocket
+   cannon, and King Raptor on the ridge top.
+2. **Skyline City**: a city at night with neon windows, a park, rooftops, an
+   elevated rail, a harbour, a taxi to drive and a tank to fire; Robo Raptor
+   on the tower roof.
+3. **Sunburn Sands**: dunes, a pyramid with a tomb inside, Jaxi the stone
+   lion to ride across a poison lake, an oasis, quicksand, and Dune Raptor on
+   the mesa.
+4. **Frostbite Peaks**: an igloo village, a frozen lake you slide on, Skyla
+   the bird to fly, a ski run against the clock, and a mountain to climb to
+   its summit; Frost Raptor on a western shelf.
+5. **Volcano Bay**: rock islands in a lava sea joined by bridges and springs,
+   Blaze the fireball who swims in lava, a cannon, and a volcano with a moon
+   on its rim and one in its crater; Magma Raptor on the west isle.
+6. **Cloud Islands**: floating islands with moving clouds between them,
+   springs, a wind column, the bird and the cannon to reach the far ones;
+   Storm Raptor on the highest isle.
+7. **Ghost Manor**: fog, a haunted mansion with an attic and a tower, a
+   hedge maze, a swamp, a graveyard hill, and ghosts that fade in and out;
+   Phantom Raptor on the hill.
 
 The balloon needs **12** moons in a kingdom to fly. Touch it once it is
-powered and it offers to fly you to the other kingdom; each kingdom keeps
-its own moons and purple coins, coins are shared.
+powered and a kingdom map opens: fly to any kingdom you have unlocked, and
+clearing a kingdom unlocks the next. Each kingdom keeps its own moons and
+purple coins, coins are shared.
 
 ## The moons
 
@@ -91,7 +108,8 @@ the last checkpoint flag. Progress is saved in the browser.
   checkpoints, the shop zone and every interaction (hat hits, pounds, Rex
   smashes, explosions, tank shells). Coins, trees and rocks are multimeshes,
   so a kingdom is a few hundred draw calls: that keeps WebGL on an iPad fast.
-- `scripts/ridge_level.gd`, `scripts/city_level.gd` — the two kingdoms:
+- `scripts/ridge_level.gd`, `city_level.gd`, `sand_level.gd`, `snow_level.gd`,
+  `lava_level.gd`, `sky_level.gd`, `ghost_level.gd` — the seven kingdoms:
   environment, water, set pieces, pickups, creatures, moons, checkpoints,
   hints, and kingdom-specific logic (the rocket cannon, the taxi race).
 - `scripts/terrain.gd` — the heightfield functions for both kingdoms,
@@ -113,7 +131,7 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 # Headless self-test: jumps, the hat, the captures, the boss fight and the
 # save file, for either kingdom
 "$GODOT" --headless --path Game6 -- --selftest
-"$GODOT" --headless --path Game6 -- --selftest --kingdom city
+"$GODOT" --headless --path Game6 -- --selftest --kingdom city   # or sand, snow, lava, sky, ghost
 
 # Screenshots of a dozen spots around a kingdom (needs a display or xvfb)
 "$GODOT" --path Game6 -- --shots /tmp/shots --touch --kingdom city
@@ -124,4 +142,4 @@ GODOT=/Applications/Godot.app/Contents/MacOS/Godot
 
 The hero's name is `Player.HERO_NAME` in `scripts/player.gd`.
 `--lightweight` forces the tablet quality path, `--desktop` / `--touch`
-force the control scheme, `--kingdom ridge|city` picks the kingdom.
+force the control scheme, `--kingdom <id>` picks the kingdom (ridge, city, sand, snow, lava, sky, ghost).

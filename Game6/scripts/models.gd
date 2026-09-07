@@ -346,11 +346,10 @@ static func stilt() -> Node3D:
 	return root
 
 
-static func bonk() -> Node3D:
+static func bonk(brown: Color = Color(0.6, 0.38, 0.2), foot_col: Color = Color(0.35, 0.2, 0.1)) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Bonk"
 	var body := pivot(root, "body", Vector3(0, 0.45, 0))
-	var brown := Color(0.6, 0.38, 0.2)
 	var b := MeshLib.Builder.new()
 	b.ellipsoid(Vector3.ZERO, Vector3(0.48, 0.42, 0.46), 14, 10)
 	part(body, b, Mats.skin(brown), "torso")
@@ -365,7 +364,7 @@ static func bonk() -> Node3D:
 		var foot := pivot(root, "legL" if s < 0 else "legR", Vector3(0.2 * s, 0.12, 0))
 		var f := MeshLib.Builder.new()
 		f.ellipsoid(Vector3(0, 0, -0.05), Vector3(0.16, 0.1, 0.22), 10, 6)
-		part(foot, f, Mats.skin(Color(0.35, 0.2, 0.1)), "foot")
+		part(foot, f, Mats.skin(foot_col), "foot")
 	var mouth := MeshLib.Builder.new()
 	mouth.box(Vector3(0, -0.15, -0.44), Vector3(0.22, 0.04, 0.03))
 	part(body, mouth, Mats.pbr(EYE_BLACK), "mouth")
@@ -482,6 +481,118 @@ static func torus_mesh(R: float, r: float, segs: int = 24) -> ArrayMesh:
 		var a := TAU * i / 12.0
 		prof.append(Vector2(R + r * cos(a), r * sin(a)))
 	b.lathe(prof, segs, Vector3.ZERO, Basis(Vector3.RIGHT, PI * 0.5), false)
+	return b.commit_mesh()
+
+
+static func ghost() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Ghost"
+	var body := pivot(root, "body", Vector3(0, 0.8, 0))
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3(0, 0.1, 0), Vector3(0.5, 0.55, 0.5), 14, 10)
+	b.lathe([Vector2(0.5, 0.1), Vector2(0.45, -0.3), Vector2(0.5, -0.5), Vector2(0.35, -0.65), Vector2(0.0, -0.55)], 14)
+	var t := part(body, b, Mats.pbr(Color(0.85, 0.9, 1.0), 0.5), "torso")
+	t.name = "torso"
+	eyes(body, Vector3(0, 0.15, -0.4), 0.17, 0.11, Vector3.FORWARD, 0.6)
+	var mouth := MeshLib.Builder.new()
+	mouth.ellipsoid(Vector3(0, -0.12, -0.45), Vector3(0.1, 0.14, 0.05), 8, 6)
+	part(body, mouth, Mats.pbr(Color(0.1, 0.05, 0.15)), "mouth")
+	for s in [-1.0, 1.0]:
+		var arm := MeshLib.Builder.new()
+		arm.ellipsoid(Vector3(0.55 * s, -0.05, -0.1), Vector3(0.14, 0.1, 0.22), 8, 6)
+		part(body, arm, Mats.pbr(Color(0.85, 0.9, 1.0), 0.5), "arm")
+	return root
+
+
+# Jaxi, the stone lion you ride. Faces -Z. Pivots: body, legs.
+static func jaxi() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Jaxi"
+	var stone := Color(0.72, 0.62, 0.45)
+	var body := pivot(root, "body", Vector3(0, 1.3, 0))
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3(0, 0, 0.2), Vector3(0.7, 0.62, 1.4), 14, 10)
+	b.ellipsoid(Vector3(0, 0.45, -1.2), Vector3(0.7, 0.62, 0.62), 14, 10)
+	b.ellipsoid(Vector3(0, 0.3, -1.65), Vector3(0.45, 0.4, 0.5), 12, 8)
+	part(body, b, Mats.pbr(stone, 0.8), "torso")
+	var mane := MeshLib.Builder.new()
+	for i in 10:
+		var a := TAU * i / 10.0
+		mane.spike(Vector3(cos(a) * 0.5, 0.45 + sin(a) * 0.5, -1.05), Vector3(cos(a) * 0.95, 0.45 + sin(a) * 0.95, -0.85), 0.2, 6, 2)
+	part(body, mane, Mats.pbr(stone.darkened(0.25), 0.8), "mane")
+	eyes(body, Vector3(0, 0.5, -1.72), 0.22, 0.1, Vector3.FORWARD, 0.5)
+	var saddle := MeshLib.Builder.new()
+	saddle.box(Vector3(0, 0.55, 0.3), Vector3(0.9, 0.16, 1.0))
+	part(body, saddle, Mats.pbr(Color(0.6, 0.2, 0.2), 0.6), "saddle")
+	var tail := MeshLib.Builder.new()
+	tail.spike(Vector3(0, 0.2, 1.5), Vector3(0, 1.0, 2.4), 0.14, 6, 4, Vector3(0, 0.3, 0))
+	part(body, tail, Mats.pbr(stone, 0.8), "tail")
+	var legs := pivot(root, "legs", Vector3(0, 1.0, 0))
+	var l := MeshLib.Builder.new()
+	for sx in [-0.45, 0.45]:
+		for sz in [-0.9, 0.9]:
+			l.cylinder(Vector3(sx, 0.2, sz), Vector3(sx, -1.0, sz), 0.2, 0.18, 8)
+			l.ellipsoid(Vector3(sx, -1.0, sz - 0.05), Vector3(0.24, 0.12, 0.3), 8, 6)
+	part(legs, l, Mats.pbr(stone.darkened(0.1), 0.8), "legs")
+	return root
+
+
+# Skyla the bird. Faces -Z. Pivots: body, wingL, wingR.
+static func bird() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Bird"
+	var blue := Color(0.3, 0.55, 0.95)
+	var body := pivot(root, "body", Vector3(0, 0.5, 0))
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3(0, 0, 0), Vector3(0.45, 0.42, 0.7), 14, 10)
+	b.ellipsoid(Vector3(0, 0.35, -0.55), Vector3(0.36, 0.34, 0.36), 12, 8)
+	part(body, b, Mats.skin(blue), "torso")
+	var belly := MeshLib.Builder.new()
+	belly.ellipsoid(Vector3(0, -0.12, -0.1), Vector3(0.34, 0.3, 0.55), 12, 8)
+	part(body, belly, Mats.skin(Color(0.95, 0.95, 0.85)), "belly")
+	var beak := MeshLib.Builder.new()
+	beak.spike(Vector3(0, 0.3, -0.85), Vector3(0, 0.25, -1.25), 0.14, 8, 3)
+	part(body, beak, Mats.pbr(Color(1.0, 0.7, 0.2), 0.5), "beak")
+	eyes(body, Vector3(0, 0.42, -0.8), 0.16, 0.09, Vector3.FORWARD, 0.55)
+	var tail := MeshLib.Builder.new()
+	tail.spike(Vector3(0, 0.05, 0.6), Vector3(0, 0.2, 1.3), 0.25, 6, 3)
+	part(body, tail, Mats.skin(blue.darkened(0.2)), "tail")
+	for s in [-1.0, 1.0]:
+		var w := pivot(body, "wingL" if s < 0 else "wingR", Vector3(0.35 * s, 0.1, 0))
+		var wb := MeshLib.Builder.new()
+		wb.ellipsoid(Vector3(0.6 * s, 0, 0.05), Vector3(0.7, 0.08, 0.4), 10, 6)
+		part(w, wb, Mats.skin(blue.darkened(0.1)), "wing")
+	return root
+
+
+# Blaze the lava fireball. Pivot: body.
+static func blaze() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Blaze"
+	var body := pivot(root, "body", Vector3(0, 0.6, 0))
+	var b := MeshLib.Builder.new()
+	b.ellipsoid(Vector3.ZERO, Vector3(0.55, 0.6, 0.55), 14, 10)
+	part(body, b, Mats.glow(Color(1.0, 0.45, 0.1), 1.6, 0.5), "core")
+	var fl := MeshLib.Builder.new()
+	for i in 7:
+		var a := TAU * i / 7.0
+		fl.spike(Vector3(cos(a) * 0.3, 0.3, sin(a) * 0.3), Vector3(cos(a) * 0.45, 1.1 + (i % 2) * 0.3, sin(a) * 0.45), 0.2, 6, 3, Vector3(0, 0.2, 0))
+	part(body, fl, Mats.glow(Color(1.0, 0.8, 0.2), 2.0, 0.5), "flames")
+	eyes(body, Vector3(0, 0.05, -0.45), 0.18, 0.11, Vector3.FORWARD, 0.6)
+	return root
+
+
+static func spring_mesh() -> ArrayMesh:
+	var b := MeshLib.Builder.new()
+	b.lathe([Vector2(0.0, 0.0), Vector2(0.9, 0.0), Vector2(0.9, 0.25), Vector2(0.0, 0.25)], 14)
+	for i in 4:
+		var y := 0.3 + i * 0.28
+		var prof := []
+		for k in 13:
+			var a := TAU * k / 12.0
+			prof.append(Vector2(0.6 + 0.08 * cos(a), y + 0.08 * sin(a)))
+		b.lathe(prof, 14, Vector3.ZERO, Basis.IDENTITY, false)
+	b.lathe([Vector2(0.0, 1.4), Vector2(0.85, 1.4), Vector2(0.85, 1.6), Vector2(0.0, 1.6)], 14)
 	return b.commit_mesh()
 
 

@@ -87,14 +87,33 @@ static func vertex_painted(rough: float = 0.95) -> StandardMaterial3D:
 
 
 static func water(deep: bool = false) -> ShaderMaterial:
-	var key := "water|%s" % deep
+	return liquid("deep" if deep else "water")
+
+
+# water, deep, poison, lava, swamp
+static func liquid(kind: String) -> ShaderMaterial:
+	var key := "liquid|%s" % kind
 	if _cache.has(key):
 		return _cache[key]
 	var m := ShaderMaterial.new()
 	m.shader = load("res://shaders/water.gdshader")
 	m.set_shader_parameter("noise_tex", noise())
-	if deep:
-		m.set_shader_parameter("color", Color(0.08, 0.3, 0.6, 0.9))
+	match kind:
+		"deep":
+			m.set_shader_parameter("color", Color(0.08, 0.3, 0.6, 0.9))
+		"poison":
+			m.set_shader_parameter("color", Color(0.35, 0.6, 0.1, 0.92))
+			m.set_shader_parameter("foam", Color(0.7, 0.95, 0.3, 1.0))
+		"lava":
+			m.set_shader_parameter("color", Color(0.95, 0.35, 0.05, 1.0))
+			m.set_shader_parameter("foam", Color(1.0, 0.85, 0.2, 1.0))
+			m.set_shader_parameter("wave", 0.05)
+			m.set_shader_parameter("scroll", Vector2(0.01, 0.008))
+			m.set_shader_parameter("foam_lo", 0.5)
+			m.set_shader_parameter("foam_hi", 0.62)
+		"swamp":
+			m.set_shader_parameter("color", Color(0.2, 0.3, 0.15, 0.85))
+			m.set_shader_parameter("foam", Color(0.4, 0.55, 0.3, 1.0))
 	_cache[key] = m
 	return m
 

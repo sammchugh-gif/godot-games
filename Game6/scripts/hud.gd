@@ -284,9 +284,24 @@ func show_panel(kind: String, data: Dictionary = {}) -> void:
 				_button(box, "FLY TO " + str(data["next"]), "fly")
 			_button(box, "KEEP EXPLORING", "resume")
 		"travel":
-			_label(box, "THE BALLOON", 46, Color(1.0, 0.85, 0.25))
-			_label(box, "Fly to %s?" % data.get("next", "the next kingdom"), 26, Color(1, 1, 1))
-			_button(box, "FLY TO " + str(data.get("next", "")), "fly")
+			_label(box, "THE BALLOON", 42, Color(1.0, 0.85, 0.25))
+			_label(box, "Where to, " + Player.HERO_NAME + "?", 22, Color(1, 1, 1))
+			var grid := GridContainer.new()
+			grid.columns = 2
+			grid.add_theme_constant_override("h_separation", 10)
+			grid.add_theme_constant_override("v_separation", 6)
+			box.add_child(grid)
+			for k in data.get("list", []):
+				var lab: String = str(k["title"])
+				if k.get("current", false):
+					lab += "   (here, %d moons)" % int(k.get("moons", 0))
+				elif k.get("unlocked", false):
+					lab += "   (%d moons)" % int(k.get("moons", 0))
+				else:
+					lab += "   locked"
+				var b := _button(grid, lab, "fly:" + str(k["id"]) if (k.get("unlocked", false) and not k.get("current", false)) else "resume", 18)
+				b.disabled = not k.get("unlocked", false) or k.get("current", false)
+			_label(box, "Clear a kingdom (12 moons) to unlock the next one.", 16, Color(0.9, 0.93, 1.0))
 			_button(box, "STAY HERE", "resume")
 		"dead":
 			_label(box, "OUCH, " + Player.HERO_NAME.to_upper() + "!", 46, Color(1.0, 0.5, 0.4))

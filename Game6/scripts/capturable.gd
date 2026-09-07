@@ -17,6 +17,7 @@ var home := Vector3.ZERO
 var anim_t := 0.0
 var rng := RandomNumberGenerator.new()
 var _col: CollisionShape3D
+var hazard_proof := false   # lava/poison do not kill this creature
 
 
 func setup(lvl: Node, p: Player) -> void:
@@ -102,3 +103,10 @@ func _physics_process(dt: float) -> void:
 	if model:
 		model.rotation.y = facing
 	animate(dt)
+	if captured and level and level.has_method("deep_water"):
+		var p := global_position
+		if p.y < -26.0 or (not hazard_proof and level.deep_water(p)):
+			if p.y >= -26.0:
+				Sfx.play("splash")
+			player.release_capture(false)
+			player.die()
