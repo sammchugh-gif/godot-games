@@ -10,14 +10,14 @@ export const Audio = {
       master = AC.createGain(); master.gain.value = 0.6; master.connect(AC.destination);
       sfxGain = AC.createGain(); sfxGain.gain.value = 1; sfxGain.connect(master);
       musGain = AC.createGain(); musGain.gain.value = 0.55; musGain.connect(master);
-      ambGain = AC.createGain(); ambGain.gain.value = 0.7; ambGain.connect(master);
+      ambGain = AC.createGain(); ambGain.gain.value = 0.45; ambGain.connect(master);
     } catch (e) { AC = null; }
   },
   resume() { if (AC && AC.state === "suspended") AC.resume(); },
   get ctx() { return AC; },
   now() { return AC ? AC.currentTime : 0; },
   setMusic(on) { this.musicOn = on; if (musGain) musGain.gain.setTargetAtTime(on ? 0.55 : 0, AC.currentTime, 0.1); },
-  setSfx(on) { this.sfxOn = on; if (sfxGain) sfxGain.gain.value = on ? 1 : 0; if (ambGain) ambGain.gain.value = on ? 0.7 : 0; },
+  setSfx(on) { this.sfxOn = on; if (sfxGain) sfxGain.gain.value = on ? 1 : 0; if (ambGain) ambGain.gain.value = on ? 0.45 : 0; },
 };
 
 function tone(f0, f1, dur, type, vol, delay, dest) {
@@ -161,10 +161,10 @@ function lfo(target, rate, depth, base) {
   o.start(); return o;
 }
 const AMBIENCES = {
-  rain(l) { const a = makeLayer(4500); a.gain.gain.value = 0.22; l.push(a); const b = makeLayer(900); b.gain.gain.value = 0.12; lfo(b.gain.gain, 0.2, 0.05, 0.12); l.push(b); },
+  rain(l) { const a = makeLayer(2200); a.gain.gain.value = 0.07; l.push(a); const b = makeLayer(600); b.gain.gain.value = 0.05; lfo(b.gain.gain, 0.2, 0.015, 0.05); l.push(b); },
   water(l) { const a = makeLayer(500); a.gain.gain.value = 0.16; lfo(a.gain.gain, 0.35, 0.08, 0.16); l.push(a); const b = makeLayer(1800, "bandpass", 2); b.gain.gain.value = 0.03; lfo(b.gain.gain, 0.9, 0.03, 0.03); l.push(b); },
   wind(l) { const a = makeLayer(400, "bandpass", 1.2); a.gain.gain.value = 0.2; lfo(a.filter.frequency, 0.13, 250, 500); lfo(a.gain.gain, 0.11, 0.1, 0.2); l.push(a); },
-  city_rain(l) { AMBIENCES.rain(l); const h = makeLayer(180); h.gain.gain.value = 0.08; l.push(h); },
+  city_rain(l) { AMBIENCES.rain(l); const h = makeLayer(180); h.gain.gain.value = 0.06; l.push(h); },
   city(l) { const h = makeLayer(220); h.gain.gain.value = 0.14; lfo(h.gain.gain, 0.07, 0.05, 0.14); l.push(h); const b = makeLayer(1200, "bandpass", 1.5); b.gain.gain.value = 0.03; lfo(b.filter.frequency, 0.05, 700, 1200); l.push(b); },
   waves(l) { const a = makeLayer(700); a.gain.gain.value = 0.1; lfo(a.gain.gain, 0.12, 0.12, 0.14); l.push(a); const b = makeLayer(2500); b.gain.gain.value = 0.04; lfo(b.gain.gain, 0.12, 0.04, 0.04); l.push(b); },
   blizzard(l) { const a = makeLayer(600, "bandpass", 1.0); a.gain.gain.value = 0.26; lfo(a.filter.frequency, 0.17, 400, 700); lfo(a.gain.gain, 0.09, 0.12, 0.26); l.push(a); const w = makeLayer(2400, "bandpass", 6); w.gain.gain.value = 0.03; lfo(w.filter.frequency, 0.3, 900, 2400); l.push(w); },
@@ -178,6 +178,11 @@ export const Ambience = {
     if (!name || !AMBIENCES[name]) return;
     const layers = [];
     AMBIENCES[name](layers);
+    // full for the first moments so the place registers, then settle to a
+    // quiet bed under the voices and the music (rain settles the furthest)
+    const settle = name === "rain" || name === "city_rain" ? 0.18 : 0.4;
+    const t = AC.currentTime;
+    for (const l of layers) { const base = l.gain.gain.value; l.gain.gain.setValueAtTime(base, t); l.gain.gain.setTargetAtTime(base * settle, t + 4, 2.5); }
     ambCur = { name, layers };
   },
   stop() {
