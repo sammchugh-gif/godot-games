@@ -38,8 +38,14 @@ orientation for one player; landscape for two.
 - **One player**: a broadcast camera behind your own half, so the goal you
   are attacking is always at the top of the screen. It swaps ends with the
   teams at half time.
-- **Two players**: a high camera down one touchline that follows the ball,
-  the same view for both seats.
+- **Two players**: split screen. The iPad is drawn twice, once for each end,
+  so the pitch always runs away from the player sitting there and their own
+  goal is behind their own controls. Each half is turned a quarter turn to
+  match that seat, so "push away from yourself" always means "run at the
+  goal you are attacking".
+- **One top-down view** is the alternative on the team screen if the two of
+  you would rather share a single overhead picture, as the game did before.
+  The screen is then the pitch: push the way you want to go.
 - **Goals**: the camera cuts to behind the net for the celebration.
 - **Penalties**: behind the taker, looking at the goal.
 
@@ -49,9 +55,12 @@ orientation for one player; landscape for two.
   hard and a 2, 3 or 5 minute match.
 - **Cup**: quarter-final, semi-final and final against three random teams.
   Each round is a step harder than the last. A draw goes to penalties.
-- **Two players, one iPad**: lay the iPad between you in landscape. Each end
-  of the screen is a control strip: stick in one half, buttons in the other,
-  and a scoreboard that reads the right way up from your seat.
+- **Two players, one iPad**: lay the iPad between you in landscape and sit
+  at either end. Each end of the screen is a control strip: stick in one
+  half, buttons in the other, and a scoreboard that reads the right way up
+  from your seat. Split screen gives each of you your own picture of the
+  match; the whole shoot-out is drawn from each seat too, so the taker
+  looks at the goal while the keeper watches the run-up.
 
 ## Penalties
 
@@ -87,7 +96,9 @@ first.
 The simulation still runs in pitch pixels, ten to the metre, and the
 renderer maps them to a 105 by 68 metre pitch. Everything the game draws is
 one directional light with a 2048-pixel shadow map, about 130 draw calls and
-7,000 triangles, which any recent iPad renders at 60 frames a second.
+7,000 triangles, which any recent iPad renders at 60 frames a second. Split
+screen draws the scene twice, about 180 calls and 9,500 triangles, sharing
+one shadow pass between the two halves.
 
 ## Debug hook
 
