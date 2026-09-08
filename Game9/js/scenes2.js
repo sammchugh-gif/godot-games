@@ -104,6 +104,19 @@ SCENES.kenya = function () {
   this.box(2.2, 1.4, 1.2, this.M({ map: PT.sign("UMBRA", "#1a1a22", "#c0c8d8", "900 90px sans-serif"), rx: 1, ry: 1 }), 52, 0.7, 2, {});
   this.cone(3.0, 2.6, this.M({ color: 0x3a3a3a, side: THREE.DoubleSide }), 56, 1.3, -2, 4);
   { const m = this.M({ color: 0xc8a060, roughness: 1 }); const body = this.box(2.6, 0.9, 1.2, m, 62, 0.45, -12, {}); this.sphere(0.8, this.M({ color: 0x8a5a2a, roughness: 1 }), 63.4, 0.8, -12, 10); this.box(1.2, 0.12, 0.12, m, 60.4, 0.6, -12, {}); this.updaters.push(dt => { body.scale.y = 1 + Math.sin(this.t * 1.2) * 0.05; }); }
+  // zebras, rocks and termite mounds
+  { const zm = this.M({ map: stripes("#f4f0e8", "#1a1a1a"), rx: 1, ry: 1, roughness: 1 }); const dark = this.M({ color: 0x1a1a1a });
+    const zebra = (x, z, ry) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; S.add(g);
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 0.9), zm); body.position.y = 1.25; body.castShadow = true; g.add(body);
+      const neck = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.4), zm); neck.position.set(1.1, 1.9, 0); neck.rotation.z = -0.5; g.add(neck);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.36), zm); head.position.set(1.6, 2.2, 0); g.add(head);
+      const mane = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.12), dark); mane.position.set(1.2, 2.35, 0); g.add(mane);
+      for (const [lx, lz] of [[-0.7, -0.3], [-0.7, 0.3], [0.7, -0.3], [0.7, 0.3]]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.8, 0.22), zm); leg.position.set(lx, 0.4, lz); g.add(leg); }
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, 0.08), dark); tail.position.set(-1.0, 1.0, 0); tail.rotation.z = 0.4; g.add(tail);
+      this.collider(x, z, 2.2, 1.2); };
+    zebra(-16, 10, 0.4); zebra(-20, 13, 1.1); zebra(-13, 14, -0.3); zebra(24, -14, 2.6);
+    const rock = this.M({ color: 0x8a7a6a, roughness: 1 }); for (const [x, z, r] of [[-28, 12, 1.4], [-26, 10, 0.9], [12, -14, 1.6], [36, 0, 1.1], [-8, -14, 1.2]]) { this.sphere(r, rock, x, r * 0.55, z, 8); this.collider(x, z, r * 2, r * 2); }
+    const mound = this.M({ color: 0xa8683a, roughness: 1 }); for (const [x, z, h] of [[-2, -16, 2.6], [30, 4, 2.2], [-34, 6, 3.0], [14, -20, 2.0]]) this.cone(1.0, h, mound, x, h / 2, z, 7, { collide: true }); }
   this.station("cameratrap", -4, 6.5, "camera", 0x7fdcff, "The camera trap");
   this.station("watering", -22, -4.5, "sonar", 0x7fffb0, "The watering hole");
   this.station("camp", 41.5, 8.5, "crate", 0xffd166, "UMBRA's camp");
@@ -116,7 +129,7 @@ SCENES.kenya = function () {
 // ------------------------------------------------------------- INDIA
 SCENES.india = function () {
   const S = this.scene;
-  S.background = this.sky.sky_sunset; S.fog = new THREE.Fog(0xf0b890, 60, 260);
+  S.background = this.gradientSky("#2f3f8a", "#f0a060", "#ffe0b0"); S.fog = new THREE.Fog(0xf0c8a0, 60, 260);
   S.add(new THREE.HemisphereLight(0xffd6b0, 0x5a4030, 0.8));
   this.sun(0xffb070, 1.5, 40, 22, 30, 70);
   this.ground(this.M({ map: PT.paving(81, [180, 165, 140]), rx: 80, roughness: 0.9 }), 300);
@@ -159,12 +172,12 @@ SCENES.india = function () {
 // ------------------------------------------------------------- CHINA
 SCENES.china = function () {
   const S = this.scene;
-  S.background = this.gradientSky("#3a2a6a", "#e88a5a", "#f6c090"); S.fog = new THREE.Fog(0xd8a890, 60, 320);
-  S.add(new THREE.HemisphereLight(0xffd0b0, 0x40405a, 0.8));
-  this.sun(0xffb080, 1.3, 50, 24, -30, 80);
+  S.background = this.gradientSky("#3a4a8a", "#f0a070", "#ffd8a8"); S.fog = new THREE.Fog(0xe8c0a8, 70, 340);
+  S.add(new THREE.HemisphereLight(0xffe0c0, 0x506050, 1.15));
+  this.sun(0xffc090, 1.8, 40, 30, 30, 80);
   this.ground(this.M({ map: PT.sand(13), rx: 70, roughness: 1, color: 0x8a9a5a }), 400);
   // hills and the Great Wall snaking over them
-  const hillM = this.M({ color: 0x4a6a3a, roughness: 1 });
+  const hillM = this.M({ color: 0x5a7a46, roughness: 1 });
   const hills = [[-40, -60, 30, 16], [10, -80, 40, 24], [60, -120, 50, 34], [-20, -140, 60, 40], [100, -180, 70, 48], [-90, -100, 45, 26]];
   for (const [x, z, r, h] of hills) this.sphere(r, hillM, x, -r + h, z, 18);
   const hillY = (x, z) => { let y = 0; for (const [hx, hz, r, h] of hills) { const d = Math.hypot(x - hx, z - hz); if (d < r) y = Math.max(y, -r + h + Math.sqrt(r * r - d * d)); } return y; };
@@ -191,20 +204,32 @@ SCENES.china = function () {
     const dish = this.cyl(1.2, 0.9, 0.3, this.M({ color: 0xdddddd, metalness: 0.5 }), tx + 2.5, 11.5, tz + 2, 20); dish.rotation.z = -0.9; this.cyl(0.08, 0.08, 1.4, this.M({ color: 0x555555 }), tx + 2.5, 10.9, tz + 2, 6);
     const lion = this.M({ color: 0x777777, roughness: 0.9 }); this.box(1.2, 1.0, 1.8, lion, tx - 2.2, 0.9, tz - 5.2, { collide: true }); this.sphere(0.6, lion, tx - 2.2, 1.8, tz - 6, 10); this.box(1.6, 0.4, 2.2, lion, tx - 2.2, 0.2, tz - 5.2, {}); }
   // cherry trees
-  for (const [x, z] of [[26, 0], [-24, 6], [4, 12]]) { this.cyl(0.18, 0.28, 2.6, this.M({ color: 0x3a2a1a }), x, undefined, z, 8, { collide: true }); for (const [dx, dy, dz, r] of [[0, 3.6, 0, 1.6], [0.9, 3.1, 0.5, 1.1], [-0.9, 3.3, -0.3, 1.2]]) this.sphere(r, this.M({ color: 0xffb7c5, emissive: 0xff8fa8, ei: 0.15, roughness: 1 }), x + dx, dy, z + dz, 12); }
+  for (const [x, z] of [[26, 0], [-24, 6], [-12, 13], [8, -8]]) { this.cyl(0.18, 0.28, 2.6, this.M({ color: 0x3a2a1a }), x, undefined, z, 8, { collide: true }); for (const [dx, dy, dz, r] of [[0, 3.6, 0, 1.6], [0.9, 3.1, 0.5, 1.1], [-0.9, 3.3, -0.3, 1.2]]) this.sphere(r, this.M({ color: 0xffb7c5, emissive: 0xff8fa8, ei: 0.15, roughness: 1 }), x + dx, dy, z + dz, 12); }
   for (const [x, z] of [[-4, 4], [20, -6], [-18, -4]]) this.lamp(x, z, 3.4, 0xffc070, 1.0, 12, { post: 0x3a2a2a });
+  // paifang gate by the spawn, bamboo, lantern strings and stone lions
+  { const red = this.M({ color: 0xa02020, roughness: 0.6 }), green = this.M({ color: 0x2a5a3a, roughness: 0.8 }), gold = this.M({ color: 0xd4a437, metalness: 0.4, roughness: 0.5 });
+    for (const dx of [-3.2, 3.2]) { this.cyl(0.3, 0.34, 5.2, red, dx, 2.6, 4, 10, { collide: true }); this.box(1.0, 0.4, 1.0, this.M({ color: 0x666666 }), dx, 0.2, 4, {}); }
+    this.box(8.4, 0.5, 0.7, red, 0, 5.0, 4, {}); this.box(9.4, 0.4, 1.2, green, 0, 5.6, 4, {}); this.box(7.0, 0.35, 0.9, green, 0, 6.5, 4, {}); this.box(3.4, 0.6, 0.3, gold, 0, 4.3, 4.35, {});
+    this.plane(3.0, 0.5, this.M({ map: PT.sign("长城", "#a02020", "#ffd166", "900 80px serif") }), 0, 4.3, 4.52);
+    for (const dx of [-4.6, 4.6]) { this.box(0.9, 0.8, 1.3, this.M({ color: 0x777777 }), dx, 0.7, 5.2, { collide: true }); this.sphere(0.45, this.M({ color: 0x777777 }), dx, 1.45, 4.7, 10); }
+    const bam = this.M({ color: 0x6a9a3a, roughness: 0.8 }); for (let i = 0; i < 14; i++) { const x = -22 + (i % 7) * 1.1 + (i * 7 % 3) * 0.3, z = -14 + Math.floor(i / 7) * 1.2; this.cyl(0.08, 0.1, 4 + (i % 3), bam, x, 2 + (i % 3) / 2, z, 5); }
+    for (let i = 0; i < 4; i++) this.sphere(1.1, this.M({ color: 0x7ab048, roughness: 1 }), -19 + i * 1.6, 4.6 + (i % 2) * 0.6, -13.4, 8);
+    for (const [x0, x1, z] of [[-10, 12, 9.5], [-8, 10, -3]]) { this.box(x1 - x0, 0.03, 0.03, this.M({ color: 0x222222 }), (x0 + x1) / 2, 3.9, z, {}); for (let x = x0 + 1.5; x < x1; x += 2.5) { const l = this.sphere(0.32, this.M({ color: 0xff4020, emissive: 0xff3010, ei: 1.6 }), x, 3.55, z, 10); l.castShadow = false; } }
+    this.light(0xff7040, 2.0, 0, 3.6, 9.5, 14); this.light(0xff7040, 2.0, 0, 3.6, -3, 14);
+    const pond = this.water(10, 7, -20, 6, 0x2a6a70, { opacity: 0.9 }); for (let i = 0; i < 10; i++) { const a = i * TAU / 10; this.cyl(0.5, 0.6, 0.6, this.M({ color: 0x777777 }), -20 + Math.cos(a) * 5.4, 0.3, 6 + Math.sin(a) * 3.9, 8, { collide: true }); }
+    this.box(4, 0.3, 1.4, red, -20, 0.9, 6, {}); this.box(4.6, 0.12, 1.6, red, -20, 1.1, 6, {}); }
   this.station("teahouse", 14, 2.5, "door", 0xff8040, "Mei's tea house");
   this.station("satdish", 22, 10, "screen", 0x7fdcff, "Mei's satellite dish");
   this.station("watchtower", -14, -11.5, "server", 0xffe23a, "The third watchtower");
   this.station("lanternlift", 5, -17.5, "rods", 0xffd166, "The lantern's rod lock");
   this.addPerson("mei", 8, 3, Math.PI, { coat: 0xc0392b, hair: 0x141414, skin: 0xf3ddc4, trousers: 0x222233 }, "Mei");
-  return { x: -2, z: 9, yaw: 0.1, bounds: { x0: -28, x1: 30, z0: -21, z1: 14 } };
+  return { x: -2, z: 9, yaw: -0.55, bounds: { x0: -28, x1: 30, z0: -21, z1: 14 } };
 };
 
 // ------------------------------------------------------------- AUSTRALIA
 SCENES.australia = function () {
   const S = this.scene;
-  S.background = this.sky.sky_sunset; S.fog = new THREE.Fog(0xf0c0a0, 80, 360);
+  S.background = this.gradientSky("#1d3f7a", "#7ab0e0", "#ffd8a8"); S.fog = new THREE.Fog(0xd8c8b8, 80, 360);
   S.add(new THREE.HemisphereLight(0xffd8b0, 0x806040, 0.8));
   this.sun(0xffa060, 1.6, -60, 22, -40, 80);
   this.ground(this.M({ map: PT.sand(17), rx: 60, roughness: 1, color: 0xf0e0c0 }), 500);
@@ -261,7 +286,7 @@ SCENES.mexico = function () {
   for (let i = 0; i < 9; i++) { const sz = 40 - i * 4; this.box(sz, 2.2, sz, stone, 0, 1.1 + i * 2.2, -40, {}); }
   this.box(8, 5, 8, stone, 0, 19.8 + 2.5, -40, {}); this.box(2.4, 3, 0.6, this.M({ color: 0x1a1008 }), 0, 21.3, -36.2, {});
   this.collider(0, -40, 20, 20);
-  { const stairs = this.box(6, 1.2, 40, this.M({ map: PT.paving(103, [150, 130, 100]), rx: 2, ry: 10 }), 0, 10, -20, {}); stairs.rotation.x = -0.46; for (const dx of [-3.6, 3.6]) { this.box(1.2, 1.2, 1.6, this.M({ color: 0x5a5a4a }), dx, 0.6, -19.5, {}); this.sphere(0.7, this.M({ color: 0x5a5a4a }), dx, 1.3, -18.6, 8); this.box(0.6, 0.3, 0.6, this.M({ color: 0xc0392b }), dx, 1.3, -17.9, {}); } }
+  { const stairs = this.box(6, 1.2, 40, this.M({ map: PT.paving(103, [150, 130, 100]), rx: 2, ry: 10 }), 0, 10, -20, {}); stairs.rotation.x = 0.46; for (const dx of [-3.6, 3.6]) { this.box(1.2, 1.2, 1.6, this.M({ color: 0x5a5a4a }), dx, 0.6, -19.5, {}); this.sphere(0.7, this.M({ color: 0x5a5a4a }), dx, 1.3, -18.6, 8); this.box(0.6, 0.3, 0.6, this.M({ color: 0xc0392b }), dx, 1.3, -17.9, {}); } }
   for (const x of [-5, 5]) { this.cyl(0.08, 0.1, 2.2, this.M({ color: 0x3a2a1a }), x, undefined, -18, 6); this.sprite(this.dotTex, x, 2.5, -18, 1.6, 0xff9030, true); const fl = this.light(0xff8030, 1.5, x, 2.4, -17.6, 8); this.updaters.push(dt => { fl.intensity = 1.3 + Math.sin(this.t * 9 + x) * 0.4; }); }
   this.box(3, 3.4, 0.6, this.M({ color: 0x0a0806 }), 16, 1.7, -19.7, {}); this.plane(2.4, 0.5, this.M({ map: PT.sign("CHAMBER", "#3a2a10", "#ffd166", "800 60px serif") }), 16, 3.8, -19.68);
   // jungle
@@ -274,9 +299,9 @@ SCENES.mexico = function () {
   for (const [x0, x1, z] of [[-30, -6, 4], [-30, -6, 12]]) { this.box(x1 - x0, 0.03, 0.03, this.M({ color: 0x333333 }), (x0 + x1) / 2, 3.6, z, {}); let k = 0; for (let x = x0 + 1; x < x1; x += 1.6) { const f = this.plane(1.1, 0.8, this.M({ color: fiesta[k++ % 6], side: THREE.DoubleSide }), x, 3.15, z); f.castShadow = false; } }
   this.box(6, 0.6, 5, this.M({ map: PT.wood(31), rx: 3, ry: 2 }), 22, 0.3, 10, { collide: true }); for (const [dx, dz] of [[-2.6, -2.2], [2.6, -2.2], [-2.6, 2.2], [2.6, 2.2]]) this.cyl(0.06, 0.06, 3, this.M({ color: 0x5a3a1a }), 22 + dx, 2.1, 10 + dz, 6); const bs = this.cone(4.5, 1.6, this.M({ map: stripes("#e63946", "#ffd166"), rx: 6, ry: 1, side: THREE.DoubleSide }), 22, 4.4, 10, 4); bs.rotation.y = Math.PI / 4;
   // the cenote and the jaguar
-  this.water(14, 14, -30, -12, 0x2a8a9a, { opacity: 0.95 }); for (let i = 0; i < 12; i++) { const a = i * TAU / 12; this.cyl(0.6, 0.7, 0.8, stone, -30 + Math.cos(a) * 7.6, 0.4, -12 + Math.sin(a) * 7.6, 8, { collide: true }); }
+  this.water(14, 14, -30, -12, 0x2a8a9a, { opacity: 0.95, y: 0.03 }); for (let i = 0; i < 12; i++) { const a = i * TAU / 12; this.cyl(0.6, 0.7, 0.8, stone, -30 + Math.cos(a) * 7.6, 0.4, -12 + Math.sin(a) * 7.6, 8, { collide: true }); }
   { const jag = this.M({ map: spots("#c8a050", "#3a2a10", 7), rx: 1, ry: 1 }); this.box(3, 1.2, 3, stone, 30, 0.6, -6, { collide: true }); this.box(2.2, 1.0, 1.0, jag, 30, 1.7, -6, {}); this.box(0.8, 0.8, 0.8, jag, 31.2, 2.2, -6, {}); for (const [lx, lz] of [[0.8, 0.3], [-0.8, 0.3], [0.8, -0.3], [-0.8, -0.3]]) this.box(0.25, 0.6, 0.25, jag, 30 + lx, 1.0, -6 + lz, {}); }
-  for (const [x, z] of [[-12, 2], [12, 2], [0, 12]]) this.lamp(x, z, 3.6, 0xffc070, 1.0, 12, { post: 0x3a2a2a });
+  for (const [x, z] of [[-12, 2], [12, 2], [-6, 14]]) this.lamp(x, z, 3.6, 0xffc070, 1.0, 12, { post: 0x3a2a2a });
   this.station("market", -16, 4, "door", 0xffd166, "The market stall");
   this.station("stairs", 0, -15.5, "crate", 0xff8040, "The serpent stairs");
   this.station("jaguar", 30, -2.5, "vault", 0xffd166, "The jaguar door");
@@ -306,7 +331,7 @@ SCENES.alps = function () {
   // frozen pond, signpost, lamps
   const pond = this.plane(14, 10, this.M({ tex: "ice", rx: 2, ry: 1.5, roughness: 0.15, metalness: 0.3, color: 0xc8dcf0 }), 6, 0.02, 12, -Math.PI / 2); pond.receiveShadow = true;
   this.cyl(0.08, 0.1, 2.6, this.M({ color: 0x5a4a3a }), -4, 1.3, 2, 6); this.plane(1.6, 0.4, this.M({ map: PT.sign("SEILBAHN →", "#f4e8c8", "#1a1a1a", "900 60px sans-serif") }), -4, 2.3, 2.05);
-  for (const [x, z] of [[-8, -6], [10, -6], [0, 8]]) this.lamp(x, z, 4.2, 0xdde8ff, 1.2, 14, { post: 0x2a2a2a });
+  for (const [x, z] of [[-8, -6], [10, -6], [-14, 4], [16, 6]]) this.lamp(x, z, 4.2, 0xdde8ff, 1.2, 14, { post: 0x2a2a2a });
   // the cable-car base station and the cable up to the lair
   { const steel = this.M({ tex: "steel", rx: 2, ry: 2, metalness: 0.7, roughness: 0.4 }); this.box(8, 6, 6, steel, 0, 3, -16, { collide: true }); const wheel = this.cyl(2, 2, 0.4, this.M({ color: 0x8a1a1a, metalness: 0.5 }), 0, 7.5, -16, 20); wheel.rotation.x = Math.PI / 2; this.box(0.4, 1, 0.4, steel, 0, 8.4, -16, {}); const sg = PT.sign("SEILBAHN", "#1a1a22", "#ffd166", "900 64px sans-serif"); this.plane(6, 1.2, this.M({ map: sg, emissive: 0xffffff, emap: sg, ei: 0.8 }), 0, 4.8, -12.95); this.box(2.4, 3, 0.4, this.M({ color: 0x0a0a10 }), 0, 1.5, -12.95, {}); this.light(0xffd0a0, 3, 0, 4, -11, 14);
     const a = new THREE.Vector3(0, 8, -16), b = new THREE.Vector3(0, 60, -96); const len = a.distanceTo(b); const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 6), this.M({ color: 0x222222 })); cable.position.copy(a).lerp(b, 0.5); cable.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); S.add(cable);

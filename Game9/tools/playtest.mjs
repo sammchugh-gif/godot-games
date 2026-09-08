@@ -38,7 +38,9 @@ check(await state() === "map", "map after briefing");
 await shot("01_map");
 
 const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
-for (let ci = 0; ci < COUNTRIES.length; ci++) {
+const startCi = +(process.argv[3] || 0);
+if (startCi > 0) { await ev(ci => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; }, startCi); await wait(300); }
+for (let ci = startCi; ci < COUNTRIES.length; ci++) {
   const c = COUNTRIES[ci];
   // fly
   await ev(() => __spy.debug.press("fly")); await waitGame(0.2);

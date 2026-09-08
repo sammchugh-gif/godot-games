@@ -345,7 +345,7 @@ export class World {
     o = o || {};
     const m = new THREE.MeshStandardMaterial({ color, roughness: 0.18, metalness: 0.55, transparent: true, opacity: o.opacity || 0.92 });
     m.normalMap = this.T("water_n", w / 8, d / 8); m.normalScale = new THREE.Vector2(0.6, 0.6);
-    const p = this.plane(w, d, m, x, o.y || -0.05, z, -Math.PI / 2); p.receiveShadow = true;
+    const p = this.plane(w, d, m, x, o.y === undefined ? 0.02 : o.y, z, -Math.PI / 2); p.receiveShadow = true;
     this.updaters.push(dt => { m.normalMap.offset.x += dt * 0.02; m.normalMap.offset.y += dt * 0.013; });
     return p;
   }

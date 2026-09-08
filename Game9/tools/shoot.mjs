@@ -25,7 +25,7 @@ if (what === "scenes" || what === "all") {
   const ids = ["london", "venice", "cairo", "tokyo", "newyork", "rio", "siberia", "paris", "kenya", "india", "china", "australia", "mexico", "alps"];
   const onlyScene = process.argv[4] || "";
   for (let i = 0; i < ids.length; i++) {
-    if (onlyScene && ids[i] !== onlyScene) continue;
+    if (onlyScene && !onlyScene.split(",").includes(ids[i])) continue;
     await page.evaluate(i => { __spy.debug.goto(i, 0); }, i);
     await page.waitForTimeout(900);
     await shot(`scene_${ids[i]}_a`);

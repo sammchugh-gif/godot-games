@@ -242,7 +242,7 @@ SCENES.cairo = function () {
   for (let i = 0; i < 3; i++) { this.cyl(0.5, 0.6, 2.2 + (i === 0 ? 1.2 : 0), this.M({ map: PT.hiero(11 + i), rx: 1, ry: 1, color: 0xc8a878 }), -28.5, undefined, -10 - i * 2.2, 10, { collide: true }); }
   for (let i = 0; i < 3; i++) this.cyl(1.0 - i * 0.25, 1.0 - i * 0.25, 0.3, this.M({ color: 0xa08050 }), -28.5, 3.55 + i * 0.3, -10, 12);
   this.station("rods", -26, -12, "rods", 0xffd166, "The tomb's counterweights");
-  this.station("tent", -20.5, 8.5, "screen", 0x7fdcff, "Nadia's tent");
+  this.station("tent", -15, 5, "screen", 0x7fdcff, "Nadia's tent");
   this.station("mast", 26.5, 7.6, "mast", 0xff5050, "UMBRA's radio mast");
   this.station("tomb", -30, -2, "tomb", 0xffb040, "The tomb of light");
   this.addPerson("nadia", -18, 4, 2.0, { coat: 0xb8860b, hat: "scarf", hatColor: 0x8a2a2a, skin: 0xc9946a, trousers: 0x6a5a4a }, "Dr Farouk");
@@ -402,7 +402,7 @@ SCENES.rio = function () {
   const car = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 1.6), this.M({ color: 0xffd166, metalness: 0.4 })); car.castShadow = true; S.add(car);
   this.updaters.push(dt => { const k = 0.5 + 0.45 * Math.sin(this.t * 0.12); car.position.copy(a).lerp(b, k); car.position.y -= 1.4; });
   // the docks across the inlet
-  this.water(40, 60, -36, -30, 0x1f7f92, { opacity: 0.95, y: -0.06 });
+  this.water(40, 60, -36, -30, 0x1f7f92, { opacity: 0.95, y: 0.025 });
   this.box(34, 1.2, 34, this.M({ map: PT.paving(51, [150, 150, 148]), rx: 10, ry: 10 }), -44, 0.5, -30, { collide: true });
   const cc = [0x2a6a9a, 0xb03a2a, 0x3a8a4a, 0xd0a020, 0x8a8a8a, 0x6a2a8a];
   let ci = 0; for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) { this.container(-52 + i * 6.4, 1.1 + 0, -20 - r * 3.2, 0, cc[ci++ % cc.length]); if ((i + r) % 2) this.container(-52 + i * 6.4, 3.7, -20 - r * 3.2, 0, cc[ci++ % cc.length]); }
