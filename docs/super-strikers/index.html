@@ -24,7 +24,7 @@ const cv=document.getElementById("c"),cx=cv.getContext("2d"),gcv=document.getEle
 let W=0,H=0,DPR=1,G3=null,lost3=false;
 const TAU=Math.PI*2,clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by),rnd=(a,b)=>a+Math.random()*(b-a),sign=v=>v<0?-1:1;
 const store={get(k,d){try{const v=localStorage.getItem("superstrikers."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("superstrikers."+k,JSON.stringify(v))}catch(e){}}};
-function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;if(G3)G3.renderer.setSize(W,H,false)}
+function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;if(G3){G3.renderer.setSize(W,H,false);G3.renderer.setViewport(0,0,W,H)}}
 window.addEventListener("resize",layout);layout();
 // ---------------------------------------------------------------- audio
 let AC=null,master=null,crowdGain=null,noiseBuf=null;
@@ -63,7 +63,7 @@ const DIFF={easy:{name:"EASY",speed:0.86,react:0.35,save:0.42,aim:0.35,pass:0.3}
 const save=store.get("save",{cups:0,wins:0,played:0,team:0});
 // ---------------------------------------------------------------- state
 let scene="title",frameT=0,tPrev=0,buttons=[];
-let cfg={mode:"1p",team:save.team||0,opp:1,diff:"normal",half:90,cup:false};
+let cfg={mode:"1p",team:save.team||0,opp:1,diff:"normal",half:90,cup:false,view:save.view||"split"};
 let M=null;   // the match
 let cup=null; // cup state
 let pk=null;  // penalty shoot-out state
@@ -146,7 +146,7 @@ function laneBlocked(p,q){const dx=q.x-p.x,dy=q.y-p.y,L=Math.hypot(dx,dy)||1;for
 function shootFrom(p,power,aimY){const team=p.team;const gx=goalX(team);const acc=M.teams[team].human>=0?0.06:M.teams[team].ai.aim*(1.1-M.teams[team].def.skill);
  const ty=PH/2+clamp(aimY,-1,1)*(GW-6)+rnd(-1,1)*acc*80;const a=Math.atan2(ty-p.y,gx-p.x);const sp=380+330*power;const vz=18+95*power*power*(dist(p.x,p.y,gx,ty)<120?1.4:1);
  kickBall(p,Math.cos(a)*sp,Math.sin(a)*sp,vz);M.shots[team]++;M.ball.shotT=M.simT;M.dbg.shots++;SFX.kick(power);setCrowd(0.45);M.ball.spin=rnd(-1,1)*power*0.6}
-function stickWorld(pad){const s=pad.stick;if(s.mag<0.08)return{x:0,y:0,mag:0};if(!G3)return{x:s.dx,y:s.dy,mag:s.mag};return padDir(pad)}
+function stickWorld(pad,idx){const s=pad.stick;if(s.mag<0.08)return{x:0,y:0,mag:0};if(!G3)return{x:s.dx,y:s.dy,mag:s.mag};return padDir(pad,idx)}
 function moveToward(p,tx,ty,speedMul,dt){const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy);if(d<2){p.dx=p.dy=0;return}const sp=Math.min(1,d/12)*(speedMul||1);p.dx=dx/d*sp;p.dy=dy/d*sp}
 // ---- human control
 function controlHuman(t,dt){const padIdx=M.teams[t].human;const pad=pads[padIdx];const b=M.ball;
@@ -155,7 +155,7 @@ function controlHuman(t,dt){const padIdx=M.teams[t].human;const pad=pads[padIdx]
  else{M.switchCd[t]-=dt;if(!c||c.role==="GK"||M.switchCd[t]<=0){const tx=b.x+b.vx*0.25,ty=b.y+b.vy*0.25;const n=nearestPlayer(t,tx,ty,true);if(n!==c&&(!c||dist(n.x,n.y,tx,ty)<dist(c.x,c.y,tx,ty)-25)){c=n}M.switchCd[t]=0.5}
   if(pad.A.pressed&&!(b.owner&&b.owner.team===t)){const n=nearestPlayer(t,b.x,b.y,true,c);c=n;M.switchCd[t]=1.0}}
  M.ctrl[t]=c;
- const s=stickWorld(pad);
+ const s=stickWorld(pad,padIdx);
  for(const p of M.players){if(p.team!==t||p===c)continue;aiPlayer(p,dt)}
  if(!c)return;
  if(c.down>0||c.slide>0)return;
@@ -309,9 +309,9 @@ function pkSetup(){const b=M.ball;const T=M.teams[pk.kicker];const gx=goalX(pk.k
 function pkStep(dt){const b=M.ball;pk.t+=dt;keyStick();if(M.msgT>0)M.msgT-=dt;
  const kT=M.teams[pk.kicker],gT=M.teams[1-pk.kicker];const kPad=kT.human>=0?pads[kT.human]:null,gPad=gT.human>=0?pads[gT.human]:null;const d=kT.dir;
  if(pk.phase==="ready"){
-  if(kPad){const s=stickWorld(kPad);pk.aim={x:s.y,y:-(s.x*d)};if(kPad.B.pressed)pkKick(pk.aim.x,pk.aim.y)}
+  if(kPad){const s=stickWorld(kPad,kT.human);pk.aim={x:s.y,y:-(s.x*d)};if(kPad.B.pressed)pkKick(pk.aim.x,pk.aim.y)}
   else if(pk.t>1.4+Math.random()*0.3){const side=[-1,0,1][Math.floor(Math.random()*3)];pkKick(side,Math.random()<0.4?-1:0)}
-  if(gPad){const s=stickWorld(gPad);pk.keepSide=Math.abs(s.y)>0.4?sign(s.y):0}
+  if(gPad){const s=stickWorld(gPad,gT.human);pk.keepSide=Math.abs(s.y)>0.4?sign(s.y):0}
   else{if(pk.t>0.9)pk.keepSide=[-1,0,1][Math.floor(Math.random()*3)]}}
  else if(pk.phase==="flight"){
   b.vz-=250*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;if(b.z<0){b.z=0;b.vz=-b.vz*0.4}b.spin+=6*dt;
@@ -387,11 +387,15 @@ function buildPlayerMesh(mats,num){const T=THREE,g=new T.Group();
 function init3D(){if(G3||lost3)return false;if(!window.THREE){lost3=true;return false}
  const T=THREE;let renderer;
  try{renderer=new T.WebGLRenderer({canvas:gcv,antialias:true,powerPreference:"high-performance"})}catch(e){lost3=true;return false}
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setSize(W,H,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
  if(renderer.outputColorSpace!==undefined)renderer.outputColorSpace=T.SRGBColorSpace;
  const scene=new T.Scene();scene.background=new T.Color(0x0a1526);scene.fog=new T.Fog(0x0a1526,140,340);
  const camera=new T.PerspectiveCamera(50,1,0.5,600);camera.position.set(0,40,60);
- G3={T,renderer,scene,camera,nums:{},players:[],rings:[],camPos:new T.Vector3(0,40,60),camLook:new T.Vector3(0,0,0),conf:null,confV:[],celeb:0,shake:0};
+ const camera2=new T.PerspectiveCamera(50,1,0.5,600);
+ renderer.shadowMap.autoUpdate=false;
+ G3={T,renderer,scene,camera,cams:[camera,camera2],nums:{},players:[],rings:[],
+  pos:[new T.Vector3(0,40,60),new T.Vector3(0,40,60)],look:[new T.Vector3(0,0,0),new T.Vector3(0,0,0)],
+  conf:null,confV:[],celeb:0,shake:0};
  for(const n of[1,2,5,8,9,11])G3.nums[n]=numTex(n);
  // lights: a night match under floodlights
  scene.add(new T.HemisphereLight(0x9fb6d8,0x1d4a22,1.15));
@@ -451,23 +455,39 @@ function syncTeams3D(){const T=G3.T;for(const o of G3.players)G3.scene.remove(o.
   const o=buildPlayerMesh(mats,p.n);o.p=p;G3.scene.add(o.g);G3.players.push(o)}
  for(let i=0;i<2;i++){const r=new T.Mesh(new T.RingGeometry(0.85,1.12,24),new T.MeshBasicMaterial({color:i?0xffe14d:0xffffff,transparent:true,opacity:0.9,side:T.DoubleSide,depthWrite:false}));
   r.rotation.x=-Math.PI/2;r.position.y=0.04;r.visible=false;G3.scene.add(r);G3.rings.push(r)}}
-function camBasis(){// ground-plane forward/right of the camera, in sim axes
- const T=G3.T,f=new T.Vector3();G3.camera.getWorldDirection(f);f.y=0;if(f.lengthSq()<1e-6)f.set(0,0,-1);f.normalize();
+// Split screen: each half of the iPad is drawn from that player's own end and
+// rolled a quarter turn, so the pitch runs away from whoever is sitting there.
+function splitOn(){return cfg.mode==="2p"&&cfg.view!=="shared"&&(scene==="match"||scene==="pk"||scene==="pause")}
+function camBasis(i){// ground-plane forward/right of one view, in sim axes
+ const T=G3.T,f=new T.Vector3();(G3.cams[i]||G3.camera).getWorldDirection(f);f.y=0;if(f.lengthSq()<1e-6)f.set(0,0,-1);f.normalize();
  return{fx:f.x,fy:f.z,rx:-f.z,ry:f.x}}
-function padDir(pad){const s=pad.stick;if(s.mag<0.08)return{x:0,y:0,mag:0};const b=camBasis();
- const x=b.rx*s.dx+b.fx*(-s.dy),y=b.ry*s.dx+b.fy*(-s.dy);const L=Math.hypot(x,y)||1;return{x:x/L,y:y/L,mag:s.mag}}
+function padDir(pad,idx){const s=pad.stick;if(s.mag<0.08)return{x:0,y:0,mag:0};
+ const split=splitOn(),i=split?(idx||0):0,b=camBasis(i);
+ // how the seat sees the screen: upright for one player, a quarter turn each way when split
+ let fwd=-s.dy,rgt=s.dx;
+ if(split){if(i===0){fwd=s.dx;rgt=s.dy}else{fwd=-s.dx;rgt=-s.dy}}
+ const x=b.rx*rgt+b.fx*fwd,y=b.ry*rgt+b.fy*fwd;const L=Math.hypot(x,y)||1;return{x:x/L,y:y/L,mag:s.mag}}
 function humanAttackDir(){for(let t=0;t<2;t++)if(M.teams[t].human===0)return M.teams[t].dir;return 1}
-function camFor(dt){const T=G3.T;const pos=new T.Vector3(),look=new T.Vector3();
+function camFor(dt,view){const T=G3.T;const pos=new T.Vector3(),look=new T.Vector3();
  if(scene==="title"||scene==="setup"||scene==="cup"||scene==="result"){const a=frameT*0.12;
-  pos.set(Math.cos(a)*86,34+Math.sin(a*0.7)*7,Math.sin(a)*86);look.set(0,2,0);return{pos,look,snap:false}}
+  pos.set(Math.cos(a)*86,34+Math.sin(a*0.7)*7,Math.sin(a)*86);look.set(0,2,0);return{pos,look}}
  const bx=wx(M.cam?M.cam.x:PW/2),bz=wz(M.cam?M.cam.y:PH/2);
+ if(view>=0){// split screen: every shot is framed from this seat's own end
+  const t=M.teams.findIndex(T2=>T2.human===view),d=M.teams[t<0?0:t].dir;
+  if(scene==="pk"&&pk){const kd=M.teams[pk.kicker].dir,gx=wx(pk.gx);
+   if(M.teams[pk.kicker].human===view){pos.set(gx-kd*21,3.8,1.5);look.set(gx-kd*3,1.3,0)}
+   else{pos.set(gx+kd*15,4.4,1.3);look.set(gx-kd*15,1.3,0)}   // the keeper watches the run-up
+   return{pos,look}}
+  const cel=M.phase==="goal";
+  pos.set(bx-d*(cel?20:25),cel?13:19,bz*0.55);look.set(bx+d*(cel?7:9),0,bz*0.7);return{pos,look}}
  if(scene==="pk"&&pk){const d=M.teams[pk.kicker].dir,gx=wx(pk.gx);
-  pos.set(gx-d*19,3.4,1.6);look.set(gx-d*2.5,1.25,0);return{pos,look,snap:false}}
+  pos.set(gx-d*19,3.4,1.6);look.set(gx-d*2.5,1.25,0);return{pos,look}}
  if(M.phase==="goal"){// the broadcast shot from behind the net
   const gs=M.ball.x>PW/2?1:-1,gx=gs*PW*M2W/2;
-  pos.set(gx+gs*12,4.8,9.5+Math.sin(frameT*0.5)*3.5);look.set(gx-gs*17,1.3,wz(M.ball.y)*0.35);return{pos,look,snap:false}}
- if(cfg.mode==="2p"){pos.set(bx*0.7,31,bz*0.4+23);look.set(bx*0.7,0,bz*0.4-3);return{pos,look,snap:false}}
- const d=humanAttackDir();pos.set(bx-d*27,19.5,bz*0.55);look.set(bx+d*10,0,bz*0.75);return{pos,look,snap:false}}
+  pos.set(gx+gs*12,4.8,9.5+Math.sin(frameT*0.5)*3.5);look.set(gx-gs*17,1.3,wz(M.ball.y)*0.35);return{pos,look}}
+ if(cfg.mode==="2p"){// shared view: near enough overhead that neither seat is upside down
+  pos.set(bx*0.7,34,bz*0.4+7);look.set(bx*0.7,0,bz*0.4);return{pos,look}}
+ const d=humanAttackDir();pos.set(bx-d*27,19.5,bz*0.55);look.set(bx+d*10,0,bz*0.75);return{pos,look}}
 function spawnConfetti(){const g=G3.conf.geometry,pos=g.attributes.position.array,col=g.attributes.color.array;const T=G3.T,c=new T.Color();
  const cols=["#ff5a5a","#ffe14d","#5ad0ff","#8dff5a","#ffffff","#ff8adf"];G3.confV=[];
  for(let i=0;i<200;i++){pos[i*3]=wx(M.ball.x)+rnd(-1,1);pos[i*3+1]=1+Math.random()*1.5;pos[i*3+2]=wz(M.ball.y)+rnd(-1,1);
@@ -503,12 +523,22 @@ function render3Di(dt){const T=G3.T;
   if(M.phase==="goal"&&G3.celeb<=0&&M.phaseT<0.4)spawnConfetti();
   if(M.phase!=="goal"&&G3.celeb>2.2)G3.celeb=Math.min(G3.celeb,0.6)}
  stepConfetti(dt);
- const c=camFor(dt),k=Math.min(1,dt*(M&&M.phase==="goal"?2.2:3.4));
- if(G3.camPos.distanceTo(c.pos)>26){G3.camPos.copy(c.pos);G3.camLook.copy(c.look)}
- else{G3.camPos.lerp(c.pos,k);G3.camLook.lerp(c.look,k)}
- G3.camera.position.copy(G3.camPos);G3.camera.lookAt(G3.camLook);
- G3.camera.aspect=W/H;G3.camera.updateProjectionMatrix();
- G3.renderer.render(G3.scene,G3.camera)}
+ const split=splitOn(),n=split?2:1,k=Math.min(1,dt*(M&&M.phase==="goal"?2.2:3.4));
+ G3.renderer.shadowMap.needsUpdate=true;
+ if(split)G3.renderer.setScissorTest(true);
+ for(let i=0;i<n;i++){const c=camFor(dt,split?i:-1);
+  if(G3.pos[i].distanceTo(c.pos)>26){G3.pos[i].copy(c.pos);G3.look[i].copy(c.look)}
+  else{G3.pos[i].lerp(c.pos,k);G3.look[i].lerp(c.look,k)}
+  const cam=G3.cams[i],w=split?Math.floor(W/2):W,x=split?i*Math.floor(W/2):0;
+  cam.position.copy(G3.pos[i]);cam.up.set(0,1,0);cam.lookAt(G3.look[i]);
+  if(split)cam.rotateZ(i===0?Math.PI/2:-Math.PI/2);
+  cam.aspect=w/H;
+  // when the picture is turned a quarter turn, the seat's up-and-down is the viewport's width
+  cam.fov=split?2*Math.atan(Math.tan(50*Math.PI/360)/cam.aspect)*180/Math.PI:50;
+  cam.updateProjectionMatrix();
+  if(split){G3.renderer.setViewport(x,0,w,H);G3.renderer.setScissor(x,0,w,H)}
+  G3.renderer.render(G3.scene,cam);G3.renderer.shadowMap.needsUpdate=false}
+ if(split){G3.renderer.setScissorTest(false);G3.renderer.setViewport(0,0,W,H)}}
 // ---------------------------------------------------------------- HUD
 function drawScoreboard(x,y,rot,small){cx.save();cx.translate(x,y);cx.rotate(rot);const w=small?250:350,h=small?34:44,s=small?15:19;
  rr(-w/2,-h/2,w,h,10);cx.fillStyle="rgba(10,20,14,0.82)";cx.fill();cx.strokeStyle="rgba(255,255,255,0.35)";cx.lineWidth=1.5;cx.stroke();
@@ -526,8 +556,10 @@ function drawPad(pad,idx){const s=pad.stick;cx.save();
  if(has&&pad.B.down){const pw=clamp(pad.B.held/0.7,0,1);cx.save();cx.translate(pad.bB.x,pad.bB.y);cx.strokeStyle="#ffe14d";cx.lineWidth=6;cx.beginPath();cx.arc(0,0,pad.bB.r+8,-Math.PI/2,-Math.PI/2+pw*TAU);cx.stroke();cx.restore()}
  cx.restore()}
 function drawMatch(){buttons=[];if(M.goalFlash>0){cx.fillStyle="rgba(255,255,255,"+(M.goalFlash*0.45)+")";cx.fillRect(0,0,W,H)}
- if(cfg.mode==="2p"){const bw=Math.min(190,W*0.2);cx.fillStyle="rgba(6,14,9,0.55)";cx.fillRect(0,0,bw,H);cx.fillRect(W-bw,0,bw,H);drawScoreboard(bw/2,H*0.5,Math.PI/2,true);drawScoreboard(W-bw/2,H*0.5,-Math.PI/2,true);drawPad(pads[0],0);drawPad(pads[1],1);
-  if(M.msgT>0){for(const[x,r]of[[bw+40,Math.PI/2],[W-bw-40,-Math.PI/2]]){cx.save();cx.translate(x,H*0.5);cx.rotate(r);text(M.msg,0,0,Math.min(40,H/14),M.msg==="GOAL!"?"#ffe14d":"#fff");cx.restore()}}}
+ if(cfg.mode==="2p"){const bw=Math.min(190,W*0.2);cx.fillStyle="rgba(6,14,9,0.55)";cx.fillRect(0,0,bw,H);cx.fillRect(W-bw,0,bw,H);
+  if(splitOn()){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(W/2-2,0,4,H)}
+  drawScoreboard(bw/2,H*0.5,Math.PI/2,true);drawScoreboard(W-bw/2,H*0.5,-Math.PI/2,true);drawPad(pads[0],0);drawPad(pads[1],1);
+  if(M.msgT>0){const sp=splitOn();for(const[x,r]of[[sp?W*0.25:bw+40,Math.PI/2],[sp?W*0.75:W-bw-40,-Math.PI/2]]){cx.save();cx.translate(x,H*0.5);cx.rotate(r);text(M.msg,0,0,Math.min(40,H/14),M.msg==="GOAL!"?"#ffe14d":"#fff");cx.restore()}}}
  else{drawScoreboard(W/2,30,0,W<600);drawPad(pads[0],0);if(M.msgT>0)text(M.msg,W/2,H*0.3,Math.min(56,W/10),M.msg==="GOAL!"?"#ffe14d":"#fff");
   btn(W-70,8,62,32,"| |",()=>{scene="pause"},{size:14})}
  if(scene==="pk"&&pk){const kT=M.teams[pk.kicker];const y=cfg.mode==="2p"?H-40:H*0.3+50;
@@ -557,7 +589,9 @@ function drawSetup(){bg(0.74);buttons=[];const two=cfg.mode==="2p";text(two?"PIC
  const y1=y0+2*(ch+10)+16;
  if(!two){const ds=["easy","normal","hard"];ds.forEach((d,i)=>btn(W/2-170+i*115,y1,105,40,DIFF[d].name,()=>{cfg.diff=d},{fill:cfg.diff===d?"#2a8a3a":"rgba(255,255,255,0.1)",size:15}))}
  const hs=[60,90,150];hs.forEach((h,i)=>btn(W/2-170+i*115,y1+(two?0:50),105,40,(h/60*2).toFixed(0)+" min match",()=>{cfg.half=h},{fill:cfg.half===h?"#2a4a8a":"rgba(255,255,255,0.1)",size:14}));
- const yb=Math.min(H-56,y1+(two?60:110));btn(W/2-230,yb,200,48,"BACK",()=>{scene="title"},{size:18});
+ if(two){[["split","SPLIT SCREEN"],["shared","ONE TOP-DOWN VIEW"]].forEach(([v,lab],i)=>btn(W/2-170+i*175,y1+50,165,40,lab,()=>{cfg.view=v;save.view=v;store.set("save",save)},{fill:cfg.view===v?"#2a8a3a":"rgba(255,255,255,0.1)",size:13}));
+  text("Split screen draws each end of the iPad for the player sitting there.",W/2,y1+104,13,"#cfd8e8")}
+ const yb=Math.min(H-56,y1+(two?124:110));btn(W/2-230,yb,200,48,"BACK",()=>{scene="title"},{size:18});
  btn(W/2+30,yb,200,48,cfg.cup?"START CUP":"KICK OFF",()=>{save.team=cfg.team;store.set("save",save);if(cfg.cup){cup={round:0,opps:pickOpps(cfg.team,3),won:false,lost:false};scene="cup"}else{startMatch()}},{fill:"#2a8a3a",size:20});
  if(!two&&!cfg.cup)text("Tap a team to make it your opponent. Tap your own team to swap.",W/2,yb-14,13,"#cfd8e8");
  drawButtons()}
@@ -593,5 +627,5 @@ function frame(ts){const dt=Math.min(0.04,(ts-tPrev)/1000||0.016);tPrev=ts;frame
  padEndFrame();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 Object.defineProperty(window,"__G3",{get(){return G3}});
-window.SS={get scene(){return scene},set scene(v){scene=v},get M(){return M},get cfg(){return cfg},set cfg(v){cfg=v},get pk(){return pk},pads,startMatch,newMatch,stepMatch,startPK,pkSetup,TEAMS,DIFF,save,own};
+window.SS={get scene(){return scene},set scene(v){scene=v},get M(){return M},get cfg(){return cfg},set cfg(v){cfg=v},get pk(){return pk},pads,startMatch,newMatch,stepMatch,startPK,pkSetup,stickWorld,TEAMS,DIFF,save,own};
 </script></body></html>
