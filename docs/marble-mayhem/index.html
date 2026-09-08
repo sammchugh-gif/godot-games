@@ -1,0 +1,214 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Marble Mayhem</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#1c2233;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+</style></head><body><canvas id="c"></canvas>
+<script>
+"use strict";
+// ============================================================ Marble Mayhem
+// A marble run builder. Drag pieces onto the board, rotate them, press GO.
+// Puzzles with a goal cup and stars, or a sandbox with saved machines.
+// Sophia, Rory and Dylan Games, Inc.
+document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+let W=0,H=0,DPR=1;const BW=960,BH=640;let board={x:0,y:0,s:1},tray={x:0,y:0,w:0,h:0,vertical:true};
+const TAU=Math.PI*2,clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by),rnd=(a,b)=>a+Math.random()*(b-a);
+const store={get(k,d){try{const v=localStorage.getItem("marblemayhem."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("marblemayhem."+k,JSON.stringify(v))}catch(e){}}};
+function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;const top=56;
+ if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w;tray.y=top;tray.h=H-top;const aw=W-tray.w-16,ah=H-top-8;board.s=Math.min(aw/BW,ah/BH);board.x=8+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
+ else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h;tray.w=W;const aw=W-16,ah=H-top-tray.h-8;board.s=Math.min(aw/BW,ah/BH);board.x=8+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
+window.addEventListener("resize",layout);layout();
+// ---------------------------------------------------------------- audio
+let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
+function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
+let lastPing=0;
+const SFX={click(){tone(1200,900,0.04,"square",0.08)},place(){tone(500,800,0.08,"triangle",0.15)},pick(){tone(700,500,0.06,"triangle",0.1)},
+ bounce(sp){const now=performance.now();if(now-lastPing<40)return;lastPing=now;const f=300+Math.min(900,sp*0.8);tone(f,f*0.7,0.06,"sine",Math.min(0.25,0.05+sp/2500))},
+ star(){[1047,1319,1568].forEach((f,i)=>tone(f,f,0.1,"triangle",0.18,i*0.07))},goal(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,f,0.16,"square",0.15,i*0.1))},
+ lost(){tone(300,120,0.35,"sawtooth",0.15)},cannon(){tone(200,60,0.2,"sawtooth",0.25)},portal(){tone(600,1800,0.2,"sine",0.15)},fan(){},go(){tone(660,990,0.15,"square",0.15)}};
+// ---------------------------------------------------------------- pieces
+const PIECES={
+ plank:{name:"Plank",col:"#c98a4b",len:140,e:0.35},
+ curve:{name:"Curve",col:"#5aa9e6",r:90,e:0.35},
+ tramp:{name:"Trampoline",col:"#e64a7a",len:100,e:1.05},
+ bumper:{name:"Bumper",col:"#f2c14e",r:22,e:1.0},
+ fan:{name:"Fan",col:"#7fd1b9",w:70,h:260},
+ spinner:{name:"Spinner",col:"#b07ce8",r:60,e:0.5},
+ cannon:{name:"Cannon",col:"#4a4e69",r:22},
+ portal:{name:"Portal",col:"#f39c12",r:20},
+};
+const ORDER=["plank","curve","tramp","bumper","fan","spinner","cannon","portal"];
+function segsOf(p,time){const s=[];const c=Math.cos(p.a),sn=Math.sin(p.a);
+ if(p.t==="plank"||p.t==="tramp"){const L=PIECES[p.t].len/2;s.push({ax:p.x-c*L,ay:p.y-sn*L,bx:p.x+c*L,by:p.y+sn*L,e:PIECES[p.t].e,th:7,piece:p})}
+ else if(p.t==="curve"){const R=PIECES.curve.r,n=8;for(let i=0;i<n;i++){const a0=p.a+Math.PI*0.5*i/n,a1=p.a+Math.PI*0.5*(i+1)/n;s.push({ax:p.x+Math.cos(a0)*R,ay:p.y+Math.sin(a0)*R,bx:p.x+Math.cos(a1)*R,by:p.y+Math.sin(a1)*R,e:0.35,th:6,piece:p})}}
+ else if(p.t==="spinner"){const R=PIECES.spinner.r,rot=p.a+(time||0)*2.6;for(let i=0;i<4;i++){const a=rot+i*Math.PI/2;s.push({ax:p.x,ay:p.y,bx:p.x+Math.cos(a)*R,by:p.y+Math.sin(a)*R,e:0.5,th:6,piece:p,spin:2.6})}}
+ return s}
+// ---------------------------------------------------------------- levels
+const P=(t,x,y,a,extra)=>Object.assign({t,x,y,a:(a||0)*Math.PI/180,fixed:true},extra||{});
+const LEVELS=[
+ {name:"First Drop",spawn:[180, 60],goal:[500, 600],tray:{plank: 1},fixed:[P("plank",390,515,30),P("plank",610,515,-30)],stars:[[330, 400]],sol:[{t:"plank",x:132,y:219,a:0.79}]},
+ {name:"Zigzag",spawn:[120, 60],goal:[280, 600],tray:{plank: 3},fixed:[P("plank",170,515,30),P("plank",390,515,-30)],stars:[[300, 280], [380, 480]],sol:[{t:"plank",x:469,y:607,a:-0.26},{t:"plank",x:131,y:149,a:0.52},{t:"plank",x:715,y:198,a:-0.79}]},
+ {name:"Bumper Bounce",spawn:[200, 60],goal:[760, 600],tray:{bumper: 1, plank: 1},fixed:[P("plank",240,260,20),P("plank",650,515,30),P("plank",870,515,-30)],stars:[[560, 300]],sol:[{t:"bumper",x:400,y:362,a:0},{t:"plank",x:283,y:346,a:0.79}]},
+ {name:"Big Jump",spawn:[100, 60],goal:[820, 600],tray:{tramp: 1, plank: 1},fixed:[P("plank",120,240,25),P("plank",560,520,90),P("plank",710,515,30),P("plank",930,515,-30)],stars:[[560, 320]],sol:[{t:"tramp",x:248,y:387,a:0.26},{t:"plank",x:853,y:358,a:0}]},
+ {name:"Fan Blast",spawn:[150, 60],goal:[760, 600],tray:{fan: 1, plank: 2},fixed:[P("plank",200,300,25),P("plank",420,370,90),P("plank",420,510,90),P("plank",420,650,90),P("plank",650,515,30),P("plank",870,515,-30)],stars:[[420, 220], [600, 400]],sol:[{t:"fan",x:42,y:87,a:1.57},{t:"plank",x:472,y:30,a:0.52},{t:"plank",x:677,y:260,a:-0.26}]},
+ {name:"Round the Bend",spawn:[860, 60],goal:[120, 600],tray:{curve: 2, plank: 1},fixed:[P("plank",760,250,-15),P("plank",10,515,30),P("plank",230,515,-30)],stars:[[600, 320], [340, 410]],sol:[{t:"curve",x:401,y:389,a:1.05},{t:"curve",x:787,y:83,a:-0.26},{t:"plank",x:436,y:71,a:0}]},
+ {name:"Cannon Shot",spawn:[100, 60],goal:[860, 320],tray:{cannon: 1, plank: 1},fixed:[P("plank",480,400,90),P("plank",480,540,90),P("plank",750,235,30),P("plank",970,235,-30)],stars:[[480, 80]],sol:[{t:"cannon",x:107,y:165,a:-0.52},{t:"plank",x:289,y:269,a:1.31}]},
+ {name:"Spin Cycle",spawn:[480, 60],goal:[860, 600],tray:{spinner: 1, plank: 2},fixed:[P("plank",480,280,10),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[640, 380], [760, 500]],sol:[{t:"spinner",x:604,y:456,a:0},{t:"plank",x:852,y:444,a:0.79},{t:"plank",x:68,y:371,a:0.26}]},
+ {name:"Portal Hop",spawn:[120, 60],goal:[820, 560],tray:{portal: 1, plank: 2},fixed:[P("plank",700,500,90),P("plank",940,500,90),P("plank",820,400,0),P("plank",710,475,30),P("plank",930,475,-30)],stars:[[300, 400]],sol:[{t:"portal",x:724,y:420,a:0,link:0,half:0},{t:"portal",x:124,y:274,a:0,link:0,half:1},{t:"plank",x:30,y:556,a:-1.05},{t:"plank",x:804,y:444,a:0.52}]},
+ {name:"Star Collector",spawn:[480, 60],goal:[480, 600],tray:{plank: 3, curve: 1},fixed:[P("plank",370,515,30),P("plank",590,515,-30)],stars:[[300, 250], [640, 420]],sol:[{t:"plank",x:509,y:162,a:0.26},{t:"plank",x:775,y:463,a:-1.31},{t:"plank",x:152,y:83,a:-1.05},{t:"curve",x:231,y:378,a:-2.36}]},
+ {name:"Pinball",spawn:[100, 60],goal:[860, 600],tray:{bumper: 3, plank: 2},fixed:[P("plank",160,220,20),P("plank",660,340,-20),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[420, 340], [600, 480]],sol:[{t:"bumper",x:250,y:102,a:0},{t:"bumper",x:377,y:551,a:0},{t:"bumper",x:356,y:200,a:0},{t:"plank",x:866,y:100,a:-0.52},{t:"plank",x:736,y:377,a:0.26}]},
+ {name:"Up and Over",spawn:[100, 60],goal:[860, 600],tray:{fan: 2, plank: 2},fixed:[P("plank",500,270,90),P("plank",500,410,90),P("plank",500,550,90),P("plank",500,690,90),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[500, 120], [720, 380]],sol:[{t:"fan",x:48,y:103,a:1.31},{t:"fan",x:193,y:71,a:-0.52},{t:"plank",x:596,y:473,a:2.62},{t:"plank",x:381,y:322,a:1.31}]},
+ {name:"Double Cannon",spawn:[480, 60],goal:[480, 600],tray:{cannon: 2, plank: 1},fixed:[P("plank",300,250,0),P("plank",660,250,0),P("plank",480,420,0),P("plank",370,515,30),P("plank",590,515,-30)],stars:[[300, 150], [580, 300]],sol:[{t:"cannon",x:809,y:551,a:-0.79},{t:"cannon",x:320,y:537,a:-1.57},{t:"plank",x:455,y:55,a:0.79}]},
+ {name:"Mixer",spawn:[120, 60],goal:[840, 600],tray:{spinner: 2, tramp: 1, plank: 1},fixed:[P("plank",240,220,15),P("plank",730,515,30),P("plank",950,515,-30)],stars:[[480, 300], [700, 450]],sol:[{t:"spinner",x:609,y:372,a:0},{t:"spinner",x:73,y:148,a:0},{t:"tramp",x:363,y:428,a:-0.52},{t:"plank",x:439,y:336,a:0}]},
+ {name:"Teleport Tangle",spawn:[100, 60],goal:[860, 600],tray:{portal: 2, plank: 2},fixed:[P("plank",480,120,90),P("plank",480,320,90),P("plank",480,520,90)],stars:[[300, 450], [700, 300]],sol:[{t:"portal",x:167,y:433,a:0,link:0,half:0},{t:"portal",x:826,y:500,a:0,link:0,half:1},{t:"portal",x:90,y:518,a:0,link:1,half:0},{t:"portal",x:803,y:321,a:0,link:1,half:1},{t:"plank",x:84,y:170,a:1.31},{t:"plank",x:336,y:359,a:-1.05}]},
+ {name:"Grand Finale",spawn:[100, 60],goal:[860, 600],tray:{plank: 2, curve: 1, bumper: 1, fan: 1, cannon: 1},fixed:[P("plank",480,300,0),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[300, 200], [700, 200], [480, 480]],sol:[{t:"plank",x:287,y:69,a:0.26},{t:"plank",x:164,y:557,a:-1.31},{t:"curve",x:444,y:279,a:0.79},{t:"bumper",x:816,y:153,a:0},{t:"fan",x:273,y:573,a:-1.57},{t:"cannon",x:120,y:138,a:0.26}]},
+];
+// ---------------------------------------------------------------- state
+let hintOn=false,misses=0,trayDraw=false;
+let scene="title",mode="puzzle",levelIdx=0,pieces=[],marbles=[],running=false,simT=0,won=false,lost=0,starsGot=[],trayCount={},sel=null,drag=null,parts=[],trail=[],resultT=0,cannonCd=new Map(),portalCd=new Map(),msg="",msgT=0,frameT=0,tPrev=0;
+const progress=store.get("progress",{}),sandbox=store.get("sandbox",{slots:[null,null,null]});let sandboxSlot=0;
+let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function text(s,x,y,size,color,align,noStroke){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";if(!noStroke){cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.6)";cx.lineJoin="round";cx.strokeText(s,x,y)}cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
+function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,12);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=2.5;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();text(b.label,b.x+b.w/2,b.y+b.h/2,o.size||20,o.color||"#fff","center",true)}}
+function level(){return LEVELS[levelIdx]}
+function loadLevel(i){levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
+function loadSandbox(slot){mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
+function saveSandbox(){if(mode!=="sandbox")return;sandbox.slots[sandboxSlot]=pieces.filter(p=>!p.fixed).map(p=>({t:p.t,x:p.x,y:p.y,a:p.a,link:p.link}));store.set("sandbox",sandbox)}
+function resetRun(){running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
+function spawnMarbles(){marbles=[];if(mode==="puzzle"){const L=level();marbles.push({x:L.spawn[0],y:L.spawn[1],vx:0,vy:0,r:12,col:"#ff5a5a",alive:true})}
+ else{const cols=["#ff5a5a","#5ad0ff","#7fff6a","#ffd05a","#d07aff"];for(let i=0;i<5;i++)marbles.push({x:120+i*40,y:40,vx:0,vy:0,r:12,col:cols[i],alive:true,delay:i*0.5})}}
+function go(){if(running){resetRun();return}running=true;simT=0;won=false;lost=0;spawnMarbles();SFX.go();sel=null}
+// ---------------------------------------------------------------- physics
+function cupSegs(g){const e=0.25,th=4;return[{ax:g[0]-44,ay:g[1]-36,bx:g[0]-30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]+44,ay:g[1]-36,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]-30,ay:g[1]+20,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}}]}
+function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segsOf(p,simT));if(mode==="puzzle")segs.push(...cupSegs(level().goal));
+ for(const m of marbles){if(!m.alive)continue;if(m.delay>0){m.delay-=dt;continue}
+  m.vy+=900*dt;
+  // fans
+  for(const p of pieces){if(p.t!=="fan")continue;const c=Math.cos(p.a),s=Math.sin(p.a);const dx=m.x-p.x,dy=m.y-p.y;const along=-(dx*(-s)+dy*c)*-1;const lx=dx*c+dy*s,ly=dx*s-dy*c;
+   // local: fan blows along its "up" (-y in local frame rotated by a)
+   const lx2=dx*Math.cos(-p.a)-dy*Math.sin(-p.a),ly2=dx*Math.sin(-p.a)+dy*Math.cos(-p.a);
+   if(Math.abs(lx2)<PIECES.fan.w/2&&ly2<0&&ly2>-PIECES.fan.h){const str=2600*(1-(-ly2)/PIECES.fan.h*0.5);const ux=Math.sin(p.a),uy=-Math.cos(p.a);m.vx+=ux*str*dt;m.vy+=uy*str*dt;m.vx*=0.995;m.vy*=0.995;if(Math.random()<0.3)parts.push({x:p.x+rnd(-20,20),y:p.y,vx:ux*rnd(150,300),vy:uy*rnd(150,300),life:0.5,col:"rgba(200,255,240,0.6)",r:3})}}
+  m.x+=m.vx*dt;m.y+=m.vy*dt;
+  // segments
+  for(const sg of segs){const ex=sg.bx-sg.ax,ey=sg.by-sg.ay,L2=ex*ex+ey*ey||1;let t=((m.x-sg.ax)*ex+(m.y-sg.ay)*ey)/L2;t=clamp(t,0,1);const px=sg.ax+ex*t,py=sg.ay+ey*t;const dx=m.x-px,dy=m.y-py;const d=Math.hypot(dx,dy)||0.001;const R=m.r+sg.th;
+   if(d<R){const nx=dx/d,ny=dy/d;m.x+=nx*(R-d);m.y+=ny*(R-d);let vn=m.vx*nx+m.vy*ny;
+    let sv=0;if(sg.spin){const rx=px-sg.ax,ry=py-sg.ay;const pvx=-ry*sg.spin,pvy=rx*sg.spin;sv=pvx*nx+pvy*ny}
+    if(vn<sv){const e=sg.e;const j=-(1+e)*(vn-sv);m.vx+=nx*j;m.vy+=ny*j;
+     const tx=-ny,ty=nx;const vt=m.vx*tx+m.vy*ty;m.vx-=tx*vt*0.02;m.vy-=ty*vt*0.02;
+     if(sg.piece.t==="tramp"){const sp=Math.hypot(m.vx,m.vy);if(sp<520){m.vx+=nx*(520-sp)*0.6;m.vy+=ny*(520-sp)*0.6}sg.piece.squish=1}
+     if(Math.abs(j)>60)SFX.bounce(Math.abs(j));if(Math.abs(j)>200)parts.push({x:px,y:py,vx:nx*100,vy:ny*100,life:0.25,col:"#fff",r:4})}}}
+  // bumpers, cannons, portals, stars, goal
+  for(const p of pieces){
+   if(p.t==="bumper"){const dx=m.x-p.x,dy=m.y-p.y,d=Math.hypot(dx,dy)||0.001,R=m.r+PIECES.bumper.r;if(d<R){const nx=dx/d,ny=dy/d;m.x+=nx*(R-d);m.y+=ny*(R-d);const vn=m.vx*nx+m.vy*ny;if(vn<0){m.vx-=nx*vn*2;m.vy-=ny*vn*2}const sp=Math.hypot(m.vx,m.vy);if(sp<420){m.vx+=nx*(420-sp);m.vy+=ny*(420-sp)}p.squish=1;SFX.bounce(500);for(let i=0;i<6;i++)parts.push({x:p.x,y:p.y,vx:rnd(-200,200),vy:rnd(-200,200),life:0.3,col:"#ffe080",r:4})}}
+   else if(p.t==="cannon"){const d=dist(m.x,m.y,p.x,p.y);const cd=cannonCd.get(m)||0;if(d<PIECES.cannon.r+m.r&&simT>cd){cannonCd.set(m,simT+0.6);const ux=Math.cos(p.a),uy=Math.sin(p.a);m.x=p.x+ux*34;m.y=p.y+uy*34;m.vx=ux*760;m.vy=uy*760;SFX.cannon();p.squish=1;for(let i=0;i<10;i++)parts.push({x:m.x,y:m.y,vx:ux*rnd(100,400)+rnd(-100,100),vy:uy*rnd(100,400)+rnd(-100,100),life:0.4,col:"#ffb060",r:4})}}
+   else if(p.t==="portal"){const d=dist(m.x,m.y,p.x,p.y);const cd=portalCd.get(m)||0;if(d<PIECES.portal.r&&simT>cd){const other=pieces.find(q=>q!==p&&q.t==="portal"&&q.link===p.link);if(other){portalCd.set(m,simT+0.5);m.x=other.x;m.y=other.y;SFX.portal();for(let i=0;i<8;i++)parts.push({x:other.x,y:other.y,vx:rnd(-150,150),vy:rnd(-150,150),life:0.4,col:"#ffd080",r:4})}}}}
+  if(mode==="puzzle"){const L=level();L.stars.forEach((s,i)=>{if(!starsGot[i]&&dist(m.x,m.y,s[0],s[1])<m.r+16){starsGot[i]=true;SFX.star();for(let k=0;k<10;k++)parts.push({x:s[0],y:s[1],vx:rnd(-150,150),vy:rnd(-150,150),life:0.5,col:"#ffe060",r:4})}});
+   if(!won&&Math.abs(m.x-L.goal[0])<30&&m.y>L.goal[1]-14&&m.y<L.goal[1]+24){winLevel(m)}}
+  // walls
+  if(m.x<m.r){m.x=m.r;m.vx=Math.abs(m.vx)*0.5}if(m.x>BW-m.r){m.x=BW-m.r;m.vx=-Math.abs(m.vx)*0.5}if(m.y<m.r){m.y=m.r;m.vy=Math.abs(m.vy)*0.5}
+  if(m.y>BH+40){m.alive=false;if(mode==="puzzle"&&!won){lost=1;resultT=1.2;misses++;SFX.lost()}else if(mode==="sandbox"){m.x=120+Math.random()*700;m.y=-20;m.vx=0;m.vy=0;m.alive=true}}
+  const sp=Math.hypot(m.vx,m.vy);if(sp>1600){m.vx*=1600/sp;m.vy*=1600/sp}
+  if(Math.floor(simT*60)%2===0)trail.push({x:m.x,y:m.y,life:0.5,col:m.col})}
+ // marble vs marble
+ for(let i=0;i<marbles.length;i++)for(let j=i+1;j<marbles.length;j++){const a=marbles[i],b=marbles[j];if(!a.alive||!b.alive)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||0.001,R=a.r+b.r;if(d<R){const nx=dx/d,ny=dy/d,push=(R-d)/2;a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny;if(va>vb){const dv=(va-vb)*0.9;a.vx-=nx*dv;a.vy-=ny*dv;b.vx+=nx*dv;b.vy+=ny*dv}}}
+ for(const p of pieces)if(p.squish>0)p.squish=Math.max(0,p.squish-dt*5);
+ for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);
+ for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0);if(trail.length>200)trail.splice(0,trail.length-200)}
+function winLevel(m){won=true;resultT=0.1;SFX.goal();m.alive=false;for(let i=0;i<40;i++)parts.push({x:m.x,y:m.y,vx:rnd(-300,300),vy:rnd(-400,50),life:rnd(0.6,1.2),col:["#ff6080","#ffe060","#60c0ff","#8dff5a"][i%4],r:5});
+ const stars=1+starsGot.filter(Boolean).length;const key="L"+levelIdx;if(!progress[key]||progress[key]<stars)progress[key]=stars;store.set("progress",progress)}
+// ---------------------------------------------------------------- input
+function toBoard(px,py){return{x:(px-board.x)/board.s,y:(py-board.y)/board.s}}
+function inBoard(p){return p.x>=0&&p.x<=BW&&p.y>=0&&p.y<=BH}
+function pieceAt(bp){for(let i=pieces.length-1;i>=0;i--){const p=pieces[i];if(p.fixed)continue;const r=p.t==="plank"?75:p.t==="tramp"?55:p.t==="curve"?95:p.t==="fan"?40:p.t==="spinner"?62:34;if(dist(bp.x,bp.y,p.x,p.y)<r)return p}return null}
+function trayItems(){const items=[];const keys=ORDER.filter(k=>mode==="sandbox"||(trayCount[k]||0)>0||(level().tray[k]||0)>0);const n=keys.length;
+ if(tray.vertical){const cell=Math.min(78,(tray.h-20)/n);keys.forEach((k,i)=>items.push({k,x:tray.x+tray.w/2,y:tray.y+16+cell*i+cell/2,sz:Math.min(cell-8,tray.w-30)}))}
+ else{const cell=Math.min(110,(tray.w-20)/n);keys.forEach((k,i)=>items.push({k,x:tray.x+10+cell*i+cell/2+(tray.w-20-cell*n)/2,y:tray.y+tray.h/2,sz:Math.min(cell-8,tray.h-30)}))}
+ return items}
+function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
+let pointerId=null;
+cv.addEventListener("pointerdown",e=>{audioInit();if(pointerId!==null)return;const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;if(scene!=="play")return;pointerId=e.pointerId;
+ for(const it of trayItems()){if(dist(p.x,p.y,it.x,it.y)<it.sz/2+8&&(trayCount[it.k]||0)>0){const bp=toBoard(p.x,p.y);const np={t:it.k,x:bp.x,y:bp.y,a:0,fixed:false,fromTray:true};if(it.k==="portal"){const n=pieces.filter(q=>q.t==="portal").length;np.link=Math.floor(n/2);np.half=n%2}drag={p:np,ox:0,oy:0};SFX.pick();sel=null;return}}
+ const bp=toBoard(p.x,p.y);const hit=pieceAt(bp);if(hit&&!running){drag={p:hit,ox:hit.x-bp.x,oy:hit.y-bp.y};sel=hit;SFX.pick()}else{sel=null;pointerId=null}});
+cv.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId||!drag)return;const bp=toBoard(e.clientX,e.clientY);drag.p.x=bp.x+drag.ox;drag.p.y=bp.y+drag.oy;drag.screen={x:e.clientX,y:e.clientY}});
+function pointerUp(e){if(e.pointerId!==pointerId)return;pointerId=null;if(!drag)return;const p=drag.p;const bp=toBoard(e.clientX,e.clientY);
+ if(p.fromTray){if(inBoard(bp)){p.fromTray=false;p.x=clamp(p.x,10,BW-10);p.y=clamp(p.y,10,BH-10);pieces.push(p);trayCount[p.t]=(trayCount[p.t]||0)-1;sel=p;SFX.place();
+  if(p.t==="portal"&&p.half===0){const b=Object.assign({},p,{x:clamp(p.x+160,10,BW-10),half:1});pieces.push(b);trayCount.portal=Math.max(0,trayCount.portal);}}
+  }else{if(!inBoard(bp)){removePiece(p);sel=null}else{p.x=clamp(p.x,10,BW-10);p.y=clamp(p.y,10,BH-10);SFX.place()}}
+ drag=null;saveSandbox()}
+cv.addEventListener("pointerup",pointerUp);cv.addEventListener("pointercancel",pointerUp);
+function removePiece(p){if(p.t==="portal"){pieces=pieces.filter(q=>!(q.t==="portal"&&q.link===p.link));trayCount.portal=(trayCount.portal||0)+1;return}pieces=pieces.filter(q=>q!==p);trayCount[p.t]=(trayCount[p.t]||0)+1}
+window.addEventListener("keydown",e=>{if(scene==="play"){if(e.code==="Space")go();if(e.code==="KeyR"&&sel)sel.a+=Math.PI/12;if(e.code==="KeyQ"&&sel)sel.a-=Math.PI/12;if((e.code==="Delete"||e.code==="Backspace")&&sel){removePiece(sel);sel=null}if(e.code==="Escape")scene=mode==="puzzle"?"levels":"title"}});
+// ---------------------------------------------------------------- drawing
+function drawPiece(p,ghost){cx.save();cx.translate(p.x,p.y);if(ghost)cx.globalAlpha=ghost===2?0.28:0.6;const d=PIECES[p.t];const sq=p.squish||0;
+ if(p.t==="plank"||p.t==="tramp"){cx.rotate(p.a);const L=d.len;cx.fillStyle=p.fixed?"#8a8fa3":d.col;rr(-L/2,-7,L,14,6);cx.fill();if(p.t==="tramp"){cx.fillStyle="#fff";for(let i=-2;i<=2;i++){cx.beginPath();cx.arc(i*20,0,3,0,TAU);cx.fill()}cx.scale(1,1-sq*0.4)}else{cx.strokeStyle="rgba(0,0,0,0.2)";cx.lineWidth=2;cx.beginPath();cx.moveTo(-L/2+10,0);cx.lineTo(L/2-10,0);cx.stroke()}}
+ else if(p.t==="curve"){cx.strokeStyle=p.fixed?"#8a8fa3":d.col;cx.lineWidth=13;cx.lineCap="round";cx.beginPath();cx.arc(0,0,d.r,p.a,p.a+Math.PI/2);cx.stroke()}
+ else if(p.t==="bumper"){const r=d.r*(1+sq*0.3);cx.fillStyle=d.col;cx.beginPath();cx.arc(0,0,r,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(0,0,r*0.5,0,TAU);cx.fill();cx.fillStyle="#f2c14e";cx.beginPath();cx.arc(0,0,r*0.2,0,TAU);cx.fill()}
+ else if(p.t==="fan"){cx.rotate(p.a);if(!trayDraw){cx.fillStyle="rgba(127,209,185,0.12)";cx.fillRect(-d.w/2,-d.h,d.w,d.h);cx.strokeStyle="rgba(127,209,185,0.35)";cx.lineWidth=3;cx.lineCap="round";for(let i=0;i<4;i++){const yy=-((frameT*160+i*65)%d.h);cx.beginPath();cx.moveTo(-d.w/2+8,yy);cx.lineTo(0,yy-14);cx.lineTo(d.w/2-8,yy);cx.stroke()}}cx.fillStyle="#4a4e69";rr(-30,-8,60,20,5);cx.fill();cx.strokeStyle=d.col;cx.lineWidth=4;for(let i=0;i<3;i++){const a=frameT*20+i*TAU/3;cx.beginPath();cx.moveTo(0,-8);cx.lineTo(Math.cos(a)*22,-8+Math.sin(a)*9);cx.stroke()}}
+ else if(p.t==="spinner"){cx.fillStyle="#4a4e69";cx.beginPath();cx.arc(0,0,10,0,TAU);cx.fill();const rot=p.a+(running?simT:0)*2.6;cx.strokeStyle=d.col;cx.lineWidth=12;cx.lineCap="round";for(let i=0;i<4;i++){const a=rot+i*Math.PI/2;cx.beginPath();cx.moveTo(0,0);cx.lineTo(Math.cos(a)*d.r,Math.sin(a)*d.r);cx.stroke()}}
+ else if(p.t==="cannon"){cx.rotate(p.a);cx.fillStyle=d.col;cx.beginPath();cx.arc(0,0,d.r,0,TAU);cx.fill();cx.fillStyle="#2b2d42";rr(0,-9,42-sq*8,18,4);cx.fill();cx.fillStyle="#ff9f43";cx.beginPath();cx.moveTo(44,0);cx.lineTo(32,-8);cx.lineTo(32,8);cx.fill()}
+ else if(p.t==="portal"){const col=["#f39c12","#8e44ad","#16a085"][p.link%3];cx.strokeStyle=col;cx.lineWidth=5;cx.beginPath();cx.ellipse(0,0,d.r,d.r*1.4,0,0,TAU);cx.stroke();cx.fillStyle=col;cx.globalAlpha*=0.35;cx.beginPath();cx.ellipse(0,0,d.r-4,d.r*1.4-4,0,0,TAU);cx.fill();cx.globalAlpha=ghost?0.6:1;text(String.fromCharCode(65+p.link)+(p.half?"'":""),0,0,16,"#fff")}
+ cx.restore()}
+function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,board.s);
+ cx.fillStyle="#0f1526";rr(0,0,BW,BH,10);cx.fill();cx.save();rr(0,0,BW,BH,10);cx.clip();cx.strokeStyle="rgba(255,255,255,0.06)";cx.lineWidth=1;for(let x=0;x<=BW;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,BH);cx.stroke()}for(let y=0;y<=BH;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(BW,y);cx.stroke()}
+ if(mode==="puzzle"){const L=level();
+  // spawn hopper
+  cx.fillStyle="#5ad0ff";cx.beginPath();cx.moveTo(L.spawn[0]-26,L.spawn[1]-30);cx.lineTo(L.spawn[0]+26,L.spawn[1]-30);cx.lineTo(L.spawn[0]+10,L.spawn[1]-4);cx.lineTo(L.spawn[0]-10,L.spawn[1]-4);cx.closePath();cx.fill();
+  if(!running){cx.fillStyle="#ff5a5a";cx.beginPath();cx.arc(L.spawn[0],L.spawn[1],12,0,TAU);cx.fill()}
+  // goal cup
+  const g=L.goal;cx.strokeStyle="#8dff5a";cx.lineWidth=9;cx.lineCap="round";cx.lineJoin="round";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.stroke();cx.fillStyle="rgba(141,255,90,0.18)";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.closePath();cx.fill();text("GOAL",g[0],g[1]-2,14,"#8dff5a");
+  L.stars.forEach((s,i)=>{if(starsGot[i])return;cx.save();cx.translate(s[0],s[1]);cx.rotate(frameT*2);cx.fillStyle="#ffe060";cx.beginPath();for(let k=0;k<10;k++){const a=k/10*TAU-Math.PI/2,r=k%2?7:16;cx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}cx.closePath();cx.fill();cx.restore()})}
+ else{for(let i=0;i<5;i++){cx.fillStyle="rgba(90,208,255,0.3)";cx.fillRect(100+i*40,0,40,12)}}
+ if(hintOn&&mode==="puzzle"&&level().sol&&!running){for(const p of level().sol){drawPiece(p,2);cx.strokeStyle="rgba(255,255,255,0.5)";cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,p.t==="curve"?100:p.t==="plank"?80:p.t==="spinner"?68:p.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}}
+ for(const p of pieces)drawPiece(p,false);
+ // links between portals
+ const portals=pieces.filter(p=>p.t==="portal");for(const p of portals){if(p.half)continue;const o=portals.find(q=>q!==p&&q.link===p.link);if(o){cx.strokeStyle="rgba(255,255,255,0.15)";cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(o.x,o.y);cx.stroke();cx.setLineDash([])}}
+ if(sel&&!running){cx.strokeStyle="#fff";cx.lineWidth=2;cx.setLineDash([6,6]);cx.beginPath();cx.arc(sel.x,sel.y,sel.t==="curve"?100:sel.t==="plank"?80:sel.t==="spinner"?68:sel.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}
+ for(const t of trail){cx.globalAlpha=t.life;cx.fillStyle=t.col;cx.beginPath();cx.arc(t.x,t.y,5,0,TAU);cx.fill()}cx.globalAlpha=1;
+ for(const m of marbles){if(!m.alive||m.delay>0)continue;cx.fillStyle=m.col;cx.beginPath();cx.arc(m.x,m.y,m.r,0,TAU);cx.fill();cx.fillStyle="rgba(255,255,255,0.6)";cx.beginPath();cx.arc(m.x-4,m.y-4,4,0,TAU);cx.fill()}
+ for(const p of parts){cx.globalAlpha=Math.min(1,p.life*2);cx.fillStyle=p.col;cx.beginPath();cx.arc(p.x,p.y,p.r,0,TAU);cx.fill()}cx.globalAlpha=1;
+ cx.restore();if(drag&&drag.p.fromTray)drawPiece(drag.p,true);
+ cx.restore()}
+function drawTray(){cx.fillStyle="#141a2b";cx.fillRect(tray.x,tray.y,tray.w,tray.h);cx.strokeStyle="rgba(255,255,255,0.12)";cx.strokeRect(tray.x+0.5,tray.y+0.5,tray.w-1,tray.h-1);
+ for(const it of trayItems()){const n=trayCount[it.k]||0;cx.save();cx.beginPath();cx.rect(it.x-it.sz/2-4,it.y-it.sz/2-2,it.sz+8,it.sz-8);cx.clip();cx.translate(it.x,it.y-4);cx.globalAlpha=n>0?1:0.3;const sc=it.sz/150;cx.scale(sc,sc);trayDraw=true;drawPiece({t:it.k,x:it.k==="curve"?-32:0,y:it.k==="curve"?-32:0,a:it.k==="plank"||it.k==="tramp"?-0.3:it.k==="curve"?0.1:it.k==="cannon"?-0.6:0,link:0,half:0},false);trayDraw=false;cx.restore();
+  text(PIECES[it.k].name,it.x,it.y+it.sz/2+2,11,"#cfd8e8");if(mode==="puzzle")text("x"+n,it.x+it.sz/2-4,it.y-it.sz/2+8,13,n>0?"#ffe060":"#888")}}
+function drawTop(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,56);buttons=[];
+ const title=mode==="puzzle"?(levelIdx+1)+". "+level().name:"SANDBOX  slot "+(sandboxSlot+1);text(title,12,28,18,"#fff","left");
+ if(mode==="puzzle"){const got=starsGot.filter(Boolean).length;text("★ "+got+"/"+level().stars.length,W*0.5-160,28,16,"#ffe060","left")}
+ btn(W*0.5-70,8,140,40,running?"■ STOP":"▶ GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:20});
+ if(sel&&!running){btn(W*0.5+90,8,44,40,"↺",()=>{sel.a-=Math.PI/12},{size:22});btn(W*0.5+140,8,44,40,"↻",()=>{sel.a+=Math.PI/12},{size:22});btn(W*0.5+190,8,44,40,"✕",()=>{removePiece(sel);sel=null;saveSandbox()},{size:18,fill:"#733"})}
+ if(mode==="puzzle"&&misses>=3&&level().sol&&!running)btn(W-280,8,80,40,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:14,fill:hintOn?"#555":"#8a6a2a"});
+ btn(W-190,8,80,40,"RESET",()=>{if(mode==="puzzle")loadLevel(levelIdx);else{pieces=[];resetRun();saveSandbox()}},{size:14});
+ btn(W-100,8,90,40,"MENU",()=>{scene=mode==="puzzle"?"levels":"title"},{size:14});
+ drawButtons()}
+function drawPlay(){drawBoard();drawTray();drawTop();
+ if(won){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(0,0,W,H);const stars=1+starsGot.filter(Boolean).length;text("GOAL!",W/2,H*0.32,64,"#8dff5a");text("★".repeat(stars)+"☆".repeat(Math.max(0,1+level().stars.length-stars)),W/2,H*0.32+70,40,"#ffe060");
+  buttons=[];if(levelIdx<LEVELS.length-1)btn(W/2-230,H*0.6,210,56,"NEXT LEVEL",()=>loadLevel(levelIdx+1),{fill:"#2a8a3a",size:22});btn(W/2+20,H*0.6,210,56,"PLAY AGAIN",()=>loadLevel(levelIdx),{size:22});drawButtons()}
+ else if(lost&&mode==="puzzle"){resultT-=1/60;text("Missed! Try again.",W/2,H*0.3,34,"#ff9090");if(resultT<=0){running=false;lost=0;const keep=pieces;resetRun();pieces=keep}}
+ if(hintOn&&!running&&!won&&mode==="puzzle"){text("Hint: match the faded shapes (rotate with ↺ ↻), then press GO",W*0.5-(tray.vertical?tray.w/2:0),H-(tray.vertical?30:tray.h+24),15,"#ffd080")}
+ else if(!running&&!won&&mode==="puzzle"&&pieces.filter(p=>!p.fixed).length===0){text("Drag pieces from the tray onto the board, then press GO",W*0.5-(tray.vertical?tray.w/2:0),H-(tray.vertical?30:tray.h+24),15,"#cfd8e8")}}
+function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<30;i++){const x=(i*173+frameT*40*(1+i%3))%(W+100)-50,y=(i*97)%H;cx.fillStyle=["#ff5a5a","#5ad0ff","#ffd05a","#7fff6a"][i%4];cx.beginPath();cx.arc(x,y,8+i%5*3,0,TAU);cx.fill()}
+ text("MARBLE MAYHEM",W/2+4,H*0.22+4,Math.min(80,W/9),"#0a0d16");text("MARBLE MAYHEM",W/2,H*0.22,Math.min(80,W/9),"#ffd05a");text("Build a run. Press GO. Watch the marble.",W/2,H*0.22+60,20,"#dfe6f0");
+ buttons=[];const bw=Math.min(340,W*0.6);btn(W/2-bw/2,H*0.45,bw,64,"PUZZLES",()=>{scene="levels"},{fill:"#2a8a3a",size:26});
+ for(let i=0;i<3;i++){const has=!!sandbox.slots[i];btn(W/2-bw/2+i*(bw/3+4)-4,H*0.45+80,bw/3-4,60,"SANDBOX "+(i+1)+(has?" ●":""),()=>loadSandbox(i),{size:15,fill:"#2a4a8a"})}
+ text("Planks, curves, bumpers, trampolines, fans, spinners, cannons and portals.",W/2,H*0.45+170,15,"#cfd8e8");text("Tap a piece to select it, then use the ↺ ↻ buttons to turn it. Drag it off the board to remove it.",W/2,H*0.45+194,15,"#cfd8e8");drawButtons()}
+function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);text("PUZZLES",W/2,50,40,"#ffd05a");buttons=[];const cols=W>700?4:2,cw=Math.min(210,(W-40)/cols-10),ch=74;const n=LEVELS.length;const rows=Math.ceil(n/cols);const y0=100;
+ LEVELS.forEach((L,i)=>{const c=i%cols,r=Math.floor(i/cols);const x=W/2+(c-(cols-1)/2)*(cw+10)-cw/2,y=y0+r*(ch+10);const st=progress["L"+i]||0;const unlocked=i===0||(progress["L"+(i-1)]||0)>0;
+  btn(x,y,cw,ch,"",()=>{if(unlocked)loadLevel(i)},{fill:unlocked?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)"});
+  text((i+1)+". "+L.name,x+cw/2,y+22,15,unlocked?"#fff":"#667","center",true);text(unlocked?"★".repeat(st)+"☆".repeat(1+L.stars.length-st):"locked",x+cw/2,y+50,16,unlocked?"#ffe060":"#667","center",true)});
+ btn(W/2-90,Math.min(H-60,y0+rows*(ch+10)+10),180,44,"BACK",()=>{scene="title"},{size:18});drawButtons()}
+function frame(ts){const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
+ if(scene==="play"&&running&&!won){const n=4;for(let i=0;i<n;i++)step(dt/n)}else if(scene==="play"){for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0)}
+ if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="play")drawPlay();
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+function simulate(pcs,maxT){const keep=pieces;pieces=pcs;resetRun();running=true;spawnMarbles();const dt=1/240;let t=0;const traj=[];let k=0;while(t<(maxT||12)&&!won&&!lost){step(dt);t+=dt;if(++k%48===0&&marbles[0])traj.push([Math.round(marbles[0].x),Math.round(marbles[0].y)])}const res={won,lost,stars:starsGot.filter(Boolean).length,t:+t.toFixed(2),traj};pieces=keep;resetRun();return res}
+window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};
+</script></body></html>
