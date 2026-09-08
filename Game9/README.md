@@ -1,12 +1,14 @@
 # Agent Rory: Operation Eclipse
 
-A first-person spy adventure for the iPad's browser. Rory, the youngest field
-agent of M.I.S.T., follows the stolen plans for a sun-blotting mirror across
-seven countries: London, Venice, Cairo, Tokyo, New York, Rio de Janeiro and
-a frozen launch site in Siberia. Two missions in each country, fourteen in
-all, and every mission is a different mini-game that wins a piece of intel.
-The intel is the thread: each piece tells you where to fly next, until the
-last one is the abort code with ninety seconds on the clock.
+A first-person spy adventure for the iPad's browser, in two acts. In
+**Operation Eclipse** Rory, the youngest field agent of M.I.S.T., follows the
+stolen plans for a sun-blotting mirror through London, Venice, Cairo, Tokyo,
+New York, Rio de Janeiro and a frozen launch site in Siberia. In **Operation
+Midnight** UMBRA's Chairman has hidden seven Shadow Lanterns over seven
+cities, and the trail runs through Paris, Nairobi, Agra, Beijing, Sydney,
+Chichen Itza and the Alps. Fourteen countries, four missions in each,
+fifty-six in all, and every mission is a mini-game that wins a piece of
+intel. The intel is the thread: each piece tells you where to go next.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/agent-rory/>. On the
 iPad, open the link in Safari, then Share → Add to Home Screen for a fullscreen
@@ -34,24 +36,19 @@ The whole story, cast and mission design is in [STORY.md](STORY.md).
 - Desktop for testing: WASD walks, mouse-drag looks, E investigates, Esc
   pauses, H asks for a hint.
 
-## The fourteen missions
+## The twenty-two mini-games
 
-| # | Where | Mission | What you do |
-| --- | --- | --- | --- |
-| 1 | London | Nothing But the Truth | Lie detector: watch the polygraph needle, call TRUTH or LIE |
-| 2 | London | Fingers' Flat | Safe cracker: turn the dial, listen for the tick, three numbers |
-| 3 | Venice | Il Vetraio | Cipher wheel: turn the ring until the coded order book reads |
-| 4 | Venice | Carnival of Masks | Find the courier among sixteen masked dancers from clues |
-| 5 | Cairo | The Listening Post | Radio: tune through static to UMBRA's channel |
-| 6 | Cairo | The Tomb of Light | Mirror maze: steer a sunbeam onto the sun disc |
-| 7 | Tokyo | Kaito Labs | Keypad memory: repeat the flashing code |
-| 8 | Tokyo | Trace the Ghost | Circuit hack: rotate tiles to connect the ports |
-| 9 | New York | Sterling's Vault | Lock pick: tap when the marker is in the green |
-| 10 | New York | Ticking | Wire cut: three devices, four rules, sixty seconds |
-| 11 | Rio | Sugarloaf Lens | Telephoto: zoom in across the bay and photograph three targets |
-| 12 | Rio | Pier 9 | Stealth: slip past torches and a searchlight to plant a tracker |
-| 13 | Siberia | The Ice Fortress | Shredder: reassemble the launch schedule |
-| 14 | Siberia | Countdown | Override: the abort code, the dial, the wires, ninety seconds |
+Lie detector, safe cracker, cipher wheel, masked ball, radio tuner, mirror
+maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
+inside the 3D world), stealth yard, shredder, the countdown override,
+codebreaker, reactor rods (towers of Hanoi), satellite photo (sliding
+tiles), sonar, vault rings, spot the difference, laser hall and passport
+match. Every mission carries a difficulty level from 1 to 4, and each game
+grows with it: more statements and subtler spikes on the polygraph, four
+numbers on the safe, up to 24 dancers and five clues, 11 by 11 mirror
+chambers, eight pins, a fifth wiring rule, a second searchlight, five-symbol
+codes and seventy-second countdowns. The full list of all fifty-six missions,
+with their levels and the intel each one wins, is in [STORY.md](STORY.md).
 
 ## How it is built
 
@@ -63,12 +60,14 @@ and loads in a couple of seconds.
   drag, immediate-mode buttons), HUD, mission flow, save, and a `window.__spy`
   debug handle the tests use.
 - `js/story.js` — the story as data: characters with voice and portrait
-  attributes, seven countries, fourteen missions with dialogue and intel.
-- `js/world.js` and `js/scenes.js` — the first-person world on three.js:
+  attributes, two acts, fourteen countries, fifty-six missions with dialogue
+  and intel.
+- `js/world.js`, `js/scenes.js` and `js/scenes2.js` — the first-person world on three.js:
   procedural textures (windows, brick, plaster, neon, hieroglyphs, flags),
   building helpers, collision, people built from boxes, weather, water, an
-  aurora shader, and the seven scenes with their landmarks.
-- `js/minigames.js` — the fourteen mini-games, each with a hint and a solver.
+  aurora shader, and the fourteen scenes with their landmarks.
+- `js/minigames.js`, `js/minigames2.js`, `js/mgbase.js` — the twenty-two
+  mini-games, each with a hint, a solver and difficulty scaling.
 - `js/ui.js` — canvas drawing, procedural portraits, the dialogue box, the
   world map (simplified continents), the dossier, the intel stamp.
 - `js/audio.js` — every sound and the theme are synthesised with WebAudio;
@@ -85,6 +84,7 @@ and loads in a couple of seconds.
 cd Game9
 node tools/shoot.mjs /tmp/shots scenes    # screenshots of every scene and screen
 node tools/playtest.mjs /tmp/playtest      # plays the whole game with the solvers
+node tools/gametest.mjs /tmp/gametest      # starts and solves every mission's mini-game directly
 ```
 
 Both use the Chromium that Playwright installs and a software renderer, so

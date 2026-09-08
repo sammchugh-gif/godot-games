@@ -169,6 +169,7 @@ const AMBIENCES = {
   waves(l) { const a = makeLayer(700); a.gain.gain.value = 0.1; lfo(a.gain.gain, 0.12, 0.12, 0.14); l.push(a); const b = makeLayer(2500); b.gain.gain.value = 0.04; lfo(b.gain.gain, 0.12, 0.04, 0.04); l.push(b); },
   blizzard(l) { const a = makeLayer(600, "bandpass", 1.0); a.gain.gain.value = 0.26; lfo(a.filter.frequency, 0.17, 400, 700); lfo(a.gain.gain, 0.09, 0.12, 0.26); l.push(a); const w = makeLayer(2400, "bandpass", 6); w.gain.gain.value = 0.03; lfo(w.filter.frequency, 0.3, 900, 2400); l.push(w); },
   hum(l) { const h = makeLayer(160); h.gain.gain.value = 0.1; l.push(h); },
+  jungle(l) { const a = makeLayer(900, "bandpass", 1.2); a.gain.gain.value = 0.08; lfo(a.gain.gain, 0.15, 0.04, 0.08); l.push(a); const b = makeLayer(3200, "bandpass", 8); b.gain.gain.value = 0.03; lfo(b.filter.frequency, 1.7, 900, 3200); lfo(b.gain.gain, 0.6, 0.03, 0.03); l.push(b); },
 };
 export const Ambience = {
   set(name) {
