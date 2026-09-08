@@ -160,7 +160,7 @@ class SafeCracker extends MG {
 // ------------------------------------------------------------- 3. cipher wheel
 const PAGES = ["ONE MIRROR LENS FORTY METRES FOR MADAME E - VETRI", "PAYMENT ARRIVES AT THE CARNIVAL - THE COURIER WEARS THE GOLDEN MASK - VETRI"];
 class CipherWheel extends MG {
-  constructor(G, m) { super(G, m); this.sub = "ORDER BOOK"; this.instr = "Drag the inner ring until the page reads properly, then tap DECODE."; this.pages = this.params.pages || PAGES; this.page = 0; this.shifts = this.pages.map((_, i) => rint(3 + (i * 8) % 20, 9 + (i * 8) % 20)); this.angle = rnd(0.5, 5.5); this.drag = null; }
+  constructor(G, m) { super(G, m); this.sub = (m.params && m.params.sub) || "ORDER BOOK"; this.instr = "Drag the inner ring until the page reads properly, then tap DECODE."; this.pages = this.params.pages || PAGES; this.page = 0; this.shifts = this.pages.map((_, i) => rint(3 + (i * 8) % 20, 9 + (i * 8) % 20)); this.angle = rnd(0.5, 5.5); this.drag = null; }
   get shift() { return ((Math.round(this.angle / (TAU / 26)) % 26) + 26) % 26; }
   cipher(p) { const k = this.shifts[p]; return this.pages[p].replace(/[A-Z]/g, c => String.fromCharCode(65 + (c.charCodeAt(0) - 65 + k) % 26)); }
   decoded(p) { const k = this.shift; return this.cipher(p).replace(/[A-Z]/g, c => String.fromCharCode(65 + (c.charCodeAt(0) - 65 - k + 26) % 26)); }
@@ -289,7 +289,7 @@ class RadioTuner extends MG {
     const st = this.strength();
     this.staticT -= dt; if (this.staticT <= 0) { this.staticT = 0.11; if (this.G.settings.sfx) noise(0.12, 0.12 * (1 - st) + 0.02, 0, 3000 + st * 2000); }
     const nearDecoy = this.decoys.some(d => Math.abs(this.f - d) < 0.5);
-    if (nearDecoy) { this.decoyT += dt; if (this.decoyT > 0.4 && !this.decoyPlayed) { this.decoyPlayed = true; SFX.jingle(); this.say(pick(["♪ Cairo FM ♪ ... habibi, habibi ... That's a pop station. Keep going.", "♪ ...and now the weather... ♪ Wrong channel.", "♪ Ranger Radio, all the hits ♪ Not that one."]), null, 3); } } else { this.decoyT = 0; this.decoyPlayed = false; }
+    if (nearDecoy) { this.decoyT += dt; if (this.decoyT > 0.4 && !this.decoyPlayed) { this.decoyPlayed = true; SFX.jingle(); this.say(pick(this.params.decoyLines || ["♪ Cairo FM ♪ ... habibi, habibi ... That's a pop station. Keep going.", "♪ ...and now the weather... ♪ Wrong channel.", "♪ Ranger Radio, all the hits ♪ Not that one."]), null, 3); } } else { this.decoyT = 0; this.decoyPlayed = false; }
     if (Math.abs(this.f - this.f0) < this.window) { this.lockT += dt; if (this.lockT > 1.1) this.lock(); } else this.lockT = Math.max(0, this.lockT - dt * 2);
   }
   lock() { this.locked = true; SFX.radioLock(); this.speaking = true; const txt = this.text; setTimeout(() => { Speech.say(txt, CHARS.eclipse.voice, { onEnd: () => { this.speaking = false; } }); }, 500); setTimeout(() => { this.speaking = false; }, 16000); }
@@ -424,7 +424,7 @@ class KeypadMemory extends MG {
     if (this.flashT > 0) { this.flashT -= 0.016; if (this.flashT <= 0 && this.phase === "input") this.flash = -1; }
     // door
     g.fillStyle = "#12202c"; rrect(g, x0 - 60 * s, y0 - 110 * s, size + 120 * s, size + 160 * s, 16 * s); g.fill(); g.strokeStyle = "#2de2ff"; g.lineWidth = 2; g.stroke();
-    text(g, "KAITO LABS · SECURE ENTRY", x0 + size / 2, y0 - 84 * s, 16 * s, "#2de2ff", "center", 800, MONO);
+    text(g, this.params.head || "KAITO LABS · SECURE ENTRY", x0 + size / 2, y0 - 84 * s, 16 * s, "#2de2ff", "center", 800, MONO);
     // screen
     g.fillStyle = "#061018"; rrect(g, x0, y0 - 60 * s, size, 44 * s, 8 * s); g.fill();
     const label = this.phase === "show" ? "WATCH..." : this.phase === "input" ? "YOUR TURN" : this.phase === "good" ? "ACCEPTED" : this.phase === "bad" ? "DENIED" : "READY";
@@ -525,7 +525,7 @@ class LockPick extends MG {
     const bx = W * 0.08, by = 90 * s, bw = W * 0.58, bh = H - 160 * s;
     const gr = g.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, "#8a6a2a"); gr.addColorStop(0.5, "#c9a15a"); gr.addColorStop(1, "#7a5a20");
     g.fillStyle = gr; rrect(g, bx, by, bw, bh, 16 * s); g.fill(); g.strokeStyle = "#3a2a10"; g.lineWidth = 4 * s; g.stroke();
-    text(g, "STERLING · PENTHOUSE VAULT", bx + bw / 2, by + 24 * s, 14 * s, "#3a2a10", "center", 900, MONO);
+    text(g, this.params.head || "STERLING · PENTHOUSE VAULT", bx + bw / 2, by + 24 * s, 14 * s, "#3a2a10", "center", 900, MONO);
     const ch = bh - 120 * s, cy0 = by + 60 * s, gap = bw / this.npins;
     this.pins.forEach((p, i) => {
       const cx = bx + gap * (i + 0.5); const cw = gap * 0.42;
@@ -630,7 +630,7 @@ class Telephoto extends MG {
 
 // ------------------------------------------------------------- 12. stealth yard
 class StealthYard extends MG {
-  constructor(G, m) { super(G, m); this.sub = "PLANT THE TRACKER"; this.instr = "Drag anywhere to move. Stay out of the torch beams and the searchlight."; this.cols = 18; this.rows = 10; this.gen(); this.stick = null; this.alarm = 0; this.plant = 0; this.resets = 0; }
+  constructor(G, m) { super(G, m); this.sub = "PLANT THE TRACKER"; this.instr = "Drag anywhere to move. Stay out of the torch beams and the searchlight."; this.cols = 18; this.rows = 10; this.place = this.params.place || "PIER 9 · NIGHT"; this.crate = this.params.crate || "ZIMA"; this.gen(); this.stick = null; this.alarm = 0; this.plant = 0; this.resets = 0; }
   gen() {
     this.boxes = [[3, 1, 3, 1.4], [3, 4, 1.4, 3], [7, 0.5, 1.4, 3], [7, 5.5, 3, 1.4], [10.5, 2.5, 1.4, 3], [12.5, 7, 3, 1.4], [13, 0.5, 3, 1.4], [15, 3.5, 1.4, 3], [5.5, 8, 3, 1.4], [9.5, 8.5, 1.4, 1.4]];
     this.spawn = { x: 1, y: 9 }; this.p = { x: 1, y: 9, vx: 0, vy: 0 }; this.goal = { x: 16.6, y: 0.6, w: 1.2, h: 1.4 };
@@ -687,13 +687,13 @@ class StealthYard extends MG {
     // guards bodies
     for (const gd of this.guards) { g.fillStyle = "#f1c9a5"; g.beginPath(); g.arc(X(gd.x), Y(gd.y), 0.28 * cs, 0, TAU); g.fill(); g.fillStyle = "#333"; g.beginPath(); g.arc(X(gd.x), Y(gd.y), 0.2 * cs, 0, TAU); g.fill(); g.strokeStyle = "#ffd166"; g.lineWidth = 3; g.beginPath(); g.moveTo(X(gd.x), Y(gd.y)); g.lineTo(X(gd.x) + Math.cos(gd.a) * 0.4 * cs, Y(gd.y) + Math.sin(gd.a) * 0.4 * cs); g.stroke(); }
     // goal crate
-    const gl = this.goal; g.fillStyle = "#8a5a2a"; g.fillRect(X(gl.x), Y(gl.y), gl.w * cs, gl.h * cs); g.strokeStyle = "#ffd166"; g.lineWidth = 2; g.strokeRect(X(gl.x), Y(gl.y), gl.w * cs, gl.h * cs); text(g, "ZIMA", X(gl.x + gl.w / 2), Y(gl.y + gl.h / 2), cs * 0.32, "#ffd166", "center", 900, MONO);
+    const gl = this.goal; g.fillStyle = "#8a5a2a"; g.fillRect(X(gl.x), Y(gl.y), gl.w * cs, gl.h * cs); g.strokeStyle = "#ffd166"; g.lineWidth = 2; g.strokeRect(X(gl.x), Y(gl.y), gl.w * cs, gl.h * cs); text(g, this.crate, X(gl.x + gl.w / 2), Y(gl.y + gl.h / 2), cs * 0.32, "#ffd166", "center", 900, MONO);
     if (this.plant > 0) { g.strokeStyle = "#2ecc71"; g.lineWidth = 4 * s; g.beginPath(); g.arc(X(gl.x + gl.w / 2), Y(gl.y + gl.h / 2), cs * 0.9, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(this.plant / 1.4, 0, 1)); g.stroke(); }
     // player
     g.fillStyle = "#3a86ff"; g.beginPath(); g.arc(X(this.p.x), Y(this.p.y), 0.3 * cs, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.arc(X(this.p.x), Y(this.p.y), 0.12 * cs, 0, TAU); g.fill();
     if (this.alarm > 0) { g.fillStyle = `rgba(230,57,70,${0.25 + Math.sin(this.t * 20) * 0.15})`; g.fillRect(X(0), Y(0), cs * this.cols, cs * this.rows); }
     if (this.stick) { g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 2; g.beginPath(); g.arc(this.stick.ox, this.stick.oy, 60 * s, 0, TAU); g.stroke(); g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(this.stick.x, this.stick.y, 24 * s, 0, TAU); g.fill(); }
-    text(g, "PIER 9 · NIGHT", X(0) + 8 * s, Y(0) + 16 * s, 12 * s, "rgba(255,255,255,.5)", "left", 800, MONO);
+    text(g, this.place, X(0) + 8 * s, Y(0) + 16 * s, 12 * s, "rgba(255,255,255,.5)", "left", 800, MONO);
     this.drawMsg(g, W, H, s);
   }
 }

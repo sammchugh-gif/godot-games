@@ -111,7 +111,7 @@ export class SatPhoto extends MG {
 
 // ------------------------------------------------------------- sonar (find the transmitter)
 export class Sonar extends MG {
-  constructor(G, m) { super(G, m); this.sub = "FIND THE SIGNAL"; this.n = L(this, 8, 9, 10, 12); this.pings = L(this, 10, 9, 9, 8); this.instr = "Tap a square to ping it. The number is how many steps away the signal is. Tap the signal itself to find it."; this.reset(); this.ripples = []; }
+  constructor(G, m) { super(G, m); this.sub = "FIND THE SIGNAL"; this.n = L(this, 8, 9, 9, 10); this.pings = L(this, 10, 9, 9, 8); this.instr = "Tap a square to ping it. The number is how many steps away the signal is. Tap the signal itself to find it."; this.reset(); this.ripples = []; }
   reset() { this.tx = rint(0, this.n - 1); this.ty = rint(0, this.n - 1); this.marks = {}; this.left = this.pings; }
   ping(x, y) { if (this.done) return; const k = x + "," + y; if (this.marks[k] !== undefined) { SFX.buzz(); return; } const d = Math.abs(x - this.tx) + Math.abs(y - this.ty); this.marks[k] = d; this.ripples.push({ x, y, t: 0 }); if (d === 0) { SFX.radioLock(); this.say("FOUND IT!", true, 2); this.win(); return; } SFX.beep(400 + Math.max(0, 14 - d) * 60); this.left--; if (this.left <= 0) { this.say("Sniffer battery flat. It moved while we recharged. Again!", false, 2.6); this.reset(); } }
   geom() { const { W, H, s } = this.G; const size = Math.min(H - 140 * s, W * 0.58); return { x0: W * 0.5 - size / 2 - 40 * s, y0: 66 * s, size, cs: size / this.n }; }
