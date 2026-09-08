@@ -1,7 +1,7 @@
 // 2D user interface on the overlay canvas: drawing helpers, immediate-mode
 // buttons, procedural portraits and flags, the dialogue box, the HUD, the
 // world map, the dossier, the title, the briefing and the intel stamp.
-import { CHARS, COUNTRIES, SYMBOLS } from "./story.js";
+import { CHARS, COUNTRIES, ACTS, SYMBOLS } from "./story.js";
 import { SFX } from "./audio.js";
 import { Speech } from "./speech.js";
 
@@ -121,6 +121,13 @@ export function drawFlag(g, id, x, y, w, h) {
       g.strokeStyle = "#fff"; g.lineWidth = h * 0.03; g.beginPath(); g.arc(x + w / 2, y + h * 0.62, h * 0.25, -2.4, -0.7); g.stroke();
       break; }
     case "ru": band(["#fff", "#0039A6", "#D52B1E"]); break;
+    case "fr": band(["#0055A4", "#fff", "#EF4135"], true); break;
+    case "ke": band(["#000", "#BB0000", "#006600"]); g.fillStyle = "#fff"; g.fillRect(x, y + h * 0.3, w, h * 0.04); g.fillRect(x, y + h * 0.66, w, h * 0.04); g.fillStyle = "#BB0000"; g.beginPath(); g.ellipse(x + w / 2, y + h / 2, w * 0.1, h * 0.36, 0, 0, TAU); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = h * 0.05; g.stroke(); break;
+    case "in": band(["#FF9933", "#fff", "#138808"]); g.strokeStyle = "#000080"; g.lineWidth = h * 0.04; g.beginPath(); g.arc(x + w / 2, y + h / 2, h * 0.14, 0, TAU); g.stroke(); break;
+    case "cn": g.fillStyle = "#DE2910"; g.fillRect(x, y, w, h); g.fillStyle = "#FFDE00"; { const st = (cx, cy, r) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill(); }; st(x + w * 0.17, y + h * 0.28, h * 0.16); st(x + w * 0.33, y + h * 0.1, h * 0.05); st(x + w * 0.39, y + h * 0.22, h * 0.05); st(x + w * 0.39, y + h * 0.38, h * 0.05); st(x + w * 0.33, y + h * 0.5, h * 0.05); } break;
+    case "au": g.fillStyle = "#00008B"; g.fillRect(x, y, w, h); g.save(); g.beginPath(); g.rect(x, y, w / 2, h / 2); g.clip(); drawFlag(g, "uk", x, y, w / 2, h / 2); g.restore(); g.fillStyle = "#fff"; for (const [sx, sy, r] of [[0.25, 0.75, 0.09], [0.75, 0.2, 0.05], [0.65, 0.5, 0.05], [0.85, 0.42, 0.05], [0.75, 0.8, 0.05]]) { g.beginPath(); for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * Math.PI / 7, rr = i % 2 ? r * h * 0.45 : r * h; g.lineTo(x + w * sx + Math.cos(a) * rr, y + h * sy + Math.sin(a) * rr); } g.closePath(); g.fill(); } break;
+    case "mx": band(["#006847", "#fff", "#CE1126"], true); g.fillStyle = "#8a6a2a"; g.beginPath(); g.arc(x + w / 2, y + h / 2, h * 0.12, 0, TAU); g.fill(); g.fillStyle = "#2a6a2a"; g.beginPath(); g.arc(x + w / 2, y + h * 0.62, h * 0.06, 0, TAU); g.fill(); break;
+    case "ch": g.fillStyle = "#D52B1E"; g.fillRect(x, y, w, h); g.fillStyle = "#fff"; g.fillRect(x + w / 2 - h * 0.1, y + h * 0.2, h * 0.2, h * 0.6); g.fillRect(x + w / 2 - h * 0.3, y + h * 0.4, h * 0.6, h * 0.2); break;
     default: g.fillStyle = "#888"; g.fillRect(x, y, w, h);
   }
   g.restore();
@@ -342,7 +349,8 @@ export class WorldMap {
     this.t += dt; this.pulse += dt;
     if (this.flight) { this.flight.t += dt; if (this.flight.t >= this.flight.dur) { const f = this.flight; this.flight = null; if (f.onDone) f.onDone(); } }
   }
-  draw(g, W, H, s, progress, highlight) {
+  draw(g, W, H, s, progress, act) {
+    act = act || 1;
     const r = this.rect(W, H, s);
     // ocean
     g.fillStyle = "#08131f"; g.fillRect(0, 0, W, H);
@@ -360,16 +368,22 @@ export class WorldMap {
       g.fillStyle = ci === CONTINENTS.length - 1 ? "#1c3346" : "#1f4d3a"; g.fill();
       g.strokeStyle = "rgba(140,220,180,.35)"; g.lineWidth = 1.2; g.stroke();
     }
-    // route
+    // routes: one chain per act, the second act leaving from London again
     const pts = COUNTRIES.map(c => this.project(c.lon, c.lat, r));
     g.setLineDash([6 * s, 6 * s]); g.lineWidth = 2 * s;
-    for (let i = 0; i < pts.length - 1; i++) {
-      g.strokeStyle = i < progress ? "#ffd166" : "rgba(255,255,255,.18)";
-      g.beginPath(); g.moveTo(pts[i][0], pts[i][1]); const [mx, my] = mid(pts[i], pts[i + 1]); g.quadraticCurveTo(mx, my, pts[i + 1][0], pts[i + 1][1]); g.stroke();
+    for (const a of ACTS) {
+      if (a.n > act) continue;
+      const chain = a.countries.map(id => COUNTRIES.findIndex(c => c.id === id)); if (a.n > 1) chain.unshift(0);
+      for (let k = 0; k < chain.length - 1; k++) {
+        const i = chain[k], j = chain[k + 1];
+        g.strokeStyle = j <= progress ? (a.n === 1 ? "#ffd166" : "#ff9f43") : "rgba(255,255,255,.18)";
+        g.beginPath(); g.moveTo(pts[i][0], pts[i][1]); const [mx, my] = mid(pts[i], pts[j]); g.quadraticCurveTo(mx, my, pts[j][0], pts[j][1]); g.stroke();
+      }
     }
     g.setLineDash([]);
     // pins
     COUNTRIES.forEach((c, i) => {
+      if (c.act > act) return;
       const [x, y] = pts[i];
       const done = i < progress, cur = i === progress;
       if (cur && !this.flight) { const p = (this.pulse % 1.4) / 1.4; g.strokeStyle = `rgba(255,209,102,${1 - p})`; g.lineWidth = 3 * s; g.beginPath(); g.arc(x, y, 8 * s + p * 26 * s, 0, TAU); g.stroke(); }
@@ -378,7 +392,7 @@ export class WorldMap {
       g.strokeStyle = "#000"; g.lineWidth = 1.5; g.stroke();
       const above = c.lat > 0;
       drawFlag(g, c.flag, x - 14 * s, above ? y - 34 * s : y + 12 * s, 28 * s, 19 * s);
-      if (cur || done || highlight) text(g, c.city, x, above ? y - 44 * s : y + 42 * s, 13 * s, done ? "#9be7b6" : "#ffd166", "center", 700);
+      if (cur || done) text(g, c.city, x, above ? y - 44 * s : y + 42 * s, 13 * s, done ? "#9be7b6" : "#ffd166", "center", 700);
     });
     // plane
     if (this.flight) {
@@ -480,13 +494,13 @@ export function drawTitleBackdrop(g, W, H, s, t) {
   g.fillRect(W * 0.68 + W * 0.05, base - H * 0.34, W * 0.02, H * 0.34);
   g.fillRect(0, base, W, H - base);
 }
-export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, t) {
+export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t) {
   g.save();
   g.fillStyle = "rgba(6,10,16,.78)"; rrect(g, x, y, w, h, 14 * s); g.fill();
   g.strokeStyle = "rgba(127,221,204,.5)"; g.lineWidth = 2; g.stroke();
   g.fillStyle = "#7fd"; g.beginPath(); g.arc(x + 18 * s, y + 18 * s, 5 * s + Math.sin(t * 4) * 1.5 * s, 0, TAU); g.fill();
   text(g, "SPY WATCH", x + 32 * s, y + 18 * s, 13 * s, "#7fd", "left", 800, MONO);
-  text(g, "INTEL " + intelCount + "/14", x + w - 12 * s, y + 18 * s, 13 * s, "#ffd166", "right", 800, MONO);
+  text(g, "INTEL " + intelCount + "/" + total, x + w - 12 * s, y + 18 * s, 13 * s, "#ffd166", "right", 800, MONO);
   paragraph(g, objective, x + 14 * s, y + 46 * s, w - 28 * s, 17 * s, "#eef2f8", 21 * s, "left", 600);
   g.restore();
 }
@@ -498,7 +512,9 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode) {
   let y = 110 * s - scroll;
   let n = 0;
   g.save(); g.beginPath(); g.rect(0, 96 * s, W, H - 96 * s - 80 * s); g.clip();
+  let lastAct = 0;
   for (const c of COUNTRIES) {
+    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 90 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
     for (const m of c.missions) {
       n++;
       const done = save.done.includes(m.id);
@@ -510,9 +526,9 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode) {
         text(g, c.city.toUpperCase(), cx + cw - 14 * s, y + 24 * s, 12 * s, done ? "#a07030" : "rgba(255,255,255,.3)", "right", 700, MONO);
         if (done) {
           let txt = m.intel.text;
-          if (m.id === "m13" && abortCode) txt = txt.replace("written in the Dossier", "shown below");
+          if (m.game === "shredder" && abortCode) txt = txt.replace("written in the Dossier", "shown below");
           paragraph(g, txt, cx + 14 * s, y + 56 * s, cw - 28 * s, 15 * s, "#2a1a0a", 19 * s, "left", 500, MONO);
-          if (m.id === "m13" && abortCode) { abortCode.forEach((sym, i) => drawSymbol(g, sym, cx + cw - 150 * s + i * 34 * s, y + 96 * s, 11 * s, "#7a1a10")); }
+          if (m.game === "shredder" && abortCode && !save.done.some(id => id !== m.id && COUNTRIES.some(cc => cc.missions.some(q => q.id === id && q.game === "shredder" && ALL_IDS.indexOf(id) > ALL_IDS.indexOf(m.id))))) { abortCode.forEach((sym, i) => drawSymbol(g, sym, cx + cw - 30 * s - (abortCode.length - 1 - i) * 34 * s, y + 96 * s, 11 * s, "#7a1a10")); }
         } else text(g, "locked", cx + 56 * s, y + 42 * s, 12 * s, "rgba(255,255,255,.3)", "left", 600, MONO);
       }
       y += h + 10 * s;
@@ -521,4 +537,5 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode) {
   g.restore();
   return y + scroll; // content height
 }
+const ALL_IDS = COUNTRIES.flatMap(c => c.missions.map(m => m.id));
 export { CONTINENTS };

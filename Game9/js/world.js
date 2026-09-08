@@ -140,6 +140,9 @@ export const PT = {
         case "camera": g.beginPath(); rrect(g, 30, 46, 68, 44, 6); g.fill(); g.fillStyle = "#0b1220"; g.beginPath(); g.arc(64, 68, 14, 0, TAU); g.fill(); g.fillStyle = color; g.fillRect(48, 36, 24, 12); break;
         case "crate": g.beginPath(); rrect(g, 30, 40, 68, 50, 4); g.stroke(); g.beginPath(); g.moveTo(30, 40); g.lineTo(98, 90); g.moveTo(98, 40); g.lineTo(30, 90); g.stroke(); break;
         case "screen": g.beginPath(); rrect(g, 28, 34, 72, 50, 6); g.stroke(); g.fillRect(56, 88, 16, 10); g.fillRect(44, 96, 40, 6); break;
+        case "laser": g.beginPath(); g.moveTo(24, 40); g.lineTo(104, 88); g.moveTo(24, 88); g.lineTo(104, 40); g.moveTo(24, 64); g.lineTo(104, 64); g.stroke(); g.beginPath(); g.arc(64, 64, 8, 0, TAU); g.fill(); break;
+        case "rods": for (let i = 0; i < 3; i++) g.fillRect(34 + i * 24, 40, 8, 56); g.fillRect(28, 96, 72, 6); g.fillRect(24, 76, 28, 8); g.fillRect(28, 62, 20, 8); break;
+        case "sonar": for (let r = 14; r <= 46; r += 16) { g.beginPath(); g.arc(64, 64, r, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); } g.beginPath(); g.arc(64, 70, 7, 0, TAU); g.fill(); break;
         default: g.beginPath(); g.arc(64, 64, 20, 0, TAU); g.fill();
       }
     });

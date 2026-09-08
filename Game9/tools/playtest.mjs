@@ -37,7 +37,7 @@ await skipDialogue(); await finishFade(); await wait(100);
 check(await state() === "map", "map after briefing");
 await shot("01_map");
 
-const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
+const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
 for (let ci = 0; ci < COUNTRIES.length; ci++) {
   const c = COUNTRIES[ci];
   // fly
@@ -47,7 +47,7 @@ for (let ci = 0; ci < COUNTRIES.length; ci++) {
   check(await state() === "world", `world ${c.id}`);
   await wait(400); await shot(`10_${c.id}_arrive`);
   await skipDialogue();
-  for (let mi = 0; mi < 2; mi++) {
+  for (let mi = 0; mi < c.missions.length; mi++) {
     const m = c.missions[mi];
     const it = await ev(station => { const it = __spy.world.interactables.find(i => i.id === station); return it ? { enabled: it.enabled, x: it.x, z: it.z } : null; }, m.station);
     check(it && it.enabled, `station ${m.station} enabled`);
@@ -70,18 +70,23 @@ for (let ci = 0; ci < COUNTRIES.length; ci++) {
     await waitGame(1.0); await shot(`40_${m.id}_intel`);
     await ev(() => __spy.debug.stampTap()); await wait(50); await finishFade(); await wait(150);
     check(await state() === "world" || await state() === "ending", `${m.id} back to world`);
-    await wait(300); if (mi === 1) await shot(`50_${m.id}_outro`);
+    await wait(300); if (mi === c.missions.length - 1) await shot(`50_${m.id}_outro`);
     await skipDialogue(); await wait(200);
-    if (mi === 1 && ci < COUNTRIES.length - 1) { await wait(200); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", `map after ${c.id}`); }
+    const lastOfCountry = mi === c.missions.length - 1;
+    const actEnd = lastOfCountry && (ci === COUNTRIES.length - 1 || COUNTRIES[ci + 1].act !== COUNTRIES[ci].act);
+    if (lastOfCountry && !actEnd) { await wait(200); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", `map after ${c.id}`); }
+    if (actEnd) {
+      await finishFade(); await wait(300);
+      check(await state() === "ending", `ending of act ${COUNTRIES[ci].act}`);
+      await wait(800); await shot(`60_ending_act${COUNTRIES[ci].act}`);
+      await skipDialogue(); await wait(400); await shot(`61_medal_act${COUNTRIES[ci].act}`);
+      if (ci < COUNTRIES.length - 1) { await ev(() => __spy.debug.press("nextact")); await finishFade(); await wait(300); check(await state() === "briefing", "act two briefing"); await shot("62_briefing_act2"); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", "map after act one"); await shot("63_map_act2"); }
+    }
   }
 }
-await finishFade(); await wait(300);
-check(await state() === "ending", "ending");
-await wait(800); await shot("60_ending");
-await skipDialogue(); await wait(400); await shot("61_medal");
-await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("62_credits");
+await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
 check(await state() === "credits", "credits");
 const save = await ev(() => JSON.parse(localStorage.getItem("agentrory.save")));
-check(save.done.length === 14 && save.finished, "save has 14 missions and finished");
+check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
 console.log("errors:", errors.length, "fails:", fail);
 await browser.close(); server.kill(); process.exit(fail || errors.length ? 1 : 0);

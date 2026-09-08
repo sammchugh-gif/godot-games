@@ -22,8 +22,10 @@ await shot("title");
 if (what === "scenes" || what === "all") {
   await page.evaluate(() => { __spy.debug.press("start"); });
   await page.waitForTimeout(500); await shot("menu");
-  const ids = ["london", "venice", "cairo", "tokyo", "newyork", "rio", "siberia"];
+  const ids = ["london", "venice", "cairo", "tokyo", "newyork", "rio", "siberia", "paris", "kenya", "india", "china", "australia", "mexico", "alps"];
+  const onlyScene = process.argv[4] || "";
   for (let i = 0; i < ids.length; i++) {
+    if (onlyScene && ids[i] !== onlyScene) continue;
     await page.evaluate(i => { __spy.debug.goto(i, 0); }, i);
     await page.waitForTimeout(900);
     await shot(`scene_${ids[i]}_a`);
@@ -37,11 +39,13 @@ if (what === "scenes" || what === "all") {
     const info = await page.evaluate(() => { const r = __spy.world.r.info; return { calls: r.render.calls, tris: r.render.triangles, geos: r.memory.geometries, tex: r.memory.textures }; });
     console.log(ids[i], "fps(swiftshader)", fps, JSON.stringify(info));
   }
-  await page.evaluate(() => { __spy.debug.goto(0, 0); __spy.save.briefed = true; __spy.debug.press("pause"); });
+  await page.evaluate(() => { __spy.debug.goto(0, 0); __spy.save.briefed = { 1: true, 2: true }; __spy.debug.press("pause"); });
   await page.waitForTimeout(300); await shot("pause");
   await page.evaluate(() => { __spy.debug.press("dossier"); });
   await page.waitForTimeout(300); await shot("dossier");
   await page.evaluate(() => { __spy.debug.press("closeDossier"); __spy.debug.press("resume"); __spy.state = "map"; __spy.save.country = 3; });
+  await page.waitForTimeout(300); await shot("map");
+  await page.evaluate(() => { __spy.state = "map"; __spy.save.country = 9; __spy.save.done = __spy.debug.COUNTRIES.slice(0, 9).flatMap(c => c.missions.map(m => m.id)); });
   await page.waitForTimeout(300); await shot("map");
   await page.evaluate(() => { __spy.state = "briefing"; __spy.dialogue.show(__spy.debug.BRIEFING || [["hale", "Agent Rory. Sit down. Last night the Royal Observatory in Greenwich was robbed."]], null); });
   await page.waitForTimeout(1200); await shot("briefing");
