@@ -7,7 +7,7 @@ export const CHARS = {
              face: { skin: "#f3cfae", hair: "#6b4423", style: "short", eyes: "#3b5f8a", clothes: "#2c3e6b", accessory: "earpiece" } },
   hale:    { name: "Commander Hale", voice: { g: "f", langs: ["en-GB"], pitch: 0.8, rate: 0.9 },
              face: { skin: "#e9c1a0", hair: "#d8d8d8", style: "bun", eyes: "#4a4a4a", clothes: "#1b2a4a", accessory: "medal", brows: "stern" } },
-  vi:      { name: "Aunt Vi", voice: { g: "f", langs: ["en-GB"], pitch: 1.35, rate: 1.12 },
+  vi:      { name: "Aunt Vi", voice: { g: "f", langs: ["en-GB"], pitch: 1.05, rate: 1.0 },
              face: { skin: "#f0c9a6", hair: "#c9462f", style: "curly", eyes: "#3d7a3a", glasses: "round", clothes: "#7a3fa0", accessory: "pencil" } },
   eclipse: { name: "Madame Eclipse", voice: { g: "f", langs: ["fr-FR"], pitch: 0.85, rate: 0.85 },
              face: { skin: "#f1d6c1", hair: "#101010", style: "sleek", eyes: "#222", glasses: "dark", clothes: "#0a0a0a", accessory: "collar", lips: "#b0102a" } },
