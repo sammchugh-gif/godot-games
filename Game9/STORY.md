@@ -49,7 +49,7 @@ mini-game briefings.
 | --- | --- | --- | --- |
 | **Rory** | The player, Agent R. | en-GB | Keen, brave, quick. "On it." |
 | **Commander Hale** | Head of M.I.S.T. Never smiles until an act ends. | en-GB, low | Crisp orders. |
-| **Aunt Vi** | Gadget genius, runs the Spy Watch, explains every mini-game. Calls Rory "pet". | en-GB, high | Chatty, warm, precise. |
+| **Aunt Vi** | Gadget genius, runs the Spy Watch, explains every mini-game. | en-GB, high | Chatty, warm, precise. |
 | **Madame Eclipse** | The villain of Act One, the lieutenant of Act Two. | fr-FR, low | Purring, amused. "You are too late, little spy." |
 | **The Chairman** | Otto, the head of UMBRA. Grey moustache, never seen until the end. Keeps a "dairy" in the Alps. | de-DE, low | Bored superiority. |
 | **Kolya "Two-Coats" Zima** | UMBRA's henchman, always eating. Escapes prison in a bread van between acts. Ends up working at the chip shop. | ru-RU, low | "Is not fair." |

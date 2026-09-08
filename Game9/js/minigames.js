@@ -44,7 +44,7 @@ class LieDetector extends MG {
     if (this.phase !== "judge") return;
     const lie = this.list[this.i][1]; this.tries++;
     if (isLie === lie) { this.correct++; this.phase = "result"; this.pt = 0; this.say(lie ? "A FIB! Look at those spikes." : "TRUE. Smooth as a millpond.", true); }
-    else { this.phase = "retry"; this.pt = 0; this.say(lie ? "That was a fib, pet. See the spikes? Listen again." : "That one was true. No spikes at all. Again.", false); }
+    else { this.phase = "retry"; this.pt = 0; this.say(lie ? "That was a fib. See the spikes? Listen again." : "That one was true. No spikes at all. Again.", false); }
   }
   button(id) { if (id === "mg:truth") this.judge(false); if (id === "mg:lie") this.judge(true); }
   hint() { return this.list[this.i] && this.list[this.i][1] ? "Watch for sharp jagged spikes while he talks. Those mean a fib." : "If the lines stay smooth and wavy the whole time, he's telling the truth."; }
@@ -107,7 +107,7 @@ class SafeCracker extends MG {
     this.dial.spin *= 0.6;
     if (d === 0) { this.holdT += dt; if (this.holdT > 1.2) this.set(); } else this.holdT = 0;
   }
-  set() { if (this.stage >= this.count) return; if (this.dist() === 0) { SFX.clunk(); this.stage++; this.holdT = 0; if (this.stage < this.count) this.say(`Tumbler ${this.stage} set!`, true, 1.4); else { SFX.unlock(); this.say("CLUNK. The door swings open.", true, 2.5); } } else this.say("Not on a number yet, pet. Listen for the loud tick.", false); }
+  set() { if (this.stage >= this.count) return; if (this.dist() === 0) { SFX.clunk(); this.stage++; this.holdT = 0; if (this.stage < this.count) this.say(`Tumbler ${this.stage} set!`, true, 1.4); else { SFX.unlock(); this.say("CLUNK. The door swings open.", true, 2.5); } } else this.say("Not on a number yet. Listen for the loud tick.", false); }
   down(x, y, id) { const { cx, cy, r } = this.geom(); this.dial.down(x, y, id, cx, cy, r); }
   move(x, y, id) { const { cx, cy } = this.geom(); this.dial.move(x, y, id, cx, cy); }
   up(x, y, id) { this.dial.up(id); }
@@ -169,7 +169,7 @@ class CipherWheel extends MG {
   move(x, y, id) { if (!this.drag || this.drag.id !== id) return; const { cx, cy } = this.geom(); const a = Math.atan2(y - cy, x - cx); let d = a - this.drag.a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; const before = this.shift; this.angle += d; this.drag.a = a; if (this.shift !== before) SFX.blip(); }
   up(x, y, id) { if (this.drag && this.drag.id === id) this.drag = null; }
   button(id) { if (id === "mg:decode") this.decode(); }
-  decode() { if (this.shift === this.shifts[this.page]) { SFX.page(); if (this.page < this.pages.length - 1) { this.say(`Page ${this.page + 1} decoded!`, true); this.page++; this.angle = rnd(0.5, 5.5); } else this.win(); } else this.say("That's not Italian, pet. Or English. Keep turning.", false); }
+  decode() { if (this.shift === this.shifts[this.page]) { SFX.page(); if (this.page < this.pages.length - 1) { this.say(`Page ${this.page + 1} decoded!`, true); this.page++; this.angle = rnd(0.5, 5.5); } else this.win(); } else this.say("That's not Italian. Or English. Keep turning.", false); }
   hint() { const last = this.pages[this.page].trim().split(" ").pop(); return `Find the last word on the page and turn the ring until it says ${last}.`; }
   solve() { this.angle = this.shifts[this.page] * TAU / 26; this.decode(); }
   draw(g, W, H, s) {
@@ -289,7 +289,7 @@ class RadioTuner extends MG {
     const st = this.strength();
     this.staticT -= dt; if (this.staticT <= 0) { this.staticT = 0.11; if (this.G.settings.sfx) noise(0.12, 0.12 * (1 - st) + 0.02, 0, 3000 + st * 2000); }
     const nearDecoy = this.decoys.some(d => Math.abs(this.f - d) < 0.5);
-    if (nearDecoy) { this.decoyT += dt; if (this.decoyT > 0.4 && !this.decoyPlayed) { this.decoyPlayed = true; SFX.jingle(); this.say(pick(["♪ Cairo FM ♪ ... habibi, habibi ... That's a pop station, pet. Keep going.", "♪ ...and now the weather... ♪ Wrong channel, pet.", "♪ Ranger Radio, all the hits ♪ Not that one, pet."]), null, 3); } } else { this.decoyT = 0; this.decoyPlayed = false; }
+    if (nearDecoy) { this.decoyT += dt; if (this.decoyT > 0.4 && !this.decoyPlayed) { this.decoyPlayed = true; SFX.jingle(); this.say(pick(["♪ Cairo FM ♪ ... habibi, habibi ... That's a pop station. Keep going.", "♪ ...and now the weather... ♪ Wrong channel.", "♪ Ranger Radio, all the hits ♪ Not that one."]), null, 3); } } else { this.decoyT = 0; this.decoyPlayed = false; }
     if (Math.abs(this.f - this.f0) < this.window) { this.lockT += dt; if (this.lockT > 1.1) this.lock(); } else this.lockT = Math.max(0, this.lockT - dt * 2);
   }
   lock() { this.locked = true; SFX.radioLock(); this.speaking = true; const txt = this.text; setTimeout(() => { Speech.say(txt, CHARS.eclipse.voice, { onEnd: () => { this.speaking = false; } }); }, 500); setTimeout(() => { this.speaking = false; }, 16000); }
@@ -556,7 +556,7 @@ class LockPick extends MG {
 class WireCut extends MG {
   constructor(G, m) { super(G, m); this.count = L(this, 3, 4, 5, 5); this.time = L(this, 60, 70, 75, 70); this.sub = `${this.time} SECONDS`; this.instr = "Read the rules in order. Tap the first wire the rules point to."; this.reset(); this.wireRects = []; }
   reset() { const nr = rulesFor(this.level).length; const seq = [...Array(nr).keys()]; while (seq.length < this.count) seq.push(rint(0, nr - 1)); this.devices = seq.slice(0, this.count).map(r => makeDevice(r, this.level)); this.cur = 0; this.timer = this.time; this.blown = 0; this.shake = 0; }
-  tick(dt) { if (this.done) return; this.shake = Math.max(0, this.shake - dt); if (this.cur >= this.count) return; this.timer -= dt; if (this.timer <= 10 && Math.floor(this.timer) !== Math.floor(this.timer + dt)) SFX.countdown(); if (this.timer <= 0) { SFX.boom(); this.blown++; this.say("KA-BOOM. Only a rehearsal, pet. Again, faster.", false, 3); this.reset(); } }
+  tick(dt) { if (this.done) return; this.shake = Math.max(0, this.shake - dt); if (this.cur >= this.count) return; this.timer -= dt; if (this.timer <= 10 && Math.floor(this.timer) !== Math.floor(this.timer + dt)) SFX.countdown(); if (this.timer <= 0) { SFX.boom(); this.blown++; this.say("KA-BOOM. Only a rehearsal. Again, faster.", false, 3); this.reset(); } }
   cut(i) { if (this.cur >= this.count || this.done) return; const d = this.devices[this.cur]; if (d.cut.includes(i)) return; d.cut.push(i); if (i === d.answer) { SFX.cut(); this.cur++; if (this.cur >= this.count) { this.say("It stopped. Three seconds to spare, give or take.", true, 3); this.win(); } else this.say(`Device ${this.cur} safe!`, true, 1.2); } else { SFX.spark(); this.shake = 0.5; this.timer -= 5; this.say("SPARKS! Not that one. Read the rules again.", false, 1.6); } }
   down(x, y) { for (const r of this.wireRects) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) { this.cut(r.i); return; } }
   hint() { const d = this.devices[Math.min(this.cur, this.count - 1)]; return `Rule ${d.rule + 1} is the first one that fits this device. Which wire does it name?`; }
@@ -594,7 +594,7 @@ class Telephoto extends MG {
     if (best === this.target && best) this.focus = Math.min(1, this.focus + dt * 0.9 / this.focusTime); else { this.target = best; this.focus = best ? Math.min(this.focus, 0.2) : Math.max(0, this.focus - dt * 2); }
     this.flash = Math.max(0, this.flash - dt * 3);
   }
-  snap() { SFX.snap(); this.flash = 1; if (this.target && this.focus >= 1) { this.taken[this.target.id] = true; this.say(`Got ${this.target.label}!`, true, 1.6); this.target = null; this.focus = 0; if (Object.keys(this.taken).length >= this.targets.length) this.win(); } else if (this.target) this.say("Blurry. Hold it steady until the ring is green.", false, 1.6); else this.say(`Nothing in the ring, pet. ${this.where[0].toUpperCase() + this.where.slice(1)}.`, false, 1.8); }
+  snap() { SFX.snap(); this.flash = 1; if (this.target && this.focus >= 1) { this.taken[this.target.id] = true; this.say(`Got ${this.target.label}!`, true, 1.6); this.target = null; this.focus = 0; if (Object.keys(this.taken).length >= this.targets.length) this.win(); } else if (this.target) this.say("Blurry. Hold it steady until the ring is green.", false, 1.6); else this.say(`Nothing in the ring. ${this.where[0].toUpperCase() + this.where.slice(1)}.`, false, 1.8); }
   button(id) { if (id === "mg:snap") this.snap(); }
   geom() { const { W, H, s } = this.G; return { zx: W - 70 * s, zy: H * 0.25, zh: H * 0.4 }; }
   down(x, y, id) { const { zx, zy, zh } = this.geom(); if (Math.abs(x - zx) < 40 * this.G.s && y > zy - 20 && y < zy + zh + 20) { this.zdrag = id; this.setZoomFromY(y); return; } this.look = { id, x, y }; }
@@ -736,7 +736,7 @@ class Shredder extends MG {
   move(x, y, id) { if (!this.drag || this.drag.id !== id) return; this.drag.x = x; const { dx, sw } = this.geom(); const target = clamp(Math.round((x - this.drag.off - dx) / sw), 0, this.n - 1); if (target !== this.drag.slot) { const v = this.order.splice(this.drag.slot, 1)[0]; this.order.splice(target, 0, v); this.drag.slot = target; SFX.blip(); } }
   up(x, y, id) { if (this.drag && this.drag.id === id) this.drag = null; }
   solved() { return this.order.every((v, i) => v === i); }
-  button(id) { if (id === "mg:tape") { if (this.solved()) { this.taped = 0.01; SFX.ding(); } else this.say("The lines don't join up yet, pet.", false); } }
+  button(id) { if (id === "mg:tape") { if (this.solved()) { this.taped = 0.01; SFX.ding(); } else this.say("The lines don't join up yet.", false); } }
   tick(dt) { if (this.taped > 0) { this.taped += dt; if (this.taped > 1.6) this.win(); } }
   hint() { const wrong = this.order.filter((v, i) => v !== i).length; const first = this.order.findIndex((v, i) => v !== i); return `${wrong} strips are still out of place. Strip ${first + 1} from the left is wrong: the one that belongs there has the piece that continues the title and the red box.`; }
   solve() { this.order = [...Array(this.n).keys()]; this.button("mg:tape"); }
@@ -829,7 +829,7 @@ class Override extends MG {
     // the manual on the right in stage 3, otherwise Vi
     const rx = px + pw + 24 * s, rw = W - rx - 24 * s;
     if (this.stage === 2) drawManual(g, rx, py, rw, Math.min(ph, 360 * s), s, -1, this.level);
-    else { panel(g, rx, py, rw, 150 * s, s, { bg: "rgba(90,42,138,.5)", border: "#c9a1ff" }); drawPortrait(g, "vi", rx + 12 * s, py + 12 * s, 64 * s, 0.2, this.t); paragraph(g, this.stage === 0 ? `The ${this.code.length} symbols from the shredded document, in order. They're in your Dossier if you've forgotten.` : "Same as Fingers' safe, pet: turn until it ticks like mad and hold it.", rx + 88 * s, py + 30 * s, rw - 100 * s, 14 * s, "#fff", 18 * s, "left", 600); }
+    else { panel(g, rx, py, rw, 150 * s, s, { bg: "rgba(90,42,138,.5)", border: "#c9a1ff" }); drawPortrait(g, "vi", rx + 12 * s, py + 12 * s, 64 * s, 0.2, this.t); paragraph(g, this.stage === 0 ? `The ${this.code.length} symbols from the shredded document, in order. They're in your Dossier if you've forgotten.` : "Same as Fingers' safe: turn until it ticks like mad and hold it.", rx + 88 * s, py + 30 * s, rw - 100 * s, 14 * s, "#fff", 18 * s, "left", 600); }
     this.drawMsg(g, W, H, s);
   }
 }
