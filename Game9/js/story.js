@@ -269,7 +269,7 @@ export const COUNTRIES = [
   },
   // ================================================================ ACT TWO
   {
-    id: "paris", act: 2, city: "Paris", country: "France", flag: "fr", lat: 48.86, lon: 2.35,
+    id: "paris", act: 2, pinBelow: true, city: "Paris", country: "France", flag: "fr", lat: 48.86, lon: 2.35,
     chapter: "The Lantern of Paris", sky: "dusk", ambience: "city", contact: "colette",
     arrive: [["colette", "Bonsoir, Agent Rory. Colette. I run the café, and the café hears everything in Paris."], ["colette", "A flower man called Jean-Luc delivered a very heavy crate to the Louvre last night. He is inside, eating my croissants and sweating. Start with him."]],
     missions: [
@@ -418,7 +418,7 @@ export const COUNTRIES = [
     leave: [["diego", "I wrote you a song. It has eleven verses. Kolya is in the second one, stuck in a cactus."]],
   },
   {
-    id: "alps", act: 2, city: "The Alps", country: "Switzerland", flag: "ch", lat: 46.5, lon: 8.0,
+    id: "alps", act: 2, pinBelow: true, city: "The Alps", country: "Switzerland", flag: "ch", lat: 46.5, lon: 8.0,
     chapter: "The Chairman", sky: "aurora", ambience: "blizzard", contact: "klaus",
     arrive: [["klaus", "Grüezi, Agent Rory. Klaus. My cable car goes to the top, where the Chairman's dairy is. It is not a dairy."], ["klaus", "The entrance hall is full of lasers, the Chairman likes to talk on the intercom, and the master switch is somewhere in a hundred rooms. Natasha is already inside."]],
     missions: [

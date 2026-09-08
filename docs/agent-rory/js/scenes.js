@@ -69,7 +69,10 @@ SCENES.london = function () {
   this.lamp(29, 5.5, 3.2, 0xffd090, 1.0, 10); this.lamp(35, 5.5, 3.2, 0xffd090, 1.0, 10);
   const hill = this.sphere(26, this.M({ color: 0x1f3a22 }), 54, -14, -16, 24); hill.scale.y = 0.35; hill.castShadow = false;
   // stations and people
+  this.box(1.4, 2.6, 0.5, this.M({ color: 0x1a1a1a }), 26.6, 1.3, -1, {}); this.box(0.4, 0.5, 0.12, this.M({ color: 0x222222, emissive: 0xff3040, ei: 1.4 }), 26.4, 1.5, -2.2, {});
+  this.station("obsdoor", 24.5, -1, "keypad", 0xff5050, "The Observatory's locked door");
   this.station("observatory", 32, 7, "dome", 0x7fdcff, "Royal Observatory");
+  this.station("cab", -9.5, 6.4, "camera", 0x7fdcff, "Dave's cab");
   this.station("flat", 14.2, 14.6, "door", 0xffd166, "Flat above the chip shop");
   this.addPerson("dave", -14, 7.2, 0.4, { coat: 0x3a3a3a, hat: "cap", hatColor: 0x4a4a3a, skin: 0xd9a57c }, "Dave");
   this.weather("rain");
@@ -136,10 +139,15 @@ SCENES.venice = function () {
   const masks = [[0xffd166, 0xff3040, 0x2a3aa0], [0xdddddd, 0x40a0ff, 0x6a1a8a], [0xff3040, 0xffffff, 0x101010], [0x40b0ff, 0xffd166, 0x8a1a1a]];
   masks.forEach(([m, f, c], i) => { const rec = this.addPerson("dancer" + i, -26 + (i % 2) * 8 + (i > 1 ? 2 : 0), -1 + Math.floor(i / 2) * 9, i, { coat: c, mask: m, feather: f, hat: i % 2 ? "trilby" : null, skin: 0xf1c9a5, faces: false });
     this.updaters.push(dt => { rec.grp.rotation.y += dt * (0.6 + i * 0.2); rec.grp.position.y = Math.abs(Math.sin(this.t * 3 + i)) * 0.08; }); });
+  this.cyl(1.1, 1.1, 0.3, this.M({ tex: "steel", rx: 1, ry: 1, metalness: 0.9, roughness: 0.2 }), 24.7, 1.6, 12, 24).rotation.z = Math.PI / 2;
+  this.station("vault", 27.5, 12, "vault", 0xc0c8d8, "The Glassmaker's ring vault");
+  this.plane(3.4, 0.7, this.M({ map: PT.sign("PANIFICIO", "#5a3a1a", "#f4e8c8", "900 60px serif") }), -8, 3.6, 12.45);
+  this.box(1.4, 2.6, 0.3, this.M({ color: 0x2a1a10 }), -8, 1.3, 12.4, {}); this.plane(1.2, 1.0, this.M({ color: 0xff3050, emissive: 0xff2040, ei: 1.2, transparent: true, opacity: 0.8 }), -8, 6.5, 12.45);
+  this.station("loft", -8, 10.4, "laser", 0xff4040, "The loft over the bakery");
   this.station("workshop", 20, 5.6, "furnace", 0xff8040, "The Glassmaker's workshop");
   this.station("piazza", -20, 1.5, "mask", 0xffd166, "The carnival piazza");
   this.addPerson("lorenzo", 6, -4.2, Math.PI, { coat: 0xc0392b, hat: "boater", skin: 0xe2b48c, prop: "oar", trousers: 0x111111 }, "Lorenzo");
-  return { x: 0, z: 4, yaw: 0.2, bounds: { x0: -31, x1: 25, z0: -5.2, z1: 12 } };
+  return { x: 0, z: 4, yaw: 0.2, bounds: { x0: -31, x1: 29, z0: -5.2, z1: 12 } };
 };
 
 // ------------------------------------------------------------- CAIRO
@@ -231,6 +239,10 @@ SCENES.cairo = function () {
   // a street cart with a lamp
   this.box(2, 1.2, 1.2, this.M({ map: PT.wood(6), rx: 2, ry: 1 }), 9, 0.9, -8, { collide: true }); this.cyl(0.45, 0.45, 0.2, this.M({ color: 0x222222 }), 8.2, 0.45, -8, 10).rotation.x = Math.PI / 2; this.cyl(0.45, 0.45, 0.2, this.M({ color: 0x222222 }), 9.8, 0.45, -8, 10).rotation.x = Math.PI / 2;
   this.lamp(-6, -10, 4.2, 0xffc070, 1.2, 14, { post: 0x3a3a3a }); this.lamp(12, -10, 4.2, 0xffc070, 1.2, 14, { post: 0x3a3a3a });
+  for (let i = 0; i < 3; i++) { this.cyl(0.5, 0.6, 2.2 + (i === 0 ? 1.2 : 0), this.M({ map: PT.hiero(11 + i), rx: 1, ry: 1, color: 0xc8a878 }), -28.5, undefined, -10 - i * 2.2, 10, { collide: true }); }
+  for (let i = 0; i < 3; i++) this.cyl(1.0 - i * 0.25, 1.0 - i * 0.25, 0.3, this.M({ color: 0xa08050 }), -28.5, 3.55 + i * 0.3, -10, 12);
+  this.station("rods", -26, -12, "rods", 0xffd166, "The tomb's counterweights");
+  this.station("tent", -15, 5, "screen", 0x7fdcff, "Nadia's tent");
   this.station("mast", 26.5, 7.6, "mast", 0xff5050, "UMBRA's radio mast");
   this.station("tomb", -30, -2, "tomb", 0xffb040, "The tomb of light");
   this.addPerson("nadia", -18, 4, 2.0, { coat: 0xb8860b, hat: "scarf", hatColor: 0x8a2a2a, skin: 0xc9946a, trousers: 0x6a5a4a }, "Dr Farouk");
@@ -299,8 +311,12 @@ SCENES.tokyo = function () {
   this.plane(2.4, 0.5, this.M({ map: PT.sign("SERVER ROOM", "#1a2430", "#ffe23a", "800 56px sans-serif"), emissive: 0xffffff, emap: PT.sign("SERVER ROOM", "#1a2430", "#ffe23a", "800 56px sans-serif"), ei: 0.9 }), 5, 3.4, -20.84);
   this.plane(1.4, 1.0, this.M({ color: 0x8fd0ff, emissive: 0x60b0ff, ei: 0.9, transparent: true, opacity: 0.8 }), 5, 1.9, -20.74);
   for (const [x, z] of [[-7, 2], [7, -8], [-7, -12]]) this.lamp(x, z, 5, 0xe8f0ff, 1.0, 14);
+  this.box(2.2, 3.0, 0.3, this.M({ color: 0x1a2430, metalness: 0.5 }), -8.6, 1.5, -20.9, {}); this.plane(2.0, 0.5, this.M({ map: PT.sign("CORRIDOR B", "#1a2430", "#ff3050", "800 56px sans-serif"), emissive: 0xffffff, emap: PT.sign("CORRIDOR B", "#1a2430", "#ff3050", "800 56px sans-serif"), ei: 0.9 }), -8.6, 3.4, -20.84);
   this.station("lab", -3.5, -18.4, "keypad", 0x2de2ff, "Kaito Labs, keypad door");
+  this.station("corridor", -8.6, -18.4, "laser", 0xff4040, "The laser corridor");
   this.station("servers", 5, -18.4, "server", 0xffe23a, "The server room");
+  this.box(0.5, 0.35, 0.05, this.M({ color: 0x111111, emissive: 0x40c0ff, ei: 1.2 }), -7.6, 1.2, 7.2, {});
+  this.station("terminal", -6.2, 5.2, "screen", 0x40c0ff, "The root terminal");
   this.addPerson("yuki", -9, 6.4, Math.PI, { coat: 0xc0392b, hat: "bandana", skin: 0xf3d9c4, trousers: 0x222233 }, "Yuki");
   this.weather("rain");
   return { x: 0, z: 9, yaw: 0, bounds: { x0: -11.5, x1: 11.5, z0: -19, z1: 12 } };
@@ -346,8 +362,11 @@ SCENES.newyork = function () {
   this.plane(2.4, 0.5, this.M({ map: PT.sign("VAULT", "#1a1a1a", "#c0c8d8", "900 60px sans-serif") }), 6, 3.4, -25.84);
   this.light(0xffd080, 3, -4, 3, -24, 12);
   for (const [x, z] of [[-9, 10], [9, -4], [-9, -18], [9, 12]]) this.lamp(x, z, 5.5, 0xfff0d0, 1.0, 16);
+  this.station("cart", 7.5, 3, "camera", 0x7fdcff, "Sal's hot-dog cart");
   this.station("tower", -4, -23.4, "vault", 0xffd166, "Sterling Tower, penthouse");
   this.station("device", 6, -23.4, "bomb", 0xff4040, "The ticking device");
+  this.box(2.2, 3.0, 0.3, this.M({ color: 0x2a2a30, metalness: 0.5 }), -10, 1.5, -25.9, {}); this.plane(2.0, 0.5, this.M({ map: PT.sign("OFFICE", "#2a2a30", "#ffd166", "800 60px serif") }), -10, 3.4, -25.84);
+  this.station("office", -10, -23.4, "sonar", 0x7fffb0, "Sterling's office");
   this.addPerson("sal", 10.5, 3.8, Math.PI, { coat: 0x6b5b45, hat: "trilby", skin: 0xe0b08a, trousers: 0x3a3a3a }, "Detective Sal");
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -13, x1: 13, z0: -24, z1: 16 } };
 };
@@ -383,7 +402,7 @@ SCENES.rio = function () {
   const car = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 1.6), this.M({ color: 0xffd166, metalness: 0.4 })); car.castShadow = true; S.add(car);
   this.updaters.push(dt => { const k = 0.5 + 0.45 * Math.sin(this.t * 0.12); car.position.copy(a).lerp(b, k); car.position.y -= 1.4; });
   // the docks across the inlet
-  this.water(40, 60, -36, -30, 0x1f7f92, { opacity: 0.95, y: -0.06 });
+  this.water(40, 60, -36, -30, 0x1f7f92, { opacity: 0.95, y: 0.025 });
   this.box(34, 1.2, 34, this.M({ map: PT.paving(51, [150, 150, 148]), rx: 10, ry: 10 }), -44, 0.5, -30, { collide: true });
   const cc = [0x2a6a9a, 0xb03a2a, 0x3a8a4a, 0xd0a020, 0x8a8a8a, 0x6a2a8a];
   let ci = 0; for (let r = 0; r < 3; r++) for (let i = 0; i < 4; i++) { this.container(-52 + i * 6.4, 1.1 + 0, -20 - r * 3.2, 0, cc[ci++ % cc.length]); if ((i + r) % 2) this.container(-52 + i * 6.4, 3.7, -20 - r * 3.2, 0, cc[ci++ % cc.length]); }
@@ -409,10 +428,14 @@ SCENES.rio = function () {
   for (let z = -48; z <= -4; z += 4) this.cyl(0.05, 0.05, 2.6, this.M({ color: 0x666666 }), -25, 1.3, z, 6);
   this.box(0.1, 2.4, 3.2, this.M({ color: 0x555555, metalness: 0.7 }), -25, 1.2, -8, {});
   this.plane(2.6, 0.7, this.M({ map: PT.sign("PIER 9", "#1a1a1a", "#ffd166", "900 80px sans-serif") }), -24.9, 2.9, -8, 0, Math.PI / 2);
+  this.box(4, 2.8, 3, this.M({ map: PT.plaster([230, 220, 200], 12), rx: 2, ry: 1 }), -14, 1.4, -15.5, { collide: true }); this.box(4.4, 0.3, 3.4, this.M({ color: 0xc0392b }), -14, 2.95, -15.5, {}); this.plane(3.2, 0.6, this.M({ map: PT.sign("CAPITANIA", "#e8e0d0", "#1b3a6b", "900 60px sans-serif") }), -14, 2.3, -13.98);
+  this.station("harbouroffice", -14, -11.5, "door", 0xffd166, "The harbour office");
+  { const g2 = new THREE.Group(); g2.position.set(9, 0.3, -14); g2.rotation.y = 0.4; S.add(g2); const hull = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.9, 1.6), this.M({ color: 0x1b6fa8 })); hull.position.y = 0.3; hull.castShadow = true; g2.add(hull); const rim = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.15, 1.8), this.M({ color: 0xf0e0c0 })); rim.position.y = 0.8; g2.add(rim); const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 3, 6), this.M({ color: 0x5a3a1a })); mast.position.set(0.4, 2.2, 0); g2.add(mast); this.collider(9, -14, 2.2, 1.1, 0.4); }
+  this.station("boat", 9, -10.5, "screen", 0x7fdcff, "Tiago's boat");
   this.station("cablecar", 24, 2.2, "camera", 0x7fdcff, "The cable-car platform");
   this.station("docks", -22.4, -8, "crate", 0xffd166, "Pier 9, the container yard");
   this.addPerson("tiago", 3, 1.5, Math.PI, { coat: 0x27ae60, hair: 0x1a1a1a, skin: 0xb57a4e, prop: "board", trousers: 0xf0e0c0 }, "Tiago");
-  this.photoTargets = [{ id: "crate", x: -42, y: 8.6, z: -48.3, label: "the crate" }, { id: "ship", x: -40, y: 4, z: -46.4, label: "the ship's name" }, { id: "kolya", x: -33, y: 1.3, z: -26, label: "Kolya" }];
+  this.photoTargets = [{ id: "crate", x: -42, y: 8.6, z: -48.3, label: "the crate" }, { id: "ship", x: -40, y: 4, z: -46.4, label: "the ship's name" }, { id: "kolya", x: -33, y: 1.3, z: -26, label: "Kolya" }, { id: "crane", x: -34, y: 21, z: -37, label: "the crane cab" }];
   return { x: 0, z: 2, yaw: 0.3, bounds: { x0: -23, x1: 30, z0: -18, z1: 6 } };
 };
 
@@ -475,7 +498,10 @@ SCENES.siberia = function () {
   for (let y = 8; y < 36; y += 7) this.box(4, 0.5, 0.6, this.M({ color: 0x8a9098, metalness: 0.7 }), 3.5, y, -60, {});
   for (const [x, z] of [[-9, -52], [9, -52], [0, -70]]) { this.cyl(0.2, 0.3, 10, this.M({ color: 0x333940 }), x, 5, z, 8); this.box(1.2, 0.8, 0.8, this.M({ color: 0x222222, emissive: 0xffffff, ei: 2 }), x, 10.2, z, {}); this.sprite(this.dotTex, x, 10.2, z, 5, 0xffffff, true); this.light(0xffffff, 6, x, 10, z, 40); }
   const rs = []; for (let i = 0; i < 5; i++) rs.push(this.sprite(this.dotTex, i * 2 - 4, 1.5, -60 + (i % 2) * 3, 5, 0xffffff)); this.updaters.push(dt => rs.forEach((s, i) => { s.position.y += dt * 0.7; s.position.x += Math.sin(this.t + i) * dt; if (s.position.y > 6) s.position.y = 1.2; s.material.opacity = 0.35 * (1 - (s.position.y - 1.2) / 4.8); }));
+  this.box(2.4, 2.8, 0.5, this.M({ color: 0x3a3038, metalness: 0.7 }), -17, 1.4, -20.3, {}); this.plane(2.2, 0.5, this.M({ map: PT.sign("REACTOR", "#3a3038", "#ffd166", "800 60px sans-serif") }), -17, 3.1, -20.04); this.box(0.6, 0.6, 0.1, this.M({ color: 0x111111, emissive: 0xffd000, ei: 1.5 }), -15.4, 1.8, -20.03, {});
   this.station("office", -9, -18.2, "door", 0xff8040, "The station office");
+  this.station("reactor", -17, -18.2, "rods", 0xffd166, "The reactor hall");
+  this.station("vaultdoor", 0, -17.6, "vault", 0xc0c8d8, "The control room vault door");
   this.station("control", 9, -18.2, "screen", 0x40c0ff, "The control room");
   this.addPerson("natasha", -4.5, 2.5, Math.PI, { coat: 0x8a9ab0, hat: "helmet", hatColor: 0xf0f0f4, hair: 0xe8c070, skin: 0xf2d5c2, trousers: 0x3a4250 }, "Natasha");
   this.weather("snow");
