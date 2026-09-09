@@ -375,12 +375,12 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
 musicOn=store.get("music",true);
 
 // ---------------------------------------------------------------- loop
-function frame(ts){const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;
  cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#1a2a1a";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play"){update(dt);}
  if(scene==="play"||scene==="levelup"||scene==="pause"||scene==="over"||scene==="win"){if(G){drawWorld();drawHUD();}}
  if(scene==="title")drawTitle();else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
- requestAnimationFrame(frame);}
+}
 requestAnimationFrame(frame);
 window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v}};
 </script></body></html>

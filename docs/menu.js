@@ -13,22 +13,49 @@ window.__shelfMenu = {};
 var paused = false, held = [], skew = 0, stoppedAt = 0;
 var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : null;
 var now = function () { return (window.performance && performance.now) ? performance.now() : Date.now(); };
+var lastFrame = 0, everRan = false, loadedAt = 0, lastError = "";
 if (raf) {
   window.requestAnimationFrame = function (cb) {
     if (paused) { held.push(cb); return -1; }
-    return raf(function (ts) { cb(ts - skew); });
+    return raf(function (ts) { lastFrame = now(); everRan = true; cb(ts - skew); });
   };
 }
-/* keep a handle on every audio context the game makes, so sound stops too */
+window.addEventListener("error", function (e) {
+  lastError = (e && e.message ? String(e.message) : "something went wrong").slice(0, 160);
+});
+window.addEventListener("unhandledrejection", function (e) {
+  var r = e && e.reason;
+  lastError = String((r && r.message) || r || "something went wrong").slice(0, 160);
+});
+/* every game stores its saves under a prefix taken from its folder name */
+var slug = (location.pathname.replace(/\/+$/, "").split("/").pop() || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+function savedKeys() {
+  var out = [];
+  try { for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && slug && k.toLowerCase().indexOf(slug + ".") === 0) out.push(k);
+  } } catch (e) {}
+  return out;
+}
+/* Keep a handle on every audio context the game makes, so its sound can be
+   stopped too. This hooks a couple of harmless prototype methods rather than
+   replacing the AudioContext constructor: a wrapped constructor is exactly
+   the sort of thing an older iPhone can refuse, and losing the sound is a
+   great deal better than losing the game. */
 var acs = [];
 ["AudioContext", "webkitAudioContext"].forEach(function (key) {
   var C = window[key];
-  if (typeof C !== "function" || typeof Proxy !== "function") return;
-  try {
-    window[key] = new Proxy(C, { construct: function (t, args) {
-      var c = Reflect.construct(t, args); acs.push(c); return c;
-    } });
-  } catch (e) {}
+  if (typeof C !== "function" || !C.prototype) return;
+  ["createGain", "createOscillator", "createBufferSource"].forEach(function (m) {
+    var orig = C.prototype[m];
+    if (typeof orig !== "function") return;
+    try {
+      C.prototype[m] = function () {
+        try { if (acs.indexOf(this) < 0) acs.push(this); } catch (e) {}
+        return orig.apply(this, arguments);
+      };
+    } catch (e) {}
+  });
 });
 /* Suspending and resuming a Godot export's audio leaves its page unable to
    navigate away, which would trap you in the game - the one thing this is
@@ -60,23 +87,27 @@ function build() {
     "left:calc(7px + env(safe-area-inset-left));width:36px;height:36px;border-radius:11px;",
     "background:rgba(8,12,20,0.45);border:1.5px solid rgba(255,255,255,0.5);display:flex;",
     "align-items:center;justify-content:center;gap:4px;cursor:pointer;touch-action:manipulation;",
-    "-webkit-tap-highlight-color:transparent;backdrop-filter:blur(2px)}",
+    "-webkit-tap-highlight-color:transparent;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}",
     "#shelf-menu-btn i{display:block;width:4px;height:14px;border-radius:1.5px;background:rgba(255,255,255,0.92)}",
     "#shelf-menu-btn:active{background:rgba(8,12,20,0.75)}",
-    "#shelf-menu-veil{position:fixed;z-index:2147483001;inset:0;display:none;align-items:center;",
-    "justify-content:center;background:rgba(4,8,16,0.72);backdrop-filter:blur(3px);",
+    "#shelf-menu-veil,#shelf-menu-stuck{position:fixed;z-index:2147483001;top:0;right:0;bottom:0;left:0;display:none;align-items:center;",
+    "justify-content:center;background:rgba(4,8,16,0.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);",
     "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;",
     "-webkit-user-select:none;user-select:none;touch-action:manipulation}",
-    "#shelf-menu-veil.on{display:flex}",
-    "#shelf-menu-card{width:min(88vw,340px);background:rgba(16,22,34,0.96);border:1.5px solid rgba(255,255,255,0.18);",
+    "#shelf-menu-veil.on,#shelf-menu-stuck.on{display:flex}",
+    "#shelf-menu-stuck{z-index:2147483002}",
+    "#shelf-menu-card,#shelf-menu-stuckcard{width:340px;max-width:88vw;background:rgba(16,22,34,0.96);border:1.5px solid rgba(255,255,255,0.18);",
     "border-radius:20px;padding:22px 20px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,0.5)}",
-    "#shelf-menu-card h2{margin:0 0 2px;font-size:26px;color:#ffe14d;letter-spacing:0.5px}",
-    "#shelf-menu-card p{margin:0 0 18px;font-size:14px;color:#aeb8c8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-    "#shelf-menu-card button{display:block;width:100%;margin:9px 0 0;padding:15px 10px;font-size:19px;",
+    "#shelf-menu-card h2,#shelf-menu-stuckcard h2{margin:0 0 2px;font-size:26px;color:#ffe14d;letter-spacing:0.5px}",
+    "#shelf-menu-card p,#shelf-menu-stuckcard p{margin:0 0 18px;font-size:14px;color:#aeb8c8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+    "#shelf-menu-card button,#shelf-menu-stuckcard button{display:block;width:100%;margin:9px 0 0;padding:15px 10px;font-size:19px;",
     "font-weight:700;color:#fff;border:0;border-radius:14px;cursor:pointer;font-family:inherit;",
     "touch-action:manipulation;-webkit-tap-highlight-color:transparent}",
-    "#shelf-menu-resume{background:#2a8a3a}#shelf-menu-quit{background:#2a4a8a}",
-    "#shelf-menu-card button:active{filter:brightness(1.25)}"
+    "#shelf-menu-resume,#shelf-stuck-retry{background:#2a8a3a}#shelf-menu-quit,#shelf-stuck-quit{background:#2a4a8a}",
+    "#shelf-stuck-wipe{background:#8a3a2a}#shelf-stuck-wait{background:rgba(255,255,255,0.14)}",
+    "#shelf-menu-stuckcard button[hidden]{display:none}",
+    "#shelf-menu-stuckcard p.why{color:#ffb0a0;font-size:12px;white-space:normal;margin:-8px 0 14px}",
+    "#shelf-menu-card button:active,#shelf-menu-stuckcard button:active{filter:brightness(1.25)}"
   ].join("");
   document.head.appendChild(css);
 
@@ -127,9 +158,57 @@ function build() {
     if (e.key === "Escape" && veil.classList.contains("on")) close();
   });
 
+  /* ------------------------------------------------------- stuck helper */
+  /* If the game stops drawing, or never starts, say so and offer a way out
+     instead of leaving a frozen picture with no buttons on it. */
+  var stuck = document.createElement("div");
+  stuck.id = "shelf-menu-stuck";
+  stuck.innerHTML = '<div id="shelf-menu-stuckcard"><h2>STUCK?</h2><p></p><p class="why"></p>' +
+    '<button id="shelf-stuck-wait" type="button">Keep waiting</button>' +
+    '<button id="shelf-stuck-retry" type="button">Start the game again</button>' +
+    '<button id="shelf-stuck-quit" type="button">Back to all games</button>' +
+    '<button id="shelf-stuck-wipe" type="button" hidden>Erase this game\u2019s saved progress</button></div>';
+  document.body.appendChild(stuck);
+  var stuckShown = false, snoozeUntil = 0;
+  function showStuck(why) {
+    if (stuckShown || now() < snoozeUntil) return;
+    stuckShown = true;
+    stuck.querySelector("p").textContent = why;
+    var w = stuck.querySelector("p.why");
+    w.textContent = lastError ? "It said: " + lastError : "";
+    var keys = savedKeys();
+    var wipe = stuck.querySelector("#shelf-stuck-wipe");
+    wipe.hidden = keys.length === 0;
+    stuck.classList.add("on");
+    btn.style.display = "none";
+  }
+  function hideStuck(snoozeSeconds) {
+    stuckShown = false; stuck.classList.remove("on");
+    if (!veil.classList.contains("on")) btn.style.display = "";
+    snoozeUntil = now() + (snoozeSeconds || 30) * 1000;
+    lastFrame = now();
+  }
+  stuck.querySelector("#shelf-stuck-wait").addEventListener("click", function () { hideStuck(30); });
+  stuck.querySelector("#shelf-stuck-retry").addEventListener("click", function () { location.reload(); });
+  stuck.querySelector("#shelf-stuck-quit").addEventListener("click", function () { window.location.href = "../"; });
+  stuck.querySelector("#shelf-stuck-wipe").addEventListener("click", function () {
+    savedKeys().forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    location.reload();
+  });
+  loadedAt = now();
+  setInterval(function () {
+    if (paused || document.hidden || veil.classList.contains("on")) { lastFrame = now(); return; }
+    if (stuckShown) { if (now() - lastFrame < 1500) hideStuck(5); return; }
+    if (everRan) { if (now() - lastFrame > 5000) showStuck("The game has stopped moving."); }
+    else if (now() - loadedAt > 25000) showStuck("This game is taking a long time to start.");
+  }, 1000);
+
   window.__shelfMenu.open = open;
   window.__shelfMenu.close = close;
+  window.__shelfMenu.stuck = function () { return stuck.classList.contains("on"); };
+  window.__shelfMenu.keys = savedKeys;
 }
-if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
-else build();
+function safeBuild() { try { build(); } catch (e) { /* never let the overlay break a game */ } }
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", safeBuild);
+else safeBuild();
 })();

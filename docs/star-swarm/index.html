@@ -27,7 +27,7 @@ const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=
 function hash(x,y){let h=(x*374761393+y*668265263)|0;h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296}
 const store={get(k,d){try{const v=localStorage.getItem("starswarm."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("starswarm."+k,JSON.stringify(v))}catch(e){}}};
 // ---------------------------------------------------------------- audio
-let AC=null,master=null,musicOn=store.get("music",true),musicTimer=null,musicStep=0,musicNext=0;
+let AC=null,master=null,musicOn=store.get("music",true)!==false,musicTimer=null,musicStep=0,musicNext=0;
 function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 function noise(dur,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){l=l*0.7+(Math.random()*2-1)*0.3;d[i]=l*(1-i/n)}const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=vol;s.connect(g);g.connect(master);s.start(t)}
@@ -98,8 +98,13 @@ const ENEMY={
  warlord:{hp:2000,spd:42,r:72,dmg:35,xp:80,col:"#606880",score:250,boss:true,name:"THE WARLORD"},
 };
 // ---------------------------------------------------------------- state
-let G=null,scene="title",shipIdx=store.get("ship",0),shake=0,flash=0,tPrev=0,frameT=0;
-const records=store.get("records",{}),unlocks=store.get("unlocks",{falcon:true});
+let G=null,scene="title",shipIdx=0,shake=0,flash=0,tPrev=0,frameT=0;
+// saved values are only ever as good as the last write: a half-written or
+// out-of-date save should never be able to stop the game from starting
+const obj=(v,d)=>(v&&typeof v==="object"&&!Array.isArray(v))?v:d;
+const records=obj(store.get("records",{}),{}),unlocks=obj(store.get("unlocks",{falcon:true}),{falcon:true});
+unlocks.falcon=true;
+shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
 function newRun(ship){G={t:0,ship,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
  weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,nextBoss:150,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,won:false,elite:0};
@@ -294,11 +299,11 @@ function start(){if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx])
 function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene="pause";musicStop()}else if(scene==="pause"){scene="play";musicStart()}}
  if(scene==="title"&&(code==="Space"||code==="Enter"))start();if(scene==="levelup"&&["Digit1","Digit2","Digit3"].includes(code)){const i=+code[5]-1;if(cards[i]){applyCard(cards[i]);scene="play"}}
  if((scene==="over"||scene==="win")&&(code==="Space"||code==="Enter"))start()}
-function frame(ts){const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
  if(["play","levelup","pause","over","win"].includes(scene)&&G){drawWorld();drawHUD()}
  if(scene==="title")drawTitle();else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
- requestAnimationFrame(frame)}
+}
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks};
 </script></body></html>

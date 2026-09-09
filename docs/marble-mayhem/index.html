@@ -205,10 +205,10 @@ function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);text("PUZZLES"
   btn(x,y,cw,ch,"",()=>{if(unlocked)loadLevel(i)},{fill:unlocked?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)"});
   text((i+1)+". "+L.name,x+cw/2,y+22,15,unlocked?"#fff":"#667","center",true);text(unlocked?"★".repeat(st)+"☆".repeat(1+L.stars.length-st):"locked",x+cw/2,y+50,16,unlocked?"#ffe060":"#667","center",true)});
  btn(W/2-90,Math.min(H-60,y0+rows*(ch+10)+10),180,44,"BACK",()=>{scene="title"},{size:18});drawButtons()}
-function frame(ts){const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
  if(scene==="play"&&running&&!won){const n=4;for(let i=0;i<n;i++)step(dt/n)}else if(scene==="play"){for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0)}
  if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="play")drawPlay();
- requestAnimationFrame(frame)}
+}
 requestAnimationFrame(frame);
 function simulate(pcs,maxT){const keep=pieces;pieces=pcs;resetRun();running=true;spawnMarbles();const dt=1/240;let t=0;const traj=[];let k=0;while(t<(maxT||12)&&!won&&!lost){step(dt);t+=dt;if(++k%48===0&&marbles[0])traj.push([Math.round(marbles[0].x),Math.round(marbles[0].y)])}const res={won,lost,stars:starsGot.filter(Boolean).length,t:+t.toFixed(2),traj};pieces=keep;resetRun();return res}
 window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};

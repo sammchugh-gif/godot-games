@@ -225,14 +225,14 @@ function drawRoundOver(){cx.fillStyle="rgba(5,8,14,0.7)";cx.fillRect(0,0,W,H);co
  else{btn(W/2-150,H*0.6,300,64,"NEXT ROUND",()=>{round++;startRound()},{fill:"#3a7a3a",size:26});}
  drawButtons();}
 function onKey(code){if(scene==="title"&&(code==="Space"||code==="Enter"))startMatch("2p");if(scene==="roundover"&&(code==="Space"||code==="Enter")){if(matchOver)startMatch(mode,botLevel);else{round++;startRound()}}if(code==="Escape"&&scene==="play")scene="title";}
-function frame(ts){const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#151a22";cx.fillRect(0,0,W,H);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#151a22";cx.fillRect(0,0,W,H);
  if(H>W*1.02){text("TURN YOUR iPAD",W/2,H*0.45,40,"#ffd040");text("SIDEWAYS TO PLAY",W/2,H*0.45+48,40,"#ffd040");buttons=[];requestAnimationFrame(frame);return}
  if(scene==="play")update(dt);
  if(scene==="play"||scene==="roundover"){drawArena();drawStrips();buttons=[];
   if(scene==="play"){if(countdown>0){text(countdown>0.3?Math.ceil(countdown)+"":"GO!",W/2,H/2,110,"#ffd040")}if(bannerT>0){cx.globalAlpha=Math.min(1,bannerT);text(banner,W/2,H*0.2,30,"#ffe060");cx.globalAlpha=1}
    btn(W/2-30,H-46,60,36,"✕",()=>{scene="title"},{size:18});drawButtons();}}
  if(scene==="title")drawTitle();else if(scene==="roundover")drawRoundOver();
- requestAnimationFrame(frame);}
+}
 resize();requestAnimationFrame(frame);
 window.TT={get scene(){return scene},get tanks(){return tanks},get shells(){return shells},startMatch,get grid(){return grid},set countdown(v){countdown=v},get wins(){return wins}};
 </script></body></html>
