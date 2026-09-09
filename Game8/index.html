@@ -1,5 +1,4 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<script src="../menu.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -8,7 +7,8 @@
 html,body{margin:0;padding:0;height:100%;background:#151a22;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
 body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
-</style></head><body><canvas id="c"></canvas>
+</style><script src="../menu.js" defer></script>
+</head><body><canvas id="c"></canvas>
 <script>
 "use strict";
 // ============================================================ Tank Tussle
@@ -66,10 +66,17 @@ function tdown(id,x,y){audioInit();if(uiTap({x,y}))return;if(scene!=="play")retu
  if(!hasStick){fingers[id]={p,stick:true,sx:x,sy:y,x,y};}else{fingers[id]={p,stick:false};tanks[p].fireReq=true;}}
 function tmove(id,x,y){const f=fingers[id];if(f&&f.stick){f.x=x;f.y=y}}
 function tup(id){delete fingers[id]}
-cv.addEventListener("touchstart",e=>{for(const t of e.changedTouches)tdown(t.identifier,t.clientX,t.clientY)},{passive:false});
-cv.addEventListener("touchmove",e=>{for(const t of e.changedTouches)tmove(t.identifier,t.clientX,t.clientY)},{passive:false});
-cv.addEventListener("touchend",e=>{for(const t of e.changedTouches)tup(t.identifier)});cv.addEventListener("touchcancel",e=>{for(const t of e.changedTouches)tup(t.identifier)});
-let mdown=false;cv.addEventListener("mousedown",e=>{mdown=true;tdown("m",e.clientX,e.clientY)});window.addEventListener("mousemove",e=>{if(mdown)tmove("m",e.clientX,e.clientY)});window.addEventListener("mouseup",()=>{mdown=false;tup("m")});
+function rectPos(cx0,cy0){const r=cv.getBoundingClientRect();return{x:r.width?(cx0-r.left)*(W/r.width):cx0,y:r.height?(cy0-r.top)*(H/r.height):cy0}}
+// Fingers the glass has forgotten about must be forgotten here too, or the
+// strip they were holding stays taken and that player can never steer again.
+function prune(e){const live={};for(const t of e.touches)live[t.identifier]=1;for(const k in fingers)if(!live[k])delete fingers[k]}
+window.addEventListener("touchstart",e=>{prune(e);for(const t of e.changedTouches){if(t.target!==cv)continue;const p=rectPos(t.clientX,t.clientY);tdown(t.identifier,p.x,p.y)}},{passive:false});
+window.addEventListener("touchmove",e=>{for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);tmove(t.identifier,p.x,p.y)}},{passive:false});
+window.addEventListener("touchend",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});
+window.addEventListener("touchcancel",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});
+window.addEventListener("blur",()=>{for(const k in fingers)delete fingers[k]});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in fingers)delete fingers[k]});
+let mdown=false;cv.addEventListener("mousedown",e=>{mdown=true;const p=rectPos(e.clientX,e.clientY);tdown("m",p.x,p.y)});window.addEventListener("mousemove",e=>{if(mdown){const p=rectPos(e.clientX,e.clientY);tmove("m",p.x,p.y)}});window.addEventListener("mouseup",()=>{mdown=false;tup("m")});
 function readSticks(){for(const t of tanks){let x=0,y=0;if(t.id===0){if(keys.KeyA)x-=1;if(keys.KeyD)x+=1;if(keys.KeyW)y-=1;if(keys.KeyS)y+=1;if(keys.Space||keys.KeyF)t.fireReq=true;}else if(!t.bot){if(keys.ArrowLeft)x-=1;if(keys.ArrowRight)x+=1;if(keys.ArrowUp)y-=1;if(keys.ArrowDown)y+=1;if(keys.Enter||keys.ShiftRight||keys.Slash)t.fireReq=true;}
  for(const k in fingers){const f=fingers[k];if(f.p===t.id&&f.stick){const dx=f.x-f.sx,dy=f.y-f.sy,d=Math.hypot(dx,dy);if(d>8){const m=Math.min(d,56)/56;x=dx/d*m;y=dy/d*m}}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}t.stick.x=x;t.stick.y=y;}}

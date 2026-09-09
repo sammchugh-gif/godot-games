@@ -146,14 +146,15 @@ function build() {
     tracking = false;
   });
   btn.addEventListener("pointercancel", function () { tracking = false; });
-  btn.addEventListener("click", function (e) { e.stopPropagation(); });
+  ["click", "touchstart", "touchmove", "touchend", "touchcancel", "mousedown", "mouseup"].forEach(function (t) {
+    btn.addEventListener(t, function (e) { e.stopPropagation(); }, false);
+  });
 
   veil.querySelector("#shelf-menu-resume").addEventListener("click", function (e) { e.stopPropagation(); close(); });
   veil.querySelector("#shelf-menu-quit").addEventListener("click", function (e) { e.stopPropagation(); quit(); });
   veil.addEventListener("click", function (e) { if (e.target === veil) close(); });
-  ["pointerdown", "pointerup", "touchstart", "touchend", "mousedown", "mouseup"].forEach(function (t) {
-    veil.addEventListener(t, function (e) { e.stopPropagation(); }, true);
-  });
+  var SWALLOW = ["pointerdown", "pointerup", "pointermove", "touchstart", "touchmove", "touchend", "touchcancel", "mousedown", "mouseup"];
+  SWALLOW.forEach(function (t) { veil.addEventListener(t, function (e) { e.stopPropagation(); }, true); });
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && veil.classList.contains("on")) close();
   });
@@ -169,6 +170,7 @@ function build() {
     '<button id="shelf-stuck-quit" type="button">Back to all games</button>' +
     '<button id="shelf-stuck-wipe" type="button" hidden>Erase this game\u2019s saved progress</button></div>';
   document.body.appendChild(stuck);
+  SWALLOW.forEach(function (t) { stuck.addEventListener(t, function (e) { e.stopPropagation(); }, true); });
   var stuckShown = false, snoozeUntil = 0;
   function showStuck(why) {
     if (stuckShown || now() < snoozeUntil) return;
