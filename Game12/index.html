@@ -64,7 +64,11 @@ const DIFF={easy:{name:"EASY",speed:0.86,react:0.35,save:0.42,aim:0.35,pass:0.3}
 const save=store.get("save",{cups:0,wins:0,played:0,team:0});
 // ---------------------------------------------------------------- state
 let scene="title",frameT=0,tPrev=0,buttons=[];
-let cfg={mode:"1p",team:save.team||0,opp:1,diff:"normal",half:90,cup:false,view:save.view||"split"};
+let cfg={mode:"1p",team:save.team||0,opp:1,diff:"normal",half:90,cup:false,view:"topdown"};
+// "topdown" looks straight down the way the first version of this game did;
+// "behind" puts the camera behind your own goal (and gives each player their
+// own half of the screen in a two-player match)
+if(save.view==="split"||save.view==="behind")cfg.view="behind";
 let M=null;   // the match
 let cup=null; // cup state
 let pk=null;  // penalty shoot-out state
@@ -458,7 +462,7 @@ function syncTeams3D(){const T=G3.T;for(const o of G3.players)G3.scene.remove(o.
   r.rotation.x=-Math.PI/2;r.position.y=0.04;r.visible=false;G3.scene.add(r);G3.rings.push(r)}}
 // Split screen: each half of the iPad is drawn from that player's own end and
 // rolled a quarter turn, so the pitch runs away from whoever is sitting there.
-function splitOn(){return cfg.mode==="2p"&&cfg.view!=="shared"&&(scene==="match"||scene==="pk"||scene==="pause")}
+function splitOn(){return cfg.mode==="2p"&&cfg.view==="behind"&&(scene==="match"||scene==="pk"||scene==="pause")}
 function camBasis(i){// ground-plane forward/right of one view, in sim axes
  const T=G3.T,f=new T.Vector3();(G3.cams[i]||G3.camera).getWorldDirection(f);f.y=0;if(f.lengthSq()<1e-6)f.set(0,0,-1);f.normalize();
  return{fx:f.x,fy:f.z,rx:-f.z,ry:f.x}}
@@ -486,8 +490,14 @@ function camFor(dt,view){const T=G3.T;const pos=new T.Vector3(),look=new T.Vecto
  if(M.phase==="goal"){// the broadcast shot from behind the net
   const gs=M.ball.x>PW/2?1:-1,gx=gs*PW*M2W/2;
   pos.set(gx+gs*12,4.8,9.5+Math.sin(frameT*0.5)*3.5);look.set(gx-gs*17,1.3,wz(M.ball.y)*0.35);return{pos,look}}
- if(cfg.mode==="2p"){// shared view: near enough overhead that neither seat is upside down
-  pos.set(bx*0.7,34,bz*0.4+7);look.set(bx*0.7,0,bz*0.4);return{pos,look}}
+ if(cfg.view==="topdown"){// straight down, both goals level with each other
+  const two=cfg.mode==="2p",tall=!two&&H>W*1.1,hi=two?49:tall?56:43;
+  const fx=two?0.7:0.85,fz=two?0.4:0.6;
+  pos.set(bx*fx,hi,bz*fz+hi*0.16);look.set(bx*fx,0,bz*fz);
+  // on a tall screen the pitch is turned to run up and down it, so you can
+  // see far enough ahead, and up the screen is the way you are attacking
+  G3.roll=tall?-humanAttackDir()*Math.PI/2:0;G3.overhead=hi;return{pos,look}}
+ G3.overhead=0;G3.roll=0;
  const d=humanAttackDir();pos.set(bx-d*27,19.5,bz*0.55);look.set(bx+d*10,0,bz*0.75);return{pos,look}}
 function spawnConfetti(){const g=G3.conf.geometry,pos=g.attributes.position.array,col=g.attributes.color.array;const T=G3.T,c=new T.Color();
  const cols=["#ff5a5a","#ffe14d","#5ad0ff","#8dff5a","#ffffff","#ff8adf"];G3.confV=[];
@@ -532,15 +542,37 @@ function render3Di(dt){const T=G3.T;
   else{G3.pos[i].lerp(c.pos,k);G3.look[i].lerp(c.look,k)}
   const cam=G3.cams[i],w=split?Math.floor(W/2):W,x=split?i*Math.floor(W/2):0;
   cam.position.copy(G3.pos[i]);cam.up.set(0,1,0);cam.lookAt(G3.look[i]);
-  if(split)cam.rotateZ(i===0?Math.PI/2:-Math.PI/2);
+  if(split)cam.rotateZ(i===0?Math.PI/2:-Math.PI/2);else if(G3.roll)cam.rotateZ(G3.roll);
   cam.aspect=w/H;
   // when the picture is turned a quarter turn, the seat's up-and-down is the viewport's width
   cam.fov=split?2*Math.atan(Math.tan(50*Math.PI/360)/cam.aspect)*180/Math.PI:50;
   cam.updateProjectionMatrix();
   if(split){G3.renderer.setViewport(x,0,w,H);G3.renderer.setScissor(x,0,w,H)}
+  if(!split&&G3.overhead){const hh=G3.overhead*Math.tan(cam.fov*Math.PI/360);G3.seen=G3.roll?{x:hh*10,y:hh*cam.aspect*10}:{y:hh*10,x:hh*cam.aspect*10}}else G3.seen=null;
   G3.renderer.render(G3.scene,cam);G3.renderer.shadowMap.needsUpdate=false}
  if(split){G3.renderer.setScissorTest(false);G3.renderer.setViewport(0,0,W,H)}}
 // ---------------------------------------------------------------- HUD
+// A map of the whole pitch: both goals, every player, the ball, and a box
+// showing the part of the field currently on screen.
+function drawMini(cxp,cyp,w,rot){if(!M)return;const h=w*PH/PW,s=w/PW;
+ cx.save();cx.translate(cxp,cyp);if(rot)cx.rotate(rot);cx.translate(-w/2,-h/2);
+ rr(0,0,w,h,4);cx.fillStyle="rgba(8,26,14,0.74)";cx.fill();cx.lineWidth=1.2;cx.strokeStyle="rgba(255,255,255,0.45)";cx.stroke();
+ cx.save();rr(0,0,w,h,4);cx.clip();
+ cx.lineWidth=1;cx.strokeStyle="rgba(255,255,255,0.3)";
+ cx.beginPath();cx.moveTo(w/2,0);cx.lineTo(w/2,h);cx.stroke();
+ cx.beginPath();cx.arc(w/2,h/2,91*s,0,TAU);cx.stroke();
+ for(const gx of[0,PW]){const d=gx?-1:1;cx.strokeRect(gx*s,(PH/2-201)*s,d*165*s,402*s)}
+ if(G3&&G3.seen){cx.strokeStyle="rgba(255,255,255,0.55)";cx.setLineDash([3,3]);
+  cx.strokeRect((M.cam.x-G3.seen.x)*s,(M.cam.y-G3.seen.y)*s,G3.seen.x*2*s,G3.seen.y*2*s);cx.setLineDash([])}
+ cx.lineWidth=2.2;cx.strokeStyle="#8dff5a";
+ for(const gx of[0,PW]){cx.beginPath();cx.moveTo(gx*s,(PH/2-GW)*s);cx.lineTo(gx*s,(PH/2+GW)*s);cx.stroke()}
+ for(const p of M.players){const T=M.teams[p.team].def;cx.fillStyle=p.role==="GK"?T.gk:T.kit;
+  cx.beginPath();cx.arc(p.x*s,p.y*s,2.7,0,TAU);cx.fill()}
+ for(let i=0;i<2;i++){const c=M.ctrl[i];if(!c||M.teams[i].human<0)continue;
+  cx.strokeStyle=M.teams[i].human===0?"#fff":"#ffe14d";cx.lineWidth=1.5;cx.beginPath();cx.arc(c.x*s,c.y*s,5,0,TAU);cx.stroke()}
+ const b=M.ball;cx.fillStyle="#fff";cx.beginPath();cx.arc(b.x*s,b.y*s,2.3,0,TAU);cx.fill();
+ cx.strokeStyle="rgba(0,0,0,0.5)";cx.lineWidth=0.8;cx.stroke();
+ cx.restore();cx.restore()}
 function drawScoreboard(x,y,rot,small){cx.save();cx.translate(x,y);cx.rotate(rot);const w=small?250:350,h=small?34:44,s=small?15:19;
  rr(-w/2,-h/2,w,h,10);cx.fillStyle="rgba(10,20,14,0.82)";cx.fill();cx.strokeStyle="rgba(255,255,255,0.35)";cx.lineWidth=1.5;cx.stroke();
  const A=M.teams[0],B=M.teams[1];cx.fillStyle=A.def.kit;cx.fillRect(-w/2+8,-h/2+8,10,h-16);cx.fillStyle=B.def.kit;cx.fillRect(w/2-18,-h/2+8,10,h-16);
@@ -558,10 +590,13 @@ function drawPad(pad,idx){const s=pad.stick;cx.save();
  cx.restore()}
 function drawMatch(){buttons=[];if(M.goalFlash>0){cx.fillStyle="rgba(255,255,255,"+(M.goalFlash*0.45)+")";cx.fillRect(0,0,W,H)}
  if(cfg.mode==="2p"){const bw=Math.min(190,W*0.2);cx.fillStyle="rgba(6,14,9,0.55)";cx.fillRect(0,0,bw,H);cx.fillRect(W-bw,0,bw,H);
-  if(splitOn()){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(W/2-2,0,4,H)}
+  if(splitOn()){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(W/2-2,0,4,H);
+   const mw=Math.min(150,H*0.22);drawMini(bw/2,H*0.5-135,mw,Math.PI/2);drawMini(W-bw/2,H*0.5+135,mw,-Math.PI/2)}
   drawScoreboard(bw/2,H*0.5,Math.PI/2,true);drawScoreboard(W-bw/2,H*0.5,-Math.PI/2,true);drawPad(pads[0],0);drawPad(pads[1],1);
   if(M.msgT>0){const sp=splitOn();for(const[x,r]of[[sp?W*0.25:bw+40,Math.PI/2],[sp?W*0.75:W-bw-40,-Math.PI/2]]){cx.save();cx.translate(x,H*0.5);cx.rotate(r);text(M.msg,0,0,Math.min(40,H/14),M.msg==="GOAL!"?"#ffe14d":"#fff");cx.restore()}}}
- else{drawScoreboard(W/2,30,0,W<600);drawPad(pads[0],0);if(M.msgT>0)text(M.msg,W/2,H*0.3,Math.min(56,W/10),M.msg==="GOAL!"?"#ffe14d":"#fff");
+ else{drawScoreboard(W/2,30,0,W<600);drawPad(pads[0],0);
+  {const rot=(G3&&G3.roll)||0,mw=rot?Math.min(150,H*0.16):Math.min(168,W*0.19),mh=mw*PH/PW;
+   drawMini(52+(rot?mh:mw)/2,14+(rot?mw:mh)/2,mw,rot)}if(M.msgT>0)text(M.msg,W/2,H*0.3,Math.min(56,W/10),M.msg==="GOAL!"?"#ffe14d":"#fff");
   btn(W-70,8,62,32,"| |",()=>{scene="pause"},{size:14})}
  if(scene==="pk"&&pk){const kT=M.teams[pk.kicker];const y=cfg.mode==="2p"?H-40:H*0.3+50;
   if(pk.phase==="ready"){const hint=kT.human>=0?"Aim with the stick (the yellow dot), then tap SHOOT":M.teams[1-pk.kicker].human>=0?"Dive with the stick: up, down or stay!":"";if(cfg.mode!=="2p")text(hint,W/2,H*0.78,18,"#fff")}
@@ -590,11 +625,13 @@ function drawSetup(){bg(0.74);buttons=[];const two=cfg.mode==="2p";text(two?"PIC
  const y1=y0+2*(ch+10)+16;
  if(!two){const ds=["easy","normal","hard"];ds.forEach((d,i)=>btn(W/2-170+i*115,y1,105,40,DIFF[d].name,()=>{cfg.diff=d},{fill:cfg.diff===d?"#2a8a3a":"rgba(255,255,255,0.1)",size:15}))}
  const hs=[60,90,150];hs.forEach((h,i)=>btn(W/2-170+i*115,y1+(two?0:50),105,40,(h/60*2).toFixed(0)+" min match",()=>{cfg.half=h},{fill:cfg.half===h?"#2a4a8a":"rgba(255,255,255,0.1)",size:14}));
- if(two){[["split","SPLIT SCREEN"],["shared","ONE TOP-DOWN VIEW"]].forEach(([v,lab],i)=>btn(W/2-170+i*175,y1+50,165,40,lab,()=>{cfg.view=v;save.view=v;store.set("save",save)},{fill:cfg.view===v?"#2a8a3a":"rgba(255,255,255,0.1)",size:13}));
-  text("Split screen draws each end of the iPad for the player sitting there.",W/2,y1+104,13,"#cfd8e8")}
- const yb=Math.min(H-56,y1+(two?124:110));btn(W/2-230,yb,200,48,"BACK",()=>{scene="title"},{size:18});
+ [["topdown","TOP-DOWN"],["behind","BEHIND THE GOAL"]].forEach(([v,lab],i)=>btn(W/2-170+i*175,y1+(two?50:100),165,40,lab,()=>{cfg.view=v;save.view=v;store.set("save",save)},{fill:cfg.view===v?"#2a8a3a":"rgba(255,255,255,0.1)",size:13}));
+ text(cfg.view==="topdown"?"Looking straight down, with a map of the whole pitch."
+   :two?"Each end of the iPad is drawn for the player sitting there."
+   :"The camera sits behind your own goal. Up the screen is always forward.",W/2,y1+(two?106:148),13,"#cfd8e8");
+ const yb=Math.min(H-56,y1+(two?136:190));btn(W/2-230,yb,200,48,"BACK",()=>{scene="title"},{size:18});
  btn(W/2+30,yb,200,48,cfg.cup?"START CUP":"KICK OFF",()=>{save.team=cfg.team;store.set("save",save);if(cfg.cup){cup={round:0,opps:pickOpps(cfg.team,3),won:false,lost:false};scene="cup"}else{startMatch()}},{fill:"#2a8a3a",size:20});
- if(!two&&!cfg.cup)text("Tap a team to make it your opponent. Tap your own team to swap.",W/2,yb-14,13,"#cfd8e8");
+ if(!two&&!cfg.cup)text("Tap a team to make it your opponent. Tap your own team to swap.",W/2,yb-18,13,"#cfd8e8");
  drawButtons()}
 function pickOpps(me,n){const pool=TEAMS.map((_,i)=>i).filter(i=>i!==me);for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}return pool.slice(0,n)}
 function startMatch(){cfg.opp=cfg.cup?cup.opps[cup.round]:cfg.opp;const diffs=["easy","normal","hard"];if(cfg.cup){cfg.diff=diffs[Math.min(2,Math.max(0,diffs.indexOf(cfg.diff)))]}
@@ -619,13 +656,13 @@ function drawResult(){bg(0.7);buttons=[];const A=M.teams[0],B=M.teams[1];const w
 function drawPause(){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(0,0,W,H);buttons=[];text("PAUSED",W/2,H*0.3,48,"#ffe14d");
  btn(W/2-110,H*0.5,220,52,"RESUME",()=>{scene="match"},{fill:"#2a8a3a",size:22});btn(W/2-110,H*0.5+64,220,52,"QUIT MATCH",()=>{scene="title";pk=null},{size:20});drawButtons()}
 // ---------------------------------------------------------------- main loop
-function frame(ts){const dt=Math.min(0.04,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.04,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);
  if(scene==="match"){padLayout();stepMatch(dt)}else if(scene==="pk"){padLayout();pkStep(dt)}
  render3D(dt);cx.clearRect(0,0,W,H);
  if(lost3){cx.fillStyle="#123a1c";cx.fillRect(0,0,W,H);text("This browser cannot show 3D graphics.",W/2,H/2,20,"#fff")}
  if(scene==="match"||scene==="pk")drawMatch();
  else if(scene==="title")drawTitle();else if(scene==="setup")drawSetup();else if(scene==="cup")drawCup();else if(scene==="result")drawResult();else if(scene==="pause")drawPause();
- padEndFrame();requestAnimationFrame(frame)}
+ padEndFrame();}
 requestAnimationFrame(frame);
 Object.defineProperty(window,"__G3",{get(){return G3}});
 window.SS={get scene(){return scene},set scene(v){scene=v},get M(){return M},get cfg(){return cfg},set cfg(v){cfg=v},get pk(){return pk},pads,startMatch,newMatch,stepMatch,startPK,pkSetup,stickWorld,TEAMS,DIFF,save,own};

@@ -1,9 +1,9 @@
 # Super Strikers
 
-Six-a-side arcade football in 3D for the iPad's browser. A floodlit stadium,
-a broadcast camera behind your own goal, and one thumb to move. Eight teams,
-three difficulty levels, a quick match, a three-round cup with penalty
-shoot-outs, and a two-player mode with the iPad held between you.
+Six-a-side arcade football in 3D for the iPad's browser. A floodlit stadium
+seen from above, a map of the whole pitch, and one thumb to move. Eight
+teams, three difficulty levels, a quick match, a three-round cup with
+penalty shoot-outs, and a two-player mode with the iPad held between you.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/super-strikers/>. On
 the iPad, open the link in Safari, then Share → Add to Home Screen. Any
@@ -11,11 +11,11 @@ orientation for one player; landscape for two.
 
 ## How to play
 
-- **Move**: thumb down on the left of the screen and drag. Up the screen is
-  always toward the goal you are attacking, whichever way the teams are
-  kicking. Push the stick all the way out to sprint. You control the player
-  with the white ring; it switches to whoever is nearest the ball when you
-  lose it.
+- **Move**: thumb down on the left of the screen and drag. The stick always
+  means what you see: in the top-down view the screen is the pitch, and in
+  the behind-the-goal view up the screen is the way you are attacking. Push
+  the stick all the way out to sprint. You control the player with the white
+  ring; it switches to whoever is nearest the ball when you lose it.
 - **PASS** (green): passes to the teammate in the direction you are pushing,
   or forward if you are standing still. The receiver becomes your player.
 - **SHOOT** (red): hold to charge power, release to shoot. Push the stick
@@ -35,19 +35,27 @@ orientation for one player; landscape for two.
 
 ## The cameras
 
-- **One player**: a broadcast camera behind your own half, so the goal you
-  are attacking is always at the top of the screen. It swaps ends with the
-  teams at half time.
-- **Two players**: split screen. The iPad is drawn twice, once for each end,
-  so the pitch always runs away from the player sitting there and their own
-  goal is behind their own controls. Each half is turned a quarter turn to
-  match that seat, so "push away from yourself" always means "run at the
-  goal you are attacking".
-- **One top-down view** is the alternative on the team screen if the two of
-  you would rather share a single overhead picture, as the game did before.
-  The screen is then the pitch: push the way you want to go.
-- **Goals**: the camera cuts to behind the net for the celebration.
-- **Penalties**: behind the taker, looking at the goal.
+Pick one on the team screen. It applies to one and two player matches alike.
+
+- **Top-down** (the default): straight down on the pitch, both goals level
+  with each other, following the ball. The screen is the pitch, so the stick
+  points the way you want to run. A **map of the whole field** sits in the
+  top-left corner: both goals, every player as a dot in their kit colour,
+  the ball in white, a ring on the player you are controlling, and a dashed
+  box showing the part of the pitch you can currently see. Held upright, the
+  pitch turns a quarter turn to run up and down the tall screen instead, so
+  you can still see far enough ahead, and the map turns with it.
+- **Behind the goal**: a broadcast camera behind your own half, so the goal
+  you are attacking is at the top of the screen. It swaps ends with the
+  teams at half time. In a two-player match this becomes **split screen**:
+  the iPad is drawn twice, once for each end, each half turned a quarter
+  turn to match that seat, so "push away from yourself" always means "run at
+  the goal you are attacking", and a small turned map sits in each player's
+  control strip.
+- **Goals**: the camera cuts to behind the net for the celebration in one
+  player, and stays with each seat in split screen.
+- **Penalties**: behind the taker, looking at the goal. In split screen the
+  taker's half looks at the goal while the keeper's half watches the run-up.
 
 ## Modes
 
