@@ -2,7 +2,6 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-<script src="../menu.js"></script>
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 		<title>Sonic Spin</title>
 		<style>
@@ -110,7 +109,8 @@ body {
   document.addEventListener("gesturestart", function (e) { e.preventDefault(); }, { passive: false });
   document.addEventListener("dblclick", function (e) { e.preventDefault(); }, { passive: false });
 </script>
-	</head>
+	<script src="../menu.js" defer></script>
+</head>
 	<body>
 		<canvas id="canvas">
 			Your browser does not support the canvas tag.

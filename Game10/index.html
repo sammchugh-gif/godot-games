@@ -1,5 +1,4 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<script src="../menu.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -8,7 +7,8 @@
 html,body{margin:0;padding:0;height:100%;background:#050614;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
 body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
-</style></head><body><canvas id="c"></canvas>
+</style><script src="../menu.js" defer></script>
+</head><body><canvas id="c"></canvas>
 <script>
 "use strict";
 // ============================================================ Star Swarm
@@ -47,12 +47,26 @@ function musicStop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
 const touch={id:-1,ox:0,oy:0,x:0,y:0};let mouseDown=false;
-cv.addEventListener("touchstart",e=>{audioInit();for(const t of e.changedTouches){const p={x:t.clientX,y:t.clientY};if(uiTap(p))continue;if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
-cv.addEventListener("touchmove",e=>{for(const t of e.changedTouches)if(t.identifier===touch.id){touch.x=t.clientX;touch.y=t.clientY}},{passive:false});
-function tend(e){for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1}
-cv.addEventListener("touchend",tend);cv.addEventListener("touchcancel",tend);
-cv.addEventListener("mousedown",e=>{audioInit();const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
-window.addEventListener("mousemove",e=>{if(mouseDown){touch.x=e.clientX;touch.y=e.clientY}});window.addEventListener("mouseup",()=>{mouseDown=false;if(touch.id===99)touch.id=-1});
+// A finger only becomes a game coordinate when it is measured against the
+// canvas itself. Assuming the window and the canvas agree breaks every tap
+// if they ever disagree, and the game keeps drawing perfectly while it does.
+function rectPos(cx0,cy0){const r=cv.getBoundingClientRect();return{x:r.width?(cx0-r.left)*(W/r.width):cx0,y:r.height?(cy0-r.top)*(H/r.height):cy0}}
+function pos(e){return rectPos(e.clientX,e.clientY)}
+// If the finger we are following is no longer on the glass, let it go. A
+// touch end lost to a system gesture used to leave the stick held for ever,
+// and every later tap was then ignored while the game carried on drawing.
+function stillDown(e){if(touch.id<0||touch.id===99)return true;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
+window.addEventListener("touchstart",e=>{audioInit();if(!stillDown(e))touch.id=-1;
+ for(const t of e.changedTouches){if(t.target!==cv)continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
+  if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
+window.addEventListener("touchmove",e=>{for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
+function tend(e){for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
+window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
+window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
+cv.addEventListener("mousedown",e=>{audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
+window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y}});
+window.addEventListener("mouseup",()=>{mouseDown=false;if(touch.id===99)touch.id=-1});
 function stickVec(){let x=0,y=0;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;
  if(touch.id>=0){const dx=touch.x-touch.ox,dy=touch.y-touch.oy,d=Math.hypot(dx,dy),R=60;if(d>8){const m=Math.min(d,R)/R;x=dx/d*m;y=dy/d*m}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return{x,y,l:Math.min(l,1)}}
