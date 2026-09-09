@@ -70,7 +70,9 @@ function rectPos(cx0,cy0){const r=cv.getBoundingClientRect();return{x:r.width?(c
 // Fingers the glass has forgotten about must be forgotten here too, or the
 // strip they were holding stays taken and that player can never steer again.
 function prune(e){const live={};for(const t of e.touches)live[t.identifier]=1;for(const k in fingers)if(!live[k])delete fingers[k]}
-window.addEventListener("touchstart",e=>{prune(e);for(const t of e.changedTouches){if(t.target!==cv)continue;const p=rectPos(t.clientX,t.clientY);tdown(t.identifier,p.x,p.y)}},{passive:false});
+function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
+window.__shelfInput=()=>"fingers "+Object.keys(fingers).length;
+window.addEventListener("touchstart",e=>{prune(e);for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);tdown(t.identifier,p.x,p.y)}},{passive:false});
 window.addEventListener("touchmove",e=>{for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);tmove(t.identifier,p.x,p.y)}},{passive:false});
 window.addEventListener("touchend",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});
 window.addEventListener("touchcancel",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});

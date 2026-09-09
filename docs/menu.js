@@ -27,6 +27,24 @@ window.addEventListener("unhandledrejection", function (e) {
   var r = e && e.reason;
   lastError = String((r && r.message) || r || "something went wrong").slice(0, 160);
 });
+/* A tally of the raw input the page receives, read in the capture phase so
+   it is counted whatever the game does with it afterwards. It is shown on
+   the pause panel, so a game that stops answering the finger can say what it
+   is actually getting instead of leaving us to guess. */
+var tally = { ts: 0, tm: 0, te: 0, tc: 0, pd: 0, pu: 0 };
+[["touchstart", "ts"], ["touchmove", "tm"], ["touchend", "te"], ["touchcancel", "tc"],
+ ["pointerdown", "pd"], ["pointerup", "pu"]].forEach(function (pair) {
+  try { window.addEventListener(pair[0], function () { tally[pair[1]]++; }, true); } catch (e) {}
+});
+function inputLine() {
+  var c = document.querySelector("canvas"), r = null, extra = "";
+  try { if (c) r = c.getBoundingClientRect(); } catch (e) {}
+  try { if (typeof window.__shelfInput === "function") extra = " \u00b7 " + window.__shelfInput(); } catch (e) {}
+  return "touch " + tally.ts + "/" + tally.tm + "/" + tally.te + "/" + tally.tc +
+    " \u00b7 tap " + tally.pd + "/" + tally.pu +
+    " \u00b7 win " + Math.round(window.innerWidth) + "\u00d7" + Math.round(window.innerHeight) +
+    (r ? " \u00b7 canvas " + Math.round(r.width) + "\u00d7" + Math.round(r.height) : " \u00b7 no canvas") + extra;
+}
 /* every game stores its saves under a prefix taken from its folder name */
 var slug = (location.pathname.replace(/\/+$/, "").split("/").pop() || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
 function savedKeys() {
@@ -107,7 +125,8 @@ function build() {
     "#shelf-stuck-wipe{background:#8a3a2a}#shelf-stuck-wait{background:rgba(255,255,255,0.14)}",
     "#shelf-menu-stuckcard button[hidden]{display:none}",
     "#shelf-menu-stuckcard p.why{color:#ffb0a0;font-size:12px;white-space:normal;margin:-8px 0 14px}",
-    "#shelf-menu-card button:active,#shelf-menu-stuckcard button:active{filter:brightness(1.25)}"
+    "#shelf-menu-card button:active,#shelf-menu-stuckcard button:active{filter:brightness(1.25)}",
+    "#shelf-diag,#shelf-diag2{margin:14px 0 0;font:11px/1.45 ui-monospace,Menlo,monospace;color:#7f8b9e;white-space:normal;word-break:break-word}"
   ].join("");
   document.head.appendChild(css);
 
@@ -122,13 +141,19 @@ function build() {
   var title = (document.title || "This game").replace(/\s*[:–-].*$/, "");
   veil.innerHTML = '<div id="shelf-menu-card"><h2>PAUSED</h2><p></p>' +
     '<button id="shelf-menu-resume" type="button">Keep playing</button>' +
-    '<button id="shelf-menu-quit" type="button">Back to all games</button></div>';
+    '<button id="shelf-menu-quit" type="button">Back to all games</button>' +
+    '<p id="shelf-diag"></p></div>';
   veil.querySelector("p").textContent = title;
 
   document.body.appendChild(btn);
   document.body.appendChild(veil);
 
-  function open() { veil.classList.add("on"); btn.style.display = "none"; setPaused(true); }
+  var openedAt = 0;
+  function open() {
+    try { veil.querySelector("#shelf-diag").textContent = inputLine(); } catch (e) {}
+    openedAt = now();
+    veil.classList.add("on"); btn.style.display = "none"; setPaused(true);
+  }
   function close() { veil.classList.remove("on"); btn.style.display = ""; setPaused(false); }
   /* leave while still paused - there is nothing to resume for */
   function quit() { window.location.href = "../"; }
@@ -152,7 +177,9 @@ function build() {
 
   veil.querySelector("#shelf-menu-resume").addEventListener("click", function (e) { e.stopPropagation(); close(); });
   veil.querySelector("#shelf-menu-quit").addEventListener("click", function (e) { e.stopPropagation(); quit(); });
-  veil.addEventListener("click", function (e) { if (e.target === veil) close(); });
+  // a tap on the button is followed by a synthetic click a moment later, and
+  // by then the panel is under the finger: ignore the backdrop until it settles
+  veil.addEventListener("click", function (e) { if (e.target === veil && now() - openedAt > 450) close(); });
   var SWALLOW = ["pointerdown", "pointerup", "pointermove", "touchstart", "touchmove", "touchend", "touchcancel", "mousedown", "mouseup"];
   SWALLOW.forEach(function (t) { veil.addEventListener(t, function (e) { e.stopPropagation(); }, true); });
   document.addEventListener("keydown", function (e) {
@@ -168,7 +195,8 @@ function build() {
     '<button id="shelf-stuck-wait" type="button">Keep waiting</button>' +
     '<button id="shelf-stuck-retry" type="button">Start the game again</button>' +
     '<button id="shelf-stuck-quit" type="button">Back to all games</button>' +
-    '<button id="shelf-stuck-wipe" type="button" hidden>Erase this game\u2019s saved progress</button></div>';
+    '<button id="shelf-stuck-wipe" type="button" hidden>Erase this game\u2019s saved progress</button>' +
+    '<p id="shelf-diag2"></p></div>';
   document.body.appendChild(stuck);
   SWALLOW.forEach(function (t) { stuck.addEventListener(t, function (e) { e.stopPropagation(); }, true); });
   var stuckShown = false, snoozeUntil = 0;
@@ -178,6 +206,7 @@ function build() {
     stuck.querySelector("p").textContent = why;
     var w = stuck.querySelector("p.why");
     w.textContent = lastError ? "It said: " + lastError : "";
+    try { stuck.querySelector("#shelf-diag2").textContent = inputLine(); } catch (e) {}
     var keys = savedKeys();
     var wipe = stuck.querySelector("#shelf-stuck-wipe");
     wipe.hidden = keys.length === 0;
