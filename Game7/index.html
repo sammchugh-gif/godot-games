@@ -76,9 +76,13 @@ function pos(e){return rectPos(e.clientX,e.clientY)}
 // If the finger we are following is no longer on the glass, let it go. A
 // touch end lost to a system gesture used to leave the stick held for ever,
 // and every later tap was then ignored while the game carried on drawing.
-function stillDown(e){if(touch.id<0||touch.id===99)return true;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
+// Only skip fingers that landed on the pause overlay, never on a guess about
+// which element the browser called the target.
+function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
+function stillDown(e){if(touch.id<0)return true;if(touch.id===99)return mouseDown;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
+window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id);
 window.addEventListener("touchstart",e=>{audioInit();if(!stillDown(e))touch.id=-1;
- for(const t of e.changedTouches){if(t.target!==cv)continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
+ for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
   if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
 window.addEventListener("touchmove",e=>{for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
 function tend(e){for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
