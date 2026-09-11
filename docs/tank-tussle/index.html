@@ -72,13 +72,18 @@ function rectPos(cx0,cy0){const r=cv.getBoundingClientRect();return{x:r.width?(c
 function prune(e){const live={};for(const t of e.touches)live[t.identifier]=1;for(const k in fingers)if(!live[k])delete fingers[k]}
 function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
 window.__shelfInput=()=>"fingers "+Object.keys(fingers).length;
-window.addEventListener("touchstart",e=>{prune(e);for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);tdown(t.identifier,p.x,p.y)}},{passive:false});
-window.addEventListener("touchmove",e=>{for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);tmove(t.identifier,p.x,p.y)}},{passive:false});
-window.addEventListener("touchend",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});
-window.addEventListener("touchcancel",e=>{for(const t of e.changedTouches)tup(t.identifier);prune(e)});
+// A tap on a touch screen is followed by a synthetic mouse event a moment
+// later. Both reached the canvas, so every button ran twice on one tap and
+// the phantom mouse pointer counted as a second finger.
+let lastTouchAt=0;
+const ghostMouse=()=>performance.now()-lastTouchAt<900;
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();prune(e);for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);tdown(t.identifier,p.x,p.y)}},{passive:false});
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);tmove(t.identifier,p.x,p.y)}},{passive:false});
+window.addEventListener("touchend",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches)tup(t.identifier);prune(e)});
+window.addEventListener("touchcancel",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches)tup(t.identifier);prune(e)});
 window.addEventListener("blur",()=>{for(const k in fingers)delete fingers[k]});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)for(const k in fingers)delete fingers[k]});
-let mdown=false;cv.addEventListener("mousedown",e=>{mdown=true;const p=rectPos(e.clientX,e.clientY);tdown("m",p.x,p.y)});window.addEventListener("mousemove",e=>{if(mdown){const p=rectPos(e.clientX,e.clientY);tmove("m",p.x,p.y)}});window.addEventListener("mouseup",()=>{mdown=false;tup("m")});
+let mdown=false;cv.addEventListener("mousedown",e=>{if(ghostMouse())return;mdown=true;const p=rectPos(e.clientX,e.clientY);tdown("m",p.x,p.y)});window.addEventListener("mousemove",e=>{if(mdown){const p=rectPos(e.clientX,e.clientY);tmove("m",p.x,p.y)}});window.addEventListener("mouseup",()=>{mdown=false;tup("m")});
 function readSticks(){for(const t of tanks){let x=0,y=0;if(t.id===0){if(keys.KeyA)x-=1;if(keys.KeyD)x+=1;if(keys.KeyW)y-=1;if(keys.KeyS)y+=1;if(keys.Space||keys.KeyF)t.fireReq=true;}else if(!t.bot){if(keys.ArrowLeft)x-=1;if(keys.ArrowRight)x+=1;if(keys.ArrowUp)y-=1;if(keys.ArrowDown)y+=1;if(keys.Enter||keys.ShiftRight||keys.Slash)t.fireReq=true;}
  for(const k in fingers){const f=fingers[k];if(f.p===t.id&&f.stick){const dx=f.x-f.sx,dy=f.y-f.sy,d=Math.hypot(dx,dy);if(d>8){const m=Math.min(d,56)/56;x=dx/d*m;y=dy/d*m}}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}t.stick.x=x;t.stick.y=y;}}
