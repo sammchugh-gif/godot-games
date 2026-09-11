@@ -520,23 +520,56 @@ function drawPanel(title,sub,color){cx.fillStyle="rgba(5,10,20,0.72)";cx.fillRec
 function drawTitle(){cx.save();cx.scale(DPR,DPR);
  // backdrop: slimes drifting
  cx.fillStyle="#2f5e2c";cx.fillRect(0,0,W,H);for(let i=0;i<24;i++){const x=(hash(i,7)*W+frameT*(20+i*3))%(W+80)-40,y=hash(i,11)*H;cx.fillStyle="rgba(80,210,90,0.35)";cx.beginPath();cx.ellipse(x,y,26,20,0,0,TAU);cx.fill();}
- const bob=Math.sin(frameT*2)*6;
+ const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  text("SLIME STORM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#1a2a1a");text("SLIME STORM",W/2,H*0.16+bob,Math.min(88,W/8),"#8dff5a");
- text("Survive ten minutes. Your weapons fire themselves.",W/2,H*0.16+66,20,"#e8ffe0");
- buttons=[];const n=HEROES.length;const cw=Math.min(300,(W-60)/n-10),ch=Math.min(250,H*0.42);const y=H*0.36;
- HEROES.forEach((h,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const sel=i===heroIdx;cx.fillStyle=sel?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.35)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.4)";cx.stroke();
-  const st={l:sel?1:0};const sv=G;G={facing:1};drawHero(x+cw/2,y+ch*0.4,h,st,frameT);G=sv;
-  text(h.name,x+cw/2,y+ch*0.62,26,sel?"#ffe060":"#fff");text(h.desc,x+cw/2,y+ch*0.74,14,"#dfe");const r=records[h.id];text(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",x+cw/2,y+ch*0.88,14,"#bfe");
-  btn(x,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
- btn(W/2-150,H*0.36+ch+24,300,64,"PLAY AS "+HEROES[heroIdx].name,()=>{start()},{fill:"#3aa04a",size:26});
- btn(20,H-64,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});
- text("Left thumb anywhere to move.   Grab gems to level up.   Pick an upgrade card.",W/2,H-30,15,"#cfe");
+ const tag="Survive ten minutes. Your weapons fire themselves.";
+ if(W<620)wrap(tag,W/2,H*0.16+54,W-36,15,"#e8ffe0");else textFit(tag,W/2,H*0.16+66,20,"#e8ffe0",W-40);
+ buttons=[];const n=HEROES.length;
+ // Three cards side by side need about 170px each before a hero name stops
+ // fitting. A phone in portrait has nowhere near that, so they stack and the
+ // hero moves to the left of their own text instead.
+ const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
+ const hero=(hx,hy,h,sel)=>{const st={l:sel?1:0},sv=G;G={facing:1};drawHero(hx,hy,h,st,frameT);G=sv};
+ let listBottom;
+ if(stack){
+  const cw=Math.min(440,W-28),ch=Math.min(104,(H*0.42)/n-10),x0=W/2-cw/2,top=H*0.30,px=ch*0.86;
+  HEROES.forEach((h,i)=>{const y=top+i*(ch+10),sel=i===heroIdx;
+   cx.fillStyle=sel?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.35)";rr(x0,y,cw,ch,16);cx.fill();
+   cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.4)";cx.stroke();
+   hero(x0+px/2+4,y+ch*0.62,h,sel);
+   const tx=x0+px+14,tw=cw-px-28,r=records[h.id];
+   textFit(h.name,tx,y+ch*0.3,22,sel?"#ffe060":"#fff",tw,"left");
+   textFit(h.desc,tx,y+ch*0.58,14,"#dfe",tw,"left");
+   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",tx,y+ch*0.82,13,"#bfe",tw,"left");
+   btn(x0,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
+  listBottom=top+n*(ch+10)-10;
+ }else{
+  const cw=rowCw,ch=Math.min(250,H*0.42),y=H*0.36;
+  HEROES.forEach((h,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const sel=i===heroIdx;
+   cx.fillStyle=sel?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.35)";rr(x,y,cw,ch,18);cx.fill();
+   cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.4)";cx.stroke();
+   hero(x+cw/2,y+ch*0.4,h,sel);
+   const r=records[h.id];
+   textFit(h.name,x+cw/2,y+ch*0.62,26,sel?"#ffe060":"#fff",cw-16);
+   textFit(h.desc,x+cw/2,y+ch*0.74,14,"#dfe",cw-16);
+   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",x+cw/2,y+ch*0.88,14,"#bfe",cw-16);
+   btn(x,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
+  listBottom=y+ch;
+ }
+ const lw=Math.min(300,W-48);
+ btn(W/2-lw/2,listBottom+18,lw,64,"PLAY AS "+HEROES[heroIdx].name,()=>{start()},{fill:"#3aa04a",size:26});
+ const h1="Left thumb anywhere to move.   Grab gems to level up.",h2="Pick an upgrade card.";
+ if(stack){textFit(h1,W/2,H-98-SB,13,"#cfe",W-24);textFit(h2,W/2,H-80-SB,13,"#cfe",W-24);
+  btn(W/2-75,H-62-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});}
+ // two lines here too: one long line, centred, reached under the music button
+ else{textFit(h1,W/2,H-52-SB,15,"#cfe",W-380);textFit(h2,W/2,H-30-SB,15,"#cfe",W-380);
+  btn(20+SAFE.l,H-64-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});}
  drawButtons();cx.restore();}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");
  buttons=[];const n=cards.length;const cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5);const y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Heal",icon:"♥",col:"#ff6080",desc:"Everything is maxed out. Refill your health."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
   cx.fillStyle="rgba(20,30,50,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();
-  text(d.icon,x+cw/2,y+ch*0.24,64,d.col);text(d.name,x+cw/2,y+ch*0.5,22,"#fff");text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");
+  text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");
   wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play";},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
  drawButtons();cx.restore();}
