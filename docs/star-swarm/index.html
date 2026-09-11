@@ -583,20 +583,54 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
 function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32)}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);
  for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}
- const bob=Math.sin(frameT*2)*6;text("STAR SWARM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#0a0a2a");text("STAR SWARM",W/2,H*0.16+bob,Math.min(88,W/8),"#80c0ff");
- textFit("Six sectors. Survive five minutes in each, then fly to the warp gate.",W/2,H*0.16+66,20,"#dfe8ff",W-40);
- buttons=[];const n=SHIPS.length,cw=Math.min(300,(W-60)/n-10),ch=Math.min(250,H*0.42),y=H*0.36;
- SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-  cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x+cw/2,y+ch*0.34,-Math.PI/2,s,sel?0.6:0);cx.restore();
-  text(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff");text(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde");const r=records[s.id];textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe",cw-16);
-  btn(x,y,cw,ch,"",()=>{if(un){shipIdx=i;store.set("ship",i)}else SFX.click()},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- btn(W/2-150,H*0.36+ch+24,300,64,"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>start(),{fill:"#2a5aa0",size:26});
- btn(20,H-64,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});
- textFit("Thumb anywhere to fly.   Weapons fire themselves.   Hide behind asteroids, shoot them for gems.",W/2,H-30-SAFE.b,15,"#cde",W-32);
+ const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
+ text("STAR SWARM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#0a0a2a");text("STAR SWARM",W/2,H*0.16+bob,Math.min(88,W/8),"#80c0ff");
+ const tag="Six sectors. Survive five minutes in each, then fly to the warp gate.";
+ if(W<620)wrap(tag,W/2,H*0.16+54,W-36,15,"#dfe8ff");else textFit(tag,W/2,H*0.16+66,20,"#dfe8ff",W-40);
+ buttons=[];const n=SHIPS.length;
+ // Three cards side by side need about 170px each before a ship name stops
+ // fitting. A phone in portrait has nowhere near that, so they stack and the
+ // ship moves to the left of its own text instead.
+ const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
+ const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else SFX.click()};
+ let listBottom;
+ if(stack){
+  const cw=Math.min(440,W-28),ch=Math.min(104,(H*0.42)/n-10),x0=W/2-cw/2,top=H*0.30,px=ch*0.86;
+  SHIPS.forEach((s,i)=>{const y=top+i*(ch+10),sel=i===shipIdx,un=!!unlocks[s.id];
+   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
+   cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
+   cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore();
+   const tx=x0+px+14,tw=cw-px-28,r=records[s.id];
+   textFit(un?s.name:"LOCKED",tx,y+ch*0.28,20,sel?"#ffe060":"#fff",tw,"left");
+   textFit(un?s.desc:s.unlock,tx,y+ch*0.56,14,"#cde",tw,"left");
+   textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",tx,y+ch*0.81,13,"#bfe",tw,"left");
+   btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  listBottom=top+n*(ch+10)-10;
+ }else{
+  const cw=rowCw,ch=Math.min(250,H*0.42),y=H*0.36;
+  SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];
+   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
+   cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
+   cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x+cw/2,y+ch*0.34,-Math.PI/2,s,sel?0.6:0);cx.restore();
+   const r=records[s.id];
+   textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff",cw-16);
+   textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde",cw-16);
+   textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe",cw-16);
+   btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  listBottom=y+ch;
+ }
+ const lw=Math.min(300,W-48);
+ btn(W/2-lw/2,listBottom+18,lw,64,"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>start(),{fill:"#2a5aa0",size:26});
+ const h1="Thumb anywhere to fly.   Weapons fire themselves.",h2="Hide behind asteroids, shoot them for gems.";
+ if(stack){textFit(h1,W/2,H-98-SB,13,"#cde",W-24);textFit(h2,W/2,H-80-SB,13,"#cde",W-24);
+  btn(W/2-75,H-62-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16})}
+ // two lines here too: one long line, centred, reached under the music button
+ else{textFit(h1,W/2,H-52-SB,15,"#cde",W-380);textFit(h2,W/2,H-30-SB,15,"#cde",W-380);
+  btn(20+SAFE.l,H-64-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16})}
  drawButtons();cx.restore()}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");buttons=[];const n=cards.length,cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5),y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
-  cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);text(d.name,x+cw/2,y+ch*0.5,22,"#fff");text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
+  cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t),won?"#80c0ff":"#ff8080");
  const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff",W-32);
