@@ -22,8 +22,20 @@ document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1,S=1; // S: world units -> css px
-function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=window.innerWidth;H=window.innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55;}
-window.addEventListener("resize",resize);resize();
+// The canvas is viewport-fit=cover, so on an iPhone the notch and the
+// Dynamic Island sit on top of it and eat whatever the HUD draws up there.
+// CSS knows the safe insets; script only learns them by measuring an element
+// that uses them.
+const safeProbe=document.createElement("div");
+safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"+
+ "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+const SAFE={t:0,r:0,b:0,l:0};
+function readSafe(){const st=getComputedStyle(safeProbe);
+ SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
+ SAFE.b=parseFloat(st.paddingBottom)||0;SAFE.l=parseFloat(st.paddingLeft)||0}
+function resize(){readSafe();DPR=Math.min(window.devicePixelRatio||1,2);W=window.innerWidth;H=window.innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55;}
+window.addEventListener("resize",resize);window.addEventListener("orientationchange",()=>setTimeout(resize,150));resize();
 const RUN_LEN=600; // seconds to survive
 const TAU=Math.PI*2;
 const rnd=(a,b)=>a+Math.random()*(b-a), rint=(a,b)=>Math.floor(rnd(a,b+1)), clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
@@ -174,6 +186,11 @@ function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p
 function drawButtons(){for(const b of buttons){const o=b.opt;cx.save();rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();
  cx.fillStyle=o.color||"#fff";cx.font=(o.size||22)+"px sans-serif";cx.textAlign="center";cx.textBaseline="middle";cx.fillText(b.label,b.x+b.w/2,b.y+b.h/2);cx.restore();}}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath();}
+// Long lines - boss announcements above all - used to run off both edges on a
+// phone. Shrink to fit rather than clip.
+function textFit(s,x,y,size,color,maxw,align){cx.font="bold "+size+"px sans-serif";
+ const w=cx.measureText(s).width;
+ text(s,x,y,w>maxw?Math.max(11,Math.floor(size*maxw/w)):size,color,align)}
 function text(s,x,y,size,color,align,weight){cx.font=(weight||"bold")+" "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.75)";cx.lineJoin="round";cx.strokeText(s,x,y);cx.fillStyle=color||"#fff";cx.fillText(s,x,y);}
 
 // ---------------------------------------------------------------- content
@@ -472,23 +489,24 @@ function drawWorld(){
 function drawStar(x,y,r,rot,col){cx.save();cx.translate(x,y);cx.rotate(rot);cx.fillStyle=col;cx.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2;const rr2=i%2?r*0.45:r;cx.lineTo(Math.cos(a)*rr2,Math.sin(a)*rr2);}cx.closePath();cx.fill();cx.restore();}
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
+ const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b,BY=H-SB;
  // XP bar
- cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,14);cx.fillStyle="#60c0ff";cx.fillRect(0,0,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,58,42,20,"#c0e8ff","left");// clear of the shelf menu button
- text(fmt(RUN_LEN-G.t),W/2,40,34,"#fff");
- text(G.kills+" ☠",W-100,34,20,"#ffd0d0","right");
+ cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
+ text("LV "+G.level,58+SL,42+ST,20,"#c0e8ff","left");// clear of the shelf menu button
+ text(fmt(RUN_LEN-G.t),W/2,40+ST,34,"#fff");
+ text(G.kills+" ☠",W-100-SR,34+ST,20,"#ffd0d0","right");
  // health
- const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16,H-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18,H-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+hw/2,H-30,15,"#fff");
+ const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
  // weapons
- let x=W-20;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,H-52,38,38,8);cx.fill();text(w.icon,x-21,H-34,22,w.col);text(G.weapons[k],x-8,H-20,12,"#fff");x-=44;}
- for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,H-52,38,38,8);cx.fill();text(w.icon,x-21,H-34,20,w.col);text(G.passives[k],x-8,H-20,12,"#fff");x-=44;}
- if(G.bossAlive){const b=G.bossAlive;const bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,60,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,62,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();text(ENEMY[b.type].name,W/2,88,14,"#ffc0c0");}
- if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);text(G.announce,W/2,H*0.3,32,"#ffe060");cx.globalAlpha=1;}
+ let x=W-20-SR;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,22,w.col);text(G.weapons[k],x-8,BY-20,12,"#fff");x-=44;}
+ for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,20,w.col);text(G.passives[k],x-8,BY-20,12,"#fff");x-=44;}
+ if(G.bossAlive){const b=G.bossAlive;const bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,60+ST,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,62+ST,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();textFit(ENEMY[b.type].name,W/2,88+ST,14,"#ffc0c0",bw);}
+ if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);textFit(G.announce,W/2,H*0.3,32,"#ffe060",W-32-SL-SR);cx.globalAlpha=1;}
  if(flash>0){cx.fillStyle="rgba(255,40,40,"+flash*0.35+")";cx.fillRect(0,0,W,H);}
  if(touch.id>=0&&touch.id!==99){cx.strokeStyle="rgba(255,255,255,0.4)";cx.lineWidth=2;cx.beginPath();cx.arc(touch.ox,touch.oy,64,0,TAU);cx.stroke();const dx=touch.x-touch.ox,dy=touch.y-touch.oy,d=Math.hypot(dx,dy),m=Math.min(d,60)/(d||1);cx.fillStyle="rgba(255,255,255,0.45)";cx.beginPath();cx.arc(touch.ox+dx*m,touch.oy+dy*m,26,0,TAU);cx.fill();}
- buttons=[];btn(W-64,52,48,40,"II",()=>{scene="pause";musicStop()},{size:20});
+ buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});
  drawButtons();cx.restore();}
-function drawPanel(title,sub,color){cx.fillStyle="rgba(5,10,20,0.72)";cx.fillRect(0,0,W,H);text(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060");if(sub)text(sub,W/2,H*0.2+52,22,"#fff");}
+function drawPanel(title,sub,color){cx.fillStyle="rgba(5,10,20,0.72)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32);}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);
  // backdrop: slimes drifting
  cx.fillStyle="#2f5e2c";cx.fillRect(0,0,W,H);for(let i=0;i<24;i++){const x=(hash(i,7)*W+frameT*(20+i*3))%(W+80)-40,y=hash(i,11)*H;cx.fillStyle="rgba(80,210,90,0.35)";cx.beginPath();cx.ellipse(x,y,26,20,0,0,TAU);cx.fill();}
@@ -516,7 +534,9 @@ function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"YOU SURVIVED THE STORM!":"THE SLIMES GOT YOU",won?"":"Survived "+fmt(G.t),won?"#8dff5a":"#ff8080");
  const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");text(G.kills+" slimes bashed     Level "+G.level,W/2,y+46,20,"#fff");
  const r=records[G.hero.id];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#8dff5a");
- buttons=[];btn(W/2-230,H*0.72,210,60,"PLAY AGAIN",()=>start(),{fill:"#3aa04a",size:24});btn(W/2+20,H*0.72,210,60,"HEROES",()=>{scene="title"},{size:24});
+ // on a phone in portrait a fixed 210px pair ran off both edges
+ const ew=Math.min(210,(W-56)/2);
+ buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"PLAY AGAIN",()=>start(),{fill:"#3aa04a",size:24});btn(W/2+10,H*0.72,ew,60,"HEROES",()=>{scene="title"},{size:24});
  if(won){for(let i=0;i<30;i++){const x=(hash(i,3)*W+frameT*60*(1+hash(i,5)))%W,y=(hash(i,9)*H+frameT*90)%H;cx.fillStyle=["#ff6080","#ffe060","#60c0ff","#8dff5a"][i%4];cx.fillRect(x,y,8,8);}}
  drawButtons();cx.restore();}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#3aa04a",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord()},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>{musicOn=!musicOn;store.set("music",musicOn)},{size:20});drawButtons();cx.restore();}
@@ -536,5 +556,5 @@ function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v},get fx(){return FX},set fx(v){FX=v?1:0}};
+window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v},get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE}};
 </script></body></html>
