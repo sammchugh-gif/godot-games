@@ -13,16 +13,31 @@ body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;
 "use strict";
 // ============================================================ Star Swarm
 // A one-thumb space survivor. Fly, your weapons fire themselves, mine the
-// asteroids, level up, survive ten minutes and reach the warp gate.
+// asteroids, level up, and fight through six five-minute sectors.
 // Sophia, Rory and Dylan Games, Inc.
 document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1,S=1;
-function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55}
-window.addEventListener("resize",resize);resize();
-const RUN_LEN=600,TAU=Math.PI*2;
+// The canvas is viewport-fit=cover, so on an iPhone the notch and the
+// Dynamic Island sit on top of it and eat whatever the HUD draws up there.
+// CSS knows the safe insets; script only learns them by measuring an element
+// that uses them.
+const safeProbe=document.createElement("div");
+safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"+
+ "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+const SAFE={t:0,r:0,b:0,l:0};
+function readSafe(){const st=getComputedStyle(safeProbe);
+ SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
+ SAFE.b=parseFloat(st.paddingBottom)||0;SAFE.l=parseFloat(st.paddingLeft)||0}
+function resize(){readSafe();DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55}
+window.addEventListener("resize",resize);window.addEventListener("orientationchange",()=>setTimeout(resize,150));resize();
+// Six sectors, five minutes each. The warp gate opens near the end of every
+// sector; flying into it clears the field and starts the next one.
+const SECTOR_LEN=300,SECTORS=6,RUN_LEN=SECTOR_LEN*SECTORS,MAX_EN=240,TAU=Math.PI*2;
+const BOSS_ORDER=["mother","kraken","warlord"];
 const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
 // The old mix never returned a value above 0.5, so anything gated behind a
 // high threshold never appeared.
@@ -160,13 +175,18 @@ let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb
 function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();cx.fillStyle=o.color||"#fff";cx.font=(o.size||22)+"px sans-serif";cx.textAlign="center";cx.textBaseline="middle";cx.fillText(b.label,b.x+b.w/2,b.y+b.h/2)}}
+// Long lines - boss announcements above all - used to run off both edges on a
+// phone. Shrink to fit rather than clip.
+function textFit(s,x,y,size,color,maxw,align){cx.font="bold "+size+"px sans-serif";
+ const w=cx.measureText(s).width;
+ text(s,x,y,w>maxw?Math.max(11,Math.floor(size*maxw/w)):size,color,align)}
 function text(s,x,y,size,color,align){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,10,0.8)";cx.lineJoin="round";cx.strokeText(s,x,y);cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
 function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words=s.split(" ");let line="",ly=y;for(const wd of words){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){text(line,x,ly,size,col);line=wd;ly+=size+5}else line=t}if(line)text(line,x,ly,size,col)}
 // ---------------------------------------------------------------- content
 const SHIPS=[
  {id:"falcon",name:"DYLAN'S FALCON",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,shield:40,speed:1.1,col:"#e04040",col2:"#ffb0b0",unlock:""},
- {id:"comet",name:"RORY'S COMET",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Survive 5 minutes in any run"},
- {id:"nova",name:"SOPHIA'S NOVA",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach the warp gate once"},
+ {id:"comet",name:"RORY'S COMET",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
+ {id:"nova",name:"SOPHIA'S NOVA",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
 ];
 const WEAPONS={
  laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6},
@@ -206,21 +226,27 @@ const records=obj(store.get("records",{}),{}),unlocks=obj(store.get("unlocks",{f
 unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
-function newRun(ship){G={t:0,ship,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
- weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,nextBoss:150,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,won:false,elite:0};
+function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
+ weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;seedRocks();shake=0;flash=0}
-function seedRocks(){for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:Math.cos(a)*d,y:Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
+function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
+ for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
 function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))}
 function dmgMul(){return 1+0.15*(G.passives.power||0)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return 1+0.2*(G.passives.scanner||0)}function magnetR(){return 100+45*(G.passives.tractor||0)}function armor(){return G.passives.armor||0}
-function hpMul(){return 1.1+G.t/95}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?1+G.t/300:hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+function hpMul(){return 1.1+G.t/110}
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?1+G.t/420:hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
-function spawnWave(dt){const t=G.t;let rate=1.35+t/40;if(t>480)rate*=1.5;G.spawnAcc+=rate*dt;
- while(G.spawnAcc>=1){G.spawnAcc-=1;const p=edgePoint();let type="scout";const r=Math.random();if(t>420&&r<0.16)type="phantom";else if(t>200&&r<0.32)type="turret";else if(t>110&&r<0.5)type="drifter";else if(t>50&&r<0.72)type="swarmer";
+function spawnWave(dt){const t=G.t;let rate=1.35+t/55;if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
+ // past the cap the swarm gets tougher rather than more numerous, which keeps
+ // the frame rate honest on a phone thirty minutes into a run
+ while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=MAX_EN){G.spawnAcc=0;break}
+  const p=edgePoint();let type="scout";const r=Math.random();if(t>250&&r<0.16)type="phantom";else if(t>170&&r<0.32)type="turret";else if(t>100&&r<0.5)type="drifter";else if(t>40&&r<0.72)type="swarmer";
   const elite=t>90&&Math.random()<0.05;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
- if(t>75&&Math.floor((t-75)/75)>G.swarm){G.swarm++;const n=18+G.swarm*6;for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
- if(t>=G.nextBoss&&!G.bossAlive){const which=G.nextBoss<200?"mother":G.nextBoss<350?"kraken":"warlord";const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);G.nextBoss+=150;announce(ENEMY[which].name+" APPROACHES!");SFX.boss();shake=1}
- if(t>=RUN_LEN-60&&!G.gate){const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};announce("THE WARP GATE IS OPEN! FLY TO IT!");SFX.warp()}}
+ if(t>75&&Math.floor((t-75)/75)>G.swarm){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
+ // one boss per sector, three minutes in
+ if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);announce(ENEMY[which].name+" APPROACHES!");SFX.boss();shake=1}
+ if(G.secT>=SECTOR_LEN-45&&!G.gate){const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
+  announce(G.sector>=SECTORS?"THE FINAL GATE IS OPEN!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}
 function announce(s){G.announce=s;G.announceT=3}
 function nearest(x,y,maxd,skip){let best=null,bd=maxd||1e9;for(const e of G.en){if(skip&&skip.has(e))continue;const d=dist(x,y,e.x,e.y)-e.r;if(d<bd){bd=d;best=e}}return best}
 function fireWeapons(dt){const wp=G.weapons,cd=G.cds;const tick=(k,base)=>{cd[k]=(cd[k]||0)-dt;if(cd[k]<=0){cd[k]=base*rateMul();return true}return false};
@@ -243,16 +269,22 @@ function explode(x,y,R,dmg){G.parts.push({k:"ring",x,y,r:R,life:0.35,col:"#ffa04
 function hurt(d){const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;die()}}
 function gainXP(v){G.xp+=v*xpMul();SFX.gem();while(G.xp>=G.xpNext){G.xp-=G.xpNext;G.level++;G.xpNext=Math.round((8+G.level*5+G.level*G.level*0.4)*1.2);G.lvlQueue++}}
 function die(){scene="over";SFX.die();musicStop();saveRecord()}
+// Flying into the gate leaves the whole swarm behind: the field is wiped, the
+// asteroids are new, shields come back, and clearing a sector pays an upgrade.
+function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.bossAlive=null;
+ for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
+ G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
+ G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
+ announce("SECTOR "+G.sector+" OF "+SECTORS);SFX.warp();flash=0.4;shake=0.8}
 function win(){scene="win";G.won=true;SFX.win();musicStop();saveRecord()}
-function saveRecord(){const id=G.ship.id,r=records[id]||{best:0,time:0,runs:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);records[id]=r;store.set("records",records);
- let u=false;if(G.t>=300&&!unlocks.comet){unlocks.comet=true;u=true}if(G.won&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
+function saveRecord(){const id=G.ship.id,r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
+ let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
 function options(){const out=[];const nw=Object.keys(G.weapons).length,np=Object.keys(G.passives).length;for(const k in WEAPONS){const l=G.weapons[k]||0;if(l>=WEAPONS[k].max)continue;if(!l&&nw>=4)continue;out.push({k,w:true,l:l+1})}for(const k in PASSIVES){const l=G.passives[k]||0;if(l>=PASSIVES[k].max)continue;if(!l&&np>=4)continue;out.push({k,w:false,l:l+1})}return out}
 function makeCards(){const o=options();cards=[];for(let i=0;i<3&&o.length;i++){cards.push(o.splice(rint(0,o.length-1),1)[0])}if(!cards.length)cards.push({k:"heal"})}
 function applyCard(c){if(c.k==="heal"){G.hp=G.maxhp;G.sh=G.maxsh}else if(c.w){G.weapons[c.k]=c.l}else{G.passives[c.k]=c.l;if(c.k==="hull"){G.maxhp+=25;G.hp=Math.min(G.maxhp,G.hp+25)}if(c.k==="shield"){G.maxsh+=20;G.sh=G.maxsh}}SFX.level()}
 function openChest(){const o=options();if(!o.length){G.hp=G.maxhp;G.sh=G.maxsh;announce("FULL REPAIR!");return}const c=o[rint(0,o.length-1)];applyCard(c);announce("CHEST: "+(c.w?WEAPONS[c.k].name:PASSIVES[c.k].name)+" LV"+c.l+"!");shake=0.5}
 // ---------------------------------------------------------------- update
-function update(dt){G.t+=dt;
- if(G.t>=RUN_LEN+20){die();return}
+function update(dt){G.t+=dt;G.secT+=dt;
  const st=stickVec(),sp=moveSpeed();
  // ship: velocity follows the stick with a little drift
  G.vx=lerp(G.vx,st.x*sp,dt*7);G.vy=lerp(G.vy,st.y*sp,dt*7);
@@ -299,7 +331,7 @@ function update(dt){G.t+=dt;
  G.pk=G.pk.filter(p=>p.life>0);
  for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0);
  for(const t of G.txt){t.life-=dt;t.y-=40*dt}G.txt=G.txt.filter(t=>t.life>0);
- if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){win();return}
+ if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){if(G.sector>=SECTORS){win();return}nextSector()}
  shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
  if(G.lvlQueue>0){G.lvlQueue--;scene="levelup";makeCards()}}
 // ---------------------------------------------------------------- drawing
@@ -523,41 +555,45 @@ if(FX)glow(G.px,G.py,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  cx.restore();cx.save();cx.scale(DPR,DPR);vignette();cx.restore()}
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
- cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,14);cx.fillStyle="#60c0ff";cx.fillRect(0,0,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,58,42,20,"#c0e8ff","left");// clear of the shelf menu button
- const left=RUN_LEN-G.t;text(left>0?fmt(left):"GATE!",W/2,40,34,left>0?"#fff":"#80c0ff");
- text(G.kills+" ☠",W-100,34,20,"#ffd0d0","right");
- const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16,H-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18,H-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+hw/2,H-30,15,"#fff");
- cx.fillStyle="rgba(0,0,0,0.5)";rr(16,H-64,hw,16,6);cx.fill();cx.fillStyle="#40d0ff";rr(18,H-62,(hw-4)*clamp(G.sh/G.maxsh,0,1),12,5);cx.fill();text("shield",16+hw/2,H-56,11,"#fff");
- let x=W-20;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,H-52,38,38,8);cx.fill();text(w.icon,x-21,H-34,22,w.col);text(G.weapons[k],x-8,H-20,12,"#fff");x-=44}
- for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,H-52,38,38,8);cx.fill();text(w.icon,x-21,H-34,20,w.col);text(G.passives[k],x-8,H-20,12,"#fff");x-=44}
- if(G.bossAlive){const b=G.bossAlive,bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,60,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,62,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();text(ENEMY[b.type].name,W/2,88,14,"#ffc0c0")}
- if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);text(G.announce,W/2,H*0.3,32,"#ffe060");cx.globalAlpha=1}
+ const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b;
+ cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
+ text("LV "+G.level,58+SL,42+ST,20,"#c0e8ff","left");// clear of the shelf menu button
+ const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,34,left>0?"#fff":"#80c0ff");
+ text("SECTOR "+G.sector+" / "+SECTORS,W/2,68+ST,15,"#9fc8ff");
+ text(G.kills+" ☠",W-100-SR,34+ST,20,"#ffd0d0","right");
+ const hw=Math.min(280,W*0.32),BY=H-SB;cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
+ cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-64,hw,16,6);cx.fill();cx.fillStyle="#40d0ff";rr(18+SL,BY-62,(hw-4)*clamp(G.sh/G.maxsh,0,1),12,5);cx.fill();text("shield",16+SL+hw/2,BY-56,11,"#fff");
+ let x=W-20-SR;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,22,w.col);text(G.weapons[k],x-8,BY-20,12,"#fff");x-=44}
+ for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,20,w.col);text(G.passives[k],x-8,BY-20,12,"#fff");x-=44}
+ if(G.bossAlive){const b=G.bossAlive,bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,88+ST,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,90+ST,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();textFit(ENEMY[b.type].name,W/2,116+ST,14,"#ffc0c0",bw)}
+ if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);textFit(G.announce,W/2,H*0.3,32,"#ffe060",W-32-SL-SR);cx.globalAlpha=1}
  if(flash>0){cx.fillStyle="rgba(255,40,40,"+flash*0.35+")";cx.fillRect(0,0,W,H)}
  if(touch.id>=0&&touch.id!==99){cx.strokeStyle="rgba(255,255,255,0.4)";cx.lineWidth=2;cx.beginPath();cx.arc(touch.ox,touch.oy,64,0,TAU);cx.stroke();const dx=touch.x-touch.ox,dy=touch.y-touch.oy,d=Math.hypot(dx,dy),m=Math.min(d,60)/(d||1);cx.fillStyle="rgba(255,255,255,0.45)";cx.beginPath();cx.arc(touch.ox+dx*m,touch.oy+dy*m,26,0,TAU);cx.fill()}
- buttons=[];btn(W-64,52,48,40,"II",()=>{scene="pause";musicStop()},{size:20});drawButtons();cx.restore()}
-function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);text(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060");if(sub)text(sub,W/2,H*0.2+52,22,"#fff")}
+ buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});drawButtons();cx.restore()}
+function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32)}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);
  for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}
  const bob=Math.sin(frameT*2)*6;text("STAR SWARM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#0a0a2a");text("STAR SWARM",W/2,H*0.16+bob,Math.min(88,W/8),"#80c0ff");
- text("Survive ten minutes, then reach the warp gate.",W/2,H*0.16+66,20,"#dfe8ff");
+ textFit("Six sectors. Survive five minutes in each, then fly to the warp gate.",W/2,H*0.16+66,20,"#dfe8ff",W-40);
  buttons=[];const n=SHIPS.length,cw=Math.min(300,(W-60)/n-10),ch=Math.min(250,H*0.42),y=H*0.36;
  SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
   cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x+cw/2,y+ch*0.34,-Math.PI/2,s,sel?0.6:0);cx.restore();
-  text(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff");text(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde");const r=records[s.id];text(un?(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe");
+  text(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff");text(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde");const r=records[s.id];textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe",cw-16);
   btn(x,y,cw,ch,"",()=>{if(un){shipIdx=i;store.set("ship",i)}else SFX.click()},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  btn(W/2-150,H*0.36+ch+24,300,64,"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>start(),{fill:"#2a5aa0",size:26});
  btn(20,H-64,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>{musicOn=!musicOn;store.set("music",musicOn)},{size:16});
- text("Thumb anywhere to fly.   Weapons fire themselves.   Hide behind asteroids, shoot them for gems.",W/2,H-30,15,"#cde");
+ textFit("Thumb anywhere to fly.   Weapons fire themselves.   Hide behind asteroids, shoot them for gems.",W/2,H-30-SAFE.b,15,"#cde",W-32);
  drawButtons();cx.restore()}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");buttons=[];const n=cards.length,cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5),y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
   cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);text(d.name,x+cw/2,y+ch*0.5,22,"#fff");text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
-function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"THROUGH THE WARP GATE!":"SHIP DESTROYED",won?"You escaped the swarm!":"Survived "+fmt(G.t),won?"#80c0ff":"#ff8080");
- const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");text(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff");
+function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t),won?"#80c0ff":"#ff8080");
+ const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff",W-32);
  const r=records[G.ship.id];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#80ff90");if(G.unlocked)text("NEW SHIP UNLOCKED!",W/2,y+110,26,"#ffe060");
- buttons=[];btn(W/2-230,H*0.72,210,60,"FLY AGAIN",()=>start(),{fill:"#2a5aa0",size:24});btn(W/2+20,H*0.72,210,60,"HANGAR",()=>{scene="title"},{size:24});
+ // on a phone in portrait a fixed 210px pair ran off both edges
+ const ew=Math.min(210,(W-56)/2);
+ buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"FLY AGAIN",()=>start(),{fill:"#2a5aa0",size:24});btn(W/2+10,H*0.72,ew,60,"HANGAR",()=>{scene="title"},{size:24});
  if(won){for(let i=0;i<30;i++){const x=(hash(i,3)*W+frameT*60*(1+hash(i,5)))%W,y2=(hash(i,9)*H+frameT*90)%H;cx.fillStyle=["#ff6080","#ffe060","#60c0ff","#8dff5a"][i%4];cx.fillRect(x,y2,8,8)}}
  drawButtons();cx.restore()}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord()},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>{musicOn=!musicOn;store.set("music",musicOn)},{size:20});drawButtons();cx.restore()}
@@ -572,5 +608,5 @@ function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0}};
+window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE}};
 </script></body></html>
