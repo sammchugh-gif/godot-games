@@ -427,7 +427,10 @@ function drawWorld(){
    cx.globalAlpha=a*0.75;glow(p.x,p.y,p.r*1.6,"rgba(255,190,60,0.9)","rgba(255,90,20,0.35)");cx.globalAlpha=1;
    cx.fillStyle="rgba(255,"+Math.floor(170+Math.random()*70)+",80,"+a*0.8+")";
    cx.beginPath();cx.arc(p.x+rnd(-2,2),p.y+rnd(-2,2),p.r*(0.45+Math.random()*0.2),0,TAU);cx.fill()}}
- for(const g of G.gems){const col=g.big>=10?"#ffd040":g.big>=3?"#40c0ff":"#60ff80",s=g.big>=10?12:g.big>=3?9:7;
+ // Gems are one hue on purpose: the small ones used to be green, the same
+ // green as the commonest enemy, so "is that a pickup or a thing that bites"
+ // was a real question. Size and brightness carry the tier instead.
+ for(const g of G.gems){const col=g.big>=10?"#b8f6ff":g.big>=3?"#6ceaff":"#35dcff",s=g.big>=10?12:g.big>=3?9:7;
   if(FX||g.big>=3)glow(g.x,g.y,s*2.4,hexA(col,0.55),hexA(col,0.12));
   cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);
   cx.fillStyle=shade(col,-0.3);cx.beginPath();cx.moveTo(0,s);cx.lineTo(-s*0.8,0);cx.lineTo(0,-s);cx.lineTo(s*0.8,0);cx.closePath();cx.fill();
@@ -471,7 +474,7 @@ function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  // XP bar
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,14);cx.fillStyle="#60c0ff";cx.fillRect(0,0,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,44,34,20,"#c0e8ff","left");
+ text("LV "+G.level,58,42,20,"#c0e8ff","left");// clear of the shelf menu button
  text(fmt(RUN_LEN-G.t),W/2,40,34,"#fff");
  text(G.kills+" ☠",W-100,34,20,"#ffd0d0","right");
  // health
@@ -533,5 +536,5 @@ function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v}};
+window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v},get fx(){return FX},set fx(v){FX=v?1:0}};
 </script></body></html>

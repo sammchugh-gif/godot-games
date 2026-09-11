@@ -485,7 +485,10 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
  if(G.gate){const gt=G.gate;cx.save();cx.translate(gt.x,gt.y);for(let i=0;i<3;i++){cx.strokeStyle="rgba(120,200,255,"+(0.9-i*0.25)+")";cx.lineWidth=8-i*2;cx.beginPath();cx.arc(0,0,gt.r*(0.6+i*0.25)+Math.sin(frameT*4+i)*4,0,TAU);cx.stroke()}cx.fillStyle="rgba(80,140,255,0.35)";cx.beginPath();cx.arc(0,0,gt.r*0.6,0,TAU);cx.fill();cx.restore();
   // arrow to the gate when off-screen
   const dx=gt.x-G.px,dy=gt.y-G.py;if(Math.hypot(dx,dy)>300){const a=Math.atan2(dy,dx);cx.save();cx.translate(G.px+Math.cos(a)*120,G.py+Math.sin(a)*120);cx.rotate(a);cx.fillStyle="#80c0ff";cx.beginPath();cx.moveTo(18,0);cx.lineTo(-10,-12);cx.lineTo(-10,12);cx.fill();cx.restore()}}
- for(const g of G.gems){const col=g.big>=10?"#ffd040":g.big>=3?"#40c0ff":"#60ff80",s=g.big>=10?12:g.big>=3?9:7;
+ // Gems are one hue on purpose: the small ones used to be green, the same
+ // green as the commonest enemy, so "is that a pickup or a thing that bites"
+ // was a real question. Size and brightness carry the tier instead.
+ for(const g of G.gems){const col=g.big>=10?"#b8f6ff":g.big>=3?"#6ceaff":"#35dcff",s=g.big>=10?12:g.big>=3?9:7;
   if(FX||g.big>=3)glow(g.x,g.y,s*2.6,hexA(col,0.6),hexA(col,0.14));
   cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);
   cx.fillStyle=shade(col,-0.3);cx.beginPath();cx.moveTo(0,s);cx.lineTo(-s*0.8,0);cx.lineTo(0,-s);cx.lineTo(s*0.8,0);cx.closePath();cx.fill();
