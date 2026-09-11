@@ -511,14 +511,15 @@ function sameSet(a, b) { if (a.length !== b.length) return false; const s1 = [..
 
 // ------------------------------------------------------------- 9. lock pick
 class LockPick extends MG {
-  constructor(G, m) { super(G, m); this.instr = "Tap PICK (or the lock) when the marker is in the green."; this.npins = L(this, 5, 6, 7, 8); this.sub = ["FIVE", "SIX", "SEVEN", "EIGHT"][this.npins - 5] + " PINS"; this.zone = L(this, 0.1, 0.09, 0.075, 0.065); this.pins = []; for (let i = 0; i < this.npins; i++) this.pins.push({ set: false, zone: rnd(0.25, 0.7), speed: 0.9 + i * L(this, 0.32, 0.3, 0.28, 0.26), ph: rnd(0, 1), drop: 0 }); this.cur = 0; this.openT = 0; }
-  marker(p) { const u = (this.t * p.speed + p.ph) % 2; return u < 1 ? u : 2 - u; }
-  inZone() { const p = this.pins[this.cur]; if (!p) return false; const m = this.marker(p); return Math.abs(m - p.zone) < this.zone; }
-  tick(dt) { for (const p of this.pins) p.drop = Math.max(0, p.drop - dt); if (this.cur >= this.npins) { this.openT += dt; if (this.openT > 1) this.win(); } }
-  pick() { if (this.cur >= this.npins) return; const p = this.pins[this.cur]; if (this.inZone()) { p.set = true; SFX.click(); this.cur++; if (this.cur >= this.npins) { SFX.unlock(); this.say("CLICK. The vault door is open.", true); } else this.say(`Pin ${this.cur} set`, true, 0.9); } else { SFX.bad(); p.drop = 0.6; if (this.cur > 0 && Math.random() < 0.5) { this.pins[this.cur - 1].set = false; this.cur--; this.say("Slipped! A pin dropped.", false); } else this.say("Missed the green. Wait for it.", false, 1.2); } }
+  constructor(G, m) { super(G, m); this.instr = "Tap PICK (or the lock) when the marker is in the green."; this.npins = L(this, 5, 6, 7, 8); this.sub = ["FIVE", "SIX", "SEVEN", "EIGHT"][this.npins - 5] + " PINS"; this.zone = L(this, 0.1, 0.09, 0.075, 0.065); this.pins = []; for (let i = 0; i < this.npins; i++) this.pins.push({ set: false, zone: rnd(0.25, 0.7), speed: 0.9 + i * L(this, 0.32, 0.3, 0.28, 0.26), ph: rnd(0, 1), drop: 0 }); this.clock = 0; this.slowT = 0; this.cur = 0; this.openT = 0; }
+  marker(p) { const u = (this.clock * p.speed + p.ph) % 2; return u < 1 ? u : 2 - u; }
+  band() { return this.zone * (this.slowT > 0 ? 1.8 : 1); }
+  inZone() { const p = this.pins[this.cur]; if (!p) return false; const m = this.marker(p); return Math.abs(m - p.zone) < this.band(); }
+  tick(dt) { this.slowT = Math.max(0, this.slowT - dt); this.clock += dt * (this.slowT > 0 ? 0.45 : 1); for (const p of this.pins) p.drop = Math.max(0, p.drop - dt); if (this.cur >= this.npins) { this.openT += dt; if (this.openT > 1) this.win(); } }
+  pick() { if (this.cur >= this.npins) return; const p = this.pins[this.cur]; if (this.inZone()) { p.set = true; SFX.click(); this.cur++; if (this.cur >= this.npins) { SFX.unlock(); this.say("CLICK. The vault door is open.", true); } else this.say(`Pin ${this.cur} set`, true, 0.9); } else { SFX.bad(); p.drop = 0.6; this.say("Missed the green. Wait for it.", false, 1.2); } }
   down(x, y) { const { W, H, s } = this.G; if (y > 60 * s && y < H - 40 * s && x < W * 0.7) this.pick(); }
   button(id) { if (id === "mg:pick") this.pick(); }
-  hint() { return "Watch one pin at a time. Tap the moment the marker slides into the green band, not before."; }
+  hint() { this.slowT = 9; return "Hold on. I am slowing this pin right down and opening the green band up for a few seconds. Tap the moment the marker is inside it."; }
   solve() { for (const p of this.pins) p.set = true; this.cur = this.npins; SFX.unlock(); }
   draw(g, W, H, s) {
     this.frame(g, W, H, s, ["#2a2418", "#0c0a06"]);
@@ -530,8 +531,8 @@ class LockPick extends MG {
     this.pins.forEach((p, i) => {
       const cx = bx + gap * (i + 0.5); const cw = gap * 0.42;
       g.fillStyle = "#2a2014"; rrect(g, cx - cw / 2, cy0, cw, ch, 8 * s); g.fill();
-      const zy = cy0 + ch * (1 - p.zone) - ch * this.zone;
-      g.fillStyle = p.set ? "rgba(46,204,113,.3)" : i === this.cur ? "rgba(46,204,113,.55)" : "rgba(46,204,113,.15)"; rrect(g, cx - cw / 2, zy, cw, ch * this.zone * 2, 6 * s); g.fill();
+      const zw = i === this.cur ? this.band() : this.zone; const zy = cy0 + ch * (1 - p.zone) - ch * zw;
+      g.fillStyle = p.set ? "rgba(46,204,113,.3)" : i === this.cur ? "rgba(46,204,113,.55)" : "rgba(46,204,113,.15)"; rrect(g, cx - cw / 2, zy, cw, ch * zw * 2, 6 * s); g.fill();
       const m = p.set ? p.zone : this.marker(p); const my = cy0 + ch * (1 - m);
       g.fillStyle = p.set ? "#2ecc71" : i === this.cur ? "#ffd166" : "#8a8070"; rrect(g, cx - cw * 0.3, my - 10 * s, cw * 0.6, 20 * s, 5 * s); g.fill();
       g.fillStyle = p.set ? "#2ecc71" : "#6a5a40"; g.fillRect(cx - cw * 0.18, cy0 - 26 * s, cw * 0.36, 22 * s);

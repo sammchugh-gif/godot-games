@@ -65,14 +65,46 @@ export class Hanoi extends MG {
     this.drawMsg(g, W, H, s);
   }
 }
-
-// ------------------------------------------------------------- satellite photo (sliding tiles)
+// ------------------------------------------------------------- satellite photo (swap the tiles)
 export class SatPhoto extends MG {
-  constructor(G, m) { super(G, m); this.sub = "SLIDE THE TILES"; this.n = L(this, 3, 4, 4, 4); this.depth = L(this, 40, 40, 80, 140); this.instr = "Tap a tile next to the gap to slide it in. Put the picture back together."; const nn = this.n * this.n; this.tiles = [...Array(nn).keys()]; this.gap = nn - 1; this.seed = m.id.length * 31 + m.id.charCodeAt(0); this.img = null; this.shuffle(); this.moves = 0; this.doneT = 0; }
-  shuffle() { const nn = this.n * this.n; let last = -1; for (let i = 0; i < this.depth * this.n; i++) { const opts = this.neighbours(this.gap).filter(k => k !== last); const k = pick(opts); last = this.gap; this.swap(k); } if (this.solved()) this.shuffle(); }
-  neighbours(i) { const n = this.n, x = i % n, y = Math.floor(i / n), o = []; if (x > 0) o.push(i - 1); if (x < n - 1) o.push(i + 1); if (y > 0) o.push(i - n); if (y < n - 1) o.push(i + n); return o; }
-  swap(k) { [this.tiles[k], this.tiles[this.gap]] = [this.tiles[this.gap], this.tiles[k]]; this.gap = k; }
+  constructor(G, m) {
+    super(G, m); this.sub = "REBUILD THE PICTURE"; this.n = L(this, 3, 4, 4, 4);
+    this.instr = "Tap a tile, then tap the square it belongs in. They swap over. A green edge means it is home for good.";
+    this.seed = m.id.length * 31 + m.id.charCodeAt(0); this.img = null;
+    this.tiles = [...Array(this.n * this.n).keys()]; this.scramble();
+    this.sel = -1; this.swaps = 0; this.tip = null; this.lockAt = -1; this.lockT = 0;
+  }
+  // every tile starts away from home, so nothing is given away for free
+  scramble() { for (let k = 0; k < 300; k++) { shuffle(this.tiles); if (this.tiles.every((v, i) => v !== i)) return; } }
+  home() { return this.tiles.filter((v, i) => v === i).length; }
   solved() { return this.tiles.every((v, i) => v === i); }
+  rc(i) { return `row ${Math.floor(i / this.n) + 1}, column ${(i % this.n) + 1}`; }
+  swapAt(a, b) {
+    [this.tiles[a], this.tiles[b]] = [this.tiles[b], this.tiles[a]]; this.swaps++;
+    const landed = this.tiles[a] === a ? a : this.tiles[b] === b ? b : -1;
+    if (landed >= 0) { SFX.unlock(); this.lockAt = landed; this.lockT = 0.9; } else SFX.page();
+    if (this.solved()) { this.say("Picture restored!", true, 2); this.win(); }
+  }
+  geom() { const { W, H, s } = this.G; const size = Math.min(H - 150 * s, W * 0.55); return { x0: W * 0.5 - size / 2 - 40 * s, y0: 70 * s, size, cs: size / this.n }; }
+  down(x, y) {
+    if (this.done) return;
+    const { x0, y0, cs } = this.geom(); const cx = Math.floor((x - x0) / cs), cy = Math.floor((y - y0) / cs);
+    if (cx < 0 || cy < 0 || cx >= this.n || cy >= this.n) return;
+    const k = cy * this.n + cx;
+    if (this.tiles[k] === k) { SFX.buzz(); this.say("That piece is already home.", false, 1.4); return; }
+    if (this.sel < 0) { this.sel = k; SFX.click(); return; }
+    if (this.sel === k) { this.sel = -1; SFX.back(); return; }
+    const a = this.sel; this.sel = -1; this.tip = null; this.swapAt(a, k);
+  }
+  // the hint names the exact pair to swap and rings them both, but still lets the player do it
+  hint() {
+    if (this.done) return "";
+    const i = this.tiles.findIndex((v, k) => v !== k); if (i < 0) return "It is already finished.";
+    const j = this.tiles.indexOf(i); this.tip = { a: i, b: j, t: 9 }; this.sel = -1;
+    return `The piece that belongs at ${this.rc(i)} is sitting at ${this.rc(j)}. Tap those two and they swap.`;
+  }
+  solve() { const i = this.tiles.findIndex((v, k) => v !== k); if (i < 0) { if (!this.done) this.win(); return; } this.swapAt(i, this.tiles.indexOf(i)); }
+  tick(dt) { if (this.tip) { this.tip.t -= dt; if (this.tip.t <= 0) this.tip = null; } if (this.lockT > 0) this.lockT = Math.max(0, this.lockT - dt); }
   makeImg(size) {
     const c = document.createElement("canvas"); c.width = c.height = size; const g = c.getContext("2d"); const u = size / 400; const h = (a, b) => { const v = Math.sin(a * 127.1 + b * 311.7 + this.seed) * 43758.5453; return v - Math.floor(v); };
     const desert = this.m.id.startsWith("cai"), snow = this.m.id.startsWith("rio"), hills = this.m.id.startsWith("chn");
@@ -92,19 +124,39 @@ export class SatPhoto extends MG {
     g.fillStyle = "rgba(0,0,0,.5)"; g.fillRect(0, size - 26 * u, size, 26 * u); g.fillStyle = "#7fd"; g.font = `${700} ${12 * u}px monospace`; g.fillText("M.I.S.T. SAT-3  " + (desert ? "CAIRO AIRFIELD" : snow ? "ZIMA STATION 64N 100E" : "GREAT WALL SECTOR 7"), 8 * u, size - 9 * u);
     return c;
   }
-  geom() { const { W, H, s } = this.G; const size = Math.min(H - 150 * s, W * 0.55); return { x0: W * 0.5 - size / 2 - 40 * s, y0: 70 * s, size, cs: size / this.n }; }
-  down(x, y) { if (this.done) return; const { x0, y0, cs } = this.geom(); const cx = Math.floor((x - x0) / cs), cy = Math.floor((y - y0) / cs); if (cx < 0 || cy < 0 || cx >= this.n || cy >= this.n) return; const k = cy * this.n + cx; if (this.neighbours(this.gap).includes(k)) { this.swap(k); this.moves++; SFX.page(); if (this.solved()) { this.say("Picture restored!", true, 2); this.win(); } } else SFX.buzz(); }
-  hint() { const wrong = this.tiles.filter((v, i) => v !== i && i !== this.gap).length; return `${wrong} tiles are out of place. Fix the top row first, left to right, then the next row down.`; }
-  solve() { this.tiles = [...Array(this.n * this.n).keys()]; this.gap = this.n * this.n - 1; this.say("Picture restored!", true, 2); this.win(); }
   draw(g, W, H, s) {
     this.frame(g, W, H, s, ["#0a1a24", "#040a10"]);
     const { x0, y0, size, cs } = this.geom();
     if (!this.img || this.img.width !== Math.round(size * 2)) this.img = this.makeImg(Math.round(size * 2));
     g.fillStyle = "#0d1118"; rrect(g, x0 - 12 * s, y0 - 12 * s, size + 24 * s, size + 24 * s, 10 * s); g.fill(); g.strokeStyle = "#7fd"; g.lineWidth = 2; g.stroke();
     const src = this.img.width / this.n;
-    for (let i = 0; i < this.n * this.n; i++) { const v = this.tiles[i]; const x = x0 + (i % this.n) * cs, y = y0 + Math.floor(i / this.n) * cs; if (i === this.gap && !this.done) { g.fillStyle = "#050a10"; g.fillRect(x, y, cs, cs); continue; } g.drawImage(this.img, (v % this.n) * src, Math.floor(v / this.n) * src, src, src, x + 1, y + 1, cs - 2, cs - 2); if (v === i) { g.strokeStyle = "rgba(127,255,220,.5)"; g.lineWidth = 2; g.strokeRect(x + 2, y + 2, cs - 4, cs - 4); } }
+    for (let i = 0; i < this.n * this.n; i++) {
+      const v = this.tiles[i], x = x0 + (i % this.n) * cs, y = y0 + Math.floor(i / this.n) * cs;
+      const home = v === i, sel = i === this.sel;
+      g.save();
+      if (sel) { const c = cs / 2; g.translate(x + c, y + c); g.scale(1.07, 1.07); g.translate(-(x + c), -(y + c)); g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 18 * s; }
+      g.drawImage(this.img, (v % this.n) * src, Math.floor(v / this.n) * src, src, src, x + 1, y + 1, cs - 2, cs - 2);
+      g.restore();
+      g.strokeStyle = "rgba(0,0,0,.55)"; g.lineWidth = 1; g.strokeRect(x, y, cs, cs);
+      if (home) { const p = i === this.lockAt ? this.lockT / 0.9 : 0; g.strokeStyle = `rgba(127,255,220,${0.6 + p * 0.4})`; g.lineWidth = (2.5 + p * 5) * s; g.strokeRect(x + 3, y + 3, cs - 6, cs - 6); }
+      if (sel) { g.strokeStyle = "#ffd166"; g.lineWidth = 4 * s; g.strokeRect(x + 2, y + 2, cs - 4, cs - 4); }
+      if (this.tip && (i === this.tip.a || i === this.tip.b)) { g.save(); g.setLineDash([10 * s, 7 * s]); g.lineDashOffset = -this.t * 44 * s; g.strokeStyle = "#ff7bd0"; g.lineWidth = 4.5 * s; g.strokeRect(x + 4, y + 4, cs - 8, cs - 8); g.restore(); }
+    }
     const rx = x0 + size + 30 * s, rw = W - rx - 24 * s;
-    if (rw > 120 * s) { panel(g, rx, y0, rw, 150 * s, s, { bg: "rgba(0,0,0,.4)" }); text(g, "SAT-3 DOWNLINK", rx + rw / 2, y0 + 24 * s, 14 * s, "#7fd", "center", 900, MONO); paragraph(g, "Tiles with a green edge are home. Slide the rest into the gap.", rx + 14 * s, y0 + 54 * s, rw - 28 * s, 14 * s, "#fff", 18 * s, "left", 600); text(g, `${this.tiles.filter((v, i) => v === i).length}/${this.n * this.n} home  ·  ${this.moves} moves`, rx + rw / 2, y0 + 128 * s, 13 * s, "#ffd166", "center", 800, MONO); drawPortrait(g, "vi", rx + rw / 2 - 36 * s, y0 + 170 * s, 72 * s, 0, this.t); }
+    if (rw > 120 * s) {
+      const ph = 344 * s;
+      panel(g, rx, y0, rw, ph, s, { bg: "rgba(0,0,0,.4)" });
+      text(g, "SAT-3 DOWNLINK", rx + rw / 2, y0 + 24 * s, 14 * s, "#7fd", "center", 900, MONO);
+      text(g, "WHAT IT SHOULD LOOK LIKE", rx + rw / 2, y0 + 45 * s, 10 * s, "rgba(255,255,255,.5)", "center", 700, MONO);
+      const tw = Math.min(rw - 34 * s, 212 * s), tx = rx + rw / 2 - tw / 2, ty = y0 + 56 * s;
+      g.drawImage(this.img, 0, 0, this.img.width, this.img.width, tx, ty, tw, tw);
+      g.strokeStyle = "rgba(0,0,0,.4)"; g.lineWidth = 1;
+      for (let i = 1; i < this.n; i++) { g.beginPath(); g.moveTo(tx + tw * i / this.n, ty); g.lineTo(tx + tw * i / this.n, ty + tw); g.stroke(); g.beginPath(); g.moveTo(tx, ty + tw * i / this.n); g.lineTo(tx + tw, ty + tw * i / this.n); g.stroke(); }
+      g.strokeStyle = "rgba(127,255,220,.7)"; g.lineWidth = 2; g.strokeRect(tx, ty, tw, tw);
+      paragraph(g, "Tap a tile, then tap the square it belongs in.", rx + 14 * s, ty + tw + 24 * s, rw - 28 * s, 13 * s, "#fff", 17 * s, "left", 600);
+      text(g, `${this.home()}/${this.n * this.n} home  ·  ${this.swaps} swap${this.swaps === 1 ? "" : "s"}`, rx + rw / 2, y0 + ph - 16 * s, 13 * s, "#ffd166", "center", 800, MONO);
+      drawPortrait(g, "vi", rx + rw / 2 - 36 * s, y0 + ph + 18 * s, 72 * s, 0, this.t);
+    }
     this.drawMsg(g, W, H, s);
   }
 }
@@ -238,14 +290,14 @@ export class SpotDiff extends MG {
 
 // ------------------------------------------------------------- laser hall
 export class LaserHall extends MG {
-  constructor(G, m) { super(G, m); this.sub = "MIND THE BEAMS"; this.count = L(this, 3, 4, 5, 6); this.speed = L(this, 1, 1.15, 1.3, 1.5); this.instr = "Drag anywhere to move. Cross the hall to the desk without touching a beam."; this.W = 20; this.H = 11; this.p = { x: 1.2, y: 5.5 }; this.stick = null; this.gen(); this.zap = 0; this.resets = 0; }
+  constructor(G, m) { super(G, m); this.sub = "MIND THE BEAMS"; this.count = L(this, 3, 4, 5, 6); this.speed = L(this, 1, 1.15, 1.3, 1.5); this.instr = "Drag anywhere to move. Cross the hall to the desk without touching a beam."; this.W = 20; this.H = 11; this.p = { x: 1.2, y: 5.5 }; this.stick = null; this.gen(); this.zap = 0; this.resets = 0; this.bt = 0; this.slowT = 0; }
   gen() {
     this.lasers = []; const gap = this.W - 4;
     for (let i = 0; i < this.count; i++) { const x = 3 + (i + 0.5) * gap / this.count; const kind = (this.level >= 3 && i % 2 === 1) ? "spin" : i % 2 ? "h" : "v"; this.lasers.push({ kind, x, y: 5.5, ph: rnd(0, TAU), sp: (0.7 + i * 0.12) * this.speed, len: kind === "spin" ? 4.5 : 0 }); }
   }
-  segs() { const out = []; for (const l of this.lasers) { const u = Math.sin(this.t * l.sp + l.ph); if (l.kind === "v") { const y0 = 1 + (u + 1) / 2 * 3; out.push([l.x, y0, l.x, y0 + 6]); } else if (l.kind === "h") { const x0 = l.x - 2.5 + u * 1.5; out.push([x0, l.y - 3.5, x0 + 4, l.y + 3.5]); } else { const a = this.t * l.sp * 0.6 + l.ph; out.push([l.x - Math.cos(a) * l.len, l.y - Math.sin(a) * l.len, l.x + Math.cos(a) * l.len, l.y + Math.sin(a) * l.len]); } } return out; }
+  segs() { const out = []; for (const l of this.lasers) { const u = Math.sin(this.bt * l.sp + l.ph); if (l.kind === "v") { const y0 = 1 + (u + 1) / 2 * 3; out.push([l.x, y0, l.x, y0 + 6]); } else if (l.kind === "h") { const x0 = l.x - 2.5 + u * 1.5; out.push([x0, l.y - 3.5, x0 + 4, l.y + 3.5]); } else { const a = this.bt * l.sp * 0.6 + l.ph; out.push([l.x - Math.cos(a) * l.len, l.y - Math.sin(a) * l.len, l.x + Math.cos(a) * l.len, l.y + Math.sin(a) * l.len]); } } return out; }
   tick(dt) {
-    if (this.done) return; this.zap = Math.max(0, this.zap - dt); if (this.zap > 0) return;
+    if (this.done) return; this.slowT = Math.max(0, this.slowT - dt); this.bt += dt * (this.slowT > 0 ? 0.35 : 1); this.zap = Math.max(0, this.zap - dt); if (this.zap > 0) return;
     let vx = 0, vy = 0; const k = this.G.input.keys; if (k.KeyW || k.ArrowUp) vy -= 1; if (k.KeyS || k.ArrowDown) vy += 1; if (k.KeyA || k.ArrowLeft) vx -= 1; if (k.KeyD || k.ArrowRight) vx += 1;
     if (this.stick) { const R = 60 * this.G.s; let dx = (this.stick.x - this.stick.ox) / R, dy = (this.stick.y - this.stick.oy) / R; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; this.stick.ox = this.stick.x - dx * R; this.stick.oy = this.stick.y - dy * R; } if (l > 0.15) { vx = dx; vy = dy; } }
     const l = Math.hypot(vx, vy); if (l > 1) { vx /= l; vy /= l; }
@@ -256,7 +308,7 @@ export class LaserHall extends MG {
   down(x, y, id) { this.stick = { id, ox: x, oy: y, x, y }; }
   move(x, y, id) { if (this.stick && this.stick.id === id) { this.stick.x = x; this.stick.y = y; } }
   up(x, y, id) { if (this.stick && this.stick.id === id) this.stick = null; }
-  hint() { return "Stand just short of a beam and watch it swing twice. Cross the moment it starts moving away from you, then stop and watch the next one."; }
+  hint() { this.slowT = 12; return "I have slowed the beams right down for a few seconds. Go now, and stop just short of each one."; }
   solve() { this.p.x = this.W - 1.2; this.p.y = 5.5; this.lasers = []; this.tick(0.016); }
   draw(g, W, H, s) {
     this.frame(g, W, H, s, ["#14101e", "#06040a"]);

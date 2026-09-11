@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 const out = process.argv[2] || "/tmp/gametest"; fs.mkdirSync(out, { recursive: true });
 const only = process.argv[3] || "";
-const port = 8771;
+const port = +(process.env.PORT || 8771);
 const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
