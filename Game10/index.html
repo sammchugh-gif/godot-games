@@ -37,7 +37,10 @@ function shade(hex,amt){const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)
  const f=v=>Math.max(0,Math.min(255,Math.round(amt<0?v*(1+amt):v+(255-v)*amt)));
  return "rgb("+f(r)+","+f(g)+","+f(b)+")"}
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")"}
-const ART={glow:{},grad:{},en:{}};
+const ART={glow:{},grad:{},en:{},ship:{}};
+const NEB=[["rgba(96,64,190,0.17)","rgba(48,28,116,0.05)"],["rgba(176,58,140,0.14)","rgba(84,18,72,0.04)"],
+           ["rgba(40,108,198,0.16)","rgba(18,44,112,0.05)"],["rgba(28,148,140,0.13)","rgba(10,62,62,0.04)"],
+           ["rgba(198,116,58,0.10)","rgba(92,46,20,0.03)"]];
 function glowSprite(inner,outer){const k=inner+"|"+outer;let sp=ART.glow[k];if(sp)return sp;
  sp=bake(64,64,g=>{const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,inner);gr.addColorStop(0.45,outer);gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(0,0,64,64)});
  ART.glow[k]=sp;return sp}
@@ -70,26 +73,38 @@ function enemySprite(type,col,flash){const k=type+"|"+col+"|"+(flash?1:0);let sp
    plate("rgba(255,255,255,0.32)");g.beginPath();g.ellipse(R*0.3,0,R*0.35,R*0.3,0,0,TAU);g.fill()}});
  ART.en[k]=sp;return sp}
 function buildArt(){
- ART.neb=[];
- const cols=[["rgba(76,52,150,0.20)","rgba(38,24,92,0.07)"],["rgba(140,48,120,0.16)","rgba(70,16,64,0.06)"],
-             ["rgba(34,86,160,0.18)","rgba(16,40,96,0.06)"],["rgba(24,120,116,0.14)","rgba(8,56,56,0.05)"]];
- for(const [a,b] of cols)ART.neb.push(bake(256,256,g=>{
-  for(let i=0;i<14;i++){const x=Math.random()*256,y=Math.random()*256,r=40+Math.random()*90;
-   const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,i%3?b:a);gr.addColorStop(1,"rgba(0,0,0,0)");
-   g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2)}}));
  ART.vigSprite=bake(256,180,(g,w,h)=>{const gr=g.createRadialGradient(w/2,h/2,h*0.36,w/2,h/2,w*0.74);
   gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(1,"rgba(0,0,10,0.6)");g.fillStyle=gr;g.fillRect(0,0,w,h)});
  ART.rock=[];
- for(let v=0;v<3;v++)ART.rock.push(bake(128,128,g=>{g.translate(64,64);
-  const base=["#6a5c4c","#584c40","#473d33"][v];
-  const gr=g.createRadialGradient(-20,-22,4,0,0,64);
-  gr.addColorStop(0,shade(base,0.35));gr.addColorStop(0.4,base);gr.addColorStop(1,shade(base,-0.55));
-  g.fillStyle=gr;g.beginPath();
-  for(let i=0;i<9;i++){const a=i/9*TAU,r=58*(0.78+0.22*hash(i+v*9,v));g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}
-  g.closePath();g.fill();
-  for(let i=0;i<7;i++){const a=hash(i,v+3)*TAU,d=hash(i+5,v)*38,r=5+hash(i+9,v)*11;
-   g.fillStyle="rgba(0,0,0,0.22)";g.beginPath();g.arc(Math.cos(a)*d,Math.sin(a)*d,r,0,TAU);g.fill();
-   g.fillStyle="rgba(255,255,255,0.10)";g.beginPath();g.arc(Math.cos(a)*d-r*0.25,Math.sin(a)*d-r*0.3,r*0.7,0,TAU);g.fill()}}));
+ // Asteroids: a hard-edged silhouette, one light direction (top-left) and
+ // craters drawn as a lit rim plus a shadowed rim. Flat translucent discs
+ // just read as soap bubbles, so each crater gets both arcs clipped to it.
+ for(let v=0;v<3;v++)ART.rock.push(bake(128,128,g=>{g.translate(64,64);g.lineJoin="round";
+  const base=["#5f564c","#4f473e","#413a32"][v];
+  const outline=()=>{g.beginPath();
+   for(let i=0;i<11;i++){const a=i/11*TAU,r=57*(0.8+0.2*hash(i+v*11,v));g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}
+   g.closePath()};
+  const gr=g.createRadialGradient(-22,-24,4,-4,-4,74);
+  gr.addColorStop(0,shade(base,0.3));gr.addColorStop(0.35,shade(base,0.04));
+  gr.addColorStop(0.72,shade(base,-0.3));gr.addColorStop(1,shade(base,-0.72));
+  outline();g.fillStyle=gr;g.fill();
+  outline();g.save();g.clip();
+  for(let i=0;i<8;i++){const a=hash(i,v+3)*TAU,d=6+hash(i+5,v)*44,r=3+hash(i+9,v)*6.5;
+   const px=Math.cos(a)*d,py=Math.sin(a)*d;
+   g.fillStyle="rgba(0,0,0,0.2)";g.beginPath();g.arc(px,py,r,0,TAU);g.fill();
+   g.strokeStyle="rgba(255,255,255,0.2)";g.lineWidth=r*0.26;
+   g.beginPath();g.arc(px,py,r*0.88,Math.PI*0.8,Math.PI*1.8);g.stroke();
+   g.strokeStyle="rgba(0,0,0,0.3)";g.lineWidth=r*0.24;
+   g.beginPath();g.arc(px,py,r*0.88,Math.PI*-0.2,Math.PI*0.8);g.stroke()}
+  for(let i=0;i<24;i++){const a=hash(i+40,v)*TAU,d=hash(i+70,v)*54;
+   g.fillStyle=hash(i,v+7)>0.5?"rgba(255,255,255,0.08)":"rgba(0,0,0,0.14)";
+   g.beginPath();g.arc(Math.cos(a)*d,Math.sin(a)*d,0.8+hash(i+3,v)*1.6,0,TAU);g.fill()}
+  // edge highlight: the silhouette redrawn offset down-right inside the clip,
+  // so only the top-left rim catches the light
+  g.strokeStyle="rgba(255,255,255,0.22)";g.lineWidth=3;
+  g.save();g.translate(2.6,2.8);outline();g.stroke();g.restore();
+  g.restore();
+  outline();g.strokeStyle="rgba(0,0,0,0.5)";g.lineWidth=1.6;g.stroke()}));
 }
 function vignette(){if(FX)cx.drawImage(ART.vigSprite,0,0,W,H)}
 const store={get(k,d){try{const v=localStorage.getItem("starswarm."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("starswarm."+k,JSON.stringify(v))}catch(e){}}};
@@ -289,14 +304,15 @@ function update(dt){G.t+=dt;
  if(G.lvlQueue>0){G.lvlQueue--;scene="levelup";makeCards()}}
 // ---------------------------------------------------------------- drawing
 function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
- if(FX){// nebula, far enough away that it barely moves
-  const par=0.12,ns=900,ox=G.px*(1-par),oy=G.py*(1-par);
-  const i0=Math.floor((G.px*par-W/S)/ns)-1,i1=Math.floor((G.px*par+W/S)/ns)+1;
-  const j0=Math.floor((G.py*par-H/S)/ns)-1,j1=Math.floor((G.py*par+H/S)/ns)+1;
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const h=hash(i*31+7,j*17+3);if(h<0.45)continue;
-   const img=ART.neb[Math.floor(h*997)%ART.neb.length],sz=ns*(0.9+h*0.7);
-   cx.globalAlpha=0.55+h*0.35;
-   cx.drawImage(img,i*ns+hash(j,i)*ns*0.4+ox,j*ns+hash(i,j*3)*ns*0.4+oy,sz,sz)}
+ if(FX){// Nebula: single soft clouds that fade out on their own edges. Drawn
+  // as tiles they showed their seams as straight bands across the sky.
+  const par=0.12,ns=680,ox=G.px*(1-par),oy=G.py*(1-par);
+  const i0=Math.floor((G.px*par-W/S)/ns)-2,i1=Math.floor((G.px*par+W/S)/ns)+2;
+  const j0=Math.floor((G.py*par-H/S)/ns)-2,j1=Math.floor((G.py*par+H/S)/ns)+2;
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const h=hash(i*31+7,j*17+3);if(h<0.42)continue;
+   const c=NEB[Math.floor(hash(i*5+2,j*11)*NEB.length)%NEB.length];
+   const bx=i*ns+hash(j,i)*ns+ox,by=j*ns+hash(i,j*3)*ns+oy,r=ns*(0.7+h*1.1);
+   cx.globalAlpha=0.45+h*0.5;glow(bx,by,r,c[0],c[1])}
   cx.globalAlpha=1}
  const layers=[[0.25,90,1.2],[0.5,140,1.8],[0.9,220,2.6]];
  for(const [par,cs,sz] of layers){const ox=G.px*(1-par),oy=G.py*(1-par);
@@ -308,19 +324,130 @@ function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
    cx.fillStyle=h>0.95?"rgba(255,220,180,"+tw+")":h>0.85?"rgba(180,200,255,"+tw+")":"rgba(255,255,255,"+tw*0.8+")";
    cx.beginPath();cx.arc(wx,wy,r,0,TAU);cx.fill();
    if(FX&&h>0.93){cx.globalAlpha=tw*0.5;glow(wx,wy,r*5,"rgba(255,235,200,0.5)","rgba(255,220,180,0.12)");cx.globalAlpha=1}}}}
-function drawShip(x,y,ang,ship,thrust){cx.save();cx.translate(x,y);cx.rotate(ang);
- if(thrust>0.1){const fl=24+thrust*14+Math.random()*8;
-  if(FX)glow(-18-fl*0.3,0,fl*0.9,"rgba(255,200,90,0.55)","rgba(255,120,30,0.18)");
-  cx.fillStyle="rgba(255,"+Math.floor(150+Math.random()*100)+",60,0.9)";
-  cx.beginPath();cx.moveTo(-14,-6);cx.lineTo(-fl,0);cx.lineTo(-14,6);cx.fill();
-  cx.fillStyle="rgba(255,245,210,0.9)";cx.beginPath();cx.moveTo(-14,-3);cx.lineTo(-14-fl*0.45,0);cx.lineTo(-14,3);cx.fill()}
- let g=ART.grad[ship.col];
- if(!g){g=cx.createRadialGradient(4,-8,2,0,0,26);g.addColorStop(0,shade(ship.col,0.6));g.addColorStop(0.4,ship.col);g.addColorStop(1,shade(ship.col,-0.5));ART.grad[ship.col]=g}
- cx.fillStyle=g;cx.beginPath();cx.moveTo(22,0);cx.lineTo(-12,-14);cx.lineTo(-6,0);cx.lineTo(-12,14);cx.closePath();cx.fill();
- cx.strokeStyle="rgba(255,255,255,0.35)";cx.lineWidth=1.2;cx.stroke();
- cx.fillStyle=ship.col2;cx.beginPath();cx.moveTo(14,0);cx.lineTo(-4,-6);cx.lineTo(-4,6);cx.closePath();cx.fill();
- cx.fillStyle="#40d0ff";cx.beginPath();cx.ellipse(4,0,4.5,3.6,0,0,TAU);cx.fill();
- cx.fillStyle="rgba(255,255,255,0.75)";cx.beginPath();cx.ellipse(5,-1.2,2,1.1,-0.4,0,TAU);cx.fill();
+
+// Each hull is painted once at four times the size it is flown at, so the
+// panel lines and canopy survive a retina screen, then stamped each frame.
+// Only the engine fire is drawn live, because it has to flicker.
+const SHIPRES=4,SHIPP=32;
+const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],
+              nova:[[-14,0,1.0],[-11,-11,0.72],[-11,11,0.72]]};
+function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
+ const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
+ const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
+ sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";g.lineCap="round";
+  const hull=g.createLinearGradient(0,-12,0,12);
+  hull.addColorStop(0,lite);hull.addColorStop(0.34,col);hull.addColorStop(0.7,mid);hull.addColorStop(1,dark);
+  const poly=(pts)=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);
+   for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);g.closePath()};
+  const mirror=(pts)=>pts.map(p=>[p[0],-p[1]]);
+  const wing=(pts)=>{poly(pts);
+   const wg=g.createLinearGradient(0,-20,0,20);
+   wg.addColorStop(0,shade(col,0.12));wg.addColorStop(0.5,mid);wg.addColorStop(1,deep);
+   g.fillStyle=wg;g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1;g.stroke();
+   // leading-edge highlight so the wing reads as a solid plate, not a flat slab
+   g.save();poly(pts);g.clip();g.strokeStyle="rgba(255,255,255,0.28)";g.lineWidth=1.4;
+   g.beginPath();g.moveTo(pts[0][0],pts[0][1]);g.lineTo(pts[1][0],pts[1][1]);g.stroke();g.restore()};
+  const strake=(x,y,len,sgn)=>{poly([[x+len*0.45,y],[x-len*0.45,y],[x-len*0.3,y+sgn*2.4],[x+len*0.32,y+sgn*1.7]]);
+   g.fillStyle=mid;g.fill();g.strokeStyle="rgba(0,0,0,0.4)";g.lineWidth=0.6;g.stroke()};
+  const pod=(x,y,w,h,c)=>{g.fillStyle=c;g.beginPath();
+   g.moveTo(x-w/2+h*0.4,y-h/2);g.lineTo(x+w/2,y-h/2);g.quadraticCurveTo(x+w/2+h*0.3,y,x+w/2,y+h/2);
+   g.lineTo(x-w/2+h*0.4,y+h/2);g.quadraticCurveTo(x-w/2,y,x-w/2+h*0.4,y-h/2);g.closePath();g.fill();
+   g.strokeStyle="rgba(0,0,0,0.5)";g.lineWidth=0.7;g.stroke()};
+  let body,tips,nose,fin;
+  if(ship.id==="comet"){
+   const w=[[3,-4],[-11,-18],[-18,-16],[-6,-3]];wing(w);wing(mirror(w));
+   strake(-14.5,-17,7,-1);strake(-14.5,17,7,1);
+   tips=[[-13.5,-16.2],[-13.5,16.2]];nose=29;fin=[[-4,0],[-16,0],[-19,0]];
+   pod(-11,-7.5,9,7,deep);pod(-11,7.5,9,7,deep);
+   body=()=>{g.beginPath();g.moveTo(29,0);g.quadraticCurveTo(15,-4.2,8,-5.4);g.lineTo(-11,-5.6);
+    g.quadraticCurveTo(-15,-3,-15,0);g.quadraticCurveTo(-15,3,-11,5.6);g.lineTo(8,5.4);
+    g.quadraticCurveTo(15,4.2,29,0);g.closePath()}}
+  else if(ship.id==="nova"){
+   const w=[[7,-6],[-9,-20],[-19,-18],[-8,-5]];wing(w);wing(mirror(w));
+   strake(-15,-18.2,8,-1);strake(-15,18.2,8,1);
+   tips=[[-14,-17.6],[-14,17.6]];nose=24;fin=[[-2,0],[-17,0],[-20,0]];
+   pod(-6,-12.5,16,7,deep);pod(-6,12.5,16,7,deep);
+   body=()=>{g.beginPath();g.moveTo(24,0);g.quadraticCurveTo(14,-6.6,7,-9);g.lineTo(-10,-10.5);
+    g.quadraticCurveTo(-16,-8,-16,0);g.quadraticCurveTo(-16,8,-10,10.5);g.lineTo(7,9);
+    g.quadraticCurveTo(14,6.6,24,0);g.closePath()}}
+  else{
+   const w=[[6,-3],[-14,-22],[-22,-20],[-6,-2]];wing(w);wing(mirror(w));
+   strake(-18,-20.6,8,-1);strake(-18,20.6,8,1);
+   tips=[[-17.5,-20],[-17.5,20]];nose=27;fin=[[-3,0],[-17,0],[-21,0]];
+   pod(-13,0,9,11,deep);
+   body=()=>{g.beginPath();g.moveTo(27,0);g.quadraticCurveTo(15,-5.2,8,-7.2);g.lineTo(-10,-8);
+    g.quadraticCurveTo(-15,-5.5,-15,0);g.quadraticCurveTo(-15,5.5,-10,8);g.lineTo(8,7.2);
+    g.quadraticCurveTo(15,5.2,27,0);g.closePath()}}
+  // dorsal fin, drawn under the fuselage so only its tail shows past the hull
+  poly([[fin[0][0],-2.6],[fin[1][0],-4.4],[fin[2][0],0],[fin[1][0],4.4],[fin[0][0],2.6]]);
+  g.fillStyle=deep;g.fill();g.strokeStyle="rgba(0,0,0,0.6)";g.lineWidth=0.8;g.stroke();
+  // fuselage, lit from above
+  body();g.fillStyle=hull;g.fill();
+  g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1.1;g.stroke();
+  body();g.save();g.clip();
+  // accent spine in the ship's trim colour
+  g.fillStyle=hexA(c2,0.4);
+  g.beginPath();g.moveTo(nose-1,0);g.lineTo(-2,-1.8);g.lineTo(-14,-1.4);g.lineTo(-14,1.4);g.lineTo(-2,1.8);g.closePath();g.fill();
+  g.strokeStyle="rgba(255,255,255,0.3)";g.lineWidth=1.1;
+  g.beginPath();g.moveTo(nose-4,-2.2);g.lineTo(-14,-6);g.stroke();
+  g.strokeStyle="rgba(0,0,0,0.32)";g.lineWidth=0.9;
+  g.beginPath();g.moveTo(nose-8,3);g.lineTo(-14,5.5);g.stroke();
+  g.beginPath();g.moveTo(0,-9);g.lineTo(0,9);g.stroke();
+  g.beginPath();g.moveTo(-7,-9);g.lineTo(-7,9);g.stroke();
+  // heat-shield band at the tail
+  g.fillStyle="rgba(0,0,0,0.3)";g.fillRect(-15,-11,3.2,22);
+  g.restore();
+  // sharp nose tip
+  g.fillStyle=shade(c2,-0.2);g.beginPath();g.moveTo(nose,0);g.lineTo(nose-6,-2.3);g.lineTo(nose-6,2.3);g.closePath();g.fill();
+  g.strokeStyle="rgba(255,255,255,0.6)";g.lineWidth=0.8;
+  g.beginPath();g.moveTo(nose,0);g.lineTo(nose-6,-2.1);g.stroke();
+  // teardrop canopy: pointed forward, dark glass with a sky reflection
+  const cxp=ship.id==="comet"?7:ship.id==="nova"?3:4,cl=ship.id==="nova"?11:9.5,cw=ship.id==="nova"?4.4:3.7;
+  const canopy=()=>{g.beginPath();g.moveTo(cxp+cl*0.62,0);
+   g.quadraticCurveTo(cxp+cl*0.2,-cw,cxp-cl*0.2,-cw*0.92);
+   g.quadraticCurveTo(cxp-cl*0.55,-cw*0.7,cxp-cl*0.6,0);
+   g.quadraticCurveTo(cxp-cl*0.55,cw*0.7,cxp-cl*0.2,cw*0.92);
+   g.quadraticCurveTo(cxp+cl*0.2,cw,cxp+cl*0.62,0);g.closePath()};
+  canopy();g.fillStyle="#080f22";g.fill();
+  const cg=g.createLinearGradient(cxp,-cw,cxp,cw);
+  cg.addColorStop(0,"rgba(170,230,255,0.85)");cg.addColorStop(0.42,"rgba(60,130,235,0.35)");
+  cg.addColorStop(1,"rgba(10,20,50,0.2)");
+  canopy();g.fillStyle=cg;g.fill();
+  g.strokeStyle="rgba(255,255,255,0.55)";g.lineWidth=0.7;canopy();g.stroke();
+  g.fillStyle="rgba(255,255,255,0.9)";g.beginPath();
+  g.ellipse(cxp+cl*0.16,-cw*0.42,cl*0.2,cw*0.17,-0.3,0,TAU);g.fill();
+  // engine bells with a hot core
+  for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+   g.fillStyle="#0c1220";g.beginPath();g.ellipse(nx,ny,2.4*ns,4.2*ns,0,0,TAU);g.fill();
+   g.strokeStyle=hexA(c2,0.9);g.lineWidth=0.9;g.stroke();
+   const eg=g.createRadialGradient(nx+0.8*ns,ny,0.2,nx,ny,3.4*ns);
+   eg.addColorStop(0,"rgba(255,255,255,0.95)");eg.addColorStop(0.45,hexA(c2,0.8));eg.addColorStop(1,hexA(c2,0));
+   g.fillStyle=eg;g.beginPath();g.ellipse(nx+0.4,ny,1.9*ns,3.3*ns,0,0,TAU);g.fill()}
+  // wingtip navigation lights
+  g.fillStyle="#ff4040";g.beginPath();g.arc(tips[0][0],tips[0][1],1.6,0,TAU);g.fill();
+  g.fillStyle="rgba(255,180,180,0.9)";g.beginPath();g.arc(tips[0][0],tips[0][1],0.7,0,TAU);g.fill();
+  g.fillStyle="#40ff70";g.beginPath();g.arc(tips[1][0],tips[1][1],1.6,0,TAU);g.fill();
+  g.fillStyle="rgba(200,255,215,0.9)";g.beginPath();g.arc(tips[1][0],tips[1][1],0.7,0,TAU);g.fill();
+  // rim light along the top edge
+  body();g.save();g.clip();g.strokeStyle="rgba(255,255,255,0.5)";g.lineWidth=1.6;
+  g.beginPath();g.moveTo(nose-3,-1.5);g.quadraticCurveTo(6,-8,-14,-7);g.stroke();g.restore()});
+ ART.ship[ship.id]=sp;return sp}
+function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
+ cx.save();cx.translate(x,y);cx.rotate(ang);
+ const th=Math.min(1,thrust);
+ if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+   const fl=(13+th*19+Math.random()*6)*ns;
+   if(FX)glow(nx-fl*0.4,ny,fl*1.25,"rgba(255,214,140,0.55)","rgba(255,110,30,0.14)");
+   cx.fillStyle="rgba(255,140,40,0.8)";
+   cx.beginPath();cx.moveTo(nx,ny-4.2*ns);cx.quadraticCurveTo(nx-fl*0.55,ny-2.2*ns,nx-fl,ny);
+   cx.quadraticCurveTo(nx-fl*0.55,ny+2.2*ns,nx,ny+4.2*ns);cx.closePath();cx.fill();
+   cx.fillStyle="rgba(255,224,120,0.9)";
+   cx.beginPath();cx.moveTo(nx,ny-3*ns);cx.quadraticCurveTo(nx-fl*0.4,ny-1.4*ns,nx-fl*0.66,ny);
+   cx.quadraticCurveTo(nx-fl*0.4,ny+1.4*ns,nx,ny+3*ns);cx.closePath();cx.fill();
+   cx.fillStyle="rgba(255,252,235,0.95)";
+   cx.beginPath();cx.moveTo(nx,ny-1.7*ns);cx.quadraticCurveTo(nx-fl*0.22,ny,nx-fl*0.34,ny);
+   cx.quadraticCurveTo(nx-fl*0.22,ny,nx,ny+1.7*ns);cx.closePath();cx.fill()}}
+ cx.drawImage(shipSprite(ship),-P,-P,P*2,P*2);
  cx.restore()}
 function drawEnemy(e){const t=frameT,r=e.r,k=r/EREF,P=EREF*1.6;
  cx.save();cx.translate(e.x,e.y);
@@ -394,7 +521,7 @@ if(FX)glow(G.px,G.py,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,14);cx.fillStyle="#60c0ff";cx.fillRect(0,0,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,44,34,20,"#c0e8ff","left");
+ text("LV "+G.level,58,42,20,"#c0e8ff","left");// clear of the shelf menu button
  const left=RUN_LEN-G.t;text(left>0?fmt(left):"GATE!",W/2,40,34,left>0?"#fff":"#80c0ff");
  text(G.kills+" ☠",W-100,34,20,"#ffd0d0","right");
  const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16,H-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18,H-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+hw/2,H-30,15,"#fff");
@@ -442,5 +569,5 @@ function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks};
+window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0}};
 </script></body></html>
