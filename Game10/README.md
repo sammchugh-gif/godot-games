@@ -48,6 +48,18 @@ shoot plasma from 3:20, phantoms that flicker from 7:00, swarm rings every 75
 seconds. Bosses: the Mothership (2:30, launches scouts), the Space Kraken
 (5:00, dashes), the Warlord (7:30, plasma fans).
 
+## How it is drawn
+
+Space is three layers of parallax stars over baked nebula clouds, all placed
+by the world's own hash so the sky never repeats. Asteroids, aliens and the
+ship are painted once into off-screen canvases and stamped, so a hundred of
+them cost about what a dozen used to. Engine flames, bullet glows and the
+vignette are baked sprites.
+
+A small governor watches the frame time: if frames start costing more than a
+smooth sixtieth of a second the extra flourishes switch themselves off, so an
+older phone keeps the game responsive and a fast one keeps the polish.
+
 ## How it is built
 
 `index.html` is the whole game: canvas 2D with a three-layer parallax

@@ -42,6 +42,19 @@ ghosts from 7:00. Swarm rings every 75 seconds. Bosses: the Slime King (2:30),
 the Bat Lord (5:00), the Stone Golem (7:30). Enemies get tougher as the clock
 runs. Best score and time per hero are saved in the browser.
 
+## How it is drawn
+
+The ground is a tiling grass texture baked into an off-screen canvas at
+start-up, with turf patches, flowers, stones and grass tufts scattered by the
+world's own hash so nothing repeats. Slimes are painted once per kind and
+colour into their own small canvas and then stamped, which reads better than a
+flat circle and costs less than shading each one every frame. Glows, the light
+around the hero and the vignette are baked sprites too.
+
+A small governor watches the frame time: if frames start costing more than a
+smooth sixtieth of a second the extra flourishes switch themselves off, so an
+older phone keeps the game responsive and a fast one keeps the polish.
+
 ## How it is built
 
 `index.html` is the whole game: canvas 2D drawing, WebAudio synthesis for
