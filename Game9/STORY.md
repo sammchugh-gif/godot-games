@@ -157,6 +157,13 @@ full screen with HINT and LEAVE chips, failure gives a hint and another go
 with no penalty, and success slams the INTEL WON stamp and reads the intel
 aloud.
 
+HINT is always worth pressing and never costs anything. In the puzzle games
+Vi names the next move outright; in the two games that are about timing
+rather than thinking, HINT slows the game down instead: the lock pick's
+marker crawls and its green band widens, and the laser beams drop to a third
+of their speed for several seconds. Nothing in any mini-game can undo
+progress the player has already made.
+
 - **Lie detector**: statements on a polygraph strip; TRUTH or LIE. Levels
   add statements, shrink the spikes, hide the sweat and add nervous wobbles
   on true statements.
@@ -171,7 +178,8 @@ aloud.
   and more decoy mirrors.
 - **Keypad memory**: sequences up to 8, flashed faster.
 - **Circuit hack**: boards up to 9 by 9.
-- **Lock pick**: five to eight pins, smaller green bands, quicker markers.
+- **Lock pick**: five to eight pins, smaller green bands, quicker markers. A
+  miss costs a moment, never a pin that was already set.
 - **Wire cut**: three to five devices; from level 3 a fifth rule about
   yellow wires joins the manual.
 - **Telephoto**: three to five targets, longer focus, more sway.
@@ -184,13 +192,17 @@ aloud.
 - **Codebreaker** (new): guess the code, black pips for right place, white
   pips for right symbol; four or five pegs from five to seven symbols.
 - **Reactor rods** (new): the towers of Hanoi with three to five discs.
-- **Satellite photo** (new): a sliding-tile picture, 3 by 3 then 4 by 4.
+- **Satellite photo** (new): a scrambled picture, 3 by 3 then 4 by 4. Tap two
+  tiles to swap them; a tile that lands in the right place locks with a green
+  edge, so progress only ever goes forwards. The finished picture is shown
+  beside the board, and the hint names the exact pair to swap next.
 - **Sonar** (new): ping a grid, read the distance, find the signal in eight
   to ten pings.
 - **Vault rings** (new): line up the notches; inner rings drag the ring
   outside them, so innermost first.
 - **Spot the difference** (new): four to seven changes between two pictures.
-- **Laser hall** (new): cross a room of sweeping and spinning beams.
+- **Laser hall** (new): cross a room of sweeping and spinning beams. HINT
+  slows them right down for a few seconds.
 - **Passport match** (new): memory pairs of the cast's faces.
 
 ## Controls

@@ -41,7 +41,7 @@ The whole story, cast and mission design is in [STORY.md](STORY.md).
 Lie detector, safe cracker, cipher wheel, masked ball, radio tuner, mirror
 maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
 inside the 3D world), stealth yard, shredder, the countdown override,
-codebreaker, reactor rods (towers of Hanoi), satellite photo (sliding
+codebreaker, reactor rods (towers of Hanoi), satellite photo (swap the
 tiles), sonar, vault rings, spot the difference, laser hall and passport
 match. Every mission carries a difficulty level from 1 to 4, and each game
 grows with it: more statements and subtler spikes on the polygraph, four
