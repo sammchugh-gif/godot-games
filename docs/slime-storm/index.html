@@ -116,7 +116,7 @@ function fxWatch(dt){fxAcc+=dt;fxN++;if(fxN<45)return;const avg=fxAcc/fxN;fxAcc=
 const store={get(k,d){try{const v=localStorage.getItem("slimestorm."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("slimestorm."+k,JSON.stringify(v))}catch(e){}}};
 
 // ---------------------------------------------------------------- audio
-let AC=null,master=null,musicOn=true,sfxOn=true,musicTimer=null,musicStep=0,musicNext=0;
+let AC=null,master=null,musicOn=store.get("music",true)!==false,sfxOn=true,musicTimer=null,musicStep=0,musicNext=0;
 function audioInit(){if(AC)return;try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination);}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC||!sfxOn)return;const t=AC.currentTime+(delay||0);const o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02);}
 function noise(dur,vol,delay){if(!AC||!sfxOn)return;const t=AC.currentTime+(delay||0);const n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){l=l*0.7+(Math.random()*2-1)*0.3;d[i]=l*(1-i/n);}const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=vol;s.connect(g);g.connect(master);s.start(t);}
@@ -146,8 +146,12 @@ function musicTick(){if(!AC||!musicOn){return}const spb=60/150/2;while(musicNext
  if(b){const f=440*Math.pow(2,(b-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*1.6);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb*1.7);}
  if(i%4==0){noise(0.04,0.05,t-AC.currentTime)}
  musicStep++;musicNext+=spb;}}
-function musicStart(){if(!AC)return;if(musicTimer)return;musicNext=AC.currentTime+0.1;musicStep=0;musicTimer=setInterval(musicTick,100);}
+function musicStart(){if(!AC||musicTimer||!musicOn)return;musicNext=AC.currentTime+0.1;musicStep=0;musicTimer=setInterval(musicTick,100);}
 function musicStop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+// One owner for the switch: flipping it used to set a flag and leave the
+// track playing until something else happened to stop it.
+function musicToggle(){musicOn=!musicOn;store.set("music",musicOn);
+ if(musicOn){audioInit();if(scene==="play")musicStart()}else musicStop()}
 
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>{keys[e.code]=false});
@@ -165,15 +169,21 @@ function pos(e){return rectPos(e.clientX,e.clientY)}
 function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
 function stillDown(e){if(touch.id<0)return true;if(touch.id===99)return mouseDown;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
 window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id);
-window.addEventListener("touchstart",e=>{audioInit();if(!stillDown(e))touch.id=-1;
+// A tap on a touch screen is followed by a synthetic mouse event a moment
+// later. Both reached the canvas, so every button ran twice on one tap. It
+// went unnoticed because most buttons are idempotent - but a toggle flipped
+// straight back, which is why MUSIC would not turn off.
+let lastTouchAt=0;
+const ghostMouse=()=>performance.now()-lastTouchAt<900;
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();if(!stillDown(e))touch.id=-1;
  for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
   if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
-window.addEventListener("touchmove",e=>{for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
-function tend(e){for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
+function tend(e){lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
-cv.addEventListener("mousedown",e=>{audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
+cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
 window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y}});
 window.addEventListener("mouseup",()=>{mouseDown=false;if(touch.id===99)touch.id=-1});
 function stickVec(){let x=0,y=0;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;
@@ -519,7 +529,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);
   text(h.name,x+cw/2,y+ch*0.62,26,sel?"#ffe060":"#fff");text(h.desc,x+cw/2,y+ch*0.74,14,"#dfe");const r=records[h.id];text(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",x+cw/2,y+ch*0.88,14,"#bfe");
   btn(x,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
  btn(W/2-150,H*0.36+ch+24,300,64,"PLAY AS "+HEROES[heroIdx].name,()=>{start()},{fill:"#3aa04a",size:26});
- btn(20,H-64,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>{musicOn=!musicOn;store.set("music",musicOn)},{size:16});
+ btn(20,H-64,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});
  text("Left thumb anywhere to move.   Grab gems to level up.   Pick an upgrade card.",W/2,H-30,15,"#cfe");
  drawButtons();cx.restore();}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");
@@ -539,7 +549,7 @@ function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"YOU SURVIVED TH
  buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"PLAY AGAIN",()=>start(),{fill:"#3aa04a",size:24});btn(W/2+10,H*0.72,ew,60,"HEROES",()=>{scene="title"},{size:24});
  if(won){for(let i=0;i<30;i++){const x=(hash(i,3)*W+frameT*60*(1+hash(i,5)))%W,y=(hash(i,9)*H+frameT*90)%H;cx.fillStyle=["#ff6080","#ffe060","#60c0ff","#8dff5a"][i%4];cx.fillRect(x,y,8,8);}}
  drawButtons();cx.restore();}
-function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#3aa04a",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord()},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>{musicOn=!musicOn;store.set("music",musicOn)},{size:20});drawButtons();cx.restore();}
+function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#3aa04a",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord()},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();cx.restore();}
 function start(){newRun(HEROES[heroIdx]);scene="play";audioInit();musicStart();}
 function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene="pause";musicStop()}else if(scene==="pause"){scene="play";musicStart()}}
  if(scene==="title"&&(code==="Space"||code==="Enter"))start();
