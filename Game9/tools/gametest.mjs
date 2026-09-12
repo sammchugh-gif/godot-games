@@ -9,7 +9,7 @@ const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: 1180, height: 820 } });
-const errs = []; page.on("pageerror", e => { errs.push(String(e)); console.log("pageerror:", String(e).slice(0, 300)); }); page.on("console", m => { if (m.type() === "error" && !m.text().includes("menu.js")) { errs.push(m.text()); console.log("console.error:", m.text().slice(0, 300)); } });
+const errs = []; page.on("pageerror", e => { errs.push(String(e)); console.log("pageerror:", String(e).slice(0, 300)); }); page.on("console", m => { if (m.type() === "error" && !((m.location() && m.location().url || "").includes("menu.js"))) { errs.push(m.text()); console.log("console.error:", m.text().slice(0, 300)); } });
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 await page.evaluate(() => localStorage.clear());

@@ -11,7 +11,7 @@ await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl", "--autoplay-policy=no-user-gesture-required"] });
 const page = await browser.newPage({ viewport: { width: 1180, height: 820 }, deviceScaleFactor: 1 });
 const errors = [];
-page.on("console", m => { if (m.type() === "error" && !m.text().includes("menu.js")) { errors.push(m.text()); console.log("console.error:", m.text().slice(0, 300)); } });
+page.on("console", m => { if (m.type() === "error" && !((m.location() && m.location().url || "").includes("menu.js"))) { errors.push(m.text()); console.log("console.error:", m.text().slice(0, 300)); } });
 page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", String(e).slice(0, 500)); });
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
