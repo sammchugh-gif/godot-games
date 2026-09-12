@@ -353,6 +353,22 @@ function pos(e){return rectPos(e.clientX,e.clientY)}
 // which element the browser called the target.
 function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
 function stillDown(e){if(touch.id<0)return true;if(touch.id===99)return mouseDown;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
+// With ?diag=1 on the address the game prints what it thinks the controls are
+// doing, straight onto the screen. The shelf can only show this from a card
+// behind a button it hides while you are playing, which is no use when the
+// thing you are trying to diagnose is the controls not working.
+const DIAG=/[?&]diag=1(&|$)/.test(location.search);
+function drawDiag(){
+ if(!DIAG)return;
+ let s="";try{s=window.__shelfInput()}catch(e){s="?"}
+ cx.save();cx.setTransform(1,0,0,1,0,0);
+ const z=Math.max(9,Math.min(13,innerWidth*0.028)),dpr=Math.min(window.devicePixelRatio||1,2);
+ cx.scale(dpr,dpr);
+ cx.font="600 "+z+"px ui-monospace,Menlo,monospace";cx.textAlign="left";cx.textBaseline="bottom";
+ const w=cx.measureText(s).width+10,y=innerHeight-4;
+ cx.fillStyle="rgba(0,0,0,0.62)";cx.fillRect(2,y-z-4,w,z+6);
+ cx.fillStyle="#8fe3ff";cx.fillText(s,7,y);
+ cx.restore()}
 window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id)+
   " fingers:"+liveN()+" events:"+evN+" resets:"+healN+" scene:"+scene;
 // A tap on a touch screen is followed by a synthetic mouse event a moment
@@ -843,6 +859,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Ma
  if(scene==="play"){update(dt);}
  if(scene==="play"||scene==="levelup"||scene==="pause"||scene==="over"||scene==="win"){if(G){drawWorld();drawHUD();}}
  if(scene==="title")drawTitle();else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
+ drawDiag();
 }
 buildArt();
 requestAnimationFrame(frame);

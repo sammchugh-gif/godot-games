@@ -20,11 +20,19 @@
     try { addEventListener(n, function () { touched = true; }, { capture: true, once: true }); } catch (e) {}
   });
 
-  function bust() { return url + (url.indexOf("?") < 0 ? "?" : "&") + "_=" + Date.now(); }
+  /* keep whatever the address already carried - ?diag=1 among it - or a
+     reload here silently throws away the thing the page was opened for */
+  var keep = (location.search || "").replace(/^\?/, "").split("&")
+    .filter(function (p) { return p && !/^(_|v)=/.test(p); }).join("&");
+  function withKeep(u, extra) {
+    var q = [keep, extra].filter(Boolean).join("&");
+    return q ? u + "?" + q : u;
+  }
+  function bust() { return withKeep(url, "_=" + Date.now()); }
   function stamp(res) { return res.headers.get("etag") || res.headers.get("last-modified") || ""; }
   function reloadFresh(v) {
     if (touched) return;
-    location.replace(url + "?v=" + encodeURIComponent(v).replace(/[^A-Za-z0-9._-]/g, "").slice(0, 32));
+    location.replace(withKeep(url, "v=" + encodeURIComponent(v).replace(/[^A-Za-z0-9._-]/g, "").slice(0, 32)));
   }
 
   /* First visit on this device: there is no stored stamp to compare against,
