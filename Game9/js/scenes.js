@@ -76,6 +76,17 @@ SCENES.london = function () {
   this.station("flat", 14.2, 14.6, "door", 0xffd166, "Flat above the chip shop");
   this.addPerson("dave", -14, 7.2, 0.4, { coat: 0x3a3a3a, hat: "cap", hatColor: 0x4a4a3a, skin: 0xd9a57c }, "Dave");
   this.weather("rain");
+  // UMBRA left three of these behind
+  this.bug(17, 0.09, 7);
+  this.bug(-29, 0.09, -2);
+  this.bug(-4, 0.09, 13);
+
+  this.station("getaway", -20, 1, "crate", 0xffd166, "The river steps");
+
+  // ambient life
+  this.crowd([[4, -1], [24, -1], [24, 7], [4, 7]], 5, { speed: 1.1, hat: "flatcap" });
+  this.birds(2, 20, 4, 9, 7, { speed: 0.22 });
+
   return { x: -4, z: 3, yaw: -0.5, bounds: { x0: -32, x1: 38, z0: -5, z1: 16 } };
 };
 
@@ -147,6 +158,15 @@ SCENES.venice = function () {
   this.station("workshop", 20, 5.6, "furnace", 0xff8040, "The Glassmaker's workshop");
   this.station("piazza", -20, 1.5, "mask", 0xffd166, "The carnival piazza");
   this.addPerson("lorenzo", 6, -4.2, Math.PI, { coat: 0xc0392b, hat: "boater", skin: 0xe2b48c, prop: "oar", trousers: 0x111111 }, "Lorenzo");
+  // UMBRA left three of these behind
+  this.bug(-28, 0.09, 2);
+  this.bug(26, 0.09, -2);
+  this.bug(-6, 0.09, -2);
+
+  // ambient life
+  this.crowd([[7, -3], [27, -3], [27, 6], [7, 6]], 5, { speed: 1.0 });
+  this.birds(0, 17, -2, 10, 7, { color: 0xe8e8e8, speed: 0.3 });
+
   return { x: 0, z: 4, yaw: 0.2, bounds: { x0: -31, x1: 29, z0: -5.2, z1: 12 } };
 };
 
@@ -247,6 +267,15 @@ SCENES.cairo = function () {
   this.station("tomb", -30, -2, "tomb", 0xffb040, "The tomb of light");
   this.addPerson("nadia", -18, 4, 2.0, { coat: 0xb8860b, hat: "scarf", hatColor: 0x8a2a2a, skin: 0xc9946a, trousers: 0x6a5a4a }, "Dr Farouk");
   this.weather("dust", this.mobile ? 250 : 500);
+  // UMBRA left three of these behind
+  this.bug(7, 0.09, -10);
+  this.bug(33, 0.09, 2);
+  this.bug(-18, 0.09, -9);
+
+  // ambient life
+  this.crowd([[7, -5], [33, -5], [33, 5], [7, 5]], 4, { speed: 1.0, hat: "scarf" });
+  this.birds(6, 22, -2, 12, 5, { speed: 0.16 });
+
   return { x: 0, z: 4, yaw: 0.15, bounds: { x0: -31, x1: 36, z0: -13.2, z1: 12 } };
 };
 
@@ -319,6 +348,16 @@ SCENES.tokyo = function () {
   this.station("terminal", -6.2, 5.2, "screen", 0x40c0ff, "The root terminal");
   this.addPerson("yuki", -9, 6.4, Math.PI, { coat: 0xc0392b, hat: "bandana", skin: 0xf3d9c4, trousers: 0x222233 }, "Yuki");
   this.weather("rain");
+  // UMBRA left three of these behind
+  this.bug(8, 0.09, 2);
+  this.bug(-8, 0.09, -10);
+  this.bug(5, 0.09, -10);
+
+  // ambient life
+  this.crowd([[-3, -17], [9, -17], [9, -3], [-3, -3]], 5, { speed: 1.25 });
+  this.traffic([[-31, 22], [32, 22], [32, 26], [-31, 26]], 4, { speed: 8 });
+  this.birds(0, 19, -4, 8, 4, { speed: 0.28 });
+
   return { x: 0, z: 9, yaw: 0, bounds: { x0: -11.5, x1: 11.5, z0: -19, z1: 12 } };
 };
 
@@ -368,6 +407,16 @@ SCENES.newyork = function () {
   this.box(2.2, 3.0, 0.3, this.M({ color: 0x2a2a30, metalness: 0.5 }), -10, 1.5, -25.9, {}); this.plane(2.0, 0.5, this.M({ map: PT.sign("OFFICE", "#2a2a30", "#ffd166", "800 60px serif") }), -10, 3.4, -25.84);
   this.station("office", -10, -23.4, "sonar", 0x7fffb0, "Sterling's office");
   this.addPerson("sal", 10.5, 3.8, Math.PI, { coat: 0x6b5b45, hat: "trilby", skin: 0xe0b08a, trousers: 0x3a3a3a }, "Detective Sal");
+  // UMBRA left three of these behind
+  this.bug(2, 0.09, -8);
+  this.bug(-10, 0.09, 13);
+  this.bug(-10, 0.09, -15);
+
+  // ambient life
+  this.crowd([[-11, -22], [11, -22], [11, 3], [-11, 3]], 5, { speed: 1.3, hat: "trilby" });
+  this.traffic([[-33, 26], [33, 26], [33, 30], [-33, 30]], 4, { speed: 9, colors: [0xf0b429, 0xf0b429, 0x2a2a30, 0xf0b429] });
+  this.birds(0, 21, -6, 9, 6, { speed: 0.26 });
+
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -13, x1: 13, z0: -24, z1: 16 } };
 };
 
@@ -436,6 +485,15 @@ SCENES.rio = function () {
   this.station("docks", -22.4, -8, "crate", 0xffd166, "Pier 9, the container yard");
   this.addPerson("tiago", 3, 1.5, Math.PI, { coat: 0x27ae60, hair: 0x1a1a1a, skin: 0xb57a4e, prop: "board", trousers: 0xf0e0c0 }, "Tiago");
   this.photoTargets = [{ id: "crate", x: -42, y: 8.6, z: -48.3, label: "the crate" }, { id: "ship", x: -40, y: 4, z: -46.4, label: "the ship's name" }, { id: "kolya", x: -33, y: 1.3, z: -26, label: "Kolya" }, { id: "crane", x: -34, y: 21, z: -37, label: "the crane cab" }];
+  // UMBRA left three of these behind
+  this.bug(-8, 0.09, -4);
+  this.bug(27, 0.09, -9);
+  this.bug(11, 0.09, -2);
+
+  // ambient life
+  this.crowd([[7, -10], [23, -10], [23, 4], [7, 4]], 5, { speed: 1.05 });
+  this.birds(4, 18, -6, 11, 7, { color: 0xf0f0f0, speed: 0.3 });
+
   return { x: 0, z: 2, yaw: 0.3, bounds: { x0: -23, x1: 30, z0: -18, z1: 6 } };
 };
 
@@ -505,5 +563,13 @@ SCENES.siberia = function () {
   this.station("control", 9, -18.2, "screen", 0x40c0ff, "The control room");
   this.addPerson("natasha", -4.5, 2.5, Math.PI, { coat: 0x8a9ab0, hat: "helmet", hatColor: 0xf0f0f4, hair: 0xe8c070, skin: 0xf2d5c2, trousers: 0x3a4250 }, "Natasha");
   this.weather("snow");
+  // UMBRA left three of these behind
+  this.bug(16, 0.09, -12);
+  this.bug(-16, 0.09, 11);
+  this.bug(9, 0.09, 11);
+
+  // ambient life
+  this.crowd([[-17, -10], [17, -10], [17, 2], [-17, 2]], 3, { speed: 0.85, hat: "ushanka" });
+
   return { x: 0, z: 9, yaw: 0, bounds: { x0: -19, x1: 19, z0: -18.8, z1: 14.5 } };
 };

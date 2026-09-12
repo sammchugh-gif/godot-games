@@ -10,11 +10,15 @@ export const COLORS = { red: "#e63946", blue: "#3a86ff", yellow: "#ffd60a", whit
 export const L = (mg, ...v) => v[Math.min(v.length, Math.max(1, mg.level || 1)) - 1];
 
 export class MG {
-  constructor(G, m) { this.G = G; this.m = m; this.level = m.level || 1; this.params = m.params || {}; this.t = 0; this.done = false; this.onDone = null; this.msg = null; this.title = m.title; this.sub = ""; this.instr = ""; }
+  constructor(G, m) { this.G = G; this.m = m; this.level = m.level || 1; this.params = m.params || {}; this.t = 0; this.done = false; this.onDone = null; this.msg = null; this.title = m.title; this.sub = ""; this.instr = ""; this.misses = 0; this.hintsUsed = 0; this.slipAllow = 1; }
   start() {} stop() {}
   update(dt) { this.t += dt; if (this.msg) { this.msg.t -= dt; if (this.msg.t <= 0) this.msg = null; } this.tick(dt); }
   tick() {}
-  say(t, good, dur) { this.msg = { text: t, t: dur || 2.6, good }; if (good === true) SFX.good(); else if (good === false) SFX.bad(); }
+  say(t, good, dur) { this.msg = { text: t, t: dur || 2.6, good }; if (good === true) SFX.good(); else if (good === false) { SFX.bad(); this.miss(); } }
+  // a slip: something the player got wrong. Costs a star once past the game's allowance.
+  miss(n) { this.misses += n || 1; }
+  // three stars: no hint and no more slips than this game allows. Two: one of those. One: finished.
+  stars() { let n = 3; if (this.hintsUsed > 0) n--; if (this.misses > this.slipAllow) n--; return Math.max(1, n); }
   win() { if (this.done) return; this.done = true; SFX.fanfare(); this.say("INTEL SECURED", true, 3); setTimeout(() => { if (this.onDone) this.onDone(true); }, 1100); }
   down() {} move() {} up() {} button() {}
   hint() { return ""; }
