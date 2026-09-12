@@ -2139,12 +2139,12 @@ function heartIcon(x,y,s,fill){
  cx.restore()}
 // ---------------------------------------------------------------- HUD
 function drawHUD(){
- const p=G.p,L=14+SAFE.l,Tp=12+SAFE.t;
+ const p=G.p,L=14+SAFE.l,Tp=12+SAFE.t,HL=L+38; // the exit button owns the corner
  // hearts
  const hs=27,per=Math.min(Math.max(1,p.maxHp),8),show=Math.min(p.maxHp,16);
  for(let i=0;i<show;i++){
   const row=Math.floor(i/per),col=i%per;
-  heartIcon(L+14+col*(hs-4),Tp+14+row*(hs-6),hs,clamp(p.hp-i,0,1))}
+  heartIcon(HL+14+col*(hs-4),Tp+14+row*(hs-6),hs,clamp(p.hp-i,0,1))}
  const rows=Math.ceil(show/per);
  let y=Tp+8+rows*(hs-6)+8;
  // gold and keys
