@@ -11,6 +11,9 @@ const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--ena
 const page = await browser.newPage({ viewport: { width: 1180, height: 820 } });
 const errs = []; page.on("pageerror", e => { errs.push(String(e)); console.log("pageerror:", String(e).slice(0, 300)); });
 page.on("console", m => { if (m.type() === "error" && !m.text().includes("404")) { errs.push(m.text()); console.log("console.error:", m.text().slice(0, 200)); } });
+// __stubShelf: ../menu.js and ../fresh.js belong to the shelf around the
+// games and only resolve when a tool serves Game9/ directly, so stub them
+await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 const ev = (f, a) => page.evaluate(f, a);
