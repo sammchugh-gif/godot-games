@@ -232,6 +232,22 @@ window.addEventListener("pointercancel",mouseRelease);
 window.addEventListener("dragend",mouseRelease);
 document.addEventListener("mouseleave",mouseRelease);
 window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
+// With ?diag=1 on the address the game prints what it thinks the controls are
+// doing, straight onto the screen. The shelf can only show this from a card
+// behind a button it hides while you are playing, which is no use when the
+// thing you are trying to diagnose is the controls not working.
+const DIAG=/[?&]diag=1(&|$)/.test(location.search);
+function drawDiag(){
+ if(!DIAG)return;
+ let s="";try{s=window.__shelfInput()}catch(e){s="?"}
+ cx.save();cx.setTransform(1,0,0,1,0,0);
+ const z=Math.max(9,Math.min(13,innerWidth*0.028)),dpr=Math.min(window.devicePixelRatio||1,2);
+ cx.scale(dpr,dpr);
+ cx.font="600 "+z+"px ui-monospace,Menlo,monospace";cx.textAlign="left";cx.textBaseline="bottom";
+ const w=cx.measureText(s).width+10,y=innerHeight-4;
+ cx.fillStyle="rgba(0,0,0,0.62)";cx.fillRect(2,y-z-4,w,z+6);
+ cx.fillStyle="#8fe3ff";cx.fillText(s,7,y);
+ cx.restore()}
 window.__shelfInput=()=>"wheel "+(wheel.id<0?"free":"held#"+wheel.id)+" "+
   (pads.drift.down?"D":"-")+(pads.item.down?"I":"-")+" resets:"+healN+" scene:"+scene;
 
@@ -1796,6 +1812,7 @@ function frame(ts){
  fxWatch(dt);
  step(dt);
  render();
+ drawDiag();
 }
 function boot(){
  bakeKarts();bakeProps();
