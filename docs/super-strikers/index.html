@@ -779,43 +779,60 @@ function drawTitle(){cx.fillStyle="#14401f";cx.fillRect(0,0,W,H);
  drawButtons()}
 function drawSetup(){cx.fillStyle="#14401f";cx.fillRect(0,0,W,H);
  buttons=[];const narrow=W<660;
- const cols=narrow?2:4,cw=Math.min(150,(W-40)/cols-10),ch=58,x0=W/2-(cols*(cw+10)-10)/2;
+ const cols=narrow?2:4,cw=Math.min(150,(W-40)/cols-10),x0=W/2-(cols*(cw+10)-10)/2;
  const rowsN=Math.ceil(TEAMS.length/cols);
- const contentH=44+rowsN*(ch+10)+(cfg.cup?10:70)+96+60;
- const top=Math.max(SAFE.t+10,(H-contentH)/2);
- textFit(cfg.cup?"PICK YOUR TEAM FOR THE CUP":"PICK THE TEAMS",W/2,top+16,Math.min(30,W/16),"#ffe14d",W-40);
- const y0=top+44;
- TEAMS.forEach((T,i)=>{const r=Math.floor(i/cols),c=i%cols,x=x0+c*(cw+10),y=y0+r*(ch+10);
+ // This used to be laid out at its natural size and centred, so on a phone in
+ // landscape BACK and KICK OFF fell off the bottom edge. Work out what it
+ // needs, and when that is more than the screen has, shrink it until it fits.
+ const B={hdr:44,ch:58,gap:10,mid:(cfg.cup?10:70),d1:40,d2:36,dg:8,dgap:24,bh:50,pad:12};
+ const needH=B.hdr+rowsN*(B.ch+B.gap)+B.mid+B.d1+B.dg+B.d2+B.dgap+B.bh+B.pad;
+ const k=Math.min(1,(H-SAFE.t-SAFE.b-14)/needH);
+ const hdr=B.hdr*k,ch=Math.max(40,B.ch*k),gap=B.gap*k,mid=B.mid*k;
+ const d1=Math.max(28,B.d1*k),d2=Math.max(26,B.d2*k),dg=B.dg*k,dgap=B.dgap*k,bh=Math.max(38,B.bh*k);
+ const total=hdr+rowsN*(ch+gap)+mid+d1+dg+d2+dgap+bh+B.pad;
+ const top=Math.max(SAFE.t+8,(H-total)/2);
+ textFit(cfg.cup?"PICK YOUR TEAM FOR THE CUP":"PICK THE TEAMS",W/2,top+hdr*0.45,
+  Math.min(30,W/16,hdr*0.6),"#ffe14d",W-40);
+ const y0=top+hdr;
+ TEAMS.forEach((T,i)=>{const r=Math.floor(i/cols),c=i%cols,x=x0+c*(cw+10),y=y0+r*(ch+gap);
   const mine=i===cfg.team,theirs=i===cfg.opp&&!cfg.cup;
   cx.fillStyle=mine?"rgba(255,225,77,0.25)":theirs?"rgba(120,180,255,0.2)":"rgba(0,0,0,0.3)";rr(x,y,cw,ch,10);cx.fill();
   cx.lineWidth=mine||theirs?3:1.5;cx.strokeStyle=mine?"#ffe14d":theirs?"#7fb4ff":"rgba(255,255,255,0.3)";cx.stroke();
   cx.fillStyle=T.kit;rr(x+6,y+6,16,ch-12,4);cx.fill();
   cx.fillStyle=T.kit2;rr(x+24,y+6,7,ch-12,3);cx.fill();
-  textFit(T.short,x+cw/2+14,y+20,19,"#fff",cw-46);
-  textFit(T.name.split("'")[0],x+cw/2+14,y+40,12,"#cfe",cw-46);
+  textFit(T.short,x+cw/2+14,y+ch*0.34,Math.min(19,ch*0.33),"#fff",cw-46);
+  textFit(T.name.split("'")[0],x+cw/2+14,y+ch*0.69,Math.min(12,ch*0.21),"#cfe",cw-46);
   btn(x,y,cw,ch,"",()=>{if(cfg.cup){cfg.team=i}else{if(i===cfg.team)return;
    if(i===cfg.opp)cfg.opp=cfg.team;cfg.team=i}},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- const rows=rowsN,yb=y0+rows*(ch+10)+10;
- if(!cfg.cup){text("tap a team to take it  ·  the other is your opponent",W/2,yb+2,13,"#bfe6c6");
-  btn(W/2-120,yb+18,110,42,"SWAP",()=>{const a=cfg.team;cfg.team=cfg.opp;cfg.opp=a},{size:16});
-  btn(W/2+10,yb+18,110,42,"OPPONENT",()=>{cfg.opp=(cfg.opp+1)%TEAMS.length;if(cfg.opp===cfg.team)cfg.opp=(cfg.opp+1)%TEAMS.length},{size:14})}
- const yd=yb+(cfg.cup?10:70);
+ const yb=y0+rowsN*(ch+gap);
+ if(!cfg.cup){
+  textFit("tap a team to take it  \u00b7  the other is your opponent",W/2,yb+mid*0.11,
+   Math.min(13,mid*0.19),"#bfe6c6",W-30);
+  const sw=Math.min(110,(W-60)/2),sh=Math.max(30,mid*0.54);
+  btn(W/2-sw-8,yb+mid*0.26,sw,sh,"SWAP",()=>{const a=cfg.team;cfg.team=cfg.opp;cfg.opp=a},
+   {size:Math.min(16,sh*0.38)});
+  btn(W/2+8,yb+mid*0.26,sw,sh,"OPPONENT",()=>{cfg.opp=(cfg.opp+1)%TEAMS.length;
+   if(cfg.opp===cfg.team)cfg.opp=(cfg.opp+1)%TEAMS.length},{size:Math.min(14,sh*0.34)})}
+ const yd=yb+mid;
  const diffs=["easy","normal","hard"];
  diffs.forEach((d,i)=>{const bw2=Math.min(104,(W-60)/3),x=W/2-(3*(bw2+8)-8)/2+i*(bw2+8);
-  const sel=cfg.diff===d;cx.fillStyle=sel?"rgba(255,225,77,0.22)":"rgba(0,0,0,0.3)";rr(x,yd,bw2,40,9);cx.fill();
+  const sel=cfg.diff===d;cx.fillStyle=sel?"rgba(255,225,77,0.22)":"rgba(0,0,0,0.3)";rr(x,yd,bw2,d1,9);cx.fill();
   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?"#ffe14d":"rgba(255,255,255,0.3)";cx.stroke();
-  textFit(DIFF[d].name,x+bw2/2,yd+20,16,sel?"#ffe14d":"#fff",bw2-10);
-  btn(x,yd,bw2,40,"",()=>{cfg.diff=d},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  textFit(DIFF[d].name,x+bw2/2,yd+d1/2,Math.min(16,d1*0.4),sel?"#ffe14d":"#fff",bw2-10);
+  btn(x,yd,bw2,d1,"",()=>{cfg.diff=d},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  const halves=[[45,"SHORT"],[60,"NORMAL"],[90,"LONG"]];
- halves.forEach(([v,n],i)=>{const bw2=Math.min(104,(W-60)/3),x=W/2-(3*(bw2+8)-8)/2+i*(bw2+8),y=yd+48;
-  const sel=cfg.half===v;cx.fillStyle=sel?"rgba(140,220,255,0.2)":"rgba(0,0,0,0.3)";rr(x,y,bw2,36,9);cx.fill();
+ halves.forEach(([v,n],i)=>{const bw2=Math.min(104,(W-60)/3),x=W/2-(3*(bw2+8)-8)/2+i*(bw2+8),y=yd+d1+dg;
+  const sel=cfg.half===v;cx.fillStyle=sel?"rgba(140,220,255,0.2)":"rgba(0,0,0,0.3)";rr(x,y,bw2,d2,9);cx.fill();
   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?"#7fd6ff":"rgba(255,255,255,0.3)";cx.stroke();
-  textFit(n,x+bw2/2,y+18,14,sel?"#7fd6ff":"#fff",bw2-10);
-  btn(x,y,bw2,36,"",()=>{cfg.half=v},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- const yg=yd+100;
- btn(W/2-150,yg,140,50,"BACK",()=>{scene="title"},{size:18});
- btn(W/2+10,yg,140,50,cfg.cup?"START CUP":"KICK OFF",()=>{save.team=cfg.team;store.set("save",save);
-  if(cfg.cup){cup={round:0,opps:pickOpps(cfg.team,3),won:false,lost:false};scene="cup"}else startMatch()},{fill:"#2a8a3a",size:18});
+  textFit(n,x+bw2/2,y+d2/2,Math.min(14,d2*0.38),sel?"#7fd6ff":"#fff",bw2-10);
+  btn(x,y,bw2,d2,"",()=>{cfg.half=v},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+ let yg=yd+d1+dg+d2+dgap;
+ yg=Math.min(yg,H-SAFE.b-10-bh);
+ const gw=Math.min(140,(W-56)/2);
+ btn(W/2-gw-8,yg,gw,bh,"BACK",()=>{scene="title"},{size:Math.min(18,bh*0.38)});
+ btn(W/2+8,yg,gw,bh,cfg.cup?"START CUP":"KICK OFF",()=>{save.team=cfg.team;store.set("save",save);
+  if(cfg.cup){cup={round:0,opps:pickOpps(cfg.team,3),won:false,lost:false};scene="cup"}else startMatch()},
+  {fill:"#2a8a3a",size:Math.min(18,bh*0.38)});
  drawButtons()}
 function pickOpps(mine,n){const pool=TEAMS.map((t,i)=>i).filter(i=>i!==mine);
  for(let i=pool.length-1;i>0;i--){const j=rint(0,i);const t=pool[i];pool[i]=pool[j];pool[j]=t}
@@ -855,11 +872,18 @@ function drawResult(){drawMatch();cx.fillStyle="rgba(4,14,8,0.78)";cx.fillRect(0
  textFit(M.teams[0].def.short+"  "+M.teams[0].score+" - "+M.teams[1].score+"  "+M.teams[1].def.short,W/2,H*0.26+58,Math.min(32,W/16),"#fff",W-40);
  if(pk&&pk.shots[0].length)text("penalties "+pk.shots[0].filter(Boolean).length+" - "+pk.shots[1].filter(Boolean).length,W/2,H*0.26+96,18,"#cfe");
  text("shots "+M.shots[0]+" - "+M.shots[1]+"    saves "+M.stats.saves+"    tackles "+M.stats.tackles,W/2,H*0.26+126,15,"#bfe6c6");
- const y=H*0.64;
- if(cfg.cup&&!cup.won&&!cup.lost)btn(W/2-110,y,220,54,"NEXT ROUND",()=>{scene="cup"},{fill:"#2a8a3a",size:19});
- else if(cfg.cup)btn(W/2-110,y,220,54,"CUP TABLE",()=>{scene="cup"},{fill:"#2a8a3a",size:19});
- else btn(W/2-230,y,220,54,"PLAY AGAIN",()=>startMatch(),{fill:"#2a8a3a",size:19});
- btn(W/2+(cfg.cup?-110:10),y+(cfg.cup?62:0),220,54,"MENU",()=>{scene="title";pk=null},{size:19});
+ // Two 220px buttons side by side need 460px, which a phone has not got, so
+ // the pair was hanging off both edges of the screen.
+ const rw=Math.min(220,(W-44)/2),rh=Math.min(54,H*0.12);
+ const y=Math.min(H*0.64,H-SAFE.b-14-rh*(cfg.cup?2.2:1));
+ if(cfg.cup){
+  btn(W/2-rw/2,y,rw,rh,(!cup.won&&!cup.lost)?"NEXT ROUND":"CUP TABLE",()=>{scene="cup"},
+   {fill:"#2a8a3a",size:Math.min(19,rh*0.36)});
+  btn(W/2-rw/2,y+rh+8,rw,rh,"MENU",()=>{scene="title";pk=null},{size:Math.min(19,rh*0.36)});
+ }else{
+  btn(W/2-rw-8,y,rw,rh,"PLAY AGAIN",()=>startMatch(),{fill:"#2a8a3a",size:Math.min(19,rh*0.36)});
+  btn(W/2+8,y,rw,rh,"MENU",()=>{scene="title";pk=null},{size:Math.min(19,rh*0.36)});
+ }
  drawButtons()}
 function drawPause(){drawMatch();cx.fillStyle="rgba(4,14,8,0.75)";cx.fillRect(0,0,W,H);buttons=[];
  textFit("PAUSED",W/2,H*0.3,Math.min(52,W/10),"#ffe14d",W-40);

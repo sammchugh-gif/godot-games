@@ -2123,6 +2123,20 @@ function text(s,x,y,size,color,align,weight){cx.font=(weight||"bold")+" "+size+"
 function textFit(s,x,y,size,color,maxw,align,weight){cx.font=(weight||"bold")+" "+size+"px sans-serif";
  const w=cx.measureText(s).width;
  text(s,x,y,w>maxw?Math.max(9,Math.floor(size*maxw/w)):size,color,align,weight)}
+function wrapLines(s,size,maxw,weight){cx.font=(weight||"bold")+" "+size+"px sans-serif";
+ const out=[];let line="";
+ for(const wd of String(s).split(" ")){const t=line?line+" "+wd:wd;
+  if(cx.measureText(t).width>maxw&&line){out.push(line);line=wd}else line=t}
+ if(line)out.push(line);return out}
+// A sentence should wrap, not shrink to 9px and run off the card. Shrink only
+// when even the wrap needs more lines than the space allows.
+function wrapFit(s,x,y,size,color,maxw,maxLines,lineH,align,weight){
+ let z=size,ls=wrapLines(s,z,maxw,weight);
+ while(z>8&&ls.length>maxLines){z-=1;ls=wrapLines(s,z,maxw,weight)}
+ const lh=lineH||Math.round(z*1.3);
+ ls=ls.slice(0,maxLines);
+ ls.forEach((l,i)=>textFit(l,x,y+i*lh,z,color,maxw,align,weight));
+ return ls.length*lh}
 function panel(x,y,w,h,r,fill,stroke){rr(cx,x,y,w,h,r==null?16:r);
  cx.fillStyle=fill||"rgba(14,12,22,0.88)";cx.fill();
  cx.lineWidth=3;cx.strokeStyle=stroke||"rgba(255,255,255,0.22)";cx.stroke()}
@@ -2392,19 +2406,21 @@ function drawHeroSelect(){
    cx.drawImage(sp,x+cw/2-sp.width*s/2,y+chh*0.05,sp.width*s,sp.height*s);
    textFit(h.name,x+cw/2,y+chh*0.56,24,h.col,cw-20);
    textFit(h.title,x+cw/2,y+chh*0.64,14,"rgba(255,255,255,0.6)",cw-20);
-   const words=h.blurb.split(" ");let line="",ly=y+chh*0.74;cx.font="600 14px sans-serif";
-   for(const wd of words){const t2=line?line+" "+wd:wd;
-    if(cx.measureText(t2).width>cw-28&&line){text(line,x+cw/2,ly,14,"rgba(255,255,255,0.82)",null,"600");line=wd;ly+=18}
-    else line=t2}
-   if(line)text(line,x+cw/2,ly,14,"rgba(255,255,255,0.82)",null,"600");
-   text("♥"+h.hp+"   FURY: "+h.fury,x+cw/2,y+chh-22,14,hexA(h.col,0.9));
+   // the blurb gets the band between the title and the stats line, no more
+   const sy=y+chh-22,bTop=y+chh*0.72,lh=Math.min(18,Math.max(13,chh*0.075));
+   const maxL=Math.max(1,Math.floor((sy-14-bTop)/lh)+1);
+   wrapFit(h.blurb,x+cw/2,bTop,14,"rgba(255,255,255,0.82)",cw-28,maxL,lh,null,"600");
+   textFit("♥"+h.hp+"   FURY: "+h.fury,x+cw/2,sy,14,hexA(h.col,0.9),cw-20);
   }else{
    const sp=ART.hero[h.id],s=chh*0.86/sp.height;
    cx.drawImage(sp,x+12,y+chh*0.07,sp.width*s,sp.height*s);
-   textFit(h.name,x+chh*0.9+4,y+24,21,h.col,cw-chh-24,"left");
-   textFit(h.title,x+chh*0.9+4,y+45,13,"rgba(255,255,255,0.6)",cw-chh-24,"left");
-   textFit(h.blurb,x+chh*0.9+4,y+70,13,"rgba(255,255,255,0.8)",cw-chh-24,"left","600");
-   textFit("♥"+h.hp+"   "+h.fury,x+chh*0.9+4,y+92,13,hexA(h.col,0.9),cw-chh-24,"left");
+   const tx=x+chh*0.9+4,tw=cw-chh-24;
+   const sy=y+chh-16,bTop=y+64,lh=15;
+   const maxL=Math.max(1,Math.floor((sy-12-bTop)/lh)+1);
+   textFit(h.name,tx,y+22,21,h.col,tw,"left");
+   textFit(h.title,tx,y+44,13,"rgba(255,255,255,0.6)",tw,"left");
+   wrapFit(h.blurb,tx,bTop,13,"rgba(255,255,255,0.8)",tw,maxL,lh,"left","600");
+   textFit("♥"+h.hp+"   "+h.fury,tx,sy,13,hexA(h.col,0.9),tw,"left");
   }
   if(wins[h.id])text("★"+wins[h.id],x+cw-22,y+18,15,"#ffd23f");
   btn(x,y,cw,chh,"",()=>{newRun(h.id);scene="play";audioInit();musicStart()},

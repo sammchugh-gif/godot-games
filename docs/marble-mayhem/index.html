@@ -23,9 +23,24 @@ const cv=document.getElementById("c"),cx=cv.getContext("2d");
 let W=0,H=0,DPR=1;const BW=960,BH=640;let board={x:0,y:0,s:1},tray={x:0,y:0,w:0,h:0,vertical:true};
 const TAU=Math.PI*2,clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by),rnd=(a,b)=>a+Math.random()*(b-a);
 const store={get(k,d){try{const v=localStorage.getItem("marblemayhem."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("marblemayhem."+k,JSON.stringify(v))}catch(e){}}};
-function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;const top=56;
- if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w;tray.y=top;tray.h=H-top;const aw=W-tray.w-16,ah=H-top-8;board.s=Math.min(aw/BW,ah/BH);board.x=8+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
- else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h;tray.w=W;const aw=W-16,ah=H-top-tray.h-8;board.s=Math.min(aw/BW,ah/BH);board.x=8+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
+const SAFE={t:0,r:0,b:0,l:0};
+(function(){const d=document.createElement("div");
+ d.style.cssText="position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;"+
+  "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+ document.body.appendChild(d);window.__safeProbe=d;})();
+function safeRead(){const d=window.__safeProbe;if(!d)return;const c=getComputedStyle(d);
+ SAFE.t=parseFloat(c.paddingTop)||0;SAFE.r=parseFloat(c.paddingRight)||0;
+ SAFE.b=parseFloat(c.paddingBottom)||0;SAFE.l=parseFloat(c.paddingLeft)||0}
+// the shelf's exit button owns the top-left corner of every game
+const EXITB=46;
+const HELP1="Planks, curves, bumpers, trampolines, fans, spinners, cannons and portals.";
+const HELP2="Tap a piece to select it, then use \u21ba \u21bb to turn it. Drag it off the board to remove it.";
+// the landscape hint line needs a strip of its own, or it lands on the goal cup
+const HINTH=26;
+function topH(){return SAFE.t+(W<620?94:56)}
+function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;safeRead();const top=topH();
+ if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w-SAFE.r;tray.y=top;tray.h=H-top-SAFE.b;const aw=W-tray.w-16-SAFE.l-SAFE.r,ah=H-top-8-SAFE.b-HINTH;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
+ else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h-SAFE.b;tray.w=W;const aw=W-16-SAFE.l-SAFE.r,ah=H-top-tray.h-8-SAFE.b;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
 window.addEventListener("resize",layout);layout();
 // ---------------------------------------------------------------- audio
 let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
@@ -47,6 +62,8 @@ const PIECES={
  portal:{name:"Portal",col:"#f39c12",r:20},
 };
 const ORDER=["plank","curve","tramp","bumper","fan","spinner","cannon","portal"];
+// the tray cell on a phone is ~37px wide, so the long names get a short form
+const SHORT={plank:"Plank",curve:"Curve",tramp:"Tramp",bumper:"Bumper",fan:"Fan",spinner:"Spin",cannon:"Cannon",portal:"Portal"};
 function segsOf(p,time){const s=[];const c=Math.cos(p.a),sn=Math.sin(p.a);
  if(p.t==="plank"||p.t==="tramp"){const L=PIECES[p.t].len/2;s.push({ax:p.x-c*L,ay:p.y-sn*L,bx:p.x+c*L,by:p.y+sn*L,e:PIECES[p.t].e,th:7,piece:p})}
  else if(p.t==="curve"){const R=PIECES.curve.r,n=8;for(let i=0;i<n;i++){const a0=p.a+Math.PI*0.5*i/n,a1=p.a+Math.PI*0.5*(i+1)/n;s.push({ax:p.x+Math.cos(a0)*R,ay:p.y+Math.sin(a0)*R,bx:p.x+Math.cos(a1)*R,by:p.y+Math.sin(a1)*R,e:0.35,th:6,piece:p})}}
@@ -78,11 +95,32 @@ let scene="title",mode="puzzle",levelIdx=0,pieces=[],marbles=[],running=false,si
 const progress=store.get("progress",{}),sandbox=store.get("sandbox",{slots:[null,null,null]});let sandboxSlot=0;
 let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function textW(s,size){cx.font="bold "+size+"px sans-serif";return cx.measureText(s).width}
+// shrink to the space that is actually there; returns the size used, or 0 when
+// even the floor will not fit, so the caller can drop the line instead
+function textFit(s,x,y,size,color,maxw,align,noStroke,floor){
+ let z=size;const f=floor||9;
+ while(z>f&&textW(s,z)>maxw)z-=1;
+ if(textW(s,z)>maxw)return 0;
+ text(s,x,y,z,color,align,noStroke);return z}
+function wrapLines(s,size,maxw){cx.font="bold "+size+"px sans-serif";
+ const out=[];let line="";
+ for(const wd of String(s).split(" ")){const t=line?line+" "+wd:wd;
+  if(cx.measureText(t).width>maxw&&line){out.push(line);line=wd}else line=t}
+ if(line)out.push(line);return out}
+function helpLines(s){return Math.min(2,wrapLines(s,15,W-32-SAFE.l-SAFE.r).length)}
+// a sentence should wrap to the width it has, not shrink until it is dropped
+function wrapFit(s,x,y,size,color,maxw,maxLines,lineH,align){
+ let z=size,ls=wrapLines(s,z,maxw);
+ while(z>9&&ls.length>maxLines){z-=1;ls=wrapLines(s,z,maxw)}
+ ls=ls.slice(0,maxLines);
+ ls.forEach((l,i)=>textFit(l,x,y+i*(lineH||z*1.25),z,color,maxw,align));
+ return ls.length}
 function text(s,x,y,size,color,align,noStroke){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";if(!noStroke){cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.6)";cx.lineJoin="round";cx.strokeText(s,x,y)}cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
 function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,12);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=2.5;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();text(b.label,b.x+b.w/2,b.y+b.h/2,o.size||20,o.color||"#fff","center",true)}}
 function level(){return LEVELS[levelIdx]}
 function loadLevel(i){levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
-function loadSandbox(slot){mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
+function loadSandbox(slot){slot=(slot|0)||0;mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
 function saveSandbox(){if(mode!=="sandbox")return;sandbox.slots[sandboxSlot]=pieces.filter(p=>!p.fixed).map(p=>({t:p.t,x:p.x,y:p.y,a:p.a,link:p.link}));store.set("sandbox",sandbox)}
 function resetRun(){running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
 function spawnMarbles(){marbles=[];if(mode==="puzzle"){const L=level();marbles.push({x:L.spawn[0],y:L.spawn[1],vx:0,vy:0,r:12,col:"#ff5a5a",alive:true})}
@@ -131,8 +169,8 @@ function toBoard(px,py){return{x:(px-board.x)/board.s,y:(py-board.y)/board.s}}
 function inBoard(p){return p.x>=0&&p.x<=BW&&p.y>=0&&p.y<=BH}
 function pieceAt(bp){for(let i=pieces.length-1;i>=0;i--){const p=pieces[i];if(p.fixed)continue;const r=p.t==="plank"?75:p.t==="tramp"?55:p.t==="curve"?95:p.t==="fan"?40:p.t==="spinner"?62:34;if(dist(bp.x,bp.y,p.x,p.y)<r)return p}return null}
 function trayItems(){const items=[];const keys=ORDER.filter(k=>mode==="sandbox"||(trayCount[k]||0)>0||(level().tray[k]||0)>0);const n=keys.length;
- if(tray.vertical){const cell=Math.min(78,(tray.h-20)/n);keys.forEach((k,i)=>items.push({k,x:tray.x+tray.w/2,y:tray.y+16+cell*i+cell/2,sz:Math.min(cell-8,tray.w-30)}))}
- else{const cell=Math.min(110,(tray.w-20)/n);keys.forEach((k,i)=>items.push({k,x:tray.x+10+cell*i+cell/2+(tray.w-20-cell*n)/2,y:tray.y+tray.h/2,sz:Math.min(cell-8,tray.h-30)}))}
+ if(tray.vertical){const cell=Math.min(78,(tray.h-20)/n);keys.forEach((k,i)=>items.push({k,cw:tray.w-14,x:tray.x+tray.w/2,y:tray.y+16+cell*i+cell/2,sz:Math.min(cell-8,tray.w-30)}))}
+ else{const cell=Math.min(110,(tray.w-20)/n);keys.forEach((k,i)=>items.push({k,cw:cell-3,x:tray.x+10+cell*i+cell/2+(tray.w-20-cell*n)/2,y:tray.y+tray.h/2,sz:Math.min(cell-8,tray.h-30)}))}
  return items}
 function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
 let pointerId=null;
@@ -180,32 +218,124 @@ function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,bo
  cx.restore()}
 function drawTray(){cx.fillStyle="#141a2b";cx.fillRect(tray.x,tray.y,tray.w,tray.h);cx.strokeStyle="rgba(255,255,255,0.12)";cx.strokeRect(tray.x+0.5,tray.y+0.5,tray.w-1,tray.h-1);
  for(const it of trayItems()){const n=trayCount[it.k]||0;cx.save();cx.beginPath();cx.rect(it.x-it.sz/2-4,it.y-it.sz/2-2,it.sz+8,it.sz-8);cx.clip();cx.translate(it.x,it.y-4);cx.globalAlpha=n>0?1:0.3;const sc=it.sz/150;cx.scale(sc,sc);trayDraw=true;drawPiece({t:it.k,x:it.k==="curve"?-32:0,y:it.k==="curve"?-32:0,a:it.k==="plank"||it.k==="tramp"?-0.3:it.k==="curve"?0.1:it.k==="cannon"?-0.6:0,link:0,half:0},false);trayDraw=false;cx.restore();
-  text(PIECES[it.k].name,it.x,it.y+it.sz/2+2,11,"#cfd8e8");if(mode==="puzzle")text("x"+n,it.x+it.sz/2-4,it.y-it.sz/2+8,13,n>0?"#ffe060":"#888")}}
-function drawTop(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,56);buttons=[];
- const title=mode==="puzzle"?(levelIdx+1)+". "+level().name:"SANDBOX  slot "+(sandboxSlot+1);text(title,12,28,18,"#fff","left");
- if(mode==="puzzle"){const got=starsGot.filter(Boolean).length;text("★ "+got+"/"+level().stars.length,W*0.5-160,28,16,"#ffe060","left")}
- btn(W*0.5-70,8,140,40,running?"■ STOP":"▶ GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:20});
- if(sel&&!running){btn(W*0.5+90,8,44,40,"↺",()=>{sel.a-=Math.PI/12},{size:22});btn(W*0.5+140,8,44,40,"↻",()=>{sel.a+=Math.PI/12},{size:22});btn(W*0.5+190,8,44,40,"✕",()=>{removePiece(sel);sel=null;saveSandbox()},{size:18,fill:"#733"})}
- if(mode==="puzzle"&&misses>=3&&level().sol&&!running)btn(W-280,8,80,40,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:14,fill:hintOn?"#555":"#8a6a2a"});
- btn(W-190,8,80,40,"RESET",()=>{if(mode==="puzzle")loadLevel(levelIdx);else{pieces=[];resetRun();saveSandbox()}},{size:14});
- btn(W-100,8,90,40,"MENU",()=>{scene=mode==="puzzle"?"levels":"title"},{size:14});
+  textFit(SHORT[it.k]||PIECES[it.k].name,it.x,it.y+it.sz/2+2,11,"#cfd8e8",it.cw||(it.sz+8),"center",false,7);if(mode==="puzzle")text("x"+n,it.x+it.sz/2-4,it.y-it.sz/2+8,13,n>0?"#ffe060":"#888")}}
+function drawTop(){
+ const th=topH(),two=W<620;
+ cx.fillStyle="#1c2233";cx.fillRect(0,0,W,th);
+ cx.fillStyle="rgba(255,255,255,0.10)";cx.fillRect(0,th-1,W,1);
+ buttons=[];
+ const padL=8+SAFE.l,padR=8+SAFE.r;
+ const bh=Math.min(40,th-SAFE.t-(two?52:16));
+ const by=two?SAFE.t+48:SAFE.t+8;
+ const rowL=two?padL:padL+EXITB,rowR=W-padR;
+ const rot=!!sel&&!running;
+ const showHint=mode==="puzzle"&&misses>=3&&level().sol&&!running;
+ // size the controls from the width the row actually has
+ const items=[["go",82],["rot",rot?132:0],["hint",showHint?68:0],["reset",72],["menu",74]].filter(i=>i[1]>0);
+ const gap=6,want=items.reduce((a,i)=>a+i[1],0)+gap*(items.length-1);
+ const k=Math.min(1,(rowR-rowL)/want),rowW=want*k;
+ let x=two?rowL+(rowR-rowL-rowW)/2:rowR-rowW;
+ const fs=v=>Math.max(11,Math.round(v*k));
+ for(const [id,w0] of items){
+  const w=w0*k;
+  if(id==="go")btn(x,by,w,bh,running?"■ STOP":"▶ GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:fs(20)});
+  else if(id==="rot"){const u=(w-2*gap*k)/3;
+   btn(x,by,u,bh,"↺",()=>{sel.a-=Math.PI/12},{size:fs(22)});
+   btn(x+u+gap*k,by,u,bh,"↻",()=>{sel.a+=Math.PI/12},{size:fs(22)});
+   btn(x+2*(u+gap*k),by,u,bh,"✕",()=>{removePiece(sel);sel=null;saveSandbox()},{size:fs(18),fill:"#733"})}
+  else if(id==="hint")btn(x,by,w,bh,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:fs(14),fill:hintOn?"#555":"#8a6a2a"});
+  else if(id==="reset")btn(x,by,w,bh,"RESET",()=>{if(mode==="puzzle")loadLevel(levelIdx);else{pieces=[];resetRun();saveSandbox()}},{size:fs(14)});
+  else btn(x,by,w,bh,"MENU",()=>{scene=mode==="puzzle"?"levels":"title"},{size:fs(14)});
+  x+=w+gap*k;
+ }
+ // the title gets whatever is left, and always starts clear of the exit button
+ const tL=padL+EXITB,tR=two?rowR:Math.max(tL+40,(two?rowR:rowR-rowW)-12);
+ const ty=SAFE.t+(two?24:8+bh/2);
+ const title=mode==="puzzle"?(levelIdx+1)+". "+level().name:"SANDBOX  slot "+(sandboxSlot+1);
+ const star=mode==="puzzle"?"\u2605 "+starsGot.filter(Boolean).length+"/"+level().stars.length:"";
+ const sw=star?textW(star,16)+14:0;
+ const band=tR-tL;
+ if(band>60)textFit(title,tL,ty,18,"#fff",Math.max(30,band-sw),"left");
+ if(star&&band>60)text(star,tR,ty,16,"#ffe060","right");
  drawButtons()}
 function drawPlay(){drawBoard();drawTray();drawTop();
  if(won){cx.fillStyle="rgba(0,0,0,0.55)";cx.fillRect(0,0,W,H);const stars=1+starsGot.filter(Boolean).length;text("GOAL!",W/2,H*0.32,64,"#8dff5a");text("★".repeat(stars)+"☆".repeat(Math.max(0,1+level().stars.length-stars)),W/2,H*0.32+70,40,"#ffe060");
-  buttons=[];if(levelIdx<LEVELS.length-1)btn(W/2-230,H*0.6,210,56,"NEXT LEVEL",()=>loadLevel(levelIdx+1),{fill:"#2a8a3a",size:22});btn(W/2+20,H*0.6,210,56,"PLAY AGAIN",()=>loadLevel(levelIdx),{size:22});drawButtons()}
+  buttons=[];const more=levelIdx<LEVELS.length-1;
+  const bw2=Math.min(210,(W-40-SAFE.l-SAFE.r)/(more?2:1)-(more?8:0)),bh2=Math.min(56,H*0.11);
+  const wy=Math.min(H*0.6,H-SAFE.b-16-bh2);
+  if(more){btn(W/2-bw2-8,wy,bw2,bh2,"NEXT LEVEL",()=>loadLevel(levelIdx+1),{fill:"#2a8a3a",size:Math.min(22,bw2*0.13)});
+   btn(W/2+8,wy,bw2,bh2,"PLAY AGAIN",()=>loadLevel(levelIdx),{size:Math.min(22,bw2*0.13)})}
+  else btn(W/2-bw2/2,wy,bw2,bh2,"PLAY AGAIN",()=>loadLevel(levelIdx),{size:Math.min(22,bw2*0.13)});
+  drawButtons()}
  else if(lost&&mode==="puzzle"){resultT-=1/60;text("Missed! Try again.",W/2,H*0.3,34,"#ff9090");if(resultT<=0){running=false;lost=0;const keep=pieces;resetRun();pieces=keep}}
- if(hintOn&&!running&&!won&&mode==="puzzle"){text("Hint: match the faded shapes (rotate with ↺ ↻), then press GO",W*0.5-(tray.vertical?tray.w/2:0),H-(tray.vertical?30:tray.h+24),15,"#ffd080")}
- else if(!running&&!won&&mode==="puzzle"&&pieces.filter(p=>!p.fixed).length===0){text("Drag pieces from the tray onto the board, then press GO",W*0.5-(tray.vertical?tray.w/2:0),H-(tray.vertical?30:tray.h+24),15,"#cfd8e8")}}
+ const hintX=SAFE.l+(W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0))/2;
+ const hintY=H-SAFE.b-(tray.vertical?HINTH/2:tray.h+20);
+ const hintW=W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0)-20;
+ if(hintOn&&!running&&!won&&mode==="puzzle"){textFit("Hint: match the faded shapes (rotate with \u21ba \u21bb), then press GO",hintX,hintY,15,"#ffd080",hintW,"center",false,10)}
+ else if(!running&&!won&&mode==="puzzle"&&pieces.filter(p=>!p.fixed).length===0){textFit("Drag pieces from the tray, then press GO",hintX,hintY,15,"#cfd8e8",hintW,"center",false,10)}}
 function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<30;i++){const x=(i*173+frameT*40*(1+i%3))%(W+100)-50,y=(i*97)%H;cx.fillStyle=["#ff5a5a","#5ad0ff","#ffd05a","#7fff6a"][i%4];cx.beginPath();cx.arc(x,y,8+i%5*3,0,TAU);cx.fill()}
- text("MARBLE MAYHEM",W/2+4,H*0.22+4,Math.min(80,W/9),"#0a0d16");text("MARBLE MAYHEM",W/2,H*0.22,Math.min(80,W/9),"#ffd05a");text("Build a run. Press GO. Watch the marble.",W/2,H*0.22+60,20,"#dfe6f0");
- buttons=[];const bw=Math.min(340,W*0.6);btn(W/2-bw/2,H*0.45,bw,64,"PUZZLES",()=>{scene="levels"},{fill:"#2a8a3a",size:26});
- for(let i=0;i<3;i++){const has=!!sandbox.slots[i];btn(W/2-bw/2+i*(bw/3+4)-4,H*0.45+80,bw/3-4,60,"SANDBOX "+(i+1)+(has?" ●":""),()=>loadSandbox(i),{size:15,fill:"#2a4a8a"})}
- text("Planks, curves, bumpers, trampolines, fans, spinners, cannons and portals.",W/2,H*0.45+170,15,"#cfd8e8");text("Tap a piece to select it, then use the ↺ ↻ buttons to turn it. Drag it off the board to remove it.",W/2,H*0.45+194,15,"#cfd8e8");drawButtons()}
-function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);text("PUZZLES",W/2,50,40,"#ffd05a");buttons=[];const cols=W>700?4:2,cw=Math.min(210,(W-40)/cols-10),ch=74;const n=LEVELS.length;const rows=Math.ceil(n/cols);const y0=100;
- LEVELS.forEach((L,i)=>{const c=i%cols,r=Math.floor(i/cols);const x=W/2+(c-(cols-1)/2)*(cw+10)-cw/2,y=y0+r*(ch+10);const st=progress["L"+i]||0;const unlocked=i===0||(progress["L"+(i-1)]||0)>0;
+ buttons=[];
+ const wide=W-32-SAFE.l-SAFE.r,cxm=SAFE.l+(W-SAFE.l-SAFE.r)/2;
+ const gap=Math.max(6,Math.min(14,H*0.018));
+ const bh=Math.min(64,H*0.11),sh=Math.min(60,H*0.095);
+ // budget from the bottom so the help lines are the first thing to go
+ const bot=H-SAFE.b-12;
+ let helpN=2;
+ const helpH=()=>helpN?(helpLines(HELP1)+(helpN>1?helpLines(HELP2):0))*18+6:0;
+ let sy=bot-helpH()-(helpN?gap:0)-sh;
+ let py=sy-gap-bh;
+ const top=SAFE.t+10+(W<620?EXITB:0);
+ // headline and strapline take what is left above the buttons
+ let lz=Math.min(80,W/9);
+ while(lz>18&&textW("MARBLE MAYHEM",lz)>wide)lz-=2;
+ const subz=Math.min(20,W*0.05);
+ const need=lz*1.1+10+subz*1.4;
+ while(py-gap-need<top&&helpN>0){helpN--;sy=bot-helpH()-(helpN?gap:0)-sh;py=sy-gap-bh}
+ const block=Math.max(top,Math.min(py-gap-need,top+(py-gap-need-top)*0.45));
+ const ly=block+lz*0.55;
+ text("MARBLE MAYHEM",cxm+4,ly+4,lz,"#0a0d16");text("MARBLE MAYHEM",cxm,ly,lz,"#ffd05a");
+ textFit("Build a run. Press GO. Watch the marble.",cxm,ly+lz*0.55+subz*0.9,subz,"#dfe6f0",wide,"center",false,10);
+ const bw=Math.min(340,wide);
+ btn(cxm-bw/2,py,bw,bh,"PUZZLES",()=>{scene="levels"},{fill:"#2a8a3a",size:Math.min(26,bw*0.1)});
+ // three sandbox slots sized so their labels fit inside them
+ const sgap=6,sw=(bw-sgap*2)/3;
+ let sz=15;while(sz>9&&textW("SANDBOX 1 \u25cf",sz)>sw-10)sz-=1;
+ const lbl=sz<11?"SLOT ":"SANDBOX ";
+ for(let i=0;i<3;i++){const has=!!sandbox.slots[i];
+  btn(cxm-bw/2+i*(sw+sgap),sy,sw,sh,lbl+(i+1)+(has?" \u25cf":""),()=>loadSandbox(i),{size:sz<11?Math.min(15,sw*0.2):sz,fill:"#2a4a8a"})}
+ if(helpN>0)wrapFit(HELP1,cxm,bot-helpH()+9,15,"#cfd8e8",wide,2,18);
+ if(helpN>1)wrapFit(HELP2,cxm,bot-helpH()+9+helpLines(HELP1)*18,15,"#cfd8e8",wide,2,18);
+ drawButtons()}
+function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
+ const n=LEVELS.length;
+ const hz=Math.min(40,W*0.1),hy=SAFE.t+(W<620?EXITB+6:14)+hz*0.55;
+ text("PUZZLES",SAFE.l+(W-SAFE.l-SAFE.r)/2,hy,hz,"#ffd05a");
+ const bkh=Math.min(44,H*0.075),y0=hy+hz*0.6+10;
+ const availW=W-24-SAFE.l-SAFE.r,availH=H-SAFE.b-12-bkh-10-y0;
+ // pick the column count that gives the roomiest cell rather than assuming two
+ let best=null;
+ for(const cols of [2,3,4,5]){
+  if(cols>n)break;
+  const rows=Math.ceil(n/cols);
+  const cw=Math.min(210,availW/cols-10),ch=Math.min(74,availH/rows-10);
+  if(cw<58||ch<30)continue;
+  const score=Math.min(cw/2.6,ch);
+  if(!best||score>best.score)best={cols,rows,cw,ch,score};
+ }
+ if(!best){const cols=Math.max(2,Math.min(5,Math.floor(availW/68)));const rows=Math.ceil(n/cols);
+  best={cols,rows,cw:availW/cols-8,ch:Math.max(26,availH/rows-6)}}
+ const {cols,rows,cw,ch}=best;
+ const gx=cw+10,gy=ch+10;
+ const gridW=cols*gx-10,left=SAFE.l+(W-SAFE.l-SAFE.r-gridW)/2;
+ LEVELS.forEach((L,i)=>{const c=i%cols,r=Math.floor(i/cols);
+  const x=left+c*gx,y=y0+r*gy;
+  const st=progress["L"+i]||0,unlocked=i===0||(progress["L"+(i-1)]||0)>0;
   btn(x,y,cw,ch,"",()=>{if(unlocked)loadLevel(i)},{fill:unlocked?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)"});
-  text((i+1)+". "+L.name,x+cw/2,y+22,15,unlocked?"#fff":"#667","center",true);text(unlocked?"★".repeat(st)+"☆".repeat(1+L.stars.length-st):"locked",x+cw/2,y+50,16,unlocked?"#ffe060":"#667","center",true)});
- btn(W/2-90,Math.min(H-60,y0+rows*(ch+10)+10),180,44,"BACK",()=>{scene="title"},{size:18});drawButtons()}
+  textFit((i+1)+". "+L.name,x+cw/2,y+ch*0.34,Math.min(15,ch*0.26),unlocked?"#fff":"#667",cw-8,"center",true,7);
+  textFit(unlocked?"\u2605".repeat(st)+"\u2606".repeat(1+L.stars.length-st):"locked",x+cw/2,y+ch*0.72,Math.min(16,ch*0.28),unlocked?"#ffe060":"#667",cw-8,"center",true,7)});
+ const bw=Math.min(180,W-40-SAFE.l-SAFE.r);
+ btn(SAFE.l+(W-SAFE.l-SAFE.r)/2-bw/2,H-SAFE.b-12-bkh,bw,bkh,"BACK",()=>{scene="title"},{size:Math.min(18,bkh*0.42)});
+ drawButtons()}
 function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
  if(scene==="play"&&running&&!won){const n=4;for(let i=0;i<n;i++)step(dt/n)}else if(scene==="play"){for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0)}
  if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="play")drawPlay();
