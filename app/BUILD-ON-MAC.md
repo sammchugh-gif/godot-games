@@ -27,6 +27,13 @@ play it before you spend anything.
 
 ---
 
+## Or hand it to Claude Cowork
+
+If you have Claude Cowork on the Mac, `PASTE-INTO-COWORK.md` next to this file
+has a block to paste in. It does the clone, the checks and the build for you,
+and then walks you through the signing step, which is the only part that needs
+a person.
+
 ## Build it — the short way
 
 Open the `godot-games` folder in Finder, go into `app`, and **double-click
@@ -176,6 +183,7 @@ Then **Product → Archive** in Xcode, and **Distribute App → App Store Connec
 | `tools/make-icon.mjs` | draws the icon and launch screen |
 | `tools/appcheck.mjs` | proves the bundle works with no network |
 | `app/Setup on Mac.command` | the double-click build. Runs all of the above in order. |
+| `app/PASTE-INTO-COWORK.md` | the same build, handed to Claude Cowork on the Mac |
 | `app/capacitor.config.json` | app id, name, iOS settings |
 | `app/ios/` | the Xcode project. Committed, because your signing settings live here. |
 | `app/www/`, `app/ios/App/App/public/` | generated. Not committed. Never edit. |
