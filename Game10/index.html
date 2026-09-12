@@ -899,10 +899,13 @@ function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b;
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,58+SL,42+ST,20,"#c0e8ff","left");// clear of the shelf menu button
- const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,34,left>0?"#fff":"#80c0ff");
+ // the top row scales with the width: at a fixed size the clock grew
+ // into the kill count on a narrow phone
+ const hz=Math.min(20,W*0.055),cz=Math.min(34,W*0.09);
+ text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
+ const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,cz,left>0?"#fff":"#80c0ff");
  textFit("SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.dif.col,W*0.62);
- text(G.kills+" ☠",W-100-SR,34+ST,20,"#ffd0d0","right");
+ text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  const hw=Math.min(280,W*0.32),BY=H-SB;cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
  cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-64,hw,16,6);cx.fill();cx.fillStyle="#40d0ff";rr(18+SL,BY-62,(hw-4)*clamp(G.sh/G.maxsh,0,1),12,5);cx.fill();text("shield",16+SL+hw/2,BY-56,11,"#fff");
  let x=W-20-SR;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,22,w.col);text(G.weapons[k],x-8,BY-20,12,"#fff");x-=44}
@@ -915,58 +918,94 @@ function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect
 function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);
  for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
- text("STAR SWARM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#0a0a2a");text("STAR SWARM",W/2,H*0.16+bob,Math.min(88,W/8),"#80c0ff");
- const tag="Six sectors. Survive five minutes in each, then fly to the warp gate.";
- if(W<620)wrap(tag,W/2,H*0.16+50,W-36,15,"#dfe8ff");else textFit(tag,W/2,H*0.16+66,20,"#dfe8ff",W-40);
- buttons=[];const n=SHIPS.length;
- // Three cards side by side need about 170px each before a ship name stops
- // fitting. A phone in portrait has nowhere near that, so they stack and the
- // ship moves to the left of its own text instead.
- const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
+ buttons=[];
+ const n=SHIPS.length;
  const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else SFX.click()};
+ const difId=DIFFS[diffIdx].id;
+ // Everything used to sit at a fixed offset from a fraction of the height,
+ // which on a phone in landscape put the tag line through the difficulty
+ // buttons and squeezed the ship cards down to eleven pixels. The screen is
+ // now measured: the fixed furniture is placed from the bottom edge, the
+ // ships get what is left, and the trimmings are dropped when there is not
+ // room for them rather than drawn on top of each other.
+ const gap=clamp(H*0.022,6,12);
+ const mh=clamp(H*0.085,34,46),bh=clamp(H*0.115,42,64);
+ const bot=H-12-SB,hs=Math.min(14,W*0.03);
+ const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
+ const minShip=stack?n*56+(n-1)*8:118;
+ const musicY=bot-mh;
+ let showHelp=true;
+ const helpH=()=>showHelp?hs*2+8:0;
+ const helpTop=()=>musicY-gap-helpH();
+ let launchY=helpTop()-gap-bh;
+ let contentBottom=launchY-gap;
+ // the shelf's exit button owns the top-left corner, so on a narrow screen
+ // the logo starts below it rather than behind it
+ const top=SAFE.t+8+(W<560?40:0);
+ const logoSz=clamp(Math.min(88,W/8),26,Math.max(26,(contentBottom-top)*0.24));
+ let cursor=top+logoSz*1.3;
+ const dh=stack?38:42;
+ // does it all fit with the tag line and the difficulty blurb in place?
+ let showTag=true,showDesc=true;
+ const need=()=>{let c=cursor;
+  if(showTag)c+=hs*2+8;
+  c+=gap+dh;
+  if(showDesc)c+=18;
+  return contentBottom-(c+gap)};
+ if(need()<minShip)showTag=false;
+ if(need()<minShip)showDesc=false;
+ if(need()<minShip){showHelp=false;launchY=helpTop()-gap-bh;contentBottom=launchY-gap}
+ text("STAR SWARM",W/2+4,top+logoSz*0.62+4+bob,logoSz,"#0a0a2a");
+ text("STAR SWARM",W/2,top+logoSz*0.62+bob,logoSz,"#80c0ff");
+ if(showTag){const tag="Six sectors. Survive five minutes in each, then fly to the warp gate.";
+  wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // difficulty, as a segmented row above the ships
- const dw=Math.min(380,W-32),dh=stack?38:42,dy=stack?H*0.26:H*0.265,dx0=W/2-dw/2,seg=dw/3;
+ const dw=Math.min(380,W-32),dy=cursor+gap,dx0=W/2-dw/2,seg=dw/3;
  DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
   cx.fillStyle=sel?hexA(d.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,dy,seg-4,dh,10);cx.fill();
   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?d.col:"rgba(255,255,255,0.3)";cx.stroke();
   textFit(d.name,x+seg/2,dy+dh/2,sel?18:16,sel?d.col:"#ccd6e4",seg-14);
   btn(x+2,dy,seg-4,dh,"",()=>{diffIdx=i;store.set("diff",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- textFit(DIFFS[diffIdx].desc,W/2,dy+dh+13,12,"#9fb0c8",W-40);
- const difId=DIFFS[diffIdx].id;
- let listBottom;
+ cursor=dy+dh;
+ if(showDesc){textFit(DIFFS[diffIdx].desc,W/2,cursor+11,12,"#9fb0c8",W-40);cursor+=18}
+ const listTop=cursor+gap,avail=contentBottom-listTop;
  if(stack){
-  const cw=Math.min(440,W-28),top=dy+dh+30,ch=Math.min(100,(H-top-190)/n-10),x0=W/2-cw/2,px=ch*0.86;
-  SHIPS.forEach((s,i)=>{const y=top+i*(ch+10),sel=i===shipIdx,un=!!unlocks[s.id];
+  const cw=Math.min(440,W-28),x0=W/2-cw/2;
+  const ch=clamp(avail/n-8,50,104),px=ch*0.86;
+  const nz=Math.min(20,ch*0.23),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
+  SHIPS.forEach((s,i)=>{const y=listTop+i*(ch+8),sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore();
    const tx=x0+px+14,tw=cw-px-28,r=records[recKeyFor(s.id,difId)];
-   textFit(un?s.name:"LOCKED",tx,y+ch*0.28,20,sel?"#ffe060":"#fff",tw,"left");
-   textFit(un?s.desc:s.unlock,tx,y+ch*0.56,14,"#cde",tw,"left");
-   textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",tx,y+ch*0.81,13,"#bfe",tw,"left");
+   textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
+   textFit(un?s.desc:s.unlock,tx,y+ch*0.55,dz,"#cde",tw,"left");
+   textFit(un?(r?"Best "+r.best+"   \u00b7   Sector "+(r.sector||1):"No runs yet"):"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
    btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
-  listBottom=top+n*(ch+10)-10;
  }else{
-  const cw=rowCw,y=dy+dh+34,ch=Math.min(250,H-y-200);
+  const cw=rowCw,ch=clamp(avail,108,250),y=listTop+Math.max(0,(avail-ch)/2);
+  const nz=Math.min(22,ch*0.115),dz=Math.min(14,ch*0.082),rz=Math.min(13,ch*0.076);
   SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
    cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-   cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x+cw/2,y+ch*0.34,-Math.PI/2,s,sel?0.6:0);cx.restore();
+   cx.save();if(!un)cx.globalAlpha=0.4;
+   cx.translate(x+cw/2,y+ch*0.28);cx.scale(Math.min(1,ch/190),Math.min(1,ch/190));
+   drawShip(0,0,-Math.PI/2,s,sel?0.6:0);cx.restore();
    const r=records[recKeyFor(s.id,difId)];
-   textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff",cw-16);
-   textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde",cw-16);
-   textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe",cw-16);
+   textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
+   textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
+   textFit(un?(r?"Best "+r.best+"   \u00b7   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
    btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
-  listBottom=y+ch;
  }
  const lw=Math.min(300,W-48);
- btn(W/2-lw/2,listBottom+18,lw,64,"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>start(),{fill:"#2a5aa0",size:26});
- const h1="Thumb anywhere to fly.   Weapons fire themselves.",h2="Hide behind asteroids, shoot them for gems.";
- if(stack){textFit(h1,W/2,H-98-SB,13,"#cde",W-24);textFit(h2,W/2,H-80-SB,13,"#cde",W-24);
-  btn(W/2-75,H-62-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16})}
- // two lines here too: one long line, centred, reached under the music button
- else{textFit(h1,W/2,H-52-SB,15,"#cde",W-380);textFit(h2,W/2,H-30-SB,15,"#cde",W-380);
-  btn(20+SAFE.l,H-64-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16})}
+ btn(W/2-lw/2,launchY,lw,bh,"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>start(),
+  {fill:"#2a5aa0",size:Math.min(26,bh*0.42)});
+ if(showHelp){const ht=helpTop();
+  textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
+  textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
+ const mw=Math.min(150,W*0.36);
+ btn(showHelp?W/2-mw/2:14+SAFE.l,musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",
+  ()=>musicToggle(),{size:Math.min(16,mh*0.38)});
  drawButtons();cx.restore()}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");buttons=[];const n=cards.length,cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5),y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];

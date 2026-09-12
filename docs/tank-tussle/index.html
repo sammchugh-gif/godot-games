@@ -36,7 +36,15 @@ const SFX={fire(){tone(400,120,0.12,"square",0.18);noise(0.08,0.2)},bounce(){ton
  win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,f,0.16,"square",0.18,i*0.11))},click(){tone(1200,900,0.04,"square",0.08)},honk(){tone(300,300,0.2,"sawtooth",0.15)}};
 // ---------------------------------------------------------------- layout
 let strip=0,ar={x:0,y:0,w:0,h:0},C=13,R=19,cell=40;
-function layout(){strip=Math.floor(W*0.25);const aw=W-strip*2-24,ah=H-28;cell=Math.floor(aw/C);let rows=Math.floor(ah/cell);if(rows%2===0)rows--;R=clamp(rows,11,23);cell=Math.min(cell,Math.floor(ah/R));ar.w=C*cell;ar.h=R*cell;ar.x=Math.floor((W-ar.w)/2);ar.y=Math.floor((H-ar.h)/2);}
+const SAFE={t:0,r:0,b:0,l:0};
+(function(){const d=document.createElement("div");
+ d.style.cssText="position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;"+
+  "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+ document.body.appendChild(d);window.__safeProbe=d})();
+function safeRead(){const d=window.__safeProbe;if(!d)return;const c=getComputedStyle(d);
+ SAFE.t=parseFloat(c.paddingTop)||0;SAFE.r=parseFloat(c.paddingRight)||0;
+ SAFE.b=parseFloat(c.paddingBottom)||0;SAFE.l=parseFloat(c.paddingLeft)||0}
+function layout(){safeRead();strip=Math.floor(W*0.25);const aw=W-strip*2-24,ah=H-28;cell=Math.floor(aw/C);let rows=Math.floor(ah/cell);if(rows%2===0)rows--;R=clamp(rows,11,23);cell=Math.min(cell,Math.floor(ah/R));ar.w=C*cell;ar.h=R*cell;ar.x=Math.floor((W-ar.w)/2);ar.y=Math.floor((H-ar.h)/2);}
 window.addEventListener("resize",resize);
 // ---------------------------------------------------------------- state
 const COLS=[{main:"#e04040",dark:"#8a2020",light:"#ff8080",name:"RED"},{main:"#3070e0",dark:"#1a3a8a",light:"#80b0ff",name:"BLUE"}];
@@ -171,8 +179,16 @@ function botThink(t,dt){const me=tanks[1];const p=tanks[0];t.botT-=dt;
 // ---------------------------------------------------------------- drawing
 function ax(x){return ar.x+x*cell}function ay(y){return ar.y+y*cell}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function textW(s,size){cx.font="bold "+size+"px sans-serif";return cx.measureText(s).width}
+// shrink to the width that is really there; 0 back means it would not fit even
+// at the floor, so the caller can drop the line rather than let it run off
+function textFit(s,x,y,size,color,maxw,align,floor){
+ let z=size;const f=floor||9;
+ while(z>f&&textW(s,z)>maxw)z-=1;
+ if(textW(s,z)>maxw)return 0;
+ text(s,x,y,z,color,align);return z}
 function text(s,x,y,size,color,align,rot){cx.save();cx.translate(x,y);if(rot)cx.rotate(rot);cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.7)";cx.lineJoin="round";cx.strokeText(s,0,0);cx.fillStyle=color||"#fff";cx.fillText(s,0,0);cx.restore()}
-function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle="rgba(255,255,255,0.5)";cx.stroke();text(b.label,b.x+b.w/2,b.y+b.h/2,o.size||22,"#fff")}}
+function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle="rgba(255,255,255,0.5)";cx.stroke();textFit(b.label,b.x+b.w/2,b.y+b.h/2,o.size||22,"#fff",b.w-16,"center",10)}}
 function drawArena(){const sx=(Math.random()-0.5)*shake*10,sy=(Math.random()-0.5)*shake*10;cx.save();cx.translate(sx,sy);
  // floor
  for(let y=0;y<R;y++)for(let x=0;x<C;x++){const v=grid[y][x];const px=ax(x),py=ay(y);
@@ -220,18 +236,40 @@ function drawStrips(){for(let i=0;i<2;i++){const t=tanks[i],c=COLS[i];const x0=i
  text(Math.ceil(roundT)+"",W/2,ar.y-4,18,roundT<10?"#ff6060":"#fff");
 }
 function drawTitle(){cx.fillStyle="#151a22";cx.fillRect(0,0,W,H);
- // tanks doodling
- for(let i=0;i<2;i++){cx.save();cx.translate(W*(0.2+0.6*i),H*0.16+Math.sin(frameT*2+i)*6);cx.rotate(i?Math.PI:0);cx.fillStyle=COLS[i].main;rr(-40,-30,80,60,10);cx.fill();cx.fillStyle=COLS[i].dark;cx.beginPath();cx.arc(0,0,22,0,TAU);cx.fill();cx.fillRect(0,-7,60,14);cx.restore();}
- text("TANK TUSSLE",W/2+4,H*0.17+4,Math.min(84,W/9),"#0b0e14");text("TANK TUSSLE",W/2,H*0.17,Math.min(84,W/9),"#ffd040");
- text("Two players, one iPad. Hold it between you.",W/2,H*0.17+62,20,"#dfe6f0");
- buttons=[];const bw=Math.min(340,W*0.4);
- btn(W/2-bw/2,H*0.38,bw,64,"2 PLAYERS",()=>startMatch("2p"),{fill:"#3a7a3a",size:26});
- btn(W/2-bw/2,H*0.38+78,bw,64,"VS ROBOT  (easy)",()=>startMatch("bot",1),{fill:"#3a4a7a",size:22});
- btn(W/2-bw/2,H*0.38+156,bw,64,"VS ROBOT  (hard)",()=>startMatch("bot",2),{fill:"#5a2a5a",size:22});
- text("Each end of the screen is yours. One thumb down drives. Tap with another finger to fire.",W/2,H*0.38+250,16,"#cfd8e8");
- text("Shells bounce off steel. Bricks break. Grab power-ups. First to 5 hits wins the round, two rounds win.",W/2,H*0.38+274,16,"#cfd8e8");
- text("Keyboard: WASD + Space   /   arrows + Enter",W/2,H-28,14,"#8892a8");
- drawButtons();}
+ const wide=W-28-SAFE.l-SAFE.r,cxm=SAFE.l+(W-SAFE.l-SAFE.r)/2;
+ buttons=[];
+ // lay the screen out from the bottom: the help lines are the first to go
+ const bot=H-SAFE.b-10;
+ const kb=W>620&&H>430;
+ const g=Math.max(6,Math.min(16,H*0.022));
+ const bh=Math.min(64,H*0.115);
+ const bw=Math.min(340,Math.max(190,W*0.5),wide);
+ let helpN=2;
+ const lineH=20;
+ const helpBot=()=>bot-(kb?22:0);
+ const helpTop=()=>helpBot()-helpN*lineH;
+ const btnTop=()=>helpTop()-(helpN?g:0)-(bh*3+g*2);
+ const top=SAFE.t+10+(W<620?44:0);      // clear of the shelf's exit button
+ const lz=Math.min(84,W/9);
+ const sz=Math.min(20,W*0.05);
+ const headNeed=lz*1.05+10+sz*1.5;
+ while(helpN>0&&btnTop()-g<top+headNeed)helpN--;
+ // the doodling tanks only get drawn if there is headroom for them
+ const by=Math.max(top+headNeed+g,btnTop());
+ const headBot=by-g;
+ const ly=Math.max(top+lz*0.55,headBot-sz*1.5-lz*0.5);
+ // only doodle tanks when they will not sit on the headline
+ if(ly-lz*0.55-top>76){
+  for(let i=0;i<2;i++){cx.save();cx.translate(W*(0.2+0.6*i),Math.max(top+34,ly-lz*0.55-38)+Math.sin(frameT*2+i)*6);cx.rotate(i?Math.PI:0);cx.fillStyle=COLS[i].main;rr(-40,-30,80,60,10);cx.fill();cx.fillStyle=COLS[i].dark;cx.beginPath();cx.arc(0,0,22,0,TAU);cx.fill();cx.fillRect(0,-7,60,14);cx.restore()}}
+ textFit("TANK TUSSLE",cxm+4,ly+4,lz,"#0b0e14",wide);textFit("TANK TUSSLE",cxm,ly,lz,"#ffd040",wide);
+ textFit("Two players, one iPad. Hold it between you.",cxm,ly+lz*0.5+sz*0.9,sz,"#dfe6f0",wide,"center",10);
+ btn(cxm-bw/2,by,bw,bh,"2 PLAYERS",()=>startMatch("2p"),{fill:"#3a7a3a",size:Math.min(26,bh*0.42)});
+ btn(cxm-bw/2,by+bh+g,bw,bh,"VS ROBOT  (easy)",()=>startMatch("bot",1),{fill:"#3a4a7a",size:Math.min(22,bh*0.36)});
+ btn(cxm-bw/2,by+(bh+g)*2,bw,bh,"VS ROBOT  (hard)",()=>startMatch("bot",2),{fill:"#5a2a5a",size:Math.min(22,bh*0.36)});
+ if(helpN>0)textFit("Each end of the screen is yours. One thumb down drives. Tap with another finger to fire.",cxm,helpTop()+lineH*0.5,16,"#cfd8e8",wide,"center",9);
+ if(helpN>1)textFit("Shells bounce off steel. Bricks break. Grab power-ups. First to 5 hits wins the round, two rounds win.",cxm,helpTop()+lineH*1.5,16,"#cfd8e8",wide,"center",9);
+ if(kb)textFit("Keyboard: WASD + Space   /   arrows + Enter",cxm,bot-8,14,"#8892a8",wide,"center",9);
+ drawButtons()}
 function drawRoundOver(){cx.fillStyle="rgba(5,8,14,0.7)";cx.fillRect(0,0,W,H);const c=COLS[winner];const nm=(mode==="bot"&&winner===1)?"ROBOT":c.name;
  text(matchOver?nm+" WINS THE MATCH!":nm+" WINS ROUND "+round+"!",W/2,H*0.32,Math.min(56,W/12),c.light);
  text(tanks[0].score+"  -  "+tanks[1].score+"       rounds "+wins[0]+" - "+wins[1],W/2,H*0.32+60,26,"#fff");
@@ -241,7 +279,11 @@ function drawRoundOver(){cx.fillStyle="rgba(5,8,14,0.7)";cx.fillRect(0,0,W,H);co
  drawButtons();}
 function onKey(code){if(scene==="title"&&(code==="Space"||code==="Enter"))startMatch("2p");if(scene==="roundover"&&(code==="Space"||code==="Enter")){if(matchOver)startMatch(mode,botLevel);else{round++;startRound()}}if(code==="Escape"&&scene==="play")scene="title";}
 function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#151a22";cx.fillRect(0,0,W,H);
- if(H>W*1.02){text("TURN YOUR iPAD",W/2,H*0.45,40,"#ffd040");text("SIDEWAYS TO PLAY",W/2,H*0.45+48,40,"#ffd040");buttons=[];requestAnimationFrame(frame);return}
+ // portrait: this used to schedule a SECOND frame on top of the one above,
+ // so the callbacks doubled every frame and the tab ground to a halt
+ if(H>W*1.02){const z=Math.min(40,W*0.11),cxm=SAFE.l+(W-SAFE.l-SAFE.r)/2,mw=W-24-SAFE.l-SAFE.r;
+  textFit("TURN YOUR iPAD",cxm,H*0.45,z,"#ffd040",mw);
+  textFit("SIDEWAYS TO PLAY",cxm,H*0.45+z*1.2,z,"#ffd040",mw);buttons=[];return}
  if(scene==="play")update(dt);
  if(scene==="play"||scene==="roundover"){drawArena();drawStrips();buttons=[];
   if(scene==="play"){if(countdown>0){text(countdown>0.3?Math.ceil(countdown)+"":"GO!",W/2,H/2,110,"#ffd040")}if(bannerT>0){cx.globalAlpha=Math.min(1,bannerT);text(banner,W/2,H*0.2,30,"#ffe060");cx.globalAlpha=1}

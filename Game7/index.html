@@ -667,9 +667,12 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b,BY=H-SB;
  // XP bar
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
- text("LV "+G.level,58+SL,42+ST,20,"#c0e8ff","left");// clear of the shelf menu button
- text(fmt(RUN_LEN-G.t),W/2,40+ST,34,"#fff");
- text(G.kills+" ☠",W-100-SR,34+ST,20,"#ffd0d0","right");
+ // the top row scales with the width: at a fixed size the clock grew
+ // into the kill count on a narrow phone
+ const hz=Math.min(20,W*0.055),cz=Math.min(34,W*0.09);
+ text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
+ text(fmt(RUN_LEN-G.t),W/2,40+ST,cz,"#fff");
+ text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  // health
  const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
  // weapons
@@ -685,49 +688,73 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);
  // backdrop: slimes drifting
  cx.fillStyle="#2f5e2c";cx.fillRect(0,0,W,H);for(let i=0;i<24;i++){const x=(hash(i,7)*W+frameT*(20+i*3))%(W+80)-40,y=hash(i,11)*H;cx.fillStyle="rgba(80,210,90,0.35)";cx.beginPath();cx.ellipse(x,y,26,20,0,0,TAU);cx.fill();}
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
- text("SLIME STORM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#1a2a1a");text("SLIME STORM",W/2,H*0.16+bob,Math.min(88,W/8),"#8dff5a");
- const tag="Survive ten minutes. Your weapons fire themselves.";
- if(W<620)wrap(tag,W/2,H*0.16+54,W-36,15,"#e8ffe0");else textFit(tag,W/2,H*0.16+66,20,"#e8ffe0",W-40);
  buttons=[];const n=HEROES.length;
- // Three cards side by side need about 170px each before a hero name stops
- // fitting. A phone in portrait has nowhere near that, so they stack and the
- // hero moves to the left of their own text instead.
- const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
  const hero=(hx,hy,h,sel)=>{const st={l:sel?1:0},sv=G;G={facing:1};drawHero(hx,hy,h,st,frameT);G=sv};
- let listBottom;
+ // The screen is measured rather than assumed: the fixed furniture is placed
+ // from the bottom edge up, the hero cards take what is left, and the tag
+ // line and the help lines are dropped when there is no room for them. The
+ // old fixed offsets put the help text inside the play button in landscape.
+ const gap=clamp(H*0.022,6,12);
+ const mh=clamp(H*0.085,34,46),bh=clamp(H*0.115,42,64);
+ const bot=H-12-SB,hs=Math.min(14,W*0.03);
+ const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
+ const minCard=stack?n*56+(n-1)*8:120;
+ const musicY=bot-mh;
+ let showHelp=true;
+ const helpH=()=>showHelp?hs*2+8:0;
+ const helpTop=()=>musicY-gap-helpH();
+ let playY=helpTop()-gap-bh;
+ let contentBottom=playY-gap;
+ // the shelf's exit button owns the top-left corner
+ const top=SAFE.t+8+(W<560?40:0);
+ const logoSz=clamp(Math.min(88,W/8),26,Math.max(26,(contentBottom-top)*0.24));
+ let cursor=top+logoSz*1.3;
+ let showTag=true;
+ const need=()=>contentBottom-(cursor+(showTag?hs*2+8:0)+gap);
+ if(need()<minCard)showTag=false;
+ if(need()<minCard){showHelp=false;playY=helpTop()-gap-bh;contentBottom=playY-gap}
+ text("SLIME STORM",W/2+4,top+logoSz*0.62+4+bob,logoSz,"#1a2a1a");
+ text("SLIME STORM",W/2,top+logoSz*0.62+bob,logoSz,"#8dff5a");
+ if(showTag){wrap("Survive ten minutes. Your weapons fire themselves.",
+  W/2,cursor+hs*0.6,W-36,hs,"#e8ffe0");cursor+=hs*2+8}
+ const listTop=cursor+gap,avail=contentBottom-listTop;
  if(stack){
-  const cw=Math.min(440,W-28),ch=Math.min(104,(H*0.42)/n-10),x0=W/2-cw/2,top=H*0.30,px=ch*0.86;
-  HEROES.forEach((h,i)=>{const y=top+i*(ch+10),sel=i===heroIdx;
+  const cw=Math.min(440,W-28),x0=W/2-cw/2;
+  const ch=clamp(avail/n-8,50,104),px=ch*0.86;
+  const nz=Math.min(22,ch*0.25),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
+  HEROES.forEach((h,i)=>{const y=listTop+i*(ch+8),sel=i===heroIdx;
    cx.fillStyle=sel?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.35)";rr(x0,y,cw,ch,16);cx.fill();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.4)";cx.stroke();
-   hero(x0+px/2+4,y+ch*0.62,h,sel);
+   cx.save();cx.translate(x0+px/2+4,y+ch*0.62);cx.scale(Math.min(1,ch/96),Math.min(1,ch/96));
+   hero(0,0,h,sel);cx.restore();
    const tx=x0+px+14,tw=cw-px-28,r=records[h.id];
-   textFit(h.name,tx,y+ch*0.3,22,sel?"#ffe060":"#fff",tw,"left");
-   textFit(h.desc,tx,y+ch*0.58,14,"#dfe",tw,"left");
-   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",tx,y+ch*0.82,13,"#bfe",tw,"left");
+   textFit(h.name,tx,y+ch*0.28,nz,sel?"#ffe060":"#fff",tw,"left");
+   textFit(h.desc,tx,y+ch*0.56,dz,"#dfe",tw,"left");
+   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",tx,y+ch*0.82,rz,"#bfe",tw,"left");
    btn(x0,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
-  listBottom=top+n*(ch+10)-10;
  }else{
-  const cw=rowCw,ch=Math.min(250,H*0.42),y=H*0.36;
+  const cw=rowCw,ch=clamp(avail,110,250),y=listTop+Math.max(0,(avail-ch)/2);
+  const nz=Math.min(26,ch*0.13),dz=Math.min(14,ch*0.082),rz=Math.min(14,ch*0.078);
   HEROES.forEach((h,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const sel=i===heroIdx;
    cx.fillStyle=sel?"rgba(255,255,255,0.22)":"rgba(0,0,0,0.35)";rr(x,y,cw,ch,18);cx.fill();
    cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.4)";cx.stroke();
-   hero(x+cw/2,y+ch*0.4,h,sel);
+   cx.save();cx.translate(x+cw/2,y+ch*0.36);cx.scale(Math.min(1,ch/200),Math.min(1,ch/200));
+   hero(0,0,h,sel);cx.restore();
    const r=records[h.id];
-   textFit(h.name,x+cw/2,y+ch*0.62,26,sel?"#ffe060":"#fff",cw-16);
-   textFit(h.desc,x+cw/2,y+ch*0.74,14,"#dfe",cw-16);
-   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",x+cw/2,y+ch*0.88,14,"#bfe",cw-16);
+   textFit(h.name,x+cw/2,y+ch*0.63,nz,sel?"#ffe060":"#fff",cw-16);
+   textFit(h.desc,x+cw/2,y+ch*0.78,dz,"#dfe",cw-16);
+   textFit(r?"Best "+r.best+"   "+fmt(r.time):"No runs yet",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
    btn(x,y,cw,ch,"",()=>{heroIdx=i;store.set("hero",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});});
-  listBottom=y+ch;
  }
  const lw=Math.min(300,W-48);
- btn(W/2-lw/2,listBottom+18,lw,64,"PLAY AS "+HEROES[heroIdx].name,()=>{start()},{fill:"#3aa04a",size:26});
- const h1="Left thumb anywhere to move.   Grab gems to level up.",h2="Pick an upgrade card.";
- if(stack){textFit(h1,W/2,H-98-SB,13,"#cfe",W-24);textFit(h2,W/2,H-80-SB,13,"#cfe",W-24);
-  btn(W/2-75,H-62-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});}
- // two lines here too: one long line, centred, reached under the music button
- else{textFit(h1,W/2,H-52-SB,15,"#cfe",W-380);textFit(h2,W/2,H-30-SB,15,"#cfe",W-380);
-  btn(20+SAFE.l,H-64-SB,150,44,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});}
+ btn(W/2-lw/2,playY,lw,bh,"PLAY AS "+HEROES[heroIdx].name,()=>{start()},
+  {fill:"#3aa04a",size:Math.min(26,bh*0.42)});
+ if(showHelp){const ht=helpTop();
+  textFit("Left thumb anywhere to move.   Grab gems to level up.",W/2,ht+hs*0.6,hs,"#cfe",W-24);
+  textFit("Pick an upgrade card.",W/2,ht+hs*1.7+6,hs,"#cfe",W-24)}
+ const mw=Math.min(150,W*0.36);
+ btn(showHelp?W/2-mw/2:14+SAFE.l,musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",
+  ()=>musicToggle(),{size:Math.min(16,mh*0.38)});
  drawButtons();cx.restore();}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");
  buttons=[];const n=cards.length;const cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5);const y=H*0.35;
