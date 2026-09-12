@@ -759,6 +759,9 @@ function drawWorld(){
 }
 function drawStar(x,y,r,rot,col){cx.save();cx.translate(x,y);cx.rotate(rot);cx.fillStyle=col;cx.beginPath();for(let i=0;i<10;i++){const a=i/10*TAU-Math.PI/2;const rr2=i%2?r*0.45:r;cx.lineTo(Math.cos(a)*rr2,Math.sin(a)*rr2);}cx.closePath();cx.fill();cx.restore();}
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
+// Where the HUD actually put things, so a test can prove nothing overlaps
+// rather than somebody spotting it in a photograph.
+let HUDBOX={};
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b,BY=H-SB;
  // XP bar
@@ -769,15 +772,61 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
  text(fmt(RUN_LEN-G.t),W/2,40+ST,cz,"#fff");
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
- // health
- const hw=Math.min(280,W*0.32);cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
- // weapons
- let x=W-20-SR;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,22,w.col);text(G.weapons[k],x-8,BY-20,12,"#fff");x-=44;}
- for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,20,w.col);text(G.passives[k],x-8,BY-20,12,"#fff");x-=44;}
- if(G.bossAlive){const b=G.bossAlive;const bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,60+ST,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,62+ST,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();textFit(ENEMY[b.type].name,W/2,88+ST,14,"#ffc0c0",bw);}
+ HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
+ // The bottom of the screen, laid out rather than assumed. Everything the HUD
+ // puts down goes in HUDBOX so a test can check nothing lands on anything else.
+ HUDBOX={};
+ const wide=W-32-SL-SR;
+ // the upgrades, along the bottom, sized to the room they have. They used to
+ // be a fixed 38px marching left from the edge until they walked over the
+ // health bar, which is exactly what eight of them did.
+ const ups=[];
+ for(const k in G.weapons)ups.push({icon:WEAPONS[k].icon,col:WEAPONS[k].col,n:G.weapons[k],big:22,bg:"rgba(0,0,0,0.45)"});
+ for(const k in G.passives)ups.push({icon:PASSIVES[k].icon,col:PASSIVES[k].col,n:G.passives[k],big:20,bg:"rgba(0,0,0,0.3)"});
+ // Fifteen upgrades will not sit on one line of a phone at a size anyone can
+ // read, so the row wraps upward rather than shrinking away or running off.
+ const gap=6;
+ const ts=Math.min(38,Math.max(26,wide/8-gap));
+ const k2=ts/38;
+ const perRow=Math.max(1,Math.floor((wide+gap)/(ts+gap)));
+ const rowsN=Math.ceil(ups.length/perRow);
+ const blockH=rowsN?rowsN*ts+(rowsN-1)*gap:0;
+ const blockTop=BY-10-blockH;
+ for(let r=0;r<rowsN;r++){
+  const slice=ups.slice(r*perRow,(r+1)*perRow);
+  const ry=blockTop+r*(ts+gap);
+  let tx=W-16-SR-ts;
+  for(const u of slice){
+   cx.fillStyle=u.bg;rr(tx,ry,ts,ts,8*k2);cx.fill();
+   text(u.icon,tx+ts*0.5,ry+ts*0.47,u.big*k2,u.col);
+   text(u.n,tx+ts*0.84,ry+ts*0.84,12*k2,"#fff");
+   tx-=ts+gap;
+  }
+ }
+ if(ups.length){const widest=Math.min(perRow,ups.length);
+  const bw2=widest*ts+(widest-1)*gap;
+  HUDBOX.ups={x:W-16-SR-bw2,y:blockTop,w:bw2,h:blockH};}
+ // health, on a line of its own above them
+ const hw=Math.min(280,wide),hh=24,hy=blockTop-(ups.length?8:0)-hh;
+ cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,hy,hw,hh,8);cx.fill();
+ cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";
+ rr(18+SL,hy+2,(hw-4)*clamp(G.hp/G.maxhp,0,1),hh-4,7);cx.fill();
+ text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,hy+hh/2,15,"#fff");
+ HUDBOX.health={x:16+SL,y:hy,w:hw,h:hh};
+ if(G.bossAlive){const b=G.bossAlive;
+  // narrow enough to stay clear of the pause button, which it used to reach
+  const pauseL=W-64-SR;
+  const bw=Math.max(120,Math.min(500,W*0.6,(pauseL-12-W/2)*2));
+  const by2=66+ST;
+  cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,by2,bw,18,6);cx.fill();
+  cx.fillStyle="#f04060";rr(W/2-bw/2+2,by2+2,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();
+  textFit(ENEMY[b.type].name,W/2,by2+30,14,"#ffc0c0",bw);
+  HUDBOX.boss={x:W/2-bw/2,y:by2,w:bw,h:18};
+  HUDBOX.bossName={x:W/2-bw/2,y:by2+22,w:bw,h:16};}
  if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);textFit(G.announce,W/2,H*0.3,32,"#ffe060",W-32-SL-SR);cx.globalAlpha=1;}
  if(flash>0){cx.fillStyle="rgba(255,40,40,"+flash*0.35+")";cx.fillRect(0,0,W,H);}
  buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});
+ HUDBOX.pause={x:W-64-SR,y:52+ST,w:48,h:40};
  drawButtons();cx.restore();}
 function drawPanel(title,sub,color){cx.fillStyle="rgba(5,10,20,0.72)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32);}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);
@@ -887,5 +936,6 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Ma
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SS={get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v},get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE}};
+window.SS={
+ hud(){return HUDBOX},WEAPONS,PASSIVES,ENEMY,get G(){return G},get scene(){return scene},start,HEROES,set scene(v){scene=v},get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE}};
 </script></body></html>
