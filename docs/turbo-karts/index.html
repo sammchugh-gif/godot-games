@@ -171,6 +171,18 @@ function listed(e,id){if(id<0)return false;if(id===99)return mouseDown;
 function reap(e){
  if(wheel.id>=0&&!listed(e,wheel.id))wheel.id=-1;
  for(const k in pads)if(pads[k].id>=0&&!listed(e,pads[k].id)){pads[k].id=-1;pads[k].down=false}}
+// A finger that goes without a touchend leaves no evidence at all, so no
+// amount of reading events will find it. What gives it away is the symptom: a
+// wheel parked dead straight. Nobody steering holds dead straight for seconds
+// on end, and letting go of it costs a player who is nothing, because the next
+// touchmove takes the wheel back.
+let straightT=0,healN=0;
+function inputWatch(){
+ if(wheel.id<0||wheel.id===99){straightT=0;return}
+ if(Math.abs(wheel.x-wheel.ox)>6){straightT=0;return}
+ const t=performance.now();
+ if(!straightT){straightT=t;return}
+ if(t-straightT>1500){wheel.id=-1;straightT=0;healN++}}
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
  // a real finger outranks a mouse press whose release never arrived
  if(wheel.id===99){wheel.id=-1;mouseDown=false}
@@ -186,8 +198,13 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   // get here, so holding a pad cannot steal the wheel.
   wheel.id=t.identifier;wheel.ox=wheel.x=p.x}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
- for(const t of e.changedTouches)if(t.identifier===wheel.id){
-  const p=rectPos(t.clientX,t.clientY);wheel.x=p.x;
+ for(const t of e.changedTouches){
+  const p=rectPos(t.clientX,t.clientY);
+  // a finger that moves while the wheel is free takes it, so a thumb the
+  // watchdog let go of is back in charge the moment it is actually used
+  if(wheel.id<0&&!onMenu(t.target)&&!padAt(p)){wheel.id=t.identifier;wheel.ox=wheel.x=p.x;continue}
+  if(t.identifier!==wheel.id)continue;
+  wheel.x=p.x;
   const dx=wheel.x-wheel.ox;
   if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R}},{passive:false});
 function tend(e){lastTouchAt=performance.now();
@@ -215,7 +232,8 @@ window.addEventListener("pointercancel",mouseRelease);
 window.addEventListener("dragend",mouseRelease);
 document.addEventListener("mouseleave",mouseRelease);
 window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
-window.__shelfInput=()=>"wheel "+(wheel.id<0?"free":"held")+" "+(pads.drift.down?"D":"-")+(pads.item.down?"I":"-");
+window.__shelfInput=()=>"wheel "+(wheel.id<0?"free":"held#"+wheel.id)+" "+
+  (pads.drift.down?"D":"-")+(pads.item.down?"I":"-")+" resets:"+healN+" scene:"+scene;
 
 // ---------------------------------------------------------------- helpers
 function bake(w,h,fn){const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w));
@@ -1771,7 +1789,7 @@ function render(){
 }
 let last=0;
 function frame(ts){
- requestAnimationFrame(frame);
+ requestAnimationFrame(frame);inputWatch();
  if(!last)last=ts;
  let dt=(ts-last)/1000;last=ts;
  if(dt>0.05)dt=0.05;if(dt<=0)dt=1/60;

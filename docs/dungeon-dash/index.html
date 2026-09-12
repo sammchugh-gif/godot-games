@@ -175,6 +175,17 @@ function listed(e,id){if(id<0)return false;if(id===99)return mouseDown;
 function reap(e){
  if(stick.id>=0&&!listed(e,stick.id))stick.id=-1;
  for(const k in pads)if(pads[k].id>=0&&!listed(e,pads[k].id)){pads[k].id=-1;releasePad(k)}}
+// A finger that goes without a touchend leaves no evidence, so the symptom is
+// the only clue: a stick parked at dead centre. A thumb resting at dead centre
+// is not moving the hero either, so taking it back costs nothing.
+let stillT=0,healN=0;
+function inputWatch(){
+ if(stick.id<0||stick.id===99){stillT=0;return}
+ const dx=stick.x-stick.ox,dy=stick.y-stick.oy;
+ if(Math.hypot(dx,dy)>8){stillT=0;return}
+ const t=performance.now();
+ if(!stillT){stillT=t;return}
+ if(t-stillT>1500){stick.id=-1;stillT=0;healN++}}
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
  // a real finger outranks a mouse press whose release never arrived
  if(stick.id===99){stick.id=-1;mouseDown=false}
@@ -189,12 +200,15 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   // stops answering. Fingers on DASH and FURY never reach here.
   stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
- for(const t of e.changedTouches)if(t.identifier===stick.id){
-  const p=rectPos(t.clientX,t.clientY);stick.x=p.x;stick.y=p.y;
+ for(const t of e.changedTouches){
+  if(stick.id<0&&!onMenu(t.target)){const q=rectPos(t.clientX,t.clientY);
+   if(!padAt(q)){stick.id=t.identifier;stick.ox=stick.x=q.x;stick.oy=stick.y=q.y;continue}}
+  if(t.identifier!==stick.id)continue;
+  {const p=rectPos(t.clientX,t.clientY);stick.x=p.x;stick.y=p.y;
   // Let the thumb wander: if it drags past the ring, the ring follows it,
   // so a long swipe never runs out of travel.
   const dx=stick.x-stick.ox,dy=stick.y-stick.oy,d=Math.hypot(dx,dy);
-  if(d>STICK_R){stick.ox=stick.x-dx/d*STICK_R;stick.oy=stick.y-dy/d*STICK_R}}},{passive:false});
+  if(d>STICK_R){stick.ox=stick.x-dx/d*STICK_R;stick.oy=stick.y-dy/d*STICK_R}}}},{passive:false});
 function tend(e){lastTouchAt=performance.now();
  for(const t of e.changedTouches){if(t.identifier===stick.id)stick.id=-1;
   for(const k in pads)if(pads[k].id===t.identifier){pads[k].id=-1;releasePad(k)}}
@@ -220,7 +234,8 @@ window.addEventListener("pointercancel",mouseRelease);
 window.addEventListener("dragend",mouseRelease);
 document.addEventListener("mouseleave",mouseRelease);
 window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
-window.__shelfInput=()=>"stick "+(stick.id<0?"free":"held#"+stick.id)+" pads "+(pads.dash.down?"D":"-")+(pads.fury.down?"F":"-");
+window.__shelfInput=()=>"stick "+(stick.id<0?"free":"held#"+stick.id)+" pads "+
+  (pads.dash.down?"D":"-")+(pads.fury.down?"F":"-")+" resets:"+healN+" scene:"+scene;
 
 // ---------------------------------------------------------------- art
 // Everything is baked once into offscreen canvases at start-up and then
@@ -2536,7 +2551,7 @@ function render(){
 }
 let last=0;
 function frame(ts){
- requestAnimationFrame(frame);
+ requestAnimationFrame(frame);inputWatch();
  if(!last)last=ts;
  let dt=(ts-last)/1000;last=ts;
  if(dt>0.05)dt=0.05;
