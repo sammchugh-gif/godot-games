@@ -103,13 +103,21 @@ function build() {
   if (document.getElementById("shelf-menu-btn")) return;
   var css = document.createElement("style");
   css.textContent = [
+    /* A red circle with a cross: this one leaves the game, and every game
+       draws its own pause button of its own. Two identical pause glyphs in
+       opposite corners was a guess for a child to make. The two bars that
+       used to be the pause glyph are rotated into the cross, so the markup
+       is unchanged. */
     "#shelf-menu-btn{position:fixed;z-index:2147483000;top:calc(7px + env(safe-area-inset-top));",
-    "left:calc(7px + env(safe-area-inset-left));width:36px;height:36px;border-radius:11px;",
-    "background:rgba(8,12,20,0.45);border:1.5px solid rgba(255,255,255,0.5);display:flex;",
-    "align-items:center;justify-content:center;gap:4px;cursor:pointer;touch-action:manipulation;",
+    "left:calc(7px + env(safe-area-inset-left));width:36px;height:36px;border-radius:50%;",
+    "background:rgba(198,38,46,0.88);border:2px solid rgba(255,255,255,0.9);display:flex;",
+    "align-items:center;justify-content:center;gap:0;cursor:pointer;touch-action:manipulation;",
+    "box-shadow:0 1px 4px rgba(0,0,0,0.45);",
     "-webkit-tap-highlight-color:transparent;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}",
-    "#shelf-menu-btn i{display:block;width:4px;height:14px;border-radius:1.5px;background:rgba(255,255,255,0.92)}",
-    "#shelf-menu-btn:active{background:rgba(8,12,20,0.75)}",
+    "#shelf-menu-btn i{position:absolute;display:block;width:3.5px;height:17px;border-radius:2px;background:#fff}",
+    "#shelf-menu-btn i:first-child{transform:rotate(45deg)}",
+    "#shelf-menu-btn i:last-child{transform:rotate(-45deg)}",
+    "#shelf-menu-btn:active{background:rgba(150,22,30,0.96)}",
     "#shelf-menu-veil,#shelf-menu-stuck{position:fixed;z-index:2147483001;top:0;right:0;bottom:0;left:0;display:none;align-items:center;",
     "justify-content:center;background:rgba(4,8,16,0.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);",
     "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;",
@@ -135,7 +143,7 @@ function build() {
   var btn = document.createElement("div");
   btn.id = "shelf-menu-btn";
   btn.setAttribute("role", "button");
-  btn.setAttribute("aria-label", "Pause");
+  btn.setAttribute("aria-label", "Leave this game");
   btn.innerHTML = "<i></i><i></i>";
 
   var veil = document.createElement("div");
