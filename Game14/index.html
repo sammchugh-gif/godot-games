@@ -309,13 +309,16 @@ function fitCtrl(ctrl,margin){
  ctrl.forEach(p=>{minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);
   miny=Math.min(miny,p[1]);maxy=Math.max(maxy,p[1])});
  const avail=WORLD-margin*2;
- const sc=Math.min(avail/(maxx-minx),avail/(maxy-miny),1);
+ // No cap. Capping at 1 left every circuit at the size it happened to be
+ // sketched at - a quarter of the world - which made the laps short and, worse,
+ // folded the loop close enough to itself that the road crossed its own path.
+ const sc=Math.min(avail/(maxx-minx),avail/(maxy-miny));
  const ox=margin+(avail-(maxx-minx)*sc)/2-minx*sc;
  const oy=margin+(avail-(maxy-miny)*sc)/2-miny*sc;
  return ctrl.map(p=>[p[0]*sc+ox,p[1]*sc+oy]);
 }
-function buildLine(ctrl0,step){
- const ctrl=fitCtrl(ctrl0,400);
+function buildLine(ctrl0,step,rh){
+ const ctrl=fitCtrl(ctrl0,300);
  const n=ctrl.length,raw=[];
  for(let i=0;i<n;i++){
   const p0=ctrl[(i-1+n)%n],p1=ctrl[i],p2=ctrl[(i+1)%n],p3=ctrl[(i+2)%n];
@@ -339,12 +342,26 @@ function buildLine(ctrl0,step){
   out[i].tx=dx/l;out[i].ty=dy/l;out[i].nx=-dy/l;out[i].ny=dx/l;out[i].a=Math.atan2(dy,dx)}
  for(let i=0;i<N;i++){const a=out[(i-3+N)%N],b=out[(i+3)%N];
   out[i].curve=angDiff(b.a,a.a)}
+ // Where can a verge post actually stand? A post sits roadHalf+34 out from the
+ // line, and on a circuit that doubles back that spot can be another part of
+ // the road. Worked out once here rather than guessed at every frame.
+ if(rh){const skip=Math.ceil(N*0.06);
+  for(let i=0;i<N;i++){
+   for(let side=-1;side<=1;side+=2){
+    const off=(rh+34)*side,px=out[i].x+out[i].nx*off,py=out[i].y+out[i].ny*off;
+    let ok=true;
+    for(let j=0;j<N&&ok;j++){
+     let sep=Math.abs(i-j);if(sep>N/2)sep=N-sep;
+     if(sep<skip)continue;
+     const dx=out[j].x-px,dy=out[j].y-py;
+     if(dx*dx+dy*dy<(rh+16)*(rh+16))ok=false}
+    if(side<0)out[i].postL=ok;else out[i].postR=ok}}}
  return{pts:out,len:total,step:total/N};
 }
 
 const TOP_SPEED=318;
 const TRACKS=[
- {id:"bay",name:"SUNSHINE BAY",sub:"Wide, fast, and the sea on both sides.",laps:5,
+ {id:"bay",name:"SUNSHINE BAY",sub:"Wide, fast, and the sea on both sides.",laps:3,
   road:"#4a4f5e",roadEdge:"#3a3e4b",ground:"#e4c98a",ground2:"#d8b874",
   kerbA:"#e03a3a",kerbB:"#f4f4f4",rough:"#c9a65e",
   sky:["#ffd48a","#ff9a5a","#f06a7a"],sun:"#fff0b0",hill:"#7a4a6a",fog:"#ffb98a",beyond:"#2f86c8",
@@ -352,22 +369,20 @@ const TRACKS=[
   ctrl:[[1024,260],[1480,300],[1800,520],[1840,880],[1600,1060],[1760,1300],
         [1700,1620],[1380,1800],[1020,1760],[860,1500],[1060,1300],[820,1140],
         [520,1240],[360,960],[520,660],[760,420]]},
- {id:"ruins",name:"JUNGLE RUINS",sub:"Tight corners under the trees.",laps:5,
+ {id:"ruins",name:"JUNGLE RUINS",sub:"Tight corners under the trees.",laps:3,
   road:"#3f4450",roadEdge:"#2f3440",ground:"#2f7a3c",ground2:"#276a33",
   kerbA:"#f0c020",kerbB:"#1b1f26",rough:"#1f5a2a",
   sky:["#8fd8ff","#5fb0e8","#3a80c0"],sun:"#ffffff",hill:"#2a5a3a",fog:"#a8d8b0",beyond:"#1d4a26",
   roadHalf:126,tree:"jungle",trees:72,
-  ctrl:[[1024,280],[1400,340],[1700,560],[1520,820],[1780,1000],[1820,1340],
-        [1520,1540],[1560,1800],[1180,1880],[900,1700],[1040,1420],[740,1300],
-        [880,1020],[560,900],[420,600],[700,380]]},
- {id:"volcano",name:"VOLCANO PEAK",sub:"Narrow, hot, and it wants you off the edge.",laps:5,
+  // extra corners between the old ones, as far out as the loop can go without
+  // coming back within a road's width of itself
+  ctrl:[[1024,280],[1203,369],[1400,340],[1585,402],[1700,560],[1561,656],[1520,820],[1684,861],[1780,1000],[1740,1177],[1820,1340],[1703,1490],[1520,1540],[1481,1679],[1560,1800],[1382,1899],[1180,1880],[1072,1740],[900,1700],[916,1533],[1040,1420],[912,1304],[740,1300],[756,1133],[880,1020],[741,904],[560,900],[436,775],[420,600],[597,537],[700,380],[844,273]]},
+ {id:"volcano",name:"VOLCANO PEAK",sub:"Narrow, hot, and it wants you off the edge.",laps:3,
   road:"#45404c",roadEdge:"#302b36",ground:"#1d1210",ground2:"#281614",
   kerbA:"#ff5a2a",kerbB:"#20161a",rough:"#35170f",
   sky:["#3a1830","#7a2a2a","#d04a20"],sun:"#ffcf6a",hill:"#1a1014",fog:"#c05a30",beyond:"#1a0c0a",
   roadHalf:114,tree:"rock",trees:68,
-  ctrl:[[1024,250],[1360,290],[1660,460],[1820,740],[1620,940],[1840,1160],
-        [1760,1480],[1420,1600],[1480,1860],[1100,1900],[860,1720],[980,1440],
-        [660,1360],[820,1080],[520,940],[380,620],[640,360]]},
+  ctrl:[[1024,250],[1186,320],[1360,290],[1535,331],[1660,460],[1697,625],[1820,740],[1755,875],[1620,940],[1695,1085],[1840,1160],[1849,1332],[1760,1480],[1573,1493],[1420,1600],[1499,1719],[1480,1860],[1285,1830],[1100,1900],[950,1850],[860,1720],[966,1600],[980,1440],[808,1449],[660,1360],[783,1245],[820,1080],[649,1055],[520,940],[496,760],[380,620],[475,455],[640,360],[846,353]]},
 ];
 // The picture of the circuit, painted once when the race loads: ground, the
 // road stroked along the line, kerbs down both edges, and the start line.
@@ -876,7 +891,7 @@ function note(t,c){toast={txt:t,col:c||"#fff",t:0}}
 
 const lineCache={};
 function trackLine(T2){if(lineCache[T2.id])return lineCache[T2.id];
- return lineCache[T2.id]=buildLine(T2.ctrl,12)}
+ return lineCache[T2.id]=buildLine(T2.ctrl,12,T2.roadHalf)}
 const texCache={};
 function trackTex(T2,line){if(texCache[T2.id])return texCache[T2.id];
  return texCache[T2.id]=bakeTrack(T2,line)}
@@ -973,8 +988,10 @@ function surfaceAt(k){
 }
 function stepKart(k,dt,input){
  const line=R.line,N=line.pts.length;
- if(k.spin>0){k.spin-=dt;k.a+=dt*14;k.sp*=Math.pow(0.16,dt);
-  if(k.spin<=0)k.spin=0}
+ if(k.spin>0){k.spin-=dt;k.spinA=(k.spinA||0)+dt*11;k.a+=dt*14;k.sp*=Math.pow(0.16,dt);
+  if(k.spin<=0){k.spin=0;k.spinA=0}}
+ if(k.air>0){k.air-=dt;k.airT=(k.airT||0)+dt;k.sp*=Math.pow(0.5,dt);
+  if(k.air<=0){k.air=0;k.airT=0;if(!k.ai)shake(6,0.15);puff(k.x,k.y,8,"#cfd8e8")}}
  const surf=surfaceAt(k);
  const rough=surf==="rough";
  if(rough)k.offT+=dt;else k.offT=0;
@@ -1050,7 +1067,7 @@ const OFFMAX=RH+140;
  // and a lift back onto the road for anyone who has got themselves wedged or
  // has spent long enough driving into the scenery
  const moved=k.idx!==k.stuckIdx;
- if(moved||k.spin>0){k.stuckIdx=k.idx;k.stuckT=0}else k.stuckT=(k.stuckT||0)+dt;
+ if(moved||k.spin>0||k.air>0){k.stuckIdx=k.idx;k.stuckT=0}else k.stuckT=(k.stuckT||0)+dt;
  if(k.stuckT>3.2||k.wrong>5||Math.abs(k.off)>OFFMAX-2&&(k.lostT=(k.lostT||0)+dt)>2.6){
   rescue(k)}
  else if(Math.abs(k.off)<=OFFMAX-2)k.lostT=0;
@@ -1058,7 +1075,7 @@ const OFFMAX=RH+140;
 function rescue(k){
  const line=R.line,p=line.pts[k.idx];
  k.x=p.x;k.y=p.y;k.a=p.a;k.sp=Math.min(k.sp,k.top*0.3);k.slip=0;
- k.drift=0;k.driftT=0;k.spin=0;k.stuckT=0;k.wrong=0;k.lostT=0;
+ k.drift=0;k.driftT=0;k.spin=0;k.spinA=0;k.air=0;k.airT=0;k.stuckT=0;k.wrong=0;k.lostT=0;
  puff(k.x,k.y,10,"#ffffff");
  if(!k.ai){note("BACK ON TRACK","#8affc8");SFX.bump()}
 }
@@ -1091,7 +1108,7 @@ function aiInput(k,dt){
  const want=clamp(-cAhead*7,-1,1)*R.track.roadHalf*0.55+k.aiOff*R.track.roadHalf*0.5;
  const tx=t.x+t.nx*want,ty=t.y+t.ny*want;
  let st=clamp(angDiff(Math.atan2(ty-k.y,tx-k.x),k.a)*2.2,-1,1);
- if(k.spin>0)st=0;
+ if(k.spin>0||k.air>0)st=0;
  // dodge the kart in front rather than sitting in its boot
  for(const o of R.karts){if(o===k)continue;
   const d=dist(o.x,o.y,k.x,k.y);
@@ -1173,7 +1190,7 @@ function stepItems(dt){
  for(let i=R.hazards.length-1;i>=0;i--){const h=R.hazards[i];h.t+=dt;
   if(h.t>h.life){R.hazards.splice(i,1);continue}
   for(const k of R.karts){
-   if(k.spin>0||k.star>0)continue;
+   if(k.spin>0||k.air>0||k.star>0)continue;
    if(dist(k.x,k.y,h.x,h.y)>h.r+18)continue;
    spinOut(k,0.75);R.hazards.splice(i,1);break}}
  for(let i=R.shots.length-1;i>=0;i--){const s=R.shots[i];s.t+=dt;
@@ -1190,9 +1207,9 @@ function stepItems(dt){
   let hit=false;
   for(const k of R.karts){
    if(k===s.owner&&s.t<0.4)continue;
-   if(k.star>0||k.spin>0)continue;
+   if(k.star>0||k.spin>0||k.air>0)continue;
    if(dist(k.x,k.y,s.x,s.y)>s.r+20)continue;
-   spinOut(k,0.95);hit=true;break}
+   launch(k,0.95);hit=true;break}
   if(hit||s.x<40||s.x>WORLD-40||s.y<40||s.y>WORLD-40){
    puff(s.x,s.y,8,"#ffffff");R.shots.splice(i,1)}}
  // the boost strips
@@ -1201,11 +1218,19 @@ function stepItems(dt){
    if(dist(k.x,k.y,p.x,p.y)>62)continue;
    if(k.boost<0.6){k.boost=Math.max(k.boost,0.85);if(!k.ai){SFX.boost();shake(5,0.2)}}}}
 }
+// A banana spins you on the spot; a shell throws you into the air and you come
+// down where you land. Two different things, so they should not look the same.
 function spinOut(k,dur){
- if(k.spin>0)return;
- k.spin=dur;k.sp*=0.45;k.boost=0;k.drift=0;k.driftT=0;
+ if(k.spin>0||k.air>0)return;
+ k.spin=dur;k.spinA=0;k.sp*=0.45;k.boost=0;k.drift=0;k.driftT=0;
  SFX.hit();puff(k.x,k.y,14,"#ffd23f");
  if(!k.ai){shake(12,0.4);flash("rgba(255,90,60,0.3)",0.2)}
+}
+function launch(k,dur){
+ if(k.spin>0||k.air>0)return;
+ k.air=dur;k.airT=0;k.sp*=0.3;k.boost=0;k.drift=0;k.driftT=0;
+ SFX.hit();puff(k.x,k.y,16,"#ffffff");
+ if(!k.ai){shake(14,0.45);flash("rgba(255,120,60,0.3)",0.2)}
 }
 function puff(x,y,n,col){
  if(!FX&&n>5)n=3;
@@ -1250,8 +1275,22 @@ function updatePlaces(){
 }
 
 // ---------------------------------------------------------------- drawing
-function billboard(sp,wx,wy,worldH,flip,alpha,tint){
- const p=project(wx,wy,0);if(!p)return null;
+// One scratch canvas per sprite and colour: the sprite drawn, then the colour
+// laid over only where the sprite has pixels.
+const tintCache=new Map();
+function tintCv(sp,col){
+ const key=sp.__id||(sp.__id=++tintCache.__n||(tintCache.__n=1));
+ const k=key+"|"+col;
+ let c=tintCache.get(k);
+ if(!c){c=document.createElement("canvas");c.width=sp.width;c.height=sp.height;
+  const g=c.getContext("2d");
+  g.drawImage(sp,0,0);
+  g.globalCompositeOperation="source-atop";
+  g.fillStyle=col;g.fillRect(0,0,c.width,c.height);
+  tintCache.set(k,c)}
+ return c}
+function billboard(sp,wx,wy,worldH,flip,alpha,tint,wz){
+ const p=project(wx,wy,wz||0);if(!p)return null;
  const h=worldH*p.s,w=h*sp.width/sp.height;
  if(p.x+w<-40||p.x-w>W+40||h<1.2)return p;
  cx.save();
@@ -1259,14 +1298,20 @@ function billboard(sp,wx,wy,worldH,flip,alpha,tint){
  cx.translate(p.x,p.y);
  if(flip<0)cx.scale(-1,1);
  cx.drawImage(sp,-w/2,-h,w,h);
- if(tint){cx.globalCompositeOperation="lighter";cx.globalAlpha=(alpha==null?1:alpha)*tint.a;
-  cx.fillStyle=tint.col;cx.fillRect(-w/2,-h,w,h);
-  cx.globalCompositeOperation="source-over"}
+ // A flat fillRect here used to light the whole frame, corners and all, which
+ // is where the blue box round a hit kart came from. Tint the sprite's own
+ // pixels on a scratch canvas and lay that over instead.
+ if(tint){const c=tintCv(sp,tint.col);
+  cx.globalAlpha=(alpha==null?1:alpha)*tint.a;
+  cx.drawImage(c,-w/2,-h,w,h)}
  cx.restore();
  return p;
 }
 function drawKart(k){
- const rel=k.ai?angDiff(k.a,CAM.a):clamp((k.vis||0)*0.95+k.slip*1.3,-1.5,1.5);
+ // a spinning kart is shown by cycling its four views, the way it would really
+ // look going round, rather than by wobbling the picture
+ const rel=k.spin>0?((k.spinA||0)%(Math.PI*2))-Math.PI
+          :k.ai?angDiff(k.a,CAM.a):clamp((k.vis||0)*0.95+k.slip*1.3,-1.5,1.5);
  const v=kartView(rel),sp=ART.kart[k.c.id][v.v];
  const p=project(k.x,k.y,0);if(!p)return;
  const scale=k.shrunk>0?0.62:1;
@@ -1291,14 +1336,20 @@ function drawKart(k){
      if(FX)for(let i=0;i<3;i++){cx.fillStyle=col;
       cx.beginPath();cx.arc(sx+rnd(-r*0.5,r*0.5),sy+rnd(-r*0.4,r*0.2),r*0.1,0,TAU);cx.fill()}}}}}
  if(k.star>0&&FX)glow(p.x,p.y-worldH*p.s*0.5,worldH*p.s*0.9,"rgba(255,215,80,0.7)");
- const tint=k.star>0?{col:"#ffd23f",a:0.25+Math.sin(T*24)*0.2}:
-            k.spin>0?{col:"#ffffff",a:0.25}:null;
+ const tint=k.star>0?{col:"#ffd23f",a:0.3+Math.sin(T*24)*0.2}:null;
+ // thrown by a shell: up, over and down again
+ const air=k.air>0?Math.sin(Math.min(1,(k.airT||0)/0.95)*Math.PI)*74:0;
  cx.save();
- if(k.spin>0){ // spinning out: the kart whips round on the spot
-  cx.translate(p.x,p.y);cx.rotate(Math.sin(k.spin*18)*0.35);cx.translate(-p.x,-p.y)}
- else if(!k.ai&&rel){ // it leans into the corner, and the lean is the wheel
+ if(air>0){ // tumbling through the air after a shell
+  const t2=Math.min(1,(k.airT||0)/0.95);
+  cx.translate(p.x,p.y);cx.rotate(Math.sin(t2*Math.PI*2)*0.5);cx.translate(-p.x,-p.y)}
+ else if(!k.ai&&rel&&k.spin<=0){ // it leans into the corner, and the lean is the wheel
   cx.translate(p.x,p.y);cx.rotate(-rel*0.10);cx.translate(-p.x+rel*9*p.s,-p.y)}
- billboard(sp,k.x,k.y+0,worldH+(hh?hh:0),v.f,null,tint);
+ // the shadow stays on the road while the kart is above it
+ if(air>0){const sh=project(k.x,k.y,0);
+  if(sh){cx.save();cx.globalAlpha=0.3;cx.fillStyle="#000";
+   cx.beginPath();cx.ellipse(sh.x,sh.y,worldH*sh.s*0.34,worldH*sh.s*0.1,0,0,TAU);cx.fill();cx.restore()}}
+ billboard(sp,k.x,k.y+0,worldH+(hh?hh:0),v.f,null,tint,air);
  cx.restore();
  if(!k.ai)return;
  // a name tag over the rival in front, so you know who you are chasing
@@ -1332,12 +1383,16 @@ function drawWorld(){
    const minx=Math.min.apply(null,cs.map(c=>c.x)),maxx=Math.max.apply(null,cs.map(c=>c.x));
    const miny=Math.min.apply(null,cs.map(c=>c.y)),maxy=Math.max.apply(null,cs.map(c=>c.y));
    cx.drawImage(ART.prop.boost,minx,miny,maxx-minx,maxy-miny);cx.restore()}})}
- // the verge posts, taken straight off the line from where the player is
+ // The verge posts. A post sits a road-and-a-bit out from the line, which on a
+ // circuit that doubles back can be somebody else's tarmac - the palm trees were
+ // checked against the whole line for exactly this and the posts never were.
+ // postOK is worked out once when the circuit is built.
  {const P=R.line.pts,N=P.length,RH=R.track.roadHalf,st=R.player.idx;
   for(let d=-2;d<66;d+=3){
    const i=((st+d)%N+N)%N,q=P[i];
    const tall=(i%24)===0;
    for(let side=-1;side<=1;side+=2){
+    if(side<0?!q.postL:!q.postR)continue;
     const off=(RH+34)*side,px2=q.x+q.nx*off,py2=q.y+q.ny*off;
     const pr=project(px2,py2,0);
     if(!pr||pr.z>560||pr.z<20)continue;
@@ -1861,6 +1916,7 @@ window.TK={
  go(){if(R){R.state="race";R.count=-1;R.time=0}},
  give(it){if(R){R.player.item=it;R.player.itemT=0}},
  auto(on){AUTO=on!==false},
+ __launch(k,d){launch(k,d)},__spin(k,d){spinOut(k,d)},
  __press(k){const q=pads[k];if(!q.down){q.down=true;q.hit=1}},
  __release(k){pads[k].down=false},
  __pads(){return padRects},

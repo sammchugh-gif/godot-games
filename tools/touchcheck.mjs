@@ -55,12 +55,28 @@ const GAMES = {
                     pos: '({x:window.SS.G.px,y:window.SS.G.py})' },
   'dungeon-dash': { api: 'DD', start: "window.DD.start('dylan')",
                     pos: '({x:window.DD.G.p.x,y:window.DD.G.p.y})' },
-  'turbo-karts':  { api: 'TK', start: "window.TK.start(0,'dylan');window.TK.go();window.TK.sim(2)",
+  /* no sim() here: stepping the race without drawing it makes the shelf think
+     the game has frozen, and its STUCK? card then swallows the touch */
+  'turbo-karts':  { api: 'TK', start: "window.TK.start(0,'dylan');window.TK.go()",
                     pos: null, steer: 'window.TK.steer' },
 };
 const SIZES = [[390, 844, 'upright'], [844, 390, 'landscape'], [1180, 820, 'iPad']];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* Without a GPU the renderer stalls often enough that the shelf decides the
+   game has frozen and puts its STUCK? card up. The card covers the screen and
+   quite correctly swallows touches - which is the shelf working, not the game
+   failing, so take it out of the way. What is under test here is whether the
+   game answers a finger. */
+async function clearShelfOverlay(pg) {
+  await pg.evaluate(() => {
+    for (const id of ['shelf-menu-stuck', 'shelf-menu-veil']) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+  }).catch(() => {});
+}
 
 function serve(port) {
   const srv = http.createServer((rq, rs) => {
@@ -91,7 +107,9 @@ async function checkGame(browser, slug, cfg, [W, H, tag]) {
   await sleep(1700);
   await pg.evaluate(`window.${cfg.api}.fx=true;${cfg.start}`);
   await sleep(500);
+  await clearShelfOverlay(pg);
 
+  await clearShelfOverlay(pg);
   const before = cfg.pos ? await pg.evaluate(cfg.pos) : null;
   /* drag from a spot clear of the action pads */
   const x = Math.round(W * 0.25), y = Math.round(H * 0.62);
@@ -131,6 +149,7 @@ async function checkResting(browser, slug, cfg) {
   await sleep(1700);
   await pg.evaluate(`window.${cfg.api}.fx=true;${cfg.start}`);
   await sleep(400);
+  await clearShelfOverlay(pg);
   const before = cfg.pos ? await pg.evaluate(cfg.pos) : null;
   const dx = Math.round(W * 0.25), dy = Math.round(H * 0.62);
   const rx = Math.round(W * 0.75), ry = Math.round(H * 0.30);
