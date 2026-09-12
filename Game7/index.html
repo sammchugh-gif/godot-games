@@ -317,12 +317,17 @@ const touch={id:-1,ox:0,oy:0,x:0,y:0,taps:[]};let mouseDown=false;
 // touch event, so pruning against it keeps this honest even when a touchend
 // goes missing, and the game can then tell a stick held by a real finger from
 // one held by a ghost.
+// Every finger on the glass, each with the spot it went down at. Tank Tussle
+// has always worked this way and is the one game nobody has complained about.
+const fingers=Object.create(null);
 const live=Object.create(null);
 let evN=0,healN=0;
 function liveN(){let n=0;for(const k in live)n++;return n}
+function fingerN(){let n=0;for(const k in fingers)n++;return n}
 function seeTouches(e){const s=Object.create(null);
  for(const t of e.touches)s[t.identifier]=1;
- for(const k in live)if(!s[k])delete live[k]}
+ for(const k in live)if(!s[k])delete live[k];
+ for(const k in fingers)if(!s[k])delete fingers[k]}
 function noteTouch(id,x,y){live[id]={x:x,y:y}}
 // Hand the stick to a finger that is actually down, or let it go.
 function reclaimStick(){
@@ -370,7 +375,7 @@ function drawDiag(){
  cx.fillStyle="#8fe3ff";cx.fillText(s,7,y);
  cx.restore()}
 window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id)+
-  " fingers:"+liveN()+" events:"+evN+" resets:"+healN+" scene:"+scene;
+  " fingers:"+liveN()+"/"+fingerN()+" events:"+evN+" resets:"+healN+" scene:"+scene;
 // A tap on a touch screen is followed by a synthetic mouse event a moment
 // later. Both reached the canvas, so every button ran twice on one tap. It
 // went unnoticed because most buttons are idempotent - but a toggle flipped
@@ -393,9 +398,11 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;aud
   // second finger resting on the glass steal it from the thumb that is
   // steering; the reap and the dead-centre watchdog are what deal with a
   // finger that has really gone.
+  fingers[t.identifier]={ox:p.x,oy:p.y,x:p.x,y:p.y};
   if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();evN++;seeTouches(e);
  for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,p.x,p.y);
+  const f=fingers[t.identifier];if(f){f.x=p.x;f.y=p.y}
   if(t.identifier===touch.id){touch.x=p.x;touch.y=p.y;continue}
   if(onMenu(t.target))continue;
   // A finger that moves takes the stick off one sitting at dead centre - a
@@ -404,15 +411,17 @@ window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();evN++;seeT
   const busy=touch.id>=0&&Math.hypot(touch.x-touch.ox,touch.y-touch.oy)>8;
   if(!busy){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
 function tend(e){lastTouchAt=performance.now();evN++;
- for(const t of e.changedTouches){delete live[t.identifier];if(t.identifier===touch.id)touch.id=-1}
+ for(const t of e.changedTouches){delete live[t.identifier];delete fingers[t.identifier];
+  if(t.identifier===touch.id)touch.id=-1}
  seeTouches(e);
  if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
-cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
-window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y}});
-function mouseRelease(){mouseDown=false;if(touch.id===99)touch.id=-1}
+cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y;fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
+window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y;
+ if(fingers[99]){fingers[99].x=p.x;fingers[99].y=p.y}}});
+function mouseRelease(){mouseDown=false;delete fingers[99];if(touch.id===99)touch.id=-1}
 window.addEventListener("mouseup",mouseRelease);
 // A press whose release never arrives - it happened outside the window, or the
 // browser synthesised the press on its own - used to pin the stick for good.
@@ -423,7 +432,15 @@ document.addEventListener("mouseleave",mouseRelease);
 // and if the buttons are genuinely up, stop pretending otherwise
 window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
 function stickVec(){let x=0,y=0;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;
- if(touch.id>=0){const dx=touch.x-touch.ox,dy=touch.y-touch.oy;const d=Math.hypot(dx,dy),R=60;if(d>8){const m=Math.min(d,R)/R;x=dx/d*m;y=dy/d*m;}}
+ // Whichever finger is pushed furthest from where it went down is the one
+ // steering. Every other finger on the glass is simply not deflected, so it
+ // cannot take the ship off whoever is actually flying it.
+ {let bd=0,bx=0,by=0;
+  for(const k in fingers){const f=fingers[k];
+   const dx=f.x-f.ox,dy=f.y-f.oy,d=Math.hypot(dx,dy);
+   if(d>bd){bd=d;bx=dx;by=dy}}
+  const R=60;
+  if(bd>8){const m=Math.min(bd,R)/R;x=bx/bd*m;y=by/bd*m}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return {x,y,l:Math.min(l,1)}}
 // Buttons: rectangles registered each frame by the UI drawing code.
 let buttons=[];
