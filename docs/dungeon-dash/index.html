@@ -165,14 +165,30 @@ function padAt(p){for(const k in padRects){const r=padRects[k];if(!r)continue;
  if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)return k}return null}
 function pressPad(k){const q=pads[k];if(q.down)return;q.down=true;q.hit=1}
 function releasePad(k){pads[k].down=false}
+// A touchend eaten by a system gesture - a swipe up for Control Centre, a
+// notification - used to leave the stick held by a finger that was not on the
+// glass. The only cleanup ran on touchend, which is exactly the event that had
+// gone missing, so the stick stayed dead until the game was reloaded and DASH
+// could stick on the same way.
+function listed(e,id){if(id<0)return false;if(id===99)return mouseDown;
+ for(const t of e.touches)if(t.identifier===id)return true;return false}
+function reap(e){
+ if(stick.id>=0&&!listed(e,stick.id))stick.id=-1;
+ for(const k in pads)if(pads[k].id>=0&&!listed(e,pads[k].id)){pads[k].id=-1;releasePad(k)}}
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
+ // a real finger outranks a mouse press whose release never arrived
+ if(stick.id===99){stick.id=-1;mouseDown=false}
+ for(const k in pads)if(pads[k].id===99){pads[k].id=-1;releasePad(k)}
+ reap(e);
  for(const t of e.changedTouches){if(onMenu(t.target))continue;
   const p=rectPos(t.clientX,t.clientY);
   if(uiTap(p))continue;
   const k=padAt(p);
   if(k){pads[k].id=t.identifier;pressPad(k);continue}
-  if(stick.id<0){stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}}},{passive:false});
-window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();
+  // a fresh finger always takes the stick, which is what a child does when it
+  // stops answering. Fingers on DASH and FURY never reach here.
+  stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}},{passive:false});
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
  for(const t of e.changedTouches)if(t.identifier===stick.id){
   const p=rectPos(t.clientX,t.clientY);stick.x=p.x;stick.y=p.y;
   // Let the thumb wander: if it drags past the ring, the ring follows it,
@@ -194,8 +210,16 @@ cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=p
 window.addEventListener("mousemove",e=>{if(!mouseDown)return;const p=pos(e);stick.x=p.x;stick.y=p.y;
  const dx=stick.x-stick.ox,dy=stick.y-stick.oy,d=Math.hypot(dx,dy);
  if(d>STICK_R){stick.ox=stick.x-dx/d*STICK_R;stick.oy=stick.y-dy/d*STICK_R}});
-window.addEventListener("mouseup",()=>{mouseDown=false;if(stick.id===99)stick.id=-1;
- for(const k in pads)if(pads[k].id===99){pads[k].id=-1;releasePad(k)}});
+function mouseRelease(){mouseDown=false;if(stick.id===99)stick.id=-1;
+ for(const k in pads)if(pads[k].id===99){pads[k].id=-1;releasePad(k)}}
+window.addEventListener("mouseup",mouseRelease);
+// a release that happened outside the window, or a press the browser invented,
+// used to pin the stick for good
+window.addEventListener("pointerup",mouseRelease);
+window.addEventListener("pointercancel",mouseRelease);
+window.addEventListener("dragend",mouseRelease);
+document.addEventListener("mouseleave",mouseRelease);
+window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
 window.__shelfInput=()=>"stick "+(stick.id<0?"free":"held#"+stick.id)+" pads "+(pads.dash.down?"D":"-")+(pads.fury.down?"F":"-");
 
 // ---------------------------------------------------------------- art

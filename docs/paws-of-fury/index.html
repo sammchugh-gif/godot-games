@@ -2006,7 +2006,19 @@ function stickRelease(){
   TOUCHIN.active=false; TOUCHIN.x=TOUCHIN.z=0; TOUCHIN.mag=0;
 }
 
+/* drop any finger the browser has stopped reporting, so a lost touchend
+   cannot leave the stick held or JUMP pressed for ever */
+function reapTouches(e){
+  const live={};
+  for(let i=0;i<e.touches.length;i++) live[e.touches[i].identifier]=1;
+  if(STICK.id!==null && !live[STICK.id]) stickRelease();
+  if(CAMDRAG.id!==null && !live[CAMDRAG.id]) CAMDRAG.id=null;
+  if(BTNHELD.jump!==null && !live[BTNHELD.jump]){ BTNHELD.jump=null; keys.jmp=false; }
+  if(BTNHELD.bite!==null && !live[BTNHELD.bite]){ BTNHELD.bite=null; }
+  if(BTNHELD.pound!==null && !live[BTNHELD.pound]){ BTNHELD.pound=null; keys.crouch=false; }
+}
 function onTouchStart(e){
+  reapTouches(e);
   e.preventDefault();
   audioInit();
   TOUCH_USED=true;
@@ -2022,7 +2034,10 @@ function onTouchStart(e){
     if(inBtn(TBTN.jump,p)){  BTNHELD.jump=t.identifier;  pressed.jmp=true; keys.jmp=true; continue; }
     if(inBtn(TBTN.bite,p)){  BTNHELD.bite=t.identifier;  pressed.atk=true; continue; }
     if(inBtn(TBTN.pound,p)){ BTNHELD.pound=t.identifier; pressed.crouch=true; keys.crouch=true; continue; }
-    if(p.x < VW*0.46 && STICK.id===null){
+    if(p.x < VW*0.46){
+      /* a fresh finger always takes the stick: a touchend eaten by a system
+         gesture used to leave it held by a finger that had left the glass,
+         and nothing could claim it back */
       STICK.id=t.identifier; STICK.ox=p.x; STICK.oy=p.y; STICK.shown=1;
       stickUpdate(p); continue;
     }
@@ -2050,6 +2065,7 @@ function onTouchEnd(e){
     if(id===BTNHELD.bite){  BTNHELD.bite=null; }
     if(id===BTNHELD.pound){ BTNHELD.pound=null; keys.crouch=false; }
   }
+  reapTouches(e);
 }
 const _stage=document.getElementById('stagebox');
 _stage.addEventListener('touchstart',onTouchStart,{passive:false});

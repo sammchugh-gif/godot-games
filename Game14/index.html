@@ -161,21 +161,39 @@ function steer(){
  if(wheel.id>=0){const dx=wheel.x-wheel.ox;s=clamp(dx/STEER_R,-1,1)}
  return clamp(s,-1,1);
 }
+// Nothing here ever let go of a finger the browser had stopped reporting. A
+// touchend eaten by a system gesture - a swipe up for Control Centre, a
+// notification - left the wheel held by a finger that was not on the glass, and
+// because the wheel was only ever handed out when it was free, steering stayed
+// dead until the game was reloaded. DRIFT could stick on the same way.
+function listed(e,id){if(id<0)return false;if(id===99)return mouseDown;
+ for(const t of e.touches)if(t.identifier===id)return true;return false}
+function reap(e){
+ if(wheel.id>=0&&!listed(e,wheel.id))wheel.id=-1;
+ for(const k in pads)if(pads[k].id>=0&&!listed(e,pads[k].id)){pads[k].id=-1;pads[k].down=false}}
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
+ // a real finger outranks a mouse press whose release never arrived
+ if(wheel.id===99){wheel.id=-1;mouseDown=false}
+ for(const k in pads)if(pads[k].id===99){pads[k].id=-1;pads[k].down=false}
+ reap(e);
  for(const t of e.changedTouches){if(onMenu(t.target))continue;
   const p=rectPos(t.clientX,t.clientY);
   if(uiTap(p))continue;
   const k=padAt(p);
   if(k){pads[k].id=t.identifier;if(!pads[k].down){pads[k].down=true;pads[k].hit=1}continue}
-  if(wheel.id<0){wheel.id=t.identifier;wheel.ox=wheel.x=p.x}}},{passive:false});
-window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();
+  // a fresh finger on the road always takes the wheel, which is what a child
+  // does when the steering stops answering. Fingers on DRIFT and ITEM never
+  // get here, so holding a pad cannot steal the wheel.
+  wheel.id=t.identifier;wheel.ox=wheel.x=p.x}},{passive:false});
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
  for(const t of e.changedTouches)if(t.identifier===wheel.id){
   const p=rectPos(t.clientX,t.clientY);wheel.x=p.x;
   const dx=wheel.x-wheel.ox;
   if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R}},{passive:false});
 function tend(e){lastTouchAt=performance.now();
  for(const t of e.changedTouches){if(t.identifier===wheel.id)wheel.id=-1;
-  for(const k in pads)if(pads[k].id===t.identifier){pads[k].id=-1;pads[k].down=false}}}
+  for(const k in pads)if(pads[k].id===t.identifier){pads[k].id=-1;pads[k].down=false}}
+ reap(e)}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 function letGo(){wheel.id=-1;for(const k in pads){pads[k].id=-1;pads[k].down=false}}
 window.addEventListener("blur",letGo);
@@ -187,8 +205,16 @@ cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=p
 window.addEventListener("mousemove",e=>{if(!mouseDown)return;const p=pos(e);wheel.x=p.x;
  const dx=wheel.x-wheel.ox;
  if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R});
-window.addEventListener("mouseup",()=>{mouseDown=false;if(wheel.id===99)wheel.id=-1;
- for(const k in pads)if(pads[k].id===99){pads[k].id=-1;pads[k].down=false}});
+function mouseRelease(){mouseDown=false;if(wheel.id===99)wheel.id=-1;
+ for(const k in pads)if(pads[k].id===99){pads[k].id=-1;pads[k].down=false}}
+window.addEventListener("mouseup",mouseRelease);
+// a release that happened outside the window, or a press the browser invented,
+// used to pin the wheel for good
+window.addEventListener("pointerup",mouseRelease);
+window.addEventListener("pointercancel",mouseRelease);
+window.addEventListener("dragend",mouseRelease);
+document.addEventListener("mouseleave",mouseRelease);
+window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
 window.__shelfInput=()=>"wheel "+(wheel.id<0?"free":"held")+" "+(pads.drift.down?"D":"-")+(pads.item.down?"I":"-");
 
 // ---------------------------------------------------------------- helpers
@@ -1765,6 +1791,7 @@ window.TK={
  get fx(){return FX},set fx(v){FX=v?1:0},
  get cam(){return CAM},get safe(){return SAFE},
  get foc(){return FOC},get kartH(){return KART_H},get hzy(){return HZY},
+ get steer(){return steer()},
  TRACKS,RACERS,ITEMS,ART,
  start(ti,id,laps){startRace(ti||0,id||"sophia",laps);scene="race"},
  __drawGround(){camSetup();drawGround(R.track,R.tex)},
