@@ -393,25 +393,32 @@ let G=null,scene="title",shipIdx=0,shake=0,flash=0,tPrev=0,frameT=0;
 // out-of-date save should never be able to stop the game from starting
 const obj=(v,d)=>(v&&typeof v==="object"&&!Array.isArray(v))?v:d;
 const records=obj(store.get("records",{}),{}),unlocks=obj(store.get("unlocks",{falcon:true}),{falcon:true});
+// Easy is the game exactly as it was tuned, so a run recorded before this
+// existed is still an easy run and keeps its own record key unchanged.
+const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:1,dmg:1,elite:0.05,desc:"The swarm as it has always been."},
+ {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.5,rate:1.3,dmg:1.25,elite:0.07,desc:"Tougher, thicker, hits harder."},
+ {id:"hard",name:"HARD",col:"#ff6060",hp:2.2,rate:1.65,dmg:1.6,elite:0.1,desc:"No mercy. Bring your best ship."}];
+let diffIdx=Math.max(0,Math.min(DIFFS.length-1,parseInt(store.get("diff",0),10)||0));
+function recKeyFor(shipId,difId){return difId==="easy"?shipId:shipId+"@"+difId}
 unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
-function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
+function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
  weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;seedRocks();shake=0;flash=0}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
 function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))}
 function dmgMul(){return 1+0.15*(G.passives.power||0)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return 1+0.2*(G.passives.scanner||0)}function magnetR(){return 100+45*(G.passives.tractor||0)}function armor(){return G.passives.armor||0}
-function hpMul(){return 1.1+G.t/110}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?1+G.t/420:hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+function hpMul(){return (1.1+G.t/110)*G.dif.hp}
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?(1+G.t/420)*G.dif.hp:hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
-function spawnWave(dt){const t=G.t;let rate=1.35+t/55;if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
+function spawnWave(dt){const t=G.t;let rate=(1.35+t/55)*G.dif.rate;if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
  // past the cap the swarm gets tougher rather than more numerous, which keeps
  // the frame rate honest on a phone thirty minutes into a run
  while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=MAX_EN){G.spawnAcc=0;break}
   const p=edgePoint();let type="scout";const r=Math.random();if(t>250&&r<0.16)type="phantom";else if(t>170&&r<0.32)type="turret";else if(t>100&&r<0.5)type="drifter";else if(t>40&&r<0.72)type="swarmer";
-  const elite=t>90&&Math.random()<0.05;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
+  const elite=t>90&&Math.random()<G.dif.elite;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
  if(t>75&&Math.floor((t-75)/75)>G.swarm){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
  // one boss per sector, three minutes in
  if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);announce(ENEMY[which].name+" APPROACHES!");SFX.boss();shake=1}
@@ -452,7 +459,7 @@ function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.bossAliv
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
  announce("SECTOR "+G.sector+"  ·  "+realm().name);SFX.warp();flash=0.4;shake=0.8}
 function win(){scene="win";G.won=true;SFX.win();musicStop();saveRecord()}
-function saveRecord(){const id=G.ship.id,r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
+function saveRecord(){const id=recKeyFor(G.ship.id,G.dif.id),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
  let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
 function options(){const out=[];const nw=Object.keys(G.weapons).length,np=Object.keys(G.passives).length;for(const k in WEAPONS){const l=G.weapons[k]||0;if(l>=WEAPONS[k].max)continue;if(!l&&nw>=4)continue;out.push({k,w:true,l:l+1})}for(const k in PASSIVES){const l=G.passives[k]||0;if(l>=PASSIVES[k].max)continue;if(!l&&np>=4)continue;out.push({k,w:false,l:l+1})}return out}
 function makeCards(){const o=options();cards=[];for(let i=0;i<3&&o.length;i++){cards.push(o.splice(rint(0,o.length-1),1)[0])}if(!cards.length)cards.push({k:"heal"})}
@@ -893,7 +900,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
  text("LV "+G.level,58+SL,42+ST,20,"#c0e8ff","left");// clear of the shelf menu button
  const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,34,left>0?"#fff":"#80c0ff");
- text("SECTOR "+G.sector+" / "+SECTORS,W/2,68+ST,15,"#9fc8ff");
+ textFit("SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.dif.col,W*0.62);
  text(G.kills+" ☠",W-100-SR,34+ST,20,"#ffd0d0","right");
  const hw=Math.min(280,W*0.32),BY=H-SB;cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
  cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-64,hw,16,6);cx.fill();cx.fillStyle="#40d0ff";rr(18+SL,BY-62,(hw-4)*clamp(G.sh/G.maxsh,0,1),12,5);cx.fill();text("shield",16+SL+hw/2,BY-56,11,"#fff");
@@ -909,33 +916,42 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillR
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  text("STAR SWARM",W/2+4,H*0.16+4+bob,Math.min(88,W/8),"#0a0a2a");text("STAR SWARM",W/2,H*0.16+bob,Math.min(88,W/8),"#80c0ff");
  const tag="Six sectors. Survive five minutes in each, then fly to the warp gate.";
- if(W<620)wrap(tag,W/2,H*0.16+54,W-36,15,"#dfe8ff");else textFit(tag,W/2,H*0.16+66,20,"#dfe8ff",W-40);
+ if(W<620)wrap(tag,W/2,H*0.16+50,W-36,15,"#dfe8ff");else textFit(tag,W/2,H*0.16+66,20,"#dfe8ff",W-40);
  buttons=[];const n=SHIPS.length;
  // Three cards side by side need about 170px each before a ship name stops
  // fitting. A phone in portrait has nowhere near that, so they stack and the
  // ship moves to the left of its own text instead.
  const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
  const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else SFX.click()};
+ // difficulty, as a segmented row above the ships
+ const dw=Math.min(380,W-32),dh=stack?38:42,dy=stack?H*0.26:H*0.265,dx0=W/2-dw/2,seg=dw/3;
+ DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
+  cx.fillStyle=sel?hexA(d.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,dy,seg-4,dh,10);cx.fill();
+  cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?d.col:"rgba(255,255,255,0.3)";cx.stroke();
+  textFit(d.name,x+seg/2,dy+dh/2,sel?18:16,sel?d.col:"#ccd6e4",seg-14);
+  btn(x+2,dy,seg-4,dh,"",()=>{diffIdx=i;store.set("diff",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+ textFit(DIFFS[diffIdx].desc,W/2,dy+dh+13,12,"#9fb0c8",W-40);
+ const difId=DIFFS[diffIdx].id;
  let listBottom;
  if(stack){
-  const cw=Math.min(440,W-28),ch=Math.min(104,(H*0.42)/n-10),x0=W/2-cw/2,top=H*0.30,px=ch*0.86;
+  const cw=Math.min(440,W-28),top=dy+dh+30,ch=Math.min(100,(H-top-190)/n-10),x0=W/2-cw/2,px=ch*0.86;
   SHIPS.forEach((s,i)=>{const y=top+i*(ch+10),sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore();
-   const tx=x0+px+14,tw=cw-px-28,r=records[s.id];
+   const tx=x0+px+14,tw=cw-px-28,r=records[recKeyFor(s.id,difId)];
    textFit(un?s.name:"LOCKED",tx,y+ch*0.28,20,sel?"#ffe060":"#fff",tw,"left");
    textFit(un?s.desc:s.unlock,tx,y+ch*0.56,14,"#cde",tw,"left");
    textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",tx,y+ch*0.81,13,"#bfe",tw,"left");
    btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
   listBottom=top+n*(ch+10)-10;
  }else{
-  const cw=rowCw,ch=Math.min(250,H*0.42),y=H*0.36;
+  const cw=rowCw,y=dy+dh+34,ch=Math.min(250,H-y-200);
   SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
    cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x+cw/2,y+ch*0.34,-Math.PI/2,s,sel?0.6:0);cx.restore();
-   const r=records[s.id];
+   const r=records[recKeyFor(s.id,difId)];
    textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.6,22,sel?"#ffe060":"#fff",cw-16);
    textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.72,14,"#cde",cw-16);
    textFit(un?(r?"Best "+r.best+"   ·   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.86,14,"#bfe",cw-16);
@@ -955,9 +971,9 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
   cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
-function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t),won?"#80c0ff":"#ff8080");
+function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+G.dif.name,won?"#80c0ff":"#ff8080");
  const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff",W-32);
- const r=records[G.ship.id];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#80ff90");if(G.unlocked)text("NEW SHIP UNLOCKED!",W/2,y+110,26,"#ffe060");
+ const r=records[recKeyFor(G.ship.id,G.dif.id)];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#80ff90");if(G.unlocked)text("NEW SHIP UNLOCKED!",W/2,y+110,26,"#ffe060");
  // on a phone in portrait a fixed 210px pair ran off both edges
  const ew=Math.min(210,(W-56)/2);
  buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"FLY AGAIN",()=>start(),{fill:"#2a5aa0",size:24});btn(W/2+10,H*0.72,ew,60,"HANGAR",()=>{scene="title"},{size:24});
