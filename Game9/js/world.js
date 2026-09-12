@@ -246,6 +246,32 @@ export class World {
     if (target) { d.target.position.set(target[0], 0, target[1]); this.scene.add(d.target); }
     this.scene.add(d); return d;
   }
+  // a hidden UMBRA listening device: small, dark, and blinking once a second
+  bug(x, y, z) {
+    const n = this.bugN = (this.bugN || 0) + 1;
+    const id = `${this.sceneId}:${n - 1}`;
+    if (this.foundBugs && this.foundBugs.has(id)) return null;
+    const grp = new THREE.Group(); grp.position.set(x, y, z); this.scene.add(grp);
+    const dark = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.5, metalness: 0.5 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.03, 10), dark);
+    base.position.y = -0.05; grp.add(base);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.14), dark);
+    grp.add(body);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2b3c }));
+    led.position.set(0.07, 0.055, 0); grp.add(led);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.dotTex, color: 0xff2b3c, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.position.copy(led.position); glow.scale.set(0.34, 0.34, 1); grp.add(glow);
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.3, 4), new THREE.MeshBasicMaterial({ color: 0x6a6a70 }));
+    wire.position.set(-0.09, 0.14, 0); wire.rotation.z = 0.25; grp.add(wire);
+    const it = { id, kind: "bug", x, z, y: y + 0.1, radius: 2.4, label: "UMBRA listening device", grp, enabled: true };
+    this.interactables.push(it);
+    this.updaters.push(dt => { const b = (Math.sin(this.t * 3.2) + 1) / 2; glow.material.opacity = 0.12 + b * 0.5; led.material.color.setRGB(0.5 + b * 0.5, 0.06, 0.1); });
+    return it;
+  }
+  removeBug(it) {
+    if (it.grp) { this.scene.remove(it.grp); it.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map && o.material.map !== this.dotTex) o.material.map.dispose(); o.material.dispose(); } }); it.grp = null; }
+    const i = this.interactables.indexOf(it); if (i >= 0) this.interactables.splice(i, 1);
+  }
   station(id, x, z, icon, color, label, o) {
     o = o || {};
     const grp = new THREE.Group(); grp.position.set(x, 0, z); this.scene.add(grp);
@@ -463,6 +489,7 @@ export class World {
   }
   load(id) {
     this.reset();
+    this.sceneId = id; this.bugN = 0;
     const spawn = SCENES[id].call(this);
     this.player.x = spawn.x; this.player.z = spawn.z; this.player.yaw = spawn.yaw || 0; this.player.pitch = 0;
     this.bounds = spawn.bounds || { x0: -28, x1: 28, z0: -28, z1: 28 };

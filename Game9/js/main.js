@@ -23,7 +23,7 @@ const G = {
 };
 window.__spy = G;
 
-function newSave() { return { version: 2, country: 0, done: [], code: null, arrived: {}, briefed: {}, finished: false, stars: {} }; }
+function newSave() { return { version: 2, country: 0, done: [], code: null, arrived: {}, briefed: {}, finished: false, stars: {}, bugs: [] }; }
 const TOTAL = ALL_MISSIONS.length;
 const actOf = ci => COUNTRIES[Math.min(ci, COUNTRIES.length - 1)].act;
 const isActEnd = ci => ci === COUNTRIES.length - 1 || COUNTRIES[ci + 1].act !== COUNTRIES[ci].act;
@@ -117,6 +117,9 @@ function keyboardInput() {
 function fadeOut(cb) { G.fadeTo = 1; G.fadeCb = cb; }
 function fadeIn() { G.fadeTo = 0; }
 const pick = a => a[Math.floor(Math.random() * a.length)];
+// collected bugs must not come back when their city is reloaded
+function loadScene(id) { G.world.foundBugs = new Set(G.save.bugs || []); return G.world.load(id); }
+function bugsIn(cityId) { const n = (G.save.bugs || []).filter(b => b.startsWith(cityId + ":")).length; return n; }
 const lowerFirst = t => t.replace(/^The /, "the ");
 function setState(s) { G.prev = G.state; G.state = s; G.buttons.begin(); }
 function toast(msg, dur) { G.toast = { msg, t: dur || 2.5 }; }
@@ -169,7 +172,7 @@ function flyNext() {
 function enterCountry(i) {
   fadeOut(() => {
     G.country = i; const c = COUNTRIES[i];
-    G.world.load(c.id);
+    loadScene(c.id);
     Ambience.set(c.ambience); Music.setMode("theme");
     refreshStations();
     setState("world"); G.pause = false;
@@ -193,6 +196,14 @@ function objective() {
 function missionNumber(m) { return ALL_MISSIONS.findIndex(q => q.id === m.id) + 1; }
 function interact(it) {
   const c = COUNTRIES[G.country];
+  if (it.kind === "bug") {
+    if (!G.save.bugs.includes(it.id)) G.save.bugs.push(it.id);
+    G.world.removeBug(it); saveGame(); SFX.unlock();
+    const here = bugsIn(c.id), all = G.save.bugs.length;
+    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/42)` : `UMBRA bug disabled.  ${here} of 3 in ${c.city}`, 3);
+    Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : "One of UMBRA's listening devices. Off it goes.", CHARS.vi.voice, null);
+    return;
+  }
   if (it.kind === "npc") {
     const who = it.id; const ch = CHARS[who];
     if (!ch) return;
@@ -241,14 +252,14 @@ function startReplay(m) {
   // a mission played inside the 3D world has to be replayed in its own city
   if (NEEDS_WORLD.includes(m.game) && ci !== G.country) {
     G.replay.swapped = true;
-    fadeOut(() => { G.country = ci; G.world.load(COUNTRIES[ci].id); refreshStations(); begin(); fadeIn(); });
+    fadeOut(() => { G.country = ci; loadScene(COUNTRIES[ci].id); refreshStations(); begin(); fadeIn(); });
   } else begin();
 }
 function endReplay() {
   const r = G.replay; G.replay = null;
   Speech.stop();
   fadeOut(() => {
-    if (r.swapped) { G.country = r.city; G.world.load(COUNTRIES[r.city].id); refreshStations(); }
+    if (r.swapped) { G.country = r.city; loadScene(COUNTRIES[r.city].id); refreshStations(); }
     G.pause = r.paused; G.dossierScroll = r.scroll; G.dossierFrom = r.from;
     setState("dossier"); Music.setMode("theme"); fadeIn();
   });
@@ -452,7 +463,7 @@ function drawWorldHud() {
     return;
   }
   // spy watch
-  UI.drawSpyWatch(g, 14 * s, 14 * s, 330 * s, 96 * s, s, objective(), G.save.done.length, TOTAL, G.t);
+  UI.drawSpyWatch(g, 14 * s, 14 * s, 330 * s, 108 * s, s, objective(), G.save.done.length, TOTAL, G.t, { found: bugsIn(c.id), of: 3 });
   // location chip
   { const label = `${c.city.toUpperCase()}  ·  ${c.country.toUpperCase()}`; g.font = `700 ${14 * s}px ${UI.FONT}`; const tw = g.measureText(label).width + 62 * s; const cx = W / 2 - tw / 2;
     chip(g, cx, 14 * s, tw, 34 * s, "", s); UI.drawFlag(g, c.flag, cx + 10 * s, 20 * s, 30 * s, 21 * s); text(g, label, cx + 50 * s, 32 * s, 14 * s, "#e8ecf4", "left", 700); }
@@ -465,7 +476,7 @@ function drawWorldHud() {
   if (it) {
     const p = G.world.project(it.x, it.y + 0.6, it.z);
     if (p) { chip(g, p.x - 120 * s, p.y - 60 * s, 240 * s, 34 * s, it.label, s, "rgba(8,12,20,.8)", "#fff"); }
-    button("interact", W - 250 * s, H - 150 * s, 220 * s, 92 * s, it.kind === "npc" ? "TALK" : "INVESTIGATE", "primary", 26 * s);
+    button("interact", W - 250 * s, H - 150 * s, 220 * s, 92 * s, it.kind === "npc" ? "TALK" : it.kind === "bug" ? "DISABLE" : "INVESTIGATE", "primary", 26 * s);
   } else if (!G.dialogue.active) { const x = W - 140 * s, y = H - 104 * s; text(g, "LOOK: drag here", x, y + 60 * s, 13 * s, "rgba(255,255,255,.3)", "center", 700); }
   // crosshair
   g.fillStyle = "rgba(255,255,255,.5)"; g.beginPath(); g.arc(W / 2, H / 2, 3 * s, 0, TAU); g.fill();
@@ -534,7 +545,7 @@ async function boot() {
   G.dialogue = new UI.Dialogue(G); G.map = new UI.WorldMap(G);
   Speech.init(); Speech.enabled = G.settings.voice;
   try { await import("./scenes2.js"); } catch (e) { console.warn("scenes2.js not loaded", e); }
-  const sv = store.get("save", null); G.save = sv && sv.version === 2 ? sv : newSave(); if (!G.save.stars) G.save.stars = {};
+  const sv = store.get("save", null); G.save = sv && sv.version === 2 ? sv : newSave(); if (!G.save.stars) G.save.stars = {}; if (!G.save.bugs) G.save.bugs = [];
   const msg = document.getElementById("bootmsg");
   await G.world.loadTextures(p => { msg.textContent = "loading textures " + Math.round(p * 100) + "%"; });
   document.getElementById("boot").style.display = "none";
@@ -546,7 +557,7 @@ boot();
 
 // ------------------------------------------------------------- debug / test hooks
 G.debug = {
-  goto(ci, mi) { G.save = G.save || newSave(); G.save.briefed = { 1: true, 2: true }; G.save.country = ci; G.save.done = []; for (let i = 0; i < ci; i++) G.save.done.push(...COUNTRIES[i].missions.map(m => m.id)); for (let k = 0; k < (mi || 0); k++) G.save.done.push(COUNTRIES[ci].missions[k].id); G.save.arrived[COUNTRIES[ci].id] = true; G.fade = 0; G.fadeTo = 0; G.fadeCb = null; G.country = ci; G.world.load(COUNTRIES[ci].id); refreshStations(); setState("world"); G.pause = false; G.dialogue.active = false; },
+  goto(ci, mi) { G.save = G.save || newSave(); G.save.briefed = { 1: true, 2: true }; G.save.country = ci; G.save.done = []; for (let i = 0; i < ci; i++) G.save.done.push(...COUNTRIES[i].missions.map(m => m.id)); for (let k = 0; k < (mi || 0); k++) G.save.done.push(COUNTRIES[ci].missions[k].id); G.save.arrived[COUNTRIES[ci].id] = true; G.fade = 0; G.fadeTo = 0; G.fadeCb = null; G.country = ci; loadScene(COUNTRIES[ci].id); refreshStations(); setState("world"); G.pause = false; G.dialogue.active = false; },
   startMission(ci, mi) { this.goto(ci, mi); const m = COUNTRIES[ci].missions[mi]; startMinigame(m); G.fade = 0; G.fadeTo = 0; if (G.fadeCb) { const cb = G.fadeCb; G.fadeCb = null; cb(); } },
   skipDialogue() { if (G.dialogue.active) { G.dialogue.lines = []; G.dialogue.i = -1; G.dialogue.next(); } },
   finishFade() { if (G.fadeCb) { const cb = G.fadeCb; G.fadeCb = null; G.fade = 1; cb(); } G.fade = 0; G.fadeTo = 0; },

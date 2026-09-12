@@ -515,7 +515,7 @@ export function drawTitleBackdrop(g, W, H, s, t) {
   g.fillRect(W * 0.68 + W * 0.05, base - H * 0.34, W * 0.02, H * 0.34);
   g.fillRect(0, base, W, H - base);
 }
-export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t) {
+export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t, bugs) {
   g.save();
   g.fillStyle = "rgba(6,10,16,.78)"; rrect(g, x, y, w, h, 14 * s); g.fill();
   g.strokeStyle = "rgba(127,221,204,.5)"; g.lineWidth = 2; g.stroke();
@@ -523,6 +523,11 @@ export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t) 
   text(g, "SPY WATCH", x + 32 * s, y + 18 * s, 13 * s, "#7fd", "left", 800, MONO);
   text(g, "INTEL " + intelCount + "/" + total, x + w - 12 * s, y + 18 * s, 13 * s, "#ffd166", "right", 800, MONO);
   paragraph(g, objective, x + 14 * s, y + 46 * s, w - 28 * s, 17 * s, "#eef2f8", 21 * s, "left", 600);
+  if (bugs) {
+    const by = y + h - 13 * s, all = bugs.found >= bugs.of;
+    g.fillStyle = all ? "#2ecc71" : "#ff4d5e"; g.beginPath(); g.arc(x + 18 * s, by, 3.5 * s, 0, TAU); g.fill();
+    text(g, `BUGS ${bugs.found}/${bugs.of}`, x + 30 * s, by + 1, 11 * s, all ? "#2ecc71" : "rgba(255,255,255,.55)", "left", 800, MONO);
+  }
   g.restore();
 }
 export function drawDossier(g, W, H, s, save, scroll, t, abortCode, rows) {
@@ -534,18 +539,21 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode, rows) {
   { const label = `${got} / ${total * 3}`; g.font = `800 ${15 * s}px ${MONO}`; const lw = g.measureText(label).width;
     drawStars(g, W / 2 - lw / 2 - 40 * s, 92 * s, 15 * s, 3);
     text(g, label, W / 2 + 14 * s, 97 * s, 15 * s, "#ffd166", "center", 800, MONO); }
+  { const nb = (save.bugs || []).length;
+    g.fillStyle = nb >= 42 ? "#2ecc71" : "#ff4d5e"; g.beginPath(); g.arc(W / 2 - 58 * s, 112 * s, 4 * s, 0, TAU); g.fill();
+    text(g, `UMBRA BUGS FOUND  ${nb} / 42`, W / 2 - 46 * s, 116 * s, 12 * s, nb >= 42 ? "#2ecc71" : "#94a2bb", "left", 700, MONO); }
   const cw = Math.min(W - 80 * s, 820 * s), cx = (W - cw) / 2;
-  let y = 118 * s - scroll;
+  let y = 136 * s - scroll;
   let n = 0;
-  g.save(); g.beginPath(); g.rect(0, 112 * s, W, H - 112 * s - 80 * s); g.clip();
+  g.save(); g.beginPath(); g.rect(0, 128 * s, W, H - 128 * s - 80 * s); g.clip();
   let lastAct = 0;
   for (const c of COUNTRIES) {
-    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 106 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
+    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 122 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
     for (const m of c.missions) {
       n++;
       const done = save.done.includes(m.id);
       const h = done ? 118 * s : 56 * s;
-      if (y + h > 106 * s && y < H) {
+      if (y + h > 122 * s && y < H) {
         panel(g, cx, y, cw, h, s, { bg: done ? "rgba(255,248,225,.95)" : "rgba(255,255,255,.06)", border: done ? "#c9a15a" : "rgba(255,255,255,.12)", r: 10 * s });
         drawFlag(g, c.flag, cx + 14 * s, y + 14 * s, 30 * s, 20 * s);
         text(g, `${n}. ${m.title}`, cx + 56 * s, y + 24 * s, 17 * s, done ? "#7a4a10" : "rgba(255,255,255,.5)", "left", 800, MONO);
@@ -556,7 +564,7 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode, rows) {
           rrect(g, bx, by, bw, bh, 8 * s); g.fillStyle = "rgba(122,74,16,.14)"; g.fill();
           g.strokeStyle = "rgba(122,74,16,.45)"; g.lineWidth = 1.5; g.stroke();
           text(g, "REPLAY", bx + bw / 2, by + bh / 2 + 1, 13 * s, "#7a4a10", "center", 800, MONO);
-          if (rows && by > 112 * s && by + bh < H - 80 * s) rows.push({ id: m.id, x: bx, y: by, w: bw, h: bh });
+          if (rows && by > 128 * s && by + bh < H - 80 * s) rows.push({ id: m.id, x: bx, y: by, w: bw, h: bh });
         }
         if (done) {
           let txt = m.intel.text;
