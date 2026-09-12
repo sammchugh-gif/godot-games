@@ -416,7 +416,24 @@ export class WorldMap {
 function mid(a, b) { return [(a[0] + b[0]) / 2, Math.min(a[1], b[1]) - Math.abs(a[0] - b[0]) * 0.18 - 10]; }
 
 // ------------------------------------------------------------- misc screens
-export function drawStamp(g, W, H, s, k, title, body, t) {
+// a row of three stars, the earned ones gold
+export function drawStars(g, cx, cy, size, earned, t) {
+  for (let i = 0; i < 3; i++) {
+    const x = cx + (i - 1) * size * 1.5, lit = i < earned;
+    const pop = t !== undefined && lit ? clamp((t - 0.25 - i * 0.22) * 6, 0, 1) : 1;
+    if (pop <= 0) continue;
+    const r = size * 0.5 * (pop < 1 ? 1 + (1 - pop) * 1.6 : 1);
+    g.save(); g.translate(x, cy); g.globalAlpha = pop;
+    g.beginPath();
+    for (let k = 0; k < 10; k++) { const a2 = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * 0.45 : r; g[k ? "lineTo" : "moveTo"](Math.cos(a2) * rr, Math.sin(a2) * rr); }
+    g.closePath();
+    g.fillStyle = lit ? "#ffd166" : "rgba(255,255,255,.13)"; g.fill();
+    g.strokeStyle = lit ? "#b8860b" : "rgba(255,255,255,.22)"; g.lineWidth = Math.max(1, size * 0.07); g.stroke();
+    g.restore();
+  }
+}
+
+export function drawStamp(g, W, H, s, k, title, body, t, stars, record) {
   // k: 0..1 slam animation
   g.fillStyle = `rgba(0,0,0,${0.65 * clamp(k * 3, 0, 1)})`; g.fillRect(0, 0, W, H);
   const sc = 1 + (1 - ease(clamp(k * 1.6, 0, 1))) * 2.5;
@@ -434,7 +451,11 @@ export function drawStamp(g, W, H, s, k, title, body, t) {
     text(g, title.toUpperCase(), px + 24 * s, py + 26 * s, 20 * s, "#7a4a10", "left", 900, MONO);
     paragraph(g, body, px + 24 * s, py + 76 * s, pw - 48 * s, 22 * s, "#2a1a0a", 30 * s, "left", 500, MONO);
     g.globalAlpha = 1;
-    if (Math.sin(t * 5) > 0) text(g, "tap to continue", W / 2, py + ph + 36 * s, 18 * s, "#ffd166", "center", 700);
+    if (stars) {
+      drawStars(g, W / 2, py + ph + 40 * s, 34 * s, stars, t);
+      if (record && t > 1.4) text(g, "NEW BEST", W / 2, py + ph + 78 * s, 14 * s, "#2ecc71", "center", 900, MONO);
+    }
+    if (Math.sin(t * 5) > 0) text(g, "tap to continue", W / 2, py + ph + (stars ? 104 : 36) * s, 18 * s, "#ffd166", "center", 700);
   }
 }
 export function drawRotatePrompt(g, W, H, s, t) {
@@ -504,26 +525,39 @@ export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t) 
   paragraph(g, objective, x + 14 * s, y + 46 * s, w - 28 * s, 17 * s, "#eef2f8", 21 * s, "left", 600);
   g.restore();
 }
-export function drawDossier(g, W, H, s, save, scroll, t, abortCode) {
+export function drawDossier(g, W, H, s, save, scroll, t, abortCode, rows) {
   g.fillStyle = "rgba(4,6,10,.92)"; g.fillRect(0, 0, W, H);
   text(g, "DOSSIER", W / 2, 42 * s, 34 * s, "#ffd166", "center", 900);
-  text(g, "Everything Rory has found out so far", W / 2, 74 * s, 16 * s, "#94a2bb", "center", 500);
+  const total = COUNTRIES.reduce((n, c) => n + c.missions.length, 0);
+  const got = Object.values(save.stars || {}).reduce((n, v) => n + v, 0);
+  text(g, "Everything Rory has found out so far", W / 2, 70 * s, 15 * s, "#94a2bb", "center", 500);
+  { const label = `${got} / ${total * 3}`; g.font = `800 ${15 * s}px ${MONO}`; const lw = g.measureText(label).width;
+    drawStars(g, W / 2 - lw / 2 - 40 * s, 92 * s, 15 * s, 3);
+    text(g, label, W / 2 + 14 * s, 97 * s, 15 * s, "#ffd166", "center", 800, MONO); }
   const cw = Math.min(W - 80 * s, 820 * s), cx = (W - cw) / 2;
-  let y = 110 * s - scroll;
+  let y = 118 * s - scroll;
   let n = 0;
-  g.save(); g.beginPath(); g.rect(0, 96 * s, W, H - 96 * s - 80 * s); g.clip();
+  g.save(); g.beginPath(); g.rect(0, 112 * s, W, H - 112 * s - 80 * s); g.clip();
   let lastAct = 0;
   for (const c of COUNTRIES) {
-    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 90 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
+    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 106 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
     for (const m of c.missions) {
       n++;
       const done = save.done.includes(m.id);
       const h = done ? 118 * s : 56 * s;
-      if (y + h > 90 * s && y < H) {
+      if (y + h > 106 * s && y < H) {
         panel(g, cx, y, cw, h, s, { bg: done ? "rgba(255,248,225,.95)" : "rgba(255,255,255,.06)", border: done ? "#c9a15a" : "rgba(255,255,255,.12)", r: 10 * s });
         drawFlag(g, c.flag, cx + 14 * s, y + 14 * s, 30 * s, 20 * s);
         text(g, `${n}. ${m.title}`, cx + 56 * s, y + 24 * s, 17 * s, done ? "#7a4a10" : "rgba(255,255,255,.5)", "left", 800, MONO);
         text(g, c.city.toUpperCase(), cx + cw - 14 * s, y + 24 * s, 12 * s, done ? "#a07030" : "rgba(255,255,255,.3)", "right", 700, MONO);
+        if (done) {
+          drawStars(g, cx + cw - 150 * s, y + 22 * s, 15 * s, (save.stars || {})[m.id] || 0);
+          const bw = 92 * s, bh = 30 * s, bx = cx + cw - bw - 14 * s, by = y + h - bh - 12 * s;
+          rrect(g, bx, by, bw, bh, 8 * s); g.fillStyle = "rgba(122,74,16,.14)"; g.fill();
+          g.strokeStyle = "rgba(122,74,16,.45)"; g.lineWidth = 1.5; g.stroke();
+          text(g, "REPLAY", bx + bw / 2, by + bh / 2 + 1, 13 * s, "#7a4a10", "center", 800, MONO);
+          if (rows && by > 112 * s && by + bh < H - 80 * s) rows.push({ id: m.id, x: bx, y: by, w: bw, h: bh });
+        }
         if (done) {
           let txt = m.intel.text;
           if (m.game === "shredder" && abortCode) txt = txt.replace("written in the Dossier", "shown below");

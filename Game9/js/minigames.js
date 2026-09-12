@@ -231,7 +231,7 @@ class MaskedBall extends MG {
     for (const f of this.figs) { const p = this.figPos(f); const d = Math.hypot(x - p.x, y - p.y); if (d < Math.min(L.cw, L.ch) * 0.5 && d < bd) { bd = d; best = f; } }
     if (!best) return;
     if (best === this.courier) { this.say("Got you! The manifest is in the cloak.", true, 3); this.win(); }
-    else { best.huff = 1.5; SFX.bad(); this.say(pick(["'Scusi! I am a dentist from Padova!'", "'Mamma mia, that is my good cloak!'", "'Signore, I am only here for the cake.'", "'Non sono io! Not me!'"]), false); if (this.clues < this.nclues) { this.clues++; SFX.blip(); } }
+    else { best.huff = 1.5; SFX.bad(); this.miss(); this.say(pick(["'Scusi! I am a dentist from Padova!'", "'Mamma mia, that is my good cloak!'", "'Signore, I am only here for the cake.'", "'Non sono io! Not me!'"]), false); if (this.clues < this.nclues) { this.clues++; SFX.blip(); } }
   }
   button(id) { if (id === "mg:clue" && this.clues < this.nclues && this.cool <= 0) { this.clues++; this.cool = 4; SFX.blip(); } }
   hint() { const c = this.courier; return `All the clues together: ${c.mask} ${this.holi ? "paint" : "mask"}, ${c.feather === "none" ? "no feather" : c.feather + " feather"}, ${c.cloak} ${this.holi ? "kurta" : "cloak"}, carrying a ${c.prop}${this.nclues >= 5 ? (c.hat ? ", with a hat" : ", no hat") : ""}.`; }
@@ -511,7 +511,7 @@ function sameSet(a, b) { if (a.length !== b.length) return false; const s1 = [..
 
 // ------------------------------------------------------------- 9. lock pick
 class LockPick extends MG {
-  constructor(G, m) { super(G, m); this.instr = "Tap PICK (or the lock) when the marker is in the green."; this.npins = L(this, 5, 6, 7, 8); this.sub = ["FIVE", "SIX", "SEVEN", "EIGHT"][this.npins - 5] + " PINS"; this.zone = L(this, 0.1, 0.09, 0.075, 0.065); this.pins = []; for (let i = 0; i < this.npins; i++) this.pins.push({ set: false, zone: rnd(0.25, 0.7), speed: 0.9 + i * L(this, 0.32, 0.3, 0.28, 0.26), ph: rnd(0, 1), drop: 0 }); this.clock = 0; this.slowT = 0; this.cur = 0; this.openT = 0; }
+  constructor(G, m) { super(G, m); this.instr = "Tap PICK (or the lock) when the marker is in the green."; this.npins = L(this, 5, 6, 7, 8); this.slipAllow = 3; this.sub = ["FIVE", "SIX", "SEVEN", "EIGHT"][this.npins - 5] + " PINS"; this.zone = L(this, 0.1, 0.09, 0.075, 0.065); this.pins = []; for (let i = 0; i < this.npins; i++) this.pins.push({ set: false, zone: rnd(0.25, 0.7), speed: 0.9 + i * L(this, 0.32, 0.3, 0.28, 0.26), ph: rnd(0, 1), drop: 0 }); this.clock = 0; this.slowT = 0; this.cur = 0; this.openT = 0; }
   marker(p) { const u = (this.clock * p.speed + p.ph) % 2; return u < 1 ? u : 2 - u; }
   band() { return this.zone * (this.slowT > 0 ? 1.8 : 1); }
   inZone() { const p = this.pins[this.cur]; if (!p) return false; const m = this.marker(p); return Math.abs(m - p.zone) < this.band(); }
@@ -631,7 +631,7 @@ class Telephoto extends MG {
 
 // ------------------------------------------------------------- 12. stealth yard
 class StealthYard extends MG {
-  constructor(G, m) { super(G, m); this.sub = "PLANT THE TRACKER"; this.instr = "Drag anywhere to move. Stay out of the torch beams and the searchlight."; this.cols = 18; this.rows = 10; this.place = this.params.place || "PIER 9 · NIGHT"; this.crate = this.params.crate || "ZIMA"; this.gen(); this.stick = null; this.alarm = 0; this.plant = 0; this.resets = 0; }
+  constructor(G, m) { super(G, m); this.sub = "PLANT THE TRACKER"; this.instr = "Drag anywhere to move. Stay out of the torch beams and the searchlight."; this.cols = 18; this.rows = 10; this.slipAllow = 2; this.place = this.params.place || "PIER 9 · NIGHT"; this.crate = this.params.crate || "ZIMA"; this.gen(); this.stick = null; this.alarm = 0; this.plant = 0; this.resets = 0; }
   gen() {
     this.boxes = [[3, 1, 3, 1.4], [3, 4, 1.4, 3], [7, 0.5, 1.4, 3], [7, 5.5, 3, 1.4], [10.5, 2.5, 1.4, 3], [12.5, 7, 3, 1.4], [13, 0.5, 3, 1.4], [15, 3.5, 1.4, 3], [5.5, 8, 3, 1.4], [9.5, 8.5, 1.4, 1.4]];
     this.spawn = { x: 1, y: 9 }; this.p = { x: 1, y: 9, vx: 0, vy: 0 }; this.goal = { x: 16.6, y: 0.6, w: 1.2, h: 1.4 };
@@ -660,7 +660,7 @@ class StealthYard extends MG {
     let seen = false;
     for (const gd of this.guards) { const dx = this.p.x - gd.x, dy = this.p.y - gd.y, d = Math.hypot(dx, dy); if (d < 4.2) { let da = Math.atan2(dy, dx) - gd.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; if (Math.abs(da) < 0.55 && this.los(gd.x, gd.y, this.p.x, this.p.y)) seen = true; } if (d < 0.7) seen = true; }
     for (const L2 of this.lights) { const dx = this.p.x - L2.x, dy = this.p.y - L2.y, d = Math.hypot(dx, dy); if (d < L2.r) { let da = Math.atan2(dy, dx) - L2.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; if (Math.abs(da) < 0.22 && this.los(L2.x, L2.y, this.p.x, this.p.y)) seen = true; } }
-    if (seen) { this.alarm = 1.6; this.resets++; SFX.alarm(); this.say(pick(["'Who's there?!' Spotted. Back to the fence.", "'Hey! You!' Back to the fence.", "Kolya: 'Is little spy! Get him!' Back to the fence."]), false, 1.8); this.plant = 0; return; }
+    if (seen) { this.alarm = 1.6; this.resets++; this.miss(); SFX.alarm(); this.say(pick(["'Who's there?!' Spotted. Back to the fence.", "'Hey! You!' Back to the fence.", "Kolya: 'Is little spy! Get him!' Back to the fence."]), false, 1.8); this.plant = 0; return; }
     const gl = this.goal;
     if (this.p.x > gl.x - 0.2 && this.p.x < gl.x + gl.w + 0.2 && this.p.y > gl.y - 0.2 && this.p.y < gl.y + gl.h + 0.2) { this.plant += dt; if (this.plant > 1.4) { this.say("Tracker planted. It's pinging.", true, 2); this.win(); } } else this.plant = Math.max(0, this.plant - dt);
   }

@@ -94,6 +94,13 @@ export const COUNTRIES = [
   {
     id: "london", act: 1, city: "London", country: "England", flag: "uk", lat: 51.5, lon: -0.12,
     chapter: "The Greenwich Job", sky: "night", ambience: "rain", contact: "dave",
+    chat: [
+      "Black cab, forty years, and I have never once had a passenger with a spy watch. Observatory's up the hill, guv.",
+      "That door had a five-star lock on it and you were through before my engine went cold. Very nice.",
+      "Nigel Pratt. I've driven him home from the pub. That one couldn't lie straight in bed.",
+      "Dashcam footage, is it? I've got eleven years of mine. It's mostly seagulls.",
+      "Fingers Malone's flat, cleaned right out, and me on a double yellow the whole time. Where to next? Venice? I don't do water.",
+    ],
     arrive: [
       ["dave", "Evening, Agent Rory. Dave, M.I.S.T. wheelman. Lovely night for it. If you're a duck."],
       ["dave", "The Observatory's up the hill, past the phone box. The thieves changed the door code on their way out. Cheeky."],
@@ -123,6 +130,13 @@ export const COUNTRIES = [
   {
     id: "venice", act: 1, city: "Venice", country: "Italy", flag: "it", lat: 45.44, lon: 12.33,
     chapter: "The Glassmaker", sky: "sunset", ambience: "water", contact: "lorenzo",
+    chat: [
+      "Aaah, a visitor! Mind the step. In Venice everything moves, even the floor.",
+      "The glassmaker writes in code because he cannot spell. This is true, I have seen his shopping list.",
+      "Three rings of glass and you broke not one. My grandmother would have kissed you on both cheeks.",
+      "Tonight everybody is somebody else. That is carnival. Tomorrow we are all just very tired.",
+      "Lasers. In a loft. In Venice. And they tell me nothing happens in this city. Bravissimo!",
+    ],
     arrive: [["lorenzo", "Benvenuto a Venezia! Lorenzo. Mind the step, the canal is wetter than it looks."], ["lorenzo", "The Glassmaker's workshop is by the furnace. Tonight is carnival, so everybody wears a mask. Even the pigeons."]],
     missions: [
       { id: "ven1", title: "Il Vetraio", game: "cipher", level: 2, station: "workshop", stationLabel: "The Glassmaker's workshop", icon: "furnace",
@@ -148,6 +162,13 @@ export const COUNTRIES = [
   {
     id: "cairo", act: 1, city: "Cairo", country: "Egypt", flag: "eg", lat: 30.04, lon: 31.24,
     chapter: "Shadow Over Cairo", sky: "desert", ambience: "wind", contact: "nadia",
+    chat: [
+      "Welcome to the dig. Please do not stand on anything older than your country.",
+      "A radio relay, in a tomb. Four thousand years of silence and UMBRA fills it with pop music.",
+      "The rods are a counting puzzle. The men who built them were better mathematicians than most of my students.",
+      "The mirrors still work, you know. Bronze, polished by hand, and the sun does exactly as it is told.",
+      "Your satellite sees an airfield. My trowel sees four thousand years. We are hunting the same thieves.",
+    ],
     arrive: [["nadia", "Agent Rory. Dr Nadia Farouk. Welcome to Cairo. Yesterday at noon the pyramids across the river went dark for one whole minute. The camels fainted."], ["nadia", "UMBRA left a radio mast on the roof of the bazaar. And they have been sniffing around my tomb in the old ridge. Nobody sniffs around my tomb."]],
     missions: [
       { id: "cai1", title: "The Listening Post", game: "radio", level: 2, station: "mast", stationLabel: "UMBRA's radio mast", icon: "mast",
@@ -173,6 +194,13 @@ export const COUNTRIES = [
   {
     id: "tokyo", act: 1, city: "Tokyo", country: "Japan", flag: "jp", lat: 35.68, lon: 139.69,
     chapter: "Neon Ghost", sky: "night", ambience: "city_rain", contact: "yuki",
+    chat: [
+      "Ramen first. Hacking after. That is the order. It is not negotiable.",
+      "Three codes, and you watched the lights instead of guessing. Good. Most people guess.",
+      "The corridor beams run on a timer. Everything in this city runs on a timer.",
+      "You traced the ghost across my own board. I have been chasing that signal for a month.",
+      "Kaito built the chip and Kaito is not answering his phone. Eat something, then go.",
+    ],
     arrive: [["yuki", "Rory-san. Yuki. Ramen chef. Also the best hacker in Japan, but the ramen pays better."], ["yuki", "Kaito Labs is the glass tower. Keypad door, laser corridor, server room, and a terminal with a password nobody knows. Eat first. Then hack."]],
     missions: [
       { id: "tok1", title: "Kaito Labs", game: "keypad", level: 2, station: "lab", stationLabel: "Kaito Labs, keypad door", icon: "keypad",
@@ -197,6 +225,13 @@ export const COUNTRIES = [
   {
     id: "newyork", act: 1, city: "New York", country: "USA", flag: "us", lat: 40.71, lon: -74.0,
     chapter: "The Money Man", sky: "night", ambience: "city", contact: "sal",
+    chat: [
+      "Agent Rory. I got a stolen lens, a penthouse I can't get a warrant for, and a captain who wants this closed by Friday.",
+      "Two photos, six differences. I stared at those for an hour. You took ninety seconds. I'm not bitter.",
+      "Six pins on a Sterling vault. My cousin's a locksmith. He'd have wept.",
+      "Four devices, seventy seconds, right wire every time. Remind me never to play cards with you.",
+      "A bug. In my own precinct. Me and the cleaner are gonna have a conversation.",
+    ],
     arrive: [["sal", "Kid. Sal Romano, NYPD. Hot dog? No? Suit yourself."], ["sal", "Sterling skipped town this morning. I've had a camera on his penthouse window for a week. This town's got more crooks than pigeons."]],
     missions: [
       { id: "nyc1", title: "Window Watch", game: "spotdiff", level: 2, station: "cart", stationLabel: "Sal's hot-dog cart", icon: "camera",
@@ -221,6 +256,13 @@ export const COUNTRIES = [
   {
     id: "rio", act: 1, city: "Rio de Janeiro", country: "Brazil", flag: "br", lat: -22.9, lon: -43.2,
     chapter: "The Rocket at Pier 9", sky: "sunset", ambience: "waves", contact: "tiago",
+    chat: [
+      "Relax, meu amigo. The boat is ready, the water is warm, and the bad guys are slow.",
+      "Every face on that ferry and you remembered all of them. I cannot remember my own cousins.",
+      "Four photographs from the cable car. My uncle sells that same view to tourists for ten reais.",
+      "Four torches and a searchlight, and not one of them saw you. Tranquilo.",
+      "Sixteen tiles, and Siberia comes out of them. Take a coat, meu amigo. Take two.",
+    ],
     arrive: [["tiago", "Rory! Tiago. Surfer, harbour pilot, part-time spy. Relax. The tide does the work."], ["tiago", "Pier 9 is across the bay. Big crate, big crane, big men. The harbour office keeps the crew photos, and the best view is from the cable car."]],
     missions: [
       { id: "rio1", title: "Crew Manifest", game: "passport", level: 1, station: "harbouroffice", stationLabel: "The harbour office", icon: "door",
@@ -245,6 +287,13 @@ export const COUNTRIES = [
   {
     id: "siberia", act: 1, city: "Zima Station", country: "Russia", flag: "ru", lat: 64, lon: 100,
     chapter: "Zima Station", sky: "aurora", ambience: "blizzard", contact: "natasha",
+    chat: [
+      "Quietly. Everything here has ears. Including the snow.",
+      "They shred every document and then leave the bin by the door. Every villain does this. Every one.",
+      "The reactor rods. Move them in the wrong order and the whole station goes dark. Which might help us, honestly.",
+      "Four steel rings. I have watched them open that lock a hundred times and I still cannot do it.",
+      "The countdown stopped. Two years I have been inside UMBRA, and that is the first time I have breathed.",
+    ],
     arrive: [["natasha", "Agent Rory. Natasha Volkova. Radio officer of UMBRA, and M.I.S.T.'s only friend inside these walls. Quietly."], ["natasha", "The rocket is on the pad behind the station. Ten minutes to launch at midnight. Office, reactor, vault door, control room. In that order, and the cameras blink every ninety seconds."]],
     missions: [
       { id: "sib1", title: "The Ice Fortress", game: "shredder", level: 2, station: "office", stationLabel: "The station office", icon: "door",
@@ -271,6 +320,13 @@ export const COUNTRIES = [
   {
     id: "paris", act: 2, pinBelow: true, city: "Paris", country: "France", flag: "fr", lat: 48.86, lon: 2.35,
     chapter: "The Lantern of Paris", sky: "dusk", ambience: "city", contact: "colette",
+    chat: [
+      "Sit. Coffee. Then you may ask me your questions. In that order. Always in that order.",
+      "Jean-Luc sweats when he lies. He has been sweating since March.",
+      "The Louvre after dark. I have a cousin who guards it. He sleeps.",
+      "Five symbols, the same lock as your Observatory door. They are not imaginative, these people.",
+      "A dairy van. At the Eiffel Tower. At midnight. Even for Paris, that is strange.",
+    ],
     arrive: [["colette", "Bonsoir, Agent Rory. Colette. I run the café, and the café hears everything in Paris."], ["colette", "A flower man called Jean-Luc delivered a very heavy crate to the Louvre last night. He is inside, eating my croissants and sweating. Start with him."]],
     missions: [
       { id: "par1", title: "The Flower Man", game: "lie", level: 3, station: "cafe", stationLabel: "Colette's café", icon: "dome",
@@ -296,6 +352,13 @@ export const COUNTRIES = [
   {
     id: "kenya", act: 2, city: "Nairobi", country: "Kenya", flag: "ke", lat: -1.29, lon: 36.82,
     chapter: "The Lantern of the Savanna", sky: "desert", ambience: "wind", contact: "amani",
+    chat: [
+      "Walk softly. The elephants already know you are here. They always know first.",
+      "Six things changed between those two pictures. The elephants spotted five of them before the camera did.",
+      "Nine pings to find one crate in all that grass. My grandfather could do it with his feet.",
+      "Five guards and a sleeping lion, and you woke neither one. That is real fieldcraft.",
+      "The old tower radio still works. Everything built by hand still works.",
+    ],
     arrive: [["amani", "Jambo, Agent Rory. Amani, park ranger. The elephants have been nervous all week, and elephants are never wrong."], ["amani", "A truck with no lights drove into the park three nights ago. My camera trap saw it. Come and look."]],
     missions: [
       { id: "ken1", title: "Camera Trap", game: "spotdiff", level: 3, station: "cameratrap", stationLabel: "The camera trap", icon: "camera",
@@ -321,6 +384,13 @@ export const COUNTRIES = [
   {
     id: "india", act: 2, city: "Agra", country: "India", flag: "in", lat: 27.18, lon: 78.02,
     chapter: "The Lantern of the Taj", sky: "sunset", ambience: "city", contact: "priya",
+    chat: [
+      "Tuk-tuk is fastest. I built the engine myself. Mostly. Hold on to something.",
+      "Twenty dancers, four clues, one courier. Myself, I would simply have asked all of them.",
+      "Three pages of code. My cousin sends me letters like that. He is not a spy, he is just untidy.",
+      "Three chambers of mirrors, and the sundial builders did it with no electricity at all. Show-offs.",
+      "Lantern four is dark. Four down, three to go. Now then, where did I park?",
+    ],
     arrive: [["priya", "Agent Rory! Priya. Tuk-tuk driver, inventor, and the only person in Agra who has read your file. Get in."], ["priya", "It is Holi today. Everybody is covered in colour, so UMBRA's courier will be too. He is somewhere in that crowd."]],
     missions: [
       { id: "ind1", title: "Festival of Colour", game: "masks", level: 3, station: "festival", stationLabel: "The Holi crowd", icon: "mask",
@@ -347,6 +417,13 @@ export const COUNTRIES = [
   {
     id: "china", act: 2, city: "Beijing", country: "China", flag: "cn", lat: 39.9, lon: 116.4,
     chapter: "The Lantern of the Wall", sky: "dusk", ambience: "wind", contact: "mei",
+    chat: [
+      "Tea. It is not optional. Sit down.",
+      "There is a safe under my floor. It came with the building. I have never once opened it.",
+      "That dish pulls in pictures from orbit and the local weather. Mostly the weather.",
+      "Two boards and you connected both of them. My nephew takes an entire afternoon.",
+      "Five discs on the watchtower lift. Whoever designed that had far too much time.",
+    ],
     arrive: [["mei", "Agent Rory. Mei. Tea, dumplings, and the best view of the Great Wall in China."], ["mei", "UMBRA hired one of the watchtowers. They left a map in my tea-house safe, thinking I would not look. I looked. But I could not open it."]],
     missions: [
       { id: "chn1", title: "The Tea-House Safe", game: "safe", level: 3, station: "teahouse", stationLabel: "Mei's tea house", icon: "door",
@@ -371,6 +448,13 @@ export const COUNTRIES = [
   {
     id: "australia", act: 2, city: "Sydney", country: "Australia", flag: "au", lat: -33.87, lon: 151.21,
     chapter: "The Lantern of the Harbour", sky: "sunset", ambience: "waves", contact: "matilda",
+    chat: [
+      "G'day! Right, the harbour's all yours. Just don't swim near the south pylon, there's something down there.",
+      "Eight pairs of passports and you matched the lot. You'd be handy on the ferry, you would.",
+      "Five photos in a swell like that. Steady hands, mate.",
+      "Seven pins, and my mate reckons nobody's ever picked it. Well. Nobody until now.",
+      "Five devices under a bridge at night. I've pulled people out of worse.",
+    ],
     arrive: [["matilda", "G'day, Agent Rory. Matilda, surf lifesaver. An UMBRA diver's been going under the harbour bridge every night. Reckon your lantern's under there."], ["matilda", "He takes the ferry across. Ferry keeps passenger photos. Let's find his."]],
     missions: [
       { id: "aus1", title: "Ferry Passengers", game: "passport", level: 2, station: "ferry", stationLabel: "The ferry wharf", icon: "door",
@@ -395,6 +479,13 @@ export const COUNTRIES = [
   {
     id: "mexico", act: 2, city: "Chichen Itza", country: "Mexico", flag: "mx", lat: 20.68, lon: -88.57,
     chapter: "The Lantern of the Pyramid", sky: "dusk", ambience: "jungle", contact: "diego",
+    chat: [
+      "Bienvenido! The pyramid is that way, the music is here. Both are important.",
+      "Twelve strips of a map, taped back together. In my job, that is called Tuesday.",
+      "Six guards on the serpent stairs and not one of them saw you. Ay, que bueno!",
+      "Five rings on the jaguar's door. The jaguar is not real. Probably.",
+      "The old code, older than the pyramid, and UMBRA is still using it. No respect.",
+    ],
     arrive: [["diego", "Agent Rory! Diego. Archaeologist by day, mariachi by night, and today is a long day."], ["diego", "UMBRA has been inside the pyramid. They shredded a map at the market. Kolya shreds everything. It is his one skill."]],
     missions: [
       { id: "mex1", title: "The Shredded Map", game: "shredder", level: 3, station: "market", stationLabel: "The market stall", icon: "door",
@@ -420,6 +511,13 @@ export const COUNTRIES = [
   {
     id: "alps", act: 2, pinBelow: true, city: "The Alps", country: "Switzerland", flag: "ch", lat: 46.5, lon: 8.0,
     chapter: "The Chairman", sky: "aurora", ambience: "blizzard", contact: "klaus",
+    chat: [
+      "You want the cable car? Fine. But the dairy at the top is not a dairy. I have said this to everybody.",
+      "Six laser beams in the entrance hall. For a dairy, that is a great deal of security, yes?",
+      "He lied about the cows. I knew it. Twenty years I have known it.",
+      "A hundred rooms under a mountain and you found the right one. My cable car takes four minutes to go up.",
+      "It is finished? Then I will say it one last time, for the record: it was never a dairy.",
+    ],
     arrive: [["klaus", "Grüezi, Agent Rory. Klaus. My cable car goes to the top, where the Chairman's dairy is. It is not a dairy."], ["klaus", "The entrance hall is full of lasers, the Chairman likes to talk on the intercom, and the master switch is somewhere in a hundred rooms. Natasha is already inside."]],
     missions: [
       { id: "alp1", title: "The Entrance Hall", game: "laserhall", level: 4, station: "cablecar", stationLabel: "The cable-car station", icon: "laser",
