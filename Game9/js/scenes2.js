@@ -181,6 +181,8 @@ SCENES.india = function () {
   this.bug(22.6, 0.09, 2.4);
   this.bug(-28.6, 0.09, -8.8);
 
+  this.station("dash", -7, 4.5, "crate", 0xffd166, "Priya's tuk-tuk, engine running");
+
   return { x: 0, z: 8, yaw: 0, bounds: { x0: -34, x1: 34, z0: -27, z1: 12 } };
 };
 
@@ -337,6 +339,8 @@ SCENES.mexico = function () {
   this.bug(-17.4, 0.09, 3.4);
   this.bug(28.6, 0.09, -2.0);
   this.bug(14.6, 0.09, -16.2);
+
+  this.station("jeep", 8, 6.5, "crate", 0xffd166, "Diego's jeep, engine running");
 
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -34, x1: 34, z0: -18, z1: 13 } };
 };

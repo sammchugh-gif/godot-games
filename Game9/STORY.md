@@ -4,7 +4,7 @@ This is the plan the game is built from. Every line of dialogue, every piece
 of intel and every mission in `js/story.js` comes from here. If the two ever
 disagree, this file is the intent and the code is the bug.
 
-The game is two acts, fourteen countries and fifty-six missions. Every
+The game is two acts, fourteen countries and fifty-nine missions. Every
 country is one 3D scene with four mission stations, in order. Every mission
 is a mini-game that wins a piece of intel, and the intel is the thread that
 names the next station or the next country.
@@ -204,6 +204,30 @@ progress the player has already made.
 - **Laser hall** (new): cross a room of sweeping and spinning beams. HINT
   slows them right down for a few seconds.
 - **Passport match** (new): memory pairs of the cast's faces.
+
+## Stars, replay and the bugs
+
+Every mission is scored out of three stars: three for finishing with no hint
+and no more slips than that mini-game allows, two for one of those, one for
+finishing at all. The dossier lists the best score for each mission and a
+running total, and any finished mission can be replayed from there with the
+REPLAY chip. A replay never removes what was already won.
+
+Three UMBRA listening devices are hidden in each of the fourteen cities,
+forty-two in all: small black boxes with a stub antenna and an LED that
+blinks once a second, left on the ground where they are worth walking around
+to find. Standing next to one and tapping DISABLE takes it out of play. The
+spy watch shows the count for the city you are in, the dossier the total.
+
+## The chase missions
+
+Three missions are chases rather than puzzles, for a change of tempo: a night
+launch down the Thames after Kolya in London, Priya's tuk-tuk after a courier
+van in Agra, and a jeep around the pyramid in Chichen Itza. Each lays its own
+route through the city it is set in, verified clear of anything solid by
+`tools/routecheck.mjs`. Drag left and right to steer; the gap to the vehicle
+ahead closes only while the driving is clean, and every scrape hands some of
+it back. There is no timer and no way to lose, only to take longer.
 
 ## Controls
 

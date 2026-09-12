@@ -7,6 +7,7 @@ import { Speech } from "./speech.js";
 import { text, textShadow, rrect, panel, chip, wrap, paragraph, drawPortrait, drawSymbol, clamp, lerp, ease, TAU, FONT, MONO } from "./ui.js";
 import { MG, L, Dial, COLORS, rnd, rint, pick, shuffle, makeDevice, drawDevice, drawManual, rulesFor } from "./mgbase.js";
 import { KINDS2 } from "./minigames2.js";
+import { KINDS3 } from "./chase.js";
 export { MG, L, rnd, rint, pick, shuffle } from "./mgbase.js";
 
 // ------------------------------------------------------------- 1. lie detector
@@ -836,4 +837,4 @@ class Override extends MG {
 }
 
 const KINDS = { lie: LieDetector, safe: SafeCracker, cipher: CipherWheel, masks: MaskedBall, radio: RadioTuner, mirror: MirrorMaze, keypad: KeypadMemory, circuit: CircuitHack, lock: LockPick, wires: WireCut, photo: Telephoto, stealth: StealthYard, shredder: Shredder, override: Override };
-export function makeMinigame(kind, G, mission) { const C = KINDS[kind] || KINDS2[kind]; return C ? new C(G, mission) : null; }
+export function makeMinigame(kind, G, mission) { const C = KINDS[kind] || KINDS2[kind] || KINDS3[kind]; return C ? new C(G, mission) : null; }

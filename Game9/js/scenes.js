@@ -81,6 +81,8 @@ SCENES.london = function () {
   this.bug(23.0, 0.09, -1.6);
   this.bug(13.0, 0.09, 13.2);
 
+  this.station("getaway", -20, 1, "crate", 0xffd166, "The river steps");
+
   return { x: -4, z: 3, yaw: -0.5, bounds: { x0: -32, x1: 38, z0: -5, z1: 16 } };
 };
 

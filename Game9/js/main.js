@@ -242,7 +242,7 @@ function startMinigame(m) {
   Music.setMode("tense");
 }
 // mini-games that play inside the 3D world rather than on their own canvas
-const NEEDS_WORLD = ["photo"];
+const NEEDS_WORLD = ["photo", "chase"];
 function startReplay(m) {
   const ci = COUNTRIES.findIndex(c => c.missions.some(q => q.id === m.id));
   if (ci < 0) return;

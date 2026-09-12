@@ -538,8 +538,9 @@ export class World {
   }
   updateCamera() {
     const p = this.player;
-    this.camera.position.set(p.x, 1.62 + Math.sin(p.bob) * 0.035 * p.moving, p.z);
-    this.camera.rotation.set(p.pitch + this.sway * 0.5, p.yaw + this.sway, 0);
+    const eye = p.eye === undefined ? 1.62 : p.eye;
+    this.camera.position.set(p.x, eye + Math.sin(p.bob) * 0.035 * p.moving, p.z);
+    this.camera.rotation.set(p.pitch + this.sway * 0.5, p.yaw + this.sway, p.roll || 0);
     if (this.fill) this.fill.position.set(p.x, 2.2, p.z);
   }
   forward() { return new THREE.Vector3(-Math.sin(this.player.yaw), 0, -Math.cos(this.player.yaw)); }
