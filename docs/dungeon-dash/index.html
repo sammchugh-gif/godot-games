@@ -196,14 +196,21 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   if(uiTap(p))continue;
   const k=padAt(p);
   if(k){pads[k].id=t.identifier;pressPad(k);continue}
-  // a fresh finger always takes the stick, which is what a child does when it
-  // stops answering. Fingers on DASH and FURY never reach here.
-  stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}},{passive:false});
+  // Only a free stick is handed out. Handing it to every new finger let one
+  // resting on the glass take it off the thumb that was moving, and the hero
+  // stopped; the reap and the watchdog recover a finger that has really gone.
+  if(stick.id<0){stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
  for(const t of e.changedTouches){
-  if(stick.id<0&&!onMenu(t.target)){const q=rectPos(t.clientX,t.clientY);
-   if(!padAt(q)){stick.id=t.identifier;stick.ox=stick.x=q.x;stick.oy=stick.y=q.y;continue}}
-  if(t.identifier!==stick.id)continue;
+  if(t.identifier!==stick.id){
+   if(onMenu(t.target))continue;
+   const q=rectPos(t.clientX,t.clientY);
+   if(padAt(q))continue;
+   // a finger that moves takes the stick off one sitting at dead centre; a
+   // thumb that is really moving the hero is deflected and keeps it
+   const busy=stick.id>=0&&Math.hypot(stick.x-stick.ox,stick.y-stick.oy)>8;
+   if(busy)continue;
+   stick.id=t.identifier;stick.ox=stick.x=q.x;stick.oy=stick.y=q.y;continue}
   {const p=rectPos(t.clientX,t.clientY);stick.x=p.x;stick.y=p.y;
   // Let the thumb wander: if it drags past the ring, the ring follows it,
   // so a long swipe never runs out of travel.

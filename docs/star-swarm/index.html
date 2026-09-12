@@ -385,13 +385,20 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;aud
  for(const t of e.changedTouches){const q=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,q.x,q.y)}
  if(!stillDown(e))touch.id=-1;
  for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
-  touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}},{passive:false});
+  // Only a free stick is handed out. Taking it from whoever holds it lets a
+  // second finger resting on the glass steal it from the thumb that is
+  // steering; the reap and the dead-centre watchdog are what deal with a
+  // finger that has really gone.
+  if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();evN++;seeTouches(e);
  for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,p.x,p.y);
-  if(t.identifier===touch.id){touch.x=p.x;touch.y=p.y}
-  // a finger that moves while the stick is free picks it up, so a thumb the
-  // watchdog let go of resumes the moment it is actually used
-  else if(touch.id<0&&!onMenu(t.target)){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
+  if(t.identifier===touch.id){touch.x=p.x;touch.y=p.y;continue}
+  if(onMenu(t.target))continue;
+  // A finger that moves takes the stick off one sitting at dead centre - a
+  // palm resting on the glass, or a finger that is not there any anymore. A
+  // thumb that is really steering is deflected, so it cannot be taken from.
+  const busy=touch.id>=0&&Math.hypot(touch.x-touch.ox,touch.y-touch.oy)>8;
+  if(!busy){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
 function tend(e){lastTouchAt=performance.now();evN++;
  for(const t of e.changedTouches){delete live[t.identifier];if(t.identifier===touch.id)touch.id=-1}
  seeTouches(e);

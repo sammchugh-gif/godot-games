@@ -117,6 +117,49 @@ async function checkGame(browser, slug, cfg, [W, H, tag]) {
   return { ok: ok && freed && !errs.length, moved, steer, diag, released, freed, errs, tag };
 }
 
+/* The case that actually broke it: a second finger resting on the glass while
+   a thumb steers. Handing the control to every new finger let the still one
+   take it, the origin re-anchored under it, and the player stopped dead while
+   events kept arriving - which is exactly what got reported. */
+async function checkResting(browser, slug, cfg) {
+  const [W, H] = [390, 844];
+  const ctx = await browser.newContext({ viewport: { width: W, height: H },
+    deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+  const pg = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(pg);
+  await pg.goto(`http://127.0.0.1:8291/docs/${slug}/`, { waitUntil: 'load', timeout: 20000 });
+  await sleep(1700);
+  await pg.evaluate(`window.${cfg.api}.fx=true;${cfg.start}`);
+  await sleep(400);
+  const before = cfg.pos ? await pg.evaluate(cfg.pos) : null;
+  const dx = Math.round(W * 0.25), dy = Math.round(H * 0.62);
+  const rx = Math.round(W * 0.75), ry = Math.round(H * 0.30);
+  await finger(cdp, 'touchStart', [{ x: dx, y: dy, id: 1 }]);
+  await sleep(60);
+  await finger(cdp, 'touchMove', [{ x: dx + 40, y: dy, id: 1 }]);
+  await sleep(70);
+  /* the second finger lands and never moves again */
+  await finger(cdp, 'touchStart', [{ x: dx + 40, y: dy, id: 1 }, { x: rx, y: ry, id: 2 }]);
+  await sleep(70);
+  for (let i = 0; i < 12; i++) {
+    await finger(cdp, 'touchMove',
+      [{ x: dx + Math.min(96, 40 + i * 8), y: dy, id: 1 }, { x: rx, y: ry, id: 2 }]);
+    await sleep(85);
+  }
+  const steer = cfg.steer ? await pg.evaluate(cfg.steer) : null;
+  const after = cfg.pos ? await pg.evaluate(cfg.pos) : null;
+  const diag = await pg.evaluate('window.__shelfInput?window.__shelfInput():""');
+  await finger(cdp, 'touchEnd');
+  await ctx.close();
+  const moved = before ? Math.hypot(after.x - before.x, after.y - before.y) : null;
+  /* A lower bar than the single-finger runs on purpose: this container does
+     not always deliver every point of a two-finger sequence, so the distance
+     varies. What is being tested is that the resting finger does not take the
+     control and stop the player dead - near-zero travel is the failure. */
+  const ok = cfg.steer ? Math.abs(steer) > 0.5 : moved > 40;
+  return { ok, moved, steer, diag };
+}
+
 const only = process.argv[2];
 const srv = await serve(8291);
 const browser = await chromium.launch({ executablePath: CHROME,
@@ -135,6 +178,12 @@ for (const [slug, cfg] of Object.entries(GAMES)) {
       `${r.freed ? 'releases' : 'STILL HELD'.padEnd(10)}  ${r.ok ? 'ok' : '<-- FAIL'}` +
       (r.errs.length ? `\n   error: ${r.errs[0].slice(0, 90)}` : ''));
   }
+  const rest = await checkResting(browser, slug, cfg);
+  if (!rest.ok) bad++;
+  const w = cfg.steer ? `steering ${Number(rest.steer).toFixed(2)}`
+                      : `moved ${Number(rest.moved).toFixed(0)}px`;
+  console.log(`${slug.padEnd(13)} ${'+resting finger'.padEnd(10)} ${w.padEnd(16)}` +
+    `          ${rest.ok ? 'ok' : '<-- FAIL'}\n              ${rest.diag}`);
 }
 console.log(bad ? `\n${bad} failures under real touch` : '\nall controls answer a real finger');
 await browser.close();
