@@ -150,6 +150,14 @@ const pads={drift:{id:-1,down:false,hit:0},item:{id:-1,down:false,hit:0}};
 let padRects={drift:null,item:null};
 let buttons=[],mouseDown=false;
 const STEER_R=46;
+// Every finger on the road with the spot it went down at. One nominated finger
+// meant whichever one claimed the wheel owned the steering, and the thumb the
+// child was actually turning with did nothing.
+const fingers=Object.create(null);
+function fingerN(){let n=0;for(const k in fingers)n++;return n}
+function forgetGone(e){const s=Object.create(null);
+ for(const t of e.touches)s[t.identifier]=1;
+ for(const k in fingers)if(!s[k])delete fingers[k]}
 function padAt(p){for(const k in padRects){const r=padRects[k];if(!r)continue;
  if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)return k}return null}
 function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
@@ -158,7 +166,12 @@ function uiTap(p){for(let i=buttons.length-1;i>=0;i--){const b=buttons[i];
 function steer(){
  let s=0;
  if(keys.KeyA||keys.ArrowLeft)s-=1;if(keys.KeyD||keys.ArrowRight)s+=1;
- if(wheel.id>=0){const dx=wheel.x-wheel.ox;s=clamp(dx/STEER_R,-1,1)}
+ // whichever finger is turned furthest from where it went down is steering;
+ // a hand resting on the glass is not turned, so it steers nothing
+ {let bd=0,bx=0;
+  for(const k in fingers){const f=fingers[k];const dx=f.x-f.ox;
+   if(Math.abs(dx)>bd){bd=Math.abs(dx);bx=dx}}
+  if(bd>0)s=clamp(bx/STEER_R,-1,1)}
  return clamp(s,-1,1);
 }
 // Nothing here ever let go of a finger the browser had stopped reporting. A
@@ -197,8 +210,13 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   // resting on the glass take it off the thumb that was steering, and the
   // steering went dead straight; the reap and the watchdog recover a finger
   // that has really gone.
+  fingers[t.identifier]={ox:p.x,x:p.x};
   if(wheel.id<0){wheel.id=t.identifier;wheel.ox=wheel.x=p.x}}},{passive:false});
-window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);forgetGone(e);
+ for(const t of e.changedTouches){const f=fingers[t.identifier];
+  if(f){const q=rectPos(t.clientX,t.clientY);f.x=q.x;
+   const d=f.x-f.ox;
+   if(d>STEER_R)f.ox=f.x-STEER_R;else if(d<-STEER_R)f.ox=f.x+STEER_R}}
  for(const t of e.changedTouches){
   const p=rectPos(t.clientX,t.clientY);
   // A finger that moves takes the wheel off one sitting dead straight - a
@@ -213,21 +231,24 @@ window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
   const dx=wheel.x-wheel.ox;
   if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R}},{passive:false});
 function tend(e){lastTouchAt=performance.now();
- for(const t of e.changedTouches){if(t.identifier===wheel.id)wheel.id=-1;
+ for(const t of e.changedTouches){delete fingers[t.identifier];
+  if(t.identifier===wheel.id)wheel.id=-1;
   for(const k in pads)if(pads[k].id===t.identifier){pads[k].id=-1;pads[k].down=false}}
  reap(e)}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
-function letGo(){wheel.id=-1;for(const k in pads){pads[k].id=-1;pads[k].down=false}}
+function letGo(){for(const k in fingers)delete fingers[k];wheel.id=-1;for(const k in pads){pads[k].id=-1;pads[k].down=false}}
 window.addEventListener("blur",letGo);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)letGo()});
 cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);
  if(uiTap(p))return;const k=padAt(p);
  if(k){pads[k].id=99;if(!pads[k].down){pads[k].down=true;pads[k].hit=1}return}
- mouseDown=true;wheel.id=99;wheel.ox=wheel.x=p.x});
+ mouseDown=true;wheel.id=99;wheel.ox=wheel.x=p.x;fingers[99]={ox:p.x,x:p.x}});
 window.addEventListener("mousemove",e=>{if(!mouseDown)return;const p=pos(e);wheel.x=p.x;
+ if(fingers[99]){fingers[99].x=p.x;const d2=p.x-fingers[99].ox;
+  if(d2>STEER_R)fingers[99].ox=p.x-STEER_R;else if(d2<-STEER_R)fingers[99].ox=p.x+STEER_R}
  const dx=wheel.x-wheel.ox;
  if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R});
-function mouseRelease(){mouseDown=false;if(wheel.id===99)wheel.id=-1;
+function mouseRelease(){mouseDown=false;delete fingers[99];if(wheel.id===99)wheel.id=-1;
  for(const k in pads)if(pads[k].id===99){pads[k].id=-1;pads[k].down=false}}
 window.addEventListener("mouseup",mouseRelease);
 // a release that happened outside the window, or a press the browser invented,
@@ -254,7 +275,7 @@ function drawDiag(){
  cx.fillStyle="#8fe3ff";cx.fillText(s,7,y);
  cx.restore()}
 window.__shelfInput=()=>"wheel "+(wheel.id<0?"free":"held#"+wheel.id)+" "+
-  (pads.drift.down?"D":"-")+(pads.item.down?"I":"-")+" resets:"+healN+" scene:"+scene;
+  (pads.drift.down?"D":"-")+(pads.item.down?"I":"-")+" fingers:"+fingerN()+" resets:"+healN+" scene:"+scene;
 
 // ---------------------------------------------------------------- helpers
 function bake(w,h,fn){const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w));

@@ -146,11 +146,24 @@ const ghostMouse=()=>performance.now()-lastTouchAt<900;
 const stick={id:-1,ox:0,oy:0,x:0,y:0};
 let mouseDown=false;
 const STICK_R=62;
+// Every finger on the glass with the spot it went down at. One nominated
+// finger meant whichever one claimed the slot owned the hero, and the thumb
+// the child was actually using did nothing.
+const fingers=Object.create(null);
+function fingerN(){let n=0;for(const k in fingers)n++;return n}
+function forgetGone(e){const s=Object.create(null);
+ for(const t of e.touches)s[t.identifier]=1;
+ for(const k in fingers)if(!s[k])delete fingers[k]}
 function stickVec(){let x=0,y=0;
  if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
  if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;
- if(stick.id>=0){const dx=stick.x-stick.ox,dy=stick.y-stick.oy,d=Math.hypot(dx,dy);
-  if(d>7){const m=Math.min(d,STICK_R)/STICK_R;x=dx/d*m;y=dy/d*m}}
+ // whichever finger is pushed furthest from where it went down is the one
+ // moving the hero; a finger sitting still is simply not deflected
+ {let bd=0,bx=0,by=0;
+  for(const k in fingers){const f=fingers[k];
+   const dx=f.x-f.ox,dy=f.y-f.oy,d=Math.hypot(dx,dy);
+   if(d>bd){bd=d;bx=dx;by=dy}}
+  if(bd>7){const m=Math.min(bd,STICK_R)/STICK_R;x=bx/bd*m;y=by/bd*m}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
  return{x,y,l:Math.min(l,1)}}
 let buttons=[];
@@ -199,8 +212,11 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   // Only a free stick is handed out. Handing it to every new finger let one
   // resting on the glass take it off the thumb that was moving, and the hero
   // stopped; the reap and the watchdog recover a finger that has really gone.
+  fingers[t.identifier]={ox:p.x,oy:p.y,x:p.x,y:p.y};
   if(stick.id<0){stick.id=t.identifier;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y}}},{passive:false});
-window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);forgetGone(e);
+ for(const t of e.changedTouches){const f=fingers[t.identifier];
+  if(f){const q=rectPos(t.clientX,t.clientY);f.x=q.x;f.y=q.y}}
  for(const t of e.changedTouches){
   if(t.identifier!==stick.id){
    if(onMenu(t.target))continue;
@@ -217,21 +233,24 @@ window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
   const dx=stick.x-stick.ox,dy=stick.y-stick.oy,d=Math.hypot(dx,dy);
   if(d>STICK_R){stick.ox=stick.x-dx/d*STICK_R;stick.oy=stick.y-dy/d*STICK_R}}}},{passive:false});
 function tend(e){lastTouchAt=performance.now();
- for(const t of e.changedTouches){if(t.identifier===stick.id)stick.id=-1;
+ for(const t of e.changedTouches){delete fingers[t.identifier];
+  if(t.identifier===stick.id)stick.id=-1;
   for(const k in pads)if(pads[k].id===t.identifier){pads[k].id=-1;releasePad(k)}}
  let held=false;for(const t of e.touches)if(t.identifier===stick.id)held=true;
  if(stick.id>=0&&stick.id!==99&&!held)stick.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
-function letGo(){if(stick.id!==99)stick.id=-1;for(const k in pads){pads[k].id=-1;releasePad(k)}}
+function letGo(){for(const k in fingers)delete fingers[k];if(stick.id!==99)stick.id=-1;for(const k in pads){pads[k].id=-1;releasePad(k)}}
 window.addEventListener("blur",letGo);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)letGo()});
 cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);
  if(uiTap(p))return;const k=padAt(p);if(k){pads[k].id=99;pressPad(k);return}
- mouseDown=true;stick.id=99;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y});
+ mouseDown=true;stick.id=99;stick.ox=stick.x=p.x;stick.oy=stick.y=p.y;
+ fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
 window.addEventListener("mousemove",e=>{if(!mouseDown)return;const p=pos(e);stick.x=p.x;stick.y=p.y;
+ if(fingers[99]){fingers[99].x=p.x;fingers[99].y=p.y}
  const dx=stick.x-stick.ox,dy=stick.y-stick.oy,d=Math.hypot(dx,dy);
  if(d>STICK_R){stick.ox=stick.x-dx/d*STICK_R;stick.oy=stick.y-dy/d*STICK_R}});
-function mouseRelease(){mouseDown=false;if(stick.id===99)stick.id=-1;
+function mouseRelease(){mouseDown=false;delete fingers[99];if(stick.id===99)stick.id=-1;
  for(const k in pads)if(pads[k].id===99){pads[k].id=-1;releasePad(k)}}
 window.addEventListener("mouseup",mouseRelease);
 // a release that happened outside the window, or a press the browser invented,
@@ -258,7 +277,7 @@ function drawDiag(){
  cx.fillStyle="#8fe3ff";cx.fillText(s,7,y);
  cx.restore()}
 window.__shelfInput=()=>"stick "+(stick.id<0?"free":"held#"+stick.id)+" pads "+
-  (pads.dash.down?"D":"-")+(pads.fury.down?"F":"-")+" resets:"+healN+" scene:"+scene;
+  (pads.dash.down?"D":"-")+(pads.fury.down?"F":"-")+" fingers:"+fingerN()+" resets:"+healN+" scene:"+scene;
 
 // ---------------------------------------------------------------- art
 // Everything is baked once into offscreen canvases at start-up and then
