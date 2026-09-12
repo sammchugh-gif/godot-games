@@ -65,7 +65,18 @@ SCENES.paris = function () {
   this.station("louvre", 22, -2, "laser", 0x7fdcff, "The glass pyramid");
   this.station("panel", 38, 8, "keypad", 0xffd166, "The lantern's disarm panel");
   this.station("tower", -34, -8, "camera", 0x7fdcff, "The Eiffel Tower deck");
+  this.station("rooftop", -28, -12, "laser", 0xff7bd0, "The rooftop launch pad");
   this.addPerson("colette", -14, 5.5, Math.PI, { coat: 0x8a1a2a, hair: 0x3a2a1a, skin: 0xf1d2b8, trousers: 0x222222 }, "Colette");
+  // UMBRA left three of these behind
+  this.bug(-19.4, 0.09, 6.2);
+  this.bug(20.6, 0.09, -1.2);
+  this.bug(36.6, 0.09, 7.2);
+
+  // ambient life
+  this.crowd([[12, 5], [42, 5], [42, 11], [12, 11]], 5, { speed: 1.05, hat: "beret" });
+  this.traffic([[-58, -19], [64, -19], [64, -15], [-58, -15]], 4, { speed: 8 });
+  this.birds(-6, 19, 0, 10, 6, { speed: 0.24 });
+
   return { x: -10, z: 4, yaw: 0.35, bounds: { x0: -38, x1: 44, z0: -13, z1: 13 } };
 };
 
@@ -123,6 +134,15 @@ SCENES.kenya = function () {
   this.station("rangertower", 30, -10.5, "mast", 0xff5050, "The old ranger tower");
   this.addPerson("amani", 6, 4.5, Math.PI, { coat: 0x8a7a4a, hat: "cap", hatColor: 0x6b5a3a, skin: 0x6b4226, trousers: 0x5a4a3a }, "Amani");
   this.weather("dust", 300);
+  // UMBRA left three of these behind
+  this.bug(-5.4, 0.09, 5.6);
+  this.bug(-20.6, 0.09, -4.0);
+  this.bug(28.6, 0.09, -9.6);
+
+  // ambient life
+  this.crowd([[2, -24], [38, -24], [38, -4], [2, -4]], 3, { speed: 0.95, hat: "cap" });
+  this.birds(0, 24, -6, 14, 6, { speed: 0.12 });
+
   return { x: 2, z: 9, yaw: 0.2, bounds: { x0: -36, x1: 43, z0: -26, z1: 16 } };
 };
 
@@ -166,6 +186,18 @@ SCENES.india = function () {
   this.station("sundial", -30, -9.5, "tomb", 0xffb040, "The sundial observatory");
   this.station("lanternpad", -18, -21.5, "keypad", 0x2de2ff, "The lantern's keypad");
   this.addPerson("priya", -8, 4, Math.PI, { coat: 0xd0407a, hair: 0x1a1010, skin: 0xb8845a, trousers: 0x3a2a4a }, "Priya");
+  // UMBRA left three of these behind
+  this.bug(-12.4, 0.09, 5.4);
+  this.bug(22.6, 0.09, 2.4);
+  this.bug(-28.6, 0.09, -8.8);
+
+  this.station("dash", -7, 4.5, "crate", 0xffd166, "Priya's tuk-tuk, engine running");
+
+  // ambient life
+  this.crowd([[-32, -11], [12, -11], [12, -3], [-32, -3]], 6, { speed: 1.1 });
+  this.traffic([[-54, 18], [54, 18], [54, 22], [-54, 22]], 4, { speed: 7.5 });
+  this.birds(-4, 20, -8, 11, 6, { speed: 0.2 });
+
   return { x: 0, z: 8, yaw: 0, bounds: { x0: -34, x1: 34, z0: -27, z1: 12 } };
 };
 
@@ -223,6 +255,16 @@ SCENES.china = function () {
   this.station("watchtower", -14, -11.5, "server", 0xffe23a, "The third watchtower");
   this.station("lanternlift", 5, -17.5, "rods", 0xffd166, "The lantern's rod lock");
   this.addPerson("mei", 8, 3, Math.PI, { coat: 0xc0392b, hair: 0x141414, skin: 0xf3ddc4, trousers: 0x222233 }, "Mei");
+  // UMBRA left three of these behind
+  this.bug(12.6, 0.09, 2.0);
+  this.bug(20.6, 0.09, 9.4);
+  this.bug(-12.6, 0.09, -10.8);
+
+  // ambient life
+  this.crowd([[-16, -11], [28, -11], [28, -3], [-16, -3]], 5, { speed: 1.0 });
+  this.traffic([[-48, 20], [50, 20], [50, 24], [-48, 24]], 3, { speed: 7 });
+  this.birds(4, 21, -6, 12, 5, { color: 0xf4f4f4, speed: 0.18 });
+
   return { x: -2, z: 9, yaw: -0.55, bounds: { x0: -28, x1: 30, z0: -21, z1: 14 } };
 };
 
@@ -271,6 +313,16 @@ SCENES.australia = function () {
   this.station("hatch", -26, -15.5, "vault", 0xc0c8d8, "The pylon hatch");
   this.station("lantern", -12, -13, "bomb", 0xff4040, "The lantern's timer");
   this.addPerson("matilda", 2, 2.5, Math.PI, { coat: 0xe63946, hair: 0xe8c070, skin: 0xe8b890, trousers: 0xffd166, prop: "board" }, "Matilda");
+  // UMBRA left three of these behind
+  this.bug(12.6, 0.09, -9.8);
+  this.bug(-32.6, 0.09, 5.4);
+  this.bug(-13.4, 0.09, -12.4);
+
+  // ambient life
+  this.crowd([[-36, -14], [8, -14], [8, -3], [-36, -3]], 5, { speed: 1.15 });
+  this.traffic([[-58, 14], [50, 14], [50, 18], [-58, 18]], 3, { speed: 8 });
+  this.birds(-8, 18, -8, 12, 7, { color: 0xf2f2f2, speed: 0.3 });
+
   return { x: 0, z: 6, yaw: 0.2, bounds: { x0: -38, x1: 30, z0: -18, z1: 8 } };
 };
 
@@ -308,6 +360,18 @@ SCENES.mexico = function () {
   this.station("chamber", 16, -16.8, "keypad", 0x2de2ff, "The lantern's panel");
   const dg = this.addPerson("diego", 6, 5, Math.PI, { coat: 0x1a1a1a, hat: "boater", skin: 0xc08a5a, trousers: 0x1a1a1a }, "Diego");
   { const guitar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.15), this.M({ color: 0x8a5a2a })); guitar.position.set(0.4, 1.0, 0.25); dg.grp.add(guitar); const neck = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.06), this.M({ color: 0x3a2a1a })); neck.position.set(0.55, 1.6, 0.25); neck.rotation.z = -0.5; dg.grp.add(neck); }
+  // UMBRA left three of these behind
+  this.bug(-17.4, 0.09, 3.4);
+  this.bug(28.6, 0.09, -2.0);
+  this.bug(14.6, 0.09, -16.2);
+
+  this.station("jeep", 8, 6.5, "crate", 0xffd166, "Diego's jeep, engine running");
+
+  // ambient life
+  this.crowd([[-20, -16], [24, -16], [24, -3], [-20, -3]], 5, { speed: 1.0, hat: "boater" });
+  this.traffic([[-54, 19], [54, 19], [54, 23], [-54, 23]], 3, { speed: 7 });
+  this.birds(0, 23, -10, 13, 5, { speed: 0.15 });
+
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -34, x1: 34, z0: -18, z1: 13 } };
 };
 
@@ -354,5 +418,14 @@ SCENES.alps = function () {
   this.station("switch", 20, -23.5, "screen", 0x40c0ff, "The master switch");
   this.addPerson("klaus", -5, 3, Math.PI, { coat: 0x3a5a3a, hat: "ushanka", hair: 0x8a6a3a, skin: 0xf0c8a8, trousers: 0x333333 }, "Klaus");
   this.weather("snow");
+  // UMBRA left three of these behind
+  this.bug(1.4, 0.09, -9.8);
+  this.bug(10.6, 0.09, -5.0);
+  this.bug(-16.6, 0.09, -22.8);
+
+  // ambient life
+  this.crowd([[-24, -22], [20, -22], [20, 1], [-24, 1]], 3, { speed: 0.9, hat: "ushanka" });
+  this.birds(-2, 26, -8, 12, 4, { speed: 0.14 });
+
   return { x: 0, z: 8, yaw: 0, bounds: { x0: -26, x1: 28, z0: -24.5, z1: 14 } };
 };

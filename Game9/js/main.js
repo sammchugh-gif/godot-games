@@ -122,6 +122,11 @@ function loadScene(id) { G.world.foundBugs = new Set(G.save.bugs || []); return 
 function bugsIn(cityId) { const n = (G.save.bugs || []).filter(b => b.startsWith(cityId + ":")).length; return n; }
 const lowerFirst = t => t.replace(/^The /, "the ");
 function setState(s) { G.prev = G.state; G.state = s; G.buttons.begin(); }
+// The site's own pause button sits in the same corner as the spy watch. This
+// tells it to stand aside while Rory is actually playing and come back when
+// the game's own pause screen is up, so there is still a way out to the shelf.
+const PLAYING = ["world", "minigame", "intel"];
+window.__shelfPaused = () => !(PLAYING.includes(G.state) && !G.pause && !G.dialogue.active);
 function toast(msg, dur) { G.toast = { msg, t: dur || 2.5 }; }
 function pressButton(id, b) {
   switch (id) {
