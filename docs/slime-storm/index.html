@@ -313,6 +313,34 @@ function musicToggle(){musicOn=!musicOn;store.set("music",musicOn);
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>{keys[e.code]=false});
 const touch={id:-1,ox:0,oy:0,x:0,y:0,taps:[]};let mouseDown=false;
+// Every finger the page has actually seen. e.touches is authoritative on every
+// touch event, so pruning against it keeps this honest even when a touchend
+// goes missing, and the game can then tell a stick held by a real finger from
+// one held by a ghost.
+const live=Object.create(null);
+let evN=0,healN=0;
+function liveN(){let n=0;for(const k in live)n++;return n}
+function seeTouches(e){const s=Object.create(null);
+ for(const t of e.touches)s[t.identifier]=1;
+ for(const k in live)if(!s[k])delete live[k]}
+function noteTouch(id,x,y){live[id]={x:x,y:y}}
+// Hand the stick to a finger that is actually down, or let it go.
+function reclaimStick(){
+ for(const id in live){const q=live[id];
+  touch.id=+id;touch.ox=touch.x=q.x;touch.oy=touch.y=q.y;healN++;return}
+ touch.id=-1;healN++}
+// Runs every frame. Two ways the stick gets taken back: the finger holding it
+// is not in the live list any more, or it has sat at dead centre long enough
+// that it cannot be someone actually playing.
+let stillT=0;
+function inputWatch(){
+ if(touch.id<0||touch.id===99){stillT=0;return}
+ if(!(touch.id in live)){reclaimStick();return}
+ const dx=touch.x-touch.ox,dy=touch.y-touch.oy;
+ if(Math.hypot(dx,dy)>8){stillT=0;return}
+ const t=performance.now();
+ if(!stillT){stillT=t;return}
+ if(t-stillT>1500){touch.id=-1;stillT=0;healN++}}
 // A finger only becomes a game coordinate when it is measured against the
 // canvas itself. Assuming the window and the canvas agree breaks every tap
 // if they ever disagree, and the game keeps drawing perfectly while it does.
@@ -325,7 +353,8 @@ function pos(e){return rectPos(e.clientX,e.clientY)}
 // which element the browser called the target.
 function onMenu(el){for(;el;el=el.parentNode)if(el.id&&String(el.id).indexOf("shelf-menu")===0)return true;return false}
 function stillDown(e){if(touch.id<0)return true;if(touch.id===99)return mouseDown;for(const t of e.touches)if(t.identifier===touch.id)return true;return false}
-window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id);
+window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id)+
+  " fingers:"+liveN()+" events:"+evN+" resets:"+healN+" scene:"+scene;
 // A tap on a touch screen is followed by a synthetic mouse event a moment
 // later. Both reached the canvas, so every button ran twice on one tap. It
 // went unnoticed because most buttons are idempotent - but a toggle flipped
@@ -338,13 +367,23 @@ const ghostMouse=()=>performance.now()-lastTouchAt<900;
 // finger that was not on the glass any more, and because the browser still
 // listed that finger nothing could ever claim it back. Tapping again is exactly
 // what a child does when it stops answering, so let tapping again fix it.
-window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioInit();
  if(touch.id===99){touch.id=-1;mouseDown=false}
+ seeTouches(e);
+ for(const t of e.changedTouches){const q=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,q.x,q.y)}
  if(!stillDown(e))touch.id=-1;
  for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
   touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}},{passive:false});
-window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
-function tend(e){lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
+window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();evN++;seeTouches(e);
+ for(const t of e.changedTouches){const p=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,p.x,p.y);
+  if(t.identifier===touch.id){touch.x=p.x;touch.y=p.y}
+  // a finger that moves while the stick is free picks it up, so a thumb the
+  // watchdog let go of resumes the moment it is actually used
+  else if(touch.id<0&&!onMenu(t.target)){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
+function tend(e){lastTouchAt=performance.now();evN++;
+ for(const t of e.changedTouches){delete live[t.identifier];if(t.identifier===touch.id)touch.id=-1}
+ seeTouches(e);
+ if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
@@ -799,7 +838,7 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
 musicOn=store.get("music",true);
 
 // ---------------------------------------------------------------- loop
-function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);
+function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);
  cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#1a2a1a";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play"){update(dt);}
  if(scene==="play"||scene==="levelup"||scene==="pause"||scene==="over"||scene==="win"){if(G){drawWorld();drawHUD();}}
