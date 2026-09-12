@@ -193,17 +193,22 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit
   if(uiTap(p))continue;
   const k=padAt(p);
   if(k){pads[k].id=t.identifier;if(!pads[k].down){pads[k].down=true;pads[k].hit=1}continue}
-  // a fresh finger on the road always takes the wheel, which is what a child
-  // does when the steering stops answering. Fingers on DRIFT and ITEM never
-  // get here, so holding a pad cannot steal the wheel.
-  wheel.id=t.identifier;wheel.ox=wheel.x=p.x}},{passive:false});
+  // Only a free wheel is handed out. Handing it to every new finger let one
+  // resting on the glass take it off the thumb that was steering, and the
+  // steering went dead straight; the reap and the watchdog recover a finger
+  // that has really gone.
+  if(wheel.id<0){wheel.id=t.identifier;wheel.ox=wheel.x=p.x}}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();reap(e);
  for(const t of e.changedTouches){
   const p=rectPos(t.clientX,t.clientY);
-  // a finger that moves while the wheel is free takes it, so a thumb the
-  // watchdog let go of is back in charge the moment it is actually used
-  if(wheel.id<0&&!onMenu(t.target)&&!padAt(p)){wheel.id=t.identifier;wheel.ox=wheel.x=p.x;continue}
-  if(t.identifier!==wheel.id)continue;
+  // A finger that moves takes the wheel off one sitting dead straight - a
+  // hand resting on the glass, or a finger that is not there any more. A
+  // thumb that is really steering is turned, so it cannot be taken from.
+  if(t.identifier!==wheel.id){
+   if(onMenu(t.target)||padAt(p))continue;
+   const busy=wheel.id>=0&&Math.abs(wheel.x-wheel.ox)>6;
+   if(busy)continue;
+   wheel.id=t.identifier;wheel.ox=wheel.x=p.x;continue}
   wheel.x=p.x;
   const dx=wheel.x-wheel.ox;
   if(dx>STEER_R)wheel.ox=wheel.x-STEER_R;else if(dx<-STEER_R)wheel.ox=wheel.x+STEER_R}},{passive:false});
