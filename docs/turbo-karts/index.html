@@ -354,7 +354,8 @@ function bakeTrack(T,line){
 const CAM_BACK=262,CAM_HEIGHT=140;
 const CAM={x:1024,y:300,a:0,h:CAM_HEIGHT,shake:0,roll:0};
 let FOC=1,HZY=0;
-function camSetup(){FOC=Math.max(200,H*0.71);HZY=H*0.40+CAM.roll}
+function camSetup(){FOC=Math.max(190,Math.min(H*0.71,W*0.66));
+ HZY=H*(W>H?0.40:0.33)+CAM.roll}
 // The ground goes into a buffer of its own at about three-quarters size and
 // is blown back up. Nothing on a mode-seven floor has detail finer than that,
 // and it is the difference between running on a phone and not.
@@ -474,8 +475,8 @@ const RACERS=[
 ];
 const CLASSES={
  balanced:{top:1.00,accel:1.00,grip:1.00,blurb:"A bit of everything."},
- speed:   {top:1.09,accel:0.86,grip:0.93,blurb:"Fastest flat out, slow off the line."},
- accel:   {top:0.94,accel:1.22,grip:1.10,blurb:"Away first and sticks in the corners."},
+ speed:   {top:1.06,accel:0.88,grip:0.94,blurb:"Fastest flat out, slow off the line."},
+ accel:   {top:0.97,accel:1.22,grip:1.12,blurb:"Away first and sticks in the corners."},
 };
 const KREF=128; // karts are baked into a 128-wide box
 function tyre(g,x,y,w,h,r){
@@ -754,6 +755,7 @@ function startRace(trackIdx,charId,laps){
     time:0,state:"count",count:3.2,finishOrder:[],resultT:0,lastLapNote:0};
  layoutTrack();
  CAM.a=player.a;CAM.x=player.x-Math.cos(CAM.a)*CAM_BACK;CAM.y=player.y-Math.sin(CAM.a)*CAM_BACK;
+ if(GP)GP.counted=false;
  musicSet=trackIdx;if(musicOn&&AC){musicStop();musicStart()}
  audioInit();engineStart();
  say(Tk.name,Tk.sub,2.4);
@@ -1112,7 +1114,7 @@ function drawKart(k){
  cx.restore();
  if(!k.ai)return;
  // a name tag over the rival in front, so you know who you are chasing
- if(p.z<460&&p.z>70){
+ if(k.place===R.player.place-1&&p.z<460&&p.z>70){
   const a=clamp(1-p.z/460,0,1);
   const sz=clamp(worldH*p.s*0.2,9,22);
   cx.globalAlpha=a*0.8;
@@ -1253,13 +1255,15 @@ function drawHUD(){
  else if(p.itemT>0){ // the roulette while the box is opening
   const sp=ART.item[ITEMS[Math.floor(T*24)%ITEMS.length]],s=IS*0.66;
   cx.save();cx.globalAlpha=0.7;cx.drawImage(sp,ix+IS/2-s/2,iy+IS/2-s/2,s,s);cx.restore()}
+ // the speed bar tucks under the lap panel; down the middle of the bottom
+ // edge it ran underneath the item button on a narrow screen
+ const bw=116,bx=L,by=Tp+130;
+ cx.fillStyle="rgba(0,0,0,0.5)";rr(cx,bx,by,bw,10,5);cx.fill();
+ const f=clamp(p.sp/(p.top*1.5),0,1);
+ cx.fillStyle=p.boost>0?"#ffd23f":"#6fe0ff";rr(cx,bx,by,Math.max(5,bw*f),10,5);cx.fill();
+ cx.lineWidth=1.5;cx.strokeStyle="rgba(255,255,255,0.2)";rr(cx,bx,by,bw,10,5);cx.stroke();
  drawMap();
  drawPads();
- // speed bar
- const bw=Math.min(210,W*0.3),bx=W/2-bw/2,by=H-16-SAFE.b;
- cx.fillStyle="rgba(0,0,0,0.45)";rr(cx,bx,by-9,bw,9,5);cx.fill();
- const f=clamp(p.sp/(p.top*1.5),0,1);
- cx.fillStyle=p.boost>0?"#ffd23f":"#6fe0ff";rr(cx,bx,by-9,Math.max(4,bw*f),9,5);cx.fill();
  if(p.wrong>1.1){
   text("WRONG WAY",W/2,H*0.3,Math.min(38,W*0.08),Math.floor(T*5)%2?"#ff5a52":"#fff")}
  if(R.state==="count"){
@@ -1268,11 +1272,11 @@ function drawHUD(){
   else text("GO!",W/2,H*0.4,Math.min(140,W*0.2),"#6fe87a")}
 }
 function drawPads(){
- const Rr=Math.min(52,Math.max(38,H*0.1));
+ const Rr=clamp(Math.min(W,H)*0.115,32,52);
  const bot=H-22-SAFE.b-Rr,rt=W-20-SAFE.r-Rr;
- const dx=rt,dy=bot,ix=rt-Rr*2.35,iy=bot+Rr*0.12;
- padRects.drift={x:dx-Rr-10,y:dy-Rr-10,w:Rr*2+20,h:Rr*2+20};
- padRects.item={x:ix-Rr-10,y:iy-Rr-10,w:Rr*2+20,h:Rr*2+20};
+ const dx=rt,dy=bot,ix=rt-Rr*2.55,iy=bot+Rr*0.1;
+ padRects.drift={x:dx-Rr-8,y:dy-Rr-8,w:Rr*2+16,h:Rr*2+16};
+ padRects.item={x:ix-Rr-8,y:iy-Rr-8,w:Rr*2+16,h:Rr*2+16};
  const p=R.player;
  const tier=p.drift?(p.driftT>2.1?3:p.driftT>1.25?2:p.driftT>0.6?1:0):0;
  const dcol=["rgba(255,255,255,0.7)","rgba(120,200,255,0.95)","rgba(255,170,60,0.95)","rgba(255,90,200,0.95)"][tier];
@@ -1311,6 +1315,18 @@ function drawToast(){
 
 // ---------------------------------------------------------------- screens
 let pickChar=store.get("char","sophia"),pickTrack=0;
+// Every screen sizes itself from the screen it is on and builds upwards from
+// the bottom edge. The first pass laid buttons out at fixed offsets from a
+// fraction of the height, which put the last one off the bottom of a phone in
+// landscape and sat BACK on top of the button beside it.
+function uiSizes(){
+ return{bh:clamp(H*0.075,34,56),          // a main button
+        sh:clamp(H*0.062,28,46),          // a lesser one
+        gap:clamp(H*0.016,6,12),
+        bot:H-clamp(H*0.03,10,24)-SAFE.b,
+        pad:14+SAFE.l,
+        wide:W-28-SAFE.l-SAFE.r};
+}
 function drawBackdrop(){
  const g=cx.createLinearGradient(0,0,0,H);
  g.addColorStop(0,"#12203a");g.addColorStop(0.55,"#1a2a4a");g.addColorStop(1,"#0a1020");
@@ -1328,140 +1344,203 @@ function drawBackdrop(){
 }
 function drawTitle(){
  drawBackdrop();
- const best=store.get("cups",{});
- const cy=H*0.3;
- textFit("TURBO",W/2,cy-Math.min(38,H*0.085),Math.min(84,W*0.18),"#ffd23f",W*0.86);
- textFit("KARTS",W/2,cy+Math.min(38,H*0.085),Math.min(84,W*0.18),"#ff5a2a",W*0.86);
- textFit("Eight drivers. Three circuits. Hold DRIFT through the corners.",
-  W/2,cy+Math.min(96,H*0.2),Math.min(17,W*0.034),"rgba(255,255,255,0.75)",W*0.86);
+ const U=uiSizes(),best=store.get("cups",{});
+ const bw=Math.min(320,W*0.72),bx=W/2-bw/2;
+ const y3=U.bot-U.sh,y2=y3-U.gap-U.sh,y1=y2-U.gap-U.bh;
  buttons=[];
- const bw=Math.min(300,W*0.7),by=H*0.6;
- btn(W/2-bw/2,by,bw,60,"GRAND PRIX",()=>{GP={i:0,pts:{},order:[0,1,2]};scene="chars"},
-  {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:22});
- btn(W/2-bw/2,by+70,bw,50,"SINGLE RACE",()=>{GP=null;scene="chars"},{size:19});
- btn(W/2-bw/2,by+128,bw,42,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:16});
+ btn(bx,y1,bw,U.bh,"GRAND PRIX",()=>{GP={i:0,pts:{},order:[0,1,2]};scene="chars"},
+  {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(22,U.bh*0.42)});
+ btn(bx,y2,bw,U.sh,"SINGLE RACE",()=>{GP=null;scene="chars"},{size:Math.min(19,U.sh*0.44)});
+ btn(bx,y3,bw,U.sh,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:Math.min(16,U.sh*0.38)});
  drawButtons();
+ // the logo takes whatever room is left above the buttons
+ const top=SAFE.t+10,space=y1-top;
+ const cy=top+space*0.42,lz=Math.min(84,W*0.18,space*0.3);
+ textFit("TURBO",W/2,cy-lz*0.52,lz,"#ffd23f",W*0.86);
+ textFit("KARTS",W/2,cy+lz*0.52,lz,"#ff5a2a",W*0.86);
+ textFit("Eight drivers. Three circuits. Hold DRIFT through the corners.",
+  W/2,cy+lz*1.3,Math.min(17,W*0.034,space*0.09),"rgba(255,255,255,0.75)",W*0.86);
  const won=Object.keys(best).length;
- if(won)textFit("Cups won: "+won+" of 3",W/2,H-24-SAFE.b,14,"rgba(255,255,255,0.5)",W*0.8);
+ if(won)textFit("Cups won: "+won+" of 3",W/2,y1-U.gap-9,
+  Math.min(14,space*0.06),"rgba(255,255,255,0.5)",W*0.8);
 }
 function drawChars(){
  drawBackdrop();
- textFit("PICK YOUR DRIVER",W/2,H*0.11,Math.min(32,W*0.07),"#ffd23f",W*0.86);
+ const U=uiSizes();
  buttons=[];
- const cols=4,rows=2;
- const cw=Math.min(150,(W-40-(cols-1)*10)/cols),chh=Math.min(H*0.28,150);
- const x0=W/2-(cols*cw+(cols-1)*10)/2,y0=H*0.2;
- RACERS.forEach((C,i)=>{
-  const x=x0+(i%cols)*(cw+10),y=y0+Math.floor(i/cols)*(chh+10);
-  const on=C.id===pickChar;
-  panel(x,y,cw,chh,14,on?hexA(C.body,0.3):"rgba(10,12,20,0.8)",on?"#ffd23f":hexA(C.body,0.7));
-  const sp=ART.kart[C.id].front,s=Math.min(chh*0.62/sp.height,(cw-16)/sp.width);
-  cx.drawImage(sp,x+cw/2-sp.width*s/2,y+6,sp.width*s,sp.height*s);
-  textFit(C.name,x+cw/2,y+chh-30,16,on?"#ffd23f":"#fff",cw-12);
-  textFit(CLASSES[C.cls].blurb,x+cw/2,y+chh-13,11,"rgba(255,255,255,0.6)",cw-10,null,"600");
-  btn(x,y,cw,chh,"",()=>{pickChar=C.id;store.set("char",C.id)},
-   {fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});
- });
- const bw=Math.min(260,W*0.6);
- btn(W/2-bw/2,H-58-SAFE.b,bw,46,GP?"START THE CUP":"PICK A TRACK",
+ // BACK and the go button share the bottom row and are laid out from the
+ // edges inwards, so they cannot land on top of one another
+ const by=U.bot-U.bh,backW=Math.min(104,W*0.26);
+ btn(U.pad,by,backW,U.bh,"BACK",()=>{scene="title"},{size:Math.min(17,U.bh*0.38)});
+ const px=U.pad+backW+10,pw=W-14-SAFE.r-px;
+ btn(px,by,pw,U.bh,GP?"START THE CUP":"PICK A TRACK",
   ()=>{if(GP){GP.pts={};RACERS.forEach(r=>GP.pts[r.id]=0);GP.i=0;
         startRace(GP.order[0],pickChar);scene="race"}
        else scene="tracks"},
-  {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:19});
- btn(14+SAFE.l,H-58-SAFE.b,86,46,"BACK",()=>{scene="title"},{size:16});
+  {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(19,U.bh*0.4)});
+ // What a driver is good at goes on one line for whoever is selected, rather
+ // than shrinking a sentence into a card it will never fit in.
+ const sel=RACERS.find(r=>r.id===pickChar)||RACERS[0];
+ const infoH=clamp(H*0.075,38,58),iy=by-10-infoH;
+ panel(U.pad,iy,U.wide,infoH,12,"rgba(10,14,26,0.72)",hexA(sel.body,0.6));
+ textFit(sel.name+"  \u00b7  "+CLASSES[sel.cls].blurb,W/2,iy+infoH/2,
+  Math.min(17,W*0.038),"#fff",U.wide-24);
+ const titleY=clamp(H*0.085,26,60)+SAFE.t;
+ textFit("PICK YOUR DRIVER",W/2,titleY,Math.min(32,W*0.07),"#ffd23f",W-120);
+ // the grid takes the space between, in as many columns as will fit
+ const gTop=titleY+clamp(H*0.05,18,34),gBot=iy-10,gut=8;
+ let cols=4;
+ if((U.wide-(cols-1)*gut)/cols<104)cols=2;
+ const rows=Math.ceil(RACERS.length/cols);
+ const cw=Math.min(190,(U.wide-(cols-1)*gut)/cols);
+ const chh=Math.max(48,Math.min(cw*1.16,(gBot-gTop-(rows-1)*gut)/rows));
+ const x0=W/2-(cols*cw+(cols-1)*gut)/2;
+ const y0=gTop+Math.max(0,(gBot-gTop-(rows*chh+(rows-1)*gut))/2);
+ RACERS.forEach((C,i)=>{
+  const x=x0+(i%cols)*(cw+gut),y=y0+Math.floor(i/cols)*(chh+gut);
+  const on=C.id===pickChar;
+  panel(x,y,cw,chh,12,on?hexA(C.body,0.32):"rgba(10,12,20,0.8)",on?"#ffd23f":hexA(C.body,0.7));
+  const sp=ART.kart[C.id].front;
+  const nz=Math.min(16,cw*0.15);
+  const art=chh-nz*1.9-10;
+  const sc=Math.min(art/sp.height,(cw-16)/sp.width);
+  cx.drawImage(sp,x+cw/2-sp.width*sc/2,y+6,sp.width*sc,sp.height*sc);
+  textFit(C.name,x+cw/2,y+chh-nz*0.95,nz,on?"#ffd23f":"#fff",cw-10);
+  btn(x,y,cw,chh,"",()=>{pickChar=C.id;store.set("char",C.id)},
+   {fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});
+ });
  drawButtons();
 }
 function drawTracks(){
  drawBackdrop();
- textFit("PICK A CIRCUIT",W/2,H*0.11,Math.min(32,W*0.07),"#ffd23f",W*0.86);
+ const U=uiSizes();
  buttons=[];
- const wide=W>H*1.05;
+ const by=U.bot-U.bh,backW=Math.min(104,W*0.26);
+ btn(U.pad,by,backW,U.bh,"BACK",()=>{scene="chars"},{size:Math.min(17,U.bh*0.38)});
+ const titleY=clamp(H*0.085,26,60)+SAFE.t;
+ textFit("PICK A CIRCUIT",W/2,titleY,Math.min(32,W*0.07),"#ffd23f",W-120);
+ const gTop=titleY+clamp(H*0.05,18,34),gBot=by-12,gut=12;
  const n=TRACKS.length;
- const cw=wide?Math.min(250,(W-40-(n-1)*12)/n):Math.min(W-40,420);
- const chh=wide?Math.min(H*0.5,270):Math.min((H*0.56)/n-10,104);
+ // side by side when there is width for it, stacked when there is not
+ const wide=(U.wide-(n-1)*gut)/n>=180;
+ const cw=wide?Math.min(260,(U.wide-(n-1)*gut)/n):Math.min(U.wide,460);
+ const chh=wide?Math.min(300,gBot-gTop):Math.max(74,Math.min(152,(gBot-gTop-(n-1)*gut)/n));
+ const totH=wide?chh:n*chh+(n-1)*gut;
+ const y0=gTop+Math.max(0,(gBot-gTop-totH)/2);
  TRACKS.forEach((T2,i)=>{
-  const x=wide?W/2-(n*cw+(n-1)*12)/2+i*(cw+12):W/2-cw/2;
-  const y=wide?H*0.2:H*0.2+i*(chh+10);
+  const x=wide?W/2-(n*cw+(n-1)*gut)/2+i*(cw+gut):W/2-cw/2;
+  const y=wide?y0:y0+i*(chh+gut);
   panel(x,y,cw,chh,16,"rgba(10,12,20,0.85)",hexA(T2.kerbA,0.8));
-  // a thumbnail of the circuit
   const m=trackMap(T2,trackLine(T2));
-  const ms=wide?chh*0.5:chh*0.8;
+  const ms=wide?Math.min(chh*0.5,cw*0.66):chh*0.82;
   cx.save();cx.globalAlpha=0.9;
   if(wide)cx.drawImage(m.img,x+cw/2-ms/2,y+10,ms,ms);
   else cx.drawImage(m.img,x+10,y+chh/2-ms/2,ms,ms);
   cx.restore();
+  // the lap count sits in the corner as a chip rather than under the text
+  const lz=Math.min(12,cw*0.055),lw=lz*4.4,lh=lz*1.8;
+  rr(cx,x+cw-lw-8,y+8,lw,lh,lh/2);cx.fillStyle="rgba(255,255,255,0.13)";cx.fill();
+  text(T2.laps+" LAPS",x+cw-lw/2-8,y+8+lh/2,lz,"rgba(255,255,255,0.78)");
   if(wide){
-   textFit(T2.name,x+cw/2,y+chh*0.62,20,"#ffd23f",cw-16);
-   textFit(T2.sub,x+cw/2,y+chh*0.74,13,"rgba(255,255,255,0.75)",cw-16,null,"600");
-   text(T2.laps+" LAPS",x+cw/2,y+chh-20,15,"rgba(255,255,255,0.6)");
+   textFit(T2.name,x+cw/2,y+ms+30,Math.min(20,cw*0.1),"#ffd23f",cw-16);
+   wrapText(T2.sub,x+cw/2,y+ms+56,Math.min(13,cw*0.062),"rgba(255,255,255,0.75)",cw-22,2);
   }else{
-   textFit(T2.name,x+ms+20,y+chh*0.34,18,"#ffd23f",cw-ms-30,"left");
-   textFit(T2.sub,x+ms+20,y+chh*0.56,12,"rgba(255,255,255,0.75)",cw-ms-30,"left","600");
-   text(T2.laps+" LAPS",x+ms+20,y+chh*0.76,13,"rgba(255,255,255,0.6)","left")}
+   const tx=x+ms+22,tw=cw-ms-34-lw;
+   textFit(T2.name,tx,y+chh*0.34,Math.min(20,tw*0.11),"#ffd23f",tw,"left");
+   wrapText(T2.sub,tx,y+chh*0.58,Math.min(13.5,tw*0.072),"rgba(255,255,255,0.78)",tw+lw,2,"left")}
   btn(x,y,cw,chh,"",()=>{pickTrack=i;startRace(i,pickChar);scene="race"},
    {fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});
  });
- btn(14+SAFE.l,H-58-SAFE.b,86,46,"BACK",()=>{scene="chars"},{size:16});
  drawButtons();
 }
 function drawResults(){
  drawWorld();
- cx.fillStyle="rgba(6,8,16,0.72)";cx.fillRect(0,0,W,H);
+ cx.fillStyle="rgba(6,8,16,0.84)";cx.fillRect(0,0,W,H);
+ const U=uiSizes();
  const order=R.finishOrder.length?R.finishOrder:R.karts.slice().sort((a,b)=>b.prog-a.prog);
  const me=order.indexOf(R.player)+1;
- textFit(me===1?"YOU WON!":me<=3?"ON THE PODIUM":"RACE OVER",
-  W/2,H*0.12,Math.min(38,W*0.08),me===1?"#ffd23f":"#fff",W*0.86);
- const rowH=Math.min(30,(H*0.56)/order.length);
- const y0=H*0.2,x0=W/2-Math.min(320,W*0.8)/2,wI=Math.min(320,W*0.8);
- order.forEach((k,i)=>{
-  const y=y0+i*rowH;
-  if(k===R.player){cx.fillStyle="rgba(255,210,60,0.16)";rr(cx,x0-6,y-rowH/2+2,wI+12,rowH-3,7);cx.fill()}
-  text(String(i+1),x0+14,y,Math.min(17,rowH*0.6),i===0?"#ffd23f":"#fff");
-  cx.fillStyle=k.c.body;rr(cx,x0+30,y-6,12,12,3);cx.fill();
-  textFit(k.c.name,x0+50,y,Math.min(16,rowH*0.56),k===R.player?"#ffd23f":"#fff",wI*0.45,"left");
-  if(GP)text("+"+(GP_POINTS[i]||0),x0+wI-44,y,Math.min(15,rowH*0.52),"#8affa0");
-  else if(k.best)text(fmtTime(k.best),x0+wI-14,y,Math.min(13,rowH*0.48),"rgba(255,255,255,0.7)","right")});
  buttons=[];
- const bw=Math.min(260,W*0.66);
+ let tableBot;
+ const bw=Math.min(300,W*0.7),bx=W/2-bw/2;
  if(GP){
-  order.forEach((k,i)=>{GP.pts[k.c.id]=(GP.pts[k.c.id]||0)+(GP_POINTS[i]||0)});
-  GP.counted=true;
-  btn(W/2-bw/2,H*0.8,bw,52,GP.i>=GP.order.length-1?"FINAL STANDINGS":"NEXT RACE",
-   ()=>{scene="standings"},{fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:20});
+  if(!GP.counted){order.forEach((k,i)=>{GP.pts[k.c.id]=(GP.pts[k.c.id]||0)+(GP_POINTS[i]||0)});
+   GP.counted=true}
+  const y1=U.bot-U.bh;tableBot=y1-U.gap;
+  btn(bx,y1,bw,U.bh,GP.i>=GP.order.length-1?"FINAL STANDINGS":"NEXT RACE",
+   ()=>{scene="standings"},{fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(20,U.bh*0.42)});
  }else{
-  btn(W/2-bw/2,H*0.78,bw,50,"RACE AGAIN",()=>{startRace(R.ti,pickChar);scene="race"},
-   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:20});
-  btn(W/2-bw/2,H*0.78+60,bw,42,"PICK ANOTHER TRACK",()=>{scene="tracks"},{size:16});
+  const y2=U.bot-U.sh,y1=y2-U.gap-U.bh;tableBot=y1-U.gap;
+  btn(bx,y1,bw,U.bh,"RACE AGAIN",()=>{startRace(R.ti,pickChar);scene="race"},
+   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(20,U.bh*0.42)});
+  btn(bx,y2,bw,U.sh,"PICK ANOTHER TRACK",()=>{scene="tracks"},{size:Math.min(16,U.sh*0.38)});
  }
+ const titleY=clamp(H*0.09,26,62)+SAFE.t;
+ textFit(me===1?"YOU WON!":me<=3?"ON THE PODIUM":"RACE OVER",
+  W/2,titleY,Math.min(38,W*0.08),me===1?"#ffd23f":"#fff",W-120);
+ placeTable(order.map(k=>({c:k.c,me:k===R.player,
+   right:GP?"+"+(GP_POINTS[order.indexOf(k)]||0):(k.best?fmtTime(k.best):"-"),
+   rcol:GP?"#8affa0":"rgba(255,255,255,0.7)"})),
+  titleY+clamp(H*0.05,18,32),tableBot);
  drawButtons();
 }
 function drawStandings(){
  drawBackdrop();
+ const U=uiSizes();
  const last=GP.i>=GP.order.length-1;
- textFit(last?"CUP FINISHED":"AFTER RACE "+(GP.i+1),W/2,H*0.12,Math.min(32,W*0.07),"#ffd23f",W*0.86);
  const rows=RACERS.slice().sort((a,b)=>(GP.pts[b.id]||0)-(GP.pts[a.id]||0));
- const rowH=Math.min(30,(H*0.52)/rows.length);
- const y0=H*0.22,wI=Math.min(320,W*0.8),x0=W/2-wI/2;
- rows.forEach((C,i)=>{const y=y0+i*rowH;
-  if(C.id===pickChar){cx.fillStyle="rgba(255,210,60,0.16)";rr(cx,x0-6,y-rowH/2+2,wI+12,rowH-3,7);cx.fill()}
-  text(String(i+1),x0+14,y,Math.min(17,rowH*0.6),i===0?"#ffd23f":"#fff");
-  cx.fillStyle=C.body;rr(cx,x0+30,y-6,12,12,3);cx.fill();
-  textFit(C.name,x0+50,y,Math.min(16,rowH*0.56),C.id===pickChar?"#ffd23f":"#fff",wI*0.5,"left");
-  text(String(GP.pts[C.id]||0),x0+wI-14,y,Math.min(16,rowH*0.56),"#8affa0","right")});
  buttons=[];
- const bw=Math.min(260,W*0.66);
+ const bw=Math.min(300,W*0.7),bx=W/2-bw/2;
+ const y1=U.bot-U.bh;
+ let tableBot=y1-U.gap;
  if(last){
   const won=rows[0].id===pickChar;
-  textFit(won?"You won the cup!":rows[0].name+" won the cup.",W/2,H*0.76,
+  if(!GP.saved){GP.saved=true;
+   if(won){const cups=store.get("cups",{});cups.gp=(cups.gp||0)+1;store.set("cups",cups)}}
+  const lineY=y1-U.gap-12;tableBot=lineY-16;
+  textFit(won?"You won the cup!":rows[0].name+" won the cup.",W/2,lineY,
    Math.min(20,W*0.042),won?"#ffd23f":"rgba(255,255,255,0.8)",W*0.86);
-  if(won){const cups=store.get("cups",{});cups["gp"]=(cups["gp"]||0)+1;store.set("cups",cups)}
-  btn(W/2-bw/2,H*0.83,bw,50,"BACK TO TITLE",()=>{GP=null;scene="title"},
-   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:19});
+  btn(bx,y1,bw,U.bh,"BACK TO TITLE",()=>{GP=null;scene="title"},
+   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(19,U.bh*0.4)});
  }else{
-  btn(W/2-bw/2,H*0.8,bw,52,"NEXT RACE",()=>{GP.i++;startRace(GP.order[GP.i],pickChar);scene="race"},
-   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:20});
+  btn(bx,y1,bw,U.bh,"NEXT RACE",()=>{GP.i++;startRace(GP.order[GP.i],pickChar);scene="race"},
+   {fill:"rgba(255,122,42,0.9)",stroke:"rgba(255,220,160,0.9)",size:Math.min(20,U.bh*0.42)});
  }
+ const titleY=clamp(H*0.09,26,62)+SAFE.t;
+ textFit(last?"CUP FINISHED":"AFTER RACE "+(GP.i+1),W/2,titleY,Math.min(32,W*0.07),"#ffd23f",W-120);
+ placeTable(rows.map(C=>({c:C,me:C.id===pickChar,
+   right:String(GP.pts[C.id]||0),rcol:"#8affa0"})),
+  titleY+clamp(H*0.05,18,32),tableBot);
  drawButtons();
+}
+// One table for both the finishing order and the cup standings, fitted into
+// whatever height is left between the heading and the buttons.
+function placeTable(rows,top,bot){
+ const n=rows.length;
+ const rowH=Math.max(16,Math.min(32,(bot-top)/n));
+ const wI=Math.min(340,W*0.86),x0=W/2-wI/2;
+ const fz=Math.min(16,rowH*0.56);
+ const y0=top+Math.max(0,(bot-top-n*rowH)/2)+rowH/2;
+ rows.forEach((r,i)=>{
+  const y=y0+i*rowH;
+  if(r.me){cx.fillStyle="rgba(255,210,60,0.16)";rr(cx,x0-6,y-rowH/2+2,wI+12,rowH-3,7);cx.fill()}
+  text(String(i+1),x0+14,y,fz,i===0?"#ffd23f":"#fff");
+  cx.fillStyle=r.c.body;rr(cx,x0+30,y-fz*0.38,fz*0.76,fz*0.76,3);cx.fill();
+  const rw=Math.max(52,wI*0.22);
+  textFit(r.c.name,x0+38+fz,y,fz,r.me?"#ffd23f":"#fff",wI-56-fz-rw,"left");
+  textFit(r.right,x0+wI-12,y,fz*0.92,r.rcol,rw-14,"right")});
+}
+// Wrap a short line of text over at most a couple of rows rather than
+// shrinking it until it is unreadable or letting it run off the card.
+function wrapText(str,x,y,size,col,maxw,maxLines,align){
+ cx.font="600 "+size+"px sans-serif";
+ const words=str.split(" "),lines=[];let line="";
+ for(const w of words){const t=line?line+" "+w:w;
+  if(cx.measureText(t).width>maxw&&line){lines.push(line);line=w;
+   if(lines.length===maxLines-1)continue}
+  else line=t}
+ if(line)lines.push(line);
+ while(lines.length>maxLines)lines.pop();
+ lines.forEach((l,i)=>textFit(l,x,y+i*size*1.25,size,col,maxw,align,"600"));
 }
 // ---------------------------------------------------------------- loop
 function onKey(code){
