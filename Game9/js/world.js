@@ -320,6 +320,71 @@ export class World {
     g.userData = { legL, legR, armL, armR, head, body, t: Math.random() * 10, walk: 0 };
     return g;
   }
+  // ---- ambient life: people walking their own routes, traffic, and birds
+  // A path is a list of [x, z] corners walked as a loop.
+  pathWalker(path, t) {
+    let total = 0; const segs = [];
+    for (let i = 0; i < path.length; i++) {
+      const a = path[i], b = path[(i + 1) % path.length];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      segs.push({ a, b, len, at: total }); total += len;
+    }
+    const d = ((t % total) + total) % total;
+    const sg = segs.find(q => d < q.at + q.len) || segs[segs.length - 1];
+    const u = sg.len ? (d - sg.at) / sg.len : 0;
+    return { x: sg.a[0] + (sg.b[0] - sg.a[0]) * u, z: sg.a[1] + (sg.b[1] - sg.a[1]) * u,
+      yaw: Math.atan2(sg.b[0] - sg.a[0], sg.b[1] - sg.a[1]), total };
+  }
+  crowd(path, n, o) {
+    o = o || {};
+    const skins = o.skins || [0xf1d2b8, 0xc9946a, 0x8a5a3a, 0x6b4226, 0xe8b890, 0xf3ddc4];
+    const coats = o.coats || [0x2a4a7a, 0x8a3a3a, 0x3a6a4a, 0x6a4a8a, 0xb8860b, 0x3a3a44, 0xc0603a];
+    for (let i = 0; i < n; i++) {
+      const look = { coat: coats[(i * 3 + 1) % coats.length], skin: skins[(i * 5 + 2) % skins.length],
+        trousers: [0x2a2a33, 0x4a3a2a, 0x33405a][i % 3], hair: [0x1a1a1a, 0x4a2a12, 0x6a5a3a][(i * 2) % 3], faces: false };
+      if (o.hat && i % 3 === 0) look.hat = o.hat;
+      const rec = this.addPerson("walker" + i, path[0][0], path[0][1], 0, look);
+      rec.walk = 1;
+      const speed = (o.speed || 1.15) * (0.82 + (i % 5) * 0.09);
+      const off = (i / n) * 1000 + (i % 3) * 7;
+      this.updaters.push(dt => {
+        const p = this.pathWalker(path, off + this.t * speed);
+        rec.grp.position.set(p.x, 0, p.z); rec.grp.rotation.y = p.yaw;
+        rec.x = p.x; rec.z = p.z;
+      });
+    }
+  }
+  traffic(path, n, o) {
+    o = o || {};
+    const cols = o.colors || [0xd94f3d, 0x2a6fdb, 0xe8e4dc, 0x2a2a30, 0xf0b429, 0x3f7a5a];
+    for (let i = 0; i < n; i++) {
+      const g = o.build ? o.build.call(this, i) : this.car(0, 0, 0, cols[i % cols.length], o.carOpts);
+      const speed = (o.speed || 7) * (0.85 + (i % 4) * 0.1);
+      const off = (i / n) * 1000;
+      this.updaters.push(dt => {
+        const p = this.pathWalker(path, off + this.t * speed);
+        g.position.set(p.x, o.y || 0, p.z); g.rotation.y = p.yaw;
+      });
+    }
+  }
+  birds(x, y, z, r, n, o) {
+    o = o || {};
+    const m = new THREE.MeshBasicMaterial({ color: o.color === undefined ? 0x2a2a2a : o.color });
+    const g = new THREE.Group(); g.position.set(x, y, z); this.scene.add(g);
+    const wings = [];
+    for (let i = 0; i < n; i++) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(o.size || 0.5, 0.04, 0.1), m);
+      b.position.set(Math.sin(i * 2.3) * r * 0.4, Math.cos(i * 1.9) * 2.2, Math.cos(i * 2.7) * r * 0.4);
+      g.add(b); wings.push(b);
+    }
+    const sp = o.speed || 0.25;
+    this.updaters.push(dt => {
+      g.rotation.y = this.t * sp;
+      g.position.y = y + Math.sin(this.t * 0.5) * 1.6;
+      wings.forEach((b, i) => { b.rotation.z = Math.sin(this.t * 7 + i) * 0.7; });
+    });
+    return g;
+  }
   addPerson(id, x, z, ry, o, label) {
     const p = this.person(o); p.position.set(x, 0, z); p.rotation.y = ry || 0; this.scene.add(p);
     const rec = { id, grp: p, x, z, faces: o.faces !== false, walk: 0 };

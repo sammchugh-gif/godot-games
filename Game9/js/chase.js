@@ -32,6 +32,18 @@ function vehicle(kind) {
     box(1.3, 0.4, 0.08, M(0x2a3038, 0.2), 0, 1.15, -1.05);
     const eng = box(0.8, 0.5, 0.7, M(0x2a2a30, 0.4), 0, 0.8, 2.4);
     for (const x of [-0.5, 0.5]) box(0.26, 0.14, 0.08, new THREE.MeshBasicMaterial({ color: 0xff3b30 }), x, 0.62, 2.52);
+  } else if (kind === "jetpack") {
+    const skin = M(0xf1d2b8), coat = M(0x2a1a3a);
+    box(0.5, 0.8, 0.3, coat, 0, 1.1, 0);                       // torso
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 10, 8), skin); head.position.set(0, 1.68, 0); g.add(head);
+    box(0.44, 0.18, 0.2, M(0x1a1a1a), 0, 1.74, 0.04);          // dark glasses and hair
+    for (const sx of [-1, 1]) { box(0.16, 0.62, 0.16, coat, sx * 0.32, 1.1, 0); box(0.17, 0.7, 0.17, coat, sx * 0.14, 0.42, 0); }
+    box(0.46, 0.6, 0.26, M(0x8a8f98, 0.3), 0, 1.12, -0.28);    // the pack
+    for (const sx of [-1, 1]) {
+      const n = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 0.3, 8), M(0x4a4f58, 0.3)); n.position.set(sx * 0.3, 0.86, -0.28); g.add(n);
+      const fl = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.8, 8), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0.85 }));
+      fl.position.set(sx * 0.3, 0.4, -0.28); fl.rotation.x = Math.PI; g.add(fl); (g.userData.flames = g.userData.flames || []).push(fl);
+    }
   } else {  // a van
     const body = M(0xe8eef2); box(2.1, 1.7, 4.6, body, 0, 1.15, 0);
     box(2.0, 0.5, 0.1, M(0x2a3038, 0.2), 0, 1.55, -2.3);
@@ -63,6 +75,27 @@ function hazard(kind) {
     const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd166 })); lamp.position.y = 1.6; g.add(lamp);
   } else if (kind === "piling") {
     for (let i = 0; i < 3; i++) { const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 2.2, 7), M(0x4a3a2a)); p2.position.set((i - 1) * 0.34, 0.9, (i % 2) * 0.3); p2.rotation.z = (i - 1) * 0.05; g.add(p2); }
+  } else if (kind === "balloon") {
+    const b2 = new THREE.Mesh(new THREE.SphereGeometry(1.5, 14, 11), M(0xe63946, 0.5)); b2.position.y = 1.5; b2.scale.y = 1.2; g.add(b2);
+    const bk = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 0.8), M(0x8a5a2a)); bk.position.y = -0.9; g.add(bk);
+    for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 4), M(0x2a2a2a)); r.position.set(sx, -0.2, sz); g.add(r); }
+  } else if (kind === "drone") {
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.7), M(0x23262c, 0.4)); b2.position.y = 0.6; g.add(b2);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2b3c })); eye.position.set(0, 0.44, 0.2); g.add(eye);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), M(0x33363c)); arm.position.set(sx * 0.5, 0.62, sz * 0.5); g.add(arm);
+      const rot = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.02, 10), new THREE.MeshBasicMaterial({ color: 0xbfc6d0, transparent: true, opacity: 0.35 }));
+      rot.position.set(sx * 0.5, 0.7, sz * 0.5); g.add(rot);
+    }
+  } else if (kind === "flock") {
+    for (let i = 0; i < 7; i++) {
+      const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.14), M(0x2a2a2a));
+      b2.position.set(Math.sin(i * 2.1) * 1.5, Math.cos(i * 1.7) * 1.0, Math.sin(i * 3.3) * 1.2);
+      b2.rotation.z = Math.sin(i) * 0.5; g.add(b2);
+    }
+  } else if (kind === "banner") {
+    for (const sx of [-1, 1]) { const m2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.5, 6), M(0x5a5f68, 0.4)); m2.position.set(sx * 2.2, 0, 0); g.add(m2); }
+    const cloth = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.3, 0.06), M(0xd94f3d, 0.9)); cloth.position.y = 1.1; g.add(cloth);
   } else {  // a puddle or ice patch: still a hit, just flatter
     const c = new THREE.Mesh(new THREE.CircleGeometry(0.8, 14), new THREE.MeshBasicMaterial({ color: 0x7fdcff, transparent: true, opacity: 0.45 }));
     c.rotation.x = -Math.PI / 2; c.position.y = 0.03; g.add(c);
@@ -76,7 +109,7 @@ export class Chase extends MG {
     super(G, m);
     this.needsWorld = true;
     this.sub = "STAY ON THEM";
-    this.instr = "Drag left and right to steer. Keep the road clear and you will close the gap.";
+    this.instr = "Drag to steer. Keep it clean and you will close the gap.";
     this.slipAllow = 2;
     this.quarryKind = this.params.quarry || "van";
     this.rideKind = this.params.ride || "taxi";
@@ -88,14 +121,18 @@ export class Chase extends MG {
     this.penalty = L(this, 6, 7, 8, 9);           // metres lost on a scrape
     this.nHaz = 9; this.spacing = L(this, 17, 14, 12, 10);   // metres between hazards
     this.v = L(this, 13, 14, 15, 16);
-    this.s = 0; this.lat = 0; this.steer = 0; this.drag = null;
+    this.air = this.params.surface === "air";
+    this.altRange = this.params.altRange || 5.5;              // how far up or down the pack can push
+    this.s = 0; this.lat = 0; this.alt = 0; this.steer = 0; this.lift = 0; this.drag = null;
     this.hit = 0; this.hits = 0; this.shake = 0; this.wonT = 0;
   }
   start() {
     const w = this.G.world;
     this.saved = { x: w.player.x, z: w.player.z, yaw: w.player.yaw, pitch: w.player.pitch, eye: w.player.eye, roll: w.player.roll };
+    // from up here the ground plane's edge is visible, so bring the haze in
+    if (this.air && w.scene.fog) { this.savedFog = { near: w.scene.fog.near, far: w.scene.fog.far }; w.scene.fog.near = 45; w.scene.fog.far = 230; }
     this.root = new THREE.Group(); w.scene.add(this.root);
-    const pts = (this.params.path || [[-10, 0], [10, 0], [10, 10], [-10, 10]]).map(([x, z]) => new THREE.Vector3(x, 0, z));
+    const pts = (this.params.path || [[-10, 0], [10, 0], [10, 10], [-10, 10]]).map(p => p.length > 2 ? new THREE.Vector3(p[0], p[1], p[2]) : new THREE.Vector3(p[0], 0, p[1]));
     this.curve = new THREE.CatmullRomCurve3(pts, true, "catmullrom", 0.4);
     this.len = this.curve.getLength();
     // the vehicle ahead
@@ -106,6 +143,12 @@ export class Chase extends MG {
     for (let i = 0; i < this.nHaz; i++) { this.haz.push(this.newHazard(this.frontS)); this.frontS += this.spacing; }
     // the road itself, laid along the route, plus something to line it with
     this.buildRoad();
+    // in the air the line is shown by rings to fly through
+    if (this.air) {
+      this.rings = [];
+      const rm = new THREE.MeshBasicMaterial({ color: 0x7fdcff, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false });
+      for (let i = 0; i < 9; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(4.6, 0.16, 6, 22), rm); this.root.add(r); this.rings.push(r); }
+    }
     // chevrons showing the racing line
     this.chev = [];
     const cm = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0.5, depthWrite: false });
@@ -133,6 +176,7 @@ export class Chase extends MG {
   // a ribbon of road along the route, kerb posts, and roadside dressing, so the
   // chase always has somewhere to be rather than borrowing the city's pavements
   buildRoad() {
+    if (this.air) return this.buildCityBelow();
     if (this.params.surface === "water") return this.buildChannel();
     const N = Math.max(64, Math.round(this.len / 2)), W = HALF + 1.1;
     const pos = [], uv = [], idx = [];
@@ -170,6 +214,34 @@ export class Chase extends MG {
       }
       if (side !== "none" && d % 16 < 8) for (const off of [-(W + 4.5), W + 4.5]) this.root.add(this.roadside(side, a2.p.x + a2.r.x * off, a2.p.z + a2.r.z * off, d));
     }
+  }
+  // Seen from a rocket backpack, a scene built for walking is a small island on
+  // a very large empty plane. This lays a carpet of rooftops under the flight
+  // path so there is a city down there. Two instanced meshes, so two draw calls.
+  buildCityBelow() {
+    const c = this.params.cityBelow; if (!c) return;
+    const n = c.count || 220, walls = [], roofs = [];
+    let made = 0, tries = 0;
+    while (made < n && tries < n * 12) {
+      tries++;
+      const a2 = rnd(0, TAU), rr = c.r0 + Math.sqrt(rnd(0, 1)) * (c.r1 - c.r0);
+      const x = c.cx + Math.cos(a2) * rr, z = c.cz + Math.sin(a2) * rr;
+      if (c.maxZ !== undefined && z > c.maxZ) continue;      // keep off the part you can walk
+      const w = rnd(7, 13), d = rnd(7, 13), h = rnd(5, c.maxH || 11);
+      walls.push({ x, z, w, d, h }); roofs.push({ x, z, w, d, h }); made++;
+    }
+    const wallM = new THREE.MeshStandardMaterial({ color: c.wall || 0xd8cbb4, roughness: 0.95 });
+    const roofM = new THREE.MeshStandardMaterial({ color: c.roof || 0x4a5460, roughness: 0.8 });
+    const box = new THREE.BoxGeometry(1, 1, 1);
+    const wi = new THREE.InstancedMesh(box, wallM, made), ri = new THREE.InstancedMesh(box, roofM, made);
+    wi.receiveShadow = true; ri.receiveShadow = true;
+    const m4 = new THREE.Matrix4();
+    walls.forEach((b, i) => {
+      m4.makeScale(b.w, b.h, b.d); m4.setPosition(b.x, b.h / 2, b.z); wi.setMatrixAt(i, m4);
+      m4.makeScale(b.w + 0.6, 0.5, b.d + 0.6); m4.setPosition(b.x, b.h + 0.25, b.z); ri.setMatrixAt(i, m4);
+    });
+    wi.instanceMatrix.needsUpdate = true; ri.instanceMatrix.needsUpdate = true;
+    this.root.add(wi); this.root.add(ri);
   }
   // a marked channel down the middle of open water
   buildChannel() {
@@ -216,30 +288,33 @@ export class Chase extends MG {
     const w = this.G.world;
     if (this.root) { w.scene.remove(this.root); this.root.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); this.root = null; }
     for (const i of this.hidden || []) if (i.grp) i.grp.visible = true;
+    if (this.savedFog && w.scene.fog) { w.scene.fog.near = this.savedFog.near; w.scene.fog.far = this.savedFog.far; this.savedFog = null; }
     if (this.saved) { Object.assign(w.player, this.saved); w.player.eye = this.saved.eye; w.player.roll = 0; w.updateCamera(); }
   }
   newHazard(s) {
     const kind = pick(this.hazards);
     const g = hazard(kind); this.root.add(g);
-    return { s, lat: rnd(-HALF + 0.7, HALF - 0.7), g, kind };
+    return { s, lat: rnd(-HALF + 0.7, HALF - 0.7), alt: this.air ? rnd(-this.altRange + 1, this.altRange - 1) : 0, g, kind };
   }
   at(s) {
     const u = ((s % this.len) + this.len) % this.len / this.len;
     const p = this.curve.getPointAt(u), t = this.curve.getTangentAt(u);
     const r = new THREE.Vector3(-t.z, 0, t.x).normalize();
-    return { p, t, r, yaw: Math.atan2(-t.x, -t.z) };
+    const flat = Math.hypot(t.x, t.z) || 1;
+    return { p, t, r, yaw: Math.atan2(-t.x / flat, -t.z / flat), climb: Math.atan2(t.y, flat) };
   }
   place(dt) {
     const w = this.G.world, me = this.at(this.s);
     w.player.x = me.p.x + me.r.x * this.lat;
     w.player.z = me.p.z + me.r.z * this.lat;
     w.player.yaw = me.yaw - this.steer * 0.16;
-    w.player.pitch = -0.03 + (this.shake > 0 ? Math.sin(this.t * 40) * 0.02 : 0);
-    w.player.roll = -this.steer * 0.05 + (this.shake > 0 ? Math.sin(this.t * 33) * 0.02 : 0);
-    w.player.eye = this.eye;
+    w.player.pitch = (this.air ? me.climb + this.lift * 0.12 : -0.03) + (this.shake > 0 ? Math.sin(this.t * 40) * 0.02 : 0);
+    w.player.roll = -this.steer * (this.air ? 0.16 : 0.05) + (this.shake > 0 ? Math.sin(this.t * 33) * 0.02 : 0);
+    w.player.eye = this.air ? me.p.y + this.alt + this.eye : this.eye;
     // the vehicle ahead, weaving a little
     const q = this.at(this.s + this.gap), qlat = Math.sin(this.s * 0.06) * 1.5;
-    this.quarry.position.set(q.p.x + q.r.x * qlat, 0, q.p.z + q.r.z * qlat);
+    const qalt = this.air ? q.p.y + Math.sin(this.s * 0.09) * 1.8 : 0;
+    this.quarry.position.set(q.p.x + q.r.x * qlat, qalt, q.p.z + q.r.z * qlat);
     this.quarry.rotation.y = q.yaw;
     // keep the tail lights readable however far ahead they are
     const far = clamp(this.gap / 70, 0, 1), pulse = 0.75 + Math.sin(this.t * 6) * 0.25;
@@ -251,11 +326,20 @@ export class Chase extends MG {
     }
     for (const h of this.haz) {
       const a = this.at(h.s);
-      h.g.position.set(a.p.x + a.r.x * h.lat, 0, a.p.z + a.r.z * h.lat);
+      h.g.position.set(a.p.x + a.r.x * h.lat, this.air ? a.p.y + h.alt : 0, a.p.z + a.r.z * h.lat);
       h.g.rotation.y = a.yaw;
       h.g.visible = h.s > this.s - 6 && h.s < this.s + 110;
     }
-    this.chev.forEach((c, i) => {
+    if (this.air) {
+      this.rings.forEach((r, i) => {
+        const rs = this.s + 16 + i * 13, a = this.at(rs);
+        r.position.set(a.p.x, a.p.y, a.p.z);
+        r.rotation.set(a.climb, a.yaw, 0);
+        r.material.opacity = 0.42;
+      });
+      for (const c of this.chev) c.visible = false;
+      if (this.quarry.userData.flames) for (const f of this.quarry.userData.flames) f.scale.y = 0.8 + Math.sin(this.t * 22 + f.position.x) * 0.3;
+    } else this.chev.forEach((c, i) => {
       const cs = this.s + 12 + i * 7, a = this.at(cs);
       c.position.set(a.p.x, 0.06, a.p.z); c.rotation.z = -a.yaw;
       c.material.opacity = 0.5;
@@ -267,11 +351,18 @@ export class Chase extends MG {
     this.shake = Math.max(0, this.shake - dt);
     this.hit = Math.max(0, this.hit - dt);
     const k = this.G.input.keys;
-    let st = this.steer;
-    if (this.drag) st = this.drag.s;
-    else if (k.KeyA || k.ArrowLeft) st = -1; else if (k.KeyD || k.ArrowRight) st = 1; else st = 0;
+    let st = 0, li = 0;
+    if (this.drag) { st = this.drag.s; li = this.drag.l; }
+    else {
+      if (k.KeyA || k.ArrowLeft) st = -1; else if (k.KeyD || k.ArrowRight) st = 1;
+      if (k.KeyW || k.ArrowUp) li = 1; else if (k.KeyS || k.ArrowDown) li = -1;
+    }
     this.steer += (st - this.steer) * Math.min(1, dt * 9);
     this.lat = clamp(this.lat + this.steer * 7.5 * dt, -HALF, HALF);
+    if (this.air) {
+      this.lift += (li - this.lift) * Math.min(1, dt * 8);
+      this.alt = clamp(this.alt + this.lift * 6.5 * dt, -this.altRange, this.altRange);
+    }
     const speed = this.hit > 0 ? this.v * 0.45 : this.v;
     this.s += speed * dt;
     // close the gap only while driving cleanly
@@ -279,7 +370,7 @@ export class Chase extends MG {
     // scrapes
     for (const h of this.haz) {
       if (h.hitT) continue;
-      if (Math.abs(h.s - this.s) < 1.7 && Math.abs(h.lat - this.lat) < 1.25) {
+      if (Math.abs(h.s - this.s) < 1.7 && Math.abs(h.lat - this.lat) < 1.25 && (!this.air || Math.abs(h.alt - this.alt) < 1.6)) {
         h.hitT = 1; this.hit = 0.9; this.shake = 0.5; this.hits++; this.miss();
         this.gap = Math.min(this.gap0, this.gap + this.penalty);
         SFX.clunk();
@@ -290,10 +381,14 @@ export class Chase extends MG {
     if (this.gap <= 0.01) { this.say("Got them! Pull over.", true, 2.2); this.win(); }
     this.place(dt);
   }
-  down(x, y, id) { if (this.done) return; this.drag = { id, x0: x, s: 0 }; }
-  move(x, y, id) { if (this.drag && this.drag.id === id) this.drag.s = clamp((x - this.drag.x0) / (110 * this.G.s), -1, 1); }
+  down(x, y, id) { if (this.done) return; this.drag = { id, x0: x, y0: y, s: 0, l: 0 }; }
+  move(x, y, id) {
+    if (!this.drag || this.drag.id !== id) return;
+    this.drag.s = clamp((x - this.drag.x0) / (110 * this.G.s), -1, 1);
+    this.drag.l = clamp((this.drag.y0 - y) / (100 * this.G.s), -1, 1);
+  }
   up(x, y, id) { if (this.drag && this.drag.id === id) this.drag = null; }
-  hint() { return "Look as far up the road as you can, not at the bonnet. Pick your side early and hold it; the gap only closes while you are clean."; }
+  hint() { return this.air ? "Fly through the rings and you are on her line. Pick your gap early, up or down as well as left or right, and hold it." : "Look as far up the road as you can, not at the bonnet. Pick your side early and hold it; the gap only closes while you are clean."; }
   solve() { this.gap = 0; this.say("Got them! Pull over.", true, 2.2); this.win(); }
   draw(g, W, H, s) {
     const closed = 1 - this.gap / this.gap0;
@@ -317,12 +412,20 @@ export class Chase extends MG {
     g.fillStyle = "rgba(255,255,255,.12)"; rrect(g, bx, by, bw, 16 * s, 8 * s); g.fill();
     g.fillStyle = this.gap < 20 ? "#2ecc71" : "#ffd166"; rrect(g, bx, by, Math.max(10 * s, bw * clamp(closed, 0, 1)), 16 * s, 8 * s); g.fill();
     text(g, this.hits ? `${this.hits} scrape${this.hits === 1 ? "" : "s"}` : "clean", px + pw / 2, py + 68 * s, 12 * s, this.hits ? "#ff8a8a" : "#2ecc71", "center", 700, MONO);
-    // steering
+    // steering, and the throttle when flying
     const cy = H - 92 * s, cw2 = 150 * s;
     g.strokeStyle = "rgba(255,255,255,.16)"; g.lineWidth = 3 * s;
     g.beginPath(); g.moveTo(W / 2 - cw2, cy); g.lineTo(W / 2 + cw2, cy); g.stroke();
     g.fillStyle = "rgba(255,209,102,.9)"; g.beginPath(); g.arc(W / 2 + this.steer * cw2, cy, 15 * s, 0, TAU); g.fill();
-    text(g, "STEER", W / 2, cy + 34 * s, 12 * s, "rgba(255,255,255,.45)", "center", 800, MONO);
+    text(g, this.air ? "STEER  ·  DRAG UP AND DOWN TO CLIMB AND DIVE" : "STEER", W / 2, cy + 34 * s, 12 * s, "rgba(255,255,255,.45)", "center", 800, MONO);
+    if (this.air) {
+      const bx2 = W - 54 * s, by2 = H / 2 - 90 * s, bh2 = 180 * s;
+      g.fillStyle = "rgba(6,10,16,.6)"; rrect(g, bx2 - 12 * s, by2, 24 * s, bh2, 12 * s); g.fill();
+      const u = clamp(0.5 - this.alt / (this.altRange * 2), 0, 1);
+      g.fillStyle = "rgba(127,220,255,.95)"; g.beginPath(); g.arc(bx2, by2 + u * bh2, 9 * s, 0, TAU); g.fill();
+      text(g, "UP", bx2, by2 - 10 * s, 11 * s, "rgba(255,255,255,.45)", "center", 800, MONO);
+      text(g, "DOWN", bx2, by2 + bh2 + 18 * s, 11 * s, "rgba(255,255,255,.45)", "center", 800, MONO);
+    }
     this.drawMsg(g, W, H, s);
   }
 }

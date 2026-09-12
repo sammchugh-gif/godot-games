@@ -19,7 +19,7 @@ for (const r of routes) {
     __spy.debug.startMission(r.ci, r.mi);
     const w = __spy.world, mg = __spy.mg;
     if (!mg || !mg.curve) return { noCurve: true };
-    const curve = mg.curve, len = mg.len, HALF = 3.4;
+    const curve = mg.curve, len = mg.len, HALF = 3.4, AIR = !!mg.air, ALT = mg.altRange || 0;
     const hits = [], outs = [];
     const solid = (x, z) => {
       for (const c of w.colliders) if (Math.abs(x - c.x) < c.hw + 0.5 && Math.abs(z - c.z) < c.hd + 0.5) return "box";
@@ -35,15 +35,20 @@ for (const r of routes) {
       const rx = -t.z, rz = t.x;
       for (const off of [-HALF, -HALF / 2, 0, HALF / 2, HALF]) {
         const x = p.x + rx * off, z = p.z + rz * off;
+        // above the rooftops there is nothing to hit but the landmark itself
+        if (AIR && p.y - ALT > 18) { far = Math.max(far, Math.max(0, x - B.x1, B.x0 - x, z - B.z1, B.z0 - z)); if (Math.abs(x) > EDGE || Math.abs(z) > EDGE) outs.push([+d.toFixed(0), +off.toFixed(1), +x.toFixed(1), +z.toFixed(1)]); continue; }
         far = Math.max(far, Math.max(0, x - B.x1, B.x0 - x, z - B.z1, B.z0 - z));
         if (Math.abs(x) > EDGE || Math.abs(z) > EDGE) { outs.push([+d.toFixed(0), +off.toFixed(1), +x.toFixed(1), +z.toFixed(1)]); continue; }
         const s2 = solid(x, z); if (s2) hits.push([+d.toFixed(0), +off.toFixed(1), +x.toFixed(1), +z.toFixed(1), s2]);
       }
     }
-    return { len: +len.toFixed(1), hits: hits.slice(0, 10), nHits: hits.length, outs: outs.slice(0, 6), nOuts: outs.length, bounds: B, far: +far.toFixed(0) };
+    let loY = 1e9, hiY = -1e9;
+    for (let d = 0; d < len; d += 2) { const y = curve.getPointAt((d % len) / len).y; loY = Math.min(loY, y); hiY = Math.max(hiY, y); }
+    return { len: +len.toFixed(1), hits: hits.slice(0, 10), nHits: hits.length, outs: outs.slice(0, 6), nOuts: outs.length, bounds: B, far: +far.toFixed(0), air: AIR, loY: +loY.toFixed(0), hiY: +hiY.toFixed(0) };
   }, r);
   if (res.noCurve) { bad++; console.log("BAD", r.id, "chase did not build a route"); continue; }
   const okLen = res.len > 90;
+  if (res.air) console.log(`   (flight path, ${res.loY}-${res.hiY} m above the ground)`);
   if (res.nHits || res.nOuts || !okLen) {
     bad++;
     console.log(`BAD ${r.id} (${r.city}) len=${res.len}m  solid=${res.nHits}  outOfBounds=${res.nOuts}`);

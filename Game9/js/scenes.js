@@ -83,6 +83,10 @@ SCENES.london = function () {
 
   this.station("getaway", -20, 1, "crate", 0xffd166, "The river steps");
 
+  // ambient life
+  this.crowd([[4, -1], [24, -1], [24, 7], [4, 7]], 5, { speed: 1.1, hat: "flatcap" });
+  this.birds(2, 20, 4, 9, 7, { speed: 0.22 });
+
   return { x: -4, z: 3, yaw: -0.5, bounds: { x0: -32, x1: 38, z0: -5, z1: 16 } };
 };
 
@@ -158,6 +162,10 @@ SCENES.venice = function () {
   this.bug(-19.0, 0.09, 2.8);
   this.bug(21.6, 0.09, 5.2);
   this.bug(-9.4, 0.09, 9.2);
+
+  // ambient life
+  this.crowd([[7, -3], [27, -3], [27, 6], [7, 6]], 5, { speed: 1.0 });
+  this.birds(0, 17, -2, 10, 7, { color: 0xe8e8e8, speed: 0.3 });
 
   return { x: 0, z: 4, yaw: 0.2, bounds: { x0: -31, x1: 29, z0: -5.2, z1: 12 } };
 };
@@ -264,6 +272,10 @@ SCENES.cairo = function () {
   this.bug(25.2, 0.09, 7.0);
   this.bug(-28.4, 0.09, -2.6);
 
+  // ambient life
+  this.crowd([[7, -5], [33, -5], [33, 5], [7, 5]], 4, { speed: 1.0, hat: "scarf" });
+  this.birds(6, 22, -2, 12, 5, { speed: 0.16 });
+
   return { x: 0, z: 4, yaw: 0.15, bounds: { x0: -31, x1: 36, z0: -13.2, z1: 12 } };
 };
 
@@ -341,6 +353,11 @@ SCENES.tokyo = function () {
   this.bug(6.4, 0.09, -17.2);
   this.bug(-9.8, 0.09, -16.8);
 
+  // ambient life
+  this.crowd([[-3, -17], [9, -17], [9, -3], [-3, -3]], 5, { speed: 1.25 });
+  this.traffic([[-31, 22], [32, 22], [32, 26], [-31, 26]], 4, { speed: 8 });
+  this.birds(0, 19, -4, 8, 4, { speed: 0.28 });
+
   return { x: 0, z: 9, yaw: 0, bounds: { x0: -11.5, x1: 11.5, z0: -19, z1: 12 } };
 };
 
@@ -394,6 +411,11 @@ SCENES.newyork = function () {
   this.bug(8.6, 0.09, 2.4);
   this.bug(-5.4, 0.09, -22.2);
   this.bug(-11.2, 0.09, -21.6);
+
+  // ambient life
+  this.crowd([[-11, -22], [11, -22], [11, 3], [-11, 3]], 5, { speed: 1.3, hat: "trilby" });
+  this.traffic([[-33, 26], [33, 26], [33, 30], [-33, 30]], 4, { speed: 9, colors: [0xf0b429, 0xf0b429, 0x2a2a30, 0xf0b429] });
+  this.birds(0, 21, -6, 9, 6, { speed: 0.26 });
 
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -13, x1: 13, z0: -24, z1: 16 } };
 };
@@ -468,6 +490,10 @@ SCENES.rio = function () {
   this.bug(10.4, 0.09, -9.4);
   this.bug(22.6, 0.09, 1.4);
 
+  // ambient life
+  this.crowd([[7, -10], [23, -10], [23, 4], [7, 4]], 5, { speed: 1.05 });
+  this.birds(4, 18, -6, 11, 7, { color: 0xf0f0f0, speed: 0.3 });
+
   return { x: 0, z: 2, yaw: 0.3, bounds: { x0: -23, x1: 30, z0: -18, z1: 6 } };
 };
 
@@ -541,6 +567,9 @@ SCENES.siberia = function () {
   this.bug(-10.4, 0.09, -17.2);
   this.bug(-15.6, 0.09, -17.0);
   this.bug(10.4, 0.09, -17.2);
+
+  // ambient life
+  this.crowd([[-17, -10], [17, -10], [17, 2], [-17, 2]], 3, { speed: 0.85, hat: "ushanka" });
 
   return { x: 0, z: 9, yaw: 0, bounds: { x0: -19, x1: 19, z0: -18.8, z1: 14.5 } };
 };

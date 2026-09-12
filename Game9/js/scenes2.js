@@ -65,11 +65,17 @@ SCENES.paris = function () {
   this.station("louvre", 22, -2, "laser", 0x7fdcff, "The glass pyramid");
   this.station("panel", 38, 8, "keypad", 0xffd166, "The lantern's disarm panel");
   this.station("tower", -34, -8, "camera", 0x7fdcff, "The Eiffel Tower deck");
+  this.station("rooftop", -28, -12, "laser", 0xff7bd0, "The rooftop launch pad");
   this.addPerson("colette", -14, 5.5, Math.PI, { coat: 0x8a1a2a, hair: 0x3a2a1a, skin: 0xf1d2b8, trousers: 0x222222 }, "Colette");
   // UMBRA left three of these behind
   this.bug(-19.4, 0.09, 6.2);
   this.bug(20.6, 0.09, -1.2);
   this.bug(36.6, 0.09, 7.2);
+
+  // ambient life
+  this.crowd([[12, 5], [42, 5], [42, 11], [12, 11]], 5, { speed: 1.05, hat: "beret" });
+  this.traffic([[-58, -19], [64, -19], [64, -15], [-58, -15]], 4, { speed: 8 });
+  this.birds(-6, 19, 0, 10, 6, { speed: 0.24 });
 
   return { x: -10, z: 4, yaw: 0.35, bounds: { x0: -38, x1: 44, z0: -13, z1: 13 } };
 };
@@ -133,6 +139,10 @@ SCENES.kenya = function () {
   this.bug(-20.6, 0.09, -4.0);
   this.bug(28.6, 0.09, -9.6);
 
+  // ambient life
+  this.crowd([[2, -24], [38, -24], [38, -4], [2, -4]], 3, { speed: 0.95, hat: "cap" });
+  this.birds(0, 24, -6, 14, 6, { speed: 0.12 });
+
   return { x: 2, z: 9, yaw: 0.2, bounds: { x0: -36, x1: 43, z0: -26, z1: 16 } };
 };
 
@@ -182,6 +192,11 @@ SCENES.india = function () {
   this.bug(-28.6, 0.09, -8.8);
 
   this.station("dash", -7, 4.5, "crate", 0xffd166, "Priya's tuk-tuk, engine running");
+
+  // ambient life
+  this.crowd([[-32, -11], [12, -11], [12, -3], [-32, -3]], 6, { speed: 1.1 });
+  this.traffic([[-54, 18], [54, 18], [54, 22], [-54, 22]], 4, { speed: 7.5 });
+  this.birds(-4, 20, -8, 11, 6, { speed: 0.2 });
 
   return { x: 0, z: 8, yaw: 0, bounds: { x0: -34, x1: 34, z0: -27, z1: 12 } };
 };
@@ -245,6 +260,11 @@ SCENES.china = function () {
   this.bug(20.6, 0.09, 9.4);
   this.bug(-12.6, 0.09, -10.8);
 
+  // ambient life
+  this.crowd([[-16, -11], [28, -11], [28, -3], [-16, -3]], 5, { speed: 1.0 });
+  this.traffic([[-48, 20], [50, 20], [50, 24], [-48, 24]], 3, { speed: 7 });
+  this.birds(4, 21, -6, 12, 5, { color: 0xf4f4f4, speed: 0.18 });
+
   return { x: -2, z: 9, yaw: -0.55, bounds: { x0: -28, x1: 30, z0: -21, z1: 14 } };
 };
 
@@ -298,6 +318,11 @@ SCENES.australia = function () {
   this.bug(-32.6, 0.09, 5.4);
   this.bug(-13.4, 0.09, -12.4);
 
+  // ambient life
+  this.crowd([[-36, -14], [8, -14], [8, -3], [-36, -3]], 5, { speed: 1.15 });
+  this.traffic([[-58, 14], [50, 14], [50, 18], [-58, 18]], 3, { speed: 8 });
+  this.birds(-8, 18, -8, 12, 7, { color: 0xf2f2f2, speed: 0.3 });
+
   return { x: 0, z: 6, yaw: 0.2, bounds: { x0: -38, x1: 30, z0: -18, z1: 8 } };
 };
 
@@ -341,6 +366,11 @@ SCENES.mexico = function () {
   this.bug(14.6, 0.09, -16.2);
 
   this.station("jeep", 8, 6.5, "crate", 0xffd166, "Diego's jeep, engine running");
+
+  // ambient life
+  this.crowd([[-20, -16], [24, -16], [24, -3], [-20, -3]], 5, { speed: 1.0, hat: "boater" });
+  this.traffic([[-54, 19], [54, 19], [54, 23], [-54, 23]], 3, { speed: 7 });
+  this.birds(0, 23, -10, 13, 5, { speed: 0.15 });
 
   return { x: 0, z: 10, yaw: 0, bounds: { x0: -34, x1: 34, z0: -18, z1: 13 } };
 };
@@ -392,6 +422,10 @@ SCENES.alps = function () {
   this.bug(1.4, 0.09, -9.8);
   this.bug(10.6, 0.09, -5.0);
   this.bug(-16.6, 0.09, -22.8);
+
+  // ambient life
+  this.crowd([[-24, -22], [20, -22], [20, 1], [-24, 1]], 3, { speed: 0.9, hat: "ushanka" });
+  this.birds(-2, 26, -8, 12, 4, { speed: 0.14 });
 
   return { x: 0, z: 8, yaw: 0, bounds: { x0: -26, x1: 28, z0: -24.5, z1: 14 } };
 };
