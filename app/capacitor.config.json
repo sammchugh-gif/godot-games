@@ -1,0 +1,14 @@
+{
+  "appId": "io.github.sammchugh.arcade",
+  "appName": "Arcade",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0a0c14",
+    "scrollEnabled": false,
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}

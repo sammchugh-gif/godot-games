@@ -1,0 +1,19 @@
+{
+  "name": "srd-arcade",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Star Swarm, Slime Storm and Dungeon Dash, as one iOS app.",
+  "scripts": {
+    "build": "node ../tools/build-app.mjs",
+    "icons": "node ../tools/make-icon.mjs && npx @capacitor/assets generate --ios",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "@capacitor/assets": "3.0.5"
+  }
+}
