@@ -4,7 +4,7 @@ This is the plan the game is built from. Every line of dialogue, every piece
 of intel and every mission in `js/story.js` comes from here. If the two ever
 disagree, this file is the intent and the code is the bug.
 
-The game is two acts, fourteen countries and fifty-nine missions. Every
+The game is two acts, fourteen countries and sixty missions. Every
 country is one 3D scene with four mission stations, in order. Every mission
 is a mini-game that wins a piece of intel, and the intel is the thread that
 names the next station or the next country.
@@ -221,13 +221,28 @@ spy watch shows the count for the city you are in, the dossier the total.
 
 ## The chase missions
 
-Three missions are chases rather than puzzles, for a change of tempo: a night
-launch down the Thames after Kolya in London, Priya's tuk-tuk after a courier
-van in Agra, and a jeep around the pyramid in Chichen Itza. Each lays its own
-route through the city it is set in, verified clear of anything solid by
-`tools/routecheck.mjs`. Drag left and right to steer; the gap to the vehicle
-ahead closes only while the driving is clean, and every scrape hands some of
-it back. There is no timer and no way to lose, only to take longer.
+Four missions are chases rather than puzzles, for a change of tempo: a night
+launch down the Thames after Kolya in London, a rocket backpack after Madame
+Eclipse around the Eiffel Tower, Priya's tuk-tuk after a courier van in Agra,
+and a jeep around the pyramid in Chichen Itza. Each lays its own route through
+the city it is set in, verified clear of anything solid by
+`tools/routecheck.mjs`. Drag left and right to steer, and in the air up and
+down to climb and dive. The gap to the quarry closes only while the driving is
+clean, and every scrape hands some of it back. There is no timer and no way to
+lose, only to take longer.
+
+The air chase also lays a Paris of its own under the flight path, because a
+scene built for walking is a small island on a very large empty plane when you
+see it from fifty metres up.
+
+## Living cities
+
+Every city has people walking their own routes, seven have traffic passing
+outside the barriers, and thirteen have birds overhead. The routes were found
+by search rather than by eye: the largest clear rectangle in each city that
+also stays seven metres clear of where the player lands. `tools/lifecheck.mjs`
+runs the clock forward two full laps in all fourteen to confirm nobody walks
+through a wall or into the player.
 
 ## Controls
 
