@@ -328,9 +328,17 @@ window.__shelfInput=()=>"stick "+(touch.id<0?"free":"held#"+touch.id);
 // straight back, which is why MUSIC would not turn off.
 let lastTouchAt=0;
 const ghostMouse=()=>performance.now()-lastTouchAt<900;
-window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();if(!stillDown(e))touch.id=-1;
+// A fresh finger always takes the stick. The old rule kept the first finger
+// until the browser said it had lifted, so a touchend eaten by a system gesture
+// - a swipe up for Control Centre, a notification - left the stick held by a
+// finger that was not on the glass any more, and because the browser still
+// listed that finger nothing could ever claim it back. Tapping again is exactly
+// what a child does when it stops answering, so let tapping again fix it.
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioInit();
+ if(touch.id===99){touch.id=-1;mouseDown=false}
+ if(!stillDown(e))touch.id=-1;
  for(const t of e.changedTouches){if(onMenu(t.target))continue;const p=rectPos(t.clientX,t.clientY);if(uiTap(p))continue;
-  if(touch.id<0){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
+  touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}},{passive:false});
 window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id){const p=rectPos(t.clientX,t.clientY);touch.x=p.x;touch.y=p.y}},{passive:false});
 function tend(e){lastTouchAt=performance.now();for(const t of e.changedTouches)if(t.identifier===touch.id)touch.id=-1;if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
@@ -338,7 +346,16 @@ window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
 cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y});
 window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y}});
-window.addEventListener("mouseup",()=>{mouseDown=false;if(touch.id===99)touch.id=-1});
+function mouseRelease(){mouseDown=false;if(touch.id===99)touch.id=-1}
+window.addEventListener("mouseup",mouseRelease);
+// A press whose release never arrives - it happened outside the window, or the
+// browser synthesised the press on its own - used to pin the stick for good.
+window.addEventListener("pointerup",mouseRelease);
+window.addEventListener("pointercancel",mouseRelease);
+window.addEventListener("dragend",mouseRelease);
+document.addEventListener("mouseleave",mouseRelease);
+// and if the buttons are genuinely up, stop pretending otherwise
+window.addEventListener("mousemove",e=>{if(mouseDown&&e.buttons===0)mouseRelease()});
 function stickVec(){let x=0,y=0;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;if(keys.KeyW||keys.ArrowUp)y-=1;if(keys.KeyS||keys.ArrowDown)y+=1;
  if(touch.id>=0){const dx=touch.x-touch.ox,dy=touch.y-touch.oy,d=Math.hypot(dx,dy),R=60;if(d>8){const m=Math.min(d,R)/R;x=dx/d*m;y=dy/d*m}}
  const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}return{x,y,l:Math.min(l,1)}}
