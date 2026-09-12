@@ -92,6 +92,7 @@ cd Game9
 node tools/shoot.mjs /tmp/shots scenes    # screenshots of every scene and screen
 node tools/playtest.mjs /tmp/playtest      # plays the whole game with the solvers
 node tools/gametest.mjs /tmp/gametest      # starts and solves every mission's mini-game directly
+node tools/savecheck.mjs                   # from the repo root: progress survives reloads and older saves still load
 ```
 
 Both use the Chromium that Playwright installs and a software renderer, so
