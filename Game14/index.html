@@ -149,7 +149,7 @@ const wheel={id:-1,ox:0,x:0,v:0};
 const pads={drift:{id:-1,down:false,hit:0},item:{id:-1,down:false,hit:0}};
 let padRects={drift:null,item:null};
 let buttons=[],mouseDown=false;
-const STEER_R=78;
+const STEER_R=46;
 function padAt(p){for(const k in padRects){const r=padRects[k];if(!r)continue;
  if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)return k}return null}
 function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
@@ -215,7 +215,7 @@ function glow(x,y,r,col){cx.drawImage(glowSprite(col),x-r,y-r,r*2,r*2)}
 // line of a few hundred evenly spaced points, and everything else - the
 // picture of the track, where the road ends, how far round you are, the line
 // the computer drivers follow - is read off that one line.
-const WORLD=2048,TEX=2048;
+const WORLD=2900,TEX=2048;
 function catmull(p0,p1,p2,p3,t){const t2=t*t,t3=t2*t;
  return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3)}
 function fitCtrl(ctrl,margin){
@@ -229,7 +229,7 @@ function fitCtrl(ctrl,margin){
  return ctrl.map(p=>[p[0]*sc+ox,p[1]*sc+oy]);
 }
 function buildLine(ctrl0,step){
- const ctrl=fitCtrl(ctrl0,500);
+ const ctrl=fitCtrl(ctrl0,400);
  const n=ctrl.length,raw=[];
  for(let i=0;i<n;i++){
   const p0=ctrl[(i-1+n)%n],p1=ctrl[i],p2=ctrl[(i+1)%n],p3=ctrl[(i+2)%n];
@@ -256,81 +256,100 @@ function buildLine(ctrl0,step){
  return{pts:out,len:total,step:total/N};
 }
 
+const TOP_SPEED=318;
 const TRACKS=[
- {id:"bay",name:"SUNSHINE BAY",sub:"Wide, fast, and the sea on both sides.",laps:3,
+ {id:"bay",name:"SUNSHINE BAY",sub:"Wide, fast, and the sea on both sides.",laps:5,
   road:"#4a4f5e",roadEdge:"#3a3e4b",ground:"#e4c98a",ground2:"#d8b874",
   kerbA:"#e03a3a",kerbB:"#f4f4f4",rough:"#c9a65e",
   sky:["#ffd48a","#ff9a5a","#f06a7a"],sun:"#fff0b0",hill:"#7a4a6a",fog:"#ffb98a",beyond:"#2f86c8",
-  roadHalf:132,tree:"palm",trees:50,
-  ctrl:[[1024,300],[1500,380],[1760,700],[1700,1100],[1440,1300],[1500,1600],
-        [1200,1780],[820,1740],[560,1540],[640,1220],[420,1000],[520,640]]},
- {id:"ruins",name:"JUNGLE RUINS",sub:"Tight corners under the trees.",laps:3,
+  roadHalf:142,tree:"palm",trees:64,
+  ctrl:[[1024,260],[1480,300],[1800,520],[1840,880],[1600,1060],[1760,1300],
+        [1700,1620],[1380,1800],[1020,1760],[860,1500],[1060,1300],[820,1140],
+        [520,1240],[360,960],[520,660],[760,420]]},
+ {id:"ruins",name:"JUNGLE RUINS",sub:"Tight corners under the trees.",laps:5,
   road:"#3f4450",roadEdge:"#2f3440",ground:"#2f7a3c",ground2:"#276a33",
   kerbA:"#f0c020",kerbB:"#1b1f26",rough:"#1f5a2a",
   sky:["#8fd8ff","#5fb0e8","#3a80c0"],sun:"#ffffff",hill:"#2a5a3a",fog:"#a8d8b0",beyond:"#1d4a26",
-  roadHalf:116,tree:"jungle",trees:58,
-  ctrl:[[1024,320],[1420,420],[1560,760],[1320,920],[1560,1180],[1520,1520],
-        [1140,1700],[840,1560],[900,1240],[620,1140],[480,820],[640,480]]},
- {id:"volcano",name:"VOLCANO PEAK",sub:"Narrow, hot, and it wants you off the edge.",laps:3,
-  road:"#3a3238",roadEdge:"#2a2428",ground:"#2a1a18",ground2:"#38201c",
-  kerbA:"#ff5a2a",kerbB:"#20161a",rough:"#4a2018",
+  roadHalf:126,tree:"jungle",trees:72,
+  ctrl:[[1024,280],[1400,340],[1700,560],[1520,820],[1780,1000],[1820,1340],
+        [1520,1540],[1560,1800],[1180,1880],[900,1700],[1040,1420],[740,1300],
+        [880,1020],[560,900],[420,600],[700,380]]},
+ {id:"volcano",name:"VOLCANO PEAK",sub:"Narrow, hot, and it wants you off the edge.",laps:5,
+  road:"#45404c",roadEdge:"#302b36",ground:"#1d1210",ground2:"#281614",
+  kerbA:"#ff5a2a",kerbB:"#20161a",rough:"#35170f",
   sky:["#3a1830","#7a2a2a","#d04a20"],sun:"#ffcf6a",hill:"#1a1014",fog:"#c05a30",beyond:"#1a0c0a",
-  roadHalf:104,tree:"rock",trees:54,
-  ctrl:[[1024,300],[1380,360],[1680,600],[1560,900],[1720,1180],[1500,1480],
-        [1180,1660],[880,1620],[700,1380],[900,1140],[560,980],[440,620],[700,400]]},
+  roadHalf:114,tree:"rock",trees:68,
+  ctrl:[[1024,250],[1360,290],[1660,460],[1820,740],[1620,940],[1840,1160],
+        [1760,1480],[1420,1600],[1480,1860],[1100,1900],[860,1720],[980,1440],
+        [660,1360],[820,1080],[520,940],[380,620],[640,360]]},
 ];
 // The picture of the circuit, painted once when the race loads: ground, the
 // road stroked along the line, kerbs down both edges, and the start line.
+// It is drawn in world coordinates and squeezed onto a TEX-square canvas, so
+// the world can be bigger than the picture without falling off the edge of it.
+const TSC=TEX/WORLD;
 function bakeTrack(T,line){
  const P=line.pts,N=P.length,RH=T.roadHalf;
+ let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+ P.forEach(p=>{minx=Math.min(minx,p.x);maxx=Math.max(maxx,p.x);
+  miny=Math.min(miny,p.y);maxy=Math.max(maxy,p.y)});
  const path=(g,off)=>{g.beginPath();
   for(let i=0;i<=N;i++){const p=P[i%N];
    const x=p.x+(off?p.nx*off:0),y=p.y+(off?p.ny*off:0);
    if(i)g.lineTo(x,y);else g.moveTo(x,y)}
   g.closePath()};
  const full=bake(TEX,TEX,(g)=>{
-  g.fillStyle=T.ground;g.fillRect(0,0,TEX,TEX);
-  // ground texture: patches of the second shade, then speckle
-  for(let i=0;i<260;i++){const x=Math.random()*TEX,y=Math.random()*TEX,r=rnd(40,190);
+  g.scale(TSC,TSC);              // everything below is in world units
+  g.fillStyle=T.ground;g.fillRect(0,0,WORLD,WORLD);
+  for(let i=0;i<300;i++){const x=Math.random()*WORLD,y=Math.random()*WORLD,r=rnd(50,240);
    g.fillStyle=hexA(T.ground2,0.5);g.beginPath();g.ellipse(x,y,r,r*rnd(0.5,1),Math.random()*TAU,0,TAU);g.fill()}
-  for(let i=0;i<3000;i++){g.fillStyle=Math.random()<0.5?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.07)";
-   g.fillRect(Math.random()*TEX,Math.random()*TEX,rnd(2,7),rnd(2,7))}
-  if(T.id==="bay"){ // the sea, and wet sand where it meets the beach
-   const SEA=170;
-   g.fillStyle="#2f86c8";g.fillRect(0,0,TEX,SEA);g.fillRect(0,TEX-SEA,TEX,SEA);
-   g.fillRect(0,0,SEA,TEX);g.fillRect(TEX-SEA,0,SEA,TEX);
-   g.fillStyle="#5aa8d8";
-   [[0,0,TEX,34],[0,TEX-34,TEX,34],[0,0,34,TEX],[TEX-34,0,34,TEX]].forEach(r=>g.fillRect(r[0],r[1],r[2],r[3]));
-   g.fillStyle="rgba(255,255,255,0.35)";
-   for(let i=0;i<160;i++){const x=Math.random()*TEX,y=Math.random()*TEX;
-    if(x>SEA+40&&x<TEX-SEA-40&&y>SEA+40&&y<TEX-SEA-40)continue;
-    g.fillRect(x,y,rnd(22,66),4)}}
-  if(T.id==="volcano"){ // cracks with light in them
+  for(let i=0;i<3400;i++){g.fillStyle=Math.random()<0.5?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.07)";
+   g.fillRect(Math.random()*WORLD,Math.random()*WORLD,rnd(3,9),rnd(3,9))}
+  if(T.id==="bay"){
+   // the sea is everything outside the circuit's own footprint, so no amount
+   // of running wide can put a kart in the water
+   const pad=RH+330,x0=minx-pad,y0=miny-pad,x1=maxx+pad,y1=maxy+pad;
+   g.save();
+   g.beginPath();g.rect(-40,-40,WORLD+80,WORLD+80);
+   rr(g,x0,y0,x1-x0,y1-y0,300);
+   g.fillStyle="#2f86c8";g.fill("evenodd");
+   g.beginPath();g.rect(-40,-40,WORLD+80,WORLD+80);
+   rr(g,x0-52,y0-52,x1-x0+104,y1-y0+104,340);
+   g.fillStyle="#5aa8d8";g.fill("evenodd");
+   g.restore();
+   g.strokeStyle="rgba(255,255,255,0.35)";g.lineWidth=5;
+   for(let i=0;i<70;i++){const a=Math.random()*TAU,rr2=rnd(0.94,1.14);
+    g.save();g.translate((x0+x1)/2,(y0+y1)/2);
+    g.beginPath();g.moveTo(Math.cos(a)*(x1-x0)/2*rr2,Math.sin(a)*(y1-y0)/2*rr2);
+    g.lineTo(Math.cos(a+0.035)*(x1-x0)/2*rr2,Math.sin(a+0.035)*(y1-y0)/2*rr2);
+    g.stroke();g.restore()}}
+  if(T.id==="volcano"){
    g.strokeStyle="rgba(255,90,30,0.5)";
-   for(let i=0;i<70;i++){let x=Math.random()*TEX,y=Math.random()*TEX;
-    g.lineWidth=rnd(2,7);g.beginPath();g.moveTo(x,y);
-    for(let j=0;j<6;j++){x+=rnd(-60,60);y+=rnd(-60,60);g.lineTo(x,y)}g.stroke()}}
+   for(let i=0;i<80;i++){let x=Math.random()*WORLD,y=Math.random()*WORLD;
+    g.lineWidth=rnd(3,9);g.beginPath();g.moveTo(x,y);
+    for(let j=0;j<6;j++){x+=rnd(-80,80);y+=rnd(-80,80);g.lineTo(x,y)}g.stroke()}}
   g.lineJoin="round";g.lineCap="round";
   // a dirt apron so leaving the road is a gradual mistake, not a cliff
-  g.strokeStyle=T.rough;g.lineWidth=(RH+46)*2;path(g);g.stroke();
-  g.strokeStyle=T.kerbA;g.lineWidth=(RH+13)*2;path(g);g.stroke();
-  // the kerb stripes, dashed along the outside of the road
-  g.save();g.setLineDash([34,34]);g.strokeStyle=T.kerbB;g.lineWidth=26;
-  path(g,RH+6);g.stroke();g.setLineDash([34,34]);g.lineDashOffset=34;
-  path(g,-(RH+6));g.stroke();g.restore();
+  g.strokeStyle=T.rough;g.lineWidth=(RH+52)*2;path(g);g.stroke();
+  g.strokeStyle=T.kerbA;g.lineWidth=(RH+14)*2;path(g);g.stroke();
+  g.save();g.setLineDash([38,38]);g.strokeStyle=T.kerbB;g.lineWidth=28;
+  path(g,RH+7);g.stroke();g.setLineDash([38,38]);g.lineDashOffset=38;
+  path(g,-(RH+7));g.stroke();g.restore();
   g.strokeStyle=T.roadEdge;g.lineWidth=RH*2;path(g);g.stroke();
-  g.strokeStyle=T.road;g.lineWidth=(RH-9)*2;path(g);g.stroke();
-  // wear down the middle of the road, and a scatter of grit
+  g.strokeStyle=T.road;g.lineWidth=(RH-10)*2;path(g);g.stroke();
+  // wear down the racing line, and a dashed centre so the road has rhythm
   g.save();g.globalAlpha=0.16;g.strokeStyle="#000";g.lineWidth=RH*0.5;
   path(g,RH*0.42);g.stroke();path(g,-RH*0.42);g.stroke();g.restore();
+  g.save();g.setLineDash([54,74]);g.strokeStyle="rgba(255,255,255,0.16)";g.lineWidth=7;
+  path(g);g.stroke();g.restore();
   g.save();g.beginPath();g.lineWidth=RH*2;path(g);g.clip("nonzero");
-  for(let i=0;i<1400;i++){g.fillStyle=Math.random()<0.5?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.09)";
-   g.fillRect(Math.random()*TEX,Math.random()*TEX,rnd(2,6),rnd(2,6))}
+  for(let i=0;i<1600;i++){g.fillStyle=Math.random()<0.5?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.09)";
+   g.fillRect(Math.random()*WORLD,Math.random()*WORLD,rnd(3,8),rnd(3,8))}
   g.restore();
   // start line: a chequered band across the road
-  const s=P[0],ax=s.nx,ay=s.ny;
-  g.save();g.translate(s.x,s.y);g.rotate(Math.atan2(ay,ax));
-  const cols=11,cw=(RH*2)/cols,rows=3,chh=17;
+  const st=P[0];
+  g.save();g.translate(st.x,st.y);g.rotate(Math.atan2(st.ny,st.nx));
+  const cols=11,cw=(RH*2)/cols,rows=3,chh=19;
   for(let r=0;r<rows;r++)for(let i=0;i<cols;i++){
    g.fillStyle=((i+r)%2)?"#f4f4f4":"#1b1f26";
    g.fillRect(-RH+i*cw,-chh*rows/2+r*chh,cw+0.5,chh+0.5)}
@@ -351,17 +370,18 @@ function bakeTrack(T,line){
 // whole look: how much road you see, how far down the screen the kart sits,
 // and how wide the world is. The first pass had the camera almost on the
 // tarmac and the road filled the screen.
-const CAM_BACK=262,CAM_HEIGHT=140;
+const CAM_BACK=152,CAM_HEIGHT=80;
 const CAM={x:1024,y:300,a:0,h:CAM_HEIGHT,shake:0,roll:0};
-let FOC=1,HZY=0;
+let FOC=1,HZY=0,FOVP=1;
 function camSetup(){FOC=Math.max(190,Math.min(H*0.71,W*0.66));
+ FOC*=FOVP;
  HZY=H*(W>H?0.40:0.33)+CAM.roll}
 // The ground goes into a buffer of its own at about three-quarters size and
 // is blown back up. Nothing on a mode-seven floor has detail finer than that,
 // and it is the difference between running on a phone and not.
 let GB=null,GBc=null,GBw=0,GBh=0;
 function groundBuf(h){
- const q=FX?0.72:0.46;
+ const q=FX?0.84:0.5;
  const w=Math.max(1,Math.ceil(W*q)),hh=Math.max(1,Math.ceil(h*q));
  if(!GB||GBw!==w||GBh!==hh){GB=document.createElement("canvas");GB.width=w;GB.height=hh;
   GBc=GB.getContext("2d");GBw=w;GBh=hh}
@@ -383,8 +403,8 @@ function drawGround(T,tex){
   const sc=f/z,k=-CAM.h*f/(z*z);
   // pick a smaller copy of the picture when a screen pixel covers more than
   // one of its pixels; sampling the full 2048 for the far bands is waste
-  let m=0;while(m<3&&sc*(1<<(m+1))<=1.05)m++;
-  const t=tex[m],e=1<<m;
+  let m=0;while(m<3&&sc*(1<<(m+1))/TSC<=1.05)m++;
+  const t=tex[m],e=(1<<m)/TSC;
   const a11=-sc*sa*e,a12=k*ca*e,a21=sc*ca*e,a22=k*sa*e;
   const dx=W/2+sc*(CAM.x*sa-CAM.y*ca);
   const dyy=yc-k*z-k*(CAM.x*ca+CAM.y*sa);
@@ -397,9 +417,10 @@ function drawGround(T,tex){
  g.setTransform(1,0,0,1,0,0);
  cx.drawImage(GB,0,y0,W,gh);
  // haze, so the far end of the circuit fades out instead of stopping dead
- const gr=cx.createLinearGradient(0,yH,0,yH+H*0.3);
- gr.addColorStop(0,hexA(T.fog,0.92));gr.addColorStop(0.45,hexA(T.fog,0.3));gr.addColorStop(1,hexA(T.fog,0));
- cx.fillStyle=gr;cx.fillRect(0,yH,W,H*0.3);
+ const fh=H*0.17;
+ const gr=cx.createLinearGradient(0,yH-5,0,yH+fh);
+ gr.addColorStop(0,hexA(T.fog,0.88));gr.addColorStop(0.36,hexA(T.fog,0.3));gr.addColorStop(1,hexA(T.fog,0));
+ cx.fillStyle=gr;cx.fillRect(0,yH-5,W,fh+5);
 }
 // world point to screen. wz is height off the ground.
 function project(wx,wy,wz){
@@ -514,65 +535,107 @@ function head(g,C,x,y,r,view){
  if(C.robot){g.fillStyle="#ff5a2a";g.beginPath();g.arc(x,y-r*1.15,r*0.2,0,TAU);g.fill();
   g.strokeStyle="#8b93a6";g.lineWidth=r*0.12;g.beginPath();g.moveTo(x,y-r*0.95);g.lineTo(x,y-r*1.05);g.stroke()}
 }
+// The rear and three-quarter views are what you look at for a whole race, so
+// they get the detail: real wheels, a body with a lit edge, a driver with
+// shoulders, a wing and two exhausts.
+function kartBody(g,C,c,base,w1,w2,skew){
+ // w1 = half width at the back, w2 = half width at the shoulder line
+ g.fillStyle=shade(C.body,-0.42);
+ g.beginPath();g.moveTo(c-w1,base-2);g.lineTo(c+w1+skew,base-2);
+ g.lineTo(c+w2+skew,base-40);g.lineTo(c-w2,base-40);g.closePath();g.fill();
+ g.fillStyle=C.body;
+ g.beginPath();g.moveTo(c-w1+2,base-9);g.lineTo(c+w1-2+skew,base-9);
+ g.lineTo(c+w2-2+skew,base-44);g.lineTo(c-w2+2,base-44);g.closePath();g.fill();
+ g.fillStyle=shade(C.body,0.26);
+ g.beginPath();g.moveTo(c-w1+2,base-9);g.lineTo(c-w1+13,base-9);
+ g.lineTo(c-w2+12,base-44);g.lineTo(c-w2+2,base-44);g.closePath();g.fill();
+ g.fillStyle="rgba(0,0,0,0.22)";
+ g.beginPath();g.moveTo(c+w1-11+skew,base-9);g.lineTo(c+w1-2+skew,base-9);
+ g.lineTo(c+w2-2+skew,base-44);g.lineTo(c+w2-10+skew,base-44);g.closePath();g.fill();
+ g.fillStyle=C.trim;g.fillRect(c-w1+3,base-27,w1*2-6+skew,6);
+ g.fillStyle="#15171f";g.fillRect(c-w1,base-4,w1*2+skew,5);
+}
+function driverBack(g,C,x,y,r){
+ // shoulders either side of the helmet
+ g.fillStyle=shade(C.body,-0.5);rr(g,x-r*1.45,y+r*0.25,r*2.9,r*1.5,r*0.5);g.fill();
+ g.fillStyle=shade(C.body,-0.32);rr(g,x-r*1.45,y+r*0.25,r*1.1,r*1.5,r*0.5);g.fill();
+ // helmet
+ g.fillStyle=shade(C.helm,-0.3);g.beginPath();g.arc(x,y,r,Math.PI*0.92,TAU*1.04);g.closePath();g.fill();
+ g.fillStyle=C.helm;g.beginPath();g.arc(x,y-1,r*0.95,Math.PI,TAU);g.closePath();g.fill();
+ g.fillStyle=shade(C.helm,0.3);g.beginPath();g.arc(x-r*0.28,y-r*0.22,r*0.6,Math.PI,TAU);g.closePath();g.fill();
+ g.fillStyle="rgba(255,255,255,0.5)";ell(g,x-r*0.38,y-r*0.44,r*0.2,r*0.1);g.fill();
+ g.fillStyle=C.trim;rr(g,x-r,y-r*0.16,r*2,r*0.3,r*0.12);g.fill();
+ g.fillStyle=shade(C.helm,-0.45);rr(g,x-r*0.22,y-r*0.95,r*0.44,r*0.3,2);g.fill();
+ // whatever is under the helmet
+ g.fillStyle=C.hair;rr(g,x-r*0.62,y+r*0.12,r*1.24,r*0.4,r*0.18);g.fill();
+ if(C.horn){g.fillStyle="#ffe37a";[-1,1].forEach(sx=>{g.beginPath();
+  g.moveTo(x+sx*r*0.62,y-r*0.5);g.lineTo(x+sx*r*1.1,y-r*1.15);g.lineTo(x+sx*r*0.3,y-r*0.76);g.closePath();g.fill()})}
+ if(C.ears){g.fillStyle=C.helm;[-1,1].forEach(sx=>{g.beginPath();
+  g.moveTo(x+sx*r*0.45,y-r*0.6);g.lineTo(x+sx*r*0.82,y-r*1.3);g.lineTo(x+sx*r*1.02,y-r*0.45);g.closePath();g.fill()})}
+ if(C.knight){g.fillStyle="#e03a3a";g.beginPath();g.moveTo(x,y-r*0.98);
+  g.quadraticCurveTo(x+r*0.8,y-r*1.5,x+r*0.45,y-r*0.4);
+  g.quadraticCurveTo(x+r*0.2,y-r*0.95,x,y-r*0.98);g.closePath();g.fill()}
+ if(C.robot){g.fillStyle="#ff5a2a";g.beginPath();g.arc(x,y-r*1.22,r*0.2,0,TAU);g.fill();
+  g.strokeStyle="#8b93a6";g.lineWidth=r*0.13;g.beginPath();g.moveTo(x,y-r*0.98);g.lineTo(x,y-r*1.1);g.stroke()}
+}
 function kartSprite(C,view){
  return bake(KREF,KREF,(g)=>{
-  const c=KREF/2,base=KREF-16;
-  g.fillStyle="rgba(0,0,0,0.32)";ell(g,c,base+3,40,10);g.fill();
-  if(C.ghost){g.globalAlpha=0.86}
+  const c=KREF/2,base=KREF-14;
+  g.fillStyle="rgba(0,0,0,0.36)";ell(g,c,base+2,44,11);g.fill();
+  if(C.ghost)g.globalAlpha=0.86;
   if(view==="rear"||view==="front"){
    const frontV=view==="front";
-   tyre(g,c-40,base+2,26,30,6);tyre(g,c+40,base+2,26,30,6);
-   // body
-   g.fillStyle=shade(C.body,-0.3);g.beginPath();
-   g.moveTo(c-40,base-4);g.lineTo(c+40,base-4);g.lineTo(c+33,base-36);g.lineTo(c-33,base-36);g.closePath();g.fill();
-   g.fillStyle=C.body;g.beginPath();
-   g.moveTo(c-38,base-10);g.lineTo(c+38,base-10);g.lineTo(c+31,base-40);g.lineTo(c-31,base-40);g.closePath();g.fill();
-   g.fillStyle=shade(C.body,0.22);g.beginPath();
-   g.moveTo(c-38,base-10);g.lineTo(c-12,base-10);g.lineTo(c-16,base-40);g.lineTo(c-31,base-40);g.closePath();g.fill();
-   g.fillStyle=C.trim;g.fillRect(c-34,base-26,68,5);
-   // seat back and driver
-   g.fillStyle=shade(C.body,-0.45);rr(g,c-20,base-56,40,26,7);g.fill();
-   head(g,C,c,base-58,17,frontV?"front":"rear");
-   if(frontV){ // arms on the wheel
-    g.fillStyle=C.body;rr(g,c-26,base-46,14,9,4);g.fill();rr(g,c+12,base-46,14,9,4);g.fill();
-    g.fillStyle="#1b2230";g.lineWidth=4;g.strokeStyle="#1b2230";
-    g.beginPath();g.arc(c,base-42,12,0,TAU);g.stroke();
-   }else{ // exhausts and a spoiler
-    g.fillStyle="#8b93a6";rr(g,c-30,base-50,9,14,3);g.fill();rr(g,c+21,base-50,9,14,3);g.fill();
-    g.fillStyle=C.trim;rr(g,c-30,base-70,60,7,3);g.fill();
-    g.fillStyle=shade(C.body,-0.35);g.fillRect(c-24,base-68,6,12);g.fillRect(c+18,base-68,6,12);
-    g.fillStyle="#ff5a2a";rr(g,c-33,base-20,10,6,3);g.fill();rr(g,c+23,base-20,10,6,3);g.fill()}
-   // number plate
-   g.fillStyle="#f4f4f4";rr(g,c-13,base-22,26,13,3);g.fill();
+   tyre(g,c-46,base+3,30,36,8);tyre(g,c+46,base+3,30,36,8);
+   kartBody(g,C,c,base,42,33,0);
+   g.fillStyle="#f4f4f4";rr(g,c-15,base-24,30,15,3);g.fill();
+   g.fillStyle="rgba(0,0,0,0.25)";rr(g,c-15,base-24,30,4,2);g.fill();
+   if(frontV){
+    g.fillStyle=C.body;rr(g,c-30,base-50,16,10,5);g.fill();rr(g,c+14,base-50,16,10,5);g.fill();
+    g.strokeStyle="#1b2230";g.lineWidth=5;g.beginPath();g.arc(c,base-46,13,0,TAU);g.stroke();
+    g.fillStyle="#ffe9a0";rr(g,c-38,base-22,11,8,3);g.fill();rr(g,c+27,base-22,11,8,3);g.fill();
+    driverBack(g,C,c,base-62,19);
+    // a face, since this is the view that sees one
+    g.fillStyle="#1b2230";rr(g,c-13,base-70,26,10,4);g.fill();
+    g.fillStyle="rgba(150,220,255,0.55)";rr(g,c-11,base-68,10,5,2);g.fill();
+   }else{
+    // exhausts
+    g.fillStyle="#8b93a6";rr(g,c-33,base-56,11,17,4);g.fill();rr(g,c+22,base-56,11,17,4);g.fill();
+    g.fillStyle="#3a4150";rr(g,c-31,base-56,7,5,2);g.fill();rr(g,c+24,base-56,7,5,2);g.fill();
+    driverBack(g,C,c,base-64,19);
+    // wing on two posts
+    g.fillStyle=shade(C.body,-0.45);g.fillRect(c-24,base-78,6,14);g.fillRect(c+18,base-78,6,14);
+    g.fillStyle=shade(C.body,-0.2);rr(g,c-31,base-85,62,8,3);g.fill();
+    g.fillStyle=C.trim;rr(g,c-31,base-85,62,2.6,1.3);g.fill();
+    // tail lights
+    g.fillStyle="#ff5a2a";rr(g,c-38,base-20,12,7,3);g.fill();rr(g,c+26,base-20,12,7,3);g.fill();
+    g.fillStyle="rgba(255,200,160,0.7)";rr(g,c-38,base-20,12,2.5,1);g.fill();rr(g,c+26,base-20,12,2.5,1);g.fill();
+   }
   }else if(view==="side"){
-   tyre(g,c-34,base+2,30,32,7);
-   g.fillStyle=shade(C.body,-0.25);g.beginPath();
-   g.moveTo(c-52,base-6);g.lineTo(c+48,base-6);g.lineTo(c+44,base-26);g.lineTo(c+6,base-30);
-   g.lineTo(c-14,base-44);g.lineTo(c-44,base-40);g.closePath();g.fill();
+   tyre(g,c-36,base+3,32,36,8);
+   g.fillStyle=shade(C.body,-0.3);g.beginPath();
+   g.moveTo(c-54,base-4);g.lineTo(c+50,base-4);g.lineTo(c+46,base-28);g.lineTo(c+6,base-33);
+   g.lineTo(c-16,base-48);g.lineTo(c-46,base-44);g.closePath();g.fill();
    g.fillStyle=C.body;g.beginPath();
-   g.moveTo(c-50,base-10);g.lineTo(c+46,base-10);g.lineTo(c+42,base-26);g.lineTo(c+6,base-30);
-   g.lineTo(c-14,base-42);g.lineTo(c-42,base-38);g.closePath();g.fill();
-   g.fillStyle=C.trim;g.fillRect(c-48,base-22,92,5);
-   g.fillStyle=shade(C.body,-0.5);rr(g,c-30,base-56,24,26,7);g.fill();
-   head(g,C,c-14,base-58,17,"side");
-   g.fillStyle="#8b93a6";rr(g,c-46,base-50,10,13,3);g.fill();
-   g.fillStyle=C.trim;rr(g,c-50,base-68,26,7,3);g.fill();
-   tyre(g,c+34,base+2,30,32,7);
-  }else{ // three-quarters, the view you mostly see of the karts ahead
-   tyre(g,c-42,base+2,25,30,6);
-   tyre(g,c+30,base-2,22,26,6);
-   g.fillStyle=shade(C.body,-0.28);g.beginPath();
-   g.moveTo(c-46,base-4);g.lineTo(c+42,base-8);g.lineTo(c+34,base-32);g.lineTo(c-36,base-38);g.closePath();g.fill();
-   g.fillStyle=C.body;g.beginPath();
-   g.moveTo(c-44,base-10);g.lineTo(c+40,base-14);g.lineTo(c+32,base-36);g.lineTo(c-34,base-42);g.closePath();g.fill();
-   g.fillStyle=shade(C.body,0.2);g.beginPath();
-   g.moveTo(c-44,base-10);g.lineTo(c-18,base-12);g.lineTo(c-14,base-40);g.lineTo(c-34,base-42);g.closePath();g.fill();
-   g.fillStyle=C.trim;g.fillRect(c-40,base-26,76,5);
-   g.fillStyle=shade(C.body,-0.45);rr(g,c-24,base-58,38,26,7);g.fill();
-   head(g,C,c-5,base-60,17,"rear");
-   g.fillStyle="#8b93a6";rr(g,c-34,base-52,9,14,3);g.fill();rr(g,c+14,base-54,9,14,3);g.fill();
-   g.fillStyle=C.trim;rr(g,c-32,base-72,56,7,3);g.fill();
-   g.fillStyle="#ff5a2a";rr(g,c-36,base-20,10,6,3);g.fill();
+   g.moveTo(c-52,base-9);g.lineTo(c+48,base-9);g.lineTo(c+44,base-28);g.lineTo(c+6,base-33);
+   g.lineTo(c-16,base-46);g.lineTo(c-44,base-42);g.closePath();g.fill();
+   g.fillStyle=C.trim;g.fillRect(c-50,base-24,96,6);
+   g.fillStyle=shade(C.body,-0.5);rr(g,c-32,base-62,26,30,8);g.fill();
+   driverBack(g,C,c-16,base-64,18);
+   g.fillStyle="#8b93a6";rr(g,c-50,base-56,12,15,4);g.fill();
+   g.fillStyle=shade(C.body,-0.2);rr(g,c-54,base-78,30,8,3);g.fill();
+   g.fillStyle=C.trim;rr(g,c-54,base-78,30,2.6,1.3);g.fill();
+   tyre(g,c+36,base+3,32,36,8);
+  }else{ // three-quarters
+   tyre(g,c-46,base+3,28,34,7);
+   tyre(g,c+34,base-3,24,29,6);
+   kartBody(g,C,c-3,base,44,34,7);
+   g.fillStyle="#f4f4f4";rr(g,c-14,base-24,28,14,3);g.fill();
+   g.fillStyle="#8b93a6";rr(g,c-36,base-58,11,17,4);g.fill();rr(g,c+18,base-60,11,17,4);g.fill();
+   driverBack(g,C,c-4,base-66,19);
+   g.fillStyle=shade(C.body,-0.45);g.fillRect(c-26,base-80,6,14);g.fillRect(c+15,base-82,6,14);
+   g.fillStyle=shade(C.body,-0.2);rr(g,c-33,base-88,62,8,3);g.fill();
+   g.fillStyle=C.trim;rr(g,c-33,base-88,62,2.6,1.3);g.fill();
+   g.fillStyle="#ff5a2a";rr(g,c-40,base-20,12,7,3);g.fill();
   }
   g.globalAlpha=1;
  });
@@ -630,6 +693,17 @@ function bakeProps(){
    g.fillStyle="#1b1e26";rr(g,x-16,y-22,32,24,10);g.fill();
    g.fillStyle=i%2?"#e03a3a":"#f4f4f4";rr(g,x-16,y-22,32,6,4);g.fill();
    g.fillStyle="#2c313c";rr(g,x-9,y-16,18,12,5);g.fill()}});
+ ART.prop.post=bake(28,72,(g)=>{
+  g.fillStyle="rgba(0,0,0,0.3)";ell(g,14,68,9,4);g.fill();
+  g.fillStyle="#e8e8f0";rr(g,9,6,10,62,3);g.fill();
+  g.fillStyle="#ffffff";rr(g,9,6,4,62,2);g.fill();
+  g.fillStyle="#e03a3a";rr(g,9,20,10,13,2);g.fill();
+  g.fillStyle="#2a2f3c";rr(g,7,64,14,6,2);g.fill()});
+ ART.prop.postTall=bake(30,104,(g)=>{
+  g.fillStyle="rgba(0,0,0,0.3)";ell(g,15,100,10,4);g.fill();
+  g.fillStyle="#c8ccd8";rr(g,11,26,8,74,3);g.fill();
+  g.fillStyle="#ffd23f";rr(g,2,4,26,22,4);g.fill();
+  g.fillStyle="#1b1f26";g.beginPath();g.moveTo(8,20);g.lineTo(15,8);g.lineTo(22,20);g.closePath();g.fill()});
  ART.prop.sign=bake(96,120,(g)=>{
   g.fillStyle="rgba(0,0,0,0.28)";ell(g,48,116,20,6);g.fill();
   g.fillStyle="#7a808e";g.fillRect(43,52,10,62);
@@ -639,9 +713,9 @@ function bakeProps(){
  // the item box: a cube you drive through
  ART.prop.box=bake(112,112,(g,w)=>{
   const c=w/2;
-  g.fillStyle="rgba(120,220,255,0.13)";rr(g,c-42,c-42,84,84,14);g.fill();
-  g.strokeStyle="rgba(255,255,255,0.85)";g.lineWidth=5;rr(g,c-42,c-42,84,84,14);g.stroke();
-  g.fillStyle="rgba(255,255,255,0.2)";rr(g,c-36,c-36,30,30,8);g.fill();
+  g.fillStyle="rgba(90,190,240,0.42)";rr(g,c-40,c-40,80,80,14);g.fill();
+  g.strokeStyle="rgba(190,245,255,0.95)";g.lineWidth=6;rr(g,c-40,c-40,80,80,14);g.stroke();
+  g.fillStyle="rgba(255,255,255,0.3)";rr(g,c-34,c-34,26,26,7);g.fill();
   g.fillStyle="#ffd23f";g.font="bold 54px sans-serif";g.textAlign="center";g.textBaseline="middle";
   g.strokeStyle="#7a5400";g.lineWidth=5;g.strokeText("?",c,c+4);g.fillText("?",c,c+4)});
  // and the things that come out of it
@@ -710,7 +784,7 @@ function note(t,c){toast={txt:t,col:c||"#fff",t:0}}
 
 const lineCache={};
 function trackLine(T2){if(lineCache[T2.id])return lineCache[T2.id];
- return lineCache[T2.id]=buildLine(T2.ctrl,9)}
+ return lineCache[T2.id]=buildLine(T2.ctrl,12)}
 const texCache={};
 function trackTex(T2,line){if(texCache[T2.id])return texCache[T2.id];
  return texCache[T2.id]=bakeTrack(T2,line)}
@@ -745,9 +819,10 @@ function startRace(trackIdx,charId,laps){
  const grid=shuffle([me].concat(others));
  const karts=grid.map((C,i)=>makeKart(C,C.id!==me.id,i,line));
  const player=karts.find(k=>!k.ai);
- // top speed is set from the length of the circuit, so every track takes
- // about the same time to get round however big it is
- const top=line.len/27;
+ // A speed that feels right, rather than one derived from how long the
+ // circuit happens to be - that only ever guaranteed every track was
+ // equally slow.
+ const top=TOP_SPEED;
  karts.forEach(k=>{const cl=CLASSES[k.c.cls];
   k.top=top*cl.top;k.acc=cl.accel;k.grip=cl.grip});
  R={track:Tk,ti:trackIdx,line,tex,karts,player,laps:laps||Tk.laps,
@@ -773,6 +848,12 @@ function layoutTrack(){
   const i=Math.floor(N*(r+0.18)/3),p=P[i];
   if(Math.abs(p.curve)>0.09)continue;
   R.props.push({kind:"boost",x:p.x,y:p.y,a:p.a,w:130,h:74,pad:true})}
+ // A circuit that doubles back means a tree planted safely beside one
+ // straight can be standing in the middle of another. Check every prop
+ // against the whole line, not just the point it was placed from.
+ const onRoad=(x,y)=>{let best=1e18;
+  for(let i=0;i<N;i++){const dx=P[i].x-x,dy=P[i].y-y,d=dx*dx+dy*dy;if(d<best)best=d}
+  return best<(RH+78)*(RH+78)};
  const kind=T2.tree;
  for(let n=0;n<T2.trees;n++){
   const i=Math.floor(Math.random()*N),p=P[i];
@@ -781,11 +862,13 @@ function layoutTrack(){
   if(x<120||x>WORLD-120||y<120||y>WORLD-120)continue;
   let art=kind;
   const roll=Math.random();
-  if(roll<0.16)art="tyres";else if(roll<0.26)art="sign";
+  if(roll<0.07)art="tyres";else if(roll<0.14)art="sign";
   if(art==="tyres"||art==="sign"){ // these two hug the edge of the road
-   const near=(RH+rnd(30,62))*side;
-   R.props.push({kind:art,x:p.x+p.nx*near,y:p.y+p.ny*near,
-    solid:art==="tyres"});continue}
+   const near=(RH+rnd(76,126))*side;
+   const nx2=p.x+p.nx*near,ny2=p.y+p.ny*near;
+   if(!onRoad(nx2,ny2))R.props.push({kind:art,x:nx2,y:ny2,solid:art==="tyres"});
+   continue}
+  if(onRoad(x,y))continue;
   R.props.push({kind:art,x,y,h:art==="tyres"?46:art==="sign"?76:120,solid:art!=="sign"})}
 }
 // ---------------------------------------------------------------- driving
@@ -812,7 +895,7 @@ function stepKart(k,dt,input){
   if(!input.drift||k.sp<k.top*0.22){
    // let go and you get whatever you charged
    const tier=k.driftT>2.1?3:k.driftT>1.25?2:k.driftT>0.6?1:0;
-   if(tier){k.boost=Math.max(k.boost,0.42+tier*0.32);SFX.boost();
+   if(tier){k.boost=Math.max(k.boost,0.30+tier*0.26);SFX.boost();
     if(!k.ai){shake(4+tier*2,0.25);flash("rgba(255,255,255,0.16)",0.1)}}
    k.drift=0;k.driftT=0}
   else{k.driftT+=dt;
@@ -820,18 +903,25 @@ function stepKart(k,dt,input){
    st=clamp(k.driftDir*0.58+st*0.55,Math.min(0,k.driftDir),Math.max(0,k.driftDir))||k.driftDir*0.6}
  }
  const spF=clamp(k.sp/Math.max(1,k.top),0,1.4);
- const turn=st*2.3*k.grip*(0.35+0.65*Math.min(1,spF*1.7))*(k.drift?1.55:1);
+ const base=lerp(3.1,1.78,clamp(spF,0,1));
+ const turn=st*base*k.grip*(0.4+0.6*Math.min(1,spF*2.2))*(k.drift?1.6:1);
  k.a+=turn*dt;
+ // what the wheel is doing right now, smoothed just enough not to flicker.
+ // The kart is drawn from this rather than from its angle to the camera,
+ // because a camera that answers quickly leaves nothing to draw from.
+ k.vis=lerp(k.vis||0,st,Math.min(1,dt*15));
  const wantSlip=k.drift?-k.driftDir*0.46:0;
  k.slip=lerp(k.slip,wantSlip,Math.min(1,dt*(k.drift?5:8)));
  // speed
  let target=k.top*(rough?SURF.rough:1);
  if(k.star>0)target=k.top*1.22;
  if(k.shrunk>0)target*=0.66;
- if(k.boost>0){target=k.top*1.5;k.boost-=dt}
+ if(k.boost>0){target=k.top*1.46;k.boost-=dt;
+  if(!k.boosted){k.boosted=1;k.sp=Math.max(k.sp,k.top*1.22)}}
+ else k.boosted=0;
  if(R.state==="count")target=0;
  if(k.finished)target=k.top*0.45;
- const rate=(target>k.sp?5.2*k.acc:3.4);
+ const rate=(k.boost>0?15:target>k.sp?5.2*k.acc:3.4);
  k.sp=lerp(k.sp,target,Math.min(1,dt*rate));
  const dir=k.a+k.slip;
  k.x+=Math.cos(dir)*k.sp*dt;k.y+=Math.sin(dir)*k.sp*dt;
@@ -926,7 +1016,7 @@ function aiInput(k,dt){
   if(Math.abs(rel)<0.55)st+=(rel>0?-0.9:0.9)}
  st=clamp(st,-1,1);
  // drift through anything that needs more than a nudge of lock
- const drift=Math.abs(cAhead)>0.055&&k.sp>k.top*0.5&&Math.abs(st)>0.3;
+ const drift=Math.abs(cAhead)>0.078&&k.sp>k.top*0.52&&Math.abs(st)>0.34;
  // a rival a long way behind the player gets a little help, and one a long
  // way ahead eases off. Nobody gets so much as to make the race a formality.
  const gap=(k.prog-R.player.prog)/Math.max(1,N);
@@ -963,7 +1053,7 @@ function useItem(k){
  const it=k.item;if(!it)return;
  k.item=null;k.itemT=0;
  const dir=k.a;
- if(it==="mushroom"){k.boost=Math.max(k.boost,1.5);SFX.boost();
+ if(it==="mushroom"){k.boost=Math.max(k.boost,1.3);SFX.boost();
   if(!k.ai){shake(7,0.3);flash("rgba(255,255,255,0.2)",0.12)}}
  else if(it==="star"){k.star=7.0;SFX.star();if(!k.ai)flash("rgba(255,220,80,0.3)",0.2)}
  else if(it==="bolt"){SFX.zap();flash("rgba(200,235,255,0.55)",0.3);shake(10,0.4);
@@ -1029,7 +1119,7 @@ function puff(x,y,n,col){
  if(!FX&&n>5)n=3;
  for(let i=0;i<n;i++){const a=Math.random()*TAU,s=rnd(20,110);
   R.fx.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,z:rnd(4,26),vz:rnd(10,70),
-   t:0,life:rnd(0.3,0.7),col,r:rnd(7,18)})}
+   t:0,life:rnd(0.3,0.7),col,r:rnd(4,10)})}
 }
 function stepFx(dt){
  for(let i=R.fx.length-1;i>=0;i--){const f=R.fx[i];f.t+=dt;
@@ -1084,7 +1174,7 @@ function billboard(sp,wx,wy,worldH,flip,alpha,tint){
  return p;
 }
 function drawKart(k){
- const rel=angDiff(k.a,CAM.a);
+ const rel=k.ai?angDiff(k.a,CAM.a):clamp((k.vis||0)*0.95+k.slip*1.3,-1.5,1.5);
  const v=kartView(rel),sp=ART.kart[k.c.id][v.v];
  const p=project(k.x,k.y,0);if(!p)return;
  const scale=k.shrunk>0?0.62:1;
@@ -1092,11 +1182,15 @@ function drawKart(k){
  const worldH=72*scale;
  // the smoke and sparks go down first, behind the kart
  if(k.boost>0||k.drift){
-  const back=project(k.x-Math.cos(k.a)*26,k.y-Math.sin(k.a)*26,0);
-  if(back){const r=26*back.s;
-   if(k.boost>0){glow(back.x,back.y-r*0.4,r*1.6,"rgba(255,170,50,0.85)");
-    cx.fillStyle="rgba(255,240,180,0.8)";
-    cx.beginPath();cx.ellipse(back.x,back.y-r*0.4,r*0.5,r*0.75,0,0,TAU);cx.fill()}
+  const back=project(k.x-Math.cos(k.a)*40,k.y-Math.sin(k.a)*40,0);
+  if(back){const r=Math.min(26*back.s,54);
+   if(k.boost>0){
+    for(let e=-1;e<=1;e+=2){const ex=back.x+e*r*0.42,ey=back.y-r*0.55;
+     glow(ex,ey,r*0.72,"rgba(255,150,40,0.8)");
+     cx.fillStyle="rgba(255,225,150,0.85)";
+     cx.beginPath();cx.ellipse(ex,ey,r*0.17,r*0.34*(0.8+Math.random()*0.4),0,0,TAU);cx.fill();
+     cx.fillStyle="rgba(255,255,235,0.9)";
+     cx.beginPath();cx.ellipse(ex,ey-r*0.06,r*0.08,r*0.16,0,0,TAU);cx.fill()}}
    if(k.drift){const tier=k.driftT>2.1?3:k.driftT>1.25?2:k.driftT>0.6?1:0;
     const col=["rgba(200,215,255,0.5)","rgba(120,200,255,0.9)","rgba(255,170,60,0.95)","rgba(255,90,200,0.95)"][tier];
     for(let s=-1;s<=1;s+=2){
@@ -1110,6 +1204,8 @@ function drawKart(k){
  cx.save();
  if(k.spin>0){ // spinning out: the kart whips round on the spot
   cx.translate(p.x,p.y);cx.rotate(Math.sin(k.spin*18)*0.35);cx.translate(-p.x,-p.y)}
+ else if(!k.ai&&rel){ // it leans into the corner, and the lean is the wheel
+  cx.translate(p.x,p.y);cx.rotate(-rel*0.10);cx.translate(-p.x+rel*9*p.s,-p.y)}
  billboard(sp,k.x,k.y+0,worldH+(hh?hh:0),v.f,null,tint);
  cx.restore();
  if(!k.ai)return;
@@ -1130,7 +1226,7 @@ function drawWorld(){
  const list=[];
  for(const p of R.props){
   if(p.pad)continue;
-  const pr=project(p.x,p.y,0);if(!pr||pr.z>1500||pr.z<96)continue;
+  const pr=project(p.x,p.y,0);if(!pr||pr.z>1500||pr.z<74)continue;
   list.push({z:pr.z,d:()=>billboard(ART.prop[p.kind],p.x,p.y,
    p.kind==="tyres"?44:p.kind==="sign"?78:p.kind==="rock"?128:140,1)})}
  for(const p of R.props){if(!p.pad)continue;
@@ -1144,12 +1240,23 @@ function drawWorld(){
    const minx=Math.min.apply(null,cs.map(c=>c.x)),maxx=Math.max.apply(null,cs.map(c=>c.x));
    const miny=Math.min.apply(null,cs.map(c=>c.y)),maxy=Math.max.apply(null,cs.map(c=>c.y));
    cx.drawImage(ART.prop.boost,minx,miny,maxx-minx,maxy-miny);cx.restore()}})}
+ // the verge posts, taken straight off the line from where the player is
+ {const P=R.line.pts,N=P.length,RH=R.track.roadHalf,st=R.player.idx;
+  for(let d=-2;d<66;d+=3){
+   const i=((st+d)%N+N)%N,q=P[i];
+   const tall=(i%24)===0;
+   for(let side=-1;side<=1;side+=2){
+    const off=(RH+34)*side,px2=q.x+q.nx*off,py2=q.y+q.ny*off;
+    const pr=project(px2,py2,0);
+    if(!pr||pr.z>560||pr.z<20)continue;
+    const art=tall?ART.prop.postTall:ART.prop.post;
+    list.push({z:pr.z,d:()=>billboard(art,px2,py2,tall?32:21,1)})}}}
  for(const b of R.boxes){if(b.gone>0)continue;
-  const pr=project(b.x,b.y,0);if(!pr||pr.z>1100||pr.z<70)continue;
+  const pr=project(b.x,b.y,0);if(!pr||pr.z>1100||pr.z<86)continue;
   list.push({z:pr.z,d:()=>{
-   const bob=Math.sin(T*2.5+b.x*0.01)*6;
-   const p2=project(b.x,b.y,24+bob);if(!p2)return;
-   const h=30*p2.s,w=h;
+   const bob=Math.sin(T*2.5+b.x*0.01)*5;
+   const p2=project(b.x,b.y,22+bob);if(!p2)return;
+   const h=Math.min(24*p2.s,120),w=h;
    cx.save();cx.translate(p2.x,p2.y-h/2);cx.rotate(Math.sin(T*1.4+b.x*0.01)*0.25);
    cx.drawImage(ART.prop.box,-w/2,-h/2,w,h);cx.restore()}})}
  for(const h of R.hazards){const pr=project(h.x,h.y,0);if(!pr||pr.z>900)continue;
@@ -1160,19 +1267,24 @@ function drawWorld(){
     s.kind==="red"?"rgba(255,90,60,0.6)":"rgba(90,230,110,0.55)")}})}
  for(const f of R.fx){const pr=project(f.x,f.y,f.z);if(!pr||pr.z>800)continue;
   list.push({z:pr.z,d:()=>{const a=1-f.t/f.life;
-   cx.globalAlpha=a*0.8;cx.fillStyle=f.col;
-   cx.beginPath();cx.arc(pr.x,pr.y,Math.max(1,f.r*pr.s*(0.4+a)),0,TAU);cx.fill();
+   cx.globalAlpha=a*0.62;cx.fillStyle=f.col;
+   cx.beginPath();cx.arc(pr.x,pr.y,clamp(f.r*pr.s*(0.4+a),1,46),0,TAU);cx.fill();
    cx.globalAlpha=1}})}
  for(const k of R.karts){const pr=project(k.x,k.y,0);if(!pr||pr.z>1400)continue;
   list.push({z:pr.z,d:()=>drawKart(k)})}
  list.sort((a,b)=>b.z-a.z);
  for(const it of list)it.d();
  // the rush of speed
- if(R.player.boost>0&&FX){
-  cx.save();cx.globalAlpha=0.4;cx.strokeStyle="#fff";cx.lineWidth=3;
-  for(let i=0;i<16;i++){const a=Math.random()*TAU,r0=rnd(W*0.22,W*0.5);
-   cx.beginPath();cx.moveTo(W/2+Math.cos(a)*r0,H*0.55+Math.sin(a)*r0*0.7);
-   cx.lineTo(W/2+Math.cos(a)*(r0+rnd(40,120)),H*0.55+Math.sin(a)*(r0+rnd(40,120))*0.7);cx.stroke()}
+ const fast=R.player.sp/Math.max(1,R.player.top);
+ if(fast>0.82&&FX){
+  cx.save();
+  cx.beginPath();cx.rect(0,HZY+6,W,H-HZY-6);cx.clip();
+  cx.globalAlpha=clamp((fast-0.82)*1.5,0,0.3);cx.strokeStyle="#fff";cx.lineWidth=2;cx.lineCap="round";
+  const cy2=HZY+(H-HZY)*0.1;
+  for(let i=0;i<(R.player.boost>0?26:14);i++){
+   const a=Math.random()*TAU,r0=rnd(W*0.2,W*0.66),L=rnd(26,72)*(R.player.boost>0?1.7:1);
+   cx.beginPath();cx.moveTo(W/2+Math.cos(a)*r0,cy2+Math.sin(a)*r0*0.85);
+   cx.lineTo(W/2+Math.cos(a)*(r0+L),cy2+Math.sin(a)*(r0+L)*0.85);cx.stroke()}
   cx.restore()}
  if(R.player.offT>0.12){ // a shudder when you put two wheels on the sand
   cx.save();cx.globalAlpha=0.16;cx.fillStyle="#000";
@@ -1567,18 +1679,34 @@ function stepRace(dt){
   if(k.ai){const save=k.top;k.top=save*(k.aiBand||1);stepKart(k,dt,input);k.top=save}
   else stepKart(k,dt,input)}
  bumpKarts();
+ // a little dust off the back tyres, so a kart at speed leaves a trace
+ if(FX)for(const k of R.karts){
+  if(k.sp<k.top*0.35)continue;
+  const near=k===R.player||dist(k.x,k.y,CAM.x,CAM.y)<620;
+  if(!near||Math.random()>dt*(k.drift?34:11))continue;
+  const a=k.a+Math.PI+rnd(-0.4,0.4),d2=rnd(16,30);
+  R.fx.push({x:k.x+Math.cos(a)*d2,y:k.y+Math.sin(a)*d2,
+   vx:Math.cos(a)*rnd(10,50),vy:Math.sin(a)*rnd(10,50),z:rnd(2,9),vz:rnd(6,26),
+   t:0,life:rnd(0.26,0.5),col:k.offT>0?"#e8cf94":"rgba(228,234,246,0.42)",r:rnd(1.8,3.8)})}
  stepItems(dt);
  stepFx(dt);
  updatePlaces();
  // the camera trails the kart and swings wide through a drift
  const p=R.player;
  const want=p.a+p.slip*0.55;
- CAM.a+=angDiff(want,CAM.a)*Math.min(1,dt*(R.state==="count"?6:4.6));
+ CAM.a+=angDiff(want,CAM.a)*Math.min(1,dt*(R.state==="count"?8:13));
  const back=CAM_BACK*(1+clamp(p.sp/p.top,0,1.6)*0.1+(p.boost>0?0.1:0));
  const tx=p.x-Math.cos(CAM.a)*back,ty=p.y-Math.sin(CAM.a)*back;
- CAM.x=lerp(CAM.x,tx,Math.min(1,dt*11));CAM.y=lerp(CAM.y,ty,Math.min(1,dt*11));
- CAM.h=lerp(CAM.h,CAM_HEIGHT+(p.boost>0?-9:0)+(p.offT>0.1?Math.sin(T*40)*2.5:0),Math.min(1,dt*6));
- CAM.roll=lerp(CAM.roll,clamp(-p.slip*26,-20,20),Math.min(1,dt*5));
+ CAM.x=lerp(CAM.x,tx,Math.min(1,dt*22));CAM.y=lerp(CAM.y,ty,Math.min(1,dt*22));
+ // never let it get inside the kart it is following
+ {const dx2=p.x-CAM.x,dy2=p.y-CAM.y,ca2=Math.cos(CAM.a),sa2=Math.sin(CAM.a);
+  const fwd2=dx2*ca2+dy2*sa2,minF=CAM_BACK*0.74;
+  if(fwd2<minF){CAM.x-=ca2*(minF-fwd2);CAM.y-=sa2*(minF-fwd2)}}
+ CAM.h=lerp(CAM.h,CAM_HEIGHT+(p.boost>0?-11:0)+(p.offT>0.1?Math.sin(T*40)*3:0),Math.min(1,dt*7));
+ CAM.roll=lerp(CAM.roll,clamp(-p.slip*26,-20,20),Math.min(1,dt*7));
+ // the lens widens when you boost, which is most of what makes a boost feel
+ // like one rather than just a bigger number
+ FOVP=lerp(FOVP,p.boost>0?0.86:(p.star>0?0.93:1),Math.min(1,dt*(p.boost>0?9:4)));
  engineSet(clamp(p.sp/Math.max(1,p.top),0,1.6),p.finished?0:0.035+clamp(p.sp/p.top,0,1)*0.03);
  if(R.state==="over"){R.resultT+=dt;if(R.resultT>2.2)scene="results"}
 }
@@ -1632,10 +1760,15 @@ window.TK={
  get cam(){return CAM},get safe(){return SAFE},
  TRACKS,RACERS,ITEMS,ART,
  start(ti,id,laps){startRace(ti||0,id||"sophia",laps);scene="race"},
+ __drawGround(){camSetup();drawGround(R.track,R.tex)},
+ __render(){render()},
  sim(t,d){const s=d||1/60;for(let i=0;i<Math.round(t/s);i++)step(s)},
  go(){if(R){R.state="race";R.count=-1;R.time=0}},
  give(it){if(R){R.player.item=it;R.player.itemT=0}},
  auto(on){AUTO=on!==false},
+ __press(k){const q=pads[k];if(!q.down){q.down=true;q.hit=1}},
+ __release(k){pads[k].down=false},
+ __pads(){return padRects},
  places(){return R?R.karts.slice().sort((a,b)=>a.place-b.place)
    .map(k=>k.place+" "+k.c.name+" lap"+k.lap+" i"+k.idx):[]},
  laptimes(){return R?R.karts.map(k=>k.c.name+" "+(k.best?k.best.toFixed(2):"-")):[]},
