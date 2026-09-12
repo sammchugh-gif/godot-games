@@ -28,9 +28,11 @@ window.addEventListener("unhandledrejection", function (e) {
   lastError = String((r && r.message) || r || "something went wrong").slice(0, 160);
 });
 /* A tally of the raw input the page receives, read in the capture phase so
-   it is counted whatever the game does with it afterwards. It is shown on
-   the pause panel, so a game that stops answering the finger can say what it
-   is actually getting instead of leaving us to guess. */
+   it is counted whatever the game does with it afterwards. This was for
+   working out why a game had stopped answering the finger; it is debug
+   output, so it stays on the stuck panel - which only appears when something
+   is already wrong - and is off on the ordinary pause panel unless the page
+   is opened with ?diag=1. */
 var tally = { ts: 0, tm: 0, te: 0, tc: 0, pd: 0, pu: 0 };
 [["touchstart", "ts"], ["touchmove", "tm"], ["touchend", "te"], ["touchcancel", "tc"],
  ["pointerdown", "pd"], ["pointerup", "pu"]].forEach(function (pair) {
@@ -139,10 +141,11 @@ function build() {
   var veil = document.createElement("div");
   veil.id = "shelf-menu-veil";
   var title = (document.title || "This game").replace(/\s*[:–-].*$/, "");
+  var wantDiag = /[?&]diag=1\b/.test(location.search);
   veil.innerHTML = '<div id="shelf-menu-card"><h2>PAUSED</h2><p></p>' +
     '<button id="shelf-menu-resume" type="button">Keep playing</button>' +
     '<button id="shelf-menu-quit" type="button">Back to all games</button>' +
-    '<p id="shelf-diag"></p></div>';
+    (wantDiag ? '<p id="shelf-diag"></p>' : '') + '</div>';
   veil.querySelector("p").textContent = title;
 
   document.body.appendChild(btn);
@@ -150,7 +153,7 @@ function build() {
 
   var openedAt = 0;
   function open() {
-    try { veil.querySelector("#shelf-diag").textContent = inputLine(); } catch (e) {}
+    if (wantDiag) { try { veil.querySelector("#shelf-diag").textContent = inputLine(); } catch (e) {} }
     openedAt = now();
     veil.classList.add("on"); btn.style.display = "none"; setPaused(true);
   }
