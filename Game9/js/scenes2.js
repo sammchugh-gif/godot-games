@@ -68,9 +68,9 @@ SCENES.paris = function () {
   this.station("rooftop", -28, -12, "laser", 0xff7bd0, "The rooftop launch pad");
   this.addPerson("colette", -14, 5.5, Math.PI, { coat: 0x8a1a2a, hair: 0x3a2a1a, skin: 0xf1d2b8, trousers: 0x222222 }, "Colette");
   // UMBRA left three of these behind
-  this.bug(-19.4, 0.09, 6.2);
-  this.bug(20.6, 0.09, -1.2);
-  this.bug(36.6, 0.09, 7.2);
+  this.bug(26, 0.09, -9);
+  this.bug(-35, 0.09, 10);
+  this.bug(-8, 0.09, -10);
 
   // ambient life
   this.crowd([[12, 5], [42, 5], [42, 11], [12, 11]], 5, { speed: 1.05, hat: "beret" });
@@ -135,9 +135,9 @@ SCENES.kenya = function () {
   this.addPerson("amani", 6, 4.5, Math.PI, { coat: 0x8a7a4a, hat: "cap", hatColor: 0x6b5a3a, skin: 0x6b4226, trousers: 0x5a4a3a }, "Amani");
   this.weather("dust", 300);
   // UMBRA left three of these behind
-  this.bug(-5.4, 0.09, 5.6);
-  this.bug(-20.6, 0.09, -4.0);
-  this.bug(28.6, 0.09, -9.6);
+  this.bug(17, 0.09, 9);
+  this.bug(-33, 0.09, 0);
+  this.bug(39, 0.09, -23);
 
   // ambient life
   this.crowd([[2, -24], [38, -24], [38, -4], [2, -4]], 3, { speed: 0.95, hat: "cap" });
@@ -187,9 +187,9 @@ SCENES.india = function () {
   this.station("lanternpad", -18, -21.5, "keypad", 0x2de2ff, "The lantern's keypad");
   this.addPerson("priya", -8, 4, Math.PI, { coat: 0xd0407a, hair: 0x1a1010, skin: 0xb8845a, trousers: 0x3a2a4a }, "Priya");
   // UMBRA left three of these behind
-  this.bug(-12.4, 0.09, 5.4);
-  this.bug(22.6, 0.09, 2.4);
-  this.bug(-28.6, 0.09, -8.8);
+  this.bug(-31, 0.09, 9);
+  this.bug(31, 0.09, -14);
+  this.bug(-8, 0.09, -24);
 
   this.station("dash", -7, 4.5, "crate", 0xffd166, "Priya's tuk-tuk, engine running");
 
@@ -256,9 +256,9 @@ SCENES.china = function () {
   this.station("lanternlift", 5, -17.5, "rods", 0xffd166, "The lantern's rod lock");
   this.addPerson("mei", 8, 3, Math.PI, { coat: 0xc0392b, hair: 0x141414, skin: 0xf3ddc4, trousers: 0x222233 }, "Mei");
   // UMBRA left three of these behind
-  this.bug(12.6, 0.09, 2.0);
-  this.bug(20.6, 0.09, 9.4);
-  this.bug(-12.6, 0.09, -10.8);
+  this.bug(-20, 0.09, 11);
+  this.bug(27, 0.09, -4);
+  this.bug(-4, 0.09, -18);
 
   // ambient life
   this.crowd([[-16, -11], [28, -11], [28, -3], [-16, -3]], 5, { speed: 1.0 });
@@ -314,9 +314,9 @@ SCENES.australia = function () {
   this.station("lantern", -12, -13, "bomb", 0xff4040, "The lantern's timer");
   this.addPerson("matilda", 2, 2.5, Math.PI, { coat: 0xe63946, hair: 0xe8c070, skin: 0xe8b890, trousers: 0xffd166, prop: "board" }, "Matilda");
   // UMBRA left three of these behind
-  this.bug(12.6, 0.09, -9.8);
-  this.bug(-32.6, 0.09, 5.4);
-  this.bug(-13.4, 0.09, -12.4);
+  this.bug(-4, 0.09, -3);
+  this.bug(-35, 0.09, -15);
+  this.bug(27, 0.09, -15);
 
   // ambient life
   this.crowd([[-36, -14], [8, -14], [8, -3], [-36, -3]], 5, { speed: 1.15 });
@@ -361,9 +361,9 @@ SCENES.mexico = function () {
   const dg = this.addPerson("diego", 6, 5, Math.PI, { coat: 0x1a1a1a, hat: "boater", skin: 0xc08a5a, trousers: 0x1a1a1a }, "Diego");
   { const guitar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.15), this.M({ color: 0x8a5a2a })); guitar.position.set(0.4, 1.0, 0.25); dg.grp.add(guitar); const neck = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.06), this.M({ color: 0x3a2a1a })); neck.position.set(0.55, 1.6, 0.25); neck.rotation.z = -0.5; dg.grp.add(neck); }
   // UMBRA left three of these behind
-  this.bug(-17.4, 0.09, 3.4);
-  this.bug(28.6, 0.09, -2.0);
-  this.bug(14.6, 0.09, -16.2);
+  this.bug(-22, 0.09, -14);
+  this.bug(31, 0.09, 8);
+  this.bug(8, 0.09, -15);
 
   this.station("jeep", 8, 6.5, "crate", 0xffd166, "Diego's jeep, engine running");
 
@@ -419,9 +419,9 @@ SCENES.alps = function () {
   this.addPerson("klaus", -5, 3, Math.PI, { coat: 0x3a5a3a, hat: "ushanka", hair: 0x8a6a3a, skin: 0xf0c8a8, trousers: 0x333333 }, "Klaus");
   this.weather("snow");
   // UMBRA left three of these behind
-  this.bug(1.4, 0.09, -9.8);
-  this.bug(10.6, 0.09, -5.0);
-  this.bug(-16.6, 0.09, -22.8);
+  this.bug(-22, 0.09, 1);
+  this.bug(25, 0.09, -17);
+  this.bug(9, 0.09, 11);
 
   // ambient life
   this.crowd([[-24, -22], [20, -22], [20, 1], [-24, 1]], 3, { speed: 0.9, hat: "ushanka" });

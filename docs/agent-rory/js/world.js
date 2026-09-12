@@ -616,9 +616,11 @@ export class World {
       if (!it.enabled) continue;
       const dx = it.x - p.x, dz = it.z - p.z, d = Math.hypot(dx, dz);
       if (d > it.radius) continue;
+      // a hidden bug must never stand between the player and a mission
+      const rank = it.kind === "bug" ? 6 : 0;
       const dot = (dx * fx + dz * fz) / (d || 1);
       if (d > 1.0 && dot < 0.2) continue;
-      if (d < bd) { bd = d; best = it; }
+      if (d + rank < bd) { bd = d + rank; best = it; }
     }
     return best;
   }

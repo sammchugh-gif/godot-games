@@ -26,6 +26,17 @@ for (let ci = 0; ci < n; ci++) {
   }, ci);
   await page.waitForTimeout(350);
   if (info.bugs.length !== 3) { bad++; console.log("BAD", info.id, "has", info.bugs.length, "bugs, expected 3"); }
+  // a bug parked next to a station wins nearest() and blocks the mission
+  const clash = await ev(() => {
+    const w = __spy.world, out = [];
+    for (const b of w.interactables.filter(i => i.kind === "bug"))
+      for (const o of w.interactables.filter(i => i.kind !== "bug")) {
+        const d = Math.hypot(b.x - o.x, b.z - o.z);
+        if (d < 6) out.push(`${b.id} is ${d.toFixed(1)}m from ${o.kind} ${o.id}`);
+      }
+    return out;
+  });
+  if (clash.length) { bad += clash.length; clash.forEach(c => console.log("BAD", info.id, c)); }
   for (const b of info.bugs) {
     total++;
     const B = info.bounds;
