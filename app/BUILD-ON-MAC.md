@@ -27,7 +27,24 @@ play it before you spend anything.
 
 ---
 
-## Build it
+## Build it — the short way
+
+Open the `godot-games` folder in Finder, go into `app`, and **double-click
+`Setup on Mac.command`**.
+
+That is the whole thing. It checks you have Xcode's tools and Node, tells you
+plainly what to install if you don't, fetches the latest games from GitHub,
+builds the app, syncs it into the Xcode project and opens Xcode. Then it prints
+the signing steps below.
+
+It is safe to run again whenever you like — that is also how you pick up
+changes, so there is no `git pull` to remember. It never merges over your own
+edits; if you have any, it says so and builds what is there.
+
+If macOS refuses to run it, the execute bit was lost somewhere — open Terminal
+in the `app` folder and run `chmod +x "Setup on Mac.command"` once.
+
+## Build it — by hand
 
 ```bash
 cd app
@@ -57,7 +74,8 @@ Trust**.
 ## Change a game and rebuild
 
 The games live in `docs/`, which is also the website. There is one copy, not
-two. Edit the game there, then:
+two. Edit the game there, then double-click `Setup on Mac.command` again — or,
+by hand:
 
 ```bash
 cd app && npm run ios
@@ -157,6 +175,7 @@ Then **Product → Archive** in Xcode, and **Distribute App → App Store Connec
 | `tools/build-app.mjs` | makes `app/www/` from them, drops the update checker |
 | `tools/make-icon.mjs` | draws the icon and launch screen |
 | `tools/appcheck.mjs` | proves the bundle works with no network |
+| `app/Setup on Mac.command` | the double-click build. Runs all of the above in order. |
 | `app/capacitor.config.json` | app id, name, iOS settings |
 | `app/ios/` | the Xcode project. Committed, because your signing settings live here. |
 | `app/www/`, `app/ios/App/App/public/` | generated. Not committed. Never edit. |
