@@ -2163,14 +2163,30 @@ function drawHUD(){
    if(ic)cx.drawImage(ic,rx-3,y-3,22,22);
    if(G.relics[id]>1)text(String(G.relics[id]),rx+16,y+16,11,"#fff");
    rx+=23;if(rx>L+250)break}}
- // floor and room, top middle
- textFit((G.floor.cfg.name)+"  ·  "+G.room.type.toUpperCase(),W/2,Tp+14,17,"rgba(255,255,255,0.72)",W*0.42);
+ // The floor and room label used to be centred on the screen, which on a
+ // phone put it straight through the hearts. Put it in whatever gap is
+ // actually free between the left-hand block and the map, and if there is
+ // no such gap, give it a line of its own underneath.
  drawMinimap();
+ const heartsRight=HL+14+(Math.min(show,per)-1)*(hs-4)+hs*0.6;
+ cx.font="bold 18px sans-serif";
+ const goldRight=L+(G.keys>0?150:30+cx.measureText(String(G.gold)).width+16);
+ const leftRight=Math.max(heartsRight,goldRight,ids.length?L+23*Math.min(ids.length,11):0);
+ const mapLeft=MAPRECT.w?MAPRECT.x:W-14-SAFE.r;
+ const label=G.floor.cfg.name+"  \u00b7  "+G.room.type.toUpperCase();
+ const band=mapLeft-12-(leftRight+12);
+ if(band>=150)textFit(label,(leftRight+12+mapLeft-12)/2,Tp+14,17,"rgba(255,255,255,0.72)",band);
+ else{const wMax=(y+26<MAPRECT.y+MAPRECT.h?mapLeft-L-12:W-L-14-SAFE.r);
+  textFit(label,L,y+26,15,"rgba(255,255,255,0.72)",wMax,"left")}
  drawPads();
+ BOSSBARY=-1;
  if(G.boss&&!G.boss.dead)drawBossBar();
 }
+const MAPRECT={x:0,y:0,w:0,h:0};
+let BOSSBARY=-1;
 function drawMinimap(){
  const f=G.floor,cell=15,gap=3;
+ MAPRECT.w=0;
  let minx=99,miny=99,maxx=-1,maxy=-1;
  for(const r of f.rooms){if(!r.seen)continue;
   minx=Math.min(minx,r.gx);maxx=Math.max(maxx,r.gx);
@@ -2179,6 +2195,7 @@ function drawMinimap(){
  const gw=(maxx-minx+1),gh=(maxy-miny+1);
  const w=gw*(cell+gap)+10,h=gh*(cell+gap)+10;
  const x0=W-14-SAFE.r-w,y0=12+SAFE.t;
+ MAPRECT.x=x0;MAPRECT.y=y0;MAPRECT.w=w;MAPRECT.h=h;
  panel(x0,y0,w,h,8,"rgba(8,7,14,0.62)","rgba(255,255,255,0.16)");
  for(const r of f.rooms){if(!r.seen)continue;
   const x=x0+5+(r.gx-minx)*(cell+gap),y=y0+5+(r.gy-miny)*(cell+gap);
@@ -2230,16 +2247,21 @@ function drawPads(){
  text("FURY",fx2,fy2+1,15,full?"#fff":"rgba(255,255,255,0.5)");
  cx.restore();
 }
+// The bar and the boss's name go above the thumb buttons, not across them.
+// drawPads has already run, so where the buttons are is known.
 function drawBossBar(){
  const b=G.boss,B=BOSSES[b.kind];
- const w=Math.min(W*0.74,520),x=W/2-w/2,y=H-30-SAFE.b-(padRects.fury?0:0)-8;
- const yy=Math.max(H*0.82,H-52-SAFE.b);
- panel(x-4,yy-6,w+8,26,8,"rgba(8,7,14,0.7)","rgba(255,255,255,0.2)");
- cx.fillStyle="rgba(0,0,0,0.55)";rr(cx,x,yy,w,14,6);cx.fill();
+ const w=Math.min(W*0.82,520),x=W/2-w/2;
+ const padTop=Math.min(padRects.fury?padRects.fury.y:H,padRects.dash?padRects.dash.y:H);
+ const bh=36;
+ const yy=Math.max(H*0.5,Math.min(H-SAFE.b-14-bh,padTop-12-bh));
+ BOSSBARY=yy;
+ panel(x-6,yy,w+12,bh,10,"rgba(8,7,14,0.74)","rgba(255,255,255,0.2)");
+ textFit(B.name,W/2,yy+11,15,"#fff",w-14);
+ cx.fillStyle="rgba(0,0,0,0.55)";rr(cx,x,yy+19,w,12,6);cx.fill();
  const fr=clamp(b.hp/b.max,0,1);
- cx.fillStyle=B.col;rr(cx,x,yy,Math.max(4,w*fr),14,6);cx.fill();
- cx.fillStyle="rgba(255,255,255,0.28)";rr(cx,x,yy,Math.max(4,w*fr),5,3);cx.fill();
- textFit(B.name,W/2,yy-16,15,"#fff",w);
+ cx.fillStyle=B.col;rr(cx,x,yy+19,Math.max(4,w*fr),12,6);cx.fill();
+ cx.fillStyle="rgba(255,255,255,0.28)";rr(cx,x,yy+19,Math.max(4,w*fr),4,2);cx.fill();
 }
 // ------------------------------------------------------------ overlays
 function drawRelicChoice(){
@@ -2295,8 +2317,9 @@ function drawBanner(){
 function drawToast(){
  if(!toast)return;
  const a=toast.t<0.15?toast.t/0.15:toast.t>1.3?(1.6-toast.t)/0.3:1;
+ const base=BOSSBARY>0?Math.min(H*0.68,BOSSBARY-26):H*0.68;
  cx.save();cx.globalAlpha=clamp(a,0,1);
- textFit(toast.txt,W/2,H*0.68-toast.t*14,24,toast.col,W*0.8);
+ textFit(toast.txt,W/2,base-toast.t*14,Math.min(24,W*0.055),toast.col,W*0.8);
  cx.restore()}
 
 // ---------------------------------------------------------------- records
@@ -2504,5 +2527,8 @@ window.DD={
  give(id,n){for(let i=0;i<(n||1);i++)takeRelic(RELIC_BY_ID[id]);return G.relics},
  killAll(){G.ents.slice().forEach(e=>killEnemy(e));return G.room.cleared},
  stats(){return ST},
+ map(){return MAPRECT},
+ pads(){return padRects},
+ bossBarY(){return BOSSBARY},
 };
 </script></body></html>
