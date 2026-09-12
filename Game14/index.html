@@ -371,6 +371,12 @@ function bakeTrack(T,line){
 // and how wide the world is. The first pass had the camera almost on the
 // tarmac and the road filled the screen.
 const CAM_BACK=152,CAM_HEIGHT=80;
+// How tall a kart stands in world units. The road is 228-284 units wide, so
+// this is what decides how much of the road the kart covers. At 72 the kart
+// took 30% of the narrowest road - two karts could barely pass - and blocked
+// the corner ahead. 50 puts it at 17-21% depending on the track, which is
+// about where the short-circuit racers of the era sat.
+const KART_H=50;
 const CAM={x:1024,y:300,a:0,h:CAM_HEIGHT,shake:0,roll:0};
 let FOC=1,HZY=0,FOVP=1;
 function camSetup(){FOC=Math.max(190,Math.min(H*0.71,W*0.66));
@@ -1179,7 +1185,7 @@ function drawKart(k){
  const p=project(k.x,k.y,0);if(!p)return;
  const scale=k.shrunk>0?0.62:1;
  const hh=(k.hop>0?Math.sin((1-k.hop/0.22)*Math.PI)*13:0);
- const worldH=72*scale;
+ const worldH=KART_H*scale;
  // the smoke and sparks go down first, behind the kart
  if(k.boost>0||k.drift){
   const back=project(k.x-Math.cos(k.a)*40,k.y-Math.sin(k.a)*40,0);
@@ -1758,6 +1764,7 @@ window.TK={
  get R(){return R},get scene(){return scene},set scene(v){scene=v},
  get fx(){return FX},set fx(v){FX=v?1:0},
  get cam(){return CAM},get safe(){return SAFE},
+ get foc(){return FOC},get kartH(){return KART_H},get hzy(){return HZY},
  TRACKS,RACERS,ITEMS,ART,
  start(ti,id,laps){startRace(ti||0,id||"sophia",laps);scene="race"},
  __drawGround(){camSetup();drawGround(R.track,R.tex)},
