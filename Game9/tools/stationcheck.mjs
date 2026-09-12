@@ -8,6 +8,9 @@ await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: 1180, height: 820 } });
 page.on("pageerror", e => console.log("pageerror:", String(e).slice(0, 300)));
+// __stubShelf: ../menu.js and ../fresh.js belong to the shelf around the
+// games and only resolve when a tool serves Game9/ directly, so stub them
+await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 const ev = (fn, arg) => page.evaluate(fn, arg);

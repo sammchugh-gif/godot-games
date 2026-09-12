@@ -14,6 +14,9 @@ const page = await browser.newPage({ viewport: { width: 1180, height: 820 }, dev
 const errors = [];
 page.on("console", m => { if (m.type() === "error" || m.type() === "warning") { errors.push(m.text()); console.log("console." + m.type() + ":", m.text().slice(0, 300)); } });
 page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", String(e).slice(0, 400)); });
+// __stubShelf: ../menu.js and ../fresh.js belong to the shelf around the
+// games and only resolve when a tool serves Game9/ directly, so stub them
+await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 await page.waitForTimeout(600);

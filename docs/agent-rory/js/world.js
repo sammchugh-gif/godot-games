@@ -246,6 +246,32 @@ export class World {
     if (target) { d.target.position.set(target[0], 0, target[1]); this.scene.add(d.target); }
     this.scene.add(d); return d;
   }
+  // a hidden UMBRA listening device: small, dark, and blinking once a second
+  bug(x, y, z) {
+    const n = this.bugN = (this.bugN || 0) + 1;
+    const id = `${this.sceneId}:${n - 1}`;
+    if (this.foundBugs && this.foundBugs.has(id)) return null;
+    const grp = new THREE.Group(); grp.position.set(x, y, z); this.scene.add(grp);
+    const dark = new THREE.MeshStandardMaterial({ color: 0x14161c, roughness: 0.5, metalness: 0.5 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.03, 10), dark);
+    base.position.y = -0.05; grp.add(base);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.11, 0.14), dark);
+    grp.add(body);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2b3c }));
+    led.position.set(0.07, 0.055, 0); grp.add(led);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.dotTex, color: 0xff2b3c, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.position.copy(led.position); glow.scale.set(0.34, 0.34, 1); grp.add(glow);
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.3, 4), new THREE.MeshBasicMaterial({ color: 0x6a6a70 }));
+    wire.position.set(-0.09, 0.14, 0); wire.rotation.z = 0.25; grp.add(wire);
+    const it = { id, kind: "bug", x, z, y: y + 0.1, radius: 2.4, label: "UMBRA listening device", grp, enabled: true };
+    this.interactables.push(it);
+    this.updaters.push(dt => { const b = (Math.sin(this.t * 3.2) + 1) / 2; glow.material.opacity = 0.12 + b * 0.5; led.material.color.setRGB(0.5 + b * 0.5, 0.06, 0.1); });
+    return it;
+  }
+  removeBug(it) {
+    if (it.grp) { this.scene.remove(it.grp); it.grp.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map && o.material.map !== this.dotTex) o.material.map.dispose(); o.material.dispose(); } }); it.grp = null; }
+    const i = this.interactables.indexOf(it); if (i >= 0) this.interactables.splice(i, 1);
+  }
   station(id, x, z, icon, color, label, o) {
     o = o || {};
     const grp = new THREE.Group(); grp.position.set(x, 0, z); this.scene.add(grp);
@@ -292,6 +318,71 @@ export class World {
     if (o.prop === "torch") { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3, 8), this.M({ color: 0x333333 })); b.position.set(0.45, 1.0, 0.25); b.rotation.x = Math.PI / 2; g.add(b); }
     for (const p of parts) { p.castShadow = true; p.receiveShadow = true; g.add(p); }
     g.userData = { legL, legR, armL, armR, head, body, t: Math.random() * 10, walk: 0 };
+    return g;
+  }
+  // ---- ambient life: people walking their own routes, traffic, and birds
+  // A path is a list of [x, z] corners walked as a loop.
+  pathWalker(path, t) {
+    let total = 0; const segs = [];
+    for (let i = 0; i < path.length; i++) {
+      const a = path[i], b = path[(i + 1) % path.length];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      segs.push({ a, b, len, at: total }); total += len;
+    }
+    const d = ((t % total) + total) % total;
+    const sg = segs.find(q => d < q.at + q.len) || segs[segs.length - 1];
+    const u = sg.len ? (d - sg.at) / sg.len : 0;
+    return { x: sg.a[0] + (sg.b[0] - sg.a[0]) * u, z: sg.a[1] + (sg.b[1] - sg.a[1]) * u,
+      yaw: Math.atan2(sg.b[0] - sg.a[0], sg.b[1] - sg.a[1]), total };
+  }
+  crowd(path, n, o) {
+    o = o || {};
+    const skins = o.skins || [0xf1d2b8, 0xc9946a, 0x8a5a3a, 0x6b4226, 0xe8b890, 0xf3ddc4];
+    const coats = o.coats || [0x2a4a7a, 0x8a3a3a, 0x3a6a4a, 0x6a4a8a, 0xb8860b, 0x3a3a44, 0xc0603a];
+    for (let i = 0; i < n; i++) {
+      const look = { coat: coats[(i * 3 + 1) % coats.length], skin: skins[(i * 5 + 2) % skins.length],
+        trousers: [0x2a2a33, 0x4a3a2a, 0x33405a][i % 3], hair: [0x1a1a1a, 0x4a2a12, 0x6a5a3a][(i * 2) % 3], faces: false };
+      if (o.hat && i % 3 === 0) look.hat = o.hat;
+      const rec = this.addPerson("walker" + i, path[0][0], path[0][1], 0, look);
+      rec.walk = 1;
+      const speed = (o.speed || 1.15) * (0.82 + (i % 5) * 0.09);
+      const off = (i / n) * 1000 + (i % 3) * 7;
+      this.updaters.push(dt => {
+        const p = this.pathWalker(path, off + this.t * speed);
+        rec.grp.position.set(p.x, 0, p.z); rec.grp.rotation.y = p.yaw;
+        rec.x = p.x; rec.z = p.z;
+      });
+    }
+  }
+  traffic(path, n, o) {
+    o = o || {};
+    const cols = o.colors || [0xd94f3d, 0x2a6fdb, 0xe8e4dc, 0x2a2a30, 0xf0b429, 0x3f7a5a];
+    for (let i = 0; i < n; i++) {
+      const g = o.build ? o.build.call(this, i) : this.car(0, 0, 0, cols[i % cols.length], o.carOpts);
+      const speed = (o.speed || 7) * (0.85 + (i % 4) * 0.1);
+      const off = (i / n) * 1000;
+      this.updaters.push(dt => {
+        const p = this.pathWalker(path, off + this.t * speed);
+        g.position.set(p.x, o.y || 0, p.z); g.rotation.y = p.yaw;
+      });
+    }
+  }
+  birds(x, y, z, r, n, o) {
+    o = o || {};
+    const m = new THREE.MeshBasicMaterial({ color: o.color === undefined ? 0x2a2a2a : o.color });
+    const g = new THREE.Group(); g.position.set(x, y, z); this.scene.add(g);
+    const wings = [];
+    for (let i = 0; i < n; i++) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(o.size || 0.5, 0.04, 0.1), m);
+      b.position.set(Math.sin(i * 2.3) * r * 0.4, Math.cos(i * 1.9) * 2.2, Math.cos(i * 2.7) * r * 0.4);
+      g.add(b); wings.push(b);
+    }
+    const sp = o.speed || 0.25;
+    this.updaters.push(dt => {
+      g.rotation.y = this.t * sp;
+      g.position.y = y + Math.sin(this.t * 0.5) * 1.6;
+      wings.forEach((b, i) => { b.rotation.z = Math.sin(this.t * 7 + i) * 0.7; });
+    });
     return g;
   }
   addPerson(id, x, z, ry, o, label) {
@@ -463,6 +554,7 @@ export class World {
   }
   load(id) {
     this.reset();
+    this.sceneId = id; this.bugN = 0;
     const spawn = SCENES[id].call(this);
     this.player.x = spawn.x; this.player.z = spawn.z; this.player.yaw = spawn.yaw || 0; this.player.pitch = 0;
     this.bounds = spawn.bounds || { x0: -28, x1: 28, z0: -28, z1: 28 };
@@ -511,8 +603,9 @@ export class World {
   }
   updateCamera() {
     const p = this.player;
-    this.camera.position.set(p.x, 1.62 + Math.sin(p.bob) * 0.035 * p.moving, p.z);
-    this.camera.rotation.set(p.pitch + this.sway * 0.5, p.yaw + this.sway, 0);
+    const eye = p.eye === undefined ? 1.62 : p.eye;
+    this.camera.position.set(p.x, eye + Math.sin(p.bob) * 0.035 * p.moving, p.z);
+    this.camera.rotation.set(p.pitch + this.sway * 0.5, p.yaw + this.sway, p.roll || 0);
     if (this.fill) this.fill.position.set(p.x, 2.2, p.z);
   }
   forward() { return new THREE.Vector3(-Math.sin(this.player.yaw), 0, -Math.cos(this.player.yaw)); }
@@ -523,9 +616,11 @@ export class World {
       if (!it.enabled) continue;
       const dx = it.x - p.x, dz = it.z - p.z, d = Math.hypot(dx, dz);
       if (d > it.radius) continue;
+      // a hidden bug must never stand between the player and a mission
+      const rank = it.kind === "bug" ? 6 : 0;
       const dot = (dx * fx + dz * fz) / (d || 1);
       if (d > 1.0 && dot < 0.2) continue;
-      if (d < bd) { bd = d; best = it; }
+      if (d + rank < bd) { bd = d + rank; best = it; }
     }
     return best;
   }

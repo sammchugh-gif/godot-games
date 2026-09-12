@@ -7,7 +7,7 @@ New York, Rio de Janeiro and a frozen launch site in Siberia. In **Operation
 Midnight** UMBRA's Chairman has hidden seven Shadow Lanterns over seven
 cities, and the trail runs through Paris, Nairobi, Agra, Beijing, Sydney,
 Chichen Itza and the Alps. Fourteen countries, four missions in each,
-fifty-six in all, and every mission is a mini-game that wins a piece of
+sixty in all, and every mission is a mini-game that wins a piece of
 intel. The intel is the thread: each piece tells you where to go next.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/agent-rory/>. On the
@@ -36,7 +36,14 @@ The whole story, cast and mission design is in [STORY.md](STORY.md).
 - Desktop for testing: WASD walks, mouse-drag looks, E investigates, Esc
   pauses, H asks for a hint.
 
-## The twenty-two mini-games
+## Stars, replay and the hidden bugs
+
+Every mission scores one to three stars (three for no hint and a clean run),
+kept as a best in the dossier alongside a running total, and any finished
+mission can be replayed from there. Three UMBRA listening devices are hidden
+in each city, forty-two in all, counted on the spy watch and in the dossier.
+
+## The twenty-three mini-games
 
 Lie detector, safe cracker, cipher wheel, masked ball, radio tuner, mirror
 maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
@@ -47,7 +54,7 @@ match. Every mission carries a difficulty level from 1 to 4, and each game
 grows with it: more statements and subtler spikes on the polygraph, four
 numbers on the safe, up to 24 dancers and five clues, 11 by 11 mirror
 chambers, eight pins, a fifth wiring rule, a second searchlight, five-symbol
-codes and seventy-second countdowns. The full list of all fifty-six missions,
+codes and seventy-second countdowns. The full list of all sixty missions,
 with their levels and the intel each one wins, is in [STORY.md](STORY.md).
 
 ## How it is built
@@ -60,13 +67,13 @@ and loads in a couple of seconds.
   drag, immediate-mode buttons), HUD, mission flow, save, and a `window.__spy`
   debug handle the tests use.
 - `js/story.js` — the story as data: characters with voice and portrait
-  attributes, two acts, fourteen countries, fifty-six missions with dialogue
+  attributes, two acts, fourteen countries, sixty missions with dialogue
   and intel.
 - `js/world.js`, `js/scenes.js` and `js/scenes2.js` — the first-person world on three.js:
   procedural textures (windows, brick, plaster, neon, hieroglyphs, flags),
   building helpers, collision, people built from boxes, weather, water, an
   aurora shader, and the fourteen scenes with their landmarks.
-- `js/minigames.js`, `js/minigames2.js`, `js/mgbase.js` — the twenty-two
+- `js/minigames.js`, `js/minigames2.js`, `js/chase.js`, `js/mgbase.js` — the twenty-three
   mini-games, each with a hint, a solver and difficulty scaling.
 - `js/ui.js` — canvas drawing, procedural portraits, the dialogue box, the
   world map (simplified continents), the dossier, the intel stamp.

@@ -159,13 +159,27 @@ function build() {
   document.body.appendChild(btn);
   document.body.appendChild(veil);
 
+  /* A game with a pause screen of its own does not need this button sitting on
+     its HUD as well: it can set window.__shelfPaused to a function saying
+     whether it is paused, and the button then shows only while it is. A game
+     that sets nothing keeps the button all the time, because for most of them
+     it is the only way out. */
+  function gameIsPlaying() {
+    if (typeof window.__shelfPaused !== "function") return false;
+    try { return !window.__shelfPaused(); } catch (e) { return false; }
+  }
+  function syncBtn() {
+    if (veil.classList.contains("on") || stuck.classList.contains("on")) return;
+    btn.style.display = gameIsPlaying() ? "none" : "";
+  }
+
   var openedAt = 0;
   function open() {
     if (wantDiag) { try { veil.querySelector("#shelf-diag").textContent = inputLine(); } catch (e) {} }
     openedAt = now();
     veil.classList.add("on"); btn.style.display = "none"; setPaused(true);
   }
-  function close() { veil.classList.remove("on"); btn.style.display = ""; setPaused(false); }
+  function close() { veil.classList.remove("on"); btn.style.display = ""; setPaused(false); syncBtn(); }
   /* leave while still paused - there is nothing to resume for */
   function quit() { window.location.href = "../"; }
 
@@ -226,7 +240,7 @@ function build() {
   }
   function hideStuck(snoozeSeconds) {
     stuckShown = false; stuck.classList.remove("on");
-    if (!veil.classList.contains("on")) btn.style.display = "";
+    if (!veil.classList.contains("on")) { btn.style.display = ""; syncBtn(); }
     snoozeUntil = now() + (snoozeSeconds || 30) * 1000;
     lastFrame = now();
   }
@@ -238,6 +252,7 @@ function build() {
     location.reload();
   });
   loadedAt = now();
+  setInterval(syncBtn, 150);
   setInterval(function () {
     if (paused || document.hidden || veil.classList.contains("on")) { lastFrame = now(); return; }
     if (stuckShown) { if (now() - lastFrame < 1500) hideStuck(5); return; }
@@ -249,6 +264,7 @@ function build() {
   window.__shelfMenu.close = close;
   window.__shelfMenu.stuck = function () { return stuck.classList.contains("on"); };
   window.__shelfMenu.keys = savedKeys;
+  window.__shelfMenu.sync = syncBtn;
 }
 function safeBuild() { try { build(); } catch (e) { /* never let the overlay break a game */ } }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", safeBuild);
