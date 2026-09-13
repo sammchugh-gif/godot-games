@@ -86,6 +86,8 @@ function engineSet(rpm,vol){if(!engineGain||!AC)return;
 const SFX={
  boost(){tone(220,900,0.35,"sawtooth",0.16);noise(0.35,0.18,0,0.88)},
  drift(){noise(0.2,0.06,0,0.94)},
+ hop(){tone(300,540,0.09,"square",0.10);noise(0.06,0.05,0,0.9)},
+ trick(){[700,940,1240].forEach((f,i)=>tone(f,f*1.25,0.09,"square",0.12,i*0.05))},
  bump(){tone(160,60,0.14,"square",0.16);noise(0.1,0.12)},
  item(){[660,880,1100].forEach((f,i)=>tone(f,f,0.08,"square",0.11,i*0.06))},
  use(){tone(520,900,0.1,"square",0.11)},
@@ -148,6 +150,7 @@ const ghostMouse=()=>performance.now()-lastTouchAt<900;
 const wheel={id:-1,ox:0,x:0,v:0};
 const pads={drift:{id:-1,down:false,hit:0},item:{id:-1,down:false,hit:0}};
 let padRects={drift:null,item:null};
+let driftWas=false;   // was the drift key down last frame? a tap is not a hold
 let buttons=[],mouseDown=false;
 const STEER_R=46;
 // Every finger on the road with the spot it went down at. One nominated finger
@@ -483,6 +486,13 @@ const CAM_BACK=152,CAM_HEIGHT=80;
 // the corner ahead. 50 puts it at 17-21% depending on the track, which is
 // about where the short-circuit racers of the era sat.
 const KART_H=50;
+// Jumping. One gravity, two launch speeds, so a hop and a ramp are the same
+// piece of physics at different strengths: peak = v*v/(2g), airtime = 2v/g.
+//   hop   210 -> 22 units up, 0.42s in the air
+//   ramp  412 -> 85 units up, 0.83s
+const GRAV=998,HOP_V=210,RAMP_V=412;
+const RAMP_H=30,RAMP_LEN=124;      // how tall the lip stands, how long the slope
+const TRICK_T=0.5;                 // one full roll
 const CAM={x:1024,y:300,a:0,h:CAM_HEIGHT,shake:0,roll:0};
 let FOC=1,HZY=0,FOVP=1;
 function camSetup(){FOC=Math.max(190,Math.min(H*0.71,W*0.66));
@@ -920,7 +930,8 @@ function makeKart(C,ai,slot,line){
  const p=line.pts[gi],off=(col?1:-1)*52;
  return{c:C,ai,x:p.x+p.nx*off,y:p.y+p.ny*off,a:p.a,sp:0,slip:0,
   idx:gi,lap:0,prog:0,place:slot+1,boost:0,drift:0,driftDir:0,driftT:0,
-  spin:0,star:0,item:null,itemT:0,shrunk:0,offT:0,bump:0,hop:0,
+  spin:0,star:0,item:null,itemT:0,shrunk:0,offT:0,bump:0,
+  jz:0,jvz:0,big:0,trick:0,tricked:0,rampCd:0,
   finished:false,finishT:0,lapT:0,best:0,wrong:0,aiOff:rnd(-0.35,0.35),
   aiSkill:ai?rnd(0.9,1.06):1,slot};
 }
@@ -938,7 +949,7 @@ function startRace(trackIdx,charId,laps){
  karts.forEach(k=>{const cl=CLASSES[k.c.cls];
   k.top=top*cl.top;k.acc=cl.accel;k.grip=cl.grip});
  R={track:Tk,ti:trackIdx,line,tex,karts,player,laps:laps||Tk.laps,
-    boxes:[],props:[],shots:[],hazards:[],fx:[],
+    boxes:[],props:[],ramps:[],shots:[],hazards:[],fx:[],
     time:0,state:"count",count:3.2,finishOrder:[],resultT:0,lastLapNote:0};
  layoutTrack();
  CAM.a=player.a;CAM.x=player.x-Math.cos(CAM.a)*CAM_BACK;CAM.y=player.y-Math.sin(CAM.a)*CAM_BACK;
@@ -960,6 +971,23 @@ function layoutTrack(){
   const i=Math.floor(N*(r+0.18)/3),p=P[i];
   if(Math.abs(p.curve)>0.09)continue;
   R.props.push({kind:"boost",x:p.x,y:p.y,a:p.a,w:130,h:74,pad:true})}
+ // Three ramps, one to each third of the lap. A ramp on a bend fires you into
+ // the scenery, so rather than hope the slot lands on a straight, each one
+ // searches its third for the flattest run - flattest over the whole flight,
+ // not just the take-off, because it is the landing that hurts. Jungle Ruins
+ // is corners almost end to end, so "the flattest available" has to be the
+ // rule; there is no threshold every circuit could meet.
+ R.ramps=[];
+ const runCurve=i=>{let w=0;
+  for(let t=-2;t<=22;t++){const c=Math.abs(P[((i+t)%N+N)%N].curve);if(c>w)w=c}
+  return w};
+ for(let r=0;r<3;r++){
+  const mid=Math.floor(N*(r+0.5)/3),span=Math.floor(N*0.13);
+  let bi=mid,bw=1e9;
+  for(let t=-span;t<=span;t++){const j=((mid+t)%N+N)%N,w=runCurve(j);
+   if(w<bw){bw=w;bi=j}}
+  const p=P[bi];
+  R.ramps.push({i:bi,x:p.x,y:p.y,a:p.a,nx:p.nx,ny:p.ny,tx:p.tx,ty:p.ty})}
  // A circuit that doubles back means a tree planted safely beside one
  // straight can be standing in the middle of another. Check every prop
  // against the whole line, not just the point it was placed from.
@@ -997,14 +1025,27 @@ function stepKart(k,dt,input){
   if(k.spin<=0){k.spin=0;k.spinA=0}}
  if(k.air>0){k.air-=dt;k.airT=(k.airT||0)+dt;k.sp*=Math.pow(0.5,dt);
   if(k.air<=0){k.air=0;k.airT=0;if(!k.ai)shake(6,0.15);puff(k.x,k.y,8,"#cfd8e8")}}
+ // off the ground: real height under real gravity, so the shadow has somewhere
+ // to be and a banana can pass underneath
+ if(k.rampCd>0)k.rampCd-=dt;
+ if(k.jz>0){
+  k.jvz-=GRAV*dt;k.jz+=k.jvz*dt;
+  if(k.trick>0)k.trick+=dt;
+  if(k.jz<=0){k.jz=0;k.jvz=0;land(k)}}
  const surf=surfaceAt(k);
- const rough=surf==="rough";
+ const rough=surf==="rough"&&k.jz<=0;   // you fly over the sand, you do not plough it
  if(rough)k.offT+=dt;else k.offT=0;
  let st=input.steer;
  // drifting: the kart keeps sliding the way it was pointed and the tail
  // steps out. Holding it charges a boost, and the longer you hold the bigger.
+ // A tap of DRIFT hops. Tap it again while a ramp has you in the air and the
+ // kart rolls, which pays a boost when you land - the one thing that makes a
+ // jump worth taking rather than merely surviving.
+ if(input.hop){if(k.jz>0)doTrick(k);else hop(k)}
+ // the rivals cannot press a button, so they trick on the way up
+ if(k.ai&&k.jz>0&&k.big&&!k.tricked&&k.jvz<RAMP_V*0.6)doTrick(k);
  if(input.drift&&k.sp>k.top*0.35&&Math.abs(st)>0.18&&!k.drift&&k.spin<=0){
-  k.drift=1;k.driftDir=st>0?1:-1;k.driftT=0;k.hop=0.22;SFX.drift()}
+  k.drift=1;k.driftDir=st>0?1:-1;k.driftT=0;hop(k);SFX.drift()}
  if(k.drift){
   if(!input.drift||k.sp<k.top*0.22){
    // let go and you get whatever you charged
@@ -1016,6 +1057,9 @@ function stepKart(k,dt,input){
    // you can steer inside the drift, but never back the other way
    st=clamp(k.driftDir*0.58+st*0.55,Math.min(0,k.driftDir),Math.max(0,k.driftDir))||k.driftDir*0.6}
  }
+ // a ramp is a commitment: you get a nudge of lock in the air, not a corner.
+ // A hop is only a flick, so it leaves the steering alone.
+ if(k.jz>0&&k.big)st*=0.28;
  const spF=clamp(k.sp/Math.max(1,k.top),0,1.4);
  const base=lerp(3.1,1.78,clamp(spF,0,1));
  const turn=st*base*k.grip*(0.4+0.6*Math.min(1,spF*2.2))*(k.drift?1.6:1);
@@ -1049,7 +1093,6 @@ const OFFMAX=RH+140;
   // the barrier turns you back along it rather than stopping you dead
   k.a+=angDiff(p.a-sgn*0.28,k.a)*Math.min(1,dt*4);
   if(!k.ai&&k.bump<=0){k.bump=0.5;SFX.bump();shake(6,0.2)}}
- if(k.hop>0)k.hop-=dt;
  if(k.bump>0)k.bump-=dt;
  if(k.star>0)k.star-=dt;
  if(k.shrunk>0)k.shrunk-=dt;
@@ -1081,6 +1124,7 @@ function rescue(k){
  const line=R.line,p=line.pts[k.idx];
  k.x=p.x;k.y=p.y;k.a=p.a;k.sp=Math.min(k.sp,k.top*0.3);k.slip=0;
  k.drift=0;k.driftT=0;k.spin=0;k.spinA=0;k.air=0;k.airT=0;k.stuckT=0;k.wrong=0;k.lostT=0;
+ k.jz=0;k.jvz=0;k.big=0;k.trick=0;k.tricked=0;
  puff(k.x,k.y,10,"#ffffff");
  if(!k.ai){note("BACK ON TRACK","#8affc8");SFX.bump()}
 }
@@ -1195,7 +1239,7 @@ function stepItems(dt){
  for(let i=R.hazards.length-1;i>=0;i--){const h=R.hazards[i];h.t+=dt;
   if(h.t>h.life){R.hazards.splice(i,1);continue}
   for(const k of R.karts){
-   if(k.spin>0||k.air>0||k.star>0)continue;
+   if(k.spin>0||k.air>0||k.star>0||k.jz>12)continue;   // hop it and it misses
    if(dist(k.x,k.y,h.x,h.y)>h.r+18)continue;
    spinOut(k,0.75);R.hazards.splice(i,1);break}}
  for(let i=R.shots.length-1;i>=0;i--){const s=R.shots[i];s.t+=dt;
@@ -1222,6 +1266,14 @@ function stepItems(dt){
   for(const k of R.karts){
    if(dist(k.x,k.y,p.x,p.y)>62)continue;
    if(k.boost<0.6){k.boost=Math.max(k.boost,0.85);if(!k.ai){SFX.boost();shake(5,0.2)}}}}
+ // the ramps, caught by how far round the lap the kart is rather than by
+ // distance to a point - a ramp spans the road, and its middle is nowhere near
+ // a kart taking it on the inside
+ for(const rp of R.ramps)for(const k of R.karts){
+  if(k.jz>0||k.spin>0||k.air>0||k.rampCd>0||k.sp<k.top*0.3)continue;
+  let d=k.idx-rp.i;if(d>N/2)d-=N;if(d<-N/2)d+=N;
+  if(d<-1||d>3||Math.abs(k.off)>RH+6)continue;
+  rampJump(k)}
 }
 // A banana spins you on the spot; a shell throws you into the air and you come
 // down where you land. Two different things, so they should not look the same.
@@ -1230,6 +1282,31 @@ function spinOut(k,dur){
  k.spin=dur;k.spinA=0;k.sp*=0.45;k.boost=0;k.drift=0;k.driftT=0;
  SFX.hit();puff(k.x,k.y,14,"#ffd23f");
  if(!k.ai){shake(12,0.4);flash("rgba(255,90,60,0.3)",0.2)}
+}
+function hop(k){
+ if(k.jz>0||k.spin>0||k.air>0)return;
+ k.jvz=HOP_V;k.jz=0.01;k.big=0;k.trick=0;k.tricked=0;
+ if(!k.ai)SFX.hop();
+}
+function rampJump(k){
+ if(k.jz>0||k.spin>0||k.air>0||k.rampCd>0)return;
+ k.jvz=RAMP_V;k.jz=0.01;k.big=1;k.trick=0;k.tricked=0;k.rampCd=1.6;
+ k.drift=0;k.driftT=0;
+ puff(k.x,k.y,6,"#ffffff");
+ if(!k.ai){SFX.hop();shake(5,0.18)}
+}
+function doTrick(k){
+ if(!k.big||k.tricked||k.jz<=0)return;
+ k.tricked=1;k.trick=0.001;
+ if(!k.ai)SFX.trick();
+}
+function land(k){
+ const big=k.big,did=k.tricked;
+ k.big=0;k.trick=0;k.tricked=0;
+ if(did){k.boost=Math.max(k.boost,0.62);
+  if(!k.ai){SFX.boost();note("TRICK!","#ffd23f");shake(5,0.22);
+   flash("rgba(255,255,255,0.12)",0.08)}}
+ puff(k.x,k.y,big?10:4,"#cfd8e8");
 }
 function launch(k,dur){
  if(k.spin>0||k.air>0)return;
@@ -1312,6 +1389,27 @@ function billboard(sp,wx,wy,worldH,flip,alpha,tint,wz){
  cx.restore();
  return p;
 }
+function drawRamp(rp){
+ const HW=R.track.roadHalf*0.94,L=RAMP_LEN;
+ const bx=rp.x-rp.tx*L*0.5,by=rp.y-rp.ty*L*0.5;   // the foot of the slope
+ const at=(f,e,z)=>project(bx+rp.tx*L*f+rp.nx*HW*e,by+rp.ty*L*f+rp.ny*HW*e,z);
+ const b1=at(0,1,0),b2=at(0,-1,0),t1=at(1,1,RAMP_H),t2=at(1,-1,RAMP_H);
+ const d1=at(1,1,0),d2=at(1,-1,0);
+ if(!b1||!b2||!t1||!t2||!d1||!d2)return;
+ const poly=(ps,fill)=>{cx.beginPath();cx.moveTo(ps[0].x,ps[0].y);
+  for(let i=1;i<ps.length;i++)cx.lineTo(ps[i].x,ps[i].y);
+  cx.closePath();cx.fillStyle=fill;cx.fill()};
+ poly([d1,d2,t2,t1],"#14171e");     // the drop under the lip, in shadow
+ poly([b1,b2,t2,t1],"#2f3542");     // the slope itself
+ // bars up the slope, so at speed it reads as "go over this" and not "a hole"
+ for(let s=0;s<3;s++){
+  const f0=0.16+s*0.27,f1=f0+0.13;
+  const c=[at(f0,1,RAMP_H*f0),at(f0,-1,RAMP_H*f0),at(f1,-1,RAMP_H*f1),at(f1,1,RAMP_H*f1)];
+  if(c.some(v=>!v))continue;
+  poly(c,s===2?"#ffd23f":"rgba(255,210,63,0.62)")}
+ cx.strokeStyle="#ffffff";cx.lineWidth=Math.max(1,2.4*t1.s);
+ cx.beginPath();cx.moveTo(t1.x,t1.y);cx.lineTo(t2.x,t2.y);cx.stroke();
+}
 function drawKart(k){
  // a spinning kart is shown by cycling its four views, the way it would really
  // look going round, rather than by wobbling the picture
@@ -1320,7 +1418,6 @@ function drawKart(k){
  const v=kartView(rel),sp=ART.kart[k.c.id][v.v];
  const p=project(k.x,k.y,0);if(!p)return;
  const scale=k.shrunk>0?0.62:1;
- const hh=(k.hop>0?Math.sin((1-k.hop/0.22)*Math.PI)*13:0);
  const worldH=KART_H*scale;
  // the smoke and sparks go down first, behind the kart
  if(k.boost>0||k.drift){
@@ -1342,19 +1439,30 @@ function drawKart(k){
       cx.beginPath();cx.arc(sx+rnd(-r*0.5,r*0.5),sy+rnd(-r*0.4,r*0.2),r*0.1,0,TAU);cx.fill()}}}}}
  if(k.star>0&&FX)glow(p.x,p.y-worldH*p.s*0.5,worldH*p.s*0.9,"rgba(255,215,80,0.7)");
  const tint=k.star>0?{col:"#ffd23f",a:0.3+Math.sin(T*24)*0.2}:null;
- // thrown by a shell: up, over and down again
+ // thrown by a shell: up, over and down again. A jump is the other kind of
+ // height - chosen rather than suffered - and the two add, so a shell that
+ // catches you mid-jump still throws you from where you are.
  const air=k.air>0?Math.sin(Math.min(1,(k.airT||0)/0.95)*Math.PI)*74:0;
+ const lift=air+(k.jz||0);
  cx.save();
  if(air>0){ // tumbling through the air after a shell
   const t2=Math.min(1,(k.airT||0)/0.95);
   cx.translate(p.x,p.y);cx.rotate(Math.sin(t2*Math.PI*2)*0.5);cx.translate(-p.x,-p.y)}
+ else if(k.trick>0){ // one full roll, and it finishes upright however long the jump
+  const t3=Math.min(1,k.trick/TRICK_T);
+  // about the middle of the kart, not its wheels - a roll round the axles
+  // looks like the thing has come off its mountings
+  const pv=p.y-lift*p.s-worldH*p.s*0.5;
+  cx.translate(p.x,pv);cx.rotate(t3*TAU);cx.translate(-p.x,-pv)}
  else if(!k.ai&&rel&&k.spin<=0){ // it leans into the corner, and the lean is the wheel
   cx.translate(p.x,p.y);cx.rotate(-rel*0.10);cx.translate(-p.x+rel*9*p.s,-p.y)}
  // the shadow stays on the road while the kart is above it
- if(air>0){const sh=project(k.x,k.y,0);
-  if(sh){cx.save();cx.globalAlpha=0.3;cx.fillStyle="#000";
-   cx.beginPath();cx.ellipse(sh.x,sh.y,worldH*sh.s*0.34,worldH*sh.s*0.1,0,0,TAU);cx.fill();cx.restore()}}
- billboard(sp,k.x,k.y+0,worldH+(hh?hh:0),v.f,null,tint,air);
+ if(lift>0){const sh=project(k.x,k.y,0);
+  if(sh){cx.save();cx.globalAlpha=clamp(0.34-lift*0.0011,0.12,0.34);cx.fillStyle="#000";
+   const sq=clamp(1-lift*0.0016,0.66,1);
+   cx.beginPath();cx.ellipse(sh.x,sh.y,worldH*sh.s*0.34*sq,worldH*sh.s*0.1*sq,0,0,TAU);
+   cx.fill();cx.restore()}}
+ billboard(sp,k.x,k.y+0,worldH,v.f,null,tint,lift);
  cx.restore();
  if(!k.ai)return;
  // a name tag over the rival in front, so you know who you are chasing
@@ -1388,6 +1496,11 @@ function drawWorld(){
    const minx=Math.min.apply(null,cs.map(c=>c.x)),maxx=Math.max.apply(null,cs.map(c=>c.x));
    const miny=Math.min.apply(null,cs.map(c=>c.y)),maxy=Math.max.apply(null,cs.map(c=>c.y));
    cx.drawImage(ART.prop.boost,minx,miny,maxx-minx,maxy-miny);cx.restore()}})}
+ // The ramps, built rather than drawn: the lip really does stand RAMP_H off
+ // the road, so it keeps its shape from whatever angle the camera is at.
+ for(const rp of R.ramps){
+  const pr=project(rp.x,rp.y,0);if(!pr||pr.z>1000||pr.z<40)continue;
+  list.push({z:pr.z+1600,d:()=>drawRamp(rp)})}
  // The verge posts. A post sits a road-and-a-bit out from the line, which on a
  // circuit that doubles back can be somebody else's tarmac - the palm trees were
  // checked against the whole line for exactly this and the posts never were.
@@ -1622,7 +1735,7 @@ function drawTitle(){
  const cy=top+space*0.42,lz=Math.min(84,W*0.18,space*0.3);
  textFit("TURBO",W/2,cy-lz*0.52,lz,"#ffd23f",W*0.86);
  textFit("KARTS",W/2,cy+lz*0.52,lz,"#ff5a2a",W*0.86);
- textFit("Eight drivers. Three circuits. Hold DRIFT through the corners.",
+ textFit("Tap DRIFT to hop, hold it round the corners, trick off the ramps.",
   W/2,cy+lz*1.3,Math.min(17,W*0.034,space*0.09),"rgba(255,255,255,0.75)",W*0.86);
  const won=Object.keys(best).length;
  if(won)textFit("Cups won: "+won+" of 3",W/2,y1-U.gap-9,
@@ -1822,8 +1935,13 @@ function stepRace(dt){
   const now2=Math.ceil(R.count-0.2);
   if(now2!==was){if(now2>0)SFX.count();else if(now2===0)SFX.go()}
   if(R.count<=-0.6){R.state="race";R.time=0;R.karts.forEach(k=>k.lapT=0)}}
+ // DRIFT is held for a drift but tapped for a hop, so the press itself has to
+ // be caught - the keyboard needs its own edge because a held key repeats.
+ const kd=!!(keys.ShiftLeft||keys.KeyZ||keys.ArrowDown);
+ const hopEdge=pads.drift.hit>0||(kd&&!driftWas);
+ pads.drift.hit=0;driftWas=kd;
  const pIn=AUTO?aiInput(R.player,dt)
-  :{steer:steer(),drift:pads.drift.down||keys.ShiftLeft||keys.KeyZ||keys.ArrowDown};
+  :{steer:steer(),drift:pads.drift.down||kd,hop:hopEdge};
  if(pads.item.hit){pads.item.hit=0;if(R.player.item)useItem(R.player)}
  for(const k of R.karts){
   if(k.itemT>0)k.itemT-=dt;
@@ -1854,7 +1972,12 @@ function stepRace(dt){
  {const dx2=p.x-CAM.x,dy2=p.y-CAM.y,ca2=Math.cos(CAM.a),sa2=Math.sin(CAM.a);
   const fwd2=dx2*ca2+dy2*sa2,minF=CAM_BACK*0.74;
   if(fwd2<minF){CAM.x-=ca2*(minF-fwd2);CAM.y-=sa2*(minF-fwd2)}}
- CAM.h=lerp(CAM.h,CAM_HEIGHT+(p.boost>0?-11:0)+(p.offT>0.1?Math.sin(T*40)*3:0),Math.min(1,dt*7));
+ // The camera climbs with a jump. Without it a kart 100 units up projects
+ // above the horizon and reads as flying off into the sky rather than over
+ // the road; with it the world drops away underneath, which is the thing that
+ // makes a jump feel like one. It lags a little on the way up on purpose.
+ CAM.h=lerp(CAM.h,CAM_HEIGHT+(p.jz||0)*0.82+(p.boost>0?-11:0)
+   +(p.offT>0.1?Math.sin(T*40)*3:0),Math.min(1,dt*(p.jz>0?9:7)));
  CAM.roll=lerp(CAM.roll,clamp(-p.slip*26,-20,20),Math.min(1,dt*7));
  // the lens widens when you boost, which is most of what makes a boost feel
  // like one rather than just a bigger number
@@ -1922,6 +2045,12 @@ window.TK={
  give(it){if(R){R.player.item=it;R.player.itemT=0}},
  auto(on){AUTO=on!==false},
  __launch(k,d){launch(k,d)},__spin(k,d){spinOut(k,d)},
+ get physics(){return{GRAV,HOP_V,RAMP_V,
+   hopPeak:HOP_V*HOP_V/(2*GRAV),rampPeak:RAMP_V*RAMP_V/(2*GRAV)}},
+ __hop(k){hop(k||R.player)},__ramp(k){rampJump(k||R.player)},
+ __trick(k){doTrick(k||R.player)},
+ get jump(){const k=R&&R.player;return k?{z:k.jz,vz:k.jvz,big:k.big,
+   trick:k.trick,tricked:k.tricked,boost:k.boost}:null},
  __press(k){const q=pads[k];if(!q.down){q.down=true;q.hit=1}},
  __release(k){pads[k].down=false},
  __pads(){return padRects},
