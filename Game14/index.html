@@ -345,16 +345,21 @@ function buildLine(ctrl0,step,rh){
  // Where can a verge post actually stand? A post sits roadHalf+34 out from the
  // line, and on a circuit that doubles back that spot can be another part of
  // the road. Worked out once here rather than guessed at every frame.
- if(rh){const skip=Math.ceil(N*0.06);
+ // No part of the line may come within a road-half of the spot, and that is
+ // asked of the whole circuit with nothing exempted. An earlier version let
+ // off any point within 6% of a lap, to stop a post being rejected by its own
+ // road - but a hairpin doubles back within a few percent of a lap, so the
+ // exemption hid precisely the posts that end up on the tarmac. It is not
+ // needed: a post stands rh+34 out from its own point, which is already clear
+ // of rh+12, so its own road can never reject it.
+ if(rh){const lim=(rh+18)*(rh+18);   // rh+14 is the outside of the kerb
   for(let i=0;i<N;i++){
    for(let side=-1;side<=1;side+=2){
     const off=(rh+34)*side,px=out[i].x+out[i].nx*off,py=out[i].y+out[i].ny*off;
     let ok=true;
     for(let j=0;j<N&&ok;j++){
-     let sep=Math.abs(i-j);if(sep>N/2)sep=N-sep;
-     if(sep<skip)continue;
      const dx=out[j].x-px,dy=out[j].y-py;
-     if(dx*dx+dy*dy<(rh+16)*(rh+16))ok=false}
+     if(dx*dx+dy*dy<lim)ok=false}
     if(side<0)out[i].postL=ok;else out[i].postR=ok}}}
  return{pts:out,len:total,step:total/N};
 }
