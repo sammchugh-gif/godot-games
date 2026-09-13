@@ -554,11 +554,26 @@ function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.bossAliv
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
  G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
- announce("SECTOR "+G.sector+"  ·  "+realm().name);SFX.warp();flash=0.4;shake=0.8}
+ // a sector that opens a slot says so, because otherwise the only sign is a
+ // card you have never been offered turning up at the next level
+ announce(G.sector===2||G.sector===4
+  ?"SECTOR "+G.sector+"  ·  NEW SLOT OPEN"
+  :"SECTOR "+G.sector+"  ·  "+realm().name);
+ SFX.warp();flash=0.4;shake=0.8}
 function win(){scene="win";G.won=true;SFX.win();musicStop();saveRecord()}
 function saveRecord(){const id=recKeyFor(G.ship.id,G.dif.id),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
  let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
-function options(){const out=[];const nw=Object.keys(G.weapons).length,np=Object.keys(G.passives).length;for(const k in WEAPONS){const l=G.weapons[k]||0;if(l>=WEAPONS[k].max)continue;if(!l&&nw>=4)continue;out.push({k,w:true,l:l+1})}for(const k in PASSIVES){const l=G.passives[k]||0;if(l>=PASSIVES[k].max)continue;if(!l&&np>=4)continue;out.push({k,w:false,l:l+1})}return out}
+// How many different weapons, and how many passives, you may carry at once.
+// It was four of each from the word go, which is why everything was collected
+// inside two sectors and the twenty minutes after that were only ranking up
+// what you already had. A slot opens with the sectors instead, so arriving in
+// 2 and in 4 each brings a choice you have not had before.
+function slots(){const s=(G&&G.sector)||1;return s>=4?4:s>=2?3:2}
+function options(){const out=[];const cap=slots();
+ const nw=Object.keys(G.weapons).length,np=Object.keys(G.passives).length;
+ for(const k in WEAPONS){const l=G.weapons[k]||0;if(l>=WEAPONS[k].max)continue;if(!l&&nw>=cap)continue;out.push({k,w:true,l:l+1})}
+ for(const k in PASSIVES){const l=G.passives[k]||0;if(l>=PASSIVES[k].max)continue;if(!l&&np>=cap)continue;out.push({k,w:false,l:l+1})}
+ return out}
 function makeCards(){const o=options();cards=[];for(let i=0;i<3&&o.length;i++){cards.push(o.splice(rint(0,o.length-1),1)[0])}if(!cards.length)cards.push({k:"heal"})}
 function applyCard(c){if(c.k==="heal"){G.hp=G.maxhp;G.sh=G.maxsh}else if(c.w){G.weapons[c.k]=c.l}else{G.passives[c.k]=c.l;if(c.k==="hull"){G.maxhp+=25;G.hp=Math.min(G.maxhp,G.hp+25)}if(c.k==="shield"){G.maxsh+=20;G.sh=G.maxsh}}SFX.level()}
 function openChest(){const o=options();if(!o.length){G.hp=G.maxhp;G.sh=G.maxsh;announce("FULL REPAIR!");return}const c=o[rint(0,o.length-1)];applyCard(c);announce("CHEST: "+(c.w?WEAPONS[c.k].name:PASSIVES[c.k].name)+" LV"+c.l+"!");shake=0.5}
@@ -1128,5 +1143,6 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Ma
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE}};
+window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+ WEAPONS,PASSIVES,DIFFS,options,slots};
 </script></body></html>
