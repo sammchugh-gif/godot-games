@@ -93,19 +93,49 @@ for (let i = 0; i < 30 && !sawAir; i++) {
 }
 check('a real finger on DRIFT hops', sawAir, 'the kart left the road');
 
+/* Somewhere on the circuit with no ramp and no boost strip anywhere near, and
+   the kart facing along the road. Without this the checks below are at the
+   mercy of wherever the last one left it - a kart that wanders onto a ramp
+   mid-measurement turns a 22-unit hop into an 85-unit reading. */
+const PARK = `(() => {
+  const R = window.TK.R, P = R.line.pts, N = P.length, k = R.player;
+  const marks = R.ramps.map(r => r.i).concat(
+    R.props.filter(p => p.pad).map(p => {
+      let bi = 0, bd = 1e18;
+      for (let i = 0; i < N; i++) { const dx = P[i].x - p.x, dy = P[i].y - p.y;
+        const d = dx*dx + dy*dy; if (d < bd) { bd = d; bi = i } }
+      return bi }));
+  let bi = 0, best = -1;
+  for (let i = 0; i < N; i++) {
+    let near = 1e9;
+    for (const m of marks) { let d = Math.abs(i - m); if (d > N/2) d = N - d;
+      if (d < near) near = d }
+    if (near > best) { best = near; bi = i }
+  }
+  k.x = P[bi].x; k.y = P[bi].y; k.a = P[bi].a; k.idx = bi;
+  k.sp = 0; k.spin = 0; k.air = 0; k.jz = 0; k.jvz = 0; k.boost = 0; k.rampCd = 0;
+  R.hazards.length = 0;
+  return best;
+})()`;
+
 /* ------------------------------------------- and the arc is what it claims.
    Stepped at a fixed dt inside the page: a software-rendered frame here is
    slower than the game's own clamp, so timing anything from out here measures
    this container rather than the game. */
-const arc = k => pg.evaluate(`(() => {
+const arc = k => pg.evaluate(`${PARK};
+(() => {
   const k = window.TK.R.player;
-  k.boost = 0; k.rampCd = 0; k.jz = 0; k.jvz = 0;
-  k.sp = k.top * 0.8;
+  /* Pinned in place for the measurement. The arc does not depend on road
+     speed, and a kart left free to roll reaches a real ramp part way through
+     and turns a 22-unit hop into an 85-unit reading. Pinning the position
+     rather than zeroing k.top, because a top speed of zero divides by zero in
+     the engine note. */
+  const home = { x: k.x, y: k.y, idx: k.idx };
   window.TK.__${k}();
-  k.sp = k.top * 0.15;          /* too slow to reach a second, real ramp */
   let peak = 0, t = 0;
   for (let i = 0; i < 200 && (i === 0 || k.jz > 0); i++) {
     window.TK.sim(1/60, 1/60); t += 1/60;
+    k.x = home.x; k.y = home.y; k.idx = home.idx;
     if (k.jz > peak) peak = k.jz;
   }
   return { peak, air: t, down: k.jz, boost: k.boost };
@@ -134,14 +164,16 @@ check('landing flat pays nothing', rampA.boost <= 0,
   `boost ${rampA.boost.toFixed(2)} after a plain landing`);
 
 /* ------------------------------------------- trick in the air, boost on land */
-const trick = await pg.evaluate(`(() => {
+const trick = await pg.evaluate(`${PARK};
+(() => {
   const k = window.TK.R.player;
-  k.boost = 0; k.rampCd = 0; k.jz = 0; k.jvz = 0; k.sp = k.top * 0.8;
-  window.TK.__ramp(); k.sp = k.top * 0.15;
-  window.TK.sim(0.2, 1/60);
+  const home = { x: k.x, y: k.y, idx: k.idx };
+  const pin = () => { k.x = home.x; k.y = home.y; k.idx = home.idx };
+  window.TK.__ramp();
+  for (let i = 0; i < 12; i++) { window.TK.sim(1/60, 1/60); pin() }
   const at = k.jz; window.TK.__trick();
   const took = k.tricked;
-  for (let i = 0; i < 200 && k.jz > 0; i++) window.TK.sim(1/60, 1/60);
+  for (let i = 0; i < 200 && k.jz > 0; i++) { window.TK.sim(1/60, 1/60); pin() }
   return { at, took, down: k.jz, boost: k.boost };
 })()`);
 check('a trick takes in the air', trick.took === 1 && trick.at > 0,
@@ -150,25 +182,40 @@ check('and pays a boost on landing', trick.down === 0 && trick.boost > 0.2,
   `boost ${trick.boost.toFixed(2)}`);
 
 /* ------------------------------------------------- and you can hop a banana */
-/* The banana goes a little way ahead, not underfoot: a hop started while you
-   are already on top of one is still only three units up on its first frame,
-   and that should hit. Timing it is the skill. */
-const banana = await pg.evaluate(`(() => {
-  const k = window.TK.R.player, out = {};
-  const set = () => { k.spin = 0; k.jz = 0; k.jvz = 0; k.sp = k.top * 0.5;
-    window.TK.R.hazards.length = 0;
-    window.TK.R.hazards.push({ x: k.x + Math.cos(k.a) * 45,
-                               y: k.y + Math.sin(k.a) * 45, r: 18, t: 0, life: 30 }) };
-  set(); window.TK.sim(0.5, 1/60);
-  out.grounded = k.spin > 0;                     /* driven into: it spins you */
-  set(); window.TK.__hop(); window.TK.sim(0.5, 1/60);
-  out.hopped = k.spin > 0;                       /* hopped early: it misses */
-  k.spin = 0; k.jz = 0; k.jvz = 0; window.TK.R.hazards.length = 0;
-  return out;
+/* Timing, not magic. A banana reaches 36 units and a kart at racing speed
+   crosses that in about a fifth of a second, so the hop has to be off the
+   ground before contact and still up at the far side. Hop on top of one and
+   you are three units up on the first frame, which hits - same answer the
+   game gives a player. */
+const banana = await pg.evaluate(`${PARK};
+(() => {
+  const k = window.TK.R.player, R = window.TK.R;
+  const home = { x: k.x, y: k.y, a: k.a, idx: k.idx };
+  const set = () => { k.x = home.x; k.y = home.y; k.a = home.a; k.idx = home.idx;
+    k.spin = 0; k.jz = 0; k.jvz = 0; k.boost = 0; k.sp = k.top * 0.6;
+    R.hazards.length = 0;
+    R.hazards.push({ x: k.x + Math.cos(k.a) * 220, y: k.y + Math.sin(k.a) * 220,
+                     r: 18, t: 0, life: 60 }) };
+  const gap = () => { const h = R.hazards[0]; if (!h) return 1e9;
+    return Math.hypot(h.x - k.x, h.y - k.y) };
+  const run = hop => {
+    set(); let hopped = false;
+    for (let i = 0; i < 120; i++) {
+      if (hop && !hopped && gap() < 60) { window.TK.__hop(); hopped = true }
+      window.TK.sim(1/60, 1/60);
+      if (k.spin > 0) return { hit: true, hopped };
+      if (!R.hazards.length) return { hit: true, hopped };
+      if (gap() > 260) break;            /* gone past it */
+    }
+    return { hit: false, hopped };
+  };
+  return { grounded: run(false).hit, hopped: run(true) };
 })()`);
 check('a hop clears a banana',
-  banana.grounded === true && banana.hopped === false,
-  `driven into it spins you, hopped it misses`);
+  banana.grounded === true && banana.hopped.hopped === true
+  && banana.hopped.hit === false,
+  `driven into: ${banana.grounded ? 'spins you' : 'MISSED IT'}; ` +
+  `hopped in time: ${banana.hopped.hit ? 'STILL HIT' : 'misses'}`);
 
 /* ------------------------------------- the ramps sit where a kart will drive */
 for (let ti = 0; ti < 3; ti++) {
