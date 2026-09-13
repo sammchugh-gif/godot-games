@@ -885,11 +885,10 @@ function bakeProps(){
   g.fillStyle="#ffffff";g.beginPath();
   g.moveTo(c+5,c-25);g.lineTo(c-11,c+1);g.lineTo(c-3,c+1);g.lineTo(c-5,c+22);
   g.lineTo(c+12,c-3);g.lineTo(c+1,c-3);g.closePath();g.fill()});
- ART.prop.boost=bake(160,90,(g,w,h)=>{
-  g.fillStyle="#1b3a6a";rr(g,4,8,w-8,h-16,10);g.fill();
-  for(let i=0;i<3;i++){g.fillStyle=["#ffd23f","#ff9a3a","#ff5a2a"][i];
-   g.beginPath();g.moveTo(20+i*40,h-18);g.lineTo(58+i*40,h/2);g.lineTo(20+i*40,18);
-   g.lineTo(34+i*40,h/2);g.closePath();g.fill()}});
+ // No baked picture for the boost pad. It used to be one, stretched into the
+ // screen-space bounding box of the projected quad - and a bounding box has no
+ // direction, which is why its arrows pointed sideways whatever the road did.
+ // It is drawn from world coordinates now; see drawPad.
 }
 const ITEMS=["mushroom","banana","green","red","star","bolt"];
 const ITEM_NAME={mushroom:"BOOST",banana:"BANANA",green:"GREEN SHELL",red:"RED SHELL",star:"STAR",bolt:"LIGHTNING"};
@@ -966,28 +965,43 @@ function layoutTrack(){
   const i=Math.floor(N*(r+0.6)/rows);const p=P[i];
   for(let c=-2;c<=2;c++){
    R.boxes.push({x:p.x+p.nx*c*(RH*0.36),y:p.y+p.ny*c*(RH*0.36),t:0,gone:0})}}
- // a couple of boost strips on the straights
- for(let r=0;r<3;r++){
-  const i=Math.floor(N*(r+0.18)/3),p=P[i];
-  if(Math.abs(p.curve)>0.09)continue;
-  R.props.push({kind:"boost",x:p.x,y:p.y,a:p.a,w:130,h:74,pad:true})}
- // Three ramps, one to each third of the lap. A ramp on a bend fires you into
- // the scenery, so rather than hope the slot lands on a straight, each one
- // searches its third for the flattest run - flattest over the whole flight,
- // not just the take-off, because it is the landing that hurts. Jungle Ruins
- // is corners almost end to end, so "the flattest available" has to be the
- // rule; there is no threshold every circuit could meet.
- R.ramps=[];
- const runCurve=i=>{let w=0;
-  for(let t=-2;t<=22;t++){const c=Math.abs(P[((i+t)%N+N)%N].curve);if(c>w)w=c}
+ // Ramps and boost strips, one of each to every third of the lap. Both want a
+ // straight, and neither used to search for one: the boost strips tested a
+ // fixed slot and gave up if it was bent, which is why Jungle Ruins and
+ // Volcano Peak had no boost strips at all - twisty circuits failed the test
+ // at all three slots. Search the third for its flattest run instead. That is
+ // "the flattest available" rather than "flat", deliberately: Jungle Ruins is
+ // corners almost end to end and there is no threshold every circuit could
+ // meet.
+ // how bent is the stretch this thing will occupy - a ramp measures forward,
+ // because it is the landing that hurts, and a pad measures both ways, because
+ // it is painted straight and a curving road will show at either end
+ const runCurve=(i,back,fwd)=>{let w=0;
+  for(let t=-back;t<=fwd;t++){const c=Math.abs(P[((i+t)%N+N)%N].curve);if(c>w)w=c}
   return w};
- for(let r=0;r<3;r++){
-  const mid=Math.floor(N*(r+0.5)/3),span=Math.floor(N*0.13);
+ const flattest=(mid,span,back,fwd,avoid)=>{
   let bi=mid,bw=1e9;
-  for(let t=-span;t<=span;t++){const j=((mid+t)%N+N)%N,w=runCurve(j);
-   if(w<bw){bw=w;bi=j}}
+  for(let t=-span;t<=span;t++){const j=((mid+t)%N+N)%N;
+   if(avoid&&avoid.some(a=>{let d=Math.abs(j-a);if(d>N/2)d=N-d;return d<N*0.05}))continue;
+   const w=runCurve(j,back,fwd);if(w<bw){bw=w;bi=j}}
+  return bi};
+ // ramps first: they need the longer straight, since it is the landing that
+ // hurts rather than the take-off
+ R.ramps=[];
+ for(let r=0;r<3;r++){
+  const bi=flattest(Math.floor(N*(r+0.5)/3),Math.floor(N*0.13),2,22,null);
   const p=P[bi];
   R.ramps.push({i:bi,x:p.x,y:p.y,a:p.a,nx:p.nx,ny:p.ny,tx:p.tx,ty:p.ty})}
+ // then the boost strips, keeping clear of them
+ const rampIdx=R.ramps.map(rp=>rp.i);
+ for(let r=0;r<3;r++){
+  const bi=flattest(Math.floor(N*(r+0.12)/3),Math.floor(N*0.1),14,14,rampIdx);
+  const p=P[bi];
+  // Long and narrow, not wide and short. A boost strip is seen almost edge-on
+  // from a camera this low, so along-track length is what the chevrons have to
+  // live in - at 148 units long they foreshortened into flat stripes. Width
+  // comes from the road so it cannot hang over the kerb on a narrow circuit.
+  R.props.push({kind:"boost",x:p.x,y:p.y,a:p.a,w:RH*0.8,h:150,pad:true})}
  // A circuit that doubles back means a tree planted safely beside one
  // straight can be standing in the middle of another. Check every prop
  // against the whole line, not just the point it was placed from.
@@ -1239,7 +1253,11 @@ function stepItems(dt){
  for(let i=R.hazards.length-1;i>=0;i--){const h=R.hazards[i];h.t+=dt;
   if(h.t>h.life){R.hazards.splice(i,1);continue}
   for(const k of R.karts){
-   if(k.spin>0||k.air>0||k.star>0||k.jz>12)continue;   // hop it and it misses
+   // Off the ground and it passes underneath. Six units rather than something
+   // grander because a banana reaches 36 units and a kart at racing speed
+   // crosses that in a fifth of a second: ask for much height and the hop is
+   // only high enough after you have already hit the thing.
+   if(k.spin>0||k.air>0||k.star>0||k.jz>6)continue;
    if(dist(k.x,k.y,h.x,h.y)>h.r+18)continue;
    spinOut(k,0.75);R.hazards.splice(i,1);break}}
  for(let i=R.shots.length-1;i>=0;i--){const s=R.shots[i];s.t+=dt;
@@ -1262,9 +1280,13 @@ function stepItems(dt){
   if(hit||s.x<40||s.x>WORLD-40||s.y<40||s.y>WORLD-40){
    puff(s.x,s.y,8,"#ffffff");R.shots.splice(i,1)}}
  // the boost strips
+ // caught on the painted rectangle itself rather than a radius round its
+ // middle, so every bit of the strip you can see is a bit that works
  for(const p of R.props){if(!p.pad)continue;
+  const ca=Math.cos(p.a),sa=Math.sin(p.a);
   for(const k of R.karts){
-   if(dist(k.x,k.y,p.x,p.y)>62)continue;
+   const dx=k.x-p.x,dy=k.y-p.y;
+   if(Math.abs(dx*ca+dy*sa)>p.h||Math.abs(dy*ca-dx*sa)>p.w)continue;
    if(k.boost<0.6){k.boost=Math.max(k.boost,0.85);if(!k.ai){SFX.boost();shake(5,0.2)}}}}
  // the ramps, caught by how far round the lap the kart is rather than by
  // distance to a point - a ramp spans the road, and its middle is nowhere near
@@ -1389,6 +1411,33 @@ function billboard(sp,wx,wy,worldH,flip,alpha,tint,wz){
  cx.restore();
  return p;
 }
+// Where a boost pad's chevrons are, in pad coordinates: s runs along the track
+// and is what makes them point forwards, e runs across it. Shared with the
+// drawing so a test can ask the same question the renderer answers.
+function padChevrons(p){
+ const H=p.h,WD=p.w,step=(2*H)/3,th=step*0.60,d=step*0.95;
+ const out=[];
+ for(let i=0;i<3;i++){
+  const s=-H+i*step;
+  out.push([[s,-WD],[s+d,0],[s,WD],[s+th,WD],[s+d+th,0],[s+th,-WD]])}
+ return out;
+}
+function drawPad(p){
+ const ca=Math.cos(p.a),sa=Math.sin(p.a);
+ const at=(s,e)=>project(p.x+ca*s-sa*e,p.y+sa*s+ca*e,0);
+ const poly=(ps,fill)=>{const q=ps.map(o=>at(o[0],o[1]));
+  if(q.some(v=>!v))return false;
+  cx.beginPath();cx.moveTo(q[0].x,q[0].y);
+  for(let i=1;i<q.length;i++)cx.lineTo(q[i].x,q[i].y);
+  cx.closePath();cx.fillStyle=fill;cx.fill();return true};
+ const H=p.h,WD=p.w;
+ if(!poly([[-H,-WD],[H,-WD],[H,WD],[-H,WD]],"#1b3a6a"))return;
+ // yellow where you drive on, reddening towards the far end - the same order
+ // the picture it replaces used, and it gives the arrow a direction on colour
+ // as well as on shape
+ const col=["#ffd23f","#ff9a3a","#ff5a2a"];
+ padChevrons(p).forEach((c,i)=>poly(c,col[i]));
+}
 function drawRamp(rp){
  const HW=R.track.roadHalf*0.94,L=RAMP_LEN;
  const bx=rp.x-rp.tx*L*0.5,by=rp.y-rp.ty*L*0.5;   // the foot of the slope
@@ -1487,15 +1536,7 @@ function drawWorld(){
    p.kind==="tyres"?44:p.kind==="sign"?78:p.kind==="rock"?128:140,1)})}
  for(const p of R.props){if(!p.pad)continue;
   const pr=project(p.x,p.y,0);if(!pr||pr.z>900)continue;
-  list.push({z:pr.z+2000,d:()=>{ // flat on the road, so it draws under everyone
-   const w=p.w,h=p.h,ca=Math.cos(p.a),sa=Math.sin(p.a);
-   const cs=[[-h,-w],[h,-w],[h,w],[-h,w]].map(o=>project(p.x+ca*o[0]-sa*o[1],p.y+sa*o[0]+ca*o[1],0));
-   if(cs.some(c=>!c))return;
-   cx.save();cx.beginPath();cx.moveTo(cs[0].x,cs[0].y);
-   for(let i=1;i<4;i++)cx.lineTo(cs[i].x,cs[i].y);cx.closePath();cx.clip();
-   const minx=Math.min.apply(null,cs.map(c=>c.x)),maxx=Math.max.apply(null,cs.map(c=>c.x));
-   const miny=Math.min.apply(null,cs.map(c=>c.y)),maxy=Math.max.apply(null,cs.map(c=>c.y));
-   cx.drawImage(ART.prop.boost,minx,miny,maxx-minx,maxy-miny);cx.restore()}})}
+  list.push({z:pr.z+2000,d:()=>drawPad(p)})}   // flat, so it draws under everyone
  // The ramps, built rather than drawn: the lip really does stand RAMP_H off
  // the road, so it keeps its shape from whatever angle the camera is at.
  for(const rp of R.ramps){
@@ -2045,6 +2086,24 @@ window.TK={
  give(it){if(R){R.player.item=it;R.player.itemT=0}},
  auto(on){AUTO=on!==false},
  __launch(k,d){launch(k,d)},__spin(k,d){spinOut(k,d)},
+ // The boost pads, for a test that wants to know which way their arrows point:
+ // where each one is on screen, and where the chevron tips and tails landed.
+ padsOnScreen(){if(!R)return[];
+  return R.props.filter(p=>p.pad).map(p=>{
+   const ca=Math.cos(p.a),sa=Math.sin(p.a);
+   const at=(s,e)=>project(p.x+ca*s-sa*e,p.y+sa*s+ca*e,0);
+   const cs=padChevrons(p).map(c=>{
+    const tip=at(c[1][0],c[1][1]);
+    const l=at(c[0][0],c[0][1]),r=at(c[2][0],c[2][1]);
+    return tip&&l&&r?{tip:{x:tip.x,y:tip.y,z:tip.z},
+                      tail:{x:(l.x+r.x)/2,y:(l.y+r.y)/2,z:(l.z+r.z)/2}}:null});
+   const box=[[-p.h,-p.w],[p.h,-p.w],[p.h,p.w],[-p.h,p.w]].map(o=>at(o[0],o[1]));
+   if(box.some(v=>!v))return null;
+   return{a:p.a,z:box[0].z,chev:cs,
+    box:{x0:Math.min.apply(null,box.map(v=>v.x)),x1:Math.max.apply(null,box.map(v=>v.x)),
+         y0:Math.min.apply(null,box.map(v=>v.y)),y1:Math.max.apply(null,box.map(v=>v.y))}}
+  }).filter(Boolean)},
+ __padAngle(i,a){const ps=R.props.filter(p=>p.pad);if(ps[i])ps[i].a=a},
  get physics(){return{GRAV,HOP_V,RAMP_V,
    hopPeak:HOP_V*HOP_V/(2*GRAV),rampPeak:RAMP_V*RAMP_V/(2*GRAV)}},
  __hop(k){hop(k||R.player)},__ramp(k){rampJump(k||R.player)},
