@@ -255,6 +255,36 @@ const dif = await pg.evaluate(`window.SW.DIFFS.map(d => Object.keys(d).filter(
 check('difficulty changes enemies, not pacing', dif.every(d => d === 'hp+rate+dmg+elite'),
   `every level scales ${dif[0]} and nothing else`);
 
+/* ------------------------------------------------------------- the launch
+   LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
+   climbs off the top of the screen, and only then does the run begin. The
+   frame loop drives it, so this waits on real frames rather than stepping
+   the simulation - and the container's frame rate is whatever it is, so
+   the wait is generous and the check is on the shape of the motion. */
+await pg.evaluate(`window.SW.scene = 'title'`);
+await sleep(300);
+const slot = await pg.evaluate('window.SW.shipSlot');
+await pg.evaluate('window.SW.launch()');
+const flight = [];
+for (let i = 0; i < 400; i++) {
+  const s = await pg.evaluate(`({scene: window.SW.scene, t: window.SW.launchT,
+    y: window.SW.launchDraw && window.SW.launchDraw.y, buttons: window.SW.buttons})`);
+  if (s.scene === 'launch' && s.y != null) flight.push(s);
+  if (s.scene === 'play') break;
+  await sleep(30);
+}
+const ended = await pg.evaluate(`({scene: window.SW.scene, t: window.SW.G ? window.SW.G.t : -1})`);
+const held = flight.filter(s => s.t < 0.4), flown = flight.filter(s => s.t > 1.0);
+check('the ship waits on the pad, engines lit', held.length > 0 && held.every(s => Math.abs(s.y - slot.y) < 6),
+  `${held.length} frames in the first 0.4s, all within 6px of the card`);
+check('then climbs off the top', flown.length > 0 && flown.every(s => s.y < slot.y - 30)
+  && Math.min(...flown.map(s => s.y)) < 0,
+  flown.length ? `lowest y ${Math.round(Math.min(...flown.map(s => s.y)))} against a pad at ${Math.round(slot.y)}` : 'never got going');
+check('nothing on the hangar answers a tap meanwhile', flight.every(s => s.buttons === 0),
+  `${flight.length} launch frames, all with an empty button list`);
+check('and the run starts once it is gone', ended.scene === 'play' && ended.t >= 0 && ended.t < 2,
+  `scene ${ended.scene}, run clock at ${ended.t.toFixed(2)}s`);
+
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 140)); }
 console.log(bad ? `\n${bad} checks failed` : '\nthe late sectors still have something to give');
 await browser.close();
