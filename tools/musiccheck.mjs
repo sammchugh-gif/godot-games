@@ -78,17 +78,17 @@ check('six tracks, six tempos', new Set(tracks.map(t => t.events)).size === 6,
    share a tempo, a key (the set of pitch classes their scale and root make),
    or a melody. Two of the six were relative keys on the first pass - the
    same seven notes under two names - and this is what caught it. */
-const T = await pg.evaluate('window.SW.TRACKS');
+const T = await pg.evaluate('window.SW.TRACKS');   /* six sectors, then the theme */
 const pcs = t => new Set(t.scale.map(i => (t.root + i) % 12));
 const same = (a, b) => a.size === b.size && [...a].every(x => b.has(x));
 const clashes = [];
-for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) {
+for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
   if (T[i].bpm === T[j].bpm) clashes.push(`${T[i].name}/${T[j].name} share a tempo`);
   if (same(pcs(T[i]), pcs(T[j]))) clashes.push(`${T[i].name}/${T[j].name} are the same key`);
   if (T[i].lead.join() === T[j].lead.join()) clashes.push(`${T[i].name}/${T[j].name} share a melody`);
 }
 check('six keys, six melodies', clashes.length === 0,
-  clashes.length ? clashes.join('; ') : T.map(t => t.name + ' ' + t.bpm).join(', '));
+  clashes.length ? clashes.join('; ') : T.slice(0, 6).map(t => t.name + ' ' + t.bpm).join(', '));
 /* and the render reflects the data: the most alike pair, by the frequencies
    actually scheduled, must still be well short of identical */
 const pitchSet = t => new Set(Object.keys(t.notes));
@@ -101,6 +101,15 @@ for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
 }
 check('and they render as different pieces', mostAlike < 0.8,
   `the two most alike, ${alikePair}, share ${(mostAlike * 100).toFixed(0)}% of their pitches`);
+
+/* ---------------------------------------------------------- the title theme
+   Slow, minor, held notes over a turning ostinato and a drone - and its own
+   thing, sharing neither tempo nor key with any sector. */
+const title = await render('music', SECS, { title: true });
+const sameKeyAsSector = T.slice(0, 6).some(t => same(pcs(t), pcs(T[6])));
+check('the hangar has a theme of its own', title.rms > 0.015 && title.peak < 0.98
+  && T[6].bpm < Math.min(...T.slice(0, 6).map(t => t.bpm)) && !sameKeyAsSector,
+  `rms ${title.rms.toFixed(3)}, ${T[6].bpm} bpm, slower than every sector, in a key none of them use`);
 
 /* ----------------------------------------------------- boss and gate layers */
 const calm = tracks[4];

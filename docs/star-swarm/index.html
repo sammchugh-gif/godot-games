@@ -340,12 +340,21 @@ const TRACKS=[
   lead:[1,0,1,0,3,0,5,0, 8,0,0,0,7,0,5,0, 6,0,6,0,8,0,10,0, 9,0,0,0,8,0,7,0, 1,0,1,0,3,0,5,0, 8,0,0,0,10,0,12,0, 11,0,10,0,9,0,8,0, 7,0,0,0,8,0,0,0],
   bass:[1,0,1,0,1,0,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[15],pad:0.036,arp:0.028,arpOct:1},
 ];
-let musicTrack=-1,musicLog=null;  // musicLog collects what was scheduled, for the checker
+let musicTrack=-1,musicLog=null,musicKind="",musicForce=null;  // musicLog collects what was scheduled, for the checker
+// the title theme sits after the six sectors
+TRACKS.push({name:"title",bpm:66,root:45,scale:MIN,chords:[0,5,3,0,0,5,6,4],
+  lead:[1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 8,0,0,0,0,0,7,0, 6,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 4,0,0,0,0,0,3,0, 2,0,0,0,0,0,0,0],
+  bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13});
+const TITLE_TRACK=TRACKS.length-1;
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 // scale degree (1-based, two octaves) to a MIDI note in this track's key
 function degNote(T,deg,oct){const d=deg-1;return T.root+T.scale[((d%7)+7)%7]+12*Math.floor(d/7)+12*(oct||0)}
 function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(T,c+1),degNote(T,c+3),degNote(T,c+5)]}
-function wantTrack(){return G?Math.min(TRACKS.length-1,Math.max(0,G.sector-1)):0}
+// Which track should be playing: the checker can force one; the hangar and
+// the credits get the theme; a run gets its sector.
+function wantTrack(){if(musicForce!=null)return musicForce;
+ if(scene==="title"||scene==="credits")return TITLE_TRACK;
+ return G?Math.min(TRACKS.length-2,Math.max(0,G.sector-1)):0}
 function osc(type,f,t,dur,vol,dest,f1,drum){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -363,25 +372,30 @@ function musicSchedule(until){
   const T=TRACKS[musicTrack],s16=60/T.bpm/4,s=musicStep,t=musicNext;
   const bar=Math.floor(s/16),inBar=s%16,eighth=Math.floor(s/2);
   const boss=!!(G&&G.bossAlive),gate=!!(G&&G.gate);
-  // a new track is taken up at a bar line, so the key changes on the beat
-  if(inBar===0&&wantTrack()!==musicTrack){musicTrack=wantTrack();musicStep=0;continue}
+  // a new track is taken up at a bar line, so the key changes on the beat -
+  // except between the hangar and a run, where it changes now
+  const kind=wantTrack()===TITLE_TRACK?"title":"run";
+  if(wantTrack()!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=wantTrack();musicKind=kind;musicStep=0;continue}
+  musicKind=kind;
   const chord=chordNotes(T,bar);
   // drums
-  const kickV=0.42,snV=0.3,hatV=0.05;
-  if(T.kick.includes(inBar)||(boss&&inBar%2===0))drum("kick",t,kickV);
-  if(T.snare.includes(inBar)||(boss&&(inBar===6||inBar===14)))drum("snare",t,snV);
-  if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar)||boss)drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
+  const kickV=0.42,snV=0.3,hatV=T.title?0.025:0.05;
+  if(!T.title){
+   if(T.kick.includes(inBar)||(boss&&inBar%2===0))drum("kick",t,kickV);
+   if(T.snare.includes(inBar)||(boss&&(inBar===6||inBar===14)))drum("snare",t,snV);}
+  if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar)||(boss&&!T.title))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
   // bass, on the eighths
   if(inBar%2===0){const b=T.bass[(inBar/2)%8];if(b){const n=chord[0]-12,jump=(T.name==="fleet"&&inBar===10)?12:0;
    osc("triangle",midiHz(n+jump),t,s16*1.7,0.16);osc("square",midiHz(n+jump),t,s16*1.2,0.04)}}
   // pad, one chord per bar, held
   if(inBar===0&&T.pad){const dur=s16*16;
    for(const n of chord){osc("sawtooth",midiHz(n)*1.003,t,dur,T.pad,padBus);osc("sawtooth",midiHz(n)*0.997,t,dur,T.pad,padBus)}
-   // the boss drone sits an octave under the root
-   if(boss)osc("sawtooth",midiHz(chord[0]-24),t,dur,0.06,padBus)}
+   // the boss drone sits an octave under the root; the theme has one always
+   if(boss||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
   // lead, on the eighths
   if(inBar%2===0){const d=T.lead[eighth%64];if(d){const n=degNote(T,d);
-   const v=boss?0.075:0.055;osc("sawtooth",midiHz(n),t,s16*1.8,v);osc("square",midiHz(n)*2,t,s16*0.9,v*0.25)}}
+   const v=boss?0.075:0.055,hold=T.hold||1.8;
+   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:0.9),v*0.25)}}
   // arpeggio on the sixteenths, up and down the chord across two octaves
   if(T.arp){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
    osc("triangle",midiHz(n),t,s16*0.9,T.arp)}
@@ -406,15 +420,16 @@ async function audioRender(what,secs,opts){
  try{
   if(what==="music"){
    G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,gate:opts.gate?{}:null};
-   musicStep=0;musicNext=0;musicTrack=-1;musicSchedule(secs)}
+   musicForce=opts.title?TITLE_TRACK:Math.min(TRACKS.length-2,(opts.sector||1)-1);
+   musicStep=0;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
   else if(SFX[what])SFX[what]();
  }finally{
-  var log=musicLog;musicLog=null;
+  var log=musicLog;musicLog=null;musicForce=null;
   const buf=await ctx.startRendering();
   AC=save.AC;master=save.master;padBus=save.padBus;G=save.G;musicStep=save.musicStep;musicNext=save.musicNext;musicTrack=save.musicTrack;
   const d=buf.getChannelData(0);let peak=0,sum=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>peak)peak=a;sum+=d[i]*d[i]}
   const notes={};for(const f of log)notes[f]=(notes[f]||0)+1;
-  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:what==="music"?TRACKS[Math.min(TRACKS.length-1,(opts.sector||1)-1)].name:what}}}
+  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:what==="music"?(opts.title?"title":TRACKS[Math.min(TRACKS.length-2,(opts.sector||1)-1)].name):what}}}
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
 const touch={id:-1,ox:0,oy:0,x:0,y:0};let mouseDown=false;
@@ -616,7 +631,20 @@ function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
 function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))}
 function dmgMul(){return 1+0.15*(G.passives.power||0)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return 1+0.2*(G.passives.scanner||0)}function magnetR(){return 100+45*(G.passives.tractor||0)}function armor(){return G.passives.armor||0}
-function hpMul(){return (1.1+G.t/110)*G.dif.hp}
+// The swarm keeps pace with the build, not just the clock. Measured, the old
+// run peaked at sector 2 and got easier from sector 4 on - a motionless
+// player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
+// because health grew with time while damage grew with ranks. The numbers are
+// what tools/curve.mjs settled on.
+const SWARM={base:0.9,time:400,rank:0.055,rank2:0.0007,slotK:0.42,rate0:1.35,rateT:70,rateR:0.05,dmgR:0.03};
+// both start biting past twelve ranks, so sector 1 is the intro it always
+// was and the pressure arrives with the build rather than before it
+function swarmDmg(){return 1+Math.max(0,ranksHeld()-12)*SWARM.dmgR}
+// weapons multiply rather than add - a fourth weapon with the damage passive
+// beside it trebles what a build puts out - so the swarm's health carries a
+// term in weapons held, squared
+function hpMul(){const r=ranksHeld(),w=Math.max(0,Object.keys(G.weapons).length-2);return (SWARM.base+G.t/SWARM.time+r*SWARM.rank)*(1+r*r*SWARM.rank2)*(1+w*w*SWARM.slotK)*G.dif.hp}
+function swarmRate(){return (SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-12)*SWARM.rateR)*G.dif.rate}
 // How much you are carrying, counted in ranks. This is what a boss is measured
 // against now: the clock alone said a run got five times stronger, when in
 // truth a finished build does about thirty times the damage of a starting one,
@@ -629,9 +657,9 @@ function ranksHeld(){let r=0;
 // send the same mothership as sector 1 at a player four times as strong.
 function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
 function bossHpMul(){return (1+ranksHeld()*0.085+G.t/900)*(1+bossLap()*1.6)*G.dif.hp}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*(d.boss?1+bossLap()*0.25:1)*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*(d.boss?1+bossLap()*0.25:swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
-function spawnWave(dt){const t=G.t;let rate=(1.35+t/55)*G.dif.rate;if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
+function spawnWave(dt){const t=G.t;let rate=swarmRate();if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
  // past the cap the swarm gets tougher rather than more numerous, which keeps
  // the frame rate honest on a phone thirty minutes into a run
  while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=MAX_EN){G.spawnAcc=0;break}
@@ -690,7 +718,7 @@ function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
  // a sector that opens a slot says so, because otherwise the only sign is a
  // card you have never been offered turning up at the next level
- announce(G.sector===2||G.sector===4
+ announce(G.sector===2||G.sector===4||G.sector===6
   ?"SECTOR "+G.sector+"  ·  NEW SLOT OPEN"
   :"SECTOR "+G.sector+"  ·  "+realm().name);
  SFX.warp();flash=0.4;shake=0.8}
@@ -702,7 +730,7 @@ function saveRecord(){const id=recKeyFor(G.ship.id,G.dif.id),r=records[id]||{bes
 // inside two sectors and the twenty minutes after that were only ranking up
 // what you already had. A slot opens with the sectors instead, so arriving in
 // 2 and in 4 each brings a choice you have not had before.
-function slots(){const s=(G&&G.sector)||1;return s>=4?4:s>=2?3:2}
+function slots(){const s=(G&&G.sector)||1;return s>=6?5:s>=4?4:s>=2?3:2}
 function options(){const out=[];const cap=slots();
  const nw=Object.keys(G.weapons).length,np=Object.keys(G.passives).length;
  for(const k in WEAPONS){const l=G.weapons[k]||0;if(l>=WEAPONS[k].max)continue;if(!l&&nw>=cap)continue;out.push({k,w:true,l:l+1})}
@@ -1249,6 +1277,45 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  HUDBOX.pause={x:W-64-SR,y:52+ST,w:48,h:40};
  drawButtons();cx.restore()}
 function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32)}
+// The logo, baked once per size. Letters extruded and lit from above, a
+// planet's ring passing behind them and over their feet, a swarm crossing the
+// corner. It was a string of text with a drop shadow.
+let LOGO=null,logoKey="";
+function logoSprite(sz,maxW){
+ // shrink until the letters and their ring fit the width they are given -
+ // italic black is a good deal wider than the plain text it replaced
+ const fontFor=z=>"italic 900 "+z+"px -apple-system,BlinkMacSystemFont,system-ui,sans-serif";
+ const measure=z=>{let r=0;bake(8,8,g=>{g.font=fontFor(z);r=g.measureText("STAR SWARM").width});return r};
+ let tw=measure(sz);while(sz>18&&tw+sz*1.3>maxW){sz-=1;tw=measure(sz)}
+ const key=sz+"@"+DPR;if(LOGO&&logoKey===key)return LOGO;
+ const font=fontFor(sz);
+ const w=Math.ceil(tw+sz*1.3),h=Math.ceil(sz*1.95);
+ LOGO=bake(Math.ceil(w*DPR),Math.ceil(h*DPR),(g)=>{g.scale(DPR,DPR);
+  const cx0=w/2,base=h*0.64,ex=Math.max(3,Math.round(sz*0.075));
+  const ring=(front)=>{g.save();g.translate(cx0,base-sz*0.36);g.rotate(-0.16);
+   if(front){g.beginPath();g.rect(-w,sz*0.12,w*2,h);g.clip()}
+   const gr=g.createLinearGradient(-w/2,0,w/2,0);gr.addColorStop(0,"rgba(255,210,63,0)");gr.addColorStop(0.3,"#ffd23f");gr.addColorStop(0.7,"#ff8a5a");gr.addColorStop(1,"rgba(255,138,90,0)");
+   g.strokeStyle=gr;g.lineWidth=sz*0.085;g.beginPath();g.ellipse(0,0,w*0.52,sz*0.3,0,0,TAU);g.stroke();
+   g.strokeStyle="rgba(255,255,255,0.35)";g.lineWidth=sz*0.02;g.beginPath();g.ellipse(0,-sz*0.02,w*0.5,sz*0.24,0,0,TAU);g.stroke();
+   g.restore()};
+  ring(false);
+  g.font=font;g.textAlign="center";g.textBaseline="alphabetic";
+  // glow
+  g.save();g.shadowColor="#4fd1ff";g.shadowBlur=sz*0.4;g.fillStyle="rgba(79,209,255,0.55)";g.fillText("STAR SWARM",cx0,base);g.restore();
+  // extrusion, back to front
+  for(let i=ex;i>=1;i--){g.fillStyle=i>ex*0.5?"#0a1240":"#16246a";g.fillText("STAR SWARM",cx0+i*0.9,base+i)}
+  // the face, lit from the top
+  const f=g.createLinearGradient(0,base-sz*0.72,0,base+sz*0.05);
+  f.addColorStop(0,"#ffffff");f.addColorStop(0.42,"#a8ecff");f.addColorStop(0.55,"#5fc3ff");f.addColorStop(1,"#2a6cff");
+  g.fillStyle=f;g.fillText("STAR SWARM",cx0,base);
+  g.lineWidth=Math.max(1,sz*0.018);g.strokeStyle="rgba(230,248,255,0.8)";g.strokeText("STAR SWARM",cx0,base);
+  ring(true);
+  // a swarm across the top right
+  for(let i=0;i<9;i++){const u=i/8,x=cx0+tw*0.18+u*tw*0.34,y=base-sz*0.98-Math.sin(u*2.6)*sz*0.22,s=sz*(0.05+u*0.045);
+   g.save();g.translate(x,y);g.rotate(-0.5+u*0.3);g.fillStyle=i%3?"#ff6080":"#ffd23f";
+   g.beginPath();g.moveTo(s,0);g.lineTo(-s*0.8,s*0.6);g.lineTo(-s*0.4,0);g.lineTo(-s*0.8,-s*0.6);g.closePath();g.fill();g.restore()}
+ });LOGO.cssW=w;LOGO.cssH=h;logoKey=key;return LOGO}
+function drawStars(){for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);
  for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
@@ -1277,7 +1344,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillR
  // the logo starts below it rather than behind it
  const top=SAFE.t+8+(W<560?40:0);
  const logoSz=clamp(Math.min(88,W/8),26,Math.max(26,(contentBottom-top)*0.24));
- let cursor=top+logoSz*1.3;
+ let cursor=top+logoSz*1.95+2;
  const dh=stack?38:42;
  // does it all fit with the tag line and the difficulty blurb in place?
  let showTag=true,showDesc=true;
@@ -1289,8 +1356,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillR
  if(need()<minShip)showTag=false;
  if(need()<minShip)showDesc=false;
  if(need()<minShip){showHelp=false;launchY=helpTop()-gap-bh;contentBottom=launchY-gap}
- text("STAR SWARM",W/2+4,top+logoSz*0.62+4+bob,logoSz,"#0a0a2a");
- text("STAR SWARM",W/2,top+logoSz*0.62+bob,logoSz,"#80c0ff");
+ {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r);cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
  if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // difficulty, as a segmented row above the ships
@@ -1338,8 +1404,9 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillR
   textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
   textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
  const mw=Math.min(150,W*0.36);
- btn(showHelp?W/2-mw/2:14+SAFE.l,musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",
+ btn(showHelp?W/2-mw*1.05:14+SAFE.l,musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",
   ()=>musicToggle(),{size:Math.min(16,mh*0.38)});
+ btn(showHelp?W/2+mw*0.05:W-14-SAFE.r-mw,musicY,mw,mh,"CREDITS",()=>{creditsT=0;scene="credits"},{size:Math.min(16,mh*0.38)});
  drawButtons();cx.restore()}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");buttons=[];const n=cards.length,cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5),y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
@@ -1351,24 +1418,62 @@ function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS
  // on a phone in portrait a fixed 210px pair ran off both edges
  const ew=Math.min(210,(W-56)/2);
  buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"FLY AGAIN",()=>start(),{fill:"#2a5aa0",size:24});btn(W/2+10,H*0.72,ew,60,"HANGAR",()=>{scene="title"},{size:24});
+ if(won)btn(W/2-ew/2,H*0.72+72,ew,44,"CREDITS",()=>{creditsT=0;scene="credits"},{size:18});
  if(won){for(let i=0;i<30;i++){const x=(hash(i,3)*W+frameT*60*(1+hash(i,5)))%W,y2=(hash(i,9)*H+frameT*90)%H;cx.fillStyle=["#ff6080","#ffe060","#60c0ff","#8dff5a"][i%4];cx.fillRect(x,y2,8,8)}}
  drawButtons();cx.restore()}
+// The roll. Everyone who should be in it is in it, and it scrolls at a pace a
+// seven-year-old can read. A tap anywhere brings the hangar back.
+let creditsT=0;
+const CREDITS=[
+ ["STAR SWARM",40,"#80c0ff"],["A SOPHIA, RORY AND DYLAN GAMES PRODUCTION",13,"#9fb0c8"],["",30],
+ ["PILOTS",13,"#ffe060"],["Sophia",22],["Rory",22],["Dylan",22],["",26],
+ ["STARSHIPS",13,"#ffe060"],["ships",22],["",26],
+ ["THE SWARM",13,"#ffe060"],["Scouts \u00b7 Swarmers \u00b7 Drifters",20],["Turrets \u00b7 Phantoms",20],["",26],
+ ["BOSSES",13,"#ffe060"],["The Mothership",22],["The Space Kraken",22],["The Warlord",22],["",26],
+ ["SIX REALMS",13,"#ffe060"],["realms",20],["",26],
+ ["MUSIC",13,"#ffe060"],["Six tracks and a theme",20],["every note an oscillator",16,"#9fb0c8"],["",26],
+ ["EXECUTIVE PRODUCER",13,"#ffe060"],["Dad",26],["",26],
+ ["BUILT WITH",13,"#ffe060"],["Claude",22],["",40],
+ ["THANKS FOR PLAYING",30,"#ffe060"],["",60]];
+function creditLines(){const out=[];
+ for(const [t,sz,col] of CREDITS){
+  if(t==="ships")for(const s of SHIPS)out.push([s.name,sz,col]);
+  else if(t==="realms")for(const r of REALMS)out.push([r.name,sz,col]);
+  else out.push([t,sz,col])}
+ return out}
+function drawCredits(dt){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);drawStars();
+ creditsT+=dt;
+ const lines=creditLines();let y=H+30-creditsT*46;
+ // it stops when the last line reaches the middle, and waits there
+ let total=0;for(const [,sz] of lines)total+=sz*1.5;
+ if(y+total<H*0.55)y=H*0.55-total;
+ for(const [t,sz,col] of lines){
+  if(t&&y>-40&&y<H+40)textFit(t,W/2,y,Math.min(sz,W*0.075),col||"#fff",W-32);
+  y+=sz*1.5}
+ // the ship flies on underneath it all
+ const sh=SHIPS[shipIdx]||SHIPS[0];
+ cx.save();cx.translate(W/2+Math.sin(frameT*0.7)*W*0.18,H-40-SAFE.b-Math.sin(frameT*1.3)*8);drawShip(0,0,-Math.PI/2,sh,0.8);cx.restore();
+ textFit("tap to return",W-16-SAFE.r,SAFE.t+26,11,"rgba(255,255,255,0.4)",W*0.4,"right");
+ buttons=[];btn(0,0,W,H,"",()=>{scene="title"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});
+ cx.restore()}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord()},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();cx.restore()}
 function start(){if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
 function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene="pause";musicStop()}else if(scene==="pause"){scene="play";musicStart()}}
  if(scene==="title"&&(code==="Space"||code==="Enter"))start();if(scene==="levelup"&&["Digit1","Digit2","Digit3"].includes(code)){const i=+code[5]-1;if(cards[i]){applyCard(cards[i]);scene="play"}}
  if((scene==="over"||scene==="win")&&(code==="Space"||code==="Enter"))start()}
-function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
+function frame(ts){requestAnimationFrame(frame);inputWatch();
+ // the hangar and the credits have a theme, and it starts the moment audio can
+ if((scene==="title"||scene==="credits")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
  if(["play","levelup","pause","over","win"].includes(scene)&&G){drawWorld();drawHUD()}
- if(scene==="title")drawTitle();else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
+ if(scene==="title")drawTitle();else if(scene==="credits")drawCredits(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  drawDiag();
 }
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
- hud(){return HUDBOX},TRACKS,audioRender,
+ hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
  sim(t,d){const s=d||1/60;for(let i=0;i<Math.round(t/s);i++)update(s)}};
