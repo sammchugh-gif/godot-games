@@ -36,7 +36,8 @@ function readSafe(){const st=getComputedStyle(safeProbe);
 function resize(){readSafe();DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55}
 window.addEventListener("resize",resize);window.addEventListener("orientationchange",()=>setTimeout(resize,150));resize();
 // Six sectors, five minutes each. The warp gate opens near the end of every
-// sector; flying into it clears the field and starts the next one.
+// sector once its boss is dead; flying into it clears the field and starts the
+// next one.
 const SECTOR_LEN=300,SECTORS=6,RUN_LEN=SECTOR_LEN*SECTORS,MAX_EN=240,TAU=Math.PI*2;
 const BOSS_ORDER=["mother","kraken","warlord"];
 const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
@@ -501,7 +502,7 @@ unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
 function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
- weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,won:false,elite:0};
+ weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;seedRocks();shake=0;flash=0}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
@@ -533,8 +534,19 @@ function spawnWave(dt){const t=G.t;let rate=(1.35+t/55)*G.dif.rate;if(G.secT>SEC
  if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);
   // the second time you meet one it is a different animal, and it says so
   announce(ENEMY[which].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"")+" APPROACHES!");SFX.boss();shake=1}
- if(G.secT>=SECTOR_LEN-45&&!G.gate){const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
-  announce(G.sector>=SECTORS?"THE FINAL GATE IS OPEN!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}
+ // The gate is the way out of a sector, and it should not be a way round the
+ // boss. It opened on the clock alone, so you could let the kraken chase you
+ // for ninety seconds and simply leave - which made every boss optional. The
+ // clock still decides the earliest it can open; the boss decides whether it
+ // does. Nobody can get stuck behind one: its health is fixed the moment it
+ // arrives while yours keeps levelling, so the fight always resolves.
+ if(G.secT>=SECTOR_LEN-45&&!G.gate){
+  if(G.bossAlive){
+   if(!G.gateHeld){G.gateHeld=true;
+    announce(ENEMY[G.bossAlive.type].name+" IS HOLDING THE GATE SHUT")}}
+  else{const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
+   announce(G.sector>=SECTORS?"THE FINAL GATE IS OPEN!"
+    :G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
 function announce(s){G.announce=s;G.announceT=3}
 function nearest(x,y,maxd,skip){let best=null,bd=maxd||1e9;for(const e of G.en){if(skip&&skip.has(e))continue;const d=dist(x,y,e.x,e.y)-e.r;if(d<bd){bd=d;best=e}}return best}
 function fireWeapons(dt){const wp=G.weapons,cd=G.cds;const tick=(k,base)=>{cd[k]=(cd[k]||0)-dt;if(cd[k]<=0){cd[k]=base*rateMul();return true}return false};
@@ -564,7 +576,7 @@ function gainXP(v){G.xp+=v*xpMul();SFX.gem();while(G.xp>=G.xpNext){G.xp-=G.xpNex
 function die(){scene="over";SFX.die();musicStop();saveRecord()}
 // Flying into the gate leaves the whole swarm behind: the field is wiped, the
 // asteroids are new, shields come back, and clearing a sector pays an upgrade.
-function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.bossAlive=null;
+function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
  G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
@@ -1057,7 +1069,13 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  // into the kill count on a narrow phone
  const hz=Math.min(20,W*0.055),cz=Math.min(34,W*0.09);
  text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
- const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,cz,left>0?"#fff":"#80c0ff");
+ // when the clock runs out the number gives way to what you are waiting on,
+ // which is the gate unless something is sitting on it
+ const left=Math.max(0,SECTOR_LEN-G.secT);
+ // bounded, because "BEAT IT!" is a good deal wider than "2:31" and the level
+ // and the kill count are sitting on either side of it
+ textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
+  left>0?"#fff":(G.bossAlive?"#ff8080":"#80c0ff"),W*0.46);
  textFit("SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
@@ -1165,7 +1183,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillR
  if(need()<minShip){showHelp=false;launchY=helpTop()-gap-bh;contentBottom=launchY-gap}
  text("STAR SWARM",W/2+4,top+logoSz*0.62+4+bob,logoSz,"#0a0a2a");
  text("STAR SWARM",W/2,top+logoSz*0.62+bob,logoSz,"#80c0ff");
- if(showTag){const tag="Six sectors. Survive five minutes in each, then fly to the warp gate.";
+ if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // difficulty, as a segmented row above the ships
  const dw=Math.min(380,W-32),dy=cursor+gap,dx0=W/2-dw/2,seg=dw/3;
@@ -1241,7 +1259,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Ma
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,options,slots,spawnEnemy,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

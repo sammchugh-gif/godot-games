@@ -177,6 +177,50 @@ check('the kraken goes through all three tempers',
 check('nobody outlasts the sector', times.every(t => !t.alive),
   'every boss dies inside 90 seconds');
 
+/* ------------------------------------------- and can you walk past the boss?
+
+   The gate used to open on the clock alone, so a player could let the boss
+   chase them for ninety seconds and simply leave. Every boss was optional.
+   Proved rather than assumed: an unkillable boss must keep the gate shut
+   however long you wait, and killing it must open it. */
+const GATE = `(function(){
+  const S = window.SW; S.fx = false; S.start(S.SHIPS[0]);
+  const G = S.G, out = {};
+  G.sector = 1; G.secT = S.SECTOR_LEN - 50; G.secBoss = true;
+  G.hp = G.maxhp = 1e9;                       /* we are testing the gate, not dying */
+  G.en.length = 0; G.gate = null; G.gateHeld = false;
+  const e = S.spawnEnemy('mother', G.px + 320, G.py);
+  G.bossAlive = e;
+  e.hp = e.maxhp = 1e9;                       /* it cannot be killed, so it must hold */
+  S.sim(60, 1/60);                            /* well past the hour the gate used to open */
+  out.shutWhileAlive = !G.gate;
+  out.saidWhy = /HOLDING THE GATE/.test(G.announce) || G.gateHeld;
+  /* now let it die to the player's own guns rather than by fiat */
+  e.hp = 1;
+  for (let i = 0; i < 60 * 6 && G.bossAlive; i++) S.sim(1/60, 1/60);
+  out.bossDied = !G.bossAlive;
+  S.sim(1, 1/60);
+  out.openedAfter = !!G.gate;
+
+  /* and the ordinary case: no boss left, gate opens on the clock as before */
+  S.start(S.SHIPS[0]);
+  const H = S.G;
+  H.sector = 1; H.secT = S.SECTOR_LEN - 50; H.secBoss = true; H.bossAlive = null;
+  H.hp = H.maxhp = 1e9; H.en.length = 0; H.gate = null;
+  S.sim(8, 1/60);
+  out.openedNormally = !!H.gate;
+  return out;
+})()`;
+const gate = await pg.evaluate(GATE);
+check('a live boss keeps the gate shut', gate.shutWhileAlive && gate.saidWhy,
+  gate.shutWhileAlive ? 'sixty seconds past the old opening time, still shut, and it says why'
+                      : 'THE GATE OPENED WITH THE BOSS STILL ALIVE');
+check('killing it opens the gate', gate.bossDied && gate.openedAfter,
+  gate.bossDied ? 'the boss went down and the gate followed'
+                : 'the boss would not die, so this proves nothing');
+check('no boss, no hold-up', gate.openedNormally,
+  'with the boss already dead the gate opens on the clock as before');
+
 /* difficulty does not touch any of this - worth stating, because the obvious
    guess is that a harder level paces upgrades differently, and it does not */
 const dif = await pg.evaluate(`window.SW.DIFFS.map(d => Object.keys(d).filter(
