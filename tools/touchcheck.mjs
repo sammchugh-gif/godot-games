@@ -49,7 +49,9 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript',
 /* Each game says where its player is, so "did it move" is a real measurement
    rather than a guess from pixels. */
 const GAMES = {
-  'star-swarm':   { api: 'SW', start: "window.SW.start('dylan')",
+  /* the run opens with a second of fly-in during which the stick does
+     nothing by design; this measures the stick, so it skips that */
+  'star-swarm':   { api: 'SW', start: "window.SW.start('dylan');window.SW.G.arrive=0",
                     pos: '({x:window.SW.G.px,y:window.SW.G.py})' },
   'slime-storm':  { api: 'SS', start: "window.SS.start('dylan')",
                     pos: '({x:window.SS.G.px,y:window.SS.G.py})' },

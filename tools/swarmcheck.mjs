@@ -285,6 +285,22 @@ check('nothing on the hangar answers a tap meanwhile', flight.every(s => s.butto
 check('and the run starts once it is gone', ended.scene === 'play' && ended.t >= 0 && ended.t < 2,
   `scene ${ended.scene}, run clock at ${ended.t.toFixed(2)}s`);
 
+/* and the run opens with the ship flying in from below: off the bottom of
+   the screen at first, settling into place inside a second, the clock and
+   the spawns held until it is there */
+const arr = await pg.evaluate(`(() => {
+  const S = window.SW; S.start(S.SHIPS[0]); const G = S.G;
+  const h = innerHeight / 2;
+  const out = { off0: S.arriveOff(), t0: G.t, en0: G.en.length };
+  S.sim(0.45); out.off1 = S.arriveOff(); out.t1 = G.t;
+  S.sim(0.6); out.off2 = S.arriveOff(); S.sim(0.5); out.t2 = G.t;
+  out.half = h; S.scene = 'title'; return out;
+})()`);
+check('the run opens with the ship flying in', arr.off0 > arr.half && arr.off1 > 0 && arr.off1 < arr.off0 && arr.off2 === 0,
+  `drawn ${Math.round(arr.off0)}px below its spot, ${Math.round(arr.off1)} after 0.45s, in place after 1.05s`);
+check('and holds the clock until it lands', arr.t0 === 0 && arr.t1 === 0 && arr.t2 > 0.4 && arr.en0 === 0,
+  `run clock ${arr.t1.toFixed(2)}s during the approach, ${arr.t2.toFixed(2)}s half a second after`);
+
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 140)); }
 console.log(bad ? `\n${bad} checks failed` : '\nthe late sectors still have something to give');
 await browser.close();
