@@ -147,6 +147,44 @@ const climb = await pg.evaluate(`(async () => {
 check('gems ring up a scale', climb[1] > climb[0] && climb[2] > climb[1] && climb[3] > climb[2],
   `four in a row: ${climb.join(' → ')} Hz`);
 
+/* ------------------------------------------------ the first tap starts it
+   Everything above ran with autoplay forced open. A phone does not do that:
+   the context starts suspended, and only a gesture the browser recognises
+   may wake it - a touchend, not a touchstart. This Chromium wakes on the
+   landing finger, so it cannot mimic that on its own; the check makes the
+   condition instead. The finger lands, the context is put to sleep the way
+   a phone leaves it, and the scheduler must stall rather than write into a
+   frozen clock; then the finger lifts, and the context must be running and
+   the scheduler moving again - the exact sequence that once left the hangar
+   silent until the music was switched off and on. */
+const strict = await chromium.launch({ executablePath: CHROME,
+  args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const sctx = await strict.newContext({ viewport: { width: 430, height: 932 }, hasTouch: true, isMobile: true });
+const sp = await sctx.newPage();
+await sp.goto('http://127.0.0.1:8397/docs/star-swarm/', { waitUntil: 'load', timeout: 20000 });
+await sleep(1200);
+await sp.evaluate(`document.querySelectorAll('.shelf-menu-stuck,.shelf-menu-veil').forEach(e => e.remove())`);
+const cdp = await sctx.newCDPSession(sp);
+await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 215, y: 300 }] });
+await sleep(300);
+await sp.evaluate('window.SW.ctx && window.SW.ctx.suspend()');
+await sleep(400);
+const asleep = await sp.evaluate('window.SW.audio');
+await sleep(500);
+const still = await sp.evaluate('window.SW.audio');
+await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await sleep(600);
+const a0 = await sp.evaluate('window.SW.audio');
+await sleep(1000);
+const a1 = await sp.evaluate('window.SW.audio');
+await strict.close();
+const stalled = asleep && still && still.next === asleep.next;
+check('a tap wakes the music on a phone', asleep && asleep.state === 'suspended' && stalled
+  && a0 && a0.state === 'running' && a1.timer && a1.next > a0.next && a1.next > a1.now,
+  asleep ? `${asleep.state} with the finger down, scheduler ${stalled ? 'held' : 'WRITING INTO A FROZEN CLOCK'}; `
+         + `${a0 && a0.state} once it lifts, scheduler ${a1 && a1.next > a0.next ? 'moving' : 'STALLED'}`
+         : 'no audio context was made at all');
+
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 160)); }
 console.log(bad ? `\n${bad} checks failed` : '\nsix tracks, a boss layer, and the pickups all have something to say');
 await browser.close();
