@@ -1387,7 +1387,10 @@ function skySprite(){const key=W+"x"+H+"@"+DPR;if(SKY&&skyKey===key)return SKY;
   const dk=g.createLinearGradient(0,H*0.55,0,H);dk.addColorStop(0,"rgba(5,6,20,0)");dk.addColorStop(1,"rgba(5,6,20,0.85)");
   g.fillStyle=dk;g.fillRect(0,0,W,H);
  });skyKey=key;return SKY}
-function drawStars(){
+// The hangar's sky: the baked sprite, a few live stars, a shooting star. Not
+// the world's drawStars - that one shipped broken for a day because this one
+// took its name and won, and every run played over the title sky.
+function drawSky(){
  cx.drawImage(skySprite(),0,0,W,H);
  // near stars: fewer, brighter, drifting, and they twinkle
  for(let i=0;i<70;i++){const x=(hash(i,7)*W+frameT*(4+i%5*3))%W,y=hash(i,11)*H;
@@ -1403,7 +1406,7 @@ function drawStars(){
   if(a<=0)shoot=null}}
 // where the title drew the chosen ship, so the launch can lift it from that spot
 let shipSlot=null,launching=false,launchT=0,launchAt=null,wipeT=0;
-function drawTitle(){cx.save();cx.scale(DPR,DPR);drawStars();
+function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  buttons=[];
  const n=SHIPS.length;
@@ -1529,7 +1532,7 @@ function creditLines(){const out=[];
   else if(t==="realms")for(const r of REALMS)out.push([r.name,sz,col]);
   else out.push([t,sz,col])}
  return out}
-function drawCredits(dt){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);drawStars();
+function drawCredits(dt){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);drawSky();
  creditsT+=dt;
  const lines=creditLines();let y=H+30-creditsT*46;
  // it stops when the last line reaches the middle, and waits there
