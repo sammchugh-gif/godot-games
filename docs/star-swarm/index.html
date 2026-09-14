@@ -292,7 +292,17 @@ let AC=null,master=null,padBus=null,musicOn=store.get("music",true)!==false,musi
 function buildBus(ctx){const m=ctx.createGain();m.gain.value=0.5;m.connect(ctx.destination);
  const f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=820;f.Q.value=0.7;f.connect(m);
  return{master:m,pad:f}}
-function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();const b=buildBus(AC);master=b.master;padBus=b.pad}catch(e){}}
+function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();const b=buildBus(AC);master=b.master;padBus=b.pad;
+  // the scheduler anchors to the context clock, and that clock is frozen at
+  // zero until the context runs - so the moment it does, start again from now
+  AC.onstatechange=()=>{if(AC.state==="running"&&musicTimer){musicNext=AC.currentTime+0.05}}}catch(e){}}
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used to
+// be made on touchstart and never resumed, so it sat suspended with its clock
+// at zero, the scheduler wrote a bar into the void and stalled, and the music
+// came only once something restarted the scheduler after the context had
+// woken on its own. Now every gesture that counts also wakes the context.
+function audioWake(){audioInit();if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;if(musicLog)musicLog.push(Math.round(f0));const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 function noise(dur,vol,delay,bright){if(!AC)return;const t=AC.currentTime+(delay||0),n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let l=0;const k=bright?0.2:0.7;for(let i=0;i<n;i++){l=l*k+(Math.random()*2-1)*(1-k);d[i]=l*(1-i/n)}const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=vol;s.connect(g);g.connect(master);s.start(t)}
 // a chord stab: several notes at once, which is what a fanfare needs and a
@@ -406,13 +416,13 @@ function musicSchedule(until){
   // the gate is open: a high sparkle every other sixteenth
   if(gate&&inBar%2===1)osc("sine",midiHz(chord[(inBar>>1)%3]+36),t,s16*0.8,0.03);
   musicStep++;musicNext+=s16}}
-function musicTick(){if(!AC||!musicOn)return;musicSchedule(AC.currentTime+0.25)}
+function musicTick(){if(!AC||!musicOn||AC.state!=="running")return;musicSchedule(AC.currentTime+0.25)}
 function musicStart(){if(!AC||musicTimer||!musicOn)return;musicNext=AC.currentTime+0.1;musicStep=0;musicTrack=-1;musicTimer=setInterval(musicTick,100)}
 function musicStop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
 // One owner for the switch: flipping it used to set a flag and leave the
 // track playing until something else happened to stop it.
 function musicToggle(){musicOn=!musicOn;store.set("music",musicOn);
- if(musicOn){audioInit();if(scene==="play")musicStart()}else musicStop()}
+ if(musicOn){audioWake();if(scene==="play")musicStart()}else musicStop()}
 // Render `secs` of a sector's track, or a sound, into an offline context and
 // report on it. This is how the score is tested: the same scheduler, the same
 // oscillators, into a buffer instead of a speaker.
@@ -435,7 +445,7 @@ async function audioRender(what,secs,opts){
   const notes={};for(const f of log)notes[f]=(notes[f]||0)+1;
   return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:what==="music"?(opts.title?"title":TRACKS[Math.min(TRACKS.length-2,(opts.sector||1)-1)].name):what}}}
 // ---------------------------------------------------------------- input
-const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
+const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;audioWake();if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
 const touch={id:-1,ox:0,oy:0,x:0,y:0};let mouseDown=false;
 // Every finger the page has actually seen. e.touches is authoritative on every
 // touch event, so pruning against it keeps this honest even when a touchend
@@ -534,15 +544,15 @@ window.addEventListener("touchmove",e=>{lastTouchAt=performance.now();evN++;seeT
   // thumb that is really steering is deflected, so it cannot be taken from.
   const busy=touch.id>=0&&Math.hypot(touch.x-touch.ox,touch.y-touch.oy)>8;
   if(!busy){touch.id=t.identifier;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y}}},{passive:false});
-function tend(e){lastTouchAt=performance.now();evN++;
+function tend(e){lastTouchAt=performance.now();evN++;audioWake();
  for(const t of e.changedTouches){delete live[t.identifier];delete fingers[t.identifier];
   if(t.identifier===touch.id)touch.id=-1}
  seeTouches(e);
  if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1});
-cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioInit();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y;fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1;if(!document.hidden&&AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})});
+cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y;fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
 window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y;
  if(fingers[99]){fingers[99].x=p.x;fingers[99].y=p.y}}});
 function mouseRelease(){mouseDown=false;delete fingers[99];if(touch.id===99)touch.id=-1}
@@ -1612,7 +1622,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
