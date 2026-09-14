@@ -182,6 +182,28 @@ check('the kraken goes through all three tempers',
 check('nobody outlasts the sector', times.every(t => !t.alive),
   'every boss dies inside 90 seconds');
 
+/* ------------------------------------------------ a boss is a duel, not a brawl
+   While one is on the field the ordinary swarm must thin out, so the fight is
+   the fight - counted as spawns over twenty seconds with and without a boss. */
+const ADDS = `(function(){
+  const S = window.SW;
+  const count = boss => { S.start(S.SHIPS[0]); const G = S.G;
+    G.sector = 3; G.t = 850; G.secT = 100; G.hp = G.maxhp = 1e9;
+    G.en.length = 0;
+    /* a real boss, not a stand-in: the HUD draws whatever bossAlive names.
+       The warlord, because it hatches no escort to muddle the count. */
+    if (boss) { const e = S.spawnEnemy('warlord', G.px + 900, G.py + 900); e.hp = e.maxhp = 1e9; G.bossAlive = e; }
+    else G.bossAlive = null;
+    let spawned = 0, last = 0;
+    for (let i = 0; i < 60 * 20; i++) { S.sim(1/60, 1/60);
+      const n = G.en.length - (boss ? 1 : 0); if (n > last) spawned += n - last; last = n; }
+    return spawned };
+  return { calm: count(false), duel: count(true) };
+})()`;
+const adds = await pg.evaluate(ADDS);
+check('the swarm thins while a boss is up', adds.duel < adds.calm * 0.5,
+  `${adds.calm} spawned in twenty calm seconds, ${adds.duel} with a boss on the field`);
+
 /* ------------------------------------------- and can you walk past the boss?
 
    The gate used to open on the clock alone, so a player could let the boss
