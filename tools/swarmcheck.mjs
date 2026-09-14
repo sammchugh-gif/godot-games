@@ -112,6 +112,71 @@ const early = await pg.evaluate(EARLY);
 check('sector 1 does not run dry', early.left >= 10,
   `slots full at rank 1, still ${early.left} ranks to spend`);
 
+/* ---------------------------------------------- and are the bosses a fight?
+
+   The second complaint, and a measurement rather than an impression: how long
+   does each boss last against the build a player realistically has by the
+   sector it turns up in? It used to get SHORTER as the run went on - 9.1
+   seconds for the sector 1 mothership and 3.4 for the sector 4 one - because
+   health scaled with the clock while damage scaled with the build, and the
+   three bosses cycle so sector 4 sent the sector 1 boss at a player four times
+   as strong. */
+const FIGHT = (boss, sector, tsec, ranks) => `(function(){
+  const S = window.SW; S.fx = false; S.start(S.SHIPS[0]);
+  const G = S.G;
+  G.sector = ${sector}; G.t = ${tsec}; G.secT = 100;
+  /* the slots that are open by now, filled evenly, with about as many ranks
+     as the player will have had levels */
+  G.weapons = {}; G.passives = {};
+  const cap = S.slots();
+  const ws = Object.keys(S.WEAPONS).slice(0, cap), ps = Object.keys(S.PASSIVES).slice(0, cap);
+  let left = ${ranks};
+  for (let r = 1; r <= 6 && left > 0; r++) {
+    for (const k of ws) { if (left <= 0) break; if (r <= S.WEAPONS[k].max) { G.weapons[k] = r; left-- } }
+    for (const k of ps) { if (left <= 0) break; if (r <= S.PASSIVES[k].max) { G.passives[k] = r; left-- } }
+  }
+  G.hp = G.maxhp = 99999; G.sh = G.maxsh = 0;   /* timing the boss, not the player */
+  G.en.length = 0;
+  const e = S.spawnEnemy(${JSON.stringify(boss)}, G.px + 240, G.py);
+  G.bossAlive = e;
+  const phases = {};
+  let t = 0;
+  for (let i = 0; i < 60 * 90 && e.hp > 0; i++) {
+    S.sim(1/60, 1/60); t += 1/60;
+    const f = e.hp / e.maxhp; phases[f > 0.6 ? 1 : f > 0.3 ? 2 : 3] = 1;
+    if (G.en.length > 30) G.en = [e].concat(G.en.filter(x => x !== e).slice(0, 20));
+  }
+  return { secs: +t.toFixed(1), hp: Math.round(e.maxhp), alive: e.hp > 0,
+           phases: Object.keys(phases).length };
+})()`;
+
+const FIGHTS = [['mother', 1, 250, 10], ['kraken', 2, 550, 20], ['warlord', 3, 850, 28],
+                ['mother', 4, 1150, 34], ['kraken', 5, 1450, 39], ['warlord', 6, 1750, 43]];
+const times = [];
+for (const [boss, sector, tsec, ranks] of FIGHTS) {
+  const r = await pg.evaluate(FIGHT(boss, sector, tsec, ranks));
+  await sleep(80);
+  times.push({ boss, sector, ...r });
+  console.log(`  ${boss.padEnd(8)} sector ${sector}  ${String(r.hp).padStart(6)} hp  ` +
+    `${ranks} ranks  ->  ${r.alive ? 'still alive after 90' : r.secs + 's'}`);
+}
+const SHORTEST = 10;
+const quick = times.filter(t => !t.alive && t.secs < SHORTEST);
+check('every boss is a fight, not a speed bump', quick.length === 0,
+  quick.length ? quick.map(t => `${t.boss} s${t.sector} in ${t.secs}s`).join(', ')
+               : `the briefest lasts ${Math.min(...times.map(t => t.secs))}s`);
+/* the actual complaint: they were getting EASIER as the run went on */
+const firstLap = times.slice(0, 3).map(t => t.secs), lastLap = times.slice(3).map(t => t.secs);
+check('the later ones are not the easier ones',
+  Math.min(...lastLap) >= Math.min(...firstLap),
+  `sectors 1-3 ${firstLap.join(', ')}s   ·   sectors 4-6 ${lastLap.join(', ')}s`);
+const krakens = times.filter(t => t.boss === 'kraken');
+check('the kraken goes through all three tempers',
+  krakens.every(k => k.phases === 3),
+  krakens.map(k => `sector ${k.sector} reached ${k.phases} of 3`).join(', '));
+check('nobody outlasts the sector', times.every(t => !t.alive),
+  'every boss dies inside 90 seconds');
+
 /* difficulty does not touch any of this - worth stating, because the obvious
    guess is that a harder level paces upgrades differently, and it does not */
 const dif = await pg.evaluate(`window.SW.DIFFS.map(d => Object.keys(d).filter(

@@ -508,7 +508,19 @@ function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
 function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))}
 function dmgMul(){return 1+0.15*(G.passives.power||0)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return 1+0.2*(G.passives.scanner||0)}function magnetR(){return 100+45*(G.passives.tractor||0)}function armor(){return G.passives.armor||0}
 function hpMul(){return (1.1+G.t/110)*G.dif.hp}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?(1+G.t/420)*G.dif.hp:hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+// How much you are carrying, counted in ranks. This is what a boss is measured
+// against now: the clock alone said a run got five times stronger, when in
+// truth a finished build does about thirty times the damage of a starting one,
+// which is why the late bosses were falling over.
+function ranksHeld(){let r=0;
+ for(const k in G.weapons)r+=G.weapons[k];
+ for(const k in G.passives)r+=G.passives[k];
+ return r}
+// Which time round the three bosses is this? They cycle, so sector 4 used to
+// send the same mothership as sector 1 at a player four times as strong.
+function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
+function bossHpMul(){return (1+ranksHeld()*0.085+G.t/900)*(1+bossLap()*1.6)*G.dif.hp}
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*(d.boss?1+bossLap()*0.25:1)*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
 function spawnWave(dt){const t=G.t;let rate=(1.35+t/55)*G.dif.rate;if(G.secT>SECTOR_LEN-70)rate*=1.4;G.spawnAcc+=rate*dt;
  // past the cap the swarm gets tougher rather than more numerous, which keeps
@@ -518,7 +530,9 @@ function spawnWave(dt){const t=G.t;let rate=(1.35+t/55)*G.dif.rate;if(G.secT>SEC
   const elite=t>90&&Math.random()<G.dif.elite;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
  if(t>75&&Math.floor((t-75)/75)>G.swarm){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
  // one boss per sector, three minutes in
- if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);announce(ENEMY[which].name+" APPROACHES!");SFX.boss();shake=1}
+ if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();G.bossAlive=spawnEnemy(which,p.x,p.y);
+  // the second time you meet one it is a different animal, and it says so
+  announce(ENEMY[which].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"")+" APPROACHES!");SFX.boss();shake=1}
  if(G.secT>=SECTOR_LEN-45&&!G.gate){const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
   announce(G.sector>=SECTORS?"THE FINAL GATE IS OPEN!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}
 function announce(s){G.announce=s;G.announceT=3}
@@ -594,7 +608,30 @@ function update(dt){G.t+=dt;G.secT+=dt;
   if(e.type==="swarmer"){e.ai+=dt*5;const px=-dy/d,py=dx/d;mx=dx/d*s+px*Math.sin(e.ai)*120;my=dy/d*s+py*Math.sin(e.ai)*120}
   else if(e.type==="turret"){if(d>280){mx=dx/d*s;my=dy/d*s}else if(d<200){mx=-dx/d*s*0.7;my=-dy/d*s*0.7}e.ai-=dt;if(e.ai<=0&&d<460){e.ai=2.2;G.bul.push({k:"plasma",x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,r:9,dmg:e.dmg,life:3,enemy:true})}}
   else if(e.type==="phantom"){e.ai+=dt;if(e.ai%3<2){mx=dx/d*s;my=dy/d*s}}
-  else if(e.type==="kraken"){e.dash-=dt;if(e.dash<=0){e.dash=2.5;e.ai=0.6;e.dvx=dx/d*520;e.dvy=dy/d*520;SFX.zap()}if(e.ai>0){e.ai-=dt;mx=e.dvx;my=e.dvy}else{mx=dx/d*s;my=dy/d*s}}
+  else if(e.type==="kraken"){
+   // Three tempers, and it shows you which one it is in. It used to be one
+   // dash on a two-and-a-half second timer, which a build with four weapons
+   // firing themselves does not even notice.
+   //   over 60%  a dash you can see coming, and a ring of plasma where it lands
+   //   under 60% dashes come sooner and the ring is wider
+   //   under 30% it brings friends, and the ring spins
+   const f=e.hp/e.maxhp,phase=f>0.6?1:f>0.3?2:3;
+   e.dash-=dt;
+   if(e.wind>0){ // coiled: it backs off for a moment first, so you can move
+    e.wind-=dt;mx=-dx/d*s*0.35;my=-dy/d*s*0.35;
+    if(e.wind<=0){e.ai=0.55;e.dvx=dx/d*(500+phase*70);e.dvy=dy/d*(500+phase*70);SFX.zap()}}
+   else if(e.ai>0){
+    e.ai-=dt;mx=e.dvx;my=e.dvy;
+    if(e.ai<=0){ // it arrives and lets go
+     const n=phase===1?6:phase===2?10:14;
+     for(let i=0;i<n;i++){const a=i/n*TAU+(phase===3?G.t*2:0);
+      G.bul.push({k:"plasma",x:e.x,y:e.y,vx:Math.cos(a)*225,vy:Math.sin(a)*225,
+                  r:9,dmg:e.dmg*0.55,life:2.4,enemy:true})}
+     if(phase===3)for(let i=0;i<3;i++){const a=Math.random()*TAU;
+      spawnEnemy("swarmer",e.x+Math.cos(a)*e.r*1.4,e.y+Math.sin(a)*e.r*1.4)}
+     SFX.zap()}}
+   else if(e.dash<=0){e.dash=phase===1?2.6:phase===2?1.9:1.5;e.wind=0.45}
+   else{mx=dx/d*s;my=dy/d*s}}
   else if(e.type==="warlord"){mx=dx/d*s;my=dy/d*s;e.ai-=dt;if(e.ai<=0){e.ai=2.0;for(let i=-2;i<=2;i++){const a=Math.atan2(dy,dx)+i*0.3;G.bul.push({k:"plasma",x:e.x,y:e.y,vx:Math.cos(a)*280,vy:Math.sin(a)*280,r:14,dmg:e.dmg,life:2.5,enemy:true})}}}
   else if(e.type==="mother"){mx=dx/d*s;my=dy/d*s;e.ai-=dt;if(e.ai<=0){e.ai=3.0;for(let i=0;i<3;i++){const a=Math.random()*TAU;spawnEnemy("scout",e.x+Math.cos(a)*e.r,e.y+Math.sin(a)*e.r)}}}
   else{mx=dx/d*s;my=dy/d*s}
@@ -901,9 +938,12 @@ function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
 // were plain stroked lines.
 function krakenArms(e,r,t){const col=e.flash>0?"#fff":e.col;
  const dk=e.flash>0?"#fff":shade(e.col,-0.5);
+ // The arms draw in while it winds up to a dash. That is the whole telegraph:
+ // a charge you cannot see coming is not difficulty, it is a coin toss.
+ const coil=e.wind>0?1-(1-e.wind/0.45)*0.42:1;
  for(let i=0;i<8;i++){const a=i/8*TAU+t*0.9+Math.sin(t*1.7+i)*0.22;
-  const c1x=Math.cos(a)*r*1.15,c1y=Math.sin(a)*r*1.15;
-  const ex=Math.cos(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95,ey=Math.sin(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95;
+  const c1x=Math.cos(a)*r*1.15*coil,c1y=Math.sin(a)*r*1.15*coil;
+  const ex=Math.cos(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil,ey=Math.sin(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil;
   cx.lineCap="round";
   cx.strokeStyle=dk;cx.lineWidth=r*0.2;
   cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke();
@@ -1007,6 +1047,9 @@ if(FX)glow(G.px,G.py,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  for(const t of G.txt){cx.globalAlpha=Math.min(1,t.life*2);text(t.s,t.x,t.y,16,t.col);cx.globalAlpha=1}
  cx.restore();cx.save();cx.scale(DPR,DPR);vignette();cx.restore()}
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
+// Where the HUD actually put things, so a test can prove nothing overlaps
+// rather than somebody spotting it in a photograph.
+let HUDBOX={};
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b;
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
@@ -1017,14 +1060,68 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const left=Math.max(0,SECTOR_LEN-G.secT);text(left>0?fmt(left):"GATE!",W/2,40+ST,cz,left>0?"#fff":"#80c0ff");
  textFit("SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
- const hw=Math.min(280,W*0.32),BY=H-SB;cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-42,hw,24,8);cx.fill();cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";rr(18+SL,BY-40,(hw-4)*clamp(G.hp/G.maxhp,0,1),20,7);cx.fill();text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,BY-30,15,"#fff");
- cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,BY-64,hw,16,6);cx.fill();cx.fillStyle="#40d0ff";rr(18+SL,BY-62,(hw-4)*clamp(G.sh/G.maxsh,0,1),12,5);cx.fill();text("shield",16+SL+hw/2,BY-56,11,"#fff");
- let x=W-20-SR;for(const k in G.weapons){const w=WEAPONS[k];cx.fillStyle="rgba(0,0,0,0.45)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,22,w.col);text(G.weapons[k],x-8,BY-20,12,"#fff");x-=44}
- for(const k in G.passives){const w=PASSIVES[k];cx.fillStyle="rgba(0,0,0,0.3)";rr(x-40,BY-52,38,38,8);cx.fill();text(w.icon,x-21,BY-34,20,w.col);text(G.passives[k],x-8,BY-20,12,"#fff");x-=44}
- if(G.bossAlive){const b=G.bossAlive,bw=Math.min(500,W*0.6);cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,88+ST,bw,18,6);cx.fill();cx.fillStyle="#f04060";rr(W/2-bw/2+2,90+ST,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();textFit(ENEMY[b.type].name,W/2,116+ST,14,"#ffc0c0",bw)}
+ HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
+ // The bottom of the screen, laid out rather than assumed. The tiles used to
+ // march left from the edge 44 pixels at a time until they walked over the
+ // health bar, which eight of them did. They size themselves to the room they
+ // have now, and everything goes in HUDBOX so a test can check it.
+ const BY=H-SB;
+ HUDBOX={};
+ const wide=W-32-SL-SR;
+ const ups=[];
+ for(const k in G.weapons)ups.push({icon:WEAPONS[k].icon,col:WEAPONS[k].col,n:G.weapons[k],big:22,bg:"rgba(0,0,0,0.45)"});
+ for(const k in G.passives)ups.push({icon:PASSIVES[k].icon,col:PASSIVES[k].col,n:G.passives[k],big:20,bg:"rgba(0,0,0,0.3)"});
+ // Shrink to fit, and when they will not fit at the smallest size, wrap onto
+ // a second row rather than walking off the side of the screen.
+ const gap=6,tmin=22;
+ const ts=ups.length?Math.max(tmin,Math.min(38,(wide-gap*(ups.length-1))/ups.length)):0;
+ const k2=ts/38;
+ const perRow=Math.max(1,Math.floor((wide+gap)/(ts+gap)));
+ const rowsN=ups.length?Math.ceil(ups.length/perRow):0;
+ const blockH=rowsN?rowsN*ts+(rowsN-1)*gap:0;
+ const rowY=BY-10-blockH;
+ for(let r=0;r<rowsN;r++){
+  const row=ups.slice(r*perRow,(r+1)*perRow);
+  let tx=W-16-SR-ts;const ry=rowY+r*(ts+gap);
+  for(const u of row){
+   cx.fillStyle=u.bg;rr(tx,ry,ts,ts,8*k2);cx.fill();
+   text(u.icon,tx+ts*0.5,ry+ts*0.47,u.big*k2,u.col);
+   text(u.n,tx+ts*0.84,ry+ts*0.84,12*k2,"#fff");
+   tx-=ts+gap}}
+ if(ups.length){const n0=Math.min(perRow,ups.length);
+  const x0=W-16-SR-(n0*ts+(n0-1)*gap);
+  HUDBOX.ups={x:x0,y:rowY,w:W-16-SR-x0,h:blockH}}
+ // hull and shield get lines of their own above the tiles
+ const hw=Math.min(280,wide),hh=22,sh=14;
+ const hy=rowY-(ups.length?8:0)-hh;
+ cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,hy,hw,hh,8);cx.fill();
+ cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";
+ rr(18+SL,hy+2,(hw-4)*clamp(G.hp/G.maxhp,0,1),hh-4,7);cx.fill();
+ text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,hy+hh/2,14,"#fff");
+ HUDBOX.hull={x:16+SL,y:hy,w:hw,h:hh};
+ const sy=hy-4-sh;
+ cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,sy,hw,sh,6);cx.fill();
+ cx.fillStyle="#40d0ff";rr(18+SL,sy+2,(hw-4)*clamp(G.sh/Math.max(1,G.maxsh),0,1),sh-4,5);cx.fill();
+ // the label used to be drawn at a fixed eleven pixels across the middle of
+ // the bar, so on a narrow phone it sat on top of the fill
+ textFit("SHIELD",16+SL+hw/2,sy+sh/2,Math.min(10,hw*0.1),"rgba(255,255,255,0.85)",hw-12);
+ HUDBOX.shield={x:16+SL,y:sy,w:hw,h:sh};
+ if(G.bossAlive){const b=G.bossAlive;
+  // narrow enough to stay clear of the pause button on a small screen
+  const pauseL=W-64-SR;
+  const bw=Math.max(120,Math.min(500,W*0.6,(pauseL-12-W/2)*2));
+  const by2=94+ST;
+  cx.fillStyle="rgba(0,0,0,0.55)";rr(W/2-bw/2,by2,bw,18,6);cx.fill();
+  cx.fillStyle="#f04060";rr(W/2-bw/2+2,by2+2,(bw-4)*Math.max(0,b.hp/b.maxhp),14,5);cx.fill();
+  const nm=ENEMY[b.type].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"");
+  textFit(nm,W/2,by2+30,14,"#ffc0c0",bw);
+  HUDBOX.boss={x:W/2-bw/2,y:by2,w:bw,h:18};
+  HUDBOX.bossName={x:W/2-bw/2,y:by2+22,w:bw,h:16}}
  if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);textFit(G.announce,W/2,H*0.3,32,"#ffe060",W-32-SL-SR);cx.globalAlpha=1}
  if(flash>0){cx.fillStyle="rgba(255,40,40,"+flash*0.35+")";cx.fillRect(0,0,W,H)}
- buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});drawButtons();cx.restore()}
+ buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});
+ HUDBOX.pause={x:W-64-SR,y:52+ST,w:48,h:40};
+ drawButtons();cx.restore()}
 function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);textFit(title,W/2,H*0.2,Math.min(64,W/10),color||"#ffe060",W-32);if(sub)textFit(sub,W/2,H*0.2+52,22,"#fff",W-32)}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.fillRect(0,0,W,H);
  for(let i=0;i<120;i++){const x=(hash(i,7)*W+frameT*(10+i%5*6))%W,y=hash(i,11)*H;cx.fillStyle="rgba(255,255,255,"+(0.3+0.7*hash(i,3))+")";cx.beginPath();cx.arc(x,y,1+hash(i,5)*2,0,TAU);cx.fill()}
@@ -1144,5 +1241,9 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();/*loop*/const dt=Ma
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,options,slots};
+ WEAPONS,PASSIVES,DIFFS,ENEMY,options,slots,spawnEnemy,
+ hud(){return HUDBOX},
+ // step the fight without drawing it, so a test can time a boss rather than
+ // somebody's impression of one
+ sim(t,d){const s=d||1/60;for(let i=0;i<Math.round(t/s);i++)update(s)}};
 </script></body></html>
