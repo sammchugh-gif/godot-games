@@ -29,18 +29,26 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const SIZES = [[320, 568, 'small phone'], [390, 844, 'phone'],
                [844, 390, 'phone sideways'], [1180, 820, 'iPad']];
 
+/* The two survivor games share this HUD and shared the fault: upgrade tiles
+   marching left from the edge until they stood on the health bar. */
+const GAMES = [
+  { slug: 'slime-storm', api: 'SS', start: "window.SS.fx=true;window.SS.start('dylan')" },
+  { slug: 'star-swarm',  api: 'SW', start: "window.SW.fx=true;window.SW.start(window.SW.SHIPS[0])" },
+];
+
 /* fill the HUD right up: every weapon, every passive, and a boss */
-const BUSY = `(() => {
-  const G = window.SS.G;
-  for (const k in window.SS.WEAPONS) G.weapons[k] = window.SS.WEAPONS[k].max || 6;
-  for (const k in window.SS.PASSIVES) G.passives[k] = 5;
+const BUSY = api => `(() => {
+  const S = window.${api}, G = S.G;
+  for (const k in S.WEAPONS) G.weapons[k] = S.WEAPONS[k].max || 6;
+  for (const k in S.PASSIVES) G.passives[k] = S.PASSIVES[k].max || 5;
   G.hp = G.maxhp * 0.8;
+  if (G.maxsh != null) G.sh = G.maxsh * 0.5;
   G.level = 13; G.kills = 499;
   const b = G.en && G.en[0];
   if (b) { G.bossAlive = b; b.maxhp = b.hp = 900; }
   else {
     /* a real boss, not just the first enemy - only the bosses carry a name */
-    const boss = Object.keys(window.SS.ENEMY).find(k => window.SS.ENEMY[k].boss);
+    const boss = Object.keys(S.ENEMY).find(k => S.ENEMY[k].boss);
     G.bossAlive = { type: boss, hp: 900, maxhp: 1200 };
   }
   return Object.keys(G.weapons).length + Object.keys(G.passives).length;
@@ -67,16 +75,18 @@ const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b
 const PAIRED = new Set(['boss|bossName']);
 
 let bad = 0;
+for (const game of GAMES) {
+console.log('\n' + game.slug);
 for (const [W, H, tag] of SIZES) {
   const pg = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
-  await pg.goto('http://127.0.0.1:8341/docs/slime-storm/', { waitUntil: 'load', timeout: 20000 });
+  await pg.goto(`http://127.0.0.1:8341/docs/${game.slug}/`, { waitUntil: 'load', timeout: 20000 });
   await sleep(1600);
-  await pg.evaluate("window.SS.fx=true;window.SS.start('dylan')");
+  await pg.evaluate(game.start);
   await sleep(400);
-  const n = await pg.evaluate(BUSY);
+  const n = await pg.evaluate(BUSY(game.api));
   await sleep(400);                                   /* let a frame lay it out */
-  const box = await pg.evaluate('window.SS.hud()');
+  const box = await pg.evaluate(`window.${game.api}.hud()`);
 
   const keys = Object.keys(box);
   const clashes = [];
@@ -94,13 +104,14 @@ for (const [W, H, tag] of SIZES) {
 
   const ok = !clashes.length && !off.length && !errs.length;
   if (!ok) bad++;
-  console.log(`${tag.padEnd(15)} ${String(n).padStart(2)} upgrades + a boss | ` +
+  console.log(`  ${tag.padEnd(15)} ${String(n).padStart(2)} upgrades + a boss | ` +
     `${clashes.length ? 'OVERLAP: ' + clashes.join(', ') : 'nothing overlaps'}` +
     `${off.length ? ' | OFF SCREEN: ' + off.join(', ') : ''} ${ok ? 'ok' : '<-- FAIL'}` +
     `${errs.length ? '\n   error: ' + errs[0].slice(0, 90) : ''}`);
   await pg.close();
 }
-console.log(bad ? `\n${bad} sizes have a HUD that writes over itself` : '\nthe HUD keeps out of its own way');
+}
+console.log(bad ? `\n${bad} sizes have a HUD that writes over itself` : '\nboth HUDs keep out of their own way');
 await browser.close();
 srv.close();
 process.exit(bad ? 1 : 0);
