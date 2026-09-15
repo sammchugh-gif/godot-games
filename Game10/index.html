@@ -606,6 +606,11 @@ function textFit(s,x,y,size,color,maxw,align){cx.font="bold "+size+"px sans-seri
  const w=cx.measureText(s).width;
  text(s,x,y,w>maxw?Math.max(11,Math.floor(size*maxw/w)):size,color,align)}
 function text(s,x,y,size,color,align){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,10,0.8)";cx.lineJoin="round";cx.strokeText(s,x,y);cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
+// wrap, but sized to a box: the font comes down until the lines fit, so a
+// long description on a narrow card ends inside the card
+function wrapLines(s,w,size){cx.font="bold "+size+"px sans-serif";const out=[];let line="";for(const wd of s.split(" ")){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){out.push(line);line=wd}else line=t}if(line)out.push(line);return out}
+function wrapFit(s,x,y,w,maxH,size,col){let sz=size,lines;for(;;){lines=wrapLines(s,w,sz);if(lines.length*(sz+5)-5<=maxH||sz<=10)break;sz--}
+ let ly=y;for(const l of lines){text(l,x,ly,sz,col);ly+=sz+5}return sz}
 function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words=s.split(" ");let line="",ly=y;for(const wd of words){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){text(line,x,ly,size,col);line=wd;ly+=size+5}else line=t}if(line)text(line,x,ly,size,col)}
 // ---------------------------------------------------------------- content
 const SHIPS=[
@@ -1013,9 +1018,17 @@ function backSprite(k){let sp=ART.back[k];if(sp)return sp;
    hull(2,6,30,9);hull(-40,-34,20,6);hull(44,-48,13,4);hull(-46,44,15,4.5);
    hull(52,34,11,3.4);hull(-14,62,17,5);hull(30,-14,9,2.8)}
   else if(k==="giant"){
+   // The ring is two half-arcs, one behind the planet and one in front, and
+   // they used to be two flat colours that met in a hard line at the planet's
+   // sides. Both halves now share one gradient that runs from the far side to
+   // the near, so the colour turns gradually the whole way round.
+   const ringG=g.createLinearGradient(0,-110,0,110);
+   ringG.addColorStop(0,"rgba(178,160,132,0.26)");ringG.addColorStop(0.5,"rgba(200,184,152,0.38)");ringG.addColorStop(1,"rgba(218,204,170,0.48)");
+   const rimG=g.createLinearGradient(0,-110,0,110);
+   rimG.addColorStop(0,"rgba(222,208,178,0.16)");rimG.addColorStop(0.5,"rgba(230,216,186,0.22)");rimG.addColorStop(1,"rgba(238,224,194,0.28)");
    g.save();g.rotate(-0.36);g.scale(1,0.22);
-   g.strokeStyle="rgba(186,168,138,0.32)";g.lineWidth=17;g.beginPath();g.arc(0,0,86,Math.PI,TAU);g.stroke();
-   g.strokeStyle="rgba(228,214,182,0.2)";g.lineWidth=6;g.beginPath();g.arc(0,0,104,Math.PI,TAU);g.stroke();g.restore();
+   g.strokeStyle=ringG;g.lineWidth=17;g.beginPath();g.arc(0,0,86,Math.PI,TAU);g.stroke();
+   g.strokeStyle=rimG;g.lineWidth=6;g.beginPath();g.arc(0,0,104,Math.PI,TAU);g.stroke();g.restore();
    const pg=g.createRadialGradient(-20,-22,6,0,0,60);
    pg.addColorStop(0,"#cdad7e");pg.addColorStop(0.5,"#9a7c54");pg.addColorStop(1,"#3f3122");
    g.fillStyle=pg;g.beginPath();g.arc(0,0,56,0,TAU);g.fill();
@@ -1024,8 +1037,8 @@ function backSprite(k){let sp=ART.back[k];if(sp)return sp;
     g.beginPath();g.ellipse(0,i*13,60,4+((i+5)%3)*2,0,0,TAU);g.fill()}
    g.fillStyle="rgba(214,150,90,0.5)";g.beginPath();g.ellipse(22,16,11,6,0.3,0,TAU);g.fill();g.restore();
    g.save();g.rotate(-0.36);g.scale(1,0.22);
-   g.strokeStyle="rgba(212,197,162,0.44)";g.lineWidth=17;g.beginPath();g.arc(0,0,86,0,Math.PI);g.stroke();
-   g.strokeStyle="rgba(236,222,192,0.26)";g.lineWidth=6;g.beginPath();g.arc(0,0,104,0,Math.PI);g.stroke();g.restore()}
+   g.strokeStyle=ringG;g.lineWidth=17;g.beginPath();g.arc(0,0,86,0,Math.PI);g.stroke();
+   g.strokeStyle=rimG;g.lineWidth=6;g.beginPath();g.arc(0,0,104,0,Math.PI);g.stroke();g.restore()}
   else if(k==="ember"){
    const cg=g.createRadialGradient(0,0,8,0,0,98);
    cg.addColorStop(0,"rgba(255,190,120,0.5)");cg.addColorStop(0.28,"rgba(255,110,50,0.32)");
@@ -1654,8 +1667,9 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
    if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name,col:d.evo.col};
    else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX",col:w.evo.col};break}}}}
   if(hint&&c.l>1){textFit(hint.a,x+cw/2,y+ch*0.74,14,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.82,13,"#dde",cw-16)}
-  else{wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
-   if(hint&&cw>=200){textFit(hint.a,x+cw/2,y+ch*0.9,13,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.96,12,"#dde",cw-16)}}
+  else{const showHint=hint&&cw>=200;
+   wrapFit(d.desc,x+cw/2,y+ch*0.7,cw-26,(showHint?ch*0.86:ch)-12-ch*0.7,15,"#dde");
+   if(showHint){textFit(hint.a,x+cw/2,y+ch*0.9,13,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.96,12,"#dde",cw-16)}}
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);
  const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
