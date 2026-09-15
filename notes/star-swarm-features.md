@@ -121,6 +121,23 @@ Thunderhead, Bastion) are earned by playing as before; these are bought:
 
 A seventh, the Saucer (space mines; deflector hull: scouts and swarmers
 bounce off without hurting you), is earned by clearing all six sectors.
+
+The hangar shows one ship at a time behind arrows. Each ship carries three
+marks out of five, and the run's numbers come from them: speed 90% to
+120%, damage 90% to 120%, shield 20 to 60. The Saucer alone is 5/5/5.
+
+| ship        | speed | damage | shield | hull |
+|-------------|-------|--------|--------|------|
+| Viper       | 4     | 3      | 2      | 90   |
+| Thunderhead | 3     | 4      | 1      | 100  |
+| Bastion     | 1     | 3      | 5      | 130  |
+| Wraith      | 5     | 3      | 2      | 85   |
+| Glacier     | 2     | 2      | 4      | 110  |
+| Magnetar    | 3     | 4      | 3      | 95   |
+| Saucer      | 5     | 5      | 5      | 100  |
+
+A ? beside the mode row opens a WAYS TO PLAY screen that explains the
+three modes, today's twist, and the marks.
 Ships not yet earned show only as a dark silhouette with a question mark,
 on the title and in the shop, so what they look like is part of the prize.
 

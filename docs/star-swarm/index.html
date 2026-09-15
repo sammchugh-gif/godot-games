@@ -373,7 +373,7 @@ function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(
 // Which track should be playing: the checker can force one; the hangar and
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
- if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun")return TITLE_TRACK;
+ if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")return TITLE_TRACK;
  return G?Math.max(0,G.sector-1)%(TRACKS.length-1):0}
 function osc(type,f,t,dur,vol,dest,f1,drum){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
@@ -614,16 +614,22 @@ function wrapFit(s,x,y,w,maxH,size,col){let sz=size,lines;for(;;){lines=wrapLine
 function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words=s.split(" ");let line="",ly=y;for(const wd of words){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){text(line,x,ly,size,col);line=wd;ly+=size+5}else line=t}if(line)text(line,x,ly,size,col)}
 // ---------------------------------------------------------------- content
 const SHIPS=[
- // the ids are what the records are keyed by, so they stay as they were
- {id:"falcon",name:"VIPER",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,shield:40,speed:1.1,col:"#e04040",col2:"#ffb0b0",unlock:""},
- {id:"comet",name:"THUNDERHEAD",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
- {id:"nova",name:"BASTION",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
+ // The ids are what the records are keyed by, so they stay as they were.
+ // Speed, damage and shield are marks out of five, and the numbers the run
+ // uses come from those marks - so what the card says is what the ship does.
+ {id:"falcon",name:"VIPER",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,stats:{speed:4,damage:3,shield:2},col:"#e04040",col2:"#ffb0b0",unlock:""},
+ {id:"comet",name:"THUNDERHEAD",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,stats:{speed:3,damage:4,shield:1},col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
+ {id:"nova",name:"BASTION",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,stats:{speed:1,damage:3,shield:5},col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
  // three more in the shop, each with a trick of its own
- {id:"wraith",name:"WRAITH",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,shield:35,speed:1.15,col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
- {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,shield:60,speed:0.9,col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
- {id:"ufo",name:"SAUCER",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,shield:50,speed:1.2,col:"#a0e0c0",col2:"#f0fff8",unlock:"Clear all six sectors"},
- {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,shield:40,speed:1.0,col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
+ {id:"wraith",name:"WRAITH",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,stats:{speed:5,damage:3,shield:2},col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
+ {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,stats:{speed:2,damage:2,shield:4},col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
+ {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,stats:{speed:3,damage:4,shield:3},col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
+ // and the one for finishing: top marks in everything
+ {id:"ufo",name:"SAUCER",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,stats:{speed:5,damage:5,shield:5},col:"#a0e0c0",col2:"#f0fff8",unlock:"Clear all six sectors"},
 ];
+function shipSpeed(sh){return 0.9+0.075*(sh.stats.speed-1)}    // 1 → 90%, 5 → 120%
+function shipDmg(sh){return 0.9+0.075*(sh.stats.damage-1)}     // 1 → 90%, 5 → 120%
+function shipShield(sh){return 10+10*sh.stats.shield}           // 1 → 20, 5 → 60
 const WEAPONS={
  laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6,evo:{name:"Prism Beam",needs:"haste",col:"#ff80ff",desc:"Three beams that pierce everything."}},
  spread:{name:"Spread Cannon",icon:"⋀",col:"#ffd040",desc:"A fan of shots in front of the ship.",max:6,evo:{name:"Starburst",needs:"power",col:"#ffe080",desc:"Shots in every direction at once."}},
@@ -720,9 +726,10 @@ function recKeyFor(shipId,difId,mode){const k=difId==="easy"?shipId:shipId+"@"+d
 function dailyKey(){return "daily:"+dayKey()}
 unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
+let viewIdx=shipIdx;   // the ship the hangar is showing, which need not be the one you fly
 let cards=[];
 function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
- G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],mode,daily,mod:daily?daily.mod:null,rng:daily?mulberry(daily.seed):null,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
+ G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],mode,daily,mod:daily?daily.mod:null,rng:daily?mulberry(daily.seed):null,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:shipShield(ship),maxsh:shipShield(ship),shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
  weapons:{},passives:{},evo:{},evolved:0,en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,arrive:ARRIVE_T,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;
  const m=mod();if(m.hull){G.maxhp=Math.round(G.maxhp*m.hull);G.hp=G.maxhp}if(m.shield!=null){G.maxsh=Math.round(G.maxsh*m.shield);G.sh=G.maxsh}
@@ -736,8 +743,8 @@ function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
 function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random=G.rng;try{return fn(a)}finally{Math.random=R}}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
-function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
-function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
+function moveSpeed(){return 210*shipSpeed(G.ship)*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
+function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))*shipDmg(G.ship)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
 // run peaked at sector 2 and got easier from sector 4 on - a motionless
 // player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
@@ -1638,7 +1645,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  buttons=[];
  const n=SHIPS.length;
- const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else if(s.cost&&FEATURES.shop){shopTab=1;scene="shop"}else SFX.click()};
+ if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;
  const difId=DIFFS[diffIdx].id;
  // Everything used to sit at a fixed offset from a fraction of the height,
  // which on a phone in landscape put the tag line through the difficulty
@@ -1649,10 +1656,9 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const gap=clamp(H*0.022,6,12);
  const mh=clamp(H*0.085,34,46),bh=clamp(H*0.115,42,64);
  const bot=H-12-SB,hs=Math.min(14,W*0.03);
- const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
- // six ships stack in one column on a phone; sideways, or on an iPad, in two
- const cols=stack&&n>3&&W>=700?(n>6?3:2):1,rows=Math.ceil(n/cols);
- const minShip=stack?rows*48+(rows-1)*6:118;
+ const stack=W<560;
+ // one ship at a time, with arrows: this is the least it needs
+ const minShip=W>=700?128:170;
  const musicY=bot-mh;
  let showHelp=true;
  const helpH=()=>showHelp?hs*2+8:0;
@@ -1688,12 +1694,15 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // the mode, then the difficulty, as segmented rows above the ships
  const seg=dw/3,dx0=twoUp?W/2+10:W/2-dw/2;
- if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2;
-  MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*seg;
-   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,seg-4,dh,10);cx.fill();
+ if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2,qs=Math.min(dh,34),mseg=(dw-qs-6)/3;
+  MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*mseg;
+   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,mseg-4,dh,10);cx.fill();
    cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?m.col:"rgba(255,255,255,0.3)";cx.stroke();
-   textFit(m.name,x+seg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",seg-14);
-   btn(x+2,my,seg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+   textFit(m.name,x+mseg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",mseg-14);
+   btn(x+2,my,mseg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  // what the modes are, one tap away
+  const qx=mx0+dw-qs;
+  btn(qx,my+(dh-qs)/2,qs,qs,"?",()=>{scene="help"},{size:18,fill:"rgba(255,224,96,0.14)",stroke:"#ffe060",color:"#ffe060"});
   if(!twoUp)cursor=my+dh}
  const dy=cursor+gap;
  DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
@@ -1707,36 +1716,38 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   const line=mid==="daily"?"TODAY: "+dailyInfo().mod.name+"  ·  "+dailyInfo().mod.desc:mid==="endless"?MODES[1].desc:DIFFS[diffIdx].desc;
   textFit(line,W/2,cursor+11,12,mid==="daily"?"#c0a0ff":mid==="endless"?"#ff9040":"#9fb0c8",W-40);cursor+=18}
  const listTop=cursor+gap,avail=contentBottom-listTop;
- if(stack){
-  const cw=(Math.min(cols>1?960:440,W-28)-(cols-1)*10)/cols,x0=W/2-(cw*cols+(cols-1)*10)/2;
-  const ch=clamp(avail/rows-6,44,104),px=ch*0.86;
-  const nz=Math.min(20,ch*0.23),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
-  SHIPS.forEach((s,i)=>{const x0=W/2-(cw*cols+(cols-1)*10)/2+(i%cols)*(cw+10),y=listTop+Math.floor(i/cols)*(ch+6),sel=i===shipIdx,un=!!unlocks[s.id];
-   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
-   cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-   if(sel)shipSlot={x:x0+px/2+4,y:y+ch/2,s:1};
-   if(!(sel&&launching)){if(un)drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);else drawSil(x0+px/2+4,y+ch/2,-Math.PI/2,s)}
-   const tx=x0+px+14,tw=cw-px-28,r=recLine(s.id,difId);
-   textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
-   textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),tx,y+ch*0.55,dz,"#cde",tw,"left");
-   textFit(un?r:"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
-   btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- }else{
-  const cw=rowCw,ch=clamp(avail,108,250),y=listTop+Math.max(0,(avail-ch)/2);
-  const nz=Math.min(22,ch*0.115),dz=Math.min(14,ch*0.082),rz=Math.min(13,ch*0.076);
-  SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];
-   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
-   cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-   if(sel)shipSlot={x:x+cw/2,y:y+ch*0.28,s:Math.min(1,ch/190)};
-   if(!(sel&&launching)){cx.save();
-   cx.translate(x+cw/2,y+ch*0.28);cx.scale(Math.min(1,ch/190),Math.min(1,ch/190));
-   if(un)drawShip(0,0,-Math.PI/2,s,sel?0.6:0);else drawSil(0,0,-Math.PI/2,s);cx.restore()}
-   const r=recLine(s.id,difId);
-   textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
-   textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
-   textFit(un?r:"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
-   btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- }
+ // One ship at a time. Arrows step through the hangar; a ship you have earned
+ // becomes the one you fly as you pass it, a ship you have not is a shape in
+ // the dark with its marks and its price. The marks are what the numbers are.
+ {const v=SHIPS[viewIdx],un=!!unlocks[v.id],sel=viewIdx===shipIdx&&un;
+  const cw=Math.min(560,W-28),x0=W/2-cw/2,ch=clamp(avail,minShip,400),y=listTop;
+  cx.fillStyle=sel?"rgba(255,255,255,0.14)":"rgba(0,0,0,0.42)";rr(x0,y,cw,ch,18);cx.fill();
+  cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
+  const aw=Math.min(44,cw*0.1),step=d=>{viewIdx=(viewIdx+d+n)%n;if(unlocks[SHIPS[viewIdx].id]){shipIdx=viewIdx;store.set("ship",shipIdx)}SFX.click()};
+  btn(x0+6,y+ch/2-26,aw,52,"◀",()=>step(-1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
+  btn(x0+cw-6-aw,y+ch/2-26,aw,52,"▶",()=>step(1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
+  const ix=x0+aw+14,inner=cw-2*(aw+14),tall=ch>=230;
+  const name=un?v.name:"???",line=un?v.desc:(v.cost?"In the shop  ·  ◆ "+v.cost:v.unlock);
+  const bars=(bx,by,bw,rowH,fz)=>{const cats=[["SPEED",v.stats.speed,"#8dff5a"],["DAMAGE",v.stats.damage,"#ffa040"],["SHIELD",v.stats.shield,"#40d0ff"]];
+   const lw2=Math.min(72,bw*0.3),pw=Math.min(22,(bw-lw2-8)/5-4),ph=Math.max(6,rowH*0.42);
+   cats.forEach(([lab,val,col],i)=>{const ry=by+i*rowH;textFit(lab,bx,ry+rowH/2,fz,"#9fb0c8",lw2-6,"left");
+    for(let p=0;p<5;p++){cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(bx+lw2+p*(pw+4),ry+rowH/2-ph/2,pw,ph,3);cx.fill()}})};
+  const r=recLine(v.id,difId);
+  if(tall){const sc=Math.min(2.2,ch*0.3/40),sx=W/2,sy=y+ch*0.2;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2,v);cx.restore()}
+   textFit(name,W/2,y+ch*0.43,Math.min(24,ch*0.09),sel?"#ffe060":"#fff",inner);
+   textFit(line,W/2,y+ch*0.52,Math.min(14,ch*0.055),"#cde",inner);
+   const bw=Math.min(300,inner-20),rowH=Math.min(24,ch*0.085);bars(W/2-bw/2,y+ch*0.58,bw,rowH,Math.min(12,rowH*0.5));
+   textFit(un?r:"Hull "+v.hp,W/2,y+ch*0.9,Math.min(13,ch*0.05),"#bfe",inner)}
+  else{const sc=Math.min(1.5,ch/90),sx=ix+inner*0.17,sy=y+ch/2;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2,v);cx.restore()}
+   const tx=ix+inner*0.36,tw=inner*0.64;
+   textFit(name,tx,y+ch*0.15,Math.min(20,ch*0.15),sel?"#ffe060":"#fff",tw,"left");
+   textFit(line,tx,y+ch*0.31,Math.min(13,ch*0.1),"#cde",tw,"left");
+   const rowH=Math.min(20,ch*0.15);bars(tx,y+ch*0.42,Math.min(300,tw),rowH,Math.min(11,rowH*0.55));
+   textFit(un?r:"Hull "+v.hp,tx,y+ch*0.84,Math.min(12,ch*0.09),"#bfe",tw,"left")}
+  // where you are in the hangar
+  for(let i=0;i<n;i++){const dx=W/2+(i-(n-1)/2)*12;cx.fillStyle=i===viewIdx?"#ffe060":unlocks[SHIPS[i].id]?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.18)";cx.beginPath();cx.arc(dx,y+ch-9,i===viewIdx?3.5:2.5,0,TAU);cx.fill()}}
  const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
  btn(W/2-lw/2,launchY,lw,lbh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),()=>launch(),
   {launch:true,size:Math.min(26,lbh*0.42)});
@@ -1847,6 +1858,23 @@ function drawLastRun(dt){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];shareS
  if(!r)btn(W/2-110,bot-48,220,48,"HANGAR",()=>{scene="title"},{size:18});
  drawButtons();cx.restore()}
 let shopTab=0;
+// The help screen: what the three ways to play are, and today's twist.
+function drawHelp(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
+ const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b,bh=clamp(H*0.09,40,52);
+ textFit("WAYS TO PLAY",W/2,top+18,Math.min(30,W/12),"#ffe060",W-100-SL-SR);
+ const d=dailyInfo();
+ const blocks=[
+  ["CAMPAIGN","#80c0ff","Six sectors, five minutes each. Survive, beat the boss, fly into the black hole. Clear all six and the Saucer is yours."],
+  ["ENDLESS","#ff9040","Past the sixth gate the sectors keep coming, and every lap the bosses come back harder. How far can you get?"],
+  ["DAILY","#c0a0ff","The campaign with one twist chosen by the date - the same run for everyone that day, so scores can be compared. Today: "+d.mod.name+"  ·  "+d.mod.desc],
+  ["SHIPS","#ffe060","Speed, damage and shield are marks out of five, and they are exactly what the ship does. Earn ships by playing, or buy them with banked gems. A ship you have not earned stays a mystery."]];
+ const rw=Math.min(600,W-24-SL-SR),x0=W/2-rw/2;let y=top+52;const avail=bot-bh-16-y,per=avail/blocks.length,fz=clamp(per*0.13,11,15);
+ for(const [t,col,body] of blocks){cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,per-8,12);cx.fill();
+  textFit(t,x0+14,y+16,Math.min(16,fz+2),col,rw-28,"left");
+  const lines=wrapLines(body,rw-28,fz);let ly=y+34;for(const l of lines.slice(0,Math.floor((per-44)/(fz+4)))){textFit(l,x0+14,ly,fz,"#dde",rw-28,"left");ly+=fz+4}
+  y+=per}
+ btn(W/2-110,bot-bh,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
+ drawButtons();cx.restore()}
 function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b;
  const bh=clamp(H*0.09,40,52),back=bot-bh;
@@ -1864,11 +1892,16 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
    cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=own?hexA(sh.col,0.7):"rgba(255,255,255,0.25)";cx.stroke();
    cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));if(own)drawShip(0,0,-Math.PI/2,sh,0.5);else drawSil(0,0,-Math.PI/2,sh);cx.restore();
    const tx=x0+Math.min(rh,92),tw2=rw-Math.min(rh,92)-bw-24;
-   textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),own?sh.col2:"#fff",tw2,"left");
-   // the ability, wrapped to its column: three lines at most, never under the button
-   const az=Math.min(12,8+5*k),al=wrapLines(sh.abName+": "+sh.abDesc,tw2,az).slice(0,3);
-   al.forEach((l,j)=>textFit(l,tx,y+rh*(0.34+j*0.14),az,hexA(sh.col2,0.9),tw2,"left"));
-   textFit("Hull "+sh.hp+"  ·  Shield "+sh.shield+"  ·  Speed "+Math.round(sh.speed*100)+"%",tx,y+rh*0.88,Math.min(11,8+4*k),"#9fb0c8",tw2,"left");
+   if(own){textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),sh.col2,tw2,"left");
+    // the ability, wrapped to its column: three lines at most, never under the button
+    const az=Math.min(12,8+5*k),al=wrapLines(sh.abName+": "+sh.abDesc,tw2,az).slice(0,3);
+    al.forEach((l,j)=>textFit(l,tx,y+rh*(0.34+j*0.14),az,hexA(sh.col2,0.9),tw2,"left"))}
+   else{textFit("???",tx,y+rh*0.16,Math.min(17,12+7*k),"#fff",tw2,"left");
+    textFit("A mystery until it is yours.",tx,y+rh*0.34,Math.min(12,8+5*k),"#cde",tw2,"left")}
+   // the marks, which are no secret
+   const cats=[["SPD",sh.stats.speed,"#8dff5a"],["DMG",sh.stats.damage,"#ffa040"],["SHD",sh.stats.shield,"#40d0ff"]],gw=tw2/3,pw=Math.max(5,Math.min(12,(gw-36)/5-3));
+   cats.forEach(([lab,val,col],ci)=>{const bx=tx+ci*gw;textFit(lab,bx,y+rh*0.8,Math.min(10,7+4*k),"#9fb0c8",28,"left");
+    for(let q=0;q<5;q++){cx.fillStyle=q<val?col:"rgba(255,255,255,0.14)";rr(bx+30+q*(pw+3),y+rh*0.8-3.5,pw,7,2);cx.fill()}});
    btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),own?"OWNED":"◆ "+sh.cost,()=>{if(buyShip(sh.id)){SFX.chest();shipIdx=SHIPS.indexOf(sh);store.set("ship",shipIdx)}else SFX.click()},
     {size:Math.min(16,10+7*k),fill:own?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:own?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
  else{
@@ -1930,16 +1963,16 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
  if((scene==="over"||scene==="win")&&(code==="Space"||code==="Enter"))start()}
 function frame(ts){requestAnimationFrame(frame);inputWatch();
  // the hangar and the credits have a theme, and it starts the moment audio can
- if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
+ if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
  if(["play","levelup","pause","over","win"].includes(scene)&&G){drawWorld();drawHUD()}
- if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
+ if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
  drawDiag();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,shipSpeed,shipDmg,shipShield,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
