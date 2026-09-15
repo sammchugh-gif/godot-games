@@ -307,7 +307,8 @@ check('and it hits a good deal harder', EVO.strong > EVO.plain * 1.6,
    plain wave, and no further than that. */
 const NOVA = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
-  const ring = rad => { const G = S.G; G.en.length = 0; G.parts.length = 0;
+  /* no rocks: one could shove a drifter inward and put it in range by accident */
+  const ring = rad => { const G = S.G; G.en.length = 0; G.parts.length = 0; G.rocks.length = 0;
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; const e = S.spawnEnemy('drifter', G.px + Math.cos(a) * rad, G.py + Math.sin(a) * rad); e.hp = e.maxhp = 1e9; e.spd = 0; }
     return S.G.en.slice(); };
   const hit = r => r.some(e => e.hp < e.maxhp);

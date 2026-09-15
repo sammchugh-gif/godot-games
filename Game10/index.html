@@ -594,7 +594,7 @@ function drawButtons(){for(const b of buttons){const o=b.opt;
   rr(b.x,b.y,b.w,b.h,16);cx.fillStyle=f;cx.fill();cx.restore();
   cx.save();rr(b.x+3,b.y+3,b.w-6,b.h*0.42,12);cx.fillStyle="rgba(255,255,255,0.16)";cx.fill();cx.restore();
   rr(b.x,b.y,b.w,b.h,16);cx.lineWidth=2.5;cx.strokeStyle="rgba(210,240,255,0.9)";cx.stroke();
-  const sz=o.size||22;text(b.label,b.x+b.w/2-sz*0.35,b.y+b.h/2,sz,"#fff");
+  const sz=o.size||22;textFit(b.label,b.x+b.w/2-sz*0.5,b.y+b.h/2,sz,"#fff",b.w-sz*2.8);
   // a chevron on the right, pointing the way out of the hangar
   const gx=b.x+b.w-sz*1.1,gy=b.y+b.h/2;cx.fillStyle="#ffe060";
   for(let k=0;k<2;k++){cx.beginPath();cx.moveTo(gx+k*sz*0.34,gy-sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.3,gy);cx.lineTo(gx+k*sz*0.34,gy+sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.12,gy);cx.closePath();cx.fill()}
@@ -1742,14 +1742,19 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
     if(!un){textFit("????",bx+lw2,ry+rowH/2,fz+1,"#6b7590",bw-lw2,"left");return}
     for(let p=0;p<5;p++){cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(bx+lw2+p*(pw+4),ry+rowH/2-ph/2,pw,ph,3);cx.fill()}})};
   const r=recLine(v.id,difId);
-  if(tall){const sc=Math.min(2.2,ch*0.3/40),sx=W/2,sy=y+ch*0.2;shipSlot={x:sx,y:sy,s:sc};
-   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
-   textFit(name,W/2,y+ch*0.43,Math.min(24,ch*0.09),sel?"#ffe060":un?"#fff":"#9fb0c8",inner);
-   textFit(line,W/2,y+ch*0.52,Math.min(14,ch*0.055),"#cde",inner);
-   const bw=Math.min(300,inner-20),rowH=Math.min(24,ch*0.085);bars(W/2-bw/2,y+ch*0.58,bw,rowH,Math.min(12,rowH*0.5));
-   textFit(un?r:"Hull ????",W/2,y+ch*0.9,Math.min(13,ch*0.05),un?"#bfe":"#6b7590",inner)}
-  else{const sc=Math.min(1.5,ch/90),sx=ix+inner*0.17,sy=y+ch/2;shipSlot={x:sx,y:sy,s:sc};
-   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
+  // The hull is drawn 32px each way from its centre, with up to 30px of
+  // exhaust below that. It gets the top 40% of the card and is scaled to fit
+  // that, so on a phone with less room it shrinks rather than leaving the box.
+  if(tall){const room=ch*0.4-16,sc=Math.max(0.6,Math.min(2.2,room/(32+30+32))),sx=W/2,sy=y+8+sc*32;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.35:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
+   // the name sits just under the exhaust, wherever that ends up
+   const ny=Math.min(y+ch*0.47,sy+sc*62+14);
+   textFit(name,W/2,ny,Math.min(24,ch*0.08),sel?"#ffe060":un?"#fff":"#9fb0c8",inner);
+   textFit(line,W/2,ny+ch*0.085,Math.min(14,ch*0.05),"#cde",inner);
+   const bw=Math.min(300,inner-20),rowH=Math.min(24,ch*0.08);bars(W/2-bw/2,ny+ch*0.14,bw,rowH,Math.min(12,rowH*0.5));
+   textFit(un?r:"Hull ????",W/2,y+ch*0.9,Math.min(13,ch*0.045),un?"#bfe":"#6b7590",inner)}
+  else{const sc=Math.max(0.6,Math.min(1.5,(ch-16)/(32+30+32))),sx=ix+inner*0.17,sy=y+ch/2-sc*12;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.35:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
    const tx=ix+inner*0.36,tw=inner*0.64;
    textFit(name,tx,y+ch*0.15,Math.min(20,ch*0.15),sel?"#ffe060":un?"#fff":"#9fb0c8",tw,"left");
    textFit(line,tx,y+ch*0.31,Math.min(13,ch*0.1),"#cde",tw,"left");
