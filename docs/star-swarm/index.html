@@ -700,7 +700,7 @@ const DAILY_MODS=[
  {id:"tide",name:"SWARM TIDE",desc:"Far more aliens, each far weaker.",rate:1.7,hp:0.55},
  {id:"rush",name:"BOSS RUSH",desc:"The boss comes at one minute, the gate right after.",bossAt:60,gateAt:130},
  {id:"turbo",name:"TURBO",desc:"You are faster. So are they.",speed:1.4,espd:1.25},
- {id:"loot",name:"TREASURE DAY",desc:"Three elite chests a sector instead of one, gems fly from far away.",chests:3,magnet:3}];
+ {id:"loot",name:"TREASURE DAY",desc:"Three elite chests a sector instead of one, gems fly from far away.",chests:3,magnet:2.5}];
 let modeIdx=FEATURES.modes?Math.max(0,Math.min(MODES.length-1,parseInt(store.get("mode",0),10)||0)):0;
 function dayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function strHash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -751,7 +751,8 @@ function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
 function moveSpeed(){return 210*shipSpeed(G.ship)*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
-function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))*shipDmg(G.ship)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
+function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))*shipDmg(G.ship)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}// gems pull from 70px bare and 245 at full Tractor Beam; it was 100 and 325, and they came too easily
+function magnetR(){return (70+35*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
 // run peaked at sector 2 and got easier from sector 4 on - a motionless
 // player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
