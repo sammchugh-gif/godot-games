@@ -9,7 +9,7 @@ branch as it stood before any of them landed is kept as the branch
 
 At the top of `docs/star-swarm/index.html` (mirrored in `Game10/index.html`):
 
-    const FEATURES={evolve:true, ...};
+    const FEATURES={evolve:true,modes:true, ...};
 
 Set one to `false`, copy the file over its mirror, commit, and that feature
 is gone from the game while everything else stays. Saved data is not
@@ -18,6 +18,7 @@ touched: a switched-off feature's records simply stop being shown.
 | switch   | feature                                  | pull request |
 |----------|------------------------------------------|--------------|
 | `evolve` | weapon evolutions                        | #82          |
+| `modes`  | endless mode and the daily run           | #83          |
 
 ## Rolling a feature back entirely
 
@@ -55,3 +56,32 @@ weapon it would evolve. When the pair is complete the game says so.
 
 An evolution counts as three ranks toward how hard the swarm and the bosses
 come, so an evolved build is not a free one.
+
+### Endless mode and the daily run (`modes`)
+
+A mode row sits above the difficulty row on the title screen (beside it on
+a phone held sideways).
+
+**Endless.** Past the sixth gate the sectors keep coming: sector 7 is the
+Ringed Giant again with its music, the bosses come round a third time as
+MK III, and the swarm keeps scaling with the clock. It has its own best
+score, sector and time per ship and difficulty.
+
+**Daily.** The campaign with one twist chosen by the date, the same for
+everyone that day. The run's dice (rocks, spawns, cards) are seeded by the
+date, so two runs on the same day fall the same way. The day keeps a board
+of its best five runs, any ship, shown on the end screen; the title shows
+today's best and the run count. The seven twists:
+
+| twist        | what it does                                        |
+|--------------|-----------------------------------------------------|
+| DOUBLE GEMS  | every gem is worth two                              |
+| GLASS CANNON | double damage, half the hull                        |
+| NO SHIELDS   | no shield at all, but half again the hull           |
+| SWARM TIDE   | far more aliens, each far weaker                    |
+| BOSS RUSH    | the boss comes at one minute, the gate right after  |
+| TURBO        | you are faster, so are they                         |
+| TREASURE DAY | every elite drops a chest, gems fly from far away   |
+
+With the switch off the mode row disappears and every run is a campaign
+run; endless and daily records stay in storage untouched.
