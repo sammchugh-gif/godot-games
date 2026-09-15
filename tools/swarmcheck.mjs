@@ -400,6 +400,30 @@ check('the escape pod survives a killing blow', SHOPT.podScene === 'play' && SHO
 check('the shop switch turns it off', SHOPT.offHull === SHOPT.baseHull && !SHOPT.offButtons.some(l => /SHOP/.test(l)),
   `FEATURES.shop=false: hull back to ${SHOPT.offHull}, no SHOP button on the title`);
 
+/* ------------------------------------------------------- the last run
+   When a run ends it is written down whole - ship, mode, result, build,
+   who ended it, gems - and turned into one line that a SHARE button hands
+   to the share sheet or the clipboard. Both go through a stub here. */
+const LAST = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  Object.defineProperty(navigator, 'share', { value: d => { window.__shared = d.text; return Promise.resolve(); }, configurable: true });
+  S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0;
+  G.weapons = { laser: 6 }; G.passives = { haste: 1 }; S.evolve('laser'); G.score = 777; G.sector = 3; G.level = 12; G.gemsGot = 55;
+  G.hp = 1; G.sh = 0; G.inv = 0; S.spawnEnemy('kraken', G.px + 5, G.py); S.sim(1);
+  const r = S.lastRun; out.scene = S.scene; out.sector = r && r.sector; out.by = r && r.by; out.how = r && r.how; out.evolved = r && r.evolved;
+  out.summary = S.runSummary();
+  S.shareRun(); S.shareNow(); out.shared = window.__shared === out.summary;
+  S.scene = 'title'; return out;
+})()`);
+check('a run is written down when it ends', LAST.scene === 'over' && LAST.how === 'died' && LAST.sector === 3 && /KRAKEN/.test(LAST.by || '') && LAST.evolved === 1,
+  `died in sector ${LAST.sector}, killed by ${LAST.by}, one evolution`);
+check('and reads as one line', /Dylan's falcon/i.test(LAST.summary) && /died in sector 3/.test(LAST.summary) && /Prism Beam/.test(LAST.summary) && /score 777/.test(LAST.summary) && /\+55 gems/.test(LAST.summary),
+  LAST.summary.slice(0, 120) + '...');
+check('SHARE hands that line to the share sheet', LAST.shared, 'navigator.share received the summary');
+await sleep(400);
+const labels = await pg.evaluate('window.SW.buttonLabels');
+check('the title offers the last run', labels.some(l => /LAST RUN/.test(l)), labels.filter(l => /LAST RUN/.test(l)).join(' | '));
+
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
    climbs off the top of the screen, and only then does the run begin. The
