@@ -302,6 +302,21 @@ check('the next chest evolves it', EVO.evolved && EVO.rank === 6 && !EVO.offered
   `Prism Beam, rank stays 6, no longer offered as a card`);
 check('and it hits a good deal harder', EVO.strong > EVO.plain * 1.6,
   `${EVO.plain} damage in six seconds at full rank, ${EVO.strong} evolved (${(EVO.strong / EVO.plain).toFixed(1)}x)`);
+/* Nova Pulse once hit everything on the screen every second, which was the
+   first evolution anyone complained about. It reaches further than the
+   plain wave, and no further than that. */
+const NOVA = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  const ring = rad => { const G = S.G; G.en.length = 0; G.parts.length = 0;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; const e = S.spawnEnemy('drifter', G.px + Math.cos(a) * rad, G.py + Math.sin(a) * rad); e.hp = e.maxhp = 1e9; e.spd = 0; }
+    return S.G.en.slice(); };
+  const hit = r => r.some(e => e.hp < e.maxhp);
+  const run = (evo, rad) => { S.fx = false; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.secT = 10;
+    G.weapons = { wave: 6 }; G.passives = { shield: 1 }; if (evo) S.evolve('wave'); const r = ring(rad); S.sim(4); const h = hit(r); S.scene = 'title'; return h; };
+  out.plain330 = run(false, 330); out.nova330 = run(true, 330); out.nova420 = run(true, 420); return out;
+})()`);
+check('Nova Pulse reaches further, not everywhere', !NOVA.plain330 && NOVA.nova330 && !NOVA.nova420,
+  `a ring at 330px: plain wave misses, Nova Pulse hits; at 420px Nova Pulse misses too`);
 check('every weapon has a partner', EVO.pairs, `${Object.keys(await pg.evaluate('window.SW.WEAPONS')).length} weapons, each paired with an upgrade that exists`);
 check('the switch turns it off', EVO.off === 0, 'FEATURES.evolve=false: nothing evolves');
 
