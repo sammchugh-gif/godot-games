@@ -344,6 +344,47 @@ check('a daily run goes on the day\'s board', MODE.died === 'over' && MODE.onBoa
   `died with 4321, placed ${MODE.rank} on today's board`);
 check('the modes switch turns it off', MODE.off === 'campaign', 'FEATURES.modes=false: endless selected, campaign played');
 
+/* --------------------------------------------------------- the hangar shop
+   Every gem picked up in a run is banked when it ends, won or lost, and the
+   bank buys small permanent upgrades. Buying costs what it says, a run
+   carries what was bought, the escape pod survives one killing blow, and
+   the switch takes the shop off the title and its perks out of the run. */
+const SHOPT = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  S.fx = false; for (const k in S.perks) delete S.perks[k]; S.bank = 0;
+  /* a run banks its gems when it dies */
+  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0;
+  for (let i = 0; i < 30; i++) G.gems.push({ x: G.px + 5, y: G.py, v: 2, big: 1 });
+  S.sim(0.5); out.got = G.gemsGot; G.hp = 1; G.sh = 0; G.inv = 0; S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(1); out.died = S.scene; out.bank = S.bank; S.scene = 'title';
+  /* buying */
+  S.bank = 90; out.poor = S.buy('hull'); S.bank = 1000; out.bought = S.buy('hull') && S.buy('hull'); out.left = S.bank; out.lv = S.perks.hull;
+  out.cap = (() => { S.bank = 1e6; let n = 0; while (S.buy('engine')) n++; return { n, more: S.buy('engine') }; })();
+  /* a run carries it */
+  S.bank = 1e6; S.buy('pod'); S.buy('start');
+  S.start(S.SHIPS[0]); G = S.G; out.hull = G.maxhp; out.baseHull = S.SHIPS[0].hp; out.rank = G.weapons[S.SHIPS[0].weapon]; out.lives = G.lives;
+  /* the pod */
+  G.arrive = 0; G.spawnAcc = -1e9; G.hp = 1; G.sh = 0; G.inv = 0; S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(0.3);
+  out.podScene = S.scene; out.podHp = G.hp; out.podLives = G.lives; S.scene = 'title';
+  /* the switch */
+  S.FEATURES.shop = false; S.start(S.SHIPS[0]); out.offHull = S.G.maxhp; S.scene = 'title';
+  return out;
+})()`);
+/* the title has to be drawn again, by a real frame, before its buttons say anything */
+await sleep(400);
+SHOPT.offButtons = await pg.evaluate('window.SW.buttonLabels');
+await pg.evaluate(`(() => { const S = window.SW; S.FEATURES.shop = true; for (const k in S.perks) delete S.perks[k]; S.bank = 0; S.scene = 'title'; })()`);
+check('a run banks its gems when it ends', SHOPT.got === 60 && SHOPT.died === 'over' && SHOPT.bank === 60,
+  `30 gems worth 2 picked up, ship destroyed, ${SHOPT.bank} in the bank`);
+check('buying costs what it says', SHOPT.poor === false && SHOPT.bought && SHOPT.left === 700 && SHOPT.lv === 2,
+  `90 gems buys nothing; 1000 buys two hull levels (100 + 200) and leaves ${SHOPT.left}`);
+check('and stops at the top level', SHOPT.cap.n === 3 && SHOPT.cap.more === false, `Engine Trim: ${SHOPT.cap.n} levels, then no more`);
+check('a run carries what was bought', SHOPT.hull === SHOPT.baseHull + 16 && SHOPT.rank === 2 && SHOPT.lives === 1,
+  `hull ${SHOPT.baseHull} → ${SHOPT.hull}, starting weapon at rank ${SHOPT.rank}, one escape pod`);
+check('the escape pod survives a killing blow', SHOPT.podScene === 'play' && SHOPT.podHp > 0 && SHOPT.podLives === 0,
+  `still playing at ${SHOPT.podHp} hull, pod spent`);
+check('the shop switch turns it off', SHOPT.offHull === SHOPT.baseHull && !SHOPT.offButtons.some(l => /SHOP/.test(l)),
+  `FEATURES.shop=false: hull back to ${SHOPT.offHull}, no SHOP button on the title`);
+
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
    climbs off the top of the screen, and only then does the run begin. The
