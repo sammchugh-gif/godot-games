@@ -632,7 +632,7 @@ const SHIPS=[
  {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,stats:{speed:2,damage:2,shield:4},col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
  {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,stats:{speed:3,damage:4,shield:3},col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
  // and the one for finishing: top marks in everything
- {id:"ufo",name:"SAUCER",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,stats:{speed:5,damage:5,shield:5},col:"#a0e0c0",col2:"#f0fff8",unlock:"Clear all six sectors"},
+ {id:"ufo",name:"ECLIPSE",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,stats:{speed:5,damage:5,shield:5},col:"#a0e0c0",col2:"#f0fff8",unlock:"Clear all six sectors"},
 ];
 function shipSpeed(sh){return 0.9+0.075*(sh.stats.speed-1)}    // 1 → 90%, 5 → 120%
 function shipDmg(sh){return 0.9+0.075*(sh.stats.damage-1)}     // 1 → 90%, 5 → 120%
@@ -1029,7 +1029,7 @@ function updateRun(dt){
   // a leaving alien is not pinned to a rock
   if(!e.boss&&!e.flee)for(const rk of G.rocks){const rd=dist(e.x,e.y,rk.x,rk.y);if(rd<rk.r+e.r){const px=(e.x-rk.x)/rd,py=(e.y-rk.y)/rd;e.x=rk.x+px*(rk.r+e.r);e.y=rk.y+py*(rk.r+e.r)}}
   if(d<e.r+16&&G.inv<=0&&!e.flee){
-   // the Saucer's deflector hull: the small ones bounce off, with a ping
+   // the Eclipse's deflector hull: the small ones bounce off, with a ping
    if(G.ship.ab==="saucer"&&(e.type==="scout"||e.type==="swarmer")&&!e.elite){e.vx-=dx/d*420;e.vy-=dy/d*420;e.x-=dx/d*6;e.y-=dy/d*6;if(Math.random()<0.5)SFX.shieldhit()}
    else{hurt(e.dmg,ENEMY[e.type].name||e.type);if(G.ship.ab==="frost")e.slow=Math.max(e.slow,2.5)}}}   // the Glacier chills what touches it
  const en=G.en;for(let i=0;i<en.length;i++){const a=en[i];for(let j=i+1;j<en.length;j++){const b=en[j];const dx=b.x-a.x,dy=b.y-a.y,md=a.r+b.r-6;if(Math.abs(dx)<md&&Math.abs(dy)<md){const d=Math.hypot(dx,dy)||1;if(d<md){const push=(md-d)*0.5,nx2=dx/d,ny2=dy/d;if(!a.boss){a.x-=nx2*push;a.y-=ny2*push}if(!b.boss){b.x+=nx2*push;b.y+=ny2*push}}}}}
@@ -1218,6 +1218,17 @@ function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
 const SHIPRES=4,SHIPP=32;
 const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],ufo:[[-19,0,0.8]],
               nova:[[-14,0,1.0],[-11,-11,0.72],[-11,11,0.72]]};
+// Brushed metal, painted inside whatever is clipped when it is called: fine
+// streaks along the axis with a little noise, a specular sweep across the
+// top, a darker underside, and a row of rivets where there are seams.
+function brush(g,x0,x1,y0,y1,rivets){
+ for(let i=0;i<60;i++){const yy=y0+(y1-y0)*(i+0.5)/60,a=0.03+hash(i*7+3,91)*0.11;
+  g.strokeStyle=(i%3?"rgba(255,255,255,":"rgba(0,0,0,")+a.toFixed(3)+")";g.lineWidth=0.3;
+  g.beginPath();g.moveTo(x0,yy);g.lineTo(x1,yy+hash(i,93)*0.8-0.4);g.stroke()}
+ const spec=g.createLinearGradient(0,y0,0,y1);spec.addColorStop(0,"rgba(255,255,255,0.04)");spec.addColorStop(0.3,"rgba(255,255,255,0.3)");
+ spec.addColorStop(0.48,"rgba(255,255,255,0.04)");spec.addColorStop(1,"rgba(0,0,0,0.22)");g.fillStyle=spec;g.fillRect(x0,y0,x1-x0,y1-y0);
+ if(rivets){g.fillStyle="rgba(0,0,0,0.4)";for(const ry of rivets)for(let x=x0+4;x<x1-4;x+=4.5){g.beginPath();g.arc(x,ry,0.5,0,TAU);g.fill();
+  g.fillStyle="rgba(255,255,255,0.25)";g.beginPath();g.arc(x-0.25,ry-0.25,0.28,0,TAU);g.fill();g.fillStyle="rgba(0,0,0,0.4)"}}}
 function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
  const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
  const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
@@ -1227,6 +1238,11 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=s
   if(shape==="ufo"){
    const dg=g.createRadialGradient(-4,-5,3,0,0,22);dg.addColorStop(0,lite);dg.addColorStop(0.55,col);dg.addColorStop(1,dark);
    g.fillStyle=dg;g.beginPath();g.arc(0,0,21,0,TAU);g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1.1;g.stroke();
+   // the disc is brushed in rings, and lit from the upper left
+   g.save();g.beginPath();g.arc(0,0,21,0,TAU);g.clip();
+   for(let i=0;i<40;i++){const rr2=2+i*0.48,a=0.03+hash(i*5+1,97)*0.1;g.strokeStyle=(i%3?"rgba(255,255,255,":"rgba(0,0,0,")+a.toFixed(3)+")";g.lineWidth=0.35;g.beginPath();g.arc(0,0,rr2,0,TAU);g.stroke()}
+   const sg=g.createRadialGradient(-7,-8,1,-4,-4,26);sg.addColorStop(0,"rgba(255,255,255,0.35)");sg.addColorStop(0.45,"rgba(255,255,255,0.04)");sg.addColorStop(1,"rgba(0,0,0,0.25)");g.fillStyle=sg;g.fillRect(-22,-22,44,44);
+   g.restore();
    g.strokeStyle="rgba(0,0,0,0.35)";g.lineWidth=0.9;g.beginPath();g.arc(0,0,15,0,TAU);g.stroke();
    g.strokeStyle="rgba(255,255,255,0.35)";g.lineWidth=1.2;g.beginPath();g.arc(0,0,18.5,-0.9,0.9);g.stroke();
    for(let i=0;i<10;i++){const a=i/10*TAU;g.fillStyle=i%2?hexA(c2,0.95):"rgba(255,120,200,0.9)";g.beginPath();g.arc(Math.cos(a)*18,Math.sin(a)*18,1.6,0,TAU);g.fill()}
@@ -1242,7 +1258,10 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=s
   const wing=(pts)=>{poly(pts);
    const wg=g.createLinearGradient(0,-20,0,20);
    wg.addColorStop(0,shade(col,0.12));wg.addColorStop(0.5,mid);wg.addColorStop(1,deep);
-   g.fillStyle=wg;g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1;g.stroke();
+   g.fillStyle=wg;g.fill();g.save();poly(pts);g.clip();brush(g,-24,8,-24,24,null);g.restore();
+   // the brush leaves its last streak as the current path, so the outline is
+   // stated again before it is stroked
+   poly(pts);g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1;g.stroke();
    // leading-edge highlight so the wing reads as a solid plate, not a flat slab
    g.save();poly(pts);g.clip();g.strokeStyle="rgba(255,255,255,0.28)";g.lineWidth=1.4;
    g.beginPath();g.moveTo(pts[0][0],pts[0][1]);g.lineTo(pts[1][0],pts[1][1]);g.stroke();g.restore()};
@@ -1284,6 +1303,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=s
   body();g.fillStyle=hull;g.fill();
   g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1.1;g.stroke();
   body();g.save();g.clip();
+  brush(g,-16,nose,-12,12,[-6.4,6.4]);
   // accent spine in the ship's trim colour
   g.fillStyle=hexA(c2,0.4);
   g.beginPath();g.moveTo(nose-1,0);g.lineTo(-2,-1.8);g.lineTo(-14,-1.4);g.lineTo(-14,1.4);g.lineTo(-2,1.8);g.closePath();g.fill();
@@ -2025,7 +2045,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than

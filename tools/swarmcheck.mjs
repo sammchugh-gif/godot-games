@@ -455,7 +455,7 @@ const FLEET = await pg.evaluate(`(() => {
   S.scene = 'title'; delete S.unlocks.wraith; delete S.unlocks.glacier; delete S.unlocks.magnetar; S.bank = 0; return out;
 })()`);
 check('no ship is named after a child', !FLEET.names.some(n => /SOPHIA|RORY|DYLAN/i.test(n)), FLEET.names.join(', '));
-/* the Saucer: earned by clearing the campaign, and the small aliens bounce off it */
+/* the Eclipse: earned by clearing the campaign, and the small aliens bounce off it */
 const UFO = await pg.evaluate(`(() => {
   const S = window.SW, out = {}; S.fx = false; delete S.unlocks.ufo;
   S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(0.2);
@@ -466,7 +466,7 @@ const UFO = await pg.evaluate(`(() => {
   G.en.length = 0; G.inv = 0; S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(0.3); out.afterDrifter = G.hp + G.sh - hp0;
   S.scene = 'title'; return out;
 })()`);
-check('clearing the campaign earns the Saucer', UFO.won === 'win' && UFO.unlocked, `the sixth gate: ${UFO.won}, Saucer unlocked`);
+check('clearing the campaign earns the Eclipse', UFO.won === 'win' && UFO.unlocked, `the sixth gate: ${UFO.won}, Saucer unlocked`);
 check('and the small aliens bounce off it', UFO.afterScout === 0 && UFO.scoutPushed && UFO.afterDrifter < 0,
   `a scout: no damage, thrown clear; a drifter: ${UFO.afterDrifter}`);
 check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === false && FLEET.bought && FLEET.owned && FLEET.left === 12000 - 2500 - 3500 - 5000,
@@ -474,7 +474,7 @@ check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === f
 check('the Ghost phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
 check('the Glacier chills', FLEET.frostSlow >= 2, `a drifter that touched it is slowed for ${FLEET.frostSlow}s`);
 check('the Magnetar pulls from twice as far', FLEET.gravR === FLEET.plainR * 2, `${FLEET.gravR}px against ${FLEET.plainR}px`);
-/* the marks on the card are the numbers in the run, and the Saucer alone
+/* the marks on the card are the numbers in the run, and the Eclipse alone
    has top marks; a ship not yet earned shows as ??? on the title, and the
    hangar shows one ship at a time behind arrows with a ? for the modes */
 const MARKS = await pg.evaluate(`(() => {
@@ -489,7 +489,7 @@ const MARKS = await pg.evaluate(`(() => {
   return out;
 })()`);
 check('the marks are the numbers', MARKS.ok && MARKS.top.length === 1 && MARKS.top[0] === 'ufo' && MARKS.last === 'ufo' && MARKS.ufoSpeed === 1.2 && MARKS.ufoShield === 60,
-  `every ship derives speed, damage and shield from its marks; only the Saucer is 5/5/5 (speed 120%, shield 60), and it comes last`);
+  `every ship derives speed, damage and shield from its marks; only the Eclipse is 5/5/5 (speed 120%, shield 60), and it comes last`);
 await pg.evaluate(`window.SW.scene = 'title'; window.SW.viewIdx = 0; delete window.SW.unlocks.wraith`);
 await sleep(400);
 const before = await pg.evaluate('window.SW.buttonLabels');
