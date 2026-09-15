@@ -700,7 +700,7 @@ const DAILY_MODS=[
  {id:"tide",name:"SWARM TIDE",desc:"Far more aliens, each far weaker.",rate:1.7,hp:0.55},
  {id:"rush",name:"BOSS RUSH",desc:"The boss comes at one minute, the gate right after.",bossAt:60,gateAt:130},
  {id:"turbo",name:"TURBO",desc:"You are faster. So are they.",speed:1.4,espd:1.25},
- {id:"loot",name:"TREASURE DAY",desc:"Every elite drops a chest, gems fly from far away.",chest:1,magnet:3}];
+ {id:"loot",name:"TREASURE DAY",desc:"Three elite chests a sector instead of one, gems fly from far away.",chests:3,magnet:3}];
 let modeIdx=FEATURES.modes?Math.max(0,Math.min(MODES.length-1,parseInt(store.get("mode",0),10)||0)):0;
 function dayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function strHash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -837,7 +837,12 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
   // Elites are five percent of every spawn, so a chest from each of them meant
   // one was always on screen. Bosses still always drop; elites about one in
   // seven, which is roughly an 85% cut.
-  if(e.boss||Math.random()<(mod().chest||0.15))G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
+  // Chests are the evolution path and the big prize, so they are rationed:
+  // one from the elites per sector (three on Treasure Day) and one from the
+  // boss. Fifteen percent of twenty-five elites a sector was five, and
+  // every elite on Treasure Day was twenty-five.
+  if(e.boss)G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
+  else if((G.secChests||0)<(mod().chests||1)&&Math.random()<(mod().chests?0.5:0.2)){G.secChests=(G.secChests||0)+1;G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60})}
   if(e.boss){announce(ENEMY[e.type].name+" DESTROYED!");shake=1}}
  else if(Math.random()<(e.type==="drifter"?0.06:0.012)){const r=Math.random();G.pk.push({k:r<0.45?"repair":r<0.8?"magnet":"nuke",x:e.x,y:e.y,r:16,life:25})}}
 function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2){const r=Math.random();G.pk.push({k:r<0.5?"repair":r<0.85?"magnet":"nuke",x:rk.x,y:rk.y,r:16,life:25})}}}
@@ -887,7 +892,7 @@ window.addEventListener("touchend",shareNow);window.addEventListener("mouseup",s
 function die(){if(scene==="over")return;scene="over";SFX.die();musicStop();saveRecord();bankRun();noteRun("died")}
 // Flying into the gate leaves the whole swarm behind: the field is wiped, the
 // asteroids are new, shields come back, and clearing a sector pays an upgrade.
-function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;
+function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;G.secChests=0;
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
  G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;

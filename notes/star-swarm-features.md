@@ -85,7 +85,7 @@ today's best and the run count. The seven twists:
 | SWARM TIDE   | far more aliens, each far weaker                    |
 | BOSS RUSH    | the boss comes at one minute, the gate right after  |
 | TURBO        | you are faster, so are they                         |
-| TREASURE DAY | every elite drops a chest, gems fly from far away   |
+| TREASURE DAY | three elite chests a sector instead of one, gems fly from far away |
 
 With the switch off the mode row disappears and every run is a campaign
 run; endless and daily records stay in storage untouched.
