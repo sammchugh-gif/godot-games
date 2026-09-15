@@ -346,14 +346,14 @@ const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06
 // Six tracks, one per realm. Notes are scale degrees, 1 to 14 across two
 // octaves, 0 for a rest, over eight bars of eighths; chords are degrees of the
 // scale, one per bar; drums are a bar of sixteenths.
-const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10];
+const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10],DOR=[0,2,3,5,7,9,10],PHR=[0,1,3,5,7,8,10];
 const TRACKS=[
  {name:"giant",bpm:128,root:57,scale:MAJ,chords:[0,4,5,3,0,4,5,3],
   lead:[1,0,3,5,0,8,0,7, 5,0,3,0,1,0,0,0, 2,0,4,5,0,7,0,9, 8,0,7,0,5,0,0,0, 1,0,3,5,0,8,0,10, 9,0,8,0,7,0,5,0, 6,0,8,9,0,10,9,8, 7,0,5,0,3,0,0,0],
   bass:[1,0,1,1,0,1,0,1],kick:[0,4,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[14],pad:0.028,arp:0.022,arpOct:0},
- {name:"fleet",bpm:142,root:52,scale:MIN,chords:[0,5,2,6,0,5,2,6],
-  lead:[1,1,0,1,0,3,0,1, 0,1,0,5,0,4,3,0, 1,1,0,1,0,3,0,1, 0,6,0,5,0,4,3,0, 8,8,0,8,0,7,0,5, 0,5,0,7,0,8,7,0, 6,6,0,6,0,5,0,3, 0,3,0,2,0,1,0,0],
-  bass:[1,0,1,0,1,1,0,1],kick:[0,3,8,10],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[],pad:0.014,arp:0,arpOct:0},
+ {name:"fleet",bpm:126,root:52,scale:DOR,chords:[0,3,0,6,0,3,4,6],
+  lead:[1,0,5,0,8,7,0,5, 0,4,0,5,0,0,0,0, 1,0,5,0,8,10,0,9, 0,7,0,8,7,0,0,0, 12,0,11,0,10,0,8,0, 9,0,8,0,7,0,5,0, 6,0,8,0,10,0,9,8, 7,0,0,0,5,0,0,0],
+  bass:[1,0,1,1,0,1,1,0],kick:[0,7,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[10],pad:0.03,arp:0.024,arpOct:1},
  {name:"ember",bpm:118,root:51,scale:MIN,chords:[0,3,5,6,0,3,5,6],
   lead:[1,0,0,0,5,0,0,0, 8,0,0,0,7,0,5,0, 4,0,0,0,6,0,0,0, 5,0,0,0,3,0,1,0, 8,0,0,0,12,0,0,0, 11,0,0,0,10,0,8,0, 6,0,0,0,7,0,0,0, 8,0,0,0,5,0,0,0],
   bass:[1,0,0,0,0,0,1,0],kick:[0,10],snare:[8],hat:[0,2,4,6,8,10,12,14],open:[6],pad:0.04,arp:0,arpOct:0},
@@ -372,7 +372,15 @@ let musicTrack=-1,musicLog=null,musicKind="",musicForce=null;  // musicLog colle
 TRACKS.push({name:"title",bpm:66,root:45,scale:MIN,chords:[0,5,3,0,0,5,6,4],
   lead:[1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 8,0,0,0,0,0,7,0, 6,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 4,0,0,0,0,0,3,0, 2,0,0,0,0,0,0,0],
   bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13});
-const TITLE_TRACK=TRACKS.length-1;
+const TITLE_TRACK=TRACKS.length-1,SECTOR_TRACKS=6;
+// The boss has a piece of its own: a phrygian riff hammering the flat second
+// over a bass on every eighth, double kicks, a drone under it all. It is
+// played in whichever key the sector was in, so the switch is a change of
+// mood, not a change of song.
+const BOSS_TRACK=TRACKS.length;
+TRACKS.push({name:"boss",bpm:150,root:52,scale:PHR,chords:[0,1,0,1,0,1,6,1],
+  lead:[1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 1,1,0,1,3,0,2,0, 8,0,7,0,5,0,4,0, 1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 6,0,8,0,9,0,8,0, 2,0,1,0,0,0,0,0],
+  bass:[1,1,1,1,1,1,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[14],pad:0.02,arp:0.03,arpOct:1,drone:true,loud:1.35});
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 // scale degree (1-based, two octaves) to a MIDI note in this track's key
 function degNote(T,deg,oct){const d=deg-1;return T.root+T.scale[((d%7)+7)%7]+12*Math.floor(d/7)+12*(oct||0)}
@@ -381,7 +389,11 @@ function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
  if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")return TITLE_TRACK;
- return G?Math.max(0,G.sector-1)%(TRACKS.length-1):0}
+ if(G&&G.bossAlive)return BOSS_TRACK;
+ return G?sectorTrack():0}
+function sectorTrack(){return Math.max(0,G.sector-1)%SECTOR_TRACKS}
+// the boss piece borrows the sector's key
+function trackAt(i){return i===BOSS_TRACK&&G?Object.assign({},TRACKS[i],{root:TRACKS[sectorTrack()].root}):TRACKS[i]}
 function osc(type,f,t,dur,vol,dest,f1,drum){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -396,36 +408,44 @@ function drum(kind,t,vol){
 function musicSchedule(until){
  while(musicNext<until){
   if(musicTrack<0)musicTrack=wantTrack();
-  const T=TRACKS[musicTrack],s16=60/T.bpm/4,s=musicStep,t=musicNext;
+  const T=trackAt(musicTrack),s=musicStep,t=musicNext;
   const bar=Math.floor(s/16),inBar=s%16,eighth=Math.floor(s/2);
-  const boss=!!(G&&G.bossAlive),gate=!!(G&&G.gate);
+  const gate=!!(G&&G.gate);
+  // Once the sector's boss is down the same piece comes back at ease: a
+  // touch slower, the kit down to a kick on the one, the bass on the
+  // downbeats, the lead softer and longer, the pad up. The gate sparkle
+  // still rides on top when it opens.
+  const calm=!!(G&&G.secBoss&&!G.bossAlive)&&musicTrack!==BOSS_TRACK&&!T.title;
+  const s16=60/(T.bpm*(calm?0.88:1))/4;
   // a new track is taken up at a bar line, so the key changes on the beat -
-  // except between the hangar and a run, where it changes now
-  const kind=wantTrack()===TITLE_TRACK?"title":"run";
-  if(wantTrack()!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=wantTrack();musicKind=kind;musicStep=0;continue}
+  // except between the hangar and a run, or in and out of a boss, where it
+  // changes now
+  const want=wantTrack(),kind=want===TITLE_TRACK?"title":want===BOSS_TRACK?"boss":"run";
+  if(want!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=want;musicKind=kind;musicStep=0;continue}
   musicKind=kind;
   const chord=chordNotes(T,bar);
   // drums
   const kickV=0.42,snV=0.3,hatV=T.title?0.025:0.05;
   if(!T.title){
-   if(T.kick.includes(inBar)||(boss&&inBar%2===0))drum("kick",t,kickV);
-   if(T.snare.includes(inBar)||(boss&&(inBar===6||inBar===14)))drum("snare",t,snV);}
-  if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar)||(boss&&!T.title))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
+   if(calm?inBar===0:T.kick.includes(inBar))drum("kick",t,kickV*(calm?0.7:1));
+   if(!calm&&T.snare.includes(inBar))drum("snare",t,snV);}
+  if(calm){if(inBar%4===0)drum("hat",t,hatV*0.6)}
+  else if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
   // bass, on the eighths
-  if(inBar%2===0){const b=T.bass[(inBar/2)%8];if(b){const n=chord[0]-12,jump=(T.name==="fleet"&&inBar===10)?12:0;
-   osc("triangle",midiHz(n+jump),t,s16*1.7,0.16);osc("square",midiHz(n+jump),t,s16*1.2,0.04)}}
+  if(inBar%2===0&&!(calm&&inBar%8)){const b=T.bass[(inBar/2)%8];if(b){const n=chord[0]-12;
+   osc("triangle",midiHz(n),t,s16*(calm?3.2:1.7),0.16);if(!calm)osc("square",midiHz(n),t,s16*1.2,0.04)}}
   // pad, one chord per bar, held
-  if(inBar===0&&T.pad){const dur=s16*16;
-   for(const n of chord){osc("sawtooth",midiHz(n)*1.003,t,dur,T.pad,padBus);osc("sawtooth",midiHz(n)*0.997,t,dur,T.pad,padBus)}
-   // the boss drone sits an octave under the root; the theme has one always
-   if(boss||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
+  if(inBar===0&&T.pad){const dur=s16*16,pv=T.pad*(calm?1.6:1);
+   for(const n of chord){osc("sawtooth",midiHz(n)*1.003,t,dur,pv,padBus);osc("sawtooth",midiHz(n)*0.997,t,dur,pv,padBus)}
+   // the boss piece and the theme carry a drone an octave under the root
+   if(T.drone||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
   // lead, on the eighths
   if(inBar%2===0){const d=T.lead[eighth%64];if(d){const n=degNote(T,d);
-   const v=boss?0.075:0.055,hold=T.hold||1.8;
-   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:0.9),v*0.25)}}
+   const v=calm?0.04:0.055*(T.loud||1),hold=calm?3.2:(T.hold||1.8);
+   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:calm?2:0.9),v*0.25)}}
   // arpeggio on the sixteenths, up and down the chord across two octaves
-  if(T.arp){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
-   osc("triangle",midiHz(n),t,s16*0.9,T.arp)}
+  if(T.arp&&!(calm&&inBar%2)){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
+   osc("triangle",midiHz(n),t,s16*(calm?1.8:0.9),T.arp*(calm?0.8:1))}
   // the gate is open: a high sparkle every other sixteenth
   if(gate&&inBar%2===1)osc("sine",midiHz(chord[(inBar>>1)%3]+36),t,s16*0.8,0.03);
   musicStep++;musicNext+=s16}}
@@ -443,11 +463,12 @@ async function audioRender(what,secs,opts){
  const ctx=new OfflineAudioContext(1,Math.ceil(44100*secs),44100);
  const save={AC,master,padBus,G,musicStep,musicNext,musicTrack};
  AC=ctx;const b=buildBus(ctx);master=b.master;padBus=b.pad;
- musicLog=[];
+ musicLog=[];let tname=what;
  try{
   if(what==="music"){
-   G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,gate:opts.gate?{}:null};
-   musicForce=opts.title?TITLE_TRACK:Math.min(TRACKS.length-2,(opts.sector||1)-1);
+   G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,secBoss:!!(opts.boss||opts.calm),gate:opts.gate?{}:null};
+   musicForce=opts.title?TITLE_TRACK:opts.boss?BOSS_TRACK:Math.min(SECTOR_TRACKS-1,(opts.sector||1)-1);
+   tname=TRACKS[musicForce].name+(opts.calm?" calm":"");
    musicStep=0;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
   else if(SFX[what])SFX[what]();
  }finally{
@@ -456,7 +477,7 @@ async function audioRender(what,secs,opts){
   AC=save.AC;master=save.master;padBus=save.padBus;G=save.G;musicStep=save.musicStep;musicNext=save.musicNext;musicTrack=save.musicTrack;
   const d=buf.getChannelData(0);let peak=0,sum=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>peak)peak=a;sum+=d[i]*d[i]}
   const notes={};for(const f of log)notes[f]=(notes[f]||0)+1;
-  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:what==="music"?(opts.title?"title":TRACKS[Math.min(TRACKS.length-2,(opts.sector||1)-1)].name):what}}}
+  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:tname}}}
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;audioWake();if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
 const touch={id:-1,ox:0,oy:0,x:0,y:0};let mouseDown=false;
@@ -807,14 +828,16 @@ function spawnWave(dt){const t=G.t;let rate=swarmRate();
   const p=edgePoint();let type="scout";const r=Math.random();if(t>250&&r<0.16)type="phantom";else if(t>170&&r<0.26)type="turret";else if(t>100&&r<0.5)type="drifter";else if(t>40&&r<0.72)type="swarmer";
   const elite=t>90&&Math.random()<G.dif.elite;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
  if(t>75&&Math.floor((t-75)/75)>G.swarm&&!G.bossAlive){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
- // one boss per sector, three minutes in
- if(G.secT>=(mod().bossAt||165)&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
+ // one boss per sector, a little past three minutes in
+ if(G.secT>=(mod().bossAt||185)&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
   // Whatever is on the field when the boss arrives turns and leaves. A hundred
   // scouts between you and the Mothership is not a boss fight, it is the last
   // three minutes again with a bigger thing behind it - and the weapons, which
   // aim at the nearest alien, never reached it. The swarm parts, the boss
-  // brings its own escort, and the duel starts on an open field.
-  for(const e of G.en)if(!e.boss)e.flee=true;
+  // brings its own escort, and the duel starts on an open field. Not quite
+  // empty, though: about one in six stays and fights, so the parting reads
+  // as the swarm giving way rather than the field being wiped.
+  for(const e of G.en)if(!e.boss&&Math.random()<0.85)e.flee=true;
   G.bossAlive=spawnEnemy(which,p.x,p.y);G.bossT=0;
   // the second time you meet one it is a different animal, and it says so
   announce(ENEMY[which].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"")+" APPROACHES!");SFX.boss();shake=1}
@@ -2082,7 +2105,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
