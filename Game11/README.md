@@ -2,9 +2,9 @@
 
 A marble run and contraption builder for the iPad's browser. Drag planks,
 curves, trampolines, bumpers, fans, spinners, cannons and portals from the
-tray onto the board, turn them, press GO and watch the marble go. Sixteen
-puzzles with a goal cup and bonus stars, plus a sandbox with five marbles
-and three save slots for your own machines.
+tray onto the board, turn them, press GO and watch the marble go. Sixty-four
+puzzles in four worlds, each with a goal cup and bonus stars, plus six
+custom sandboxes for your own machines.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/marble-mayhem/>. On
 the iPad, open the link in Safari, then Share → Add to Home Screen. Works in
@@ -23,12 +23,14 @@ either orientation. One file, no engine.
 - Stuck? After three misses a **HINT** button appears. It shows a faded
   outline of one piece of a working layout; every three more misses adds
   another, so the level stays yours to finish.
-- Sandbox mode has unlimited pieces and five marbles that respawn from the
-  top. Hold **RAIN** to pour more, up to thirty. The board keeps a **RUN**
-  clock, the longest any marble has kept moving, and a **BEST** for each
-  slot that survives a reload. **RESET** puts the marbles back; **CLEAR**
-  empties the board, and asks first. Each of the three slots saves itself
-  automatically.
+- **CUSTOM SANDBOX** on the title screen leads to six sandboxes. Each has
+  unlimited pieces and a hopper at the top that every marble enters
+  through: drag the hopper to choose where they come in. Five marbles drop
+  on GO and come back through the hopper when they fall off; hold **RAIN**
+  to pour more, up to thirty. The board keeps a **RUN** clock, the longest
+  any marble has kept moving, and a **BEST** for each sandbox that
+  survives a reload. **RESET** puts the marbles back; **CLEAR** empties the
+  board, and asks first. Every sandbox saves itself, hopper included.
 - Music plays from the first tap. The **♪** switch on the title screen
   turns it off and remembers.
 
@@ -51,10 +53,19 @@ Every level ships with a verified solution. A search over thousands of
 random layouts, then hill-climbing on the best ones, found a layout for
 each level that still wins when every piece is nudged up to ten pixels,
 which is roughly the imprecision of a thumb on an iPad. That solution is
-what the hint shows, one piece at a time. The level list, in order: First Drop, Zigzag, Bumper
-Bounce, Big Jump, Fan Blast, Round the Bend, Cannon Shot, Spin Cycle,
-Portal Hop, Star Collector, Pinball, Up and Over, Double Cannon, Mixer,
-Teleport Tangle and Grand Finale.
+what the hint shows, one piece at a time.
+
+World 1, First Rolls, is the original sixteen, made by hand: First Drop,
+Zigzag, Bumper Bounce, Big Jump, Fan Blast, Round the Bend, Cannon Shot,
+Spin Cycle, Portal Hop, Star Collector, Pinball, Up and Over, Double
+Cannon, Mixer, Teleport Tangle and Grand Finale.
+
+Worlds 2 to 4 (Rolling On, Wind and Fire, Grand Machines) are written by
+`tools/marblelevels.mjs`, which lays out a board from a seed, solves it by
+running this file's own physics headlessly, keeps only layouts that survive
+forty nudges with every angle snapped to the fifteen-degree steps the
+buttons make, drops any piece the solution does not need, and puts the
+bonus stars on the winning path. `--verify` re-proves all sixty-four.
 
 ## Files
 
@@ -62,13 +73,17 @@ Teleport Tangle and Grand Finale.
   segment physics step run four times per frame, WebAudio sound and music,
   pointer input, localStorage saves.
 - `../tools/marblecheck.mjs`: the controls under a real finger (CDP touch
-  events) at four screen sizes, plus the hint, the rain, the run meter and
-  the music. `PLAYWRIGHT=... node tools/marblecheck.mjs`.
+  events) at four screen sizes, plus the hint, the rain, the hopper, the
+  sandbox picker, the world tabs, the run meter, the music, and a proof
+  that every level's solution wins. `PLAYWRIGHT=... node tools/marblecheck.mjs`.
+- `../tools/marblelevels.mjs`: makes and proves worlds 2 to 4 (see above).
+  `--write` splices them into this file between the `GEN` markers.
 
 ## Debug hook
 
 `window.MM` exposes the scene, pieces, marbles, the selected piece,
-`buttons()` (where the top bar put each control this frame), `loadLevel(i)`,
-`loadSandbox(slot)`, `go()`, `rain()`, `hintPieces()`, `runBest` and
-`simulate(pieces, seconds)`, which runs the physics headlessly and reports
-whether the marble reached the goal.
+`buttons()` (where the top bar put each control this frame), `LEVELS`,
+`WORLDS`, `worldIdx`, `hopper`, `loadLevel(i)`, `loadSandbox(slot)`,
+`go()`, `rain()`, `hintPieces()`, `runBest` and `simulate(pieces, seconds)`,
+which runs the physics headlessly and reports whether the marble reached
+the goal.

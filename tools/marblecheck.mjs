@@ -80,7 +80,50 @@ for (const [W, H, tag] of SIZES) {
   let clash = false;
   for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) if (overlaps(bs[i], bs[j])) clash = true;
   check('title buttons keep off each other', !clash && !!find(bs, /♪/), `${bs.length} buttons`);
+  check('title offers PUZZLES and CUSTOM SANDBOX', !!(find(bs, /^PUZZLES$/) && find(bs, /CUSTOM SANDBOX/)), '');
   if (SHOTS) await pg.screenshot({ path: `${SHOTS}/title-${W}x${H}.png` });
+
+  /* ---- the sandbox picker: six slots, the third opens slot three */
+  await tap(cdp, mid(find(bs, /CUSTOM SANDBOX/)));
+  bs = await buttons(pg);
+  const slots = bs.filter(b => b.label === '');
+  check('CUSTOM SANDBOX shows six sandboxes', (await pg.evaluate(() => window.MM.scene)) === 'sandboxes' && slots.length === 6 && !!find(bs, /BACK/), `${slots.length} slots`);
+  if (SHOTS) await pg.screenshot({ path: `${SHOTS}/picker-${W}x${H}.png` });
+  await tap(cdp, mid(slots[2]));
+  check('the third opens sandbox 3', await pg.evaluate(() => window.MM.scene === 'play' && window.MM.sandboxSlot === 2), '');
+
+  /* ---- the hopper: drag it, and the marbles follow */
+  const hop0 = await pg.evaluate(() => window.MM.hopper[2]);
+  const hp = await pg.evaluate(() => { const b = window.MM.board(); return { x: b.x + window.MM.hopper[2] * b.s, y: b.y + 18 * b.s, s: b.s }; });
+  await finger(cdp, 'touchStart', [{ x: Math.round(hp.x), y: Math.round(hp.y) }]);
+  await sleep(60);
+  for (let i = 1; i <= 10; i++) { await finger(cdp, 'touchMove', [{ x: Math.round(hp.x + i * 15), y: Math.round(hp.y) }]); await sleep(40); }
+  await finger(cdp, 'touchEnd');
+  await sleep(100);
+  const hop1 = await pg.evaluate(() => window.MM.hopper[2]);
+  const want = hop0 + 150 / hp.s;
+  check('the hopper drags along the top', Math.abs(hop1 - want) < 12, `${Math.round(hop0)} -> ${Math.round(hop1)} (aimed ${Math.round(want)})`);
+  const spawn = await pg.evaluate(() => { const M = window.MM; M.rain(); const m = M.marbles[M.marbles.length - 1]; return { dx: Math.abs(m.x - M.hopper[2]), y: m.y }; });
+  check('marbles enter through the hopper', spawn.dx <= 18 && spawn.y === -14, `${spawn.dx.toFixed(0)}px from it`);
+  const hopSaved = await pg.evaluate(() => JSON.parse(localStorage.getItem('marblemayhem.hopper'))[2]);
+  check('the hopper position is saved', Math.abs(hopSaved - hop1) < 0.01, '');
+  await pg.evaluate(() => { window.MM.resetRun(); window.MM.scene = 'title'; });
+  if (SHOTS) { await pg.evaluate(() => window.MM.loadSandbox(2)); await sleep(150); await pg.screenshot({ path: `${SHOTS}/hopper-${W}x${H}.png` }); await pg.evaluate(() => { window.MM.scene = 'title'; }); }
+
+  /* ---- the worlds */
+  await pg.evaluate(() => { window.MM.worldIdx = 0; window.MM.scene = 'levels'; });
+  bs = await buttons(pg);
+  const nWorld = await pg.evaluate(() => Math.ceil(window.MM.LEVELS.length / window.MM.WN));
+  const tabs = bs.filter(b => /^WORLD \d$/.test(b.label));
+  check('a tab per world of sixteen', tabs.length === nWorld && nWorld >= 4, `${tabs.length} tabs, ${await pg.evaluate(() => window.MM.LEVELS.length)} levels`);
+  if (tabs[1]) {
+    await tap(cdp, mid(tabs[1]));
+    check('WORLD 2 tab shows world 2', (await pg.evaluate(() => window.MM.worldIdx)) === 1, '');
+    if (SHOTS) await pg.screenshot({ path: `${SHOTS}/levels-${W}x${H}.png` });
+    await pg.evaluate(() => window.MM.loadLevel(19));
+    await tap(cdp, mid(find(await buttons(pg), /MENU/)));
+    check('MENU from level 20 lands on world 2', await pg.evaluate(() => window.MM.scene === 'levels' && window.MM.worldIdx === 1), '');
+  }
 
   /* ---- puzzle: sizes, stability, a real tap on GO */
   await pg.evaluate(() => window.MM.loadLevel(1));
@@ -189,6 +232,15 @@ for (const [W, H, tag] of SIZES) {
   const au = await pg.evaluate(() => window.__audio());
   check('music plays after the first tap', !!(au && au.state === 'running' && au.timer && au.next > au.now), au ? `${au.state}, timer ${au.timer}` : 'no context');
 
+  if (tag === 'iPad landscape') {
+    const proof = await pg.evaluate(() => { const M = window.MM, bad = [];
+      for (let i = 0; i < M.LEVELS.length; i++) { const L = M.LEVELS[i]; M.loadLevel(i);
+        const bare = M.simulate(L.fixed.slice(), 12), sol = M.simulate(L.fixed.concat(L.sol || []), 12);
+        /* the hand-made sixteen never promised their hint collected every star; the made ones do */
+        if (bare.won || !sol.won || (L.seed != null && sol.stars !== L.stars.length)) bad.push((i + 1) + '. ' + L.name + (bare.won ? ' wins bare' : !sol.won ? ' unsolved' : ' stars ' + sol.stars + '/' + L.stars.length)); }
+      M.resetRun(); M.scene = 'title'; return { n: M.LEVELS.length, bad }; });
+    check('every level solves and none wins bare', proof.n >= 64 && !proof.bad.length, proof.bad.length ? proof.bad.slice(0, 2).join('; ') : `${proof.n} levels`);
+  }
   check('no page errors', !errs.length, errs[0] ? errs[0].slice(0, 60) : '');
   await ctx.close();
 }
