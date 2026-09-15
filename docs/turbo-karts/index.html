@@ -55,6 +55,20 @@ const store={get(k,d){try{const v=localStorage.getItem("turbokarts."+k);return v
 // ---------------------------------------------------------------- audio
 let AC=null,master=null,musicOn=store.get("music",true)!==false,sfxOn=true,musicTimer=null,musicStep=0,musicNext=0,musicSet=0;
 let engineOsc=null,engineGain=null,engineOsc2=null;
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used
+// to be made on touchstart and never resumed, so on a phone it could sit
+// suspended with its clock at zero: the music scheduler wrote a bar into the
+// void and stalled, and one-shot sounds went nowhere. Every gesture that
+// counts now also wakes the context, and when it comes alive the scheduler,
+// where there is one, re-anchors to now.
+function audioWake(){audioInit();if(!AC)return;
+ if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
+window.__audioCtx=()=>AC;
 function audioInit(){if(AC)return;try{AC=new (window.AudioContext||window.webkitAudioContext)();
  master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC||!sfxOn)return;const t=AC.currentTime+(delay||0);
@@ -117,7 +131,7 @@ const TRACKS_MUS=[
         bass:[40,40,47,40, 40,40,47,40, 38,38,45,38, 38,38,45,38,
               40,40,47,40, 43,43,50,43, 45,45,52,45, 47,47,0,0]},
 ];
-function musicTick(){if(!AC||!musicOn)return;const T=TRACKS_MUS[musicSet%TRACKS_MUS.length],spb=60/T.bpm/2;
+function musicTick(){if(!AC||!musicOn||AC.state!=="running")return;const T=TRACKS_MUS[musicSet%TRACKS_MUS.length],spb=60/T.bpm/2;
  while(musicNext<AC.currentTime+0.3){const i=musicStep%T.lead.length,t=musicNext,l=T.lead[i],b=T.bass[i];
   if(l){const f=440*Math.pow(2,(l-69)/12),o=AC.createOscillator(),g=AC.createGain();
    o.type="square";o.frequency.value=f;g.gain.setValueAtTime(0.03,t);
