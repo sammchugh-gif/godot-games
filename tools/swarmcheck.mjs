@@ -308,7 +308,8 @@ check('nukes, repairs and tractor beams are rationed', DROPS.nukes === 1 && DROP
    full rank un-evolved. */
 const EVO = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
-  const ring = () => { const G = S.G; G.en.length = 0; G.bul.length = 0; G.pk.length = 0;
+  /* no rocks: one can shove two drifters into a beam's path and double the count */
+  const ring = () => { const G = S.G; G.en.length = 0; G.bul.length = 0; G.pk.length = 0; G.rocks.length = 0;
     for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; const e = S.spawnEnemy('drifter', G.px + Math.cos(a) * 170, G.py + Math.sin(a) * 170); e.hp = e.maxhp = 1e9; e.spd = 0; }
     return G.en.slice(); };
   const dealt = ring0 => ring0.reduce((a, e) => a + (e.maxhp - e.hp), 0);
