@@ -9,7 +9,7 @@ branch as it stood before any of them landed is kept as the branch
 
 At the top of `docs/star-swarm/index.html` (mirrored in `Game10/index.html`):
 
-    const FEATURES={evolve:true,modes:true, ...};
+    const FEATURES={evolve:true,modes:true,shop:true};
 
 Set one to `false`, copy the file over its mirror, commit, and that feature
 is gone from the game while everything else stays. Saved data is not
@@ -19,6 +19,7 @@ touched: a switched-off feature's records simply stop being shown.
 |----------|------------------------------------------|--------------|
 | `evolve` | weapon evolutions                        | #82          |
 | `modes`  | endless mode and the daily run           | #83          |
+| `shop`   | the hangar shop                          | #84          |
 
 ## Rolling a feature back entirely
 
@@ -85,3 +86,23 @@ today's best and the run count. The seven twists:
 
 With the switch off the mode row disappears and every run is a campaign
 run; endless and daily records stay in storage untouched.
+
+### The hangar shop (`shop`)
+
+Every gem picked up in a run is banked when the run ends, won, lost or
+quit. The bank is shown on the SHOP button on the title and buys small
+permanent upgrades, applied to every run from then on:
+
+| upgrade         | levels | each level                       | cost per level          |
+|-----------------|--------|----------------------------------|-------------------------|
+| Reinforced Hull | 5      | +8 max hull                      | 100, 200, 350, 550, 800 |
+| Shield Bank     | 5      | +4 max shield                    | same                    |
+| Weapon Tuning   | 5      | +4% damage                       | same                    |
+| Engine Trim     | 3      | +3% speed                        | 100, 200, 350           |
+| Gem Polish      | 3      | +8% XP from gems                 | 100, 200, 350           |
+| Head Start      | 1      | every run starts at weapon rank 2| 600                     |
+| Escape Pod      | 1      | once a run, survive a killing blow| 1500                   |
+
+The end screen says how many gems the run banked. With the switch off the
+SHOP button is gone and the perks do nothing; the bank and the purchases
+stay in storage for when it comes back.
