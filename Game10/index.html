@@ -1808,9 +1808,8 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   {launch:true,size:Math.min(26,lbh*0.42)});
  if(showHelp){const ht=helpTop();
   textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
-  if(lastRun){const l="LAST RUN:  sector "+lastRun.sector+"  ·  "+lastRun.score+"  ·  "+(lastRun.how==="won"?"cleared":lastRun.how==="quit"?"quit":"died")+"   ▸";
-   btn(W/2-Math.min(300,W-40)/2,ht+hs*1.2,Math.min(300,W-40),hs*1.6+6,l,()=>{scene="lastrun"},{size:hs,fill:"rgba(0,0,0,0.25)",stroke:"rgba(255,255,255,0.25)",color:"#ffe060"})}
-  else textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
+  // the last run is kept and shared from the end screen; it is not on the title
+  textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
  // music, shop, credits: three across when they fit, or spread to the edges
  const three=FEATURES.shop,mw=launchInline?Math.min(130,(W-lw-60-SAFE.l-SAFE.r)/4-8):three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
  // inline: music and shop to the left of LAUNCH, credits to its right
