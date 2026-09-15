@@ -123,14 +123,21 @@ check('an open gate adds to it', gate.events > calm.events,
   `${gate.events} events with the gate open`);
 
 /* --------------------------------------------------------- the pickup sounds */
-const SOUNDS = ['gem', 'pick', 'magnet', 'chest', 'level', 'boss', 'warp', 'win', 'launch', 'evolve'];
+const SOUNDS = ['gem', 'pick', 'magnet', 'chest', 'level', 'boss', 'warp', 'win', 'launch', 'evolve', 'nuke'];
 const quiet = [];
 for (const s of SOUNDS) {
   const r = await render(s, 1.6);
-  if (r.peak < 0.08 || r.peak > 0.98) quiet.push(`${s} (peak ${r.peak.toFixed(2)})`);
+  /* the gem is meant to be soft, so its floor is lower - but it must still be there */
+  if (r.peak < (s === 'gem' ? 0.06 : 0.08) || r.peak > 0.98) quiet.push(`${s} (peak ${r.peak.toFixed(2)})`);
 }
 check('every pickup and fanfare renders', quiet.length === 0,
   quiet.length ? quiet.join('; ') : SOUNDS.length + ' sounds, all audible, none clipping');
+
+/* the gem is soft and the nuke is not: the one sound heard a hundred times
+   a minute sits well under the one heard once a sector */
+const gemR = await render('gem', 0.4), nukeR = await render('nuke', 1.8), boomR = await render('boom', 0.8);
+check('a gem is soft, a nuke is loud', gemR.peak < 0.12 && nukeR.peak > 0.4 && nukeR.peak < 0.98 && nukeR.rms > boomR.rms * 1.5,
+  `gem peak ${gemR.peak.toFixed(2)}; nuke peak ${nukeR.peak.toFixed(2)}, rms ${nukeR.rms.toFixed(3)} against the small explosion's ${boomR.rms.toFixed(3)}`);
 
 /* gems ring up: ten quick gems must climb in pitch, and a pause must reset */
 const climb = await pg.evaluate(`(async () => {
