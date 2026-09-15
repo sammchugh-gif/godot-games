@@ -1310,6 +1310,33 @@ function drawEnemy(e){const t=frameT,r=e.r,k=r/EREF,P=EREF*1.6;
   cx.fillStyle="rgba(20,0,0,0.75)";rr(e.x-w/2,e.y-r-13,w,6,3);cx.fill();
   cx.fillStyle=e.boss?"#ff8040":"#f44";rr(e.x-w/2,e.y-r-13,Math.max(2,w*f),6,3);cx.fill();
   cx.fillStyle="rgba(255,255,255,0.3)";cx.fillRect(e.x-w/2+1,e.y-r-12,Math.max(1,w*f-2),2)}}
+// The warp gate, as a black hole: a spinning accretion disc baked once (a
+// hot white-blue inner edge cooling to violet and ember, with spiral arms),
+// sparks falling in along a spiral, and a black core ringed by light. It used
+// to be three see-through rings, which read as a target rather than a way out.
+function gateSprite(){if(ART.gate)return ART.gate;const N=256,R=N/2;
+ ART.gate=bake(N,N,g=>{g.translate(R,R);
+  const disc=g.createRadialGradient(0,0,R*0.3,0,0,R);
+  disc.addColorStop(0,"rgba(230,245,255,0)");disc.addColorStop(0.08,"rgba(230,245,255,0.95)");disc.addColorStop(0.22,"rgba(150,120,255,0.75)");
+  disc.addColorStop(0.5,"rgba(110,60,200,0.42)");disc.addColorStop(0.78,"rgba(255,130,70,0.22)");disc.addColorStop(1,"rgba(255,120,60,0)");
+  g.fillStyle=disc;g.beginPath();g.arc(0,0,R,0,TAU);g.fill();
+  // three spiral arms of brighter gas, each a run of soft dots
+  for(let k=0;k<3;k++){for(let i=0;i<70;i++){const t=i/70,a=k*TAU/3+t*4.2,r=R*(0.34+t*0.66);
+   g.fillStyle="rgba(255,240,255,"+(0.5*(1-t)*(1-t)).toFixed(3)+")";g.beginPath();g.arc(Math.cos(a)*r,Math.sin(a)*r,2.5+t*5,0,TAU);g.fill()}}
+  // the inner edge, hottest of all
+  g.strokeStyle="rgba(255,255,255,0.85)";g.lineWidth=3;g.beginPath();g.arc(0,0,R*0.33,0,TAU);g.stroke()});
+ return ART.gate}
+function drawGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
+ if(FX)glow(0,0,R*1.7,"rgba(140,110,255,0.35)","rgba(40,20,120,0.04)");
+ cx.save();cx.rotate(frameT*1.2);cx.drawImage(gateSprite(),-R,-R,R*2,R*2);cx.restore();
+ // sparks spiralling in, brighter as they fall
+ for(let i=0;i<18;i++){const p=(frameT*0.3+i/18)%1,a=frameT*2.2+i*2.4-p*7,d=R*(1.05-p*0.7);
+  cx.fillStyle="rgba(220,240,255,"+(0.2+0.7*p).toFixed(2)+")";cx.beginPath();cx.arc(Math.cos(a)*d,Math.sin(a)*d,1.5+p*2.2,0,TAU);cx.fill()}
+ // the hole, and the ring of light bent round it
+ cx.fillStyle="#000";cx.beginPath();cx.arc(0,0,gt.r*0.6,0,TAU);cx.fill();
+ cx.strokeStyle="rgba(255,255,255,0.95)";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
+ cx.strokeStyle="rgba(170,200,255,"+(0.35+0.2*Math.sin(frameT*5)).toFixed(2)+")";cx.lineWidth=7;cx.beginPath();cx.arc(0,0,gt.r*0.68,0,TAU);cx.stroke();
+ cx.restore()}
 function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);cx.scale(S,S);cx.translate(-G.px,-G.py);
  drawStars();
  for(const rk of G.rocks){const v=rk.hp>=3?0:rk.hp===2?1:2,k=rk.r/58;
@@ -1319,7 +1346,7 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
    for(let c=0;c<(3-rk.hp);c++){const a=hash(Math.floor(rk.seed*10)+c,7)*TAU;cx.beginPath();cx.moveTo(0,0);
     cx.lineTo(Math.cos(a)*rk.r*0.9,Math.sin(a)*rk.r*0.9);cx.stroke()}}
   cx.restore()}
- if(G.gate){const gt=G.gate;cx.save();cx.translate(gt.x,gt.y);for(let i=0;i<3;i++){cx.strokeStyle="rgba(120,200,255,"+(0.9-i*0.25)+")";cx.lineWidth=8-i*2;cx.beginPath();cx.arc(0,0,gt.r*(0.6+i*0.25)+Math.sin(frameT*4+i)*4,0,TAU);cx.stroke()}cx.fillStyle="rgba(80,140,255,0.35)";cx.beginPath();cx.arc(0,0,gt.r*0.6,0,TAU);cx.fill();cx.restore();
+ if(G.gate){const gt=G.gate;drawGate(gt);
   // arrow to the gate when off-screen
   const dx=gt.x-G.px,dy=gt.y-G.py;if(Math.hypot(dx,dy)>300){const a=Math.atan2(dy,dx);cx.save();cx.translate(G.px+Math.cos(a)*120,G.py+Math.sin(a)*120);cx.rotate(a);cx.fillStyle="#80c0ff";cx.beginPath();cx.moveTo(18,0);cx.lineTo(-10,-12);cx.lineTo(-10,12);cx.fill();cx.restore()}}
  // Gems are one hue on purpose: the small ones used to be green, the same
