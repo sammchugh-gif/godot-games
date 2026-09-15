@@ -463,6 +463,9 @@ await sleep(400);
 const arrows = before.filter(l => l === '◀' || l === '▶').length, help = before.includes('?');
 check('the hangar shows one ship behind arrows, with a ?', arrows === 2 && help, `${arrows} arrows and a ? on the title`);
 const viewing = await pg.evaluate(`({ i: window.SW.viewIdx, un: !!window.SW.unlocks[window.SW.SHIPS[window.SW.viewIdx].id], flying: window.SW.shipIdx })`);
+/* and a locked ship is drawn as one generic hull, the same for all of them */
+const MYST = await pg.evaluate(`(() => { const S = window.SW; const m = S.mysterySprite(); return { one: m === S.mysterySprite(), isCanvas: m && m.tagName === 'CANVAS', own: Object.keys(S.SHIPS).length }; })()`);
+check('an unearned ship is a generic hull', MYST.one && MYST.isCanvas, 'one placeholder sprite stands in for every locked ship');
 check('stepping to an unearned ship does not fly it', viewing.i === 3 && !viewing.un && viewing.flying === 0,
   `viewing ship ${viewing.i} (locked), still flying ship ${viewing.flying}`);
 await pg.evaluate(`window.SW.viewIdx = 0`);

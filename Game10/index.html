@@ -1292,10 +1292,17 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=s
  ART.ship[ship.id]=sp;return sp}
 // A ship not yet earned is a shape in the dark: you can see it is a ship
 // and nothing else, which is what keeps the next one worth reaching.
-function silSprite(ship){ART.sil=ART.sil||{};let sp=ART.sil[ship.id];if(sp)return sp;const src=shipSprite(ship);
- sp=bake(src.width,src.height,g=>{g.drawImage(src,0,0);g.globalCompositeOperation="source-in";g.fillStyle="#151b36";g.fillRect(0,0,src.width,src.height)});
- ART.sil[ship.id]=sp;return sp}
-function drawSil(x,y,ang,ship){const P=SHIPP;cx.save();cx.translate(x,y);cx.rotate(ang);cx.drawImage(silSprite(ship),-P,-P,P*2,P*2);
+// A ship not yet earned is drawn as this instead: one generic grey hull, the
+// same for every locked ship, so not even its outline gives it away.
+function mysterySprite(){if(ART.mystery)return ART.mystery;const P=SHIPP,R=SHIPRES;
+ ART.mystery=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";
+  g.fillStyle="#3a4260";g.strokeStyle="#6b7590";g.lineWidth=1.2;
+  g.beginPath();g.moveTo(24,0);g.quadraticCurveTo(10,-7,-8,-7);g.lineTo(-16,-4);g.lineTo(-16,4);g.lineTo(-8,7);g.quadraticCurveTo(10,7,24,0);g.closePath();g.fill();g.stroke();
+  g.fillStyle="#2c334d";g.beginPath();g.moveTo(-2,-6);g.lineTo(-14,-18);g.lineTo(-18,-16);g.lineTo(-12,-5);g.closePath();g.fill();g.stroke();
+  g.beginPath();g.moveTo(-2,6);g.lineTo(-14,18);g.lineTo(-18,16);g.lineTo(-12,5);g.closePath();g.fill();g.stroke();
+  g.fillStyle="#4d5878";g.beginPath();g.ellipse(6,0,6,3,0,0,TAU);g.fill()});
+ return ART.mystery}
+function drawSil(x,y,ang){const P=SHIPP;cx.save();cx.translate(x,y);cx.rotate(ang);cx.globalAlpha=0.75;cx.drawImage(mysterySprite(),-P,-P,P*2,P*2);cx.globalAlpha=1;
  cx.strokeStyle="rgba(255,255,255,0.18)";cx.lineWidth=1;cx.beginPath();cx.arc(0,0,P*0.72,0,TAU);cx.stroke();
  cx.rotate(-ang);text("?",0,1,20,"rgba(255,255,255,0.55)");cx.restore()}   // the mark stays upright whichever way the hull points
 function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
@@ -1728,24 +1735,26 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   btn(x0+cw-6-aw,y+ch/2-26,aw,52,"▶",()=>step(1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
   const ix=x0+aw+14,inner=cw-2*(aw+14),tall=ch>=230;
   const name=un?v.name:"???",line=un?v.desc:(v.cost?"In the shop  ·  ◆ "+v.cost:v.unlock);
+  // the marks, or ???? for a ship not yet earned
   const bars=(bx,by,bw,rowH,fz)=>{const cats=[["SPEED",v.stats.speed,"#8dff5a"],["DAMAGE",v.stats.damage,"#ffa040"],["SHIELD",v.stats.shield,"#40d0ff"]];
    const lw2=Math.min(72,bw*0.3),pw=Math.min(22,(bw-lw2-8)/5-4),ph=Math.max(6,rowH*0.42);
-   cats.forEach(([lab,val,col],i)=>{const ry=by+i*rowH;textFit(lab,bx,ry+rowH/2,fz,"#9fb0c8",lw2-6,"left");
+   cats.forEach(([lab,val,col],i)=>{const ry=by+i*rowH;textFit(lab,bx,ry+rowH/2,fz,un?"#9fb0c8":"#6b7590",lw2-6,"left");
+    if(!un){textFit("????",bx+lw2,ry+rowH/2,fz+1,"#6b7590",bw-lw2,"left");return}
     for(let p=0;p<5;p++){cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(bx+lw2+p*(pw+4),ry+rowH/2-ph/2,pw,ph,3);cx.fill()}})};
   const r=recLine(v.id,difId);
   if(tall){const sc=Math.min(2.2,ch*0.3/40),sx=W/2,sy=y+ch*0.2;shipSlot={x:sx,y:sy,s:sc};
-   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2,v);cx.restore()}
-   textFit(name,W/2,y+ch*0.43,Math.min(24,ch*0.09),sel?"#ffe060":"#fff",inner);
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
+   textFit(name,W/2,y+ch*0.43,Math.min(24,ch*0.09),sel?"#ffe060":un?"#fff":"#9fb0c8",inner);
    textFit(line,W/2,y+ch*0.52,Math.min(14,ch*0.055),"#cde",inner);
    const bw=Math.min(300,inner-20),rowH=Math.min(24,ch*0.085);bars(W/2-bw/2,y+ch*0.58,bw,rowH,Math.min(12,rowH*0.5));
-   textFit(un?r:"Hull "+v.hp,W/2,y+ch*0.9,Math.min(13,ch*0.05),"#bfe",inner)}
+   textFit(un?r:"Hull ????",W/2,y+ch*0.9,Math.min(13,ch*0.05),un?"#bfe":"#6b7590",inner)}
   else{const sc=Math.min(1.5,ch/90),sx=ix+inner*0.17,sy=y+ch/2;shipSlot={x:sx,y:sy,s:sc};
-   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2,v);cx.restore()}
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.6:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
    const tx=ix+inner*0.36,tw=inner*0.64;
-   textFit(name,tx,y+ch*0.15,Math.min(20,ch*0.15),sel?"#ffe060":"#fff",tw,"left");
+   textFit(name,tx,y+ch*0.15,Math.min(20,ch*0.15),sel?"#ffe060":un?"#fff":"#9fb0c8",tw,"left");
    textFit(line,tx,y+ch*0.31,Math.min(13,ch*0.1),"#cde",tw,"left");
    const rowH=Math.min(20,ch*0.15);bars(tx,y+ch*0.42,Math.min(300,tw),rowH,Math.min(11,rowH*0.55));
-   textFit(un?r:"Hull "+v.hp,tx,y+ch*0.84,Math.min(12,ch*0.09),"#bfe",tw,"left")}
+   textFit(un?r:"Hull ????",tx,y+ch*0.84,Math.min(12,ch*0.09),un?"#bfe":"#6b7590",tw,"left")}
   // where you are in the hangar
   for(let i=0;i<n;i++){const dx=W/2+(i-(n-1)/2)*12;cx.fillStyle=i===viewIdx?"#ffe060":unlocks[SHIPS[i].id]?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.18)";cx.beginPath();cx.arc(dx,y+ch-9,i===viewIdx?3.5:2.5,0,TAU);cx.fill()}}
  const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
@@ -1890,7 +1899,7 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  if(shopTab===1){const ships=SHIPS.filter(x=>x.cost);const n=ships.length,rh=clamp((avail-(n-1)*8)/n,64,120),k=rh/120,bw=Math.min(112,rw*0.24);
   ships.forEach((sh,i)=>{const y=ly+i*(rh+8),own=!!unlocks[sh.id],can=!own&&bank>=sh.cost;
    cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=own?hexA(sh.col,0.7):"rgba(255,255,255,0.25)";cx.stroke();
-   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));if(own)drawShip(0,0,-Math.PI/2,sh,0.5);else drawSil(0,0,-Math.PI/2,sh);cx.restore();
+   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));if(own)drawShip(0,0,-Math.PI/2,sh,0.5);else drawSil(0,0,-Math.PI/2);cx.restore();
    const tx=x0+Math.min(rh,92),tw2=rw-Math.min(rh,92)-bw-24;
    if(own){textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),sh.col2,tw2,"left");
     // the ability, wrapped to its column: three lines at most, never under the button
@@ -1898,9 +1907,10 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
     al.forEach((l,j)=>textFit(l,tx,y+rh*(0.34+j*0.14),az,hexA(sh.col2,0.9),tw2,"left"))}
    else{textFit("???",tx,y+rh*0.16,Math.min(17,12+7*k),"#fff",tw2,"left");
     textFit("A mystery until it is yours.",tx,y+rh*0.34,Math.min(12,8+5*k),"#cde",tw2,"left")}
-   // the marks, which are no secret
+   // the marks once it is yours; ???? until then
    const cats=[["SPD",sh.stats.speed,"#8dff5a"],["DMG",sh.stats.damage,"#ffa040"],["SHD",sh.stats.shield,"#40d0ff"]],gw=tw2/3,pw=Math.max(5,Math.min(12,(gw-36)/5-3));
-   cats.forEach(([lab,val,col],ci)=>{const bx=tx+ci*gw;textFit(lab,bx,y+rh*0.8,Math.min(10,7+4*k),"#9fb0c8",28,"left");
+   cats.forEach(([lab,val,col],ci)=>{const bx=tx+ci*gw;textFit(lab,bx,y+rh*0.8,Math.min(10,7+4*k),own?"#9fb0c8":"#6b7590",28,"left");
+    if(!own){textFit("???",bx+30,y+rh*0.8,Math.min(11,8+4*k),"#6b7590",gw-42,"left");return}
     for(let q=0;q<5;q++){cx.fillStyle=q<val?col:"rgba(255,255,255,0.14)";rr(bx+30+q*(pw+3),y+rh*0.8-3.5,pw,7,2);cx.fill()}});
    btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),own?"OWNED":"◆ "+sh.cost,()=>{if(buyShip(sh.id)){SFX.chest();shipIdx=SHIPS.indexOf(sh);store.set("ship",shipIdx)}else SFX.click()},
     {size:Math.min(16,10+7*k),fill:own?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:own?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
@@ -1972,7 +1982,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,shipSpeed,shipDmg,shipShield,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
