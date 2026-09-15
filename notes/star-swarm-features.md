@@ -56,7 +56,10 @@ weapon it would evolve. When the pair is complete the game says so.
 | Black Hole    | Scanner        | Singularity   |
 
 An evolution counts as three ranks toward how hard the swarm and the bosses
-come, so an evolved build is not a free one.
+come, so an evolved build is not a free one. Each is tuned to about twice
+the damage of the plain weapon at full rank into a ring of targets, measured
+by the same test; Nova Pulse reaches a quarter further than the plain wave
+and no further, after a first cut that hit the whole screen.
 
 ### Endless mode and the daily run (`modes`)
 
