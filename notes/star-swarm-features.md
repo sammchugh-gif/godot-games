@@ -227,8 +227,19 @@ opens with it flying in from the bottom (the arrival that already
 existed). On the last gate of the campaign the dive is the ending. The
 look table is `WARP_LOOK`, the timings `WARP`.
 
+In the tunnel the ship is a solid, not the sprite: `shipMesh(shape)` lofts
+a hull from a row of cross-sections, adds wings and fins as thin plates and
+a glass canopy (the Eclipse is a disc turned on a lathe), winds every face
+outward once, and `drawShip3D` paints it far to near with a perspective
+projection, lit from the upper left, engines glowing. The flat ship tilts
+into the tunnel over the first half second and rolls into the bends. The
+warp has sounds of its own: `warpDive`, `warpRun`, and the launch for the
+exit.
+
 `window.SW.halt()`, `step(dt)` and `resume()` stop the frame loop and step
-it by hand, so a checker can catch a cutscene at an exact moment.
+it by hand, so a checker can catch a cutscene at an exact moment. The
+frame already queued when `halt()` is called still runs, and on a slow
+renderer it can land a second later, so wait before drawing by hand.
 
 ## Music
 
