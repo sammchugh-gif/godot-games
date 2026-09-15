@@ -54,7 +54,8 @@ const SIZES = [[390, 844, 'phone upright'], [844, 390, 'phone landscape'],
                [1180, 820, 'iPad landscape'], [820, 1180, 'iPad upright']];
 
 /* the buttons as the game laid them out this frame */
-const buttons = pg => pg.evaluate(() => window.MM.buttons().map(b => ({ x: b.x, y: b.y, w: b.w, h: b.h, label: b.label })));
+const frame = pg => pg.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const buttons = async pg => { await frame(pg); return pg.evaluate(() => window.MM.buttons().map(b => ({ x: b.x, y: b.y, w: b.w, h: b.h, label: b.label }))); };
 const find = (bs, re) => bs.find(b => re.test(b.label));
 const mid = b => ({ x: Math.round(b.x + b.w / 2), y: Math.round(b.y + b.h / 2) });
 const finger = (cdp, type, pts = []) =>
