@@ -684,8 +684,8 @@ const obj=(v,d)=>(v&&typeof v==="object"&&!Array.isArray(v))?v:d;
 const records=obj(store.get("records",{}),{}),unlocks=obj(store.get("unlocks",{falcon:true}),{falcon:true});
 // Easy keeps the original record key; it is a shade softer than the first
 // tuning, which a seven-year-old found hard by the end of sector 1.
-const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:0.85,dmg:0.9,elite:0.05,desc:"The swarm, a little thinner."},
- {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.3,rate:1.2,dmg:1.25,elite:0.07,desc:"Tougher, thicker, hits harder."},
+const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:0.85,dmg:0.9,elite:0.05,desc:"Where to start. A fair fight."},
+ {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.3,rate:1.2,dmg:1.25,elite:0.07,desc:"Tougher aliens, more of them, harder hits."},
  {id:"hard",name:"HARD",col:"#ff6060",hp:1.7,rate:1.45,dmg:1.45,elite:0.1,desc:"No mercy. Bring your best ship."}];
 let diffIdx=Math.max(0,Math.min(DIFFS.length-1,parseInt(store.get("diff",0),10)||0));
 // Three ways to play. The campaign is the six sectors. Endless keeps going
@@ -1708,7 +1708,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  // one ship at a time, with arrows: this is the least it needs
  const minShip=W>=700?128:170;
  const musicY=bot-mh;
- let showHelp=true;
+ let showHelp=false;   // no help lines under the launch button any more
  const helpH=()=>showHelp?hs*2+8:0;
  const helpTop=()=>musicY-gap-helpH();
  let launchY=helpTop()-gap-bh;
@@ -1806,10 +1806,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
  btn(W/2-lw/2,launchY,lw,lbh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),()=>launch(),
   {launch:true,size:Math.min(26,lbh*0.42)});
- if(showHelp){const ht=helpTop();
-  textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
-  // the last run is kept and shared from the end screen; it is not on the title
-  textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
+ // the help lines are gone: the game is learnt by playing it
  // music, shop, credits: three across when they fit, or spread to the edges
  const three=FEATURES.shop,mw=launchInline?Math.min(130,(W-lw-60-SAFE.l-SAFE.r)/4-8):three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
  // inline: music and shop to the left of LAUNCH, credits to its right
