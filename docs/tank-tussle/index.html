@@ -27,6 +27,20 @@ const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(
 function hash(x,y){let h=(x*374761393+y*668265263)|0;h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296}
 const store={get(k,d){try{const v=localStorage.getItem("tanktussle."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("tanktussle."+k,JSON.stringify(v))}catch(e){}}};
 // ---------------------------------------------------------------- audio
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used
+// to be made on touchstart and never resumed, so on a phone it could sit
+// suspended with its clock at zero: the music scheduler wrote a bar into the
+// void and stalled, and one-shot sounds went nowhere. Every gesture that
+// counts now also wakes the context, and when it comes alive the scheduler,
+// where there is one, re-anchors to now.
+function audioWake(){audioInit();if(!AC)return;
+ if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
+window.__audioCtx=()=>AC;
 let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 function noise(dur,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){l=l*0.6+(Math.random()*2-1)*0.4;d[i]=l*(1-i/n)}const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=vol;s.connect(g);g.connect(master);s.start(t)}

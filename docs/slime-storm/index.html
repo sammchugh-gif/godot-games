@@ -274,6 +274,20 @@ const store={get(k,d){try{const v=localStorage.getItem("slimestorm."+k);return v
 
 // ---------------------------------------------------------------- audio
 let AC=null,master=null,musicOn=store.get("music",true)!==false,sfxOn=true,musicTimer=null,musicStep=0,musicNext=0;
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used
+// to be made on touchstart and never resumed, so on a phone it could sit
+// suspended with its clock at zero: the music scheduler wrote a bar into the
+// void and stalled, and one-shot sounds went nowhere. Every gesture that
+// counts now also wakes the context, and when it comes alive the scheduler,
+// where there is one, re-anchors to now.
+function audioWake(){audioInit();if(!AC)return;
+ if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
+window.__audioCtx=()=>AC;
 function audioInit(){if(AC)return;try{AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination);}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC||!sfxOn)return;const t=AC.currentTime+(delay||0);const o=AC.createOscillator(),g=AC.createGain();o.type=type||"square";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02);}
 function noise(dur,vol,delay){if(!AC||!sfxOn)return;const t=AC.currentTime+(delay||0);const n=Math.floor(AC.sampleRate*dur),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){l=l*0.7+(Math.random()*2-1)*0.3;d[i]=l*(1-i/n);}const s=AC.createBufferSource();s.buffer=b;const g=AC.createGain();g.gain.value=vol;s.connect(g);g.connect(master);s.start(t);}
@@ -298,7 +312,7 @@ const LEAD=[76,0,79,83,0,79,76,0, 74,0,76,79,0,76,74,0, 72,0,76,79,0,84,83,79, 7
             76,0,79,83,0,86,84,83, 79,0,76,79,0,76,74,0, 72,74,76,79,83,84,86,88, 84,0,83,0,79,0,0,0];
 const BASS=[40,0,40,0,47,0,40,0, 38,0,38,0,45,0,38,0, 36,0,36,0,43,0,36,0, 38,0,40,0,43,0,40,0,
             40,0,40,0,47,0,40,0, 38,0,38,0,45,0,38,0, 36,0,36,0,43,0,36,0, 43,0,40,0,36,0,0,0];
-function musicTick(){if(!AC||!musicOn){return}const spb=60/150/2;while(musicNext<AC.currentTime+0.25){const i=musicStep%LEAD.length;const t=musicNext;const l=LEAD[i],b=BASS[i];
+function musicTick(){if(!AC||!musicOn||AC.state!=="running"){return}const spb=60/150/2;while(musicNext<AC.currentTime+0.25){const i=musicStep%LEAD.length;const t=musicNext;const l=LEAD[i],b=BASS[i];
  if(l){const f=440*Math.pow(2,(l-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="square";o.frequency.value=f;g.gain.setValueAtTime(0.045,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*0.9);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb);}
  if(b){const f=440*Math.pow(2,(b-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*1.6);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb*1.7);}
  if(i%4==0){noise(0.04,0.05,t-AC.currentTime)}

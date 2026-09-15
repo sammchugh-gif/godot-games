@@ -45,6 +45,20 @@ window.addEventListener("resize",layout);
 window.addEventListener("orientationchange",()=>setTimeout(layout,150));
 // ---------------------------------------------------------------- audio
 let AC=null,master=null,crowdGain=null,noiseBuf=null;
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used
+// to be made on touchstart and never resumed, so on a phone it could sit
+// suspended with its clock at zero: the music scheduler wrote a bar into the
+// void and stalled, and one-shot sounds went nowhere. Every gesture that
+// counts now also wakes the context, and when it comes alive the scheduler,
+// where there is one, re-anchors to now.
+function audioWake(){audioInit();if(!AC)return;
+ if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
+window.__audioCtx=()=>AC;
 function audioInit(){if(AC)return;
  try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.5;master.connect(AC.destination);
   const n=AC.sampleRate*2;noiseBuf=AC.createBuffer(1,n,AC.sampleRate);const d=noiseBuf.getChannelData(0);

@@ -43,6 +43,20 @@ function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=inne
  else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h-SAFE.b;tray.w=W;const aw=W-16-SAFE.l-SAFE.r,ah=H-top-tray.h-8-SAFE.b;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
 window.addEventListener("resize",layout);layout();
 // ---------------------------------------------------------------- audio
+// iOS lets a page start sound only inside a gesture it recognises, and a
+// touchstart is not one - a touchend, a click or a key is. The context used
+// to be made on touchstart and never resumed, so on a phone it could sit
+// suspended with its clock at zero: the music scheduler wrote a bar into the
+// void and stalled, and one-shot sounds went nowhere. Every gesture that
+// counts now also wakes the context, and when it comes alive the scheduler,
+// where there is one, re-anchors to now.
+function audioWake(){audioInit();if(!AC)return;
+ if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
+window.__audioCtx=()=>AC;
 let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 let lastPing=0;
