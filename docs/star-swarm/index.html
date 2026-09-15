@@ -845,13 +845,14 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
   else if((G.secChests||0)<(mod().chests||1)&&Math.random()<(mod().chests?0.5:0.2)){G.secChests=(G.secChests||0)+1;G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60})}
   if(e.boss){announce(ENEMY[e.type].name+" DESTROYED!");shake=1}}
  else if(Math.random()<(e.type==="drifter"?0.06:0.012))dropPickup(e.x,e.y)}
-// Nukes and repairs are rationed the way chests are: a dozen pickups a sector
-// used to come out as six repairs and two or three nukes, which made the hull
-// bar and the screen-clear both cheap. One nuke and three repairs a sector;
-// a roll that lands on a spent kind becomes a tractor beam, which is harmless.
-const RATION={nuke:1,repair:3};
-function dropPickup(x,y){const r=Math.random();let k=r<0.45?"repair":r<0.8?"magnet":"nuke";
- if(RATION[k]!=null){G.secDrops=G.secDrops||{};if((G.secDrops[k]||0)>=RATION[k])k="magnet";else G.secDrops[k]=(G.secDrops[k]||0)+1}
+// Pickups are rationed the way chests are: a dozen a sector used to come out
+// as six repairs, four tractor beams and two or three nukes, which made the
+// hull bar and the screen-clear both cheap. One nuke, three repairs and
+// three tractor beams a sector; a roll that lands on a spent kind drops
+// nothing at all.
+const RATION={nuke:1,repair:3,magnet:3};
+function dropPickup(x,y){const r=Math.random();const k=r<0.45?"repair":r<0.8?"magnet":"nuke";
+ G.secDrops=G.secDrops||{};if((G.secDrops[k]||0)>=RATION[k])return;G.secDrops[k]=(G.secDrops[k]||0)+1;
  G.pk.push({k,x,y,r:16,life:25})}
 function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2)dropPickup(rk.x,rk.y)}}
 function explode(x,y,R,dmg){G.parts.push({k:"ring",x,y,r:R,life:0.35,col:"#ffa040"});for(let i=0;i<14;i++)G.parts.push({k:"dot",x,y,vx:rnd(-200,200),vy:rnd(-200,200),life:0.4,col:"#ff8040",r:6});for(const e of G.en){if(dist(x,y,e.x,e.y)<R+e.r)damage(e,dmg)}for(const rk of G.rocks){if(dist(x,y,rk.x,rk.y)<R+rk.r)hitRock(rk,2)}SFX.boom();shake=Math.max(shake,0.4)}

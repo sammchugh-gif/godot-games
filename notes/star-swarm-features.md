@@ -156,7 +156,7 @@ cheap. The counts reset at every gate.
 | chest   | 1 from elites (3 on Treasure Day) | 1 from the boss |
 | nuke    | 1                           |                 |
 | repair  | 3                           |                 |
-| tractor beam | unlimited              |                 |
+| tractor beam | 3                      |                 |
 
-A drop that lands on a spent kind becomes a tractor beam. The numbers are
+A drop that lands on a spent kind drops nothing. The numbers are
 `RATION` in the game file and the chest cap in `killEnemy`.
