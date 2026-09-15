@@ -145,3 +145,18 @@ stays part of the prize.
 
 Ship ids are unchanged from the original three, so old records still
 attach to the right ship after the renaming.
+
+## Rations
+
+Chests, nukes and repairs are rationed per sector, so none of them is
+cheap. The counts reset at every gate.
+
+| pickup  | per sector                  | plus            |
+|---------|-----------------------------|-----------------|
+| chest   | 1 from elites (3 on Treasure Day) | 1 from the boss |
+| nuke    | 1                           |                 |
+| repair  | 3                           |                 |
+| tractor beam | unlimited              |                 |
+
+A drop that lands on a spent kind becomes a tractor beam. The numbers are
+`RATION` in the game file and the chest cap in `killEnemy`.
