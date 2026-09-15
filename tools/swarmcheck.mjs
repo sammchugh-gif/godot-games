@@ -297,8 +297,8 @@ const DROPS = await pg.evaluate(`(() => {
   G.secDrops = {}; G.pk.length = 0; for (let i = 0; i < 300; i++) S.dropPickup(G.px, G.py); out.nextSector = count('nuke');
   S.scene = 'title'; return out;
 })()`);
-check('nukes and repairs are rationed', DROPS.nukes === 1 && DROPS.repairs === 3 && DROPS.magnets === 296 && DROPS.nextSector === 1,
-  `300 drops in one sector: ${DROPS.nukes} nuke, ${DROPS.repairs} repairs, ${DROPS.magnets} tractor beams; the next sector gets its nuke back`);
+check('nukes, repairs and tractor beams are rationed', DROPS.nukes === 1 && DROPS.repairs === 3 && DROPS.magnets === 3 && DROPS.nextSector === 1,
+  `300 rolls in one sector: ${DROPS.nukes} nuke, ${DROPS.repairs} repairs, ${DROPS.magnets} tractor beams and nothing else; the next sector gets its nuke back`);
 
 /* ------------------------------------------------------ weapon evolutions
    A weapon at full rank, with the upgrade it pairs with, evolves at the
