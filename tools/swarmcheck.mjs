@@ -444,7 +444,7 @@ const FLEET = await pg.evaluate(`(() => {
   S.bank = 100; out.poor = S.buyShip('wraith');
   S.bank = 12000; out.bought = S.buyShip('wraith') && S.buyShip('glacier') && S.buyShip('magnetar'); out.left = S.bank; out.owned = !!S.unlocks.wraith;
   const startAs = id => { S.fx = false; S.start(S.SHIPS.find(s => s.id === id)); const G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.hp = G.maxhp = 1e9; return G; };
-  /* phase: a hit leaves the Wraith untouchable for longer */
+  /* phase: a hit leaves the Ghost untouchable for longer */
   let G = startAs('wraith'); G.inv = 0; S.spawnEnemy('scout', G.px + 5, G.py); S.sim(1 / 60); out.phaseInv = +G.inv.toFixed(2);
   G = startAs('falcon'); G.inv = 0; S.spawnEnemy('scout', G.px + 5, G.py); S.sim(1 / 60); out.plainInv = +G.inv.toFixed(2);
   /* frost: what touches the Glacier is slowed */
@@ -470,7 +470,7 @@ check('and the small aliens bounce off it', UFO.afterScout === 0 && UFO.scoutPus
   `a scout: no damage, thrown clear; a drifter: ${UFO.afterDrifter}`);
 check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === false && FLEET.bought && FLEET.owned && FLEET.left === 12000 - 2500 - 3500 - 5000,
   `${FLEET.forSale.join(', ')}: 100 gems buys none; 12000 buys all three and leaves ${FLEET.left}`);
-check('the Wraith phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
+check('the Ghost phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
 check('the Glacier chills', FLEET.frostSlow >= 2, `a drifter that touched it is slowed for ${FLEET.frostSlow}s`);
 check('the Magnetar pulls from twice as far', FLEET.gravR === FLEET.plainR * 2, `${FLEET.gravR}px against ${FLEET.plainR}px`);
 /* the marks on the card are the numbers in the run, and the Saucer alone
