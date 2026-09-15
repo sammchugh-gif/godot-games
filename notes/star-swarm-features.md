@@ -210,6 +210,26 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## The warp
+
+Flying into the gate is a cutscene in three acts, all drawn on the same
+canvas with no library. The dive (1.2 s): the camera pushes in on the
+black hole and the ship spirals down into it, shrinking, while the field
+is wiped in a burst of dust. The tunnel (2.6 s): a wormhole drawn in
+perspective, rings and wall streaks projected by depth, dressed for the
+sector it comes out in - amber ring shards for the Ringed Giant, a
+twisting steel duct for the Alien Fleet, fire rings with licks for the
+Ember Star, rolling hexagons for the Hive, tumbling rocks for the
+Shattered Moon, spiral arms for the Black Hole - with the next realm's
+backdrop growing at the far end. The exit (0.5 s): the ship climbs off
+the top of the screen the way it leaves the hangar, and the next sector
+opens with it flying in from the bottom (the arrival that already
+existed). On the last gate of the campaign the dive is the ending. The
+look table is `WARP_LOOK`, the timings `WARP`.
+
+`window.SW.halt()`, `step(dt)` and `resume()` stop the frame loop and step
+it by hand, so a checker can catch a cutscene at an exact moment.
+
 ## Music
 
 Six sector tracks, a title theme, and a boss piece. The boss piece is a

@@ -985,8 +985,32 @@ function openChest(){const ev=evolvable();if(ev.length){evolve(ev[0]);return}con
 // stick does nothing - the hand-off from the launch is one continuous shot.
 const ARRIVE_T=0.9;
 function arriveOff(){if(!G||!(G.arrive>0))return 0;const k=G.arrive/ARRIVE_T;return k*k*(H/2/S+70)}
+function stepParts(dt){for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0)}
+// ---------------------------------------------------------------- the warp
+// Flying into the gate is a cutscene in three acts. The dive: the camera
+// pushes in on the black hole while the ship spirals down into it. The
+// tunnel: a run down a wormhole drawn in perspective, dressed for wherever
+// it comes out. The exit: the ship blasts off the top of the screen the way
+// it leaves the hangar, and the next sector opens with it flying in from
+// the bottom. On the last gate of the campaign the dive is the ending.
+const WARP={dive:1.2,tunnel:2.6,exit:0.5};
+function startWarp(){const g=G.gate,dx=G.px-g.x,dy=G.py-g.y;
+ G.warp={t:0,gx:g.x,gy:g.y,r0:Math.max(30,Math.hypot(dx,dy)),a0:Math.atan2(dy,dx),win:G.sector>=SECTORS&&G.mode!=="endless",to:G.sector+1};
+ // the field is wiped the moment the gate takes the ship, in a burst of dust
+ for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
+ G.en.length=0;G.bul.length=0;G.vx=G.vy=0;G.inv=99;SFX.warp()}
+function warpStep(dt){const w=G.warp;w.t+=dt;stepParts(dt);
+ if(w.t<WARP.dive){const e=Math.min(1,w.t/WARP.dive),k=e*e,r=w.r0*(1-k),a=w.a0+k*7;
+  G.px=w.gx+Math.cos(a)*r;G.py=w.gy+Math.sin(a)*r;G.ang=a+Math.PI/2;return}
+ if(w.win){G.warp=null;win();return}
+ if(w.t>=WARP.dive+WARP.tunnel+WARP.exit){G.warp=null;nextSector();G.arrive=ARRIVE_T;G.ang=-Math.PI/2}}
+// the camera during the dive: from the ship to the hole, pushing in
+function camView(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return{x:G.px,y:G.py,z:1};
+ const e=Math.min(1,w.t/WARP.dive),k=e*e;return{x:G.px+(w.gx-G.px)*k,y:G.py+(w.gy-G.py)*k,z:1+k*2.5}}
+function warpShrink(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return 1;const e=Math.min(1,w.t/WARP.dive);return 1-e*e*0.9}
 function update(dt){return seeded(updateRun,dt)}
 function updateRun(dt){
+ if(G.warp){warpStep(dt);return}
  if(G.arrive>0){G.arrive-=dt;G.vx=G.vy=0;G.ang=-Math.PI/2;G.inv=Math.max(G.inv,0.4);return}
  G.t+=dt;G.secT+=dt;if(G.bossAlive)G.bossT=(G.bossT||0)+dt;
  const st=stickVec(),sp=moveSpeed();
@@ -1077,9 +1101,9 @@ function updateRun(dt){
    else if(p.k==="nuke"){SFX.nuke();shake=1.6;flash=0.7;for(const e of G.en){if(!e.boss)damage(e,999);else damage(e,150)}}
    else if(p.k==="chest"){SFX.chest();openChest()}}}
  G.pk=G.pk.filter(p=>p.life>0);
- for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0);
+ stepParts(dt);
  for(const t of G.txt){t.life-=dt;t.y-=40*dt}G.txt=G.txt.filter(t=>t.life>0);
- if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){if(G.sector>=SECTORS&&G.mode!=="endless"){win();return}nextSector()}
+ if(G.gate&&!G.warp&&!G.won&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r)startWarp();
  shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
  if(G.lvlQueue>0){G.lvlQueue--;scene="levelup";makeCards()}}
 // ---------------------------------------------------------------- drawing
@@ -1568,7 +1592,59 @@ function drawGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
  cx.strokeStyle="rgba(255,255,255,0.95)";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
  cx.strokeStyle="rgba(170,200,255,"+(0.35+0.2*Math.sin(frameT*5)).toFixed(2)+")";cx.lineWidth=7;cx.beginPath();cx.arc(0,0,gt.r*0.68,0,TAU);cx.stroke();
  cx.restore()}
-function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);cx.scale(S,S);cx.translate(-G.px,-G.py);
+// The dive's last moment: the hole's light swallows the screen.
+function drawDive(){const w=G.warp,e=Math.min(1,w.t/WARP.dive),k=Math.max(0,(e-0.72)/0.28);if(k<=0)return;
+ cx.save();cx.setTransform(1,0,0,1,0,0);cx.fillStyle="rgba(235,225,255,"+(k*k).toFixed(3)+")";cx.fillRect(0,0,cv.width,cv.height);cx.restore()}
+// Each realm dresses the tunnel: its colour, the shape of its rings, how
+// much the way ahead bends, how fast it rolls.
+const WARP_LOOK={giant:{col:[255,196,110],ring:"arc",curve:0.35,spin:0.25,bg:"#150e05"},
+ fleet:{col:[120,190,255],ring:"box",curve:0.08,spin:0,bg:"#040914"},
+ ember:{col:[255,130,60],ring:"circle",curve:0.22,spin:0.6,bg:"#170503",pulse:1},
+ hive:{col:[110,255,170],ring:"hex",curve:0.18,spin:1.3,bg:"#03100a"},
+ moon:{col:[205,210,220],ring:"rock",curve:0.45,spin:0.15,bg:"#08080c"},
+ hole:{col:[175,120,255],ring:"spiral",curve:0.12,spin:2.6,bg:"#090316"}};
+function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),ex=Math.max(0,(w.t-WARP.dive-WARP.tunnel)/WARP.exit);
+ const R=REALMS[(w.to-1)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole,[cr,cg,cb]=L.col,rgba=a=>"rgba("+cr+","+cg+","+cb+","+a.toFixed(3)+")";
+ cx.save();cx.scale(DPR,DPR);
+ cx.fillStyle=L.bg;cx.fillRect(0,0,W,H);
+ const K=Math.min(W,H)*0.62,Z=9,speed=2.2+u*2.5+ex*6,C={x:W/2,y:H*0.44};
+ // the way ahead drifts, and the rings follow it more the further off they are
+ const vp={x:C.x+Math.sin(t*0.8)*L.curve*W*0.3,y:C.y+Math.cos(t*0.6)*L.curve*H*0.14};
+ const proj=(z,a,rr)=>{const f=z/(z+1),ccx=C.x+(vp.x-C.x)*f,ccy=C.y+(vp.y-C.y)*f,pr=K/(z+0.2)*rr;return[ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr,pr,ccx,ccy]};
+ // depth: dark at the far end, the wall lit as it comes close
+ const fog=cx.createRadialGradient(vp.x,vp.y,K*0.05,vp.x,vp.y,K*1.6);fog.addColorStop(0,"rgba(0,0,0,0.6)");fog.addColorStop(0.35,rgba(0.06));fog.addColorStop(1,rgba(0.28));
+ cx.fillStyle=fog;cx.fillRect(0,0,W,H);
+ if(FX)glow(vp.x,vp.y,K*0.9,rgba(0.35),rgba(0.04));
+ // the rings, far to near
+ cx.lineCap="round";const N=26,roll=frameT*L.spin;
+ for(let i=N-1;i>=0;i--){const z=((i/N*Z+speed*t)%Z),depth=1-z/Z;let al=depth*depth*0.9;if(L.pulse)al*=0.7+0.3*Math.sin(t*9-z);
+  const [,,pr,ccx,ccy]=proj(z,0,1);cx.strokeStyle=rgba(al);cx.lineWidth=1.2+depth*2.4;cx.beginPath();
+  if(L.ring==="circle"){cx.arc(ccx,ccy,pr,0,TAU);for(let k=0;k<10;k++){const a=k/10*TAU+z*0.4+roll,lk=pr*(0.06+0.08*Math.abs(Math.sin(t*7+k*1.7+z)));cx.moveTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr);cx.lineTo(ccx+Math.cos(a)*(pr+lk),ccy+Math.sin(a)*(pr+lk))}}
+  else if(L.ring==="hex"||L.ring==="box"){const n=L.ring==="hex"?6:4;for(let k=0;k<=n;k++){const a=k/n*TAU+roll+z*0.3;cx.lineTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr)}}
+  else if(L.ring==="arc"){for(let k=0;k<3;k++){const a=k/3*TAU+roll+z*0.5;cx.moveTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr);cx.arc(ccx,ccy,pr,a,a+1.3)}}
+  else if(L.ring==="rock"){for(let k=0;k<9;k++){const a=k/9*TAU+z*0.7+hash(k,i)*0.5,q=pr*(0.9+hash(k+3,i)*0.2);const rk=2+depth*4;cx.moveTo(ccx+Math.cos(a)*q+rk,ccy+Math.sin(a)*q);cx.arc(ccx+Math.cos(a)*q,ccy+Math.sin(a)*q,rk,0,TAU)}}
+  else{cx.arc(ccx,ccy,pr,0,TAU);for(let k=0;k<3;k++){const a=k/3*TAU+roll-z*0.8;cx.moveTo(ccx+Math.cos(a)*pr*0.2,ccy+Math.sin(a)*pr*0.2);cx.quadraticCurveTo(ccx+Math.cos(a+0.9)*pr*0.6,ccy+Math.sin(a+0.9)*pr*0.6,ccx+Math.cos(a+1.6)*pr,ccy+Math.sin(a+1.6)*pr)}}
+  cx.stroke();if(L.ring==="rock"){cx.fillStyle=rgba(al*0.6);cx.fill()}}
+ // streaks of light on the wall, rushing past
+ for(let i=0;i<110;i++){const a=hash(i,61)*TAU+roll*0.5,rr=0.9+hash(i,67)*0.15,z=((hash(i,71)*Z-speed*t*(0.8+hash(i,73)*0.6))%Z+Z)%Z;
+  const [x1,y1]=proj(z,a,rr),[x2,y2]=proj(z+0.8+speed*0.12,a,rr),depth=1-z/Z,wh=hash(i,79)>0.6;
+  cx.strokeStyle=wh?"rgba(255,255,255,"+(depth*depth*0.55).toFixed(3)+")":rgba(depth*depth*0.8);cx.lineWidth=0.6+depth*1.6;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke()}
+ // the far end: where it comes out grows to meet you
+ const far=Math.max(0,(u-0.6)/0.4);
+ if(far>0){const sp=backSprite(R.back);if(sp){const sz=K*(0.08+far*far*1.6);cx.globalAlpha=Math.min(1,far*1.6);cx.drawImage(sp,vp.x-sz/2,vp.y-sz/2,sz,sz);cx.globalAlpha=1}}
+ // the ship, banking into the bends, then climbing out of the top
+ const climb=ex*ex*ex,sc=S*1.5*(1+climb*0.3),bank=(vp.x-C.x)/W*1.4,sx=W/2+(vp.x-C.x)*0.35,sy=H*0.7-climb*(H*0.7+SHIPP*3);
+ const len=SHIPP*sc*(2.2+climb*6),jx=(Math.random()*2-1)*1.5,jy=(Math.random()*2-1)*1.5;
+ cx.save();cx.translate(sx+jx,sy+jy);cx.rotate(bank);
+ const eg=cx.createLinearGradient(0,SHIPP*sc*0.5,0,SHIPP*sc*0.5+len);eg.addColorStop(0,"rgba(255,230,150,0.6)");eg.addColorStop(0.35,"rgba(255,140,40,0.35)");eg.addColorStop(1,"rgba(255,80,20,0)");
+ cx.fillStyle=eg;cx.beginPath();cx.moveTo(-9*sc,SHIPP*sc*0.45);cx.lineTo(9*sc,SHIPP*sc*0.45);cx.lineTo(2*sc,SHIPP*sc*0.45+len);cx.lineTo(-2*sc,SHIPP*sc*0.45+len);cx.closePath();cx.fill();
+ cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.restore();
+ // where it is going, over the top
+ textFit(R.name,W/2,SAFE.t+H*0.09,Math.min(26,W*0.06),rgba(0.75+0.25*Math.sin(t*4)),W*0.8);
+ // the flash it leaves in
+ const fl=Math.max(0,(ex-0.45)/0.55);if(fl>0){cx.fillStyle="rgba(255,255,255,"+fl.toFixed(2)+")";cx.fillRect(0,0,W,H)}
+ cx.restore()}
+function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);const cam=camView();cx.scale(S*cam.z,S*cam.z);cx.translate(-cam.x,-cam.y);
  drawStars();
  for(const rk of G.rocks){const v=rk.hp>=3?0:rk.hp===2?1:2,k=rk.r/58;
   cx.save();cx.translate(rk.x,rk.y);cx.rotate(rk.rot+frameT*0.1);
@@ -1609,15 +1685,15 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
   else if(b.k==="missile"){cx.fillStyle="#ff8040";rr(-12,-5,22,10,3);cx.fill();cx.fillStyle="#ffe0a0";cx.beginPath();cx.moveTo(10,-5);cx.lineTo(18,0);cx.lineTo(10,5);cx.fill()}
   else if(b.k==="plasma"){cx.fillStyle="#ff60ff";cx.beginPath();cx.arc(0,0,b.r,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(0,0,b.r*0.4,0,TAU);cx.fill()}
   cx.restore()}
-{const ao=arriveOff(),sy=G.py+ao;
+{const ao=arriveOff(),sy=G.py+ao,wk=warpShrink();cx.save();cx.translate(G.px,sy);cx.scale(wk,wk);cx.translate(-G.px,-sy);
  if(FX)glow(G.px,sy,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  if(ao>0){// exhaust column trailing the arrival
   const len=60+ao*0.6,g=cx.createLinearGradient(0,sy+14,0,sy+14+len);
   g.addColorStop(0,"rgba(255,230,150,0.5)");g.addColorStop(0.35,"rgba(255,140,40,0.3)");g.addColorStop(1,"rgba(255,80,20,0)");
   cx.fillStyle=g;cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px+8,sy+14);cx.lineTo(G.px+2,sy+14+len);cx.lineTo(G.px-2,sy+14+len);cx.closePath();cx.fill()}
- drawShip(G.px,sy,G.ang,G.ship,ao>0?1:stickVec().l);
+ drawShip(G.px,sy,G.ang,G.ship,(ao>0||G.warp)?1:stickVec().l);
  if(G.sh>0){cx.strokeStyle="rgba(64,208,255,"+(0.25+0.3*(G.sh/G.maxsh))+")";cx.lineWidth=3;cx.beginPath();cx.arc(G.px,sy,28,0,TAU);cx.stroke()}
- if(G.inv>0&&ao<=0&&Math.floor(frameT*20)%2){cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.arc(G.px,G.py,26,0,TAU);cx.fill()}}
+ if(G.inv>0&&ao<=0&&Math.floor(frameT*20)%2){cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.arc(G.px,G.py,26,0,TAU);cx.fill()}cx.restore()}
  for(const p of G.parts){if(p.k==="dot"){cx.globalAlpha=Math.min(1,p.life*2);cx.fillStyle=p.col;cx.beginPath();cx.arc(p.x,p.y,p.r,0,TAU);cx.fill();cx.globalAlpha=1}else if(p.k==="ring"){cx.strokeStyle=p.col;cx.lineWidth=6;cx.globalAlpha=p.life*2;cx.beginPath();cx.arc(p.x,p.y,p.r*(1.2-p.life),0,TAU);cx.stroke();cx.globalAlpha=1}}
  for(const t of G.txt){cx.globalAlpha=Math.min(1,t.life*2);text(t.s,t.x,t.y,16,t.col);cx.globalAlpha=1}
  cx.restore();cx.save();cx.scale(DPR,DPR);vignette();cx.restore()}
@@ -2128,11 +2204,14 @@ function drawWipe(dt){if(wipeT<=0)return;wipeT-=dt;cx.save();cx.setTransform(1,0
 function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene="pause";musicStop()}else if(scene==="pause"){scene="play";musicStart()}}
  if(scene==="title"&&(code==="Space"||code==="Enter"))launch();if(scene==="levelup"&&["Digit1","Digit2","Digit3"].includes(code)){const i=+code[5]-1;if(cards[i]){applyCard(cards[i]);scene="play"}}
  if((scene==="over"||scene==="win")&&(code==="Space"||code==="Enter"))start()}
-function frame(ts){requestAnimationFrame(frame);inputWatch();
+// the checker can halt the loop and step it by hand, so a cutscene can be
+// caught at an exact moment on a machine that renders slowly
+let halted=false;
+function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();
  // the hangar and the credits have a theme, and it starts the moment audio can
  if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
- if(["play","levelup","pause","over","win"].includes(scene)&&G){drawWorld();drawHUD()}
+ if(["play","levelup","pause","over","win"].includes(scene)&&G){if(G.warp&&G.warp.t>=WARP.dive)drawWarp();else{drawWorld();if(G.warp)drawDive();else drawHUD()}}
  if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
  drawDiag();
@@ -2140,7 +2219,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

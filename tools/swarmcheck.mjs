@@ -274,6 +274,24 @@ check('most of the swarm parts for the boss', part.boss && part.after >= 3 && pa
 check('and it parts at 185 seconds, not before', part.bossT != null && part.bossT >= 184 && part.bossT <= 186.2,
   `the boss arrived at ${part.bossT}s into the sector`);
 
+/* ------------------------------------------------------ the gate is a scene
+   Flying into the gate no longer cuts straight to the next sector: the
+   ship dives into the hole, runs the tunnel, blasts off the top, and the
+   next sector opens with it flying in from the bottom. On the last gate
+   of the campaign the dive is the ending. */
+const WARPC = await pg.evaluate(`(() => {
+  const S = window.SW, out = {}, T = S.WARP; S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
+  S.spawnEnemy('scout', G.px + 300, G.py); G.sector = 2; G.secT = 290; G.gate = { x: G.px + 40, y: G.py, r: 60 }; S.sim(0.05);
+  out.started = !!S.warp; out.fieldWiped = G.en.length; S.sim(T.dive * 0.5); out.atHalfDive = Math.hypot(G.px - G.gate.x, G.py - G.gate.y).toFixed(0); out.sectorDuring = G.sector;
+  S.sim(T.dive * 0.5 + 0.02); out.atHole = Math.hypot(G.px - G.gate.x, G.py - G.gate.y).toFixed(0); out.sectorTunnel = G.sector; out.tunnel = !!S.warp;
+  S.sim(T.tunnel + T.exit + 0.02); out.sectorAfter = G.sector; out.arriving = G.arrive > 0; out.over = !S.warp; out.total = +(T.dive + T.tunnel + T.exit).toFixed(1);
+  S.sim(1.2); out.scene = S.scene; S.scene = 'title'; return out;
+})()`);
+check('the gate is a cutscene, not a cut', WARPC.started && WARPC.fieldWiped === 0 && WARPC.sectorDuring === 2 && +WARPC.atHalfDive < +WARPC.atHole + 1000 && +WARPC.atHole < 3 && WARPC.tunnel && WARPC.sectorTunnel === 2,
+  `warp starts on entry, the field is wiped, the ship is ${WARPC.atHalfDive}px from the hole mid-dive and ${WARPC.atHole}px at its end, still in sector ${WARPC.sectorTunnel} for the tunnel`);
+check('and comes out flying into the next one', WARPC.over && WARPC.sectorAfter === 3 && WARPC.arriving && (WARPC.scene === 'play' || WARPC.scene === 'levelup'),
+  `${WARPC.total}s later: sector ${WARPC.sectorAfter}, arrival playing, then ${WARPC.scene}`);
+
 /* ---------------------------------------------------------- chest ration
    Chests are rationed: one from the elites per sector, three on Treasure
    Day, and the boss always drops one on top. */
@@ -367,7 +385,7 @@ check('the switch turns it off', EVO.off === 0, 'FEATURES.evolve=false: nothing 
    way, and its own board of the day's best five. */
 const MODE = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
-  const gateIn = () => { const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(0.2); };
+  const gateIn = () => { const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + S.WARP.tunnel + S.WARP.exit + 0.3); };   /* through the warp cutscene */
   S.fx = false;
   S.mode = 0; S.start(S.SHIPS[0]); gateIn(); out.campaign = S.scene; S.scene = 'title';
   S.mode = 1; S.start(S.SHIPS[0]); gateIn(); out.endless = S.scene; out.sector = S.G.sector; out.realm = S.realm().name; out.hudMode = S.G.mode; S.scene = 'title';
@@ -463,7 +481,7 @@ check('no ship is named after a child', !FLEET.names.some(n => /SOPHIA|RORY|DYLA
 /* the Eclipse: earned by clearing the campaign, and the small aliens bounce off it */
 const UFO = await pg.evaluate(`(() => {
   const S = window.SW, out = {}; S.fx = false; delete S.unlocks.ufo;
-  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(0.2);
+  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + 0.2);
   out.won = S.scene; out.unlocked = !!S.unlocks.ufo; S.scene = 'title';
   const ufo = S.SHIPS.find(s => s.id === 'ufo');
   S.start(ufo); G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.inv = 0; const hp0 = G.hp + G.sh;
