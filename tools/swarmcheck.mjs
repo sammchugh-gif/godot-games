@@ -526,7 +526,7 @@ check('and reads as one line', /Viper/i.test(LAST.summary) && /died in sector 3/
 check('SHARE hands that line to the share sheet', LAST.shared, 'navigator.share received the summary');
 await sleep(400);
 const labels = await pg.evaluate('window.SW.buttonLabels');
-check('the title offers the last run', labels.some(l => /LAST RUN/.test(l)), labels.filter(l => /LAST RUN/.test(l)).join(' | '));
+check('the title keeps the last run to itself', !labels.some(l => /LAST RUN/.test(l)), 'no LAST RUN on the title; the end screen shares it');
 
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
