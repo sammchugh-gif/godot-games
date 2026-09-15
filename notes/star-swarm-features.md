@@ -39,8 +39,8 @@ sector again" (#81), with none of the three features.
 
 ### Weapon evolutions (`evolve`)
 
-A weapon at full rank, held with the upgrade it pairs with, evolves at the
-next chest (every boss drops one). It keeps its slot and gains a new name,
+A weapon at full rank, held with the upgrade it pairs with at rank two,
+evolves at the next chest (every boss drops one). It keeps its slot and gains a new name,
 colour and a good deal more of what it did. The level-up card for a
 weapon's last rank names the upgrade it needs; an upgrade's card names the
 weapon it would evolve. When the pair is complete the game says so.

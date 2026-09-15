@@ -649,7 +649,10 @@ const WEAPONS={
 // A weapon at full rank, with the upgrade it pairs with, evolves at the next
 // chest: a new name, a new colour, and a good deal more of whatever it did.
 // It is the goal past "everything at max", which a run reached by sector 4.
-function evolvable(){if(!FEATURES.evolve||!G)return[];return Object.keys(G.weapons).filter(k=>{const w=WEAPONS[k];return w.evo&&G.weapons[k]>=w.max&&!G.evo[k]&&(G.passives[w.evo.needs]||0)>0})}
+// the partner has to be at rank two: with the sector 1 boss chest guaranteed,
+// a laser at six by level nine was evolving inside the first sector
+const EVO_NEEDS=2;
+function evolvable(){if(!FEATURES.evolve||!G)return[];return Object.keys(G.weapons).filter(k=>{const w=WEAPONS[k];return w.evo&&G.weapons[k]>=w.max&&!G.evo[k]&&(G.passives[w.evo.needs]||0)>=EVO_NEEDS})}
 function evolve(k){if(!WEAPONS[k].evo||G.evo[k])return false;G.evo[k]=true;G.evolved=(G.evolved||0)+1;
  announce(WEAPONS[k].name.toUpperCase()+" EVOLVED  ·  "+WEAPONS[k].evo.name.toUpperCase()+"!");SFX.evolve();flash=0.8;shake=1;
  for(let i=0;i<40;i++)G.parts.push({k:"dot",x:G.px,y:G.py,vx:rnd(-260,260),vy:rnd(-260,260),life:rnd(0.5,1.1),col:WEAPONS[k].evo.col,r:rnd(3,8)});return true}
@@ -789,7 +792,7 @@ function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
 // no longer has around it
 // the difficulty multiplier applies at its square root here: at the full
 // 2.2x the hard Mothership never died in any run, and the gate stayed shut
-function bossHpMul(){return (1+ranksHeld()*0.05+G.t/900)*(1+bossLap()*1.2)*1.25*Math.sqrt(G.dif.hp)}
+function bossHpMul(){return (1+ranksHeld()*0.05+G.t/900)*(1+bossLap()*1.4)*1.25*Math.sqrt(G.dif.hp)}
 // the cap holds for everything but a boss: rings and hatches used to walk
 // past it, and a run peaked at 577 on the field
 function spawnEnemy(type,x,y,elite){const d=ENEMY[type];if(!d.boss&&G.en.length>=MAX_EN)return null;const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd*(mod().espd||1),dmg:d.dmg*(d.boss?1.2*(1+bossLap()*0.25):swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
@@ -1825,8 +1828,8 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
   // room for both.
   let hint=null;
   if(FEATURES.evolve){
-   if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name,col:d.evo.col};
-   else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX",col:w.evo.col};break}}}}
+   if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name+" "+EVO_NEEDS,col:d.evo.col};
+   else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX"+(c.l<EVO_NEEDS?" (rank "+EVO_NEEDS+")":""),col:w.evo.col};break}}}}
   if(hint&&c.l>1){textFit(hint.a,x+cw/2,y+ch*0.74,14,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.82,13,"#dde",cw-16)}
   else{const showHint=hint&&cw>=200;
    wrapFit(d.desc,x+cw/2,y+ch*0.7,cw-26,(showHint?ch*0.86:ch)-12-ch*0.7,15,"#dde");
