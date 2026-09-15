@@ -305,6 +305,45 @@ check('and it hits a good deal harder', EVO.strong > EVO.plain * 1.6,
 check('every weapon has a partner', EVO.pairs, `${Object.keys(await pg.evaluate('window.SW.WEAPONS')).length} weapons, each paired with an upgrade that exists`);
 check('the switch turns it off', EVO.off === 0, 'FEATURES.evolve=false: nothing evolves');
 
+/* ------------------------------------------------------ endless and daily
+   Past the sixth gate the campaign ends and endless goes on, sector 7 in
+   the first realm again. A daily run is the campaign with the day's twist,
+   its dice seeded by the date so two runs on the same day fall the same
+   way, and its own board of the day's best five. */
+const MODE = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  const gateIn = () => { const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(0.2); };
+  S.fx = false;
+  S.mode = 0; S.start(S.SHIPS[0]); gateIn(); out.campaign = S.scene; S.scene = 'title';
+  S.mode = 1; S.start(S.SHIPS[0]); gateIn(); out.endless = S.scene; out.sector = S.G.sector; out.realm = S.realm().name; out.hudMode = S.G.mode; S.scene = 'title';
+  /* daily: same day, same twist, same rocks */
+  S.mode = 2; S.start(S.SHIPS[0]); const a = S.G; const twistA = a.mod.id, rocksA = a.rocks.slice(0, 5).map(r => Math.round(r.x) + ',' + Math.round(r.y)).join(' ');
+  S.sim(2); const enA = a.en.map(e => e.type + Math.round(e.x)).join(' ');
+  S.scene = 'title'; S.start(S.SHIPS[0]); const b = S.G; const twistB = b.mod.id, rocksB = b.rocks.slice(0, 5).map(r => Math.round(r.x) + ',' + Math.round(r.y)).join(' ');
+  S.sim(2); const enB = b.en.map(e => e.type + Math.round(e.x)).join(' ');
+  out.twist = twistA; out.sameTwist = twistA === twistB; out.sameRocks = rocksA === rocksB && rocksA.length > 0; out.sameSpawns = enA === enB && enA.length > 0;
+  out.date = S.dailyInfo().date; out.inList = S.DAILY_MODS.some(m => m.id === twistA);
+  /* and a campaign run is not seeded */
+  S.mode = 0; S.start(S.SHIPS[0]); const c1 = S.G.rocks.slice(0, 5).map(r => Math.round(r.x)).join(); S.scene = 'title'; S.start(S.SHIPS[0]); const c2 = S.G.rocks.slice(0, 5).map(r => Math.round(r.x)).join();
+  out.campaignVaries = c1 !== c2; S.scene = 'title';
+  /* the board: a daily run that dies is on it */
+  S.mode = 2; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.score = 4321; G.hp = 1; G.sh = 0; G.inv = 0; G.spawnAcc = -1e9;
+  S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(1.5); out.died = S.scene; const day = S.records['daily:' + out.date];
+  out.onBoard = !!(day && day.board.some(b => b.score === 4321)); out.rank = G.dailyRank; S.scene = 'title';
+  /* the switch */
+  S.FEATURES.modes = false; S.mode = 1; S.start(S.SHIPS[0]); out.off = S.G.mode; S.FEATURES.modes = true; S.mode = 0; S.scene = 'title';
+  return out;
+})()`);
+check('the sixth gate ends the campaign', MODE.campaign === 'win', `scene ${MODE.campaign}`);
+check('and opens sector 7 in endless', (MODE.endless === 'play' || MODE.endless === 'levelup') && MODE.sector === 7 && /GIANT/.test(MODE.realm) && MODE.hudMode === 'endless',
+  `scene ${MODE.endless} (a new sector pays a card), sector ${MODE.sector}, ${MODE.realm} again`);
+check('the daily is the same for everyone', MODE.sameTwist && MODE.sameRocks && MODE.sameSpawns && MODE.inList,
+  `${MODE.date}: ${MODE.twist}, same rocks and same first spawns on two runs`);
+check('a campaign run still rolls its own dice', MODE.campaignVaries, 'two campaign starts, different rocks');
+check('a daily run goes on the day\'s board', MODE.died === 'over' && MODE.onBoard && MODE.rank >= 1,
+  `died with 4321, placed ${MODE.rank} on today's board`);
+check('the modes switch turns it off', MODE.off === 'campaign', 'FEATURES.modes=false: endless selected, campaign played');
+
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
    climbs off the top of the screen, and only then does the run begin. The

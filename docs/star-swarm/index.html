@@ -43,7 +43,7 @@ const BOSS_ORDER=["mother","kraken","warlord"];
 // Each of these is one feature, added in its own change, and can be switched
 // off here without touching anything else. See notes/star-swarm-features.md
 // for what each one is and how to roll it back entirely.
-const FEATURES={evolve:true};
+const FEATURES={evolve:true,modes:true};
 const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
 // The old mix never returned a value above 0.5, so anything gated behind a
 // high threshold never appeared.
@@ -374,7 +374,7 @@ function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
  if(scene==="title"||scene==="credits"||scene==="launch")return TITLE_TRACK;
- return G?Math.min(TRACKS.length-2,Math.max(0,G.sector-1)):0}
+ return G?Math.max(0,G.sector-1)%(TRACKS.length-1):0}
 function osc(type,f,t,dur,vol,dest,f1,drum){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -661,17 +661,49 @@ const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:0.85,dmg:0.9,elite:0
  {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.5,rate:1.3,dmg:1.25,elite:0.07,desc:"Tougher, thicker, hits harder."},
  {id:"hard",name:"HARD",col:"#ff6060",hp:2.2,rate:1.65,dmg:1.6,elite:0.1,desc:"No mercy. Bring your best ship."}];
 let diffIdx=Math.max(0,Math.min(DIFFS.length-1,parseInt(store.get("diff",0),10)||0));
-function recKeyFor(shipId,difId){return difId==="easy"?shipId:shipId+"@"+difId}
+// Three ways to play. The campaign is the six sectors. Endless keeps going
+// past the sixth gate, the sectors and their bosses coming round again harder
+// each lap. The daily is the campaign with one twist chosen by the date, the
+// same for everyone that day, with its own board.
+const MODES=[
+ {id:"campaign",name:"CAMPAIGN",col:"#80c0ff",desc:"Six sectors, six bosses, then the final gate."},
+ {id:"endless",name:"ENDLESS",col:"#ff9040",desc:"Past the sixth gate the sectors keep coming, harder every lap."},
+ {id:"daily",name:"DAILY",col:"#c0a0ff",desc:"Today's twist, the same for everyone. Beat your best."}];
+const DAILY_MODS=[
+ {id:"gems",name:"DOUBLE GEMS",desc:"Every gem is worth two.",xp:2},
+ {id:"glass",name:"GLASS CANNON",desc:"Double damage, half the hull.",dmg:2,hull:0.5},
+ {id:"noshield",name:"NO SHIELDS",desc:"No shield at all, but half again the hull.",shield:0,hull:1.5},
+ {id:"tide",name:"SWARM TIDE",desc:"Far more aliens, each far weaker.",rate:1.7,hp:0.55},
+ {id:"rush",name:"BOSS RUSH",desc:"The boss comes at one minute, the gate right after.",bossAt:60,gateAt:130},
+ {id:"turbo",name:"TURBO",desc:"You are faster. So are they.",speed:1.4,espd:1.25},
+ {id:"loot",name:"TREASURE DAY",desc:"Every elite drops a chest, gems fly from far away.",chest:1,magnet:3}];
+let modeIdx=FEATURES.modes?Math.max(0,Math.min(MODES.length-1,parseInt(store.get("mode",0),10)||0)):0;
+function dayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function strHash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function mulberry(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function dailyInfo(){const date=dayKey(),seed=strHash("starswarm:"+date);return{date,seed,mod:DAILY_MODS[seed%DAILY_MODS.length]}}
+function modeOf(){return FEATURES.modes?MODES[modeIdx].id:"campaign"}
+const NOMOD={};
+function mod(){return (G&&G.mod)||NOMOD}
+function recKeyFor(shipId,difId,mode){const k=difId==="easy"?shipId:shipId+"@"+difId;return mode==="endless"?k+"#endless":k}
+function dailyKey(){return "daily:"+dayKey()}
 unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
-function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
+function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
+ G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],mode,daily,mod:daily?daily.mod:null,rng:daily?mulberry(daily.seed):null,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
  weapons:{},passives:{},evo:{},evolved:0,en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,arrive:ARRIVE_T,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
- G.xpNext=10;G.weapons[ship.weapon]=1;seedRocks();shake=0;flash=0}
+ G.xpNext=10;G.weapons[ship.weapon]=1;
+ const m=mod();if(m.hull){G.maxhp=Math.round(G.maxhp*m.hull);G.hp=G.maxhp}if(m.shield!=null){G.maxsh=Math.round(G.maxsh*m.shield);G.sh=G.maxsh}
+ seeded(seedRocks);shake=0;flash=0}
+// A daily run draws its dice from a generator seeded by the date, so the
+// rocks, the spawns and the cards fall the same way for everyone that day.
+// Only the game's own steps are seeded; the drawing keeps the real dice.
+function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random=G.rng;try{return fn(a)}finally{Math.random=R}}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
-function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))}
-function dmgMul(){return 1+0.15*(G.passives.power||0)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return 1+0.2*(G.passives.scanner||0)}function magnetR(){return 100+45*(G.passives.tractor||0)}function armor(){return G.passives.armor||0}
+function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))*(mod().speed||1)}
+function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
 // run peaked at sector 2 and got easier from sector 4 on - a motionless
 // player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
@@ -684,8 +716,8 @@ function swarmDmg(){return 1+Math.max(0,ranksHeld()-12)*SWARM.dmgR}
 // weapons multiply rather than add - a fourth weapon with the damage passive
 // beside it trebles what a build puts out - so the swarm's health carries a
 // term in weapons held, squared
-function hpMul(){const r=ranksHeld(),w=Math.max(0,Object.keys(G.weapons).length-2);return (SWARM.base+G.t/SWARM.time+r*SWARM.rank)*(1+r*r*SWARM.rank2)*(1+w*w*SWARM.slotK)*G.dif.hp}
-function swarmRate(){return (SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-12)*SWARM.rateR)*G.dif.rate}
+function hpMul(){const r=ranksHeld(),w=Math.max(0,Object.keys(G.weapons).length-2);return (SWARM.base+G.t/SWARM.time+r*SWARM.rank)*(1+r*r*SWARM.rank2)*(1+w*w*SWARM.slotK)*G.dif.hp*(mod().hp||1)}
+function swarmRate(){return (SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-12)*SWARM.rateR)*G.dif.rate*(mod().rate||1)}
 // How much you are carrying, counted in ranks. This is what a boss is measured
 // against now: the clock alone said a run got five times stronger, when in
 // truth a finished build does about thirty times the damage of a starting one,
@@ -700,7 +732,7 @@ function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
 // the quarter on the end is what the boss carries in place of the swarm it
 // no longer has around it
 function bossHpMul(){return (1+ranksHeld()*0.085+G.t/900)*(1+bossLap()*1.6)*1.25*G.dif.hp}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd,dmg:d.dmg*(d.boss?1.2*(1+bossLap()*0.25):swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd*(mod().espd||1),dmg:d.dmg*(d.boss?1.2*(1+bossLap()*0.25):swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
 function spawnWave(dt){const t=G.t;let rate=swarmRate();
  // a boss is a duel, not a brawl: the ordinary swarm thins to a third while one
@@ -713,7 +745,7 @@ function spawnWave(dt){const t=G.t;let rate=swarmRate();
   const elite=t>90&&Math.random()<G.dif.elite;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
  if(t>75&&Math.floor((t-75)/75)>G.swarm&&!G.bossAlive){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
  // one boss per sector, three minutes in
- if(G.secT>=165&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
+ if(G.secT>=(mod().bossAt||165)&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
   // Whatever is on the field when the boss arrives turns and leaves. A hundred
   // scouts between you and the Mothership is not a boss fight, it is the last
   // three minutes again with a bigger thing behind it - and the weapons, which
@@ -729,12 +761,12 @@ function spawnWave(dt){const t=G.t;let rate=swarmRate();
  // clock still decides the earliest it can open; the boss decides whether it
  // does. Nobody can get stuck behind one: its health is fixed the moment it
  // arrives while yours keeps levelling, so the fight always resolves.
- if(G.secT>=SECTOR_LEN-45&&!G.gate){
+ if(G.secT>=(mod().gateAt||SECTOR_LEN-45)&&!G.gate){
   if(G.bossAlive){
    if(!G.gateHeld){G.gateHeld=true;
     announce(ENEMY[G.bossAlive.type].name+" IS HOLDING THE GATE SHUT")}}
   else{const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
-   announce(G.sector>=SECTORS?"THE FINAL GATE IS OPEN!"
+   announce(G.sector>=SECTORS&&G.mode!=="endless"?"THE FINAL GATE IS OPEN!"
     :G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
 function announce(s){G.announce=s;G.announceT=3}
 // "Nearest" leans toward a boss and away from anything running off: a hatchling
@@ -757,7 +789,7 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
   // Elites are five percent of every spawn, so a chest from each of them meant
   // one was always on screen. Bosses still always drop; elites about one in
   // seven, which is roughly an 85% cut.
-  if(e.boss||Math.random()<0.15)G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
+  if(e.boss||Math.random()<(mod().chest||0.15))G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
   if(e.boss){announce(ENEMY[e.type].name+" DESTROYED!");shake=1}}
  else if(Math.random()<(e.type==="drifter"?0.06:0.012)){const r=Math.random();G.pk.push({k:r<0.45?"repair":r<0.8?"magnet":"nuke",x:e.x,y:e.y,r:16,life:25})}}
 function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2){const r=Math.random();G.pk.push({k:r<0.5?"repair":r<0.85?"magnet":"nuke",x:rk.x,y:rk.y,r:16,life:25})}}}
@@ -767,7 +799,7 @@ function hurt(d){const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;G.shT=3.5
 // rather than a starting weapon; the curve is unchanged from level six
 function xpFor(l){return Math.round((8+l*5+l*l*0.4)*1.2*(l<6?0.8:1))}
 function gainXP(v){G.xp+=v*xpMul();SFX.gem();while(G.xp>=G.xpNext){G.xp-=G.xpNext;G.level++;G.xpNext=xpFor(G.level);G.lvlQueue++}}
-function die(){scene="over";SFX.die();musicStop();saveRecord()}
+function die(){if(scene==="over")return;scene="over";SFX.die();musicStop();saveRecord()}
 // Flying into the gate leaves the whole swarm behind: the field is wiped, the
 // asteroids are new, shields come back, and clearing a sector pays an upgrade.
 function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;
@@ -778,10 +810,16 @@ function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld
  // card you have never been offered turning up at the next level
  announce(G.sector===2||G.sector===4||G.sector===6
   ?"SECTOR "+G.sector+"  ·  NEW SLOT OPEN"
+  :G.sector>SECTORS?"SECTOR "+G.sector+"  ·  LAP "+(Math.floor((G.sector-1)/SECTORS)+1)+"  ·  "+realm().name
   :"SECTOR "+G.sector+"  ·  "+realm().name);
  SFX.warp();flash=0.4;shake=0.8}
 function win(){scene="win";G.won=true;SFX.win();musicStop();saveRecord()}
-function saveRecord(){const id=recKeyFor(G.ship.id,G.dif.id),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
+function saveRecord(){
+ if(G.mode==="daily"){// the day's board: top five, any ship, and the run count
+  const id=dailyKey(),d=records[id]||{best:0,runs:0,board:[]};d.runs++;if(G.score>d.best)d.best=G.score;
+  d.board.push({score:G.score,ship:G.ship.id,sector:G.sector,lvl:G.level,dif:G.dif.id});d.board.sort((a,b)=>b.score-a.score);d.board.length=Math.min(5,d.board.length);
+  records[id]=d;store.set("records",records);G.dailyRank=d.board.findIndex(b=>b.score===G.score&&b.ship===G.ship.id)+1;return}
+ const id=recKeyFor(G.ship.id,G.dif.id,G.mode),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=G.mode==="endless"?G.t:Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
  let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
 // How many different weapons, and how many passives, you may carry at once.
 // It was four of each from the word go, which is why everything was collected
@@ -805,7 +843,8 @@ function openChest(){const ev=evolvable();if(ev.length){evolve(ev[0]);return}con
 // stick does nothing - the hand-off from the launch is one continuous shot.
 const ARRIVE_T=0.9;
 function arriveOff(){if(!G||!(G.arrive>0))return 0;const k=G.arrive/ARRIVE_T;return k*k*(H/2/S+70)}
-function update(dt){
+function update(dt){return seeded(updateRun,dt)}
+function updateRun(dt){
  if(G.arrive>0){G.arrive-=dt;G.vx=G.vy=0;G.ang=-Math.PI/2;G.inv=Math.max(G.inv,0.4);return}
  G.t+=dt;G.secT+=dt;
  const st=stickVec(),sp=moveSpeed();
@@ -895,7 +934,7 @@ function update(dt){
  G.pk=G.pk.filter(p=>p.life>0);
  for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0);
  for(const t of G.txt){t.life-=dt;t.y-=40*dt}G.txt=G.txt.filter(t=>t.life>0);
- if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){if(G.sector>=SECTORS){win();return}nextSector()}
+ if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){if(G.sector>=SECTORS&&G.mode!=="endless"){win();return}nextSector()}
  shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
  if(G.lvlQueue>0){G.lvlQueue--;scene="levelup";makeCards()}}
 // ---------------------------------------------------------------- drawing
@@ -912,7 +951,7 @@ const REALMS=[
  {name:"THE HIVE",neb:[3,2],back:"hive"},
  {name:"THE SHATTERED MOON",neb:[0,3],back:"moon"},
  {name:"THE BLACK HOLE",neb:[0,1],back:"hole"}];
-function realm(){return REALMS[Math.min(REALMS.length,Math.max(1,(G&&G.sector)||1))-1]}
+function realm(){const s=Math.max(1,(G&&G.sector)||1);return REALMS[(s-1)%REALMS.length]}   // endless comes round again
 const BACKSZ={giant:1500,fleet:1500,ember:1400,hive:950,moon:1150,hole:1650};
 function backSprite(k){let sp=ART.back[k];if(sp)return sp;
  const N=512;
@@ -1302,7 +1341,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  // and the kill count are sitting on either side of it
  textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
   left>0?"#fff":(G.bossAlive?"#ff8080":"#80c0ff"),W*0.46);
- textFit("SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.dif.col,W*0.62);
+ textFit(G.mode==="endless"?"SECTOR "+G.sector+"   ·   ENDLESS   ·   "+G.dif.name:G.mode==="daily"?"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.mod.name:"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.mode==="endless"?"#ff9040":G.mode==="daily"?"#c0a0ff":G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
  // The bottom of the screen, laid out rather than assumed. The tiles used to
@@ -1461,6 +1500,11 @@ function drawSky(){
   if(a<=0)shoot=null}}
 // where the title drew the chosen ship, so the launch can lift it from that spot
 let shipSlot=null,launching=false,launchT=0,launchAt=null,wipeT=0;
+// the record line on a ship card, for whichever mode is chosen
+function recLine(shipId,difId){const m=modeOf();
+ if(m==="daily"){const d=records[dailyKey()];return d?"Today\u2019s best "+d.best+"   \u00b7   "+d.runs+(d.runs===1?" run":" runs"):"No runs today"}
+ const r=records[recKeyFor(shipId,difId,m)];if(!r)return m==="endless"?"No endless runs yet":"No runs yet";
+ return "Best "+r.best+"   \u00b7   Sector "+(r.sector||1)+(m==="endless"?"   \u00b7   "+fmt(r.time):"")}
 function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  buttons=[];
@@ -1492,8 +1536,12 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const dh=stack?38:42;
  // does it all fit with the tag line and the difficulty blurb in place?
  let showTag=true,showDesc=true;
+ // on a phone held sideways there is no height for two rows but plenty of
+ // width, so the mode row and the difficulty row share one line
+ const dw=Math.min(380,W-32),twoUp=FEATURES.modes&&W>=dw*2+60;
  const need=()=>{let c=cursor;
   if(showTag)c+=hs*2+8;
+  if(FEATURES.modes&&!twoUp)c+=gap+dh;
   c+=gap+dh;
   if(showDesc)c+=18;
   return contentBottom-(c+gap)};
@@ -1503,15 +1551,26 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r);cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
  if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
- // difficulty, as a segmented row above the ships
- const dw=Math.min(380,W-32),dy=cursor+gap,dx0=W/2-dw/2,seg=dw/3;
+ // the mode, then the difficulty, as segmented rows above the ships
+ const seg=dw/3,dx0=twoUp?W/2+10:W/2-dw/2;
+ if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2;
+  MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*seg;
+   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,seg-4,dh,10);cx.fill();
+   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?m.col:"rgba(255,255,255,0.3)";cx.stroke();
+   textFit(m.name,x+seg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",seg-14);
+   btn(x+2,my,seg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  if(!twoUp)cursor=my+dh}
+ const dy=cursor+gap;
  DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
   cx.fillStyle=sel?hexA(d.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,dy,seg-4,dh,10);cx.fill();
   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?d.col:"rgba(255,255,255,0.3)";cx.stroke();
   textFit(d.name,x+seg/2,dy+dh/2,sel?18:16,sel?d.col:"#ccd6e4",seg-14);
   btn(x+2,dy,seg-4,dh,"",()=>{diffIdx=i;store.set("diff",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  cursor=dy+dh;
- if(showDesc){textFit(DIFFS[diffIdx].desc,W/2,cursor+11,12,"#9fb0c8",W-40);cursor+=18}
+ // one line of small print: the twist of the day, the mode, or the difficulty
+ if(showDesc){const mid=modeOf();
+  const line=mid==="daily"?"TODAY: "+dailyInfo().mod.name+"  ·  "+dailyInfo().mod.desc:mid==="endless"?MODES[1].desc:DIFFS[diffIdx].desc;
+  textFit(line,W/2,cursor+11,12,mid==="daily"?"#c0a0ff":mid==="endless"?"#ff9040":"#9fb0c8",W-40);cursor+=18}
  const listTop=cursor+gap,avail=contentBottom-listTop;
  if(stack){
   const cw=Math.min(440,W-28),x0=W/2-cw/2;
@@ -1522,10 +1581,10 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    if(sel)shipSlot={x:x0+px/2+4,y:y+ch/2,s:1};
    if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore()}
-   const tx=x0+px+14,tw=cw-px-28,r=records[recKeyFor(s.id,difId)];
+   const tx=x0+px+14,tw=cw-px-28,r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
    textFit(un?s.desc:s.unlock,tx,y+ch*0.55,dz,"#cde",tw,"left");
-   textFit(un?(r?"Best "+r.best+"   \u00b7   Sector "+(r.sector||1):"No runs yet"):"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
+   textFit(un?r:"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
    btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  }else{
   const cw=rowCw,ch=clamp(avail,108,250),y=listTop+Math.max(0,(avail-ch)/2);
@@ -1537,10 +1596,10 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
    if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;
    cx.translate(x+cw/2,y+ch*0.28);cx.scale(Math.min(1,ch/190),Math.min(1,ch/190));
    drawShip(0,0,-Math.PI/2,s,sel?0.6:0);cx.restore()}
-   const r=records[recKeyFor(s.id,difId)];
+   const r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
    textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
-   textFit(un?(r?"Best "+r.best+"   \u00b7   Sector "+(r.sector||1):"No runs yet"):"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
+   textFit(un?r:"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
    btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  }
  const lw=Math.min(300,W-48);
@@ -1569,9 +1628,18 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
   else{wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
    if(hint&&cw>=200){textFit(hint.a,x+cw/2,y+ch*0.9,13,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.96,12,"#dde",cw-16)}}
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
-function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+G.dif.name,won?"#80c0ff":"#ff8080");
+function drawEnd(won){cx.save();cx.scale(DPR,DPR);
+ const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
+ drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+tail,won?"#80c0ff":"#ff8080");
  const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff",W-32);
- const r=records[recKeyFor(G.ship.id,G.dif.id)];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#80ff90");if(G.unlocked)text("NEW SHIP UNLOCKED!",W/2,y+110,26,"#ffe060");
+ if(G.mode==="daily"){const d=records[dailyKey()];
+  if(G.dailyRank===1&&G.score>0)text("TODAY\u2019S BEST!",W/2,y+80,26,"#80ff90");
+  // the day's board, where there is room for it under the score
+  if(d&&H>=600){let by=y+112;textFit("TODAY\u2019S TOP "+d.board.length,W/2,by,14,"#c0a0ff",W-32);by+=20;
+   d.board.forEach((b,i)=>{const sh=SHIPS.find(x=>x.id===b.ship);const me=i===G.dailyRank-1;
+    textFit((i+1)+".  "+b.score+"   \u00b7   "+(sh?sh.name:b.ship)+"   \u00b7   S"+b.sector,W/2,by,me?15:13,me?"#ffe060":"#dde",W-40);by+=18})}}
+ else{const r=records[recKeyFor(G.ship.id,G.dif.id,G.mode)];if(r&&G.score>=r.best&&G.score>0)text("NEW BEST!",W/2,y+80,26,"#80ff90")}
+ if(G.unlocked)text("NEW SHIP UNLOCKED!",W/2,y+(G.mode==="daily"?H>=600?230:110:110),26,"#ffe060");
  // on a phone in portrait a fixed 210px pair ran off both edges
  const ew=Math.min(210,(W-56)/2);
  buttons=[];btn(W/2-ew-10,H*0.72,ew,60,"FLY AGAIN",()=>start(),{fill:"#2a5aa0",size:24});btn(W/2+10,H*0.72,ew,60,"HANGAR",()=>{scene="title"},{size:24});
@@ -1665,7 +1733,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
