@@ -626,9 +626,9 @@ const SHIPS=[
  // uses come from those marks - so what the card says is what the ship does.
  {id:"falcon",name:"VIPER",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,stats:{speed:4,damage:3,shield:2},col:"#e04040",col2:"#ffb0b0",unlock:""},
  {id:"comet",name:"THUNDERHEAD",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,stats:{speed:3,damage:4,shield:1},col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
- {id:"nova",name:"BASTION",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,stats:{speed:1,damage:3,shield:5},col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
+ {id:"nova",name:"HORNET",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,stats:{speed:1,damage:3,shield:5},col:"#f2c21b",col2:"#1a1a1a",unlock:"Reach Sector 3"},
  // three more in the shop, each with a trick of its own
- {id:"wraith",name:"WRAITH",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,stats:{speed:5,damage:3,shield:2},col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
+ {id:"wraith",name:"GHOST",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,stats:{speed:5,damage:3,shield:2},col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
  {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,stats:{speed:2,damage:2,shield:4},col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
  {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,stats:{speed:3,damage:4,shield:3},col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
  // and the one for finishing: top marks in everything
@@ -874,7 +874,7 @@ function dropPickup(x,y){const r=Math.random();const k=r<0.45?"repair":r<0.8?"ma
 function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2)dropPickup(rk.x,rk.y)}}
 function explode(x,y,R,dmg){G.parts.push({k:"ring",x,y,r:R,life:0.35,col:"#ffa040"});for(let i=0;i<14;i++)G.parts.push({k:"dot",x,y,vx:rnd(-200,200),vy:rnd(-200,200),life:0.4,col:"#ff8040",r:6});for(const e of G.en){if(dist(x,y,e.x,e.y)<R+e.r)damage(e,dmg)}for(const rk of G.rocks){if(dist(x,y,rk.x,rk.y)<R+rk.r)hitRock(rk,2)}SFX.boom();shake=Math.max(shake,0.4)}
 function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;
- // the Wraith's phase shift: longer untouchable, and the swarm thrown back
+ // the Ghost's phase shift: longer untouchable, and the swarm thrown back
  if(G.ship.ab==="phase"){G.inv=1.6;for(const e of G.en){const dx=e.x-G.px,dy=e.y-G.py,dd=Math.hypot(dx,dy)||1;if(dd<240&&!e.boss){e.vx+=dx/dd*340;e.vy+=dy/dd*340}}}G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;
   // the escape pod: once a run, a killing blow is survived instead, at half
   // hull, with everything nearby blown clear

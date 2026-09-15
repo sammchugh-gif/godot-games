@@ -111,11 +111,11 @@ SHOP button is gone and the perks do nothing; the bank and the purchases
 stay in storage for when it comes back.
 
 The shop's second tab sells three more ships. The first three (Viper,
-Thunderhead, Bastion) are earned by playing as before; these are bought:
+Thunderhead, Hornet) are earned by playing as before; these are bought:
 
 | ship     | weapon      | ability                                                          | cost |
 |----------|-------------|------------------------------------------------------------------|------|
-| Wraith   | Missiles    | Phase shift: a hit makes you untouchable for 1.6 s and throws the swarm back | 2500 |
+| Ghost    | Missiles    | Phase shift: a hit makes you untouchable for 1.6 s and throws the swarm back | 2500 |
 | Glacier  | Plasma Wave | Frost hull: what touches you is slowed 2.5 s; shields recharge 1.5x | 3500 |
 | Magnetar | Black Hole  | Gravity well: gems from twice as far, 15% more XP                 | 5000 |
 
@@ -130,8 +130,8 @@ marks out of five, and the run's numbers come from them: speed 90% to
 |-------------|-------|--------|--------|------|
 | Viper       | 4     | 3      | 2      | 90   |
 | Thunderhead | 3     | 4      | 1      | 100  |
-| Bastion     | 1     | 3      | 5      | 130  |
-| Wraith      | 5     | 3      | 2      | 85   |
+| Hornet      | 1     | 3      | 5      | 130  |
+| Ghost       | 5     | 3      | 2      | 85   |
 | Glacier     | 2     | 2      | 4      | 110  |
 | Magnetar    | 3     | 4      | 3      | 95   |
 | Saucer      | 5     | 5      | 5      | 100  |
