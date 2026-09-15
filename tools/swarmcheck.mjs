@@ -269,6 +269,42 @@ const part = await pg.evaluate(`(() => {
 check('the swarm parts for the boss', part.boss && part.after <= 6 && part.later <= 10 && part.straggle <= 2,
   `${part.before} on the field at 160s; boss up, ${part.after} still fighting 0.5s in, ${part.later} six seconds later (its own escort) and ${part.straggle} still leaving`);
 
+/* ------------------------------------------------------ weapon evolutions
+   A weapon at full rank, with the upgrade it pairs with, evolves at the
+   next chest - and only then: neither half alone will do, and the switch
+   turns the whole thing off. An evolved weapon has to be worth it, so its
+   damage into a ring of targets is measured against the same weapon at
+   full rank un-evolved. */
+const EVO = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  const ring = () => { const G = S.G; G.en.length = 0; G.bul.length = 0; G.pk.length = 0;
+    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; const e = S.spawnEnemy('drifter', G.px + Math.cos(a) * 170, G.py + Math.sin(a) * 170); e.hp = e.maxhp = 1e9; e.spd = 0; }
+    return G.en.slice(); };
+  const dealt = ring0 => ring0.reduce((a, e) => a + (e.maxhp - e.hp), 0);
+  S.fx = false; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.secT = 10;
+  G.weapons = { laser: 6 }; G.passives = {};
+  out.halfway = S.evolvable().length;                    /* max rank, no partner */
+  G.passives.haste = 1; out.ready = S.evolvable();       /* both halves */
+  let r = ring(); S.sim(6); out.plain = Math.round(dealt(r));
+  S.openChest(); out.evolved = !!G.evo.laser; out.rank = G.weapons.laser;
+  out.offered = S.options().some(c => c.k === 'laser');
+  r = ring(); S.sim(6); out.strong = Math.round(dealt(r));
+  out.ranks = S.SWARM && (function(){ let n = 0; for (const k in G.weapons) n += G.weapons[k]; for (const k in G.passives) n += G.passives[k]; return n; })();
+  /* every weapon has a partner that exists */
+  out.pairs = Object.keys(S.WEAPONS).every(k => S.WEAPONS[k].evo && S.PASSIVES[S.WEAPONS[k].evo.needs]);
+  /* and the switch */
+  S.FEATURES.evolve = false; G.evo = {}; out.off = S.evolvable().length; S.FEATURES.evolve = true;
+  S.scene = 'title'; return out;
+})()`);
+check('a max weapon needs its partner to evolve', EVO.halfway === 0 && EVO.ready.length === 1 && EVO.ready[0] === 'laser',
+  `laser at 6 alone: nothing; with Rapid Fire: ${EVO.ready.join()}`);
+check('the next chest evolves it', EVO.evolved && EVO.rank === 6 && !EVO.offered,
+  `Prism Beam, rank stays 6, no longer offered as a card`);
+check('and it hits a good deal harder', EVO.strong > EVO.plain * 1.6,
+  `${EVO.plain} damage in six seconds at full rank, ${EVO.strong} evolved (${(EVO.strong / EVO.plain).toFixed(1)}x)`);
+check('every weapon has a partner', EVO.pairs, `${Object.keys(await pg.evaluate('window.SW.WEAPONS')).length} weapons, each paired with an upgrade that exists`);
+check('the switch turns it off', EVO.off === 0, 'FEATURES.evolve=false: nothing evolves');
+
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
    climbs off the top of the screen, and only then does the run begin. The

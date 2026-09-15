@@ -40,6 +40,10 @@ window.addEventListener("resize",resize);window.addEventListener("orientationcha
 // next one.
 const SECTOR_LEN=300,SECTORS=6,RUN_LEN=SECTOR_LEN*SECTORS,MAX_EN=240,TAU=Math.PI*2;
 const BOSS_ORDER=["mother","kraken","warlord"];
+// Each of these is one feature, added in its own change, and can be switched
+// off here without touching anything else. See notes/star-swarm-features.md
+// for what each one is and how to roll it back entirely.
+const FEATURES={evolve:true};
 const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
 // The old mix never returned a value above 0.5, so anything gated behind a
 // high threshold never appeared.
@@ -313,6 +317,8 @@ function stab(freqs,dur,type,vol,delay){for(const f of freqs)tone(f,f,dur,type,v
 let gemStreak=0,gemLast=0;
 const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06,"square",0.05)},boom(){tone(200,50,0.2,"triangle",0.25);noise(0.15,0.25);tone(90,30,0.5,"sine",0.3)},hit(){tone(500,200,0.05,"square",0.05)},
  kill(){tone(320,80,0.14,"square",0.12);noise(0.06,0.1)},
+ // an evolution: a riser, a five-note climb, a big chord and a long shimmer
+ evolve(){tone(220,1760,0.5,"sine",0.14);[523,659,784,1047,1319].forEach((f,i)=>tone(f,f,0.16,"square",0.14,0.45+i*0.09));stab([659,784,1047,1319,1568],1.6,"triangle",0.42,0.95);tone(4186,2637,1.2,"sine",0.08,0.95);noise(0.5,0.1,0.9,true)},
  // engines spool for half a second, then the ship goes: a rumble that
  // swells, a low sawtooth climbing under it, and a bright sweep as it leaves
  launch(){noise(1.5,0.28);tone(48,70,0.55,"sawtooth",0.14);tone(70,520,0.9,"sawtooth",0.16,0.55);
@@ -608,14 +614,21 @@ const SHIPS=[
  {id:"nova",name:"SOPHIA'S NOVA",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
 ];
 const WEAPONS={
- laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6},
- spread:{name:"Spread Cannon",icon:"⋀",col:"#ffd040",desc:"A fan of shots in front of the ship.",max:6},
- drones:{name:"Drones",icon:"◈",col:"#80ffc0",desc:"Little ships that follow you and shoot.",max:6},
- missile:{name:"Missiles",icon:"➤",col:"#ff8040",desc:"Homing missiles that explode.",max:6},
- mines:{name:"Space Mines",icon:"✹",col:"#c0c0ff",desc:"Drops mines behind you that blow up aliens.",max:6},
- wave:{name:"Plasma Wave",icon:"◎",col:"#40d0ff",desc:"A ring of plasma bursts out of the ship.",max:6},
- hole:{name:"Black Hole",icon:"●",col:"#b080ff",desc:"Pulls aliens into a crushing hole.",max:6},
+ laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6,evo:{name:"Prism Beam",needs:"haste",col:"#ff80ff",desc:"Three beams that pierce everything."}},
+ spread:{name:"Spread Cannon",icon:"⋀",col:"#ffd040",desc:"A fan of shots in front of the ship.",max:6,evo:{name:"Starburst",needs:"power",col:"#ffe080",desc:"Shots in every direction at once."}},
+ drones:{name:"Drones",icon:"◈",col:"#80ffc0",desc:"Little ships that follow you and shoot.",max:6,evo:{name:"Drone Swarm",needs:"engine",col:"#c0ffe0",desc:"Six drones, and their shots pierce."}},
+ missile:{name:"Missiles",icon:"➤",col:"#ff8040",desc:"Homing missiles that explode.",max:6,evo:{name:"Warhead Salvo",needs:"tractor",col:"#ffb060",desc:"Four missiles, twice the blast."}},
+ mines:{name:"Space Mines",icon:"✹",col:"#c0c0ff",desc:"Drops mines behind you that blow up aliens.",max:6,evo:{name:"Minefield",needs:"hull",col:"#e0e0ff",desc:"Mines twice as fast, twice as big."}},
+ wave:{name:"Plasma Wave",icon:"◎",col:"#40d0ff",desc:"A ring of plasma bursts out of the ship.",max:6,evo:{name:"Nova Pulse",needs:"shield",col:"#80f0ff",desc:"A huge ring with twice the punch."}},
+ hole:{name:"Black Hole",icon:"●",col:"#b080ff",desc:"Pulls aliens into a crushing hole.",max:6,evo:{name:"Singularity",needs:"scanner",col:"#d0a0ff",desc:"Bigger, longer, and pulls harder."}},
 };
+// A weapon at full rank, with the upgrade it pairs with, evolves at the next
+// chest: a new name, a new colour, and a good deal more of whatever it did.
+// It is the goal past "everything at max", which a run reached by sector 4.
+function evolvable(){if(!FEATURES.evolve||!G)return[];return Object.keys(G.weapons).filter(k=>{const w=WEAPONS[k];return w.evo&&G.weapons[k]>=w.max&&!G.evo[k]&&(G.passives[w.evo.needs]||0)>0})}
+function evolve(k){if(!WEAPONS[k].evo||G.evo[k])return false;G.evo[k]=true;G.evolved=(G.evolved||0)+1;
+ announce(WEAPONS[k].name.toUpperCase()+" EVOLVED  ·  "+WEAPONS[k].evo.name.toUpperCase()+"!");SFX.evolve();flash=0.8;shake=1;
+ for(let i=0;i<40;i++)G.parts.push({k:"dot",x:G.px,y:G.py,vx:rnd(-260,260),vy:rnd(-260,260),life:rnd(0.5,1.1),col:WEAPONS[k].evo.col,r:rnd(3,8)});return true}
 const PASSIVES={
  engine:{name:"Turbo Engine",icon:"»",col:"#80ff80",desc:"+12% speed.",max:5},
  hull:{name:"Thick Hull",icon:"▣",col:"#c0c0c0",desc:"+25 max hull and repair 25.",max:5},
@@ -653,7 +666,7 @@ unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
 let cards=[];
 function newRun(ship){G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
- weapons:{},passives:{},en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,arrive:ARRIVE_T,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
+ weapons:{},passives:{},evo:{},evolved:0,en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,arrive:ARRIVE_T,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;seedRocks();shake=0;flash=0}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
@@ -680,7 +693,7 @@ function swarmRate(){return (SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-
 function ranksHeld(){let r=0;
  for(const k in G.weapons)r+=G.weapons[k];
  for(const k in G.passives)r+=G.passives[k];
- return r}
+ return r+3*(G.evolved||0)}
 // Which time round the three bosses is this? They cycle, so sector 4 used to
 // send the same mothership as sector 1 at a player four times as strong.
 function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
@@ -727,14 +740,14 @@ function announce(s){G.announce=s;G.announceT=3}
 // "Nearest" leans toward a boss and away from anything running off: a hatchling
 // at 90 px used to take every shot while the Mothership sat at 200.
 function nearest(x,y,maxd,skip){let best=null,bd=maxd||1e9;for(const e of G.en){if(skip&&skip.has(e))continue;let d=dist(x,y,e.x,e.y)-e.r;if(e.boss)d-=160;if(e.flee)d+=300;if(d<bd){bd=d;best=e}}return best}
-function fireWeapons(dt){const wp=G.weapons,cd=G.cds;const tick=(k,base)=>{cd[k]=(cd[k]||0)-dt;if(cd[k]<=0){cd[k]=base*rateMul();return true}return false};
- if(wp.laser&&tick("laser",Math.max(0.12,0.42-wp.laser*0.04))){const tg=nearest(G.px,G.py,760);if(tg){const a=Math.atan2(tg.y-G.py,tg.x-G.px);const n=wp.laser>=4?2:1;for(let i=0;i<n;i++){const off=(i-(n-1)/2)*10;G.bul.push({k:"laser",x:G.px-Math.sin(a)*off,y:G.py+Math.cos(a)*off,vx:Math.cos(a)*900,vy:Math.sin(a)*900,r:6,dmg:(7+wp.laser*3)*dmgMul(),life:0.9,pierce:wp.laser>=6?1:0,hit:new Set()})}SFX.laser()}}
- if(wp.spread&&tick("spread",Math.max(0.3,0.9-wp.spread*0.07))){const n=3+Math.floor(wp.spread/2);const tg=nearest(G.px,G.py,700);const base=tg?Math.atan2(tg.y-G.py,tg.x-G.px):G.ang;for(let i=0;i<n;i++){const a=base+(i-(n-1)/2)*0.18;G.bul.push({k:"shot",x:G.px,y:G.py,vx:Math.cos(a)*560,vy:Math.sin(a)*560,r:7,dmg:(6+wp.spread*2.5)*dmgMul(),life:1.0,pierce:0,hit:new Set()})}SFX.shot()}
- if(wp.drones){const want=1+Math.floor((wp.drones+1)/2);while(G.drones.length<want)G.drones.push({x:G.px,y:G.py,a:Math.random()*TAU,cd:Math.random()});for(const d of G.drones){d.a+=dt*2.2;const R=58;const tx=G.px+Math.cos(d.a)*R,ty=G.py+Math.sin(d.a)*R;d.x=lerp(d.x,tx,dt*8);d.y=lerp(d.y,ty,dt*8);d.cd-=dt;if(d.cd<=0){d.cd=Math.max(0.35,1.0-wp.drones*0.08)*rateMul();const tg=nearest(d.x,d.y,520);if(tg){const a=Math.atan2(tg.y-d.y,tg.x-d.x);G.bul.push({k:"shot",x:d.x,y:d.y,vx:Math.cos(a)*620,vy:Math.sin(a)*620,r:5,dmg:(5+wp.drones*2.5)*dmgMul(),life:0.9,pierce:0,hit:new Set()});if(Math.random()<0.4)SFX.shot()}}}}
- if(wp.missile&&tick("missile",Math.max(0.6,1.8-wp.missile*0.16))){const n=1+Math.floor(wp.missile/3);for(let i=0;i<n;i++){const a=G.ang+(i-(n-1)/2)*0.8;G.bul.push({k:"missile",x:G.px,y:G.py,vx:Math.cos(a)*200,vy:Math.sin(a)*200,r:9,dmg:(22+wp.missile*8)*dmgMul(),life:3,aoe:70+wp.missile*10,hit:new Set()})}SFX.shot()}
- if(wp.mines){G.mineT-=dt;if(G.mineT<=0){G.mineT=Math.max(0.5,1.6-wp.mines*0.15)*rateMul();G.pk.push({k:"mine",x:G.px-Math.cos(G.ang)*30,y:G.py-Math.sin(G.ang)*30,r:12,life:12,dmg:(24+wp.mines*9)*dmgMul(),aoe:60+wp.mines*8,arm:0.8})}}
- if(wp.wave&&tick("wave",Math.max(1.0,3.0-wp.wave*0.28))){const R=130+wp.wave*24;G.parts.push({k:"ring",x:G.px,y:G.py,r:R,life:0.5,col:"#40d0ff"});for(const e of G.en){if(dist(G.px,G.py,e.x,e.y)<R+e.r){damage(e,(10+wp.wave*4)*dmgMul());const dx=e.x-G.px,dy=e.y-G.py,d=Math.hypot(dx,dy)||1;e.vx+=dx/d*260;e.vy+=dy/d*260}}for(const rk of G.rocks){if(dist(G.px,G.py,rk.x,rk.y)<R+rk.r)hitRock(rk,1)}SFX.zap()}
- if(wp.hole&&tick("hole",Math.max(2.5,6-wp.hole*0.5))){const tg=nearest(G.px,G.py,500);const x=tg?tg.x:G.px+Math.cos(G.ang)*220,y=tg?tg.y:G.py+Math.sin(G.ang)*220;G.pk.push({k:"hole",x,y,r:26+wp.hole*4,life:2.2+wp.hole*0.3,dmg:(6+wp.hole*2.5)*dmgMul(),pull:170+wp.hole*30});SFX.zap()}}
+function fireWeapons(dt){const wp=G.weapons,cd=G.cds,EV=G.evo;const tick=(k,base)=>{cd[k]=(cd[k]||0)-dt;if(cd[k]<=0){cd[k]=base*rateMul();return true}return false};
+ if(wp.laser&&tick("laser",Math.max(0.12,0.42-wp.laser*0.04))){const tg=nearest(G.px,G.py,760);if(tg){const a=Math.atan2(tg.y-G.py,tg.x-G.px);const n=EV.laser?3:wp.laser>=4?2:1;for(let i=0;i<n;i++){const off=(i-(n-1)/2)*10;G.bul.push({k:"laser",evo:!!EV.laser,x:G.px-Math.sin(a)*off,y:G.py+Math.cos(a)*off,vx:Math.cos(a)*900,vy:Math.sin(a)*900,r:6,dmg:(7+wp.laser*3)*dmgMul()*(EV.laser?1.5:1),life:0.9,pierce:EV.laser?99:wp.laser>=6?1:0,hit:new Set()})}SFX.laser()}}
+ if(wp.spread&&tick("spread",Math.max(0.3,0.9-wp.spread*0.07))){const n=EV.spread?12:3+Math.floor(wp.spread/2);const tg=nearest(G.px,G.py,700);const base=tg?Math.atan2(tg.y-G.py,tg.x-G.px):G.ang;for(let i=0;i<n;i++){const a=EV.spread?base+i*TAU/n:base+(i-(n-1)/2)*0.18;G.bul.push({k:"shot",evo:!!EV.spread,x:G.px,y:G.py,vx:Math.cos(a)*560,vy:Math.sin(a)*560,r:EV.spread?9:7,dmg:(6+wp.spread*2.5)*dmgMul()*(EV.spread?1.3:1),life:1.0,pierce:0,hit:new Set()})}SFX.shot()}
+ if(wp.drones){const want=EV.drones?6:1+Math.floor((wp.drones+1)/2);while(G.drones.length<want)G.drones.push({x:G.px,y:G.py,a:Math.random()*TAU,cd:Math.random()});for(const d of G.drones){d.a+=dt*2.2;const R=58;const tx=G.px+Math.cos(d.a)*R,ty=G.py+Math.sin(d.a)*R;d.x=lerp(d.x,tx,dt*8);d.y=lerp(d.y,ty,dt*8);d.cd-=dt;if(d.cd<=0){d.cd=Math.max(0.35,1.0-wp.drones*0.08)*rateMul()*(EV.drones?0.7:1);const tg=nearest(d.x,d.y,520);if(tg){const a=Math.atan2(tg.y-d.y,tg.x-d.x);G.bul.push({k:"shot",evo:!!EV.drones,x:d.x,y:d.y,vx:Math.cos(a)*620,vy:Math.sin(a)*620,r:5,dmg:(5+wp.drones*2.5)*dmgMul(),life:0.9,pierce:EV.drones?1:0,hit:new Set()});if(Math.random()<0.4)SFX.shot()}}}}
+ if(wp.missile&&tick("missile",Math.max(0.6,1.8-wp.missile*0.16))){const n=EV.missile?4:1+Math.floor(wp.missile/3);for(let i=0;i<n;i++){const a=G.ang+(i-(n-1)/2)*0.8;G.bul.push({k:"missile",evo:!!EV.missile,x:G.px,y:G.py,vx:Math.cos(a)*200,vy:Math.sin(a)*200,r:9,dmg:(22+wp.missile*8)*dmgMul()*(EV.missile?1.3:1),life:3,aoe:(70+wp.missile*10)*(EV.missile?1.8:1),hit:new Set()})}SFX.shot()}
+ if(wp.mines){G.mineT-=dt;if(G.mineT<=0){G.mineT=Math.max(0.5,1.6-wp.mines*0.15)*rateMul()*(EV.mines?0.5:1);G.pk.push({k:"mine",evo:!!EV.mines,x:G.px-Math.cos(G.ang)*30,y:G.py-Math.sin(G.ang)*30,r:EV.mines?15:12,life:EV.mines?16:12,dmg:(24+wp.mines*9)*dmgMul()*(EV.mines?1.5:1),aoe:(60+wp.mines*8)*(EV.mines?1.6:1),arm:0.8})}}
+ if(wp.wave&&tick("wave",Math.max(1.0,3.0-wp.wave*0.28)*(EV.wave?0.7:1))){const R=(130+wp.wave*24)*(EV.wave?1.6:1),kb=EV.wave?400:260;G.parts.push({k:"ring",x:G.px,y:G.py,r:R,life:0.5,col:EV.wave?"#80f0ff":"#40d0ff"});for(const e of G.en){if(dist(G.px,G.py,e.x,e.y)<R+e.r){damage(e,(10+wp.wave*4)*dmgMul()*(EV.wave?2:1));const dx=e.x-G.px,dy=e.y-G.py,d=Math.hypot(dx,dy)||1;e.vx+=dx/d*kb;e.vy+=dy/d*kb}}for(const rk of G.rocks){if(dist(G.px,G.py,rk.x,rk.y)<R+rk.r)hitRock(rk,1)}SFX.zap()}
+ if(wp.hole&&tick("hole",Math.max(2.5,6-wp.hole*0.5))){const tg=nearest(G.px,G.py,500);const x=tg?tg.x:G.px+Math.cos(G.ang)*220,y=tg?tg.y:G.py+Math.sin(G.ang)*220;G.pk.push({k:"hole",evo:!!EV.hole,x,y,r:(26+wp.hole*4)*(EV.hole?1.5:1),life:(2.2+wp.hole*0.3)*(EV.hole?1.6:1),dmg:(6+wp.hole*2.5)*dmgMul()*(EV.hole?2:1),pull:(170+wp.hole*30)*(EV.hole?1.5:1)});SFX.zap()}}
 function damage(e,amt,kind){e.hp-=amt;e.flash=0.12;G.txt.push({x:e.x+rnd(-10,10),y:e.y-e.r,s:Math.round(amt)+"",life:0.6,col:kind==="zap"?"#c0f0ff":"#fff"});if(e.hp<=0)killEnemy(e);else if(Math.random()<0.3)SFX.hit()}
 function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e.elite?4:1);SFX.kill();
  for(let i=0;i<(e.boss?40:8);i++)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-180,180),vy:rnd(-180,180),life:rnd(0.3,0.7),col:e.col,r:rnd(3,7)});
@@ -782,8 +795,9 @@ function options(){const out=[];const cap=slots();
  for(const k in PASSIVES){const l=G.passives[k]||0;if(l>=PASSIVES[k].max)continue;if(!l&&np>=cap)continue;out.push({k,w:false,l:l+1})}
  return out}
 function makeCards(){const o=options();cards=[];for(let i=0;i<3&&o.length;i++){cards.push(o.splice(rint(0,o.length-1),1)[0])}if(!cards.length)cards.push({k:"heal"})}
-function applyCard(c){if(c.k==="heal"){G.hp=G.maxhp;G.sh=G.maxsh}else if(c.w){G.weapons[c.k]=c.l}else{G.passives[c.k]=c.l;if(c.k==="hull"){G.maxhp+=25;G.hp=Math.min(G.maxhp,G.hp+25)}if(c.k==="shield"){G.maxsh+=20;G.sh=G.maxsh}}SFX.level()}
-function openChest(){const o=options();if(!o.length){G.hp=G.maxhp;G.sh=G.maxsh;announce("FULL REPAIR!");return}const c=o[rint(0,o.length-1)];applyCard(c);announce("CHEST: "+(c.w?WEAPONS[c.k].name:PASSIVES[c.k].name)+" LV"+c.l+"!");shake=0.5}
+function applyCard(c){const was=evolvable().length;if(c.k==="heal"){G.hp=G.maxhp;G.sh=G.maxsh}else if(c.w){G.weapons[c.k]=c.l}else{G.passives[c.k]=c.l;if(c.k==="hull"){G.maxhp+=25;G.hp=Math.min(G.maxhp,G.hp+25)}if(c.k==="shield"){G.maxsh+=20;G.sh=G.maxsh}}SFX.level();
+ const ev=evolvable();if(ev.length>was)announce(WEAPONS[ev[ev.length-1]].name.toUpperCase()+" CAN EVOLVE  ·  FIND A CHEST!")}
+function openChest(){const ev=evolvable();if(ev.length){evolve(ev[0]);return}const o=options();if(!o.length){G.hp=G.maxhp;G.sh=G.maxsh;announce("FULL REPAIR!");return}const c=o[rint(0,o.length-1)];applyCard(c);announce("CHEST: "+(c.w?WEAPONS[c.k].name:PASSIVES[c.k].name)+" LV"+c.l+"!");shake=0.5}
 // ---------------------------------------------------------------- update
 // The run opens with the ship flying up from below the screen, the way it
 // left the hangar: engines lit, slowing as it settles into place. Until it
@@ -1253,7 +1267,7 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
   if(FX){const bg={laser:"rgba(255,64,96,",shot:"rgba(255,208,64,",missile:"rgba(255,128,64,",plasma:"rgba(255,96,255,"}[b.k];
    if(bg)glow(b.x,b.y,(b.r||12)*2.4,bg+"0.55)",bg+"0.14)")}
   cx.save();cx.translate(b.x,b.y);cx.rotate(Math.atan2(b.vy,b.vx));
-  if(b.k==="laser"){cx.fillStyle="#ff4060";cx.fillRect(-16,-2.5,32,5);cx.fillStyle="#fff";cx.fillRect(-10,-1,20,2)}
+  if(b.k==="laser"){cx.fillStyle=b.evo?"#ff80ff":"#ff4060";cx.fillRect(-16,-2.5,32,5);cx.fillStyle="#fff";cx.fillRect(-10,-1,20,2)}
   else if(b.k==="shot"){cx.fillStyle="#ffd040";cx.beginPath();cx.ellipse(0,0,10,5,0,0,TAU);cx.fill()}
   else if(b.k==="missile"){cx.fillStyle="#ff8040";rr(-12,-5,22,10,3);cx.fill();cx.fillStyle="#ffe0a0";cx.beginPath();cx.moveTo(10,-5);cx.lineTo(18,0);cx.lineTo(10,5);cx.fill()}
   else if(b.k==="plasma"){cx.fillStyle="#ff60ff";cx.beginPath();cx.arc(0,0,b.r,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(0,0,b.r*0.4,0,TAU);cx.fill()}
@@ -1299,7 +1313,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  HUDBOX={};
  const wide=W-32-SL-SR;
  const ups=[];
- for(const k in G.weapons)ups.push({icon:WEAPONS[k].icon,col:WEAPONS[k].col,n:G.weapons[k],big:22,bg:"rgba(0,0,0,0.45)"});
+ for(const k in G.weapons){const ev=G.evo[k]&&WEAPONS[k].evo;ups.push({icon:WEAPONS[k].icon,col:ev?ev.col:WEAPONS[k].col,n:ev?"★":G.weapons[k],big:22,bg:ev?"rgba(60,20,90,0.6)":"rgba(0,0,0,0.45)"})}
  for(const k in G.passives)ups.push({icon:PASSIVES[k].icon,col:PASSIVES[k].col,n:G.passives[k],big:20,bg:"rgba(0,0,0,0.3)"});
  // Shrink to fit, and when they will not fit at the smallest size, wrap onto
  // a second row rather than walking off the side of the screen.
@@ -1542,7 +1556,18 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  drawButtons();cx.restore()}
 function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!","Choose an upgrade","#ffe060");buttons=[];const n=cards.length,cw=Math.min(280,(W-40)/n-12),ch=Math.min(300,H*0.5),y=H*0.35;
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2;const d=c.k==="heal"?{name:"Full Repair",icon:"✚",col:"#80ff90",desc:"Everything is maxed out. Refill hull and shield."}:c.w?WEAPONS[c.k]:PASSIVES[c.k];
-  cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
+  cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);text(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060");
+  // The road to an evolution, on the card that walks it: two short lines.
+  // On a card you already hold they stand in for the description, which you
+  // know by now; a NEW card keeps its description and, on a phone, has no
+  // room for both.
+  let hint=null;
+  if(FEATURES.evolve){
+   if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name,col:d.evo.col};
+   else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX",col:w.evo.col};break}}}}
+  if(hint&&c.l>1){textFit(hint.a,x+cw/2,y+ch*0.74,14,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.82,13,"#dde",cw-16)}
+  else{wrap(d.desc,x+cw/2,y+ch*0.72,cw-30,15,"#dde");
+   if(hint&&cw>=200){textFit(hint.a,x+cw/2,y+ch*0.9,13,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.96,12,"#dde",cw-16)}}
   btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+G.dif.name,won?"#80c0ff":"#ff8080");
  const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level,W/2,y+46,20,"#fff",W-32);
@@ -1640,7 +1665,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
