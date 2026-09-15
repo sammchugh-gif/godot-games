@@ -119,12 +119,12 @@ Thunderhead, Hornet) are earned by playing as before; these are bought:
 | Glacier  | Plasma Wave | Frost hull: what touches you is slowed 2.5 s; shields recharge 1.5x | 3500 |
 | Magnetar | Black Hole  | Gravity well: gems from twice as far, 15% more XP                 | 5000 |
 
-A seventh, the Saucer (space mines; deflector hull: scouts and swarmers
+A seventh, the Eclipse (space mines; deflector hull: scouts and swarmers
 bounce off without hurting you), is earned by clearing all six sectors.
 
 The hangar shows one ship at a time behind arrows. Each ship carries three
 marks out of five, and the run's numbers come from them: speed 90% to
-120%, damage 90% to 120%, shield 20 to 60. The Saucer alone is 5/5/5.
+120%, damage 90% to 120%, shield 20 to 60. The Eclipse alone is 5/5/5.
 
 | ship        | speed | damage | shield | hull |
 |-------------|-------|--------|--------|------|
@@ -134,7 +134,7 @@ marks out of five, and the run's numbers come from them: speed 90% to
 | Ghost       | 5     | 3      | 2      | 85   |
 | Glacier     | 2     | 2      | 4      | 110  |
 | Magnetar    | 3     | 4      | 3      | 95   |
-| Saucer      | 5     | 5      | 5      | 100  |
+| Eclipse     | 5     | 5      | 5      | 100  |
 
 A ? beside the mode row opens a WAYS TO PLAY screen that explains the
 three modes, today's twist, and the marks.
