@@ -439,6 +439,33 @@ check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === f
 check('the Wraith phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
 check('the Glacier chills', FLEET.frostSlow >= 2, `a drifter that touched it is slowed for ${FLEET.frostSlow}s`);
 check('the Magnetar pulls from twice as far', FLEET.gravR === FLEET.plainR * 2, `${FLEET.gravR}px against ${FLEET.plainR}px`);
+/* the marks on the card are the numbers in the run, and the Saucer alone
+   has top marks; a ship not yet earned shows as ??? on the title, and the
+   hangar shows one ship at a time behind arrows with a ? for the modes */
+const MARKS = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  out.ok = S.SHIPS.every(s => s.stats && [s.stats.speed, s.stats.damage, s.stats.shield].every(v => v >= 1 && v <= 5)
+    && Math.abs(S.shipSpeed(s) - (0.9 + 0.075 * (s.stats.speed - 1))) < 1e-9
+    && Math.abs(S.shipDmg(s) - (0.9 + 0.075 * (s.stats.damage - 1))) < 1e-9
+    && S.shipShield(s) === 10 + 10 * s.stats.shield);
+  const top = S.SHIPS.filter(s => s.stats.speed === 5 && s.stats.damage === 5 && s.stats.shield === 5).map(s => s.id);
+  out.top = top; out.last = S.SHIPS[S.SHIPS.length - 1].id;
+  const ufo = S.SHIPS.find(s => s.id === 'ufo'); S.unlocks.ufo = true; S.start(ufo); out.ufoSpeed = +S.shipSpeed(S.G.ship).toFixed(3); out.ufoShield = S.G.maxsh; S.scene = 'title'; delete S.unlocks.ufo;
+  return out;
+})()`);
+check('the marks are the numbers', MARKS.ok && MARKS.top.length === 1 && MARKS.top[0] === 'ufo' && MARKS.last === 'ufo' && MARKS.ufoSpeed === 1.2 && MARKS.ufoShield === 60,
+  `every ship derives speed, damage and shield from its marks; only the Saucer is 5/5/5 (speed 120%, shield 60), and it comes last`);
+await pg.evaluate(`window.SW.scene = 'title'; window.SW.viewIdx = 0; delete window.SW.unlocks.wraith`);
+await sleep(400);
+const before = await pg.evaluate('window.SW.buttonLabels');
+await pg.evaluate(`(() => { const S = window.SW; for (let i = 0; i < 3; i++) S.viewIdx = (S.viewIdx + 1) % S.SHIPS.length; })()`);
+await sleep(400);
+const arrows = before.filter(l => l === '◀' || l === '▶').length, help = before.includes('?');
+check('the hangar shows one ship behind arrows, with a ?', arrows === 2 && help, `${arrows} arrows and a ? on the title`);
+const viewing = await pg.evaluate(`({ i: window.SW.viewIdx, un: !!window.SW.unlocks[window.SW.SHIPS[window.SW.viewIdx].id], flying: window.SW.shipIdx })`);
+check('stepping to an unearned ship does not fly it', viewing.i === 3 && !viewing.un && viewing.flying === 0,
+  `viewing ship ${viewing.i} (locked), still flying ship ${viewing.flying}`);
+await pg.evaluate(`window.SW.viewIdx = 0`);
 
 /* ------------------------------------------------------- the last run
    When a run ends it is written down whole - ship, mode, result, build,
