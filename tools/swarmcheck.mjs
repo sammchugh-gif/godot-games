@@ -255,6 +255,20 @@ const dif = await pg.evaluate(`window.SW.DIFFS.map(d => Object.keys(d).filter(
 check('difficulty changes enemies, not pacing', dif.every(d => d === 'hp+rate+dmg+elite'),
   `every level scales ${dif[0]} and nothing else`);
 
+/* ----------------------------------------------------- the swarm parts
+   Whatever is on the field when a boss arrives turns and leaves, so the
+   duel starts on an open field rather than behind a hundred scouts. */
+const part = await pg.evaluate(`(() => {
+  const S = window.SW; S.fx = false; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0;
+  G.hp = G.maxhp = 1e9; G.secT = 160; G.spawnAcc = -1e9;
+  for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; S.spawnEnemy(['scout','swarmer','drifter'][i % 3], G.px + Math.cos(a) * 320, G.py + Math.sin(a) * 320); }
+  const before = G.en.length;
+  S.sim(5.5); const out = { before, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
+  S.sim(6); out.later = G.en.filter(e => !e.boss && !e.flee).length; out.straggle = G.en.filter(e => e.flee).length; S.scene = 'title'; return out;
+})()`);
+check('the swarm parts for the boss', part.boss && part.after <= 6 && part.later <= 10 && part.straggle <= 2,
+  `${part.before} on the field at 160s; boss up, ${part.after} still fighting 0.5s in, ${part.later} six seconds later (its own escort) and ${part.straggle} still leaving`);
+
 /* ------------------------------------------------------------- the launch
    LAUNCH is a take-off, not a cut: the chosen ship lifts out of its card,
    climbs off the top of the screen, and only then does the run begin. The
