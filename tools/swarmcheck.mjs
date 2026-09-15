@@ -269,6 +269,24 @@ const part = await pg.evaluate(`(() => {
 check('the swarm parts for the boss', part.boss && part.after <= 6 && part.later <= 10 && part.straggle <= 2,
   `${part.before} on the field at 160s; boss up, ${part.after} still fighting 0.5s in, ${part.later} six seconds later (its own escort) and ${part.straggle} still leaving`);
 
+/* ---------------------------------------------------------- chest ration
+   Chests are rationed: one from the elites per sector, three on Treasure
+   Day, and the boss always drops one on top. */
+const CHEST = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0;
+    if (mod) G.mod = mod;
+    for (let i = 0; i < 60; i++) { const e = S.spawnEnemy('scout', G.px + 400, G.py, true); e.hp = 1; }
+    S.sim(8); const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* long enough to kill them all */
+  out.normal = farm(null); out.treasure = farm(S.DAILY_MODS.find(m => m.id === 'loot'));
+  /* and the boss */
+  S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.secChests = 1;
+  const b = S.spawnEnemy('mother', G.px + 300, G.py); b.hp = 1; S.sim(1.5); out.boss = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title';
+  return out;
+})()`);
+check('chests are rationed', CHEST.normal === 1 && CHEST.treasure === 3 && CHEST.boss >= 1,
+  `sixty elites killed: ${CHEST.normal} chest on a normal day, ${CHEST.treasure} on Treasure Day; the boss still drops one with the ration spent`);
+
 /* ------------------------------------------------------ weapon evolutions
    A weapon at full rank, with the upgrade it pairs with, evolves at the
    next chest - and only then: neither half alone will do, and the switch
