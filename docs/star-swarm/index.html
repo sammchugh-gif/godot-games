@@ -323,9 +323,16 @@ const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06
  // swells, a low sawtooth climbing under it, and a bright sweep as it leaves
  launch(){noise(1.5,0.28);tone(48,70,0.55,"sawtooth",0.14);tone(70,520,0.9,"sawtooth",0.16,0.55);
   tone(300,1800,0.55,"sine",0.12,0.85);noise(0.5,0.18,0.9,true);tone(1200,2400,0.3,"triangle",0.08,1.1)},
+ // A gem is a soft ping that climbs with a streak - a fifth lower than it
+ // was, half the volume, without the top overtone, and the climb stops at
+ // seven semitones: a hundred of these in a minute should not grate.
  gem(){const now=AC?AC.currentTime:0;if(now-gemLast>0.5)gemStreak=0;gemLast=now;
-  const f=880*Math.pow(2,Math.min(gemStreak,12)/12);gemStreak++;
-  tone(f,f*1.01,0.13,"sine",0.22);tone(f*1.5,f*1.5,0.08,"triangle",0.08,0.02);tone(f*2,f*2,0.05,"sine",0.05,0.04)},
+  const f=587*Math.pow(2,Math.min(gemStreak,7)/12);gemStreak++;
+  tone(f,f*1.01,0.1,"sine",0.16);tone(f*1.5,f*1.5,0.06,"triangle",0.045,0.02)},
+ // The nuke clears the screen, and sounds like it: a crack, a sawtooth boom
+ // falling away, a sub that rolls on for a second and a half, a long rumble
+ // and a bright shimmer riding the tail.
+ nuke(){noise(0.08,0.45,0,true);tone(180,28,0.9,"sawtooth",0.3);tone(64,20,1.5,"sine",0.58);noise(1.1,0.3,0.05);tone(2600,500,0.7,"sine",0.07,0.08);tone(120,40,0.5,"triangle",0.18,0.12)},
  hurt(){tone(180,80,0.25,"sawtooth",0.25);noise(0.12,0.25)},shieldhit(){tone(900,400,0.08,"sine",0.15)},
  // a riser into a three-note fanfare with a chord under the last one
  level(){tone(220,880,0.32,"sine",0.12);[659,784,1047].forEach((f,i)=>tone(f,f,0.14,"square",0.13,0.3+i*0.1));stab([523,659,784,1047],0.5,"triangle",0.3,0.6);noise(0.25,0.06,0.6,true)},
@@ -1010,7 +1017,7 @@ function updateRun(dt){
   if(dist(p.x,p.y,G.px,G.py)<p.r+18){p.life=0;
    if(p.k==="repair"){G.hp=Math.min(G.maxhp,G.hp+40);SFX.pick();G.txt.push({x:G.px,y:G.py-30,s:"+40",life:0.8,col:"#80ff90"})}
    else if(p.k==="magnet"){G.magnetT=3;SFX.magnet();announce("TRACTOR BEAM!")}
-   else if(p.k==="nuke"){SFX.boom();shake=1.2;flash=0.5;for(const e of G.en){if(!e.boss)damage(e,999);else damage(e,150)}}
+   else if(p.k==="nuke"){SFX.nuke();shake=1.6;flash=0.7;for(const e of G.en){if(!e.boss)damage(e,999);else damage(e,150)}}
    else if(p.k==="chest"){SFX.chest();openChest()}}}
  G.pk=G.pk.filter(p=>p.life>0);
  for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0);
