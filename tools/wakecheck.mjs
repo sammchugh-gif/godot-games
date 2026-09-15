@@ -33,7 +33,8 @@ const GAMES = {
   'slime-storm':    { start: "window.SS.start('dylan')", music: true },
   'dungeon-dash':   { start: "window.DD.start('dylan')", music: true },
   'turbo-karts':    { start: "window.TK.start(0,'dylan');window.TK.go()", music: true },
-  'marble-mayhem':  {}, 'riddle-rumble': {}, 'super-strikers': {}, 'tank-tussle': {},
+  'marble-mayhem':  { music: true },
+  'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];
 const slugs = only ? [only] : Object.keys(GAMES);

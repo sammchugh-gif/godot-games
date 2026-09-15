@@ -34,10 +34,10 @@ function safeRead(){const d=window.__safeProbe;if(!d)return;const c=getComputedS
 // the shelf's exit button owns the top-left corner of every game
 const EXITB=46;
 const HELP1="Planks, curves, bumpers, trampolines, fans, spinners, cannons and portals.";
-const HELP2="Tap a piece to select it, then use \u21ba \u21bb to turn it. Drag it off the board to remove it.";
+const HELP2="Tap a piece to select it, then tap or hold \u21ba \u21bb to turn it. Drag it off the board to remove it.";
 // the landscape hint line needs a strip of its own, or it lands on the goal cup
 const HINTH=26;
-function topH(){return SAFE.t+(W<620?94:56)}
+function topH(){return SAFE.t+(W<620?116:72)}
 function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;safeRead();const top=topH();
  if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w-SAFE.r;tray.y=top;tray.h=H-top-SAFE.b;const aw=W-tray.w-16-SAFE.l-SAFE.r,ah=H-top-8-SAFE.b-HINTH;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
  else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h-SAFE.b;tray.w=W;const aw=W-16-SAFE.l-SAFE.r,ah=H-top-tray.h-8-SAFE.b;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
@@ -52,18 +52,36 @@ window.addEventListener("resize",layout);layout();
 // where there is one, re-anchors to now.
 function audioWake(){audioInit();if(!AC)return;
  if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
- if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{});musicStart()}
 for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
 window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
 window.__audioCtx=()=>AC;
-let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
+let AC=null,master=null,musicOn=store.get("music",true)!==false,musicTimer=null,musicStep=0,musicNext=0;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 let lastPing=0;
 const SFX={click(){tone(1200,900,0.04,"square",0.08)},place(){tone(500,800,0.08,"triangle",0.15)},pick(){tone(700,500,0.06,"triangle",0.1)},
  bounce(sp){const now=performance.now();if(now-lastPing<40)return;lastPing=now;const f=300+Math.min(900,sp*0.8);tone(f,f*0.7,0.06,"sine",Math.min(0.25,0.05+sp/2500))},
  star(){[1047,1319,1568].forEach((f,i)=>tone(f,f,0.1,"triangle",0.18,i*0.07))},goal(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,f,0.16,"square",0.15,i*0.1))},
  lost(){tone(300,120,0.35,"sawtooth",0.15)},cannon(){tone(200,60,0.2,"sawtooth",0.25)},portal(){tone(600,1800,0.2,"sine",0.15)},fan(){},go(){tone(660,990,0.15,"square",0.15)}};
+// ---------------------------------------------------------------- music
+// A gentle loop for a building game: triangle lead over a sine bass, C major
+// at 128 BPM, scheduled a beat ahead the way the other games do it. It
+// starts on the first tap and plays on every screen; the switch on the title
+// screen turns it off and remembers that.
+const LEAD=[72,0,76,0,79,0,76,0, 74,0,77,0,81,0,77,0, 76,0,79,0,84,0,79,0, 81,0,79,0,76,74,72,0,
+            72,0,76,79,0,84,0,79, 74,0,77,81,0,86,0,81, 76,0,81,84,0,88,0,84, 86,0,84,0,83,0,79,0];
+const BASS=[48,0,0,48,0,55,0,0, 50,0,0,50,0,57,0,0, 52,0,0,52,0,59,0,0, 53,0,0,53,55,0,55,0,
+            48,0,0,48,0,55,0,0, 50,0,0,50,0,57,0,0, 45,0,0,45,0,52,0,0, 55,0,0,55,0,50,0,55];
+function musicTick(){if(!AC||!musicOn||AC.state!=="running")return;const spb=60/128/2;
+ while(musicNext<AC.currentTime+0.25){const i=musicStep%LEAD.length,t=musicNext,l=LEAD[i],b=BASS[i];
+  if(l){const f=440*Math.pow(2,(l-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*0.95);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb)}
+  if(b){const f=440*Math.pow(2,(b-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*1.8);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb*1.9)}
+  if(i%4===0){const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(i%8?1400:900,t);g.gain.setValueAtTime(0.03,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.03);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.04)}
+  musicStep++;musicNext+=spb}}
+function musicStart(){if(!AC||musicTimer||!musicOn)return;musicNext=AC.currentTime+0.1;musicStep=0;musicTimer=setInterval(musicTick,100)}
+function musicStop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+function musicToggle(){musicOn=!musicOn;store.set("music",musicOn);if(musicOn){audioInit();musicStart()}else musicStop()}
 // ---------------------------------------------------------------- pieces
 const PIECES={
  plank:{name:"Plank",col:"#c98a4b",len:140,e:0.35},
@@ -104,7 +122,10 @@ const LEVELS=[
  {name:"Grand Finale",spawn:[100, 60],goal:[860, 600],tray:{plank: 2, curve: 1, bumper: 1, fan: 1, cannon: 1},fixed:[P("plank",480,300,0),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[300, 200], [700, 200], [480, 480]],sol:[{t:"plank",x:287,y:69,a:0.26},{t:"plank",x:164,y:557,a:-1.31},{t:"curve",x:444,y:279,a:0.79},{t:"bumper",x:816,y:153,a:0},{t:"fan",x:273,y:573,a:-1.57},{t:"cannon",x:120,y:138,a:0.26}]},
 ];
 // ---------------------------------------------------------------- state
-let hintOn=false,misses=0,trayDraw=false;
+let hintOn=false,misses=0,trayDraw=false,clearArm=0,bestFlash=0,held=null;
+// the sandbox keeps score: the longest a marble has stayed moving, per slot
+const runBest=store.get("runbest",[0,0,0]);
+const MCOLS=["#ff5a5a","#5ad0ff","#7fff6a","#ffd05a","#d07aff"],MAXM=30,RAINX=[110,290];
 let scene="title",mode="puzzle",levelIdx=0,pieces=[],marbles=[],running=false,simT=0,won=false,lost=0,starsGot=[],trayCount={},sel=null,drag=null,parts=[],trail=[],resultT=0,cannonCd=new Map(),portalCd=new Map(),msg="",msgT=0,frameT=0,tPrev=0;
 const progress=store.get("progress",{}),sandbox=store.get("sandbox",{slots:[null,null,null]});let sandboxSlot=0;
 let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
@@ -133,13 +154,25 @@ function wrapFit(s,x,y,size,color,maxw,maxLines,lineH,align){
 function text(s,x,y,size,color,align,noStroke){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";if(!noStroke){cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.6)";cx.lineJoin="round";cx.strokeText(s,x,y)}cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
 function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,12);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=2.5;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();text(b.label,b.x+b.w/2,b.y+b.h/2,o.size||20,o.color||"#fff","center",true)}}
 function level(){return LEVELS[levelIdx]}
-function loadLevel(i){levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
-function loadSandbox(slot){slot=(slot|0)||0;mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
+// One piece of the answer per three misses, in the order the search wrote
+// them. The whole layout used to appear at once, which finishes the level
+// for the child instead of getting them unstuck.
+function hintPieces(){const s=level().sol||[];return s.slice(0,Math.min(s.length,Math.floor(misses/3)))}
+function loadLevel(i){resetRun();levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
+function loadSandbox(slot){slot=(slot|0)||0;resetRun();mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
 function saveSandbox(){if(mode!=="sandbox")return;sandbox.slots[sandboxSlot]=pieces.filter(p=>!p.fixed).map(p=>({t:p.t,x:p.x,y:p.y,a:p.a,link:p.link}));store.set("sandbox",sandbox)}
-function resetRun(){running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
+function resetRun(){if(mode==="sandbox")for(const m of marbles)endRun(m);running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
 function spawnMarbles(){marbles=[];if(mode==="puzzle"){const L=level();marbles.push({x:L.spawn[0],y:L.spawn[1],vx:0,vy:0,r:12,col:"#ff5a5a",alive:true})}
- else{const cols=["#ff5a5a","#5ad0ff","#7fff6a","#ffd05a","#d07aff"];for(let i=0;i<5;i++)marbles.push({x:120+i*40,y:40,vx:0,vy:0,r:12,col:cols[i],alive:true,delay:i*0.5})}}
+ else{for(let i=0;i<5;i++)marbles.push({x:120+i*40,y:40,vx:0,vy:0,r:12,col:MCOLS[i],alive:true,delay:i*0.5,run:0,still:0})}}
 function go(){if(running){resetRun();return}running=true;simT=0;won=false;lost=0;spawnMarbles();SFX.go();sel=null}
+// Marble rain: hold the button and marbles pour from the hopper, up to a
+// board's worth. It is the most repeated thing anyone does with a marble toy.
+function rain(){if(mode!=="sandbox")return;if(!running)go();if(marbles.filter(m=>m.alive).length>=MAXM)return;
+ marbles.push({x:rnd(RAINX[0],RAINX[1]),y:-14,vx:rnd(-40,40),vy:0,r:12,col:MCOLS[marbles.length%MCOLS.length],alive:true,run:0,still:0});SFX.pick()}
+// A run is how long a marble keeps moving. It ends when the marble drops off
+// the board or settles for two seconds; a marble parked in a bowl for ever
+// would otherwise hold the record.
+function endRun(m){if(m.run>runBest[sandboxSlot]+0.05){runBest[sandboxSlot]=Math.round(m.run*10)/10;store.set("runbest",runBest);if(m.run>=2){bestFlash=2;SFX.star()}}m.run=0;m.still=0}
 // ---------------------------------------------------------------- physics
 function cupSegs(g){const e=0.25,th=4;return[{ax:g[0]-44,ay:g[1]-36,bx:g[0]-30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]+44,ay:g[1]-36,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]-30,ay:g[1]+20,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}}]}
 function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segsOf(p,simT));if(mode==="puzzle")segs.push(...cupSegs(level().goal));
@@ -168,8 +201,9 @@ function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segs
    if(!won&&Math.abs(m.x-L.goal[0])<30&&m.y>L.goal[1]-14&&m.y<L.goal[1]+24){winLevel(m)}}
   // walls
   if(m.x<m.r){m.x=m.r;m.vx=Math.abs(m.vx)*0.5}if(m.x>BW-m.r){m.x=BW-m.r;m.vx=-Math.abs(m.vx)*0.5}if(m.y<m.r){m.y=m.r;m.vy=Math.abs(m.vy)*0.5}
-  if(m.y>BH+40){m.alive=false;if(mode==="puzzle"&&!won){lost=1;resultT=1.2;misses++;SFX.lost()}else if(mode==="sandbox"){m.x=120+Math.random()*700;m.y=-20;m.vx=0;m.vy=0;m.alive=true}}
+  if(m.y>BH+40){m.alive=false;if(mode==="puzzle"&&!won){lost=1;resultT=1.2;misses++;SFX.lost()}else if(mode==="sandbox"){endRun(m);m.x=120+Math.random()*700;m.y=-20;m.vx=0;m.vy=0;m.alive=true}}
   const sp=Math.hypot(m.vx,m.vy);if(sp>1600){m.vx*=1600/sp;m.vy*=1600/sp}
+  if(mode==="sandbox"&&m.alive){if(sp>25){m.run=(m.run||0)+dt;m.still=0}else if((m.still=(m.still||0)+dt)>2)endRun(m)}
   if(Math.floor(simT*60)%2===0)trail.push({x:m.x,y:m.y,life:0.5,col:m.col})}
  // marble vs marble
  for(let i=0;i<marbles.length;i++)for(let j=i+1;j<marbles.length;j++){const a=marbles[i],b=marbles[j];if(!a.alive||!b.alive)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||0.001,R=a.r+b.r;if(d<R){const nx=dx/d,ny=dy/d,push=(R-d)/2;a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny;if(va>vb){const dv=(va-vb)*0.9;a.vx-=nx*dv;a.vy-=ny*dv;b.vx+=nx*dv;b.vy+=ny*dv}}}
@@ -186,9 +220,15 @@ function trayItems(){const items=[];const keys=ORDER.filter(k=>mode==="sandbox"|
  if(tray.vertical){const cell=Math.min(78,(tray.h-20)/n);keys.forEach((k,i)=>items.push({k,cw:tray.w-14,x:tray.x+tray.w/2,y:tray.y+16+cell*i+cell/2,sz:Math.min(cell-8,tray.w-30)}))}
  else{const cell=Math.min(110,(tray.w-20)/n);keys.forEach((k,i)=>items.push({k,cw:cell-3,x:tray.x+10+cell*i+cell/2+(tray.w-20-cell*n)/2,y:tray.y+tray.h/2,sz:Math.min(cell-8,tray.h-30)}))}
  return items}
-function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
+// A finger is not a point. A tap up to SLOP px outside a button still counts,
+// and goes to the nearest one, so the gap between two controls is not a hole.
+const SLOP=10;
+function btnAt(p){let best=null,bd=1e9;for(const b of buttons){const dx=Math.max(b.x-p.x,0,p.x-b.x-b.w),dy=Math.max(b.y-p.y,0,p.y-b.y-b.h);const d=Math.hypot(dx,dy);if(d<=SLOP&&d<bd){bd=d;best=b}}return best}
+function uiTap(p){const b=btnAt(p);if(!b)return false;SFX.click();b.cb();if(b.opt.repeat)held={b,next:performance.now()+(b.opt.first==null?400:b.opt.first)};return true}
 let pointerId=null;
-cv.addEventListener("pointerdown",e=>{audioInit();if(pointerId!==null)return;const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;if(scene!=="play")return;pointerId=e.pointerId;
+// Buttons come before the one-finger gate: a thumb resting on the tray used
+// to count as a drag and every tap on GO after it was thrown away.
+cv.addEventListener("pointerdown",e=>{audioInit();const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;if(pointerId!==null)return;if(scene!=="play")return;pointerId=e.pointerId;
  for(const it of trayItems()){if(dist(p.x,p.y,it.x,it.y)<it.sz/2+8&&(trayCount[it.k]||0)>0){const bp=toBoard(p.x,p.y);const np={t:it.k,x:bp.x,y:bp.y,a:0,fixed:false,fromTray:true};if(it.k==="portal"){const n=pieces.filter(q=>q.t==="portal").length;np.link=Math.floor(n/2);np.half=n%2}drag={p:np,ox:0,oy:0};SFX.pick();sel=null;return}}
  const bp=toBoard(p.x,p.y);const hit=pieceAt(bp);if(hit&&!running){drag={p:hit,ox:hit.x-bp.x,oy:hit.y-bp.y};sel=hit;SFX.pick()}else{sel=null;pointerId=null}});
 cv.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId||!drag)return;const bp=toBoard(e.clientX,e.clientY);drag.p.x=bp.x+drag.ox;drag.p.y=bp.y+drag.oy;drag.screen={x:e.clientX,y:e.clientY}});
@@ -198,6 +238,7 @@ function pointerUp(e){if(e.pointerId!==pointerId)return;pointerId=null;if(!drag)
   }else{if(!inBoard(bp)){removePiece(p);sel=null}else{p.x=clamp(p.x,10,BW-10);p.y=clamp(p.y,10,BH-10);SFX.place()}}
  drag=null;saveSandbox()}
 cv.addEventListener("pointerup",pointerUp);cv.addEventListener("pointercancel",pointerUp);
+for(const ev of ["pointerup","pointercancel"])window.addEventListener(ev,()=>{held=null});
 function removePiece(p){if(p.t==="portal"){pieces=pieces.filter(q=>!(q.t==="portal"&&q.link===p.link));trayCount.portal=(trayCount.portal||0)+1;return}pieces=pieces.filter(q=>q!==p);trayCount[p.t]=(trayCount[p.t]||0)+1}
 window.addEventListener("keydown",e=>{if(scene==="play"){if(e.code==="Space")go();if(e.code==="KeyR"&&sel)sel.a+=Math.PI/12;if(e.code==="KeyQ"&&sel)sel.a-=Math.PI/12;if((e.code==="Delete"||e.code==="Backspace")&&sel){removePiece(sel);sel=null}if(e.code==="Escape")scene=mode==="puzzle"?"levels":"title"}});
 // ---------------------------------------------------------------- drawing
@@ -219,8 +260,12 @@ function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,bo
   // goal cup
   const g=L.goal;cx.strokeStyle="#8dff5a";cx.lineWidth=9;cx.lineCap="round";cx.lineJoin="round";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.stroke();cx.fillStyle="rgba(141,255,90,0.18)";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.closePath();cx.fill();text("GOAL",g[0],g[1]-2,14,"#8dff5a");
   L.stars.forEach((s,i)=>{if(starsGot[i])return;cx.save();cx.translate(s[0],s[1]);cx.rotate(frameT*2);cx.fillStyle="#ffe060";cx.beginPath();for(let k=0;k<10;k++){const a=k/10*TAU-Math.PI/2,r=k%2?7:16;cx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}cx.closePath();cx.fill();cx.restore()})}
- else{for(let i=0;i<5;i++){cx.fillStyle="rgba(90,208,255,0.3)";cx.fillRect(100+i*40,0,40,12)}}
- if(hintOn&&mode==="puzzle"&&level().sol&&!running){for(const p of level().sol){drawPiece(p,2);cx.strokeStyle="rgba(255,255,255,0.5)";cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,p.t==="curve"?100:p.t==="plank"?80:p.t==="spinner"?68:p.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}}
+ else{for(let i=0;i<5;i++){cx.fillStyle="rgba(90,208,255,0.3)";cx.fillRect(100+i*40,0,40,12)}
+  const cur=marbles.reduce((a,m)=>m.alive&&m.run>a?m.run:a,0);
+  text("RUN "+cur.toFixed(1)+"s",BW-16,24,18,"#cfd8e8","right");
+  text("BEST "+(runBest[sandboxSlot]||0).toFixed(1)+"s",BW-16,50,18,bestFlash>0?"#ffe060":"#8dff5a","right");
+  if(bestFlash>0)text("NEW BEST!",BW/2,70,40+Math.sin(frameT*12)*3,"#ffe060")}
+ if(hintOn&&mode==="puzzle"&&level().sol&&!running){for(const p of hintPieces()){drawPiece(p,2);cx.strokeStyle="rgba(255,255,255,0.5)";cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,p.t==="curve"?100:p.t==="plank"?80:p.t==="spinner"?68:p.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}}
  for(const p of pieces)drawPiece(p,false);
  // links between portals
  const portals=pieces.filter(p=>p.t==="portal");for(const p of portals){if(p.half)continue;const o=portals.find(q=>q!==p&&q.link===p.link);if(o){cx.strokeStyle="rgba(255,255,255,0.15)";cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(o.x,o.y);cx.stroke();cx.setLineDash([])}}
@@ -239,34 +284,42 @@ function drawTop(){
  cx.fillStyle="rgba(255,255,255,0.10)";cx.fillRect(0,th-1,W,1);
  buttons=[];
  const padL=8+SAFE.l,padR=8+SAFE.r;
- const bh=Math.min(40,th-SAFE.t-(two?52:16));
- const by=two?SAFE.t+48:SAFE.t+8;
+ const bh=Math.min(56,th-SAFE.t-(two?60:16));
+ const by=two?SAFE.t+52:SAFE.t+8;
  const rowL=two?padL:padL+EXITB,rowR=W-padR;
- const rot=!!sel&&!running;
- const showHint=mode==="puzzle"&&misses>=3&&level().sol&&!running;
- // size the controls from the width the row actually has
- const items=[["go",82],["rot",rot?132:0],["hint",showHint?68:0],["reset",72],["menu",74]].filter(i=>i[1]>0);
- const gap=6,want=items.reduce((a,i)=>a+i[1],0)+gap*(items.length-1);
- const k=Math.min(1,(rowR-rowL)/want),rowW=want*k;
- let x=two?rowL+(rowR-rowL-rowW)/2:rowR-rowW;
- const fs=v=>Math.max(11,Math.round(v*k));
- for(const [id,w0] of items){
-  const w=w0*k;
-  if(id==="go")btn(x,by,w,bh,running?"■ STOP":"▶ GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:fs(20)});
-  else if(id==="rot"){const u=(w-2*gap*k)/3;
-   btn(x,by,u,bh,"↺",()=>{sel.a-=Math.PI/12},{size:fs(22)});
-   btn(x+u+gap*k,by,u,bh,"↻",()=>{sel.a+=Math.PI/12},{size:fs(22)});
-   btn(x+2*(u+gap*k),by,u,bh,"✕",()=>{removePiece(sel);sel=null;saveSandbox()},{size:fs(18),fill:"#733"})}
-  else if(id==="hint")btn(x,by,w,bh,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:fs(14),fill:hintOn?"#555":"#8a6a2a"});
-  else if(id==="reset")btn(x,by,w,bh,"RESET",()=>{if(mode==="puzzle")loadLevel(levelIdx);else{pieces=[];resetRun();saveSandbox()}},{size:fs(14)});
-  else btn(x,by,w,bh,"MENU",()=>{scene=mode==="puzzle"?"levels":"title"},{size:fs(14)});
-  x+=w+gap*k;
- }
+ const sand=mode==="sandbox",canRot=!!sel&&!running;
+ const showHint=!sand&&misses>=3&&level().sol&&!running;
+ // Every slot is laid out whether or not its button is showing, so GO and the
+ // turn buttons never move: a child aims for where a button was a moment ago,
+ // and the row used to reflow under the finger whenever a piece was picked
+ // up or put down. The turn buttons sit dim until a piece is selected.
+ const gap=6,sum=a=>a.reduce((s,i)=>s+i[1],0)+gap*(a.length-1);
+ const main=[["go",120],["rot",184],[sand?"rain":"hint",76]];
+ const side=sand?[["reset",72],["clear",72],["menu",72]]:[["reset",72],["menu",72]];
+ const dim={fill:"rgba(255,255,255,0.04)",stroke:"rgba(255,255,255,0.18)",color:"rgba(255,255,255,0.3)"};
+ const draw=(items,x,k,y,h)=>{const fs=v=>Math.max(11,Math.round(v*k));
+  for(const [id,w0] of items){const w=w0*k;
+   if(id==="go")btn(x,y,w,h,running?"\u25a0 STOP":"\u25b6 GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:fs(22)});
+   else if(id==="rot"){const g=8*k,u=(w-2*g)/3;
+    btn(x,y,u,h,"\u21ba",()=>{if(sel)sel.a-=Math.PI/12},Object.assign({size:fs(28),repeat:true},canRot?{}:dim));
+    btn(x+u+g,y,u,h,"\u21bb",()=>{if(sel)sel.a+=Math.PI/12},Object.assign({size:fs(28),repeat:true},canRot?{}:dim));
+    btn(x+2*(u+g),y,u,h,"\u2715",()=>{if(sel){removePiece(sel);sel=null;saveSandbox()}},Object.assign({size:fs(20),fill:"#733"},canRot?{}:dim))}
+   else if(id==="hint"){if(showHint)btn(x,y,w,h,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:fs(15),fill:hintOn?"#555":"#8a6a2a"})}
+   else if(id==="rain")btn(x,y,w,h,"RAIN",()=>rain(),{size:fs(15),fill:"#2a4a8a",repeat:true,first:120,every:120});
+   else if(id==="reset")btn(x,y,w,h,"RESET",()=>{if(sand)resetRun();else loadLevel(levelIdx)},{size:fs(14)});
+   else if(id==="clear")btn(x,y,w,h,clearArm>0?"SURE?":"CLEAR",()=>{if(clearArm>0){pieces=[];resetRun();saveSandbox();clearArm=0}else clearArm=2.5},{size:fs(14),fill:clearArm>0?"#a33":"rgba(255,255,255,0.12)"});
+   else btn(x,y,w,h,"MENU",()=>{scene=sand?"title":"levels"},{size:fs(14)});
+   x+=w+gap*k}};
+ let tR;
+ if(two){
+  const w2=sum(main),k2=Math.min(1,(rowR-rowL)/w2);draw(main,rowL+(rowR-rowL-w2*k2)/2,k2,by,bh);
+  const w1=sum(side),k1=Math.min(1,(rowR-rowL-EXITB-40)/w1);draw(side,rowR-w1*k1,k1,SAFE.t+6,40);tR=rowR-w1*k1-10}
+ else{const all=main.concat(side),wA=sum(all),k=Math.min(1,(rowR-rowL)/wA);draw(all,rowR-wA*k,k,by,bh);tR=rowR-wA*k-12}
  // the title gets whatever is left, and always starts clear of the exit button
- const tL=padL+EXITB,tR=two?rowR:Math.max(tL+40,(two?rowR:rowR-rowW)-12);
- const ty=SAFE.t+(two?24:8+bh/2);
- const title=mode==="puzzle"?(levelIdx+1)+". "+level().name:"SANDBOX  slot "+(sandboxSlot+1);
- const star=mode==="puzzle"?"\u2605 "+starsGot.filter(Boolean).length+"/"+level().stars.length:"";
+ const tL=padL+EXITB;tR=Math.max(tL+40,tR);
+ const ty=SAFE.t+(two?26:8+bh/2);
+ const title=sand?"SANDBOX "+(sandboxSlot+1):(levelIdx+1)+". "+level().name;
+ const star=sand?"":"\u2605 "+starsGot.filter(Boolean).length+"/"+level().stars.length;
  const sw=star?textW(star,16)+14:0;
  const band=tR-tL;
  if(band>60)textFit(title,tL,ty,18,"#fff",Math.max(30,band-sw),"left");
@@ -285,10 +338,11 @@ function drawPlay(){drawBoard();drawTray();drawTop();
  const hintX=SAFE.l+(W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0))/2;
  const hintY=H-SAFE.b-(tray.vertical?HINTH/2:tray.h+20);
  const hintW=W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0)-20;
- if(hintOn&&!running&&!won&&mode==="puzzle"){textFit("Hint: match the faded shapes (rotate with \u21ba \u21bb), then press GO",hintX,hintY,15,"#ffd080",hintW,"center",false,10)}
+ if(hintOn&&!running&&!won&&mode==="puzzle"){const n=hintPieces().length,m=level().sol.length;textFit("Hint "+n+"/"+m+": match the faded shape"+(n>1?"s":"")+", then GO."+(n<m?" Miss 3 more for the next.":""),hintX,hintY,15,"#ffd080",hintW,"center",false,10)}
  else if(!running&&!won&&mode==="puzzle"&&pieces.filter(p=>!p.fixed).length===0){textFit("Drag pieces from the tray, then press GO",hintX,hintY,15,"#cfd8e8",hintW,"center",false,10)}}
 function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<30;i++){const x=(i*173+frameT*40*(1+i%3))%(W+100)-50,y=(i*97)%H;cx.fillStyle=["#ff5a5a","#5ad0ff","#ffd05a","#7fff6a"][i%4];cx.beginPath();cx.arc(x,y,8+i%5*3,0,TAU);cx.fill()}
  buttons=[];
+ btn(W-8-SAFE.r-104,SAFE.t+6,104,44,musicOn?"\u266a ON":"\u266a OFF",()=>musicToggle(),{size:18,fill:musicOn?"#2a4a8a":"rgba(255,255,255,0.12)"});
  const wide=W-32-SAFE.l-SAFE.r,cxm=SAFE.l+(W-SAFE.l-SAFE.r)/2;
  const gap=Math.max(6,Math.min(14,H*0.018));
  const bh=Math.min(64,H*0.11),sh=Math.min(60,H*0.095);
@@ -298,7 +352,7 @@ function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<3
  const helpH=()=>helpN?(helpLines(HELP1)+(helpN>1?helpLines(HELP2):0))*18+6:0;
  let sy=bot-helpH()-(helpN?gap:0)-sh;
  let py=sy-gap-bh;
- const top=SAFE.t+10+(W<620?EXITB:0);
+ const top=SAFE.t+10+(W<620||H<520?EXITB:0);
  // headline and strapline take what is left above the buttons
  let lz=Math.min(80,W/9);
  while(lz>18&&textW("MARBLE MAYHEM",lz)>wide)lz-=2;
@@ -350,11 +404,12 @@ function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
  const bw=Math.min(180,W-40-SAFE.l-SAFE.r);
  btn(SAFE.l+(W-SAFE.l-SAFE.r)/2-bw/2,H-SAFE.b-12-bkh,bw,bkh,"BACK",()=>{scene="title"},{size:Math.min(18,bkh*0.42)});
  drawButtons()}
-function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;
+ if(held&&performance.now()>=held.next){held.b.cb();held.next=performance.now()+(held.b.opt.every||120)}if(clearArm>0)clearArm-=dt;if(bestFlash>0)bestFlash-=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
  if(scene==="play"&&running&&!won){const n=4;for(let i=0;i<n;i++)step(dt/n)}else if(scene==="play"){for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0)}
  if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="play")drawPlay();
 }
 requestAnimationFrame(frame);
 function simulate(pcs,maxT){const keep=pieces;pieces=pcs;resetRun();running=true;spawnMarbles();const dt=1/240;let t=0;const traj=[];let k=0;while(t<(maxT||12)&&!won&&!lost){step(dt);t+=dt;if(++k%48===0&&marbles[0])traj.push([Math.round(marbles[0].x),Math.round(marbles[0].y)])}const res={won,lost,stars:starsGot.filter(Boolean).length,t:+t.toFixed(2),traj};pieces=keep;resetRun();return res}
-window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};
+window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},set hintOn(v){hintOn=v},get sel(){return sel},set sel(v){sel=v},buttons:()=>buttons,hintPieces,rain,runBest,music:()=>!!musicTimer,get musicOn(){return musicOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};
 </script></body></html>
