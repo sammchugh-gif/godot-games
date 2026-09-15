@@ -39,8 +39,8 @@ sector again" (#81), with none of the three features.
 
 ### Weapon evolutions (`evolve`)
 
-A weapon at full rank, held with the upgrade it pairs with, evolves at the
-next chest (every boss drops one). It keeps its slot and gains a new name,
+A weapon at full rank, held with the upgrade it pairs with at rank two,
+evolves at the next chest (every boss drops one). It keeps its slot and gains a new name,
 colour and a good deal more of what it did. The level-up card for a
 weapon's last rank names the upgrade it needs; an upgrade's card names the
 weapon it would evolve. When the pair is complete the game says so.
@@ -160,3 +160,50 @@ cheap. The counts reset at every gate.
 
 A drop that lands on a spent kind drops nothing. The numbers are
 `RATION` in the game file and the chest cap in `killEnemy`.
+
+## Balance, and how it is measured
+
+`tools/playbot.mjs` plays whole runs with a plain bot (backs away from
+anything close, sidesteps bolts, flies to the gate, collects gems and
+pickups, keeps a boss at range, takes a card at every level, weapons
+first) and reports the shape of each: level and ranks at every gate,
+evolutions, hull lost, boss fight length, how it ended. The targets the
+game is tuned to, and where it stood after the September pass:
+
+| difficulty | target                    | measured (bot)                          |
+|------------|---------------------------|-----------------------------------------|
+| easy       | won about half the time   | 6 of 8 won; deaths in sectors 5 and 6   |
+| medium     | won one run in five       | 2 of 8 won; deaths in sectors 1 to 5    |
+| hard       | rarely won                | 0 of 6; every run ends at the sector 2 Kraken |
+
+Levels at each gate on easy: 8 to 12, 13 to 19, 16 to 27, 20 to 32,
+23 to 36. First evolution in sector 3 or 4. Hull lost per sector 40 to
+70% of the pool, so every sector costs something and none is a wall.
+Endless reaches sector 8 to 10 by minute 40.
+
+What the pass changed, and why:
+
+- XP per level is 2.8x the base curve from level six (was 1.2x). The
+  build used to be full by sector 2; it fills by sector 5.
+- The swarm scales off the clock, not the player's ranks. Scaling off
+  ranks made levelling up the thing that killed you: with the build a
+  run actually holds, a scout carried 32x its hull by sector 4 and 94x
+  by sector 6. Rank terms are a fraction of what they were.
+- The spawn rate has a ceiling of nine a second. It reached 27 by minute
+  thirty and pinned the field at the 240 cap, which was the wall and the
+  source of the turret bolts that ended every run.
+- Bosses always end: the rank coefficient on boss hull is 0.05 (was
+  0.085), hard's multiplier applies at its square root, the second lap
+  is 1.4x (was 1.6x), and a boss alive for 150 seconds can no longer
+  hold the gate.
+- The enemy cap holds for swarm rings and boss hatches too.
+- Turrets: bolts 200 px/s (was 240), one every 3 s (was 2.2), a smaller
+  share of the swarm.
+- Medium is 1.3x hull and 1.2x rate (was 1.5 and 1.3); hard 1.7x, 1.45x
+  and 1.45x damage (was 2.2, 1.65, 1.6).
+- An evolution needs its partner upgrade at rank two, so the guaranteed
+  sector 1 boss chest cannot evolve a weapon in the first sector.
+
+To re-measure after any change:
+
+    PLAYWRIGHT=... node tools/playbot.mjs --dif easy --mode campaign --runs 4

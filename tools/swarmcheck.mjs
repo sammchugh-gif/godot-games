@@ -316,7 +316,8 @@ const EVO = await pg.evaluate(`(() => {
   S.fx = false; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.secT = 10;
   G.weapons = { laser: 6 }; G.passives = {};
   out.halfway = S.evolvable().length;                    /* max rank, no partner */
-  G.passives.haste = 1; out.ready = S.evolvable();       /* both halves */
+  G.passives.haste = 1; out.halfway2 = S.evolvable().length;   /* partner at rank one: not yet */
+  G.passives.haste = 2; out.ready = S.evolvable();       /* both halves */
   let r = ring(); S.sim(6); out.plain = Math.round(dealt(r));
   S.openChest(); out.evolved = !!G.evo.laser; out.rank = G.weapons.laser;
   out.offered = S.options().some(c => c.k === 'laser');
@@ -328,8 +329,8 @@ const EVO = await pg.evaluate(`(() => {
   S.FEATURES.evolve = false; G.evo = {}; out.off = S.evolvable().length; S.FEATURES.evolve = true;
   S.scene = 'title'; return out;
 })()`);
-check('a max weapon needs its partner to evolve', EVO.halfway === 0 && EVO.ready.length === 1 && EVO.ready[0] === 'laser',
-  `laser at 6 alone: nothing; with Rapid Fire: ${EVO.ready.join()}`);
+check('a max weapon needs its partner at rank two', EVO.halfway === 0 && EVO.halfway2 === 0 && EVO.ready.length === 1 && EVO.ready[0] === 'laser',
+  `laser at 6 alone: nothing; Rapid Fire 1: nothing; Rapid Fire 2: ${EVO.ready.join()}`);
 check('the next chest evolves it', EVO.evolved && EVO.rank === 6 && !EVO.offered,
   `Prism Beam, rank stays 6, no longer offered as a card`);
 check('and it hits a good deal harder', EVO.strong > EVO.plain * 1.6,
