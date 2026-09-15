@@ -138,8 +138,10 @@ marks out of five, and the run's numbers come from them: speed 90% to
 
 A ? beside the mode row opens a WAYS TO PLAY screen that explains the
 three modes, today's twist, and the marks.
-Ships not yet earned show only as a dark silhouette with a question mark,
-on the title and in the shop, so what they look like is part of the prize.
+Ships not yet earned show as one generic grey hull with a question mark,
+named ???, with ???? in place of their marks and hull, on the title and in
+the shop. Only the price or the unlock condition shows, so what a ship is
+stays part of the prize.
 
 Ship ids are unchanged from the original three, so old records still
 attach to the right ship after the renaming.
