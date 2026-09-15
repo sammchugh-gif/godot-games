@@ -67,7 +67,10 @@ const PLAY = (dif, mode, twist, maxmin, policy, seed) => `(() => {
   const bot = () => {
     let fx = 0, fy = 0, threat = false;
     for (const e of G.en) { if (e.flee) continue; const dx = G.px - e.x, dy = G.py - e.y, d = Math.hypot(dx, dy) || 1; if (d < (e.boss ? 300 : 150) + e.r) { threat = true; fx += dx / d / d * 220; fy += dy / d / d * 220; } }
-    for (const b of G.bul) { if (!b.enemy) continue; const dx = G.px - b.x, dy = G.py - b.y, d = Math.hypot(dx, dy) || 1; if (d < 90) { threat = true; fx += dx / d / d * 120; fy += dy / d / d * 120; } }
+    /* a bolt that will pass close within a second and a half: step sideways off its line */
+    for (const b of G.bul) { if (!b.enemy) continue; const rx = G.px - b.x, ry = G.py - b.y, sp = Math.hypot(b.vx, b.vy) || 1, ux = b.vx / sp, uy = b.vy / sp;
+      const along = rx * ux + ry * uy; if (along < 0 || along > sp * 1.5) continue; const off = rx * uy - ry * ux;
+      if (Math.abs(off) < 60) { threat = true; const side = off >= 0 ? 1 : -1; fx += uy * side * 3; fy += -ux * side * 3; } }
     if (!threat) {
       if (G.gate) { fx = G.gate.x - G.px; fy = G.gate.y - G.py; }
       else { let best = null, bd = 600;
