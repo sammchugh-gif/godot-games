@@ -274,13 +274,13 @@ check('the swarm parts for the boss', part.boss && part.after <= 6 && part.later
    Day, and the boss always drops one on top. */
 const CHEST = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
-  const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0;
+  const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0;
     if (mod) G.mod = mod;
     for (let i = 0; i < 60; i++) { const e = S.spawnEnemy('scout', G.px + 400, G.py, true); e.hp = 1; }
-    S.sim(8); const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* long enough to kill them all */
+    S.sim(16); const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* long enough to kill most of them, rocks cleared so none hides */
   out.normal = farm(null); out.treasure = farm(S.DAILY_MODS.find(m => m.id === 'loot'));
   /* and the boss */
-  S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.secChests = 1;
+  S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0; G.secChests = 1;
   const b = S.spawnEnemy('mother', G.px + 300, G.py); b.hp = 1; S.sim(1.5); out.boss = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title';
   return out;
 })()`);
