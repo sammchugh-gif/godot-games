@@ -203,6 +203,28 @@ What the pass changed, and why:
   and 1.45x damage (was 2.2, 1.65, 1.6).
 - An evolution needs its partner upgrade at rank two, so the guaranteed
   sector 1 boss chest cannot evolve a weapon in the first sector.
+- The boss arrives at 185 seconds into a sector (was 165); the gate's
+  earliest is unchanged at 255, so the duel has seventy seconds before
+  the clock can force the gate.
+- When the boss arrives about five in six of the swarm turn and leave
+  (it was all of them); the rest stay and fight, so the field gives way
+  rather than emptying.
+
+## Music
+
+Six sector tracks, a title theme, and a boss piece. The boss piece is a
+phrygian riff at 150 bpm over a bass on every eighth, double kicks and a
+drone, played in whichever key the sector was in, so a boss changes the
+mood and not the song. Once the boss is down the sector's own track comes
+back at ease until the gate: 12% slower, a kick on the one and no snare,
+bass on the downbeats only, the lead softer and longer, the pad up. The
+gate sparkle still rides on top when it opens. Sector 2 ("fleet") was
+rewritten as a dorian piece at 126 bpm with a melody that moves; the old
+one hammered its root over a hat on every sixteenth.
+
+`tools/musiccheck.mjs` renders each track offline and checks the boss
+piece is faster and louder than every sector with its own melody, and the
+calm mix is quieter with fewer notes than the fight.
 
 To re-measure after any change:
 

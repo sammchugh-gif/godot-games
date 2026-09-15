@@ -111,15 +111,23 @@ check('the hangar has a theme of its own', title.rms > 0.015 && title.peak < 0.9
   && T[6].bpm < Math.min(...T.slice(0, 6).map(t => t.bpm)) && !sameKeyAsSector,
   `rms ${title.rms.toFixed(3)}, ${T[6].bpm} bpm, slower than every sector, in a key none of them use`);
 
-/* ----------------------------------------------------- boss and gate layers */
-const calm = tracks[4];
+/* ------------------------------------------- the boss piece and the calm mix
+   A boss gets a piece of its own, in the sector's key: faster than any
+   sector, louder, and a different melody. Once it is down the sector's own
+   track returns at ease - slower, quieter, fewer notes - with the gate
+   sparkle still riding on top when it opens. */
+const plain = tracks[4];
 const boss = await render('music', SECS, { sector: 5, boss: true });
+const calm = await render('music', SECS, { sector: 5, calm: true });
 const gate = await render('music', SECS, { sector: 5, gate: true });
-/* the boss layer is mostly drums and a drone, which do not count as notes -
-   so it is measured as loudness, which is what it is */
-check('a boss changes the music', boss.rms > calm.rms * 1.12,
-  `sector 5: rms ${calm.rms.toFixed(3)} calm, ${boss.rms.toFixed(3)} with a boss on the field`);
-check('an open gate adds to it', gate.events > calm.events,
+const BT = T.find(t => t.name === 'boss');
+console.log(`  sector 5  plain rms ${plain.rms.toFixed(3)} ${plain.events} notes; boss rms ${boss.rms.toFixed(3)} ${boss.events} notes; calm rms ${calm.rms.toFixed(3)} ${calm.events} notes`);
+check('a boss brings its own piece', boss.track === 'boss' && BT && BT.bpm > Math.max(...T.slice(0, 6).map(t => t.bpm))
+  && T.slice(0, 6).every(t => t.lead.join() !== BT.lead.join()) && boss.rms > plain.rms * 1.12 && boss.peak < 0.98,
+  `${boss.track} at ${BT && BT.bpm} bpm, rms ${boss.rms.toFixed(3)} against ${plain.rms.toFixed(3)} for the sector, peak ${boss.peak.toFixed(2)}`);
+check('and the sector comes back calmer once it is down', calm.track === 'moon calm' && calm.rms < plain.rms * 0.9 && calm.events < plain.events * 0.8 && calm.rms > 0.015,
+  `calm rms ${calm.rms.toFixed(3)} with ${calm.events} notes, against ${plain.rms.toFixed(3)} and ${plain.events} in the fight`);
+check('an open gate adds to it', gate.events > plain.events,
   `${gate.events} events with the gate open`);
 
 /* --------------------------------------------------------- the pickup sounds */
@@ -193,7 +201,7 @@ check('a tap wakes the music on a phone', asleep && asleep.state === 'suspended'
          : 'no audio context was made at all');
 
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 160)); }
-console.log(bad ? `\n${bad} checks failed` : '\nsix tracks, a boss layer, and the pickups all have something to say');
+console.log(bad ? `\n${bad} checks failed` : '\nsix tracks, a boss piece, a calm mix, and the pickups all have something to say');
 await browser.close();
 srv.close();
 process.exit(bad ? 1 : 0);

@@ -258,24 +258,29 @@ check('difficulty changes enemies, not pacing', dif.every(d => d === 'hp+rate+dm
 
 /* ----------------------------------------------------- the swarm parts
    Whatever is on the field when a boss arrives turns and leaves, so the
-   duel starts on an open field rather than behind a hundred scouts. */
+   duel starts on an open field rather than behind a hundred scouts -
+   most of it, anyway: about one in six stays, so the field is not wiped. */
 const part = await pg.evaluate(`(() => {
   const S = window.SW; S.fx = false; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0;
-  G.hp = G.maxhp = 1e9; G.secT = 160; G.spawnAcc = -1e9;
+  G.hp = G.maxhp = 1e9; G.secT = 180; G.spawnAcc = -1e9;
   for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; S.spawnEnemy(['scout','swarmer','drifter'][i % 3], G.px + Math.cos(a) * 320, G.py + Math.sin(a) * 320); }
-  const before = G.en.length;
-  S.sim(5.5); const out = { before, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
+  const before = G.en.length; let bossT = null;
+  for (let i = 0; i < 55; i++) { S.sim(0.1); if (G.bossAlive && bossT == null) bossT = +G.secT.toFixed(1); }
+  const out = { before, bossT, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
   S.sim(6); out.later = G.en.filter(e => !e.boss && !e.flee).length; out.straggle = G.en.filter(e => e.flee).length; S.scene = 'title'; return out;
 })()`);
-check('the swarm parts for the boss', part.boss && part.after <= 6 && part.later <= 10 && part.straggle <= 2,
-  `${part.before} on the field at 160s; boss up, ${part.after} still fighting 0.5s in, ${part.later} six seconds later (its own escort) and ${part.straggle} still leaving`);
+check('most of the swarm parts for the boss', part.boss && part.after >= 3 && part.after <= 16 && part.later <= 20 && part.straggle <= 2,
+  `${part.before} on the field at 180s; boss up, ${part.after} of them still fighting 0.5s in (about one in six should), ${part.later} six seconds later (with its escort) and ${part.straggle} still leaving`);
+check('and it parts at 185 seconds, not before', part.bossT != null && part.bossT >= 184 && part.bossT <= 186.2,
+  `the boss arrived at ${part.bossT}s into the sector`);
 
 /* ---------------------------------------------------------- chest ration
    Chests are rationed: one from the elites per sector, three on Treasure
    Day, and the boss always drops one on top. */
 const CHEST = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
-  const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0;
+  /* the ship is held invulnerable: an elite that rams the hull dies on the contact path, which never rolls for a chest, and that made this flaky */
+  const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.inv = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0;
     if (mod) G.mod = mod;
     for (let i = 0; i < 60; i++) { const e = S.spawnEnemy('scout', G.px + 400, G.py, true); e.hp = 1; }
     S.sim(16); const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* long enough to kill most of them, rocks cleared so none hides */
