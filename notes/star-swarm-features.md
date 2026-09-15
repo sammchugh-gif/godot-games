@@ -98,14 +98,26 @@ permanent upgrades, applied to every run from then on:
 
 | upgrade         | levels | each level                       | cost per level          |
 |-----------------|--------|----------------------------------|-------------------------|
-| Reinforced Hull | 5      | +8 max hull                      | 100, 200, 350, 550, 800 |
+| Reinforced Hull | 5      | +8 max hull                      | 200, 400, 700, 1100, 1600 |
 | Shield Bank     | 5      | +4 max shield                    | same                    |
 | Weapon Tuning   | 5      | +4% damage                       | same                    |
-| Engine Trim     | 3      | +3% speed                        | 100, 200, 350           |
-| Gem Polish      | 3      | +8% XP from gems                 | 100, 200, 350           |
-| Head Start      | 1      | every run starts at weapon rank 2| 600                     |
-| Escape Pod      | 1      | once a run, survive a killing blow| 1500                   |
+| Engine Trim     | 3      | +3% speed                        | 200, 400, 700           |
+| Gem Polish      | 3      | +8% XP from gems                 | 200, 400, 700           |
+| Head Start      | 1      | every run starts at weapon rank 2| 1200                    |
+| Escape Pod      | 1      | once a run, survive a killing blow| 3000                   |
 
 The end screen says how many gems the run banked. With the switch off the
 SHOP button is gone and the perks do nothing; the bank and the purchases
 stay in storage for when it comes back.
+
+The shop's second tab sells three more ships. The first three (Viper,
+Thunderhead, Bastion) are earned by playing as before; these are bought:
+
+| ship     | weapon      | ability                                                          | cost |
+|----------|-------------|------------------------------------------------------------------|------|
+| Wraith   | Missiles    | Phase shift: a hit makes you untouchable for 1.6 s and throws the swarm back | 2500 |
+| Glacier  | Plasma Wave | Frost hull: what touches you is slowed 2.5 s; shields recharge 1.5x | 3500 |
+| Magnetar | Black Hole  | Gravity well: gems from twice as far, 15% more XP                 | 5000 |
+
+Ship ids are unchanged from the original three, so old records still
+attach to the right ship after the renaming.

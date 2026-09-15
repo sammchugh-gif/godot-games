@@ -372,7 +372,7 @@ const SHOPT = await pg.evaluate(`(() => {
   for (let i = 0; i < 30; i++) G.gems.push({ x: G.px + 5, y: G.py, v: 2, big: 1 });
   S.sim(0.5); out.got = G.gemsGot; G.hp = 1; G.sh = 0; G.inv = 0; S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(1); out.died = S.scene; out.bank = S.bank; S.scene = 'title';
   /* buying */
-  S.bank = 90; out.poor = S.buy('hull'); S.bank = 1000; out.bought = S.buy('hull') && S.buy('hull'); out.left = S.bank; out.lv = S.perks.hull;
+  S.bank = 190; out.poor = S.buy('hull'); S.bank = 1000; out.bought = S.buy('hull') && S.buy('hull'); out.left = S.bank; out.lv = S.perks.hull;
   out.cap = (() => { S.bank = 1e6; let n = 0; while (S.buy('engine')) n++; return { n, more: S.buy('engine') }; })();
   /* a run carries it */
   S.bank = 1e6; S.buy('pod'); S.buy('start');
@@ -390,8 +390,8 @@ SHOPT.offButtons = await pg.evaluate('window.SW.buttonLabels');
 await pg.evaluate(`(() => { const S = window.SW; S.FEATURES.shop = true; for (const k in S.perks) delete S.perks[k]; S.bank = 0; S.scene = 'title'; })()`);
 check('a run banks its gems when it ends', SHOPT.got === 60 && SHOPT.died === 'over' && SHOPT.bank === 60,
   `30 gems worth 2 picked up, ship destroyed, ${SHOPT.bank} in the bank`);
-check('buying costs what it says', SHOPT.poor === false && SHOPT.bought && SHOPT.left === 700 && SHOPT.lv === 2,
-  `90 gems buys nothing; 1000 buys two hull levels (100 + 200) and leaves ${SHOPT.left}`);
+check('buying costs what it says', SHOPT.poor === false && SHOPT.bought && SHOPT.left === 400 && SHOPT.lv === 2,
+  `190 gems buys nothing; 1000 buys two hull levels (200 + 400) and leaves ${SHOPT.left}`);
 check('and stops at the top level', SHOPT.cap.n === 3 && SHOPT.cap.more === false, `Engine Trim: ${SHOPT.cap.n} levels, then no more`);
 check('a run carries what was bought', SHOPT.hull === SHOPT.baseHull + 16 && SHOPT.rank === 2 && SHOPT.lives === 1,
   `hull ${SHOPT.baseHull} → ${SHOPT.hull}, starting weapon at rank ${SHOPT.rank}, one escape pod`);
@@ -399,6 +399,32 @@ check('the escape pod survives a killing blow', SHOPT.podScene === 'play' && SHO
   `still playing at ${SHOPT.podHp} hull, pod spent`);
 check('the shop switch turns it off', SHOPT.offHull === SHOPT.baseHull && !SHOPT.offButtons.some(l => /SHOP/.test(l)),
   `FEATURES.shop=false: hull back to ${SHOPT.offHull}, no SHOP button on the title`);
+
+/* ------------------------------------------------------- ships for sale
+   Six ships, none named after a child, three of them bought with gems,
+   each with a trick that has to do what its card says. */
+const FLEET = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  out.names = S.SHIPS.map(s => s.name);
+  out.forSale = S.SHIPS.filter(s => s.cost).map(s => s.id);
+  S.bank = 100; out.poor = S.buyShip('wraith');
+  S.bank = 12000; out.bought = S.buyShip('wraith') && S.buyShip('glacier') && S.buyShip('magnetar'); out.left = S.bank; out.owned = !!S.unlocks.wraith;
+  const startAs = id => { S.fx = false; S.start(S.SHIPS.find(s => s.id === id)); const G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.hp = G.maxhp = 1e9; return G; };
+  /* phase: a hit leaves the Wraith untouchable for longer */
+  let G = startAs('wraith'); G.inv = 0; S.spawnEnemy('scout', G.px + 5, G.py); S.sim(1 / 60); out.phaseInv = +G.inv.toFixed(2);
+  G = startAs('falcon'); G.inv = 0; S.spawnEnemy('scout', G.px + 5, G.py); S.sim(1 / 60); out.plainInv = +G.inv.toFixed(2);
+  /* frost: what touches the Glacier is slowed */
+  G = startAs('glacier'); G.inv = 0; const e = S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(1 / 60); out.frostSlow = +e.slow.toFixed(1);
+  /* gravity: the Magnetar pulls gems from twice as far */
+  G = startAs('magnetar'); out.gravR = S.magnetR(); G = startAs('falcon'); out.plainR = S.magnetR();
+  S.scene = 'title'; delete S.unlocks.wraith; delete S.unlocks.glacier; delete S.unlocks.magnetar; S.bank = 0; return out;
+})()`);
+check('no ship is named after a child', !FLEET.names.some(n => /SOPHIA|RORY|DYLAN/i.test(n)), FLEET.names.join(', '));
+check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === false && FLEET.bought && FLEET.owned && FLEET.left === 12000 - 2500 - 3500 - 5000,
+  `${FLEET.forSale.join(', ')}: 100 gems buys none; 12000 buys all three and leaves ${FLEET.left}`);
+check('the Wraith phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
+check('the Glacier chills', FLEET.frostSlow >= 2, `a drifter that touched it is slowed for ${FLEET.frostSlow}s`);
+check('the Magnetar pulls from twice as far', FLEET.gravR === FLEET.plainR * 2, `${FLEET.gravR}px against ${FLEET.plainR}px`);
 
 /* ------------------------------------------------------- the last run
    When a run ends it is written down whole - ship, mode, result, build,
@@ -417,7 +443,7 @@ const LAST = await pg.evaluate(`(() => {
 })()`);
 check('a run is written down when it ends', LAST.scene === 'over' && LAST.how === 'died' && LAST.sector === 3 && /KRAKEN/.test(LAST.by || '') && LAST.evolved === 1,
   `died in sector ${LAST.sector}, killed by ${LAST.by}, one evolution`);
-check('and reads as one line', /Dylan's falcon/i.test(LAST.summary) && /died in sector 3/.test(LAST.summary) && /Prism Beam/.test(LAST.summary) && /score 777/.test(LAST.summary) && /\+55 gems/.test(LAST.summary),
+check('and reads as one line', /Viper/i.test(LAST.summary) && /died in sector 3/.test(LAST.summary) && /Prism Beam/.test(LAST.summary) && /score 777/.test(LAST.summary) && /\+55 gems/.test(LAST.summary),
   LAST.summary.slice(0, 120) + '...');
 check('SHARE hands that line to the share sheet', LAST.shared, 'navigator.share received the summary');
 await sleep(400);

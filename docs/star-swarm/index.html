@@ -614,9 +614,14 @@ function wrapFit(s,x,y,w,maxH,size,col){let sz=size,lines;for(;;){lines=wrapLine
 function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words=s.split(" ");let line="",ly=y;for(const wd of words){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){text(line,x,ly,size,col);line=wd;ly+=size+5}else line=t}if(line)text(line,x,ly,size,col)}
 // ---------------------------------------------------------------- content
 const SHIPS=[
- {id:"falcon",name:"DYLAN'S FALCON",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,shield:40,speed:1.1,col:"#e04040",col2:"#ffb0b0",unlock:""},
- {id:"comet",name:"RORY'S COMET",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
- {id:"nova",name:"SOPHIA'S NOVA",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
+ // the ids are what the records are keyed by, so they stay as they were
+ {id:"falcon",name:"VIPER",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,shield:40,speed:1.1,col:"#e04040",col2:"#ffb0b0",unlock:""},
+ {id:"comet",name:"THUNDERHEAD",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
+ {id:"nova",name:"BASTION",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
+ // three more in the shop, each with a trick of its own
+ {id:"wraith",name:"WRAITH",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,shield:35,speed:1.15,col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
+ {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,shield:60,speed:0.9,col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
+ {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,shield:40,speed:1.0,col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
 ];
 const WEAPONS={
  laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6,evo:{name:"Prism Beam",needs:"haste",col:"#ff80ff",desc:"Three beams that pierce everything."}},
@@ -697,15 +702,16 @@ const SHOP=[
  {id:"power",name:"Weapon Tuning",icon:"✊",col:"#ffa040",desc:"+4% damage per level.",max:5},
  {id:"engine",name:"Engine Trim",icon:"»",col:"#80ff80",desc:"+3% speed per level.",max:3},
  {id:"gems",name:"Gem Polish",icon:"✦",col:"#c0a0ff",desc:"+8% XP from gems per level.",max:3},
- {id:"start",name:"Head Start",icon:"▲",col:"#ffe060",desc:"Begin every run at weapon rank 2.",max:1,cost:600},
- {id:"pod",name:"Escape Pod",icon:"✚",col:"#80ff90",desc:"Once a run, survive a killing blow.",max:1,cost:1500}];
-const SHOP_COST=[100,200,350,550,800];
+ {id:"start",name:"Head Start",icon:"▲",col:"#ffe060",desc:"Begin every run at weapon rank 2.",max:1,cost:1200},
+ {id:"pod",name:"Escape Pod",icon:"✚",col:"#80ff90",desc:"Once a run, survive a killing blow.",max:1,cost:3000}];
+const SHOP_COST=[200,400,700,1100,1600];
 let bank=Math.max(0,parseInt(store.get("bank",0),10)||0);
 const perks=obj(store.get("perks",{}),{});
 function perkLv(id){return FEATURES.shop?(perks[id]||0):0}
 function shopCost(it){const l=perks[it.id]||0;return l>=it.max?0:(it.cost||SHOP_COST[Math.min(l,SHOP_COST.length-1)])}
 function buy(id){const it=SHOP.find(x=>x.id===id);if(!it||!FEATURES.shop)return false;const c=shopCost(it);if(!c||bank<c)return false;
  bank-=c;perks[id]=(perks[id]||0)+1;store.set("bank",bank);store.set("perks",perks);return true}
+function buyShip(id){const sh=SHIPS.find(x=>x.id===id);if(!sh||!sh.cost||!FEATURES.shop||unlocks[id]||bank<sh.cost)return false;bank-=sh.cost;unlocks[id]=true;store.set("bank",bank);store.set("unlocks",unlocks);return true}
 function bankRun(){if(!G||G.banked||!FEATURES.shop)return;G.banked=true;const got=Math.round(G.gemsGot||0);if(got>0){bank+=got;store.set("bank",bank)}}
 const NOMOD={};
 function mod(){return (G&&G.mod)||NOMOD}
@@ -730,7 +736,7 @@ function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
 function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
-function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)}function armor(){return G.passives.armor||0}
+function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
 // run peaked at sector 2 and got easier from sector 4 on - a motionless
 // player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
@@ -821,7 +827,9 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
  else if(Math.random()<(e.type==="drifter"?0.06:0.012)){const r=Math.random();G.pk.push({k:r<0.45?"repair":r<0.8?"magnet":"nuke",x:e.x,y:e.y,r:16,life:25})}}
 function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2){const r=Math.random();G.pk.push({k:r<0.5?"repair":r<0.85?"magnet":"nuke",x:rk.x,y:rk.y,r:16,life:25})}}}
 function explode(x,y,R,dmg){G.parts.push({k:"ring",x,y,r:R,life:0.35,col:"#ffa040"});for(let i=0;i<14;i++)G.parts.push({k:"dot",x,y,vx:rnd(-200,200),vy:rnd(-200,200),life:0.4,col:"#ff8040",r:6});for(const e of G.en){if(dist(x,y,e.x,e.y)<R+e.r)damage(e,dmg)}for(const rk of G.rocks){if(dist(x,y,rk.x,rk.y)<R+rk.r)hitRock(rk,2)}SFX.boom();shake=Math.max(shake,0.4)}
-function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;
+function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;
+ // the Wraith's phase shift: longer untouchable, and the swarm thrown back
+ if(G.ship.ab==="phase"){G.inv=1.6;for(const e of G.en){const dx=e.x-G.px,dy=e.y-G.py,dd=Math.hypot(dx,dy)||1;if(dd<240&&!e.boss){e.vx+=dx/dd*340;e.vy+=dy/dd*340}}}G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;
   // the escape pod: once a run, a killing blow is survived instead, at half
   // hull, with everything nearby blown clear
   if(G.lives>0){G.lives--;G.hp=Math.round(G.maxhp/2);G.sh=G.maxsh;G.inv=2.5;flash=1;shake=1.2;SFX.boom();announce("ESCAPE POD!  ONE MORE CHANCE");
@@ -916,7 +924,7 @@ function updateRun(dt){
  for(const rk of G.rocks){const d=dist(nx,ny,rk.x,rk.y);if(d<rk.r+14){const px=(nx-rk.x)/d,py=(ny-rk.y)/d;nx=rk.x+px*(rk.r+14);ny=rk.y+py*(rk.r+14);G.vx*=0.5;G.vy*=0.5}}
  G.px=nx;G.py=ny;if(st.l>0.1)G.ang=Math.atan2(G.vy,G.vx);
  G.inv=Math.max(0,G.inv-dt);G.magnetT=Math.max(0,G.magnetT-dt);G.shT=Math.max(0,G.shT-dt);
- if(G.shT<=0&&G.sh<G.maxsh)G.sh=Math.min(G.maxsh,G.sh+(6.5+4*(G.passives.shield||0))*dt);
+ if(G.shT<=0&&G.sh<G.maxsh)G.sh=Math.min(G.maxsh,G.sh+(6.5+4*(G.passives.shield||0))*(G.ship.ab==="frost"?1.5:1)*dt);
  spawnWave(dt);fireWeapons(dt);
  for(const e of G.en){let s=e.spd*(e.slow>0?0.45:1);e.slow=Math.max(0,e.slow-dt);e.flash=Math.max(0,e.flash-dt);e.wob+=dt*6;
   const dx=G.px-e.x,dy=G.py-e.y,d=Math.hypot(dx,dy)||1;
@@ -971,7 +979,7 @@ function updateRun(dt){
   e.x+=(mx+e.vx)*dt;e.y+=(my+e.vy)*dt;e.vx*=0.9;e.vy*=0.9;
   // a leaving alien is not pinned to a rock
   if(!e.boss&&!e.flee)for(const rk of G.rocks){const rd=dist(e.x,e.y,rk.x,rk.y);if(rd<rk.r+e.r){const px=(e.x-rk.x)/rd,py=(e.y-rk.y)/rd;e.x=rk.x+px*(rk.r+e.r);e.y=rk.y+py*(rk.r+e.r)}}
-  if(d<e.r+16&&G.inv<=0&&!e.flee)hurt(e.dmg,ENEMY[e.type].name||e.type)}
+  if(d<e.r+16&&G.inv<=0&&!e.flee){hurt(e.dmg,ENEMY[e.type].name||e.type);if(G.ship.ab==="frost")e.slow=Math.max(e.slow,2.5)}}   // the Glacier chills what touches it
  const en=G.en;for(let i=0;i<en.length;i++){const a=en[i];for(let j=i+1;j<en.length;j++){const b=en[j];const dx=b.x-a.x,dy=b.y-a.y,md=a.r+b.r-6;if(Math.abs(dx)<md&&Math.abs(dy)<md){const d=Math.hypot(dx,dy)||1;if(d<md){const push=(md-d)*0.5,nx2=dx/d,ny2=dy/d;if(!a.boss){a.x-=nx2*push;a.y-=ny2*push}if(!b.boss){b.x+=nx2*push;b.y+=ny2*push}}}}}
  G.en=G.en.filter(e=>!e.dead);G.rocks=G.rocks.filter(r=>!r.dead);
  for(const b of G.bul){b.life-=dt;
@@ -1158,7 +1166,7 @@ function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
 const SHIPRES=4,SHIPP=32;
 const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],
               nova:[[-14,0,1.0],[-11,-11,0.72],[-11,11,0.72]]};
-function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
+function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
  const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
  const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
  sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";g.lineCap="round";
@@ -1181,7 +1189,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
    g.lineTo(x-w/2+h*0.4,y+h/2);g.quadraticCurveTo(x-w/2,y,x-w/2+h*0.4,y-h/2);g.closePath();g.fill();
    g.strokeStyle="rgba(0,0,0,0.5)";g.lineWidth=0.7;g.stroke()};
   let body,tips,nose,fin;
-  if(ship.id==="comet"){
+  if(shape==="comet"){
    const w=[[3,-4],[-11,-18],[-18,-16],[-6,-3]];wing(w);wing(mirror(w));
    strake(-14.5,-17,7,-1);strake(-14.5,17,7,1);
    tips=[[-13.5,-16.2],[-13.5,16.2]];nose=29;fin=[[-4,0],[-16,0],[-19,0]];
@@ -1189,7 +1197,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
    body=()=>{g.beginPath();g.moveTo(29,0);g.quadraticCurveTo(15,-4.2,8,-5.4);g.lineTo(-11,-5.6);
     g.quadraticCurveTo(-15,-3,-15,0);g.quadraticCurveTo(-15,3,-11,5.6);g.lineTo(8,5.4);
     g.quadraticCurveTo(15,4.2,29,0);g.closePath()}}
-  else if(ship.id==="nova"){
+  else if(shape==="nova"){
    const w=[[7,-6],[-9,-20],[-19,-18],[-8,-5]];wing(w);wing(mirror(w));
    strake(-15,-18.2,8,-1);strake(-15,18.2,8,1);
    tips=[[-14,-17.6],[-14,17.6]];nose=24;fin=[[-2,0],[-17,0],[-20,0]];
@@ -1229,7 +1237,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   g.strokeStyle="rgba(255,255,255,0.6)";g.lineWidth=0.8;
   g.beginPath();g.moveTo(nose,0);g.lineTo(nose-6,-2.1);g.stroke();
   // teardrop canopy: pointed forward, dark glass with a sky reflection
-  const cxp=ship.id==="comet"?7:ship.id==="nova"?3:4,cl=ship.id==="nova"?11:9.5,cw=ship.id==="nova"?4.4:3.7;
+  const cxp=shape==="comet"?7:shape==="nova"?3:4,cl=shape==="nova"?11:9.5,cw=shape==="nova"?4.4:3.7;
   const canopy=()=>{g.beginPath();g.moveTo(cxp+cl*0.62,0);
    g.quadraticCurveTo(cxp+cl*0.2,-cw,cxp-cl*0.2,-cw*0.92);
    g.quadraticCurveTo(cxp-cl*0.55,-cw*0.7,cxp-cl*0.6,0);
@@ -1244,7 +1252,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   g.fillStyle="rgba(255,255,255,0.9)";g.beginPath();
   g.ellipse(cxp+cl*0.16,-cw*0.42,cl*0.2,cw*0.17,-0.3,0,TAU);g.fill();
   // engine bells with a hot core
-  for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+  for(const[nx,ny,ns] of NOZZLE[shape]||NOZZLE.falcon){
    g.fillStyle="#0c1220";g.beginPath();g.ellipse(nx,ny,2.4*ns,4.2*ns,0,0,TAU);g.fill();
    g.strokeStyle=hexA(c2,0.9);g.lineWidth=0.9;g.stroke();
    const eg=g.createRadialGradient(nx+0.8*ns,ny,0.2,nx,ny,3.4*ns);
@@ -1262,7 +1270,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
 function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
  cx.save();cx.translate(x,y);cx.rotate(ang);
  const th=Math.min(1,thrust);
- if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+ if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.shape||ship.id]||NOZZLE.falcon){
    const fl=(13+th*19+Math.random()*6)*ns;
    if(FX)glow(nx-fl*0.4,ny,fl*1.25,"rgba(255,214,140,0.55)","rgba(255,110,30,0.14)");
    cx.fillStyle="rgba(255,140,40,0.8)";
@@ -1606,7 +1614,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  buttons=[];
  const n=SHIPS.length;
- const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else SFX.click()};
+ const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else if(s.cost&&FEATURES.shop){shopTab=1;scene="shop"}else SFX.click()};
  const difId=DIFFS[diffIdx].id;
  // Everything used to sit at a fixed offset from a fraction of the height,
  // which on a phone in landscape put the tag line through the difficulty
@@ -1618,7 +1626,9 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const mh=clamp(H*0.085,34,46),bh=clamp(H*0.115,42,64);
  const bot=H-12-SB,hs=Math.min(14,W*0.03);
  const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
- const minShip=stack?n*56+(n-1)*8:118;
+ // six ships stack in one column on a phone; sideways, or on an iPad, in two
+ const cols=stack&&n>3&&W>=700?2:1,rows=Math.ceil(n/cols);
+ const minShip=stack?rows*48+(rows-1)*6:118;
  const musicY=bot-mh;
  let showHelp=true;
  const helpH=()=>showHelp?hs*2+8:0;
@@ -1645,6 +1655,10 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  if(need()<minShip)showTag=false;
  if(need()<minShip)showDesc=false;
  if(need()<minShip){showHelp=false;launchY=helpTop()-gap-bh;contentBottom=launchY-gap}
+ // still short, on a wide screen: LAUNCH sits in the bottom row between the
+ // small buttons rather than on top of the ship cards
+ let launchInline=false;
+ if(need()<minShip&&W>=700){launchInline=true;launchY=musicY;contentBottom=launchY-gap}
  {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r);cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
  if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
@@ -1670,17 +1684,17 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   textFit(line,W/2,cursor+11,12,mid==="daily"?"#c0a0ff":mid==="endless"?"#ff9040":"#9fb0c8",W-40);cursor+=18}
  const listTop=cursor+gap,avail=contentBottom-listTop;
  if(stack){
-  const cw=Math.min(440,W-28),x0=W/2-cw/2;
-  const ch=clamp(avail/n-8,50,104),px=ch*0.86;
+  const cw=(Math.min(cols===2?900:440,W-28)-(cols-1)*10)/cols,x0=W/2-(cw*cols+(cols-1)*10)/2;
+  const ch=clamp(avail/rows-6,44,104),px=ch*0.86;
   const nz=Math.min(20,ch*0.23),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
-  SHIPS.forEach((s,i)=>{const y=listTop+i*(ch+8),sel=i===shipIdx,un=!!unlocks[s.id];
+  SHIPS.forEach((s,i)=>{const x0=W/2-(cw*cols+(cols-1)*10)/2+(i%cols)*(cw+10),y=listTop+Math.floor(i/cols)*(ch+6),sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    if(sel)shipSlot={x:x0+px/2+4,y:y+ch/2,s:1};
    if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore()}
    const tx=x0+px+14,tw=cw-px-28,r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
-   textFit(un?s.desc:s.unlock,tx,y+ch*0.55,dz,"#cde",tw,"left");
+   textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),tx,y+ch*0.55,dz,"#cde",tw,"left");
    textFit(un?r:"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
    btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  }else{
@@ -1695,21 +1709,22 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
    drawShip(0,0,-Math.PI/2,s,sel?0.6:0);cx.restore()}
    const r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
-   textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
+   textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
    textFit(un?r:"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
    btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
  }
- const lw=Math.min(300,W-48);
- btn(W/2-lw/2,launchY,lw,bh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>launch(),
-  {launch:true,size:Math.min(26,bh*0.42)});
+ const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
+ btn(W/2-lw/2,launchY,lw,lbh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),()=>launch(),
+  {launch:true,size:Math.min(26,lbh*0.42)});
  if(showHelp){const ht=helpTop();
   textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
   if(lastRun){const l="LAST RUN:  sector "+lastRun.sector+"  ·  "+lastRun.score+"  ·  "+(lastRun.how==="won"?"cleared":lastRun.how==="quit"?"quit":"died")+"   ▸";
    btn(W/2-Math.min(300,W-40)/2,ht+hs*1.2,Math.min(300,W-40),hs*1.6+6,l,()=>{scene="lastrun"},{size:hs,fill:"rgba(0,0,0,0.25)",stroke:"rgba(255,255,255,0.25)",color:"#ffe060"})}
   else textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
  // music, shop, credits: three across when they fit, or spread to the edges
- const three=FEATURES.shop,mw=three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
- const bx=i=>showHelp||three?W/2+(i-(three?1:0.5))*(mw+10)-mw/2:(i===0?14+SAFE.l:W-14-SAFE.r-mw);
+ const three=FEATURES.shop,mw=launchInline?Math.min(130,(W-lw-60-SAFE.l-SAFE.r)/4-8):three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
+ // inline: music and shop to the left of LAUNCH, credits to its right
+ const bx=i=>launchInline?(i===0?14+SAFE.l:i===1&&three?14+SAFE.l+mw+8:W-14-SAFE.r-mw):showHelp||three?W/2+(i-(three?1:0.5))*(mw+10)-mw/2:(i===0?14+SAFE.l:W-14-SAFE.r-mw);
  btn(bx(0),musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:fs});
  if(three)btn(bx(1),musicY,mw,mh,"SHOP  ◆ "+bank,()=>{scene="shop"},{size:fs,color:"#ffe060"});
  btn(bx(three?2:1),musicY,mw,mh,"CREDITS",()=>{creditsT=0;scene="credits"},{size:fs});
@@ -1807,13 +1822,34 @@ function drawLastRun(dt){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];shareS
   btn(W/2+6,back,bw,bh,"HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)})}
  if(!r)btn(W/2-110,bot-48,220,48,"HANGAR",()=>{scene="title"},{size:18});
  drawButtons();cx.restore()}
+let shopTab=0;
 function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b;
  const bh=clamp(H*0.09,40,52),back=bot-bh;
  textFit("HANGAR SHOP",W/2,top+18,Math.min(30,W/12),"#ffe060",W-100-SL-SR);
  textFit("◆ "+bank+" gems banked",W/2,top+46,16,"#c0e8ff",W-40);
+ // two tabs: the upgrades, and the ships for sale
+ const tw=Math.min(300,W-40),tx0=W/2-tw/2,ty=top+62,th=32;
+ ["UPGRADES","SHIPS"].forEach((t,i)=>{const sel=shopTab===i,x=tx0+i*tw/2;
+  cx.fillStyle=sel?"rgba(255,224,96,0.18)":"rgba(0,0,0,0.42)";rr(x+2,ty,tw/2-4,th,9);cx.fill();cx.lineWidth=sel?2.5:1.5;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.3)";cx.stroke();
+  textFit(t,x+tw/4,ty+th/2,15,sel?"#ffe060":"#ccd6e4",tw/2-16);
+  btn(x+2,ty,tw/2-4,th,"",()=>{shopTab=i},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+ const rw=Math.min(560,W-24-SL-SR),x0=W/2-rw/2,ly=ty+th+10,avail=back-12-ly;
+ if(shopTab===1){const ships=SHIPS.filter(x=>x.cost);const n=ships.length,rh=clamp((avail-(n-1)*8)/n,64,120),k=rh/120,bw=Math.min(112,rw*0.24);
+  ships.forEach((sh,i)=>{const y=ly+i*(rh+8),own=!!unlocks[sh.id],can=!own&&bank>=sh.cost;
+   cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=own?hexA(sh.col,0.7):"rgba(255,255,255,0.25)";cx.stroke();
+   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));drawShip(0,0,-Math.PI/2,sh,0.5);cx.restore();
+   const tx=x0+Math.min(rh,92),tw2=rw-Math.min(rh,92)-bw-24;
+   textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),own?sh.col2:"#fff",tw2,"left");
+   // the ability, wrapped to its column: three lines at most, never under the button
+   const az=Math.min(12,8+5*k),al=wrapLines(sh.abName+": "+sh.abDesc,tw2,az).slice(0,3);
+   al.forEach((l,j)=>textFit(l,tx,y+rh*(0.34+j*0.14),az,hexA(sh.col2,0.9),tw2,"left"));
+   textFit("Hull "+sh.hp+"  ·  Shield "+sh.shield+"  ·  Speed "+Math.round(sh.speed*100)+"%",tx,y+rh*0.88,Math.min(11,8+4*k),"#9fb0c8",tw2,"left");
+   btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),own?"OWNED":"◆ "+sh.cost,()=>{if(buyShip(sh.id)){SFX.chest();shipIdx=SHIPS.indexOf(sh);store.set("ship",shipIdx)}else SFX.click()},
+    {size:Math.min(16,10+7*k),fill:own?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:own?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
+ else{
  // seven rows that share whatever height is left
- const n=SHOP.length,ly=top+66,avail=back-12-ly,rh=clamp((avail-(n-1)*6)/n,40,72),rw=Math.min(560,W-24-SL-SR),x0=W/2-rw/2;
+ const n=SHOP.length,rh=clamp((avail-(n-1)*6)/n,40,72);
  const k=rh/72,bw=Math.min(112,rw*0.24);
  SHOP.forEach((it,i)=>{const y=ly+i*(rh+6),lv=perks[it.id]||0,cost=shopCost(it),can=cost>0&&bank>=cost,maxed=lv>=it.max;
   cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=maxed?hexA(it.col,0.6):"rgba(255,255,255,0.25)";cx.stroke();
@@ -1824,11 +1860,11 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
   // level pips
   for(let p=0;p<it.max;p++){cx.fillStyle=p<lv?it.col:"rgba(255,255,255,0.18)";rr(tx+p*14,y+rh*(rh<52?0.66:0.84)-4,10,8,3);cx.fill()}
   btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),maxed?"MAX":"◆ "+cost,()=>{if(buy(it.id))SFX.chest();else SFX.click()},
-   {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})});
+   {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
  btn(W/2-110,back,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
  drawButtons();cx.restore()}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord();bankRun();noteRun("quit")},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();cx.restore()}
-function start(){if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
+function start(ship){if(ship&&typeof ship==="object"&&SHIPS.indexOf(ship)>=0)shipIdx=SHIPS.indexOf(ship);if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
 // LAUNCH does not cut straight to the fight. The chosen ship lights its
 // engines in its card, shakes for half a second, then climbs off the top of
 // the screen while the stars streak past, and the run begins on a flash.
@@ -1879,7 +1915,7 @@ function frame(ts){requestAnimationFrame(frame);inputWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
  WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
