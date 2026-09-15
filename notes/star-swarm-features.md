@@ -119,5 +119,10 @@ Thunderhead, Bastion) are earned by playing as before; these are bought:
 | Glacier  | Plasma Wave | Frost hull: what touches you is slowed 2.5 s; shields recharge 1.5x | 3500 |
 | Magnetar | Black Hole  | Gravity well: gems from twice as far, 15% more XP                 | 5000 |
 
+A seventh, the Saucer (space mines; deflector hull: scouts and swarmers
+bounce off without hurting you), is earned by clearing all six sectors.
+Ships not yet earned show only as a dark silhouette with a question mark,
+on the title and in the shop, so what they look like is part of the prize.
+
 Ship ids are unchanged from the original three, so old records still
 attach to the right ship after the renaming.

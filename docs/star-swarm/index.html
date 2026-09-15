@@ -621,6 +621,7 @@ const SHIPS=[
  // three more in the shop, each with a trick of its own
  {id:"wraith",name:"WRAITH",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,shield:35,speed:1.15,col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
  {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,shield:60,speed:0.9,col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
+ {id:"ufo",name:"SAUCER",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,shield:50,speed:1.2,col:"#a0e0c0",col2:"#f0fff8",unlock:"Clear all six sectors"},
  {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,shield:40,speed:1.0,col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
 ];
 const WEAPONS={
@@ -890,7 +891,7 @@ function saveRecord(){
   d.board.push({score:G.score,ship:G.ship.id,sector:G.sector,lvl:G.level,dif:G.dif.id});d.board.sort((a,b)=>b.score-a.score);d.board.length=Math.min(5,d.board.length);
   records[id]=d;store.set("records",records);G.dailyRank=d.board.findIndex(b=>b.score===G.score&&b.ship===G.ship.id)+1;return}
  const id=recKeyFor(G.ship.id,G.dif.id,G.mode),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=G.mode==="endless"?G.t:Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
- let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
+ let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(G.won&&!unlocks.ufo){unlocks.ufo=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
 // How many different weapons, and how many passives, you may carry at once.
 // It was four of each from the word go, which is why everything was collected
 // inside two sectors and the twenty minutes after that were only ranking up
@@ -979,7 +980,10 @@ function updateRun(dt){
   e.x+=(mx+e.vx)*dt;e.y+=(my+e.vy)*dt;e.vx*=0.9;e.vy*=0.9;
   // a leaving alien is not pinned to a rock
   if(!e.boss&&!e.flee)for(const rk of G.rocks){const rd=dist(e.x,e.y,rk.x,rk.y);if(rd<rk.r+e.r){const px=(e.x-rk.x)/rd,py=(e.y-rk.y)/rd;e.x=rk.x+px*(rk.r+e.r);e.y=rk.y+py*(rk.r+e.r)}}
-  if(d<e.r+16&&G.inv<=0&&!e.flee){hurt(e.dmg,ENEMY[e.type].name||e.type);if(G.ship.ab==="frost")e.slow=Math.max(e.slow,2.5)}}   // the Glacier chills what touches it
+  if(d<e.r+16&&G.inv<=0&&!e.flee){
+   // the Saucer's deflector hull: the small ones bounce off, with a ping
+   if(G.ship.ab==="saucer"&&(e.type==="scout"||e.type==="swarmer")&&!e.elite){e.vx-=dx/d*420;e.vy-=dy/d*420;e.x-=dx/d*6;e.y-=dy/d*6;if(Math.random()<0.5)SFX.shieldhit()}
+   else{hurt(e.dmg,ENEMY[e.type].name||e.type);if(G.ship.ab==="frost")e.slow=Math.max(e.slow,2.5)}}}   // the Glacier chills what touches it
  const en=G.en;for(let i=0;i<en.length;i++){const a=en[i];for(let j=i+1;j<en.length;j++){const b=en[j];const dx=b.x-a.x,dy=b.y-a.y,md=a.r+b.r-6;if(Math.abs(dx)<md&&Math.abs(dy)<md){const d=Math.hypot(dx,dy)||1;if(d<md){const push=(md-d)*0.5,nx2=dx/d,ny2=dy/d;if(!a.boss){a.x-=nx2*push;a.y-=ny2*push}if(!b.boss){b.x+=nx2*push;b.y+=ny2*push}}}}}
  G.en=G.en.filter(e=>!e.dead);G.rocks=G.rocks.filter(r=>!r.dead);
  for(const b of G.bul){b.life-=dt;
@@ -1164,12 +1168,24 @@ function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
 // panel lines and canopy survive a retina screen, then stamped each frame.
 // Only the engine fire is drawn live, because it has to flicker.
 const SHIPRES=4,SHIPP=32;
-const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],
+const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],ufo:[[-19,0,0.8]],
               nova:[[-14,0,1.0],[-11,-11,0.72],[-11,11,0.72]]};
 function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
  const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
  const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
  sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";g.lineCap="round";
+  // The saucer is its own thing: a disc seen from above, a dome, a ring of
+  // lights, and a brighter arc on the side that leads.
+  if(shape==="ufo"){
+   const dg=g.createRadialGradient(-4,-5,3,0,0,22);dg.addColorStop(0,lite);dg.addColorStop(0.55,col);dg.addColorStop(1,dark);
+   g.fillStyle=dg;g.beginPath();g.arc(0,0,21,0,TAU);g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1.1;g.stroke();
+   g.strokeStyle="rgba(0,0,0,0.35)";g.lineWidth=0.9;g.beginPath();g.arc(0,0,15,0,TAU);g.stroke();
+   g.strokeStyle="rgba(255,255,255,0.35)";g.lineWidth=1.2;g.beginPath();g.arc(0,0,18.5,-0.9,0.9);g.stroke();
+   for(let i=0;i<10;i++){const a=i/10*TAU;g.fillStyle=i%2?hexA(c2,0.95):"rgba(255,120,200,0.9)";g.beginPath();g.arc(Math.cos(a)*18,Math.sin(a)*18,1.6,0,TAU);g.fill()}
+   const mg=g.createRadialGradient(1,-3,1,2,0,9.5);mg.addColorStop(0,"rgba(200,240,255,0.95)");mg.addColorStop(0.5,"rgba(90,150,220,0.7)");mg.addColorStop(1,"rgba(20,40,90,0.9)");
+   g.fillStyle=mg;g.beginPath();g.arc(2,0,9.5,0,TAU);g.fill();g.strokeStyle="rgba(0,0,0,0.6)";g.lineWidth=0.9;g.stroke();
+   g.fillStyle="rgba(255,255,255,0.55)";g.beginPath();g.ellipse(-1,-3.5,3.4,1.8,-0.5,0,TAU);g.fill();
+   return}
   const hull=g.createLinearGradient(0,-12,0,12);
   hull.addColorStop(0,lite);hull.addColorStop(0.34,col);hull.addColorStop(0.7,mid);hull.addColorStop(1,dark);
   const poly=(pts)=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);
@@ -1267,6 +1283,14 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=s
   body();g.save();g.clip();g.strokeStyle="rgba(255,255,255,0.5)";g.lineWidth=1.6;
   g.beginPath();g.moveTo(nose-3,-1.5);g.quadraticCurveTo(6,-8,-14,-7);g.stroke();g.restore()});
  ART.ship[ship.id]=sp;return sp}
+// A ship not yet earned is a shape in the dark: you can see it is a ship
+// and nothing else, which is what keeps the next one worth reaching.
+function silSprite(ship){ART.sil=ART.sil||{};let sp=ART.sil[ship.id];if(sp)return sp;const src=shipSprite(ship);
+ sp=bake(src.width,src.height,g=>{g.drawImage(src,0,0);g.globalCompositeOperation="source-in";g.fillStyle="#151b36";g.fillRect(0,0,src.width,src.height)});
+ ART.sil[ship.id]=sp;return sp}
+function drawSil(x,y,ang,ship){const P=SHIPP;cx.save();cx.translate(x,y);cx.rotate(ang);cx.drawImage(silSprite(ship),-P,-P,P*2,P*2);
+ cx.strokeStyle="rgba(255,255,255,0.18)";cx.lineWidth=1;cx.beginPath();cx.arc(0,0,P*0.72,0,TAU);cx.stroke();
+ cx.rotate(-ang);text("?",0,1,20,"rgba(255,255,255,0.55)");cx.restore()}   // the mark stays upright whichever way the hull points
 function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
  cx.save();cx.translate(x,y);cx.rotate(ang);
  const th=Math.min(1,thrust);
@@ -1627,7 +1651,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bot=H-12-SB,hs=Math.min(14,W*0.03);
  const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
  // six ships stack in one column on a phone; sideways, or on an iPad, in two
- const cols=stack&&n>3&&W>=700?2:1,rows=Math.ceil(n/cols);
+ const cols=stack&&n>3&&W>=700?(n>6?3:2):1,rows=Math.ceil(n/cols);
  const minShip=stack?rows*48+(rows-1)*6:118;
  const musicY=bot-mh;
  let showHelp=true;
@@ -1684,14 +1708,14 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   textFit(line,W/2,cursor+11,12,mid==="daily"?"#c0a0ff":mid==="endless"?"#ff9040":"#9fb0c8",W-40);cursor+=18}
  const listTop=cursor+gap,avail=contentBottom-listTop;
  if(stack){
-  const cw=(Math.min(cols===2?900:440,W-28)-(cols-1)*10)/cols,x0=W/2-(cw*cols+(cols-1)*10)/2;
+  const cw=(Math.min(cols>1?960:440,W-28)-(cols-1)*10)/cols,x0=W/2-(cw*cols+(cols-1)*10)/2;
   const ch=clamp(avail/rows-6,44,104),px=ch*0.86;
   const nz=Math.min(20,ch*0.23),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
   SHIPS.forEach((s,i)=>{const x0=W/2-(cw*cols+(cols-1)*10)/2+(i%cols)*(cw+10),y=listTop+Math.floor(i/cols)*(ch+6),sel=i===shipIdx,un=!!unlocks[s.id];
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
    cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    if(sel)shipSlot={x:x0+px/2+4,y:y+ch/2,s:1};
-   if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore()}
+   if(!(sel&&launching)){if(un)drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);else drawSil(x0+px/2+4,y+ch/2,-Math.PI/2,s)}
    const tx=x0+px+14,tw=cw-px-28,r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
    textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),tx,y+ch*0.55,dz,"#cde",tw,"left");
@@ -1704,9 +1728,9 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
    cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
    cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
    if(sel)shipSlot={x:x+cw/2,y:y+ch*0.28,s:Math.min(1,ch/190)};
-   if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;
+   if(!(sel&&launching)){cx.save();
    cx.translate(x+cw/2,y+ch*0.28);cx.scale(Math.min(1,ch/190),Math.min(1,ch/190));
-   drawShip(0,0,-Math.PI/2,s,sel?0.6:0);cx.restore()}
+   if(un)drawShip(0,0,-Math.PI/2,s,sel?0.6:0);else drawSil(0,0,-Math.PI/2,s);cx.restore()}
    const r=recLine(s.id,difId);
    textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
    textFit(un?s.desc:(s.cost?"In the shop  ·  ◆ "+s.cost:s.unlock),x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
@@ -1838,7 +1862,7 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  if(shopTab===1){const ships=SHIPS.filter(x=>x.cost);const n=ships.length,rh=clamp((avail-(n-1)*8)/n,64,120),k=rh/120,bw=Math.min(112,rw*0.24);
   ships.forEach((sh,i)=>{const y=ly+i*(rh+8),own=!!unlocks[sh.id],can=!own&&bank>=sh.cost;
    cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=own?hexA(sh.col,0.7):"rgba(255,255,255,0.25)";cx.stroke();
-   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));drawShip(0,0,-Math.PI/2,sh,0.5);cx.restore();
+   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));if(own)drawShip(0,0,-Math.PI/2,sh,0.5);else drawSil(0,0,-Math.PI/2,sh);cx.restore();
    const tx=x0+Math.min(rh,92),tw2=rw-Math.min(rh,92)-bw-24;
    textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),own?sh.col2:"#fff",tw2,"left");
    // the ability, wrapped to its column: three lines at most, never under the button
