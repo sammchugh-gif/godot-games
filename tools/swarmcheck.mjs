@@ -420,6 +420,20 @@ const FLEET = await pg.evaluate(`(() => {
   S.scene = 'title'; delete S.unlocks.wraith; delete S.unlocks.glacier; delete S.unlocks.magnetar; S.bank = 0; return out;
 })()`);
 check('no ship is named after a child', !FLEET.names.some(n => /SOPHIA|RORY|DYLAN/i.test(n)), FLEET.names.join(', '));
+/* the Saucer: earned by clearing the campaign, and the small aliens bounce off it */
+const UFO = await pg.evaluate(`(() => {
+  const S = window.SW, out = {}; S.fx = false; delete S.unlocks.ufo;
+  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(0.2);
+  out.won = S.scene; out.unlocked = !!S.unlocks.ufo; S.scene = 'title';
+  const ufo = S.SHIPS.find(s => s.id === 'ufo');
+  S.start(ufo); G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.inv = 0; const hp0 = G.hp + G.sh;
+  const sc = S.spawnEnemy('scout', G.px + 5, G.py); S.sim(0.3); out.afterScout = G.hp + G.sh - hp0; out.scoutPushed = Math.hypot(sc.x - G.px, sc.y - G.py) > 40;
+  G.en.length = 0; G.inv = 0; S.spawnEnemy('drifter', G.px + 5, G.py); S.sim(0.3); out.afterDrifter = G.hp + G.sh - hp0;
+  S.scene = 'title'; return out;
+})()`);
+check('clearing the campaign earns the Saucer', UFO.won === 'win' && UFO.unlocked, `the sixth gate: ${UFO.won}, Saucer unlocked`);
+check('and the small aliens bounce off it', UFO.afterScout === 0 && UFO.scoutPushed && UFO.afterDrifter < 0,
+  `a scout: no damage, thrown clear; a drifter: ${UFO.afterDrifter}`);
 check('three ships are for sale', FLEET.forSale.length === 3 && FLEET.poor === false && FLEET.bought && FLEET.owned && FLEET.left === 12000 - 2500 - 3500 - 5000,
   `${FLEET.forSale.join(', ')}: 100 gems buys none; 12000 buys all three and leaves ${FLEET.left}`);
 check('the Wraith phases', FLEET.phaseInv > 1.4 && FLEET.plainInv < 0.7, `untouchable for ${FLEET.phaseInv}s after a hit, against ${FLEET.plainInv}s in the Viper`);
