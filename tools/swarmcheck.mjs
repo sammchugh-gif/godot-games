@@ -292,6 +292,27 @@ check('the gate is a cutscene, not a cut', WARPC.started && WARPC.fieldWiped ===
 check('and comes out flying into the next one', WARPC.over && WARPC.sectorAfter === 3 && WARPC.arriving && (WARPC.scene === 'play' || WARPC.scene === 'levelup'),
   `${WARPC.total}s later: sector ${WARPC.sectorAfter}, arrival playing, then ${WARPC.scene}`);
 
+/* ------------------------------------------------------------ the bonus run
+   The last gate's tunnel is playable: hoops pay a growing combo, gems pay
+   a little, shards break the combo, nothing kills, and what it earns goes
+   on the score before the win screen. */
+const BON = await pg.evaluate(`(() => {
+  const S = window.SW, out = {}; S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
+  G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + 0.1); const b = S.bonus; out.started = !!b && S.scene === 'play';
+  S.stick = { x: 0, y: 0, l: 0 }; const score0 = G.score;
+  const feed = (k) => { b.obj.length = 0; b.spawn = 99; b.obj.push({ k, a: 0, rr: 0, z: S.BONUS.zShip + 0.3 }); S.sim(0.4); };
+  feed('hoop'); feed('hoop'); out.hoops = b.hoops; out.combo = b.combo; out.afterHoops = b.score;
+  feed('gem'); out.gems = b.gems; out.afterGem = b.score;
+  feed('shard'); out.hits = b.hits; out.comboAfterShard = b.combo; out.hull = G.hp;
+  b.obj.length = 0; b.obj.push({ k: 'hoop', a: Math.PI, rr: 0.7, z: S.BONUS.zShip + 0.3 }); S.sim(0.4); out.missed = b.hoops;
+  S.stick = { x: 1, y: 0, l: 1 }; S.sim(1); out.moved = +b.ox.toFixed(2); S.stick = null;
+  const earned = b.score; S.sim(S.BONUS.t); out.scene = S.scene; out.added = G.score - score0 === earned && G.bonusScore === earned; out.bonusGone = !S.bonus; S.scene = 'title'; return out;
+})()`);
+check('the last gate is a bonus run', BON.started && BON.hoops === 2 && BON.combo === 2 && BON.afterHoops === 150 && BON.gems === 1 && BON.afterGem === 170 && BON.hits === 1 && BON.comboAfterShard === 0 && BON.hull === 1e9 && BON.missed === 2,
+  `two hoops for ${BON.afterHoops} (50 then 100), a gem for 20, a shard breaks the combo (${BON.comboAfterShard}) and costs no hull, a hoop on the far wall is missed`);
+check('the stick flies it, and it pays out at the end', BON.moved > 0.5 && BON.scene === 'win' && BON.added && BON.bonusGone,
+  `stick right moves the ship to ${BON.moved}; ${BON.scene} after ${45}s with the bonus on the score`);
+
 /* ---------------------------------------------------------- chest ration
    Chests are rationed: one from the elites per sector, three on Treasure
    Day, and the boss always drops one on top. */
@@ -387,7 +408,7 @@ const MODE = await pg.evaluate(`(() => {
   const S = window.SW, out = {};
   const gateIn = () => { const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + S.WARP.tunnel + S.WARP.exit + 0.3); };   /* through the warp cutscene */
   S.fx = false;
-  S.mode = 0; S.start(S.SHIPS[0]); gateIn(); out.campaign = S.scene; S.scene = 'title';
+  S.mode = 0; S.start(S.SHIPS[0]); gateIn(); out.campaign = S.bonus ? 'bonus' : S.scene; S.scene = 'title';
   S.mode = 1; S.start(S.SHIPS[0]); gateIn(); out.endless = S.scene; out.sector = S.G.sector; out.realm = S.realm().name; out.hudMode = S.G.mode; S.scene = 'title';
   /* daily: same day, same twist, same rocks */
   S.mode = 2; S.start(S.SHIPS[0]); const a = S.G; const twistA = a.mod.id, rocksA = a.rocks.slice(0, 5).map(r => Math.round(r.x) + ',' + Math.round(r.y)).join(' ');
@@ -407,7 +428,7 @@ const MODE = await pg.evaluate(`(() => {
   S.FEATURES.modes = false; S.mode = 1; S.start(S.SHIPS[0]); out.off = S.G.mode; S.FEATURES.modes = true; S.mode = 0; S.scene = 'title';
   return out;
 })()`);
-check('the sixth gate ends the campaign', MODE.campaign === 'win', `scene ${MODE.campaign}`);
+check('the sixth gate opens the bonus run', MODE.campaign === 'bonus', `after the dive: ${MODE.campaign}`);
 check('and opens sector 7 in endless', (MODE.endless === 'play' || MODE.endless === 'levelup') && MODE.sector === 7 && /GIANT/.test(MODE.realm) && MODE.hudMode === 'endless',
   `scene ${MODE.endless} (a new sector pays a card), sector ${MODE.sector}, ${MODE.realm} again`);
 check('the daily is the same for everyone', MODE.sameTwist && MODE.sameRocks && MODE.sameSpawns && MODE.inList,
@@ -481,7 +502,7 @@ check('no ship is named after a child', !FLEET.names.some(n => /SOPHIA|RORY|DYLA
 /* the Eclipse: earned by clearing the campaign, and the small aliens bounce off it */
 const UFO = await pg.evaluate(`(() => {
   const S = window.SW, out = {}; S.fx = false; delete S.unlocks.ufo;
-  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + 0.2);
+  S.mode = 0; S.start(S.SHIPS[0]); let G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + S.BONUS.t + 0.5);   /* the dive, then the whole bonus run */
   out.won = S.scene; out.unlocked = !!S.unlocks.ufo; S.scene = 'title';
   const ufo = S.SHIPS.find(s => s.id === 'ufo');
   S.start(ufo); G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.inv = 0; const hp0 = G.hp + G.sh;

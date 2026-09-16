@@ -396,7 +396,7 @@ function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
  if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")return TITLE_TRACK;
- if(G&&G.bossAlive)return BOSS_TRACK;
+ if(G&&(G.bossAlive||G.bonus))return BOSS_TRACK;
  return G?sectorTrack():0}
 function sectorTrack(){return Math.max(0,G.sector-1)%SECTOR_TRACKS}
 // the boss piece borrows the sector's key
@@ -1011,7 +1011,7 @@ function warpStep(dt){const w=G.warp;w.t+=dt;stepParts(dt);
  if(!w.out&&w.t>=WARP.dive+WARP.tunnel){w.out=true;SFX.launch()}
  if(w.t<WARP.dive){const e=Math.min(1,w.t/WARP.dive),k=e*e,r=w.r0*(1-k),a=w.a0+k*7;
   G.px=w.gx+Math.cos(a)*r;G.py=w.gy+Math.sin(a)*r;G.ang=a+Math.PI/2;return}
- if(w.win){G.warp=null;win();return}
+ if(w.win){G.warp=null;startBonus();return}
  if(w.t>=WARP.dive+WARP.tunnel+WARP.exit){G.warp=null;nextSector();G.arrive=ARRIVE_T;G.ang=-Math.PI/2}}
 // the camera during the dive: from the ship to the hole, pushing in
 function camView(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return{x:G.px,y:G.py,z:1};
@@ -1020,6 +1020,7 @@ function warpShrink(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return 1;const e=M
 function update(dt){return seeded(updateRun,dt)}
 function updateRun(dt){
  if(G.warp){warpStep(dt);return}
+ if(G.bonus){bonusStep(dt);return}
  if(G.arrive>0){G.arrive-=dt;G.vx=G.vy=0;G.ang=-Math.PI/2;G.inv=Math.max(G.inv,0.4);return}
  G.t+=dt;G.secT+=dt;if(G.bossAlive)G.bossT=(G.bossT||0)+dt;
  const st=stickVec(),sp=moveSpeed();
@@ -1688,11 +1689,13 @@ const WARP_LOOK={giant:{col:[255,196,110],ring:"arc",curve:0.35,spin:0.25,bg:"#1
  hive:{col:[110,255,170],ring:"hex",curve:0.18,spin:1.3,bg:"#03100a"},
  moon:{col:[205,210,220],ring:"rock",curve:0.45,spin:0.15,bg:"#08080c"},
  hole:{col:[175,120,255],ring:"spiral",curve:0.12,spin:2.6,bg:"#090316"}};
-function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),ex=Math.max(0,(w.t-WARP.dive-WARP.tunnel)/WARP.exit);
- const R=REALMS[(w.to-1)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole,[cr,cg,cb]=L.col,rgba=a=>"rgba("+cr+","+cg+","+cb+","+a.toFixed(3)+")";
- cx.save();cx.scale(DPR,DPR);
+// The tunnel itself: background, fog, rings and wall streaks, for a look
+// L at time t moving at `speed`. It hands back the frame's projection so
+// whatever rides in it - the ship, the bonus run's hoops - is placed the
+// same way: proj(depth, angle, radius fraction) gives a screen point.
+function tunnelWalls(L,t,speed){const [cr,cg,cb]=L.col,rgba=a=>"rgba("+cr+","+cg+","+cb+","+a.toFixed(3)+")";
  cx.fillStyle=L.bg;cx.fillRect(0,0,W,H);
- const K=Math.min(W,H)*0.62,Z=9,speed=2.2+u*2.5+ex*6,C={x:W/2,y:H*0.44};
+ const K=Math.min(W,H)*0.62,Z=9,C={x:W/2,y:H*0.44};
  // the way ahead drifts, and the rings follow it more the further off they are
  const vp={x:C.x+Math.sin(t*0.8)*L.curve*W*0.3,y:C.y+Math.cos(t*0.6)*L.curve*H*0.14};
  const proj=(z,a,rr)=>{const f=z/(z+1),ccx=C.x+(vp.x-C.x)*f,ccy=C.y+(vp.y-C.y)*f,pr=K/(z+0.2)*rr;return[ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr,pr,ccx,ccy]};
@@ -1714,25 +1717,81 @@ function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),e
  for(let i=0;i<110;i++){const a=hash(i,61)*TAU+roll*0.5,rr=0.9+hash(i,67)*0.15,z=((hash(i,71)*Z-speed*t*(0.8+hash(i,73)*0.6))%Z+Z)%Z;
   const [x1,y1]=proj(z,a,rr),[x2,y2]=proj(z+0.8+speed*0.12,a,rr),depth=1-z/Z,wh=hash(i,79)>0.6;
   cx.strokeStyle=wh?"rgba(255,255,255,"+(depth*depth*0.55).toFixed(3)+")":rgba(depth*depth*0.8);cx.lineWidth=0.6+depth*1.6;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke()}
+ return{vp,C,K,Z,proj,rgba}}
+// The ship riding the tunnel: an exhaust column, the solid hull tilted in
+// and rolled by `bank`, and (while `fade` is above zero) the sprite over it.
+function tunnelShip(x,y,sc,bank,tilt,fade,t){const len=SHIPP*sc*2.2,jx=(Math.random()*2-1)*1.5,jy=(Math.random()*2-1)*1.5;
+ cx.save();cx.translate(x+jx,y+jy);cx.rotate(bank);
+ const eg=cx.createLinearGradient(0,SHIPP*sc*0.5,0,SHIPP*sc*0.5+len);eg.addColorStop(0,"rgba(255,230,150,0.6)");eg.addColorStop(0.35,"rgba(255,140,40,0.35)");eg.addColorStop(1,"rgba(255,80,20,0)");
+ cx.fillStyle=eg;cx.beginPath();cx.moveTo(-9*sc,SHIPP*sc*0.45);cx.lineTo(9*sc,SHIPP*sc*0.45);cx.lineTo(2*sc,SHIPP*sc*0.45+len);cx.lineTo(-2*sc,SHIPP*sc*0.45+len);cx.closePath();cx.fill();
+ cx.rotate(-bank);drawShip3D(0,0,sc,G.ship,tilt,bank*1.6+Math.sin(t*1.3)*0.12,Math.sin(t*0.9)*0.1,1);
+ if(fade>0){cx.globalAlpha=fade;cx.rotate(bank);cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.globalAlpha=1}
+ cx.restore()}
+function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),ex=Math.max(0,(w.t-WARP.dive-WARP.tunnel)/WARP.exit);
+ const R=REALMS[(w.to-1)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole;
+ cx.save();cx.scale(DPR,DPR);
+ const {vp,C,K,rgba}=tunnelWalls(L,t,2.2+u*2.5+ex*6);
  // the far end: where it comes out grows to meet you
  const far=Math.max(0,(u-0.6)/0.4);
  if(far>0){const sp=backSprite(R.back);if(sp){const sz=K*(0.08+far*far*1.6);cx.globalAlpha=Math.min(1,far*1.6);cx.drawImage(sp,vp.x-sz/2,vp.y-sz/2,sz,sz);cx.globalAlpha=1}}
- // the ship, banking into the bends, then climbing out of the top
+ // the ship, banking into the bends, then climbing out of the top; the flat
+ // ship becomes a solid as it enters, tilting its nose into the tunnel
  const climb=ex*ex*ex,sc=S*2.2*(1+climb*0.3),bank=(vp.x-C.x)/W*1.4,sx=W/2+(vp.x-C.x)*0.35,sy=H*0.7-climb*(H*0.7+SHIPP*3);
- const len=SHIPP*sc*(2.2+climb*6),jx=(Math.random()*2-1)*1.5,jy=(Math.random()*2-1)*1.5;
- cx.save();cx.translate(sx+jx,sy+jy);cx.rotate(bank);
- const eg=cx.createLinearGradient(0,SHIPP*sc*0.5,0,SHIPP*sc*0.5+len);eg.addColorStop(0,"rgba(255,230,150,0.6)");eg.addColorStop(0.35,"rgba(255,140,40,0.35)");eg.addColorStop(1,"rgba(255,80,20,0)");
- cx.fillStyle=eg;cx.beginPath();cx.moveTo(-9*sc,SHIPP*sc*0.45);cx.lineTo(9*sc,SHIPP*sc*0.45);cx.lineTo(2*sc,SHIPP*sc*0.45+len);cx.lineTo(-2*sc,SHIPP*sc*0.45+len);cx.closePath();cx.fill();
- // the flat ship becomes a solid as it enters, tilting its nose into the
- // tunnel, and rolls into the bends; the sprite fades out over it
- const mp=Math.min(1,t/0.6),tilt=mp*mp*(3-2*mp)*0.62*(1-climb*0.4),rl=bank*1.6+Math.sin(t*1.3)*0.12,yaw=Math.sin(t*0.9)*0.1;
- cx.rotate(-bank);drawShip3D(0,0,sc,G.ship,tilt,rl,yaw,1);
- if(mp<0.5){cx.globalAlpha=1-mp*2;cx.rotate(bank);cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.globalAlpha=1}
- cx.restore();
+ const mp=Math.min(1,t/0.6),tilt=mp*mp*(3-2*mp)*0.62*(1-climb*0.4);
+ tunnelShip(sx,sy,sc,bank,tilt,mp<0.5?1-mp*2:0,t);
  // where it is going, over the top
  textFit(R.name,W/2,SAFE.t+H*0.09,Math.min(26,W*0.06),rgba(0.75+0.25*Math.sin(t*4)),W*0.8);
  // the flash it leaves in
  const fl=Math.max(0,(ex-0.45)/0.55);if(fl>0){cx.fillStyle="rgba(255,255,255,"+fl.toFixed(2)+")";cx.fillRect(0,0,W,H)}
+ cx.restore()}
+// ------------------------------------------------------------ the bonus run
+// Clear all six sectors and the last gate's tunnel is yours to fly: forty-five
+// seconds down the wormhole, the look changing every few seconds, steering
+// the ship across the tunnel through hoops (a combo that pays more each
+// time), over gems, and round shards that break the combo. Nothing here can
+// kill you; the score it earns goes on the run's total.
+const BONUS={t:45,speed:3.2,zShip:1.23,look:7.5};
+function startBonus(){G.bonus={t:0,ox:0,oy:0,vx:0,vy:0,obj:[],spawn:1.2,n:0,score:0,combo:0,best:0,hits:0,hoops:0,gems:0,hurt:0,ang:Math.random()*TAU};
+ announce("BONUS RUN  \u00b7  FLY THROUGH THE HOOPS!");SFX.warpRun()}
+function bonusStep(dt){const b=G.bonus;b.t+=dt;const st=stickVec(),k=Math.min(1,dt*8);
+ b.vx+=(st.x*2.4-b.vx)*k;b.vy+=(st.y*2.4-b.vy)*k;b.ox+=b.vx*dt;b.oy+=b.vy*dt;const l=Math.hypot(b.ox,b.oy);if(l>0.8){b.ox*=0.8/l;b.oy*=0.8/l}
+ // something new every half second: mostly hoops wandering round the wall,
+ // gems in the gaps, a shard now and then on the far side
+ b.spawn-=dt;if(b.spawn<=0&&b.t<BONUS.t-3){b.spawn=0.5;b.n++;b.ang+=rnd(-0.9,0.9);const kind=b.n%7===0||b.n%5===0?"shard":b.n%3===0?"gem":"hoop";
+  let a=b.ang,rr=0.25+Math.random()*0.5;if(kind==="shard"){a+=Math.PI*(0.5+Math.random());rr=0.2+Math.random()*0.55}
+  b.obj.push({k:kind,a,rr,z:9})}
+ const zs=BONUS.zShip;
+ for(const o of b.obj){const z0=o.z;o.z-=BONUS.speed*dt;if(z0>zs&&o.z<=zs&&!o.done){o.done=true;const d=Math.hypot(Math.cos(o.a)*o.rr-b.ox,Math.sin(o.a)*o.rr-b.oy);
+  if(o.k==="hoop"){if(d<0.22){o.hit=true;b.combo++;b.best=Math.max(b.best,b.combo);b.hoops++;b.score+=50*b.combo;SFX.pick();flash=0.12}else b.combo=0}
+  else if(o.k==="gem"&&d<0.18){o.hit=true;b.gems++;b.score+=20;SFX.gem()}
+  else if(o.k==="shard"&&d<0.2){o.hit=true;b.hits++;b.combo=0;b.hurt=0.5;shake=1;SFX.hurt()}}}
+ b.obj=b.obj.filter(o=>o.z>-0.5);b.hurt=Math.max(0,b.hurt-dt);
+ shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
+ if(b.t>=BONUS.t){G.bonusScore=b.score;G.score+=b.score;G.bonus=null;win()}}
+function drawBonus(){const b=G.bonus,t=b.t,R=REALMS[Math.floor(t/BONUS.look)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole;
+ cx.save();cx.scale(DPR,DPR);const sh=(Math.random()-0.5)*shake*10;cx.translate(sh,sh*0.6);
+ const {proj,K}=tunnelWalls(L,t,BONUS.speed+1.2),zs=BONUS.zShip;
+ const drawObj=(o)=>{if(o.z<0||(o.hit&&o.k!=="shard"))return;const [x,y]=proj(o.z,o.a,o.rr),depth=Math.max(0,1-o.z/9),r=K/(o.z+0.2)*(o.k==="hoop"?0.22:0.16),al=Math.min(1,depth*1.6);
+  if(o.k==="hoop"){cx.strokeStyle="rgba(255,220,90,"+al.toFixed(2)+")";cx.lineWidth=2+depth*4;cx.beginPath();cx.arc(x,y,r,0,TAU);cx.stroke();
+   cx.strokeStyle="rgba(255,255,255,"+(al*0.5).toFixed(2)+")";cx.lineWidth=1;cx.beginPath();cx.arc(x,y,r*0.85,0,TAU);cx.stroke();if(FX&&depth>0.5)glow(x,y,r*1.6,"rgba(255,220,90,0.35)","rgba(255,200,60,0.02)")}
+  else if(o.k==="gem"){const g=r*0.45;cx.fillStyle="rgba(120,220,255,"+al.toFixed(2)+")";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.7,y);cx.lineTo(x,y+g);cx.lineTo(x-g*0.7,y);cx.closePath();cx.fill();
+   cx.fillStyle="rgba(255,255,255,"+(al*0.7).toFixed(2)+")";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.3,y-g*0.3);cx.lineTo(x-g*0.3,y-g*0.3);cx.closePath();cx.fill()}
+  else{const g=r*0.9,sp=frameT*2+o.a;cx.fillStyle=o.hit?"rgba(120,120,120,"+al.toFixed(2)+")":"rgba(255,80,100,"+al.toFixed(2)+")";cx.beginPath();
+   for(let i=0;i<10;i++){const q=i%2?g*0.45:g,a=sp+i/10*TAU;cx.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}cx.closePath();cx.fill();
+   cx.strokeStyle="rgba(255,255,255,"+(al*0.6).toFixed(2)+")";cx.lineWidth=1;cx.stroke()}};
+ const objs=b.obj.slice().sort((p,q)=>q.z-p.z);for(const o of objs)if(o.z>zs)drawObj(o);
+ const [sx,sy]=proj(zs,Math.atan2(b.oy,b.ox),Math.hypot(b.ox,b.oy)),bank=b.vx*0.35;
+ if(!(b.hurt>0&&Math.floor(frameT*20)%2))tunnelShip(sx,sy,S*2,bank,0.62,0,t);
+ for(const o of objs)if(o.z<=zs)drawObj(o);
+ // the readout: what is left, what it has earned, the combo
+ const ST=SAFE.t,cz=Math.min(30,W*0.07);
+ textFit("BONUS RUN",W/2,ST+cz*0.9,cz*0.7,"#ffe060",W*0.8);
+ textFit(fmt(Math.max(0,BONUS.t-t)),W/2,ST+cz*2,cz,"#fff",W*0.5);
+ textFit("+"+b.score,W/2,ST+cz*3,cz*0.8,"#80ff90",W*0.5);
+ if(b.combo>1)textFit("x"+b.combo+" COMBO",W/2,ST+cz*3.9,cz*0.7,"#ffe060",W*0.5);
+ if(G.announceT>0)textFit(G.announce,W/2,H*0.62,Math.min(24,W*0.055),"rgba(255,255,255,"+Math.min(1,G.announceT).toFixed(2)+")",W*0.9);
+ if(b.hurt>0){cx.fillStyle="rgba(255,60,60,"+(b.hurt*0.45).toFixed(2)+")";cx.fillRect(0,0,W,H)}
+ if(flash>0){cx.fillStyle="rgba(255,255,255,"+(flash*0.6).toFixed(2)+")";cx.fillRect(0,0,W,H)}
  cx.restore()}
 function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);const cam=camView();cx.scale(S*cam.z,S*cam.z);cx.translate(-cam.x,-cam.y);
  drawStars();
@@ -2115,7 +2174,7 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);shareSaidT=Math.max(0,shareSaidT-1/60);
  const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
  drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+tail,won?"#80c0ff":"#ff8080");
- const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(FEATURES.shop&&G.gemsGot>0?"     +"+Math.round(G.gemsGot)+" gems banked":""),W/2,y+46,20,"#fff",W-32);
+ const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(G.bonusScore?"     Tunnel bonus +"+G.bonusScore:"")+(FEATURES.shop&&G.gemsGot>0?"     +"+Math.round(G.gemsGot)+" gems banked":""),W/2,y+46,20,"#fff",W-32);
  if(G.mode==="daily"){const d=records[dailyKey()];
   if(G.dailyRank===1&&G.score>0)text("TODAY\u2019S BEST!",W/2,y+80,26,"#80ff90");
   // the day's board, where there is room for it under the score
@@ -2301,7 +2360,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();
  // the hangar and the credits have a theme, and it starts the moment audio can
  if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
- if(["play","levelup","pause","over","win"].includes(scene)&&G){if(G.warp&&G.warp.t>=WARP.dive)drawWarp();else{drawWorld();if(G.warp)drawDive();else drawHUD()}}
+ if(["play","levelup","pause","over","win"].includes(scene)&&G){if(G.warp&&G.warp.t>=WARP.dive)drawWarp();else if(G.bonus)drawBonus();else{drawWorld();if(G.warp)drawDive();else drawHUD()}}
  if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
  drawDiag();
@@ -2309,7 +2368,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,BONUS,get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

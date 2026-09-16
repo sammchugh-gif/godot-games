@@ -241,6 +241,18 @@ it by hand, so a checker can catch a cutscene at an exact moment. The
 frame already queued when `halt()` is called still runs, and on a slow
 renderer it can land a second later, so wait before drawing by hand.
 
+## The bonus run
+
+Clear all six sectors and the last gate's tunnel is playable: forty-five
+seconds down the wormhole, the look changing every seven and a half
+seconds through all six realms, steering the solid ship across the tunnel
+with the stick. Hoops pay 50 times a combo that grows with each one in a
+row and resets on a miss or a shard; gems pay 20; shards break the combo,
+flash the screen and cost nothing else. Nothing in it can kill you. What
+it earns goes on the run's score before the win screen, which says so.
+Timings and speeds are in `BONUS`; `swarmcheck` feeds it hoops, a gem and
+a shard and checks the arithmetic, then plays it out to the win.
+
 ## Music
 
 Six sector tracks, a title theme, and a boss piece. The boss piece is a
