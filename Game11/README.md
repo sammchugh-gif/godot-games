@@ -24,13 +24,15 @@ either orientation. One file, no engine.
   outline of one piece of a working layout; every three more misses adds
   another, so the level stays yours to finish.
 - **CUSTOM SANDBOX** on the title screen leads to six sandboxes. Each has
-  unlimited pieces and a hopper at the top that every marble enters
-  through: drag the hopper to choose where they come in. Five marbles drop
-  on GO and come back through the hopper when they fall off; hold **RAIN**
-  to pour more, up to thirty. The board keeps a **RUN** clock, the longest
-  any marble has kept moving, and a **BEST** for each sandbox that
-  survives a reload. **RESET** puts the marbles back; **CLEAR** empties the
-  board, and asks first. Every sandbox saves itself, hopper included.
+  unlimited pieces, a hopper at the top that every marble enters through,
+  and an **END** cup at the bottom: drag either along its edge to choose
+  where the marbles come in and where they should end up. Five marbles
+  drop on GO and come back through the hopper when they fall off or land
+  in the cup; hold **RAIN** to pour more, up to thirty. The board keeps a
+  **RUN** clock, the longest any marble has kept moving, a **CAUGHT** count
+  for the cup, and a **BEST** and **MOST** for each sandbox that survive a
+  reload. **RESET** puts the marbles back; **CLEAR** empties the board, and
+  asks first. Every sandbox saves itself, hopper and cup included.
 - Music plays from the first tap. The **♪** switch on the title screen
   turns it off and remembers.
 
@@ -83,7 +85,7 @@ bonus stars on the winning path. `--verify` re-proves all sixty-four.
 
 `window.MM` exposes the scene, pieces, marbles, the selected piece,
 `buttons()` (where the top bar put each control this frame), `LEVELS`,
-`WORLDS`, `worldIdx`, `hopper`, `loadLevel(i)`, `loadSandbox(slot)`,
+`WORLDS`, `worldIdx`, `hopper`, `cup`, `caught`, `loadLevel(i)`, `loadSandbox(slot)`,
 `go()`, `rain()`, `hintPieces()`, `runBest` and `simulate(pieces, seconds)`,
 which runs the physics headlessly and reports whether the marble reached
 the goal.

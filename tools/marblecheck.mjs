@@ -107,6 +107,24 @@ for (const [W, H, tag] of SIZES) {
   check('marbles enter through the hopper', spawn.dx <= 18 && spawn.y === -14, `${spawn.dx.toFixed(0)}px from it`);
   const hopSaved = await pg.evaluate(() => JSON.parse(localStorage.getItem('marblemayhem.hopper'))[2]);
   check('the hopper position is saved', Math.abs(hopSaved - hop1) < 0.01, '');
+
+  /* ---- the cup: drag it along the floor, then line it up under the hopper
+     with nothing in between and every marble should land in it */
+  await pg.evaluate(() => window.MM.resetRun());
+  const cup0 = await pg.evaluate(() => window.MM.cup[2]);
+  const cp = await pg.evaluate(() => { const b = window.MM.board(); return { x: b.x + window.MM.cup[2] * b.s, y: b.y + 600 * b.s, s: b.s }; });
+  await finger(cdp, 'touchStart', [{ x: Math.round(cp.x), y: Math.round(cp.y) }]);
+  await sleep(60);
+  for (let i = 1; i <= 10; i++) { await finger(cdp, 'touchMove', [{ x: Math.round(cp.x - i * 15), y: Math.round(cp.y) }]); await sleep(40); }
+  await finger(cdp, 'touchEnd');
+  await sleep(100);
+  const cup1 = await pg.evaluate(() => window.MM.cup[2]);
+  check('the cup drags along the floor', Math.abs(cup1 - (cup0 - 150 / cp.s)) < 12, `${Math.round(cup0)} -> ${Math.round(cup1)}`);
+  await pg.evaluate(() => { const M = window.MM; M.hopper[2] = M.cup[2]; M.resetRun(); M.go(); });
+  let got = 0;
+  for (let i = 0; i < 60 && !(got > 0); i++) { await sleep(250); got = await pg.evaluate(() => window.MM.caught); }
+  const most = await pg.evaluate(() => JSON.parse(localStorage.getItem('marblemayhem.caught'))[2]);
+  check('marbles that land in the cup are counted', got > 0 && most >= got, `${got} caught, most ${most}`);
   await pg.evaluate(() => { window.MM.resetRun(); window.MM.scene = 'title'; });
   if (SHOTS) { await pg.evaluate(() => window.MM.loadSandbox(2)); await sleep(150); await pg.screenshot({ path: `${SHOTS}/hopper-${W}x${H}.png` }); await pg.evaluate(() => { window.MM.scene = 'title'; }); }
 

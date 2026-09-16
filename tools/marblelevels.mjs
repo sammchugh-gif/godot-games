@@ -83,8 +83,8 @@ const PLAN = [
 const DIFF = [
   null, null,
   { planks: [1, 2], ledges: [1, 2], wall: 0.3, funnel: 0.85, min: 2, stars: [1, 2], gap: 300 },
-  { planks: [1, 2], ledges: [1, 3], wall: 0.6, funnel: 0.75, min: 3, stars: [2, 2], gap: 380 },
-  { planks: [1, 2], ledges: [2, 3], wall: 0.8, funnel: 0.65, min: 4, stars: [2, 3], gap: 420 },
+  { planks: [1, 2], ledges: [1, 3], wall: 0.6, funnel: 0.75, min: 2, stars: [2, 2], gap: 380 },
+  { planks: [1, 2], ledges: [2, 3], wall: 0.8, funnel: 0.65, min: 3, stars: [2, 3], gap: 420 },
 ];
 
 /* mulberry32: a seed gives the same board every time */
@@ -374,7 +374,10 @@ async function worker(pg) {
       if (res.level) {
         const L = res.level;
         console.log(`${String(idx + 1).padStart(2)}. ${L.name.padEnd(18)} seed ${attempt} ok  ${Object.entries(L.tray).map(([k, v]) => k + (v > 1 ? '×' + v : '')).join(' ')}  ${L.stars.length}★  ${res.t}s  (${res.sims} sims, ${((Date.now() - t0) / 1000).toFixed(0)}s)`);
-        out.set(idx, L); break;
+        console.log(emit(L));
+        out.set(idx, L);
+        if (WRITE && !FIX) writeGen();
+        break;
       }
       console.log(`${String(idx + 1).padStart(2)}. ${spec[0].padEnd(18)} seed ${attempt} -- ${res.fail}`);
     }
@@ -388,6 +391,33 @@ await browser.close(); srv.close();
 const made = [...out.keys()].sort((a, b) => a - b);
 const wanted = FIX ? FIX.split(',').length : range[1] - range[0] + 1;
 console.log(`\n${made.length}/${wanted} levels in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+/* rewrite the GEN block from what this run has made plus what the file
+   already had for the rest; a level this run has not reached yet keeps its
+   old line, and a level nobody has made yet is left out */
+function writeGen() {
+  let s = fs.readFileSync(GAME, 'utf8');
+  const a = s.indexOf('/*GEN-START*/'), b = s.indexOf('/*GEN-END*/');
+  if (a < 0 || b < 0) { console.error('no GEN markers in ' + GAME); process.exit(1); }
+  const have = new Map();
+  for (const m of s.slice(a, b).matchAll(/^ \{name:("(?:[^"\\]|\\.)*"),.*\},$/gm)) have.set(JSON.parse(m[1]), m[0]);
+  const lines = [];
+  for (let i = FIRST; i < FIRST + PLAN.length; i++) {
+    const name = PLAN[i - FIRST][0];
+    if (out.has(i)) lines.push(emit(out.get(i)));
+    else if (have.has(name)) lines.push(have.get(name));
+  }
+  const block = `/*GEN-START*/
+// Worlds 2-4 are written by tools/marblelevels.mjs: a seeded layout generator
+// whose every level is solved by search against this file's own physics and
+// kept only when the solution survives a ten-pixel nudge of every piece.
+// Edit the tool, not this block.
+const GEN=[
+${lines.join('\n')}
+];
+`;
+  fs.writeFileSync(GAME, s.slice(0, a) + block + s.slice(b));
+  return lines.length;
+}
 if (WRITE && FIX) {
   /* a fixed original replaces its own line in the hand-made list */
   let s = fs.readFileSync(GAME, 'utf8');
@@ -400,33 +430,8 @@ if (WRITE && FIX) {
   fs.writeFileSync(GAME, s);
   console.log(`rewrote ${made.length} hand-made levels in ${path.relative(ROOT, GAME)}`);
 } else if (WRITE) {
-  let s = fs.readFileSync(GAME, 'utf8');
-  const a = s.indexOf('/*GEN-START*/'), b = s.indexOf('/*GEN-END*/');
-  if (a < 0 || b < 0) { console.error('no GEN markers in ' + GAME); process.exit(1); }
-  /* a partial run keeps what is already there for the levels it did not make */
-  const cur = s.slice(a, b);
-  const have = new Map();
-  for (const m of cur.matchAll(/^ \{name:("(?:[^"\\]|\\.)*"),.*\},$/gm)) have.set(JSON.parse(m[1]), m[0]);
-  const lines = [];
-  for (let i = FIRST; i < FIRST + PLAN.length; i++) {
-    const name = PLAN[i - FIRST][0];
-    if (out.has(i)) lines.push(emit(out.get(i)));
-    else if (have.has(name)) lines.push(have.get(name));
-    else { console.error(`no level for ${i + 1}. ${name}; not writing`); process.exit(1); }
-  }
-  const block = `/*GEN-START*/
-// Worlds 2-4 are written by tools/marblelevels.mjs: a seeded layout generator
-// whose every level is solved by search against this file's own physics and
-// kept only when the solution survives a ten-pixel nudge of every piece.
-// Edit the tool, not this block.
-const GEN=[
-${lines.join('\n')}
-];
-`;
-  s = s.slice(0, a) + block + s.slice(b);
-  fs.writeFileSync(GAME, s);
-  console.log(`wrote ${lines.length} levels into ${path.relative(ROOT, GAME)}`);
-} else {
-  for (const i of made) console.log(emit(out.get(i)));
+  const n = writeGen();
+  console.log(`${n}/${PLAN.length} levels are in ${path.relative(ROOT, GAME)}`);
+  if (n < PLAN.length) console.log('run again for the rest; a level already in the file is kept');
 }
 process.exit(made.length === wanted ? 0 : 1);
