@@ -111,6 +111,17 @@ check('the hangar has a theme of its own', title.rms > 0.015 && title.peak < 0.9
   && T[6].bpm < Math.min(...T.slice(0, 6).map(t => t.bpm)) && !sameKeyAsSector,
   `rms ${title.rms.toFixed(3)}, ${T[6].bpm} bpm, slower than every sector, in a key none of them use`);
 
+/* ------------------------------------------------------ a longer form
+   Eight bars looped was the complaint. Every track now has a second tune
+   over its own chords, played third in a thirty-two bar form, and the
+   render from bar sixteen must not be the render from bar zero. */
+const formOK = T.every(t => t.lead2 && t.chords2 && t.lead2.length === 64 && t.chords2.length === 8 && t.lead2.join() !== t.lead.join());
+const secA = await render('music', SECS, { sector: 1 });
+const secB = await render('music', SECS, { sector: 1, bar: 16 });
+const shared = (() => { let n = 0; for (const k of Object.keys(secA.notes)) if (secB.notes[k]) n++; return n / Math.max(1, Object.keys(secA.notes).length); })();
+check('every track has a second section', formOK && JSON.stringify(secA.notes) !== JSON.stringify(secB.notes) && secB.rms > 0.02,
+  `all ${T.length} tracks carry a second tune; sector 1 from bar 16 shares ${(shared * 100).toFixed(0)}% of its pitches with bar 0 and is a different render`);
+
 /* ------------------------------------------- the boss piece and the calm mix
    A boss gets a piece of its own, in the sector's key: faster than any
    sector, louder, and a different melody. Once it is down the sector's own
