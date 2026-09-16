@@ -357,28 +357,35 @@ const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10],DOR=[0,2,3,5,7,9,10],PHR=[0,1,3,
 const TRACKS=[
  {name:"giant",bpm:128,root:57,scale:MAJ,chords:[0,4,5,3,0,4,5,3],
   lead:[1,0,3,5,0,8,0,7, 5,0,3,0,1,0,0,0, 2,0,4,5,0,7,0,9, 8,0,7,0,5,0,0,0, 1,0,3,5,0,8,0,10, 9,0,8,0,7,0,5,0, 6,0,8,9,0,10,9,8, 7,0,5,0,3,0,0,0],
-  bass:[1,0,1,1,0,1,0,1],kick:[0,4,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[14],pad:0.028,arp:0.022,arpOct:0},
+  bass:[1,0,1,1,0,1,0,1],kick:[0,4,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[14],pad:0.028,arp:0.022,arpOct:0,
+  chords2:[3,4,0,5,3,4,1,4],lead2:[5,0,6,0,8,0,10,0, 9,0,8,0,7,0,5,0, 3,0,5,0,6,0,8,0, 7,0,0,0,5,0,3,0, 10,0,10,0,9,0,8,0, 9,0,0,0,7,0,8,0, 6,0,8,0,9,0,10,0, 8,0,0,0,0,0,0,0]},
  {name:"fleet",bpm:126,root:52,scale:DOR,chords:[0,3,0,6,0,3,4,6],
   lead:[1,0,5,0,8,7,0,5, 0,4,0,5,0,0,0,0, 1,0,5,0,8,10,0,9, 0,7,0,8,7,0,0,0, 12,0,11,0,10,0,8,0, 9,0,8,0,7,0,5,0, 6,0,8,0,10,0,9,8, 7,0,0,0,5,0,0,0],
-  bass:[1,0,1,1,0,1,1,0],kick:[0,7,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[10],pad:0.03,arp:0.024,arpOct:1},
+  bass:[1,0,1,1,0,1,1,0],kick:[0,7,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[10],pad:0.03,arp:0.024,arpOct:1,
+  chords2:[5,6,0,3,5,6,4,0],lead2:[8,0,0,7,0,5,0,4, 5,0,0,0,7,0,8,0, 10,0,0,9,0,8,0,7, 8,0,0,0,5,0,0,0, 3,0,4,0,5,0,7,0, 8,0,7,0,5,0,4,0, 6,0,0,5,0,4,0,2, 1,0,0,0,0,0,0,0]},
  {name:"ember",bpm:118,root:51,scale:MIN,chords:[0,3,5,6,0,3,5,6],
   lead:[1,0,0,0,5,0,0,0, 8,0,0,0,7,0,5,0, 4,0,0,0,6,0,0,0, 5,0,0,0,3,0,1,0, 8,0,0,0,12,0,0,0, 11,0,0,0,10,0,8,0, 6,0,0,0,7,0,0,0, 8,0,0,0,5,0,0,0],
-  bass:[1,0,0,0,0,0,1,0],kick:[0,10],snare:[8],hat:[0,2,4,6,8,10,12,14],open:[6],pad:0.04,arp:0,arpOct:0},
+  bass:[1,0,0,0,0,0,1,0],kick:[0,10],snare:[8],hat:[0,2,4,6,8,10,12,14],open:[6],pad:0.04,arp:0,arpOct:0,
+  chords2:[5,6,3,0,5,6,4,0],lead2:[12,0,0,0,0,0,11,0, 10,0,0,0,8,0,0,0, 9,0,0,0,0,0,8,0, 7,0,0,0,5,0,0,0, 8,0,0,0,0,0,10,0, 12,0,0,0,0,0,0,0, 11,0,0,0,10,0,9,0, 8,0,0,0,0,0,0,0]},
  {name:"hive",bpm:134,root:58,scale:MIN,chords:[0,0,5,6,0,0,5,6],
   lead:[1,3,5,3,1,3,5,8, 7,5,3,5,7,5,3,1, 1,3,5,3,1,3,5,8, 6,8,10,8,6,8,7,5, 1,3,5,3,1,3,5,8, 7,5,3,5,7,5,3,1, 8,6,8,6,8,6,8,10, 7,8,7,5,3,5,3,1],
-  bass:[1,1,1,1,1,1,1,1],kick:[0,4,8,12],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[7,15],pad:0.012,arp:0.03,arpOct:1},
+  bass:[1,1,1,1,1,1,1,1],kick:[0,4,8,12],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[7,15],pad:0.012,arp:0.03,arpOct:1,
+  chords2:[3,3,5,6,3,3,4,4],lead2:[5,7,8,7,5,7,8,10, 9,8,7,8,9,8,7,5, 5,7,8,7,5,7,8,10, 11,10,9,10,11,10,9,8, 8,10,12,10,8,10,12,13, 12,11,10,11,12,11,10,8, 6,8,10,8,6,8,10,12, 11,10,9,8,7,6,5,0]},
  {name:"moon",bpm:108,root:48,scale:MIN,chords:[0,5,3,6,0,5,3,6],
   lead:[1,0,0,0,0,0,5,0, 0,0,3,0,0,0,0,0, 8,0,0,0,0,0,7,0, 0,0,5,0,0,0,0,0, 1,0,0,0,0,0,5,0, 0,0,3,0,0,0,4,0, 6,0,0,0,5,0,0,0, 3,0,0,0,1,0,0,0],
-  bass:[1,0,0,0,1,0,0,0],kick:[0,10],snare:[8],hat:[0,4,8,12],open:[12],pad:0.045,arp:0.026,arpOct:2},
+  bass:[1,0,0,0,1,0,0,0],kick:[0,10],snare:[8],hat:[0,4,8,12],open:[12],pad:0.045,arp:0.026,arpOct:2,
+  chords2:[3,6,0,5,3,6,4,5],lead2:[8,0,0,0,0,0,10,0, 0,0,9,0,0,0,0,0, 7,0,0,0,0,0,8,0, 0,0,5,0,0,0,0,0, 10,0,0,0,0,0,12,0, 0,0,11,0,0,0,10,0, 9,0,0,0,8,0,0,0, 7,0,0,0,5,0,0,0]},
  {name:"hole",bpm:136,root:55,scale:MIN,chords:[0,5,6,0,3,5,6,6],
   lead:[1,0,1,0,3,0,5,0, 8,0,0,0,7,0,5,0, 6,0,6,0,8,0,10,0, 9,0,0,0,8,0,7,0, 1,0,1,0,3,0,5,0, 8,0,0,0,10,0,12,0, 11,0,10,0,9,0,8,0, 7,0,0,0,8,0,0,0],
-  bass:[1,0,1,0,1,0,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[15],pad:0.036,arp:0.028,arpOct:1},
+  bass:[1,0,1,0,1,0,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[15],pad:0.036,arp:0.028,arpOct:1,
+  chords2:[3,4,5,6,3,4,0,0],lead2:[12,0,11,0,10,0,8,0, 9,0,0,0,10,0,9,0, 8,0,7,0,6,0,5,0, 7,0,0,0,8,0,0,0, 12,0,12,0,13,0,12,0, 11,0,0,0,10,0,8,0, 9,0,8,0,7,0,6,0, 5,0,0,0,0,0,0,0]},
 ];
 let musicTrack=-1,musicLog=null,musicKind="",musicForce=null;  // musicLog collects what was scheduled, for the checker
 // the title theme sits after the six sectors
 TRACKS.push({name:"title",bpm:66,root:45,scale:MIN,chords:[0,5,3,0,0,5,6,4],
   lead:[1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 8,0,0,0,0,0,7,0, 6,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 4,0,0,0,0,0,3,0, 2,0,0,0,0,0,0,0],
-  bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13});
+  bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13,
+  chords2:[3,0,5,6,3,0,4,4],lead2:[8,0,0,0,0,0,0,0, 7,0,0,0,0,0,5,0, 6,0,0,0,0,0,0,0, 5,0,0,0,0,0,3,0, 4,0,0,0,0,0,0,0, 5,0,0,0,0,0,6,0, 7,0,0,0,0,0,0,0, 2,0,0,0,0,0,0,0]});
 const TITLE_TRACK=TRACKS.length-1,SECTOR_TRACKS=6;
 // The boss has a piece of its own: a phrygian riff hammering the flat second
 // over a bass on every eighth, double kicks, a drone under it all. It is
@@ -387,11 +394,12 @@ const TITLE_TRACK=TRACKS.length-1,SECTOR_TRACKS=6;
 const BOSS_TRACK=TRACKS.length;
 TRACKS.push({name:"boss",bpm:150,root:52,scale:PHR,chords:[0,1,0,1,0,1,6,1],
   lead:[1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 1,1,0,1,3,0,2,0, 8,0,7,0,5,0,4,0, 1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 6,0,8,0,9,0,8,0, 2,0,1,0,0,0,0,0],
-  bass:[1,1,1,1,1,1,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[14],pad:0.02,arp:0.03,arpOct:1,drone:true,loud:1.35});
+  bass:[1,1,1,1,1,1,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[14],pad:0.02,arp:0.03,arpOct:1,drone:true,loud:1.35,
+  chords2:[5,6,5,6,0,1,0,1],lead2:[8,8,0,8,10,0,9,0, 8,8,0,8,11,0,9,0, 5,5,0,5,7,0,6,0, 12,0,11,0,10,0,9,0, 1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 8,0,7,0,6,0,5,0, 2,0,1,0,2,0,1,0]});
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 // scale degree (1-based, two octaves) to a MIDI note in this track's key
 function degNote(T,deg,oct){const d=deg-1;return T.root+T.scale[((d%7)+7)%7]+12*Math.floor(d/7)+12*(oct||0)}
-function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(T,c+1),degNote(T,c+3),degNote(T,c+5)]}
+function chordNotes(T,bar,ch){ch=ch||T.chords;const c=ch[bar%ch.length];return[degNote(T,c+1),degNote(T,c+3),degNote(T,c+5)]}
 // Which track should be playing: the checker can force one; the hangar and
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
@@ -430,12 +438,16 @@ function musicSchedule(until){
   const want=wantTrack(),kind=want===TITLE_TRACK?"title":want===BOSS_TRACK?"boss":"run";
   if(want!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=want;musicKind=kind;musicStep=0;continue}
   musicKind=kind;
-  const chord=chordNotes(T,bar);
+  // Thirty-two bars, not eight: the tune, the tune with a harmony a third
+  // up, a second tune over its own chords, then the tune again doubled an
+  // octave up with a drum fill into the top.
+  const sec=Math.floor(bar/8)%4,useB=sec===2&&!!T.lead2,lead=useB?T.lead2:T.lead,chord=chordNotes(T,bar,useB?T.chords2:T.chords),dress=!T.title&&!calm;
   // drums
   const kickV=0.42,snV=0.3,hatV=T.title?0.025:0.05;
   if(!T.title){
    if(calm?inBar===0:T.kick.includes(inBar))drum("kick",t,kickV*(calm?0.7:1));
-   if(!calm&&T.snare.includes(inBar))drum("snare",t,snV);}
+   if(!calm&&T.snare.includes(inBar))drum("snare",t,snV);
+   if(dress&&sec===3&&bar%8===7&&inBar>=8&&inBar%2===0)drum("snare",t,snV*0.7);}
   if(calm){if(inBar%4===0)drum("hat",t,hatV*0.6)}
   else if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
   // bass, on the eighths
@@ -447,9 +459,11 @@ function musicSchedule(until){
    // the boss piece and the theme carry a drone an octave under the root
    if(T.drone||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
   // lead, on the eighths
-  if(inBar%2===0){const d=T.lead[eighth%64];if(d){const n=degNote(T,d);
+  if(inBar%2===0){const d=lead[eighth%64];if(d){const n=degNote(T,d);
    const v=calm?0.04:0.055*(T.loud||1),hold=calm?3.2:(T.hold||1.8);
-   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:calm?2:0.9),v*0.25)}}
+   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:calm?2:0.9),v*0.25);
+   if(dress&&sec===1)osc("sawtooth",midiHz(degNote(T,d+2)),t,s16*hold,v*0.45);
+   if(dress&&sec===3)osc("triangle",midiHz(n+12),t,s16*hold*0.8,v*0.5)}}
   // arpeggio on the sixteenths, up and down the chord across two octaves
   if(T.arp&&!(calm&&inBar%2)){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
    osc("triangle",midiHz(n),t,s16*(calm?1.8:0.9),T.arp*(calm?0.8:1))}
@@ -476,7 +490,7 @@ async function audioRender(what,secs,opts){
    G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,secBoss:!!(opts.boss||opts.calm),gate:opts.gate?{}:null};
    musicForce=opts.title?TITLE_TRACK:opts.boss?BOSS_TRACK:Math.min(SECTOR_TRACKS-1,(opts.sector||1)-1);
    tname=TRACKS[musicForce].name+(opts.calm?" calm":"");
-   musicStep=0;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
+   musicStep=(opts.bar||0)*16;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
   else if(SFX[what])SFX[what]();
  }finally{
   var log=musicLog;musicLog=null;musicForce=null;
@@ -563,7 +577,7 @@ const ghostMouse=()=>performance.now()-lastTouchAt<900;
 // finger that was not on the glass any more, and because the browser still
 // listed that finger nothing could ever claim it back. Tapping again is exactly
 // what a child does when it stops answering, so let tapping again fix it.
-window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioInit();
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioWake();
  if(touch.id===99){touch.id=-1;mouseDown=false}
  seeTouches(e);
  for(const t of e.changedTouches){const q=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,q.x,q.y)}
@@ -592,7 +606,12 @@ function tend(e){lastTouchAt=performance.now();evN++;audioWake();
  if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1;if(!document.hidden&&AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1;if(!document.hidden)audioNudge()});
+// A context the phone has interrupted (the screen locked, a call, another
+// app) comes back only when something asks. Every way back into the page
+// asks, and the frame loop keeps asking once a second until it is running.
+function audioNudge(){if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+window.addEventListener("pageshow",audioNudge);window.addEventListener("focus",audioNudge);let nudgeT=0;
 cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y;fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
 window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y;
  if(fingers[99]){fingers[99].x=p.x;fingers[99].y=p.y}}});
@@ -950,11 +969,11 @@ function shareNow(){if(!shareAsk)return;const text=shareAsk;shareAsk=null;
 window.addEventListener("touchend",shareNow);window.addEventListener("mouseup",shareNow);window.addEventListener("keyup",shareNow);
 function die(){if(scene==="over")return;scene="over";SFX.die();musicStop();saveRecord();bankRun();noteRun("died")}
 // Flying into the gate leaves the whole swarm behind: the field is wiped, the
-// asteroids are new, shields come back, and clearing a sector pays an upgrade.
+// asteroids are new, shields come back, and a quarter of the hull with them.
 function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;G.secChests=0;G.secDrops={};
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
  G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
- G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
+ G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;
  // a sector that opens a slot says so, because otherwise the only sign is a
  // card you have never been offered turning up at the next level
  announce(G.sector===2||G.sector===4||G.sector===6
@@ -1745,53 +1764,77 @@ function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),e
  const fl=Math.max(0,(ex-0.45)/0.55);if(fl>0){cx.fillStyle="rgba(255,255,255,"+fl.toFixed(2)+")";cx.fillRect(0,0,W,H)}
  cx.restore()}
 // ------------------------------------------------------------ the bonus run
-// Clear all six sectors and the last gate's tunnel is yours to fly: forty-five
-// seconds down the wormhole, the look changing every few seconds, steering
-// the ship across the tunnel through hoops (a combo that pays more each
-// time), over gems, and round shards that break the combo. Nothing here can
-// kill you; the score it earns goes on the run's total.
-const BONUS={t:45,speed:3.2,zShip:1.23,look:7.5};
-function startBonus(){G.bonus={t:0,ox:0,oy:0,vx:0,vy:0,obj:[],spawn:1.2,n:0,score:0,combo:0,best:0,hits:0,hoops:0,gems:0,hurt:0,ang:Math.random()*TAU};
- announce("BONUS RUN  \u00b7  FLY THROUGH THE HOOPS!");SFX.warpRun()}
-function bonusStep(dt){const b=G.bonus;b.t+=dt;const st=stickVec(),k=Math.min(1,dt*8);
+// Clear all six sectors and the last gate's tunnel is a level of its own:
+// forty-five seconds down the wormhole in perspective, the look changing
+// every few seconds, steering the solid ship across the tunnel while its
+// guns fire ahead. Aliens fly at you and weave toward you; shoot them for a
+// combo that pays more each kill. Meteoroids tumble down the tunnel; dodge
+// them, or shoot them three times. A hit on the hull costs hull and the
+// combo, and a hull that runs out ends the run early. What it earns goes
+// on the run's total.
+const BONUS={t:45,speed:3.2,zShip:1.23,look:7.5,bolt:11,fire:0.16};
+function startBonus(){G.bonus={t:0,ox:0,oy:0,vx:0,vy:0,obj:[],bolts:[],spawn:1.0,n:0,shots:0,score:0,combo:0,best:0,kills:0,hits:0,hurt:0,fireT:0.3,ang:Math.random()*TAU};
+ G.hp=G.maxhp;G.sh=G.maxsh;announce("SHOOT THE SWARM  \u00b7  DODGE THE ROCKS");SFX.warpRun()}
+function bonusSpawn(b){b.n++;b.ang+=rnd(-1.1,1.1);
+ if(b.n%4===0)b.obj.push({k:"rock",a:b.ang+Math.PI*0.7,rr:0.2+Math.random()*0.55,z:9,hp:3,size:0.13+Math.random()*0.09,rot:Math.random()*TAU,spin:rnd(-2,2)});
+ else{const type=b.n%9===0?"drifter":b.n%2?"scout":"swarmer",d=ENEMY[type];
+  b.obj.push({k:"alien",type,a:b.ang,rr:0.15+Math.random()*0.55,z:9,hp:type==="drifter"?4:type==="scout"?2:1,maxhp:0,r:0,x:0,y:0,col:d.col,flash:0,ai:0,elite:false,boss:false,wob:Math.random()*TAU})}}
+function bonusStep(dt){const b=G.bonus;b.t+=dt;const st=stickVec(),k=Math.min(1,dt*8),zs=BONUS.zShip;
  b.vx+=(st.x*2.4-b.vx)*k;b.vy+=(st.y*2.4-b.vy)*k;b.ox+=b.vx*dt;b.oy+=b.vy*dt;const l=Math.hypot(b.ox,b.oy);if(l>0.8){b.ox*=0.8/l;b.oy*=0.8/l}
- // something new every half second: mostly hoops wandering round the wall,
- // gems in the gaps, a shard now and then on the far side
- b.spawn-=dt;if(b.spawn<=0&&b.t<BONUS.t-3){b.spawn=0.5;b.n++;b.ang+=rnd(-0.9,0.9);const kind=b.n%7===0||b.n%5===0?"shard":b.n%3===0?"gem":"hoop";
-  let a=b.ang,rr=0.25+Math.random()*0.5;if(kind==="shard"){a+=Math.PI*(0.5+Math.random());rr=0.2+Math.random()*0.55}
-  b.obj.push({k:kind,a,rr,z:9})}
- const zs=BONUS.zShip;
- for(const o of b.obj){const z0=o.z;o.z-=BONUS.speed*dt;if(z0>zs&&o.z<=zs&&!o.done){o.done=true;const d=Math.hypot(Math.cos(o.a)*o.rr-b.ox,Math.sin(o.a)*o.rr-b.oy);
-  if(o.k==="hoop"){if(d<0.22){o.hit=true;b.combo++;b.best=Math.max(b.best,b.combo);b.hoops++;b.score+=50*b.combo;SFX.pick();flash=0.12}else b.combo=0}
-  else if(o.k==="gem"&&d<0.18){o.hit=true;b.gems++;b.score+=20;SFX.gem()}
-  else if(o.k==="shard"&&d<0.2){o.hit=true;b.hits++;b.combo=0;b.hurt=0.5;shake=1;SFX.hurt()}}}
- b.obj=b.obj.filter(o=>o.z>-0.5);b.hurt=Math.max(0,b.hurt-dt);
- shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
- if(b.t>=BONUS.t){G.bonusScore=b.score;G.score+=b.score;G.bonus=null;win()}}
+ b.spawn-=dt;if(b.spawn<=0&&b.t<BONUS.t-2.5){b.spawn=0.45;bonusSpawn(b)}
+ // the guns fire ahead on their own, as they do everywhere else
+ b.fireT-=dt;if(b.fireT<=0){b.fireT=BONUS.fire;b.shots++;b.bolts.push({x:b.ox,y:b.oy,z:zs+0.1});if(b.shots%2)SFX.shot()}
+ for(const o of b.obj){const z0=o.z;
+  if(o.k==="alien"){o.z-=2.3*dt;o.wob+=dt*3;o.flash=Math.max(0,o.flash-dt);
+   // aliens weave, and edge toward wherever you are
+   const ax=Math.cos(o.a)*o.rr,ay=Math.sin(o.a)*o.rr,tx=ax+(b.ox-ax)*0.4*dt+Math.sin(o.wob)*0.15*dt,ty=ay+(b.oy-ay)*0.4*dt;
+   o.a=Math.atan2(ty,tx);o.rr=Math.min(0.85,Math.hypot(tx,ty))}
+  else if(o.k==="rock"){o.z-=BONUS.speed*dt;o.rot+=o.spin*dt}
+  else if(o.k==="gem")o.z-=BONUS.speed*0.8*dt;
+  else{o.t+=dt;o.z-=BONUS.speed*dt}
+  if(z0>zs&&o.z<=zs&&!o.done){o.done=true;const d=Math.hypot(Math.cos(o.a)*o.rr-b.ox,Math.sin(o.a)*o.rr-b.oy);
+   if(o.k==="gem"&&d<0.26){o.hit=true;b.score+=20;SFX.gem()}
+   else if((o.k==="rock"&&d<o.size+0.12)||(o.k==="alien"&&d<0.2)){o.hit=true;b.hits++;b.combo=0;b.hurt=0.5;shake=1;SFX.hurt();
+    G.hp=Math.max(0,G.hp-Math.round(G.maxhp*(o.k==="rock"?0.15:0.1)));
+    if(G.hp<=0){G.hp=1;announce("HULL CRITICAL  \u00b7  PULLING OUT!");b.t=Math.max(b.t,BONUS.t-1.5)}}}}
+ for(const sb of b.bolts){sb.z+=BONUS.bolt*dt;if(sb.hit)continue;
+  for(const o of b.obj){if((o.k!=="alien"&&o.k!=="rock")||o.hit||o.z<zs)continue;
+   if(Math.abs(o.z-sb.z)<0.45&&Math.hypot(Math.cos(o.a)*o.rr-sb.x,Math.sin(o.a)*o.rr-sb.y)<(o.k==="rock"?o.size+0.08:0.2)){sb.hit=true;o.hp--;o.flash=0.1;SFX.hit();
+    if(o.hp<=0){o.hit=true;b.combo++;b.best=Math.max(b.best,b.combo);b.kills++;b.score+=(o.k==="rock"?30:100)*b.combo;SFX.kill();
+     b.obj.push({k:"gem",a:o.a,rr:o.rr,z:o.z},{k:"boom",a:o.a,rr:o.rr,z:o.z,t:0,col:o.k==="rock"?"#c0b8a8":o.col})}
+    break}}}
+ b.bolts=b.bolts.filter(sb=>!sb.hit&&sb.z<9.5);b.obj=b.obj.filter(o=>o.z>-0.5&&!(o.k==="boom"&&o.t>0.4)&&!(o.hit&&o.k!=="boom"));
+ b.hurt=Math.max(0,b.hurt-dt);shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
+ if(b.t>=BONUS.t){G.bonusScore=b.score;G.score+=b.score;G.kills+=b.kills;G.bonus=null;win()}}
 function drawBonus(){const b=G.bonus,t=b.t,R=REALMS[Math.floor(t/BONUS.look)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole;
  cx.save();cx.scale(DPR,DPR);const sh=(Math.random()-0.5)*shake*10;cx.translate(sh,sh*0.6);
  const {proj,K}=tunnelWalls(L,t,BONUS.speed+1.2),zs=BONUS.zShip;
- const drawObj=(o)=>{if(o.z<0||(o.hit&&o.k!=="shard"))return;const [x,y]=proj(o.z,o.a,o.rr),depth=Math.max(0,1-o.z/9),r=K/(o.z+0.2)*(o.k==="hoop"?0.22:0.16),al=Math.min(1,depth*1.6);
-  if(o.k==="hoop"){cx.strokeStyle="rgba(255,220,90,"+al.toFixed(2)+")";cx.lineWidth=2+depth*4;cx.beginPath();cx.arc(x,y,r,0,TAU);cx.stroke();
-   cx.strokeStyle="rgba(255,255,255,"+(al*0.5).toFixed(2)+")";cx.lineWidth=1;cx.beginPath();cx.arc(x,y,r*0.85,0,TAU);cx.stroke();if(FX&&depth>0.5)glow(x,y,r*1.6,"rgba(255,220,90,0.35)","rgba(255,200,60,0.02)")}
-  else if(o.k==="gem"){const g=r*0.45;cx.fillStyle="rgba(120,220,255,"+al.toFixed(2)+")";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.7,y);cx.lineTo(x,y+g);cx.lineTo(x-g*0.7,y);cx.closePath();cx.fill();
-   cx.fillStyle="rgba(255,255,255,"+(al*0.7).toFixed(2)+")";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.3,y-g*0.3);cx.lineTo(x-g*0.3,y-g*0.3);cx.closePath();cx.fill()}
-  else{const g=r*0.9,sp=frameT*2+o.a;cx.fillStyle=o.hit?"rgba(120,120,120,"+al.toFixed(2)+")":"rgba(255,80,100,"+al.toFixed(2)+")";cx.beginPath();
-   for(let i=0;i<10;i++){const q=i%2?g*0.45:g,a=sp+i/10*TAU;cx.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}cx.closePath();cx.fill();
-   cx.strokeStyle="rgba(255,255,255,"+(al*0.6).toFixed(2)+")";cx.lineWidth=1;cx.stroke()}};
+ const drawObj=(o)=>{if(o.z<0||(o.hit&&o.k!=="boom"))return;const [x,y]=proj(o.z,o.a,o.rr),depth=Math.max(0,1-o.z/9),al=Math.min(1,depth*1.6),R1=K/(o.z+0.2);
+  cx.globalAlpha=al;
+  if(o.k==="rock"){const r=R1*o.size,v=o.hp>=3?0:o.hp===2?1:2;cx.save();cx.translate(x,y);cx.rotate(o.rot);cx.drawImage(ART.rock[v],-r,-r,r*2,r*2);cx.restore()}
+  else if(o.k==="alien"){o.x=x;o.y=y;o.r=R1*0.11*(o.type==="drifter"?1.8:1);if(!o.maxhp)o.maxhp=o.hp;drawEnemy(o)}
+  else if(o.k==="gem"){const g=R1*0.07;cx.fillStyle="rgba(120,220,255,1)";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.7,y);cx.lineTo(x,y+g);cx.lineTo(x-g*0.7,y);cx.closePath();cx.fill();
+   cx.fillStyle="rgba(255,255,255,0.7)";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.3,y-g*0.3);cx.lineTo(x-g*0.3,y-g*0.3);cx.closePath();cx.fill()}
+  else{const r=R1*(0.04+o.t*0.5);cx.globalAlpha=al*(1-o.t/0.4);cx.strokeStyle=o.col;cx.lineWidth=2+depth*3;cx.beginPath();cx.arc(x,y,r,0,TAU);cx.stroke()}
+  cx.globalAlpha=1};
  const objs=b.obj.slice().sort((p,q)=>q.z-p.z);for(const o of objs)if(o.z>zs)drawObj(o);
+ // the bolts, streaking away down the tunnel
+ for(const sb of b.bolts){const a=Math.atan2(sb.y,sb.x),rr=Math.hypot(sb.x,sb.y),[x1,y1]=proj(sb.z,a,rr),[x2,y2]=proj(sb.z+0.7,a,rr),depth=Math.max(0,1-sb.z/9);
+  cx.strokeStyle=hexA(G.ship.col2,0.9);cx.lineWidth=1.5+depth*3;cx.lineCap="round";cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  cx.fillStyle="rgba(255,255,255,0.9)";cx.beginPath();cx.arc(x1,y1,1+depth*2.5,0,TAU);cx.fill()}
  const [sx,sy]=proj(zs,Math.atan2(b.oy,b.ox),Math.hypot(b.ox,b.oy)),bank=b.vx*0.35;
  if(!(b.hurt>0&&Math.floor(frameT*20)%2))tunnelShip(sx,sy,S*2,bank,0.62,0,t);
  for(const o of objs)if(o.z<=zs)drawObj(o);
- // the readout: what is left, what it has earned, the combo
+ // the readout: what is left, what it has earned, the combo, the hull
  const ST=SAFE.t,cz=Math.min(30,W*0.07);
- textFit("BONUS RUN",W/2,ST+cz*0.9,cz*0.7,"#ffe060",W*0.8);
- textFit(fmt(Math.max(0,BONUS.t-t)),W/2,ST+cz*2,cz,"#fff",W*0.5);
- textFit("+"+b.score,W/2,ST+cz*3,cz*0.8,"#80ff90",W*0.5);
- if(b.combo>1)textFit("x"+b.combo+" COMBO",W/2,ST+cz*3.9,cz*0.7,"#ffe060",W*0.5);
+ textFit(fmt(Math.max(0,BONUS.t-t)),W/2,ST+cz*1.2,cz,"#fff",W*0.5);
+ textFit("+"+b.score,W/2,ST+cz*2.2,cz*0.8,"#80ff90",W*0.5);
+ if(b.combo>1)textFit("x"+b.combo,W/2,ST+cz*3.1,cz*0.7,"#ffe060",W*0.5);
+ const bw=Math.min(220,W*0.5),bh=9,bx=W/2-bw/2,by=ST+cz*3.6;
+ cx.fillStyle="rgba(0,0,0,0.45)";rr(bx,by,bw,bh,4);cx.fill();cx.fillStyle=G.hp/G.maxhp>0.3?"#60e070":"#ff6060";rr(bx,by,Math.max(4,bw*G.hp/G.maxhp),bh,4);cx.fill();
  if(G.announceT>0)textFit(G.announce,W/2,H*0.62,Math.min(24,W*0.055),"rgba(255,255,255,"+Math.min(1,G.announceT).toFixed(2)+")",W*0.9);
- if(b.hurt>0){cx.fillStyle="rgba(255,60,60,"+(b.hurt*0.45).toFixed(2)+")";cx.fillRect(0,0,W,H)}
- if(flash>0){cx.fillStyle="rgba(255,255,255,"+(flash*0.6).toFixed(2)+")";cx.fillRect(0,0,W,H)}
+ if(b.hurt>0){cx.fillStyle="rgba(255,60,60,"+(b.hurt*0.45).toFixed(2)+")";cx.fillRect(-20,-20,W+40,H+40)}
+ if(flash>0){cx.fillStyle="rgba(255,255,255,"+(flash*0.6).toFixed(2)+")";cx.fillRect(-20,-20,W+40,H+40)}
  cx.restore()}
 function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);const cam=camView();cx.scale(S*cam.z,S*cam.z);cx.translate(-cam.x,-cam.y);
  drawStars();
@@ -2356,7 +2399,7 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
 // the checker can halt the loop and step it by hand, so a cutscene can be
 // caught at an exact moment on a machine that renders slowly
 let halted=false;
-function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();
+function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
  // the hangar and the credits have a theme, and it starts the moment audio can
  if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);

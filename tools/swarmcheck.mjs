@@ -293,25 +293,35 @@ check('and comes out flying into the next one', WARPC.over && WARPC.sectorAfter 
   `${WARPC.total}s later: sector ${WARPC.sectorAfter}, arrival playing, then ${WARPC.scene}`);
 
 /* ------------------------------------------------------------ the bonus run
-   The last gate's tunnel is playable: hoops pay a growing combo, gems pay
-   a little, shards break the combo, nothing kills, and what it earns goes
-   on the score before the win screen. */
+   The last gate's tunnel is a level: the guns fire ahead on their own,
+   aliens die to them for a growing combo, rocks take three shots, a hit on
+   the hull costs hull and the combo, gems pay a little, and what it earns
+   goes on the score before the win screen. */
 const BON = await pg.evaluate(`(() => {
-  const S = window.SW, out = {}; S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
-  G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + 0.1); const b = S.bonus; out.started = !!b && S.scene === 'play';
-  S.stick = { x: 0, y: 0, l: 0 }; const score0 = G.score;
-  const feed = (k) => { b.obj.length = 0; b.spawn = 99; b.obj.push({ k, a: 0, rr: 0, z: S.BONUS.zShip + 0.3 }); S.sim(0.4); };
-  feed('hoop'); feed('hoop'); out.hoops = b.hoops; out.combo = b.combo; out.afterHoops = b.score;
-  feed('gem'); out.gems = b.gems; out.afterGem = b.score;
-  feed('shard'); out.hits = b.hits; out.comboAfterShard = b.combo; out.hull = G.hp;
-  b.obj.length = 0; b.obj.push({ k: 'hoop', a: Math.PI, rr: 0.7, z: S.BONUS.zShip + 0.3 }); S.sim(0.4); out.missed = b.hoops;
-  S.stick = { x: 1, y: 0, l: 1 }; S.sim(1); out.moved = +b.ox.toFixed(2); S.stick = null;
-  const earned = b.score; S.sim(S.BONUS.t); out.scene = S.scene; out.added = G.score - score0 === earned && G.bonusScore === earned; out.bonusGone = !S.bonus; S.scene = 'title'; return out;
+  const S = window.SW, out = {}; S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0;
+  G.sector = 6; G.secT = 290; G.gate = { x: G.px, y: G.py, r: 60 }; S.sim(S.WARP.dive + 0.1); const b = S.bonus; out.started = !!b && S.scene === 'play' && G.hp === G.maxhp;
+  S.stick = { x: 0, y: 0, l: 0 }; const score0 = G.score, zs = S.BONUS.zShip;
+  const clear = () => { b.obj.length = 0; b.bolts.length = 0; b.spawn = 99; };
+  const alien = (type, hp) => ({ k: 'alien', type, a: 0, rr: 0, z: zs + 2.5, hp, maxhp: 0, r: 0, x: 0, y: 0, col: '#fff', flash: 0, ai: 0, elite: false, boss: false, wob: 0 });
+  /* two aliens dead ahead die to the guns before they arrive */
+  clear(); b.obj.push(alien('scout', 2)); S.sim(0.8); out.kills = b.kills; out.combo = b.combo; out.first = b.score;
+  clear(); b.obj.push(alien('swarmer', 1)); S.sim(0.8); out.kills2 = b.kills; out.combo2 = b.combo; out.second = b.score; out.hullAfterKills = G.hp;
+  /* a rock on the nose: three shots break it, or it breaks you */
+  clear(); b.obj.push({ k: 'rock', a: 0, rr: 0, z: zs + 0.25, hp: 3, size: 0.18, rot: 0, spin: 0 }); S.sim(0.3); out.rockHit = b.hits; out.hullAfterRock = G.hp; out.comboAfterRock = b.combo;
+  clear(); b.obj.push({ k: 'rock', a: 0, rr: 0, z: zs + 3, hp: 3, size: 0.18, rot: 0, spin: 0 }); S.sim(0.9); out.rockShot = b.obj.some(o => o.k === 'gem'); out.hullAfterShot = G.hp;
+  /* a gem crossing the ship pays */
+  clear(); const s3 = b.score; b.obj.push({ k: 'gem', a: 0, rr: 0, z: zs + 0.2 }); S.sim(0.3); out.gem = b.score - s3;
+  /* the stick flies it */
+  S.stick = { x: 1, y: 0, l: 1 }; S.sim(1); out.moved = +b.ox.toFixed(2); S.stick = { x: 0, y: 0, l: 0 };
+  /* and it plays out to the win, with its earnings on the score */
+  const earned = () => b.score; S.sim(S.BONUS.t); out.scene = S.scene; out.bonusGone = !S.bonus; out.added = G.bonusScore > 0 && G.score - score0 === G.bonusScore; S.stick = null; S.scene = 'title'; return out;
 })()`);
-check('the last gate is a bonus run', BON.started && BON.hoops === 2 && BON.combo === 2 && BON.afterHoops === 150 && BON.gems === 1 && BON.afterGem === 170 && BON.hits === 1 && BON.comboAfterShard === 0 && BON.hull === 1e9 && BON.missed === 2,
-  `two hoops for ${BON.afterHoops} (50 then 100), a gem for 20, a shard breaks the combo (${BON.comboAfterShard}) and costs no hull, a hoop on the far wall is missed`);
+check('the last gate is a rail shooter', BON.started && BON.kills === 1 && BON.combo === 1 && BON.first === 100 && BON.kills2 === 2 && BON.combo2 === 2 && BON.second === 300 && BON.hullAfterKills === BON.hullAfterKills,
+  `a scout dies to the guns for 100, a swarmer next for 200 (combo x2), score ${BON.second}`);
+check('rocks hurt, or break under fire', BON.rockHit === 1 && BON.hullAfterRock < BON.hullAfterKills && BON.comboAfterRock === 0 && BON.rockShot && BON.hullAfterShot === BON.hullAfterRock && BON.gem === 20,
+  `a rock on the nose: ${BON.hullAfterKills} hull to ${BON.hullAfterRock}, combo reset; the next one is shot to a gem with no hull lost; a gem pays ${BON.gem}`);
 check('the stick flies it, and it pays out at the end', BON.moved > 0.5 && BON.scene === 'win' && BON.added && BON.bonusGone,
-  `stick right moves the ship to ${BON.moved}; ${BON.scene} after ${45}s with the bonus on the score`);
+  `stick right moves the ship to ${BON.moved}; ${BON.scene} after the run with the bonus on the score`);
 
 /* ---------------------------------------------------------- chest ration
    Chests are rationed: one from the elites per sector, three on Treasure

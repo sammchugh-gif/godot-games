@@ -243,15 +243,21 @@ renderer it can land a second later, so wait before drawing by hand.
 
 ## The bonus run
 
-Clear all six sectors and the last gate's tunnel is playable: forty-five
-seconds down the wormhole, the look changing every seven and a half
-seconds through all six realms, steering the solid ship across the tunnel
-with the stick. Hoops pay 50 times a combo that grows with each one in a
-row and resets on a miss or a shard; gems pay 20; shards break the combo,
-flash the screen and cost nothing else. Nothing in it can kill you. What
-it earns goes on the run's score before the win screen, which says so.
-Timings and speeds are in `BONUS`; `swarmcheck` feeds it hoops, a gem and
-a shard and checks the arithmetic, then plays it out to the win.
+Clear all six sectors and the last gate's tunnel is a level of its own:
+forty-five seconds down the wormhole in perspective, the look changing
+every seven and a half seconds through all six realms, the stick steering
+the solid ship across the tunnel while its guns fire ahead on their own.
+Aliens fly at you and weave toward you; each kill pays 100 times a combo
+that grows with every kill in a row. Meteoroids tumble down the tunnel:
+dodge them, or shoot them three times for 30 times the combo and a gem.
+A rock on the hull costs 15% of it and the combo, an alien 10%, and a
+hull that runs out ends the run early; gems pay 20. What it earns goes on
+the run's score before the win screen, which says so. Timings, speeds and
+the rate of fire are in `BONUS`; `swarmcheck` feeds it aliens, rocks and
+a gem and checks the arithmetic, then plays it out to the win.
+
+Clearing a sector no longer hands out a free upgrade card; the gate still
+restores shields and a quarter of the hull.
 
 ## Music
 
@@ -264,6 +270,12 @@ bass on the downbeats only, the lead softer and longer, the pad up. The
 gate sparkle still rides on top when it opens. Sector 2 ("fleet") was
 rewritten as a dorian piece at 126 bpm with a melody that moves; the old
 one hammered its root over a hat on every sixteenth.
+
+Every track is a thirty-two bar form rather than eight bars looped: the
+tune, the tune with a harmony a third above, a second tune over its own
+chords (`lead2`, `chords2`), then the tune doubled an octave up with a
+snare fill into the top. The title theme and the boss piece have second
+tunes too.
 
 `tools/musiccheck.mjs` renders each track offline and checks the boss
 piece is faster and louder than every sector with its own melody, and the
