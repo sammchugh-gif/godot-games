@@ -339,6 +339,13 @@ const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06
  pick(){[659,988,1319].forEach((f,i)=>tone(f,f*1.01,0.12,"triangle",0.26,i*0.06));stab([1319,1661,1976],0.35,"triangle",0.3,0.18);tone(2637,2637,0.2,"sine",0.1,0.18)},
  magnet(){tone(300,1900,0.3,"sawtooth",0.16);tone(150,950,0.3,"sawtooth",0.1);tone(1200,2400,0.14,"sine",0.22,0.22);noise(0.2,0.08,0.05,true)},
  chest(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,f,0.13,"triangle",0.14,i*0.08));stab([784,1047,1319,1568],0.7,"square",0.28,0.42);tone(3136,2093,0.5,"sine",0.06,0.45);noise(0.3,0.07,0.42,true)},
+ // The warp has three sounds of its own. The dive: a long fall in pitch
+ // with a swell of noise under it. The run: a throbbing rumble, a whistle
+ // climbing the whole way, and a tick of pulses going past. The exit is
+ // the launch, because it is the launch.
+ warpDive(){tone(900,50,1.1,"sine",0.22);tone(1800,100,1.0,"triangle",0.08,0.05);noise(1.2,0.22);tone(40,80,1.2,"sawtooth",0.12,0.2)},
+ warpRun(){for(let i=0;i<6;i++){tone(55+i*9,70+i*9,0.8,"sawtooth",0.16,i*0.42);noise(0.5,0.12,i*0.42)}
+  tone(200,1800,2.4,"sine",0.06);tone(300,2400,2.4,"triangle",0.03,0.1);for(let i=0;i<10;i++)tone(1200+i*120,900+i*120,0.08,"square",0.03,0.3+i*0.22)},
  rock(){noise(0.14,0.3);tone(150,60,0.12,"triangle",0.2)},boss(){tone(80,40,0.7,"sawtooth",0.35);noise(0.5,0.3);stab([110,165,220],1.2,"sawtooth",0.25,0.2)},warp(){[262,330,392,523,659,784,1047,1319].forEach((f,i)=>tone(f,f*1.02,0.2,"sine",0.2,i*0.1));tone(400,3200,0.9,"sawtooth",0.05)},
  die(){[392,349,330,294,262].forEach((f,i)=>tone(f,f*0.98,0.22,"square",0.2,i*0.17))},win(){[523,659,784,1047,784,1047,1319,1568].forEach((f,i)=>tone(f,f,0.16,"square",0.18,i*0.12));stab([523,659,784,1047],1.4,"triangle",0.35,1.0)},click(){tone(1200,900,0.04,"square",0.08)},zap(){tone(1800,300,0.1,"sawtooth",0.1)}};
 
@@ -998,8 +1005,10 @@ function startWarp(){const g=G.gate,dx=G.px-g.x,dy=G.py-g.y;
  G.warp={t:0,gx:g.x,gy:g.y,r0:Math.max(30,Math.hypot(dx,dy)),a0:Math.atan2(dy,dx),win:G.sector>=SECTORS&&G.mode!=="endless",to:G.sector+1};
  // the field is wiped the moment the gate takes the ship, in a burst of dust
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
- G.en.length=0;G.bul.length=0;G.vx=G.vy=0;G.inv=99;SFX.warp()}
+ G.en.length=0;G.bul.length=0;G.vx=G.vy=0;G.inv=99;SFX.warpDive()}
 function warpStep(dt){const w=G.warp;w.t+=dt;stepParts(dt);
+ if(!w.ran&&w.t>=WARP.dive&&!w.win){w.ran=true;SFX.warpRun()}
+ if(!w.out&&w.t>=WARP.dive+WARP.tunnel){w.out=true;SFX.launch()}
  if(w.t<WARP.dive){const e=Math.min(1,w.t/WARP.dive),k=e*e,r=w.r0*(1-k),a=w.a0+k*7;
   G.px=w.gx+Math.cos(a)*r;G.py=w.gy+Math.sin(a)*r;G.ang=a+Math.PI/2;return}
  if(w.win){G.warp=null;win();return}
@@ -1592,6 +1601,82 @@ function drawGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
  cx.strokeStyle="rgba(255,255,255,0.95)";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
  cx.strokeStyle="rgba(170,200,255,"+(0.35+0.2*Math.sin(frameT*5)).toFixed(2)+")";cx.lineWidth=7;cx.beginPath();cx.arc(0,0,gt.r*0.68,0,TAU);cx.stroke();
  cx.restore()}
+// ------------------------------------------------------- the ship in 3-D
+// For the tunnel the flat sprite becomes a solid: a hull lofted from a row
+// of cross-sections, wings and fins as thin plates, a glass canopy, or for
+// the Eclipse a disc turned on a lathe. Model space is the sprite's: x is
+// forward, y across, z up. Faces are wound outward once, when built.
+const MESH={};
+function shipMesh(shape){if(MESH[shape])return MESH[shape];const F=[];
+ const face=(pts,kind,cen)=>{const [a,b,c]=pts,u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+  let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];const l=Math.hypot(...n)||1;n=n.map(q=>q/l);
+  const m=[0,0,0];for(const q of pts){m[0]+=q[0]/pts.length;m[1]+=q[1]/pts.length;m[2]+=q[2]/pts.length}
+  const d=(m[0]-cen[0])*n[0]+(m[1]-cen[1])*n[1]+(m[2]-cen[2])*n[2];if(d<0){pts=pts.slice().reverse();n=n.map(q=>-q)}
+  if(l>1e-6)F.push({p:pts,n,kind})};
+ // a body lofted along x: sections of [x, half-width, half-height, z centre, y centre]
+ const loft=(secs,n,kind)=>{const rings=secs.map(([x,ry,rz,zc,yc])=>{const r=[];for(let k=0;k<n;k++){const a=k/n*TAU;r.push([x,(yc||0)+Math.cos(a)*ry,(zc||0)+Math.sin(a)*rz])}return r});
+  const cen=[(secs[0][0]+secs[secs.length-1][0])/2,secs[0][4]||0,secs[Math.floor(secs.length/2)][3]||0];
+  for(let s=0;s<rings.length-1;s++)for(let k=0;k<n;k++)face([rings[s][k],rings[s][(k+1)%n],rings[s+1][(k+1)%n],rings[s+1][k]],kind,cen);
+  face(rings[rings.length-1],kind,cen)};
+ // a flat plate in the x-y plane with a little thickness
+ const plate=(poly,z0,z1,kind)=>{const top=poly.map(([x,y])=>[x,y,z1]),bot=poly.map(([x,y])=>[x,y,z0]);
+  const cen=[0,0,(z0+z1)/2];for(const q of poly){cen[0]+=q[0]/poly.length;cen[1]+=q[1]/poly.length}
+  face(top,kind,cen);face(bot,kind,cen);for(let k=0;k<poly.length;k++){const j=(k+1)%poly.length;face([bot[k],bot[j],top[j],top[k]],kind,cen)}};
+ // an upright plate in the x-z plane, for a fin
+ const fin=(poly,kind)=>{const l=poly.map(([x,z])=>[x,-0.6,z]),r=poly.map(([x,z])=>[x,0.6,z]);
+  const cen=[0,0,0];for(const q of poly){cen[0]+=q[0]/poly.length;cen[2]+=q[1]/poly.length}
+  face(l,kind,cen);face(r,kind,cen);for(let k=0;k<poly.length;k++){const j=(k+1)%poly.length;face([l[k],l[j],r[j],r[k]],kind,cen)}};
+ const mirror=pts=>pts.map(([x,y])=>[x,-y]);
+ if(shape==="ufo"){
+  // a disc on a lathe: rings of [radius, height], the top of the dome glass
+  const prof=[[0,4.6],[4,4.3],[7.5,3.2],[10,1.8],[13,1.2],[19,0.4],[21,-0.6],[16,-1.8],[9,-2.6],[0,-3]],n=18,cen=[0,0,0.5];
+  const rings=prof.map(([r,z])=>{const q=[];for(let k=0;k<n;k++){const a=k/n*TAU;q.push([Math.cos(a)*r,Math.sin(a)*r,z])}return q});
+  for(let s=0;s<rings.length-1;s++)for(let k=0;k<n;k++)face([rings[s][k],rings[s][(k+1)%n],rings[s+1][(k+1)%n],rings[s+1][k]],s<3?"glass":s===5?"rim":"hull",cen);
+  for(const sg of [-1,1])plate([[-4,sg*19],[-22,sg*24],[-28,sg*20],[-19,sg*6]],-1,1,"fin")}
+ else if(shape==="comet"){
+  loft([[29,0.4,0.3],[22,2.2,1.8],[12,4.8,3.8],[2,5.6,4.4],[-8,5.6,4.4],[-15,3.2,2.6]],10,"hull");
+  loft([[16,0.5,0.4,3.4],[11,2.2,1.9,3.6],[5,2.8,2.3,3.6],[0,2.2,1.9,3.6],[-3,0.5,0.4,3.4]],8,"glass");
+  const w=[[3,-4],[-11,-18],[-18,-16],[-6,-3]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  for(const sg of [-1,1])loft([[-5,2.4,2.4,0,sg*7.5],[-11,3.2,3.2,0,sg*7.5],[-16,2.2,2.2,0,sg*7.5]],8,"fin");
+  fin([[-4,1.5],[-16,1.5],[-19,7],[-13,6.5]],"fin")}
+ else if(shape==="nova"){
+  loft([[24,0.4,0.3],[16,4,3.2],[7,8.5,6.2],[-2,10.2,7],[-10,10,6.8],[-16,6,4.6]],12,"hull");
+  loft([[15,0.5,0.4,5.2],[9,2.8,2.4,5.6],[3,3.6,3,5.8],[-3,2.8,2.4,5.8],[-6,0.5,0.4,5.4]],8,"glass");
+  const w=[[7,-6],[-9,-20],[-19,-18],[-8,-5]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  for(const sg of [-1,1])loft([[2,2.8,2.8,0,sg*12.5],[-6,3.5,3.5,0,sg*12.5],[-14,2.4,2.4,0,sg*12.5]],8,"fin");
+  fin([[-2,2],[-17,2],[-20,8],[-12,7]],"fin")}
+ else{
+  loft([[27,0.4,0.3],[21,2.6,2],[13,5.2,4.2],[4,7.4,5.6],[-6,7.8,5.8],[-12,6.4,5],[-15,4.2,3.4]],10,"hull");
+  loft([[16,0.5,0.4,4.2],[11,2.6,2.2,4.6],[5,3.4,2.8,4.6],[-1,2.6,2.4,4.6],[-4,0.5,0.4,4.4]],8,"glass");
+  const w=[[6,-3],[-14,-22],[-22,-20],[-6,-2]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  loft([[-8,4.6,5.6,0],[-13,5,6,0],[-18,3.6,4.4,0]],8,"fin");
+  fin([[-3,2],[-17,2],[-21,9],[-14,8]],"fin")}
+ MESH[shape]=F;return F}
+// Draw the solid at (x,y) on the screen, nose up, tilted `pitch` into the
+// screen (0 is the sprite's own view from above), rolled by `roll`, turned
+// by `yaw`. Faces are lit from the upper left and painted far to near.
+function drawShip3D(x,y,sc,ship,pitch,roll,yaw,thrust){const shape=ship.shape||ship.id,F=shipMesh(shape);
+ const hull=shape==="ufo"?"#2b3342":ship.col,cr=Math.cos(roll),sr=Math.sin(roll),cw=Math.cos(yaw),sw=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),f=150;
+ const xf=(v)=>{let [px,py,pz]=v;let y1=py*cr-pz*sr,z1=py*sr+pz*cr;let x2=px*cw-y1*sw,y2=px*sw+y1*cw;
+  // to the screen: right is y, up is x, into the screen is -z, then tilt the nose in
+  let sx=y2,sy=-x2,d=-z1;const sy2=sy*cp+d*sp,d2=-sy*sp+d*cp;return[sx,sy2,d2]};
+ const L=[-0.3,-0.55,-0.78],out=[];
+ for(const fc of F){const n=xf(fc.n);if(n[2]>0.02)continue;
+  const pts=fc.p.map(xf);let dm=0;for(const q of pts)dm+=q[2]/pts.length;
+  const lit=Math.max(0,n[0]*L[0]+n[1]*L[1]+n[2]*L[2]),k=0.3+0.7*lit;
+  out.push({pts,dm,lit,k,kind:fc.kind})}
+ out.sort((a,b)=>b.dm-a.dm);
+ cx.save();cx.translate(x,y);cx.scale(sc,sc);cx.lineJoin="round";cx.lineWidth=0.22;
+ for(const o of out){const base=o.kind==="glass"?"#2f6fd0":o.kind==="rim"?ship.col:o.kind==="wing"?shade(hull,-0.15):o.kind==="fin"?shade(hull,-0.4):hull;
+  cx.fillStyle=shade(base,-0.6+o.k*1.05);cx.strokeStyle="rgba(0,0,0,0.22)";cx.beginPath();
+  for(let i=0;i<o.pts.length;i++){const [px,py,pd]=o.pts[i],kk=f/(f+pd);if(i)cx.lineTo(px*kk,py*kk);else cx.moveTo(px*kk,py*kk)}
+  cx.closePath();cx.fill();cx.stroke();
+  if(o.kind==="glass"&&o.lit>0.85){cx.fillStyle="rgba(255,255,255,"+((o.lit-0.85)*3).toFixed(2)+")";cx.fill()}}
+ // the engines, lit, so the view from behind has something to look at
+ if(thrust>0)for(const[nx,ny,ns] of NOZZLE[shape]||NOZZLE.falcon){const [px,py,pd]=xf([nx,ny,0]),kk=f/(f+pd),r=(2.2+Math.random()*0.6)*ns*kk;
+  const eg=cx.createRadialGradient(px*kk,py*kk,0,px*kk,py*kk,r*2.2);eg.addColorStop(0,"rgba(255,255,255,"+(0.95*thrust).toFixed(2)+")");eg.addColorStop(0.35,"rgba(255,200,90,"+(0.8*thrust).toFixed(2)+")");eg.addColorStop(1,"rgba(255,120,30,0)");
+  cx.fillStyle=eg;cx.beginPath();cx.arc(px*kk,py*kk,r*2.2,0,TAU);cx.fill()}
+ cx.restore()}
 // The dive's last moment: the hole's light swallows the screen.
 function drawDive(){const w=G.warp,e=Math.min(1,w.t/WARP.dive),k=Math.max(0,(e-0.72)/0.28);if(k<=0)return;
  cx.save();cx.setTransform(1,0,0,1,0,0);cx.fillStyle="rgba(235,225,255,"+(k*k).toFixed(3)+")";cx.fillRect(0,0,cv.width,cv.height);cx.restore()}
@@ -1633,12 +1718,17 @@ function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),e
  const far=Math.max(0,(u-0.6)/0.4);
  if(far>0){const sp=backSprite(R.back);if(sp){const sz=K*(0.08+far*far*1.6);cx.globalAlpha=Math.min(1,far*1.6);cx.drawImage(sp,vp.x-sz/2,vp.y-sz/2,sz,sz);cx.globalAlpha=1}}
  // the ship, banking into the bends, then climbing out of the top
- const climb=ex*ex*ex,sc=S*1.5*(1+climb*0.3),bank=(vp.x-C.x)/W*1.4,sx=W/2+(vp.x-C.x)*0.35,sy=H*0.7-climb*(H*0.7+SHIPP*3);
+ const climb=ex*ex*ex,sc=S*2.2*(1+climb*0.3),bank=(vp.x-C.x)/W*1.4,sx=W/2+(vp.x-C.x)*0.35,sy=H*0.7-climb*(H*0.7+SHIPP*3);
  const len=SHIPP*sc*(2.2+climb*6),jx=(Math.random()*2-1)*1.5,jy=(Math.random()*2-1)*1.5;
  cx.save();cx.translate(sx+jx,sy+jy);cx.rotate(bank);
  const eg=cx.createLinearGradient(0,SHIPP*sc*0.5,0,SHIPP*sc*0.5+len);eg.addColorStop(0,"rgba(255,230,150,0.6)");eg.addColorStop(0.35,"rgba(255,140,40,0.35)");eg.addColorStop(1,"rgba(255,80,20,0)");
  cx.fillStyle=eg;cx.beginPath();cx.moveTo(-9*sc,SHIPP*sc*0.45);cx.lineTo(9*sc,SHIPP*sc*0.45);cx.lineTo(2*sc,SHIPP*sc*0.45+len);cx.lineTo(-2*sc,SHIPP*sc*0.45+len);cx.closePath();cx.fill();
- cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.restore();
+ // the flat ship becomes a solid as it enters, tilting its nose into the
+ // tunnel, and rolls into the bends; the sprite fades out over it
+ const mp=Math.min(1,t/0.6),tilt=mp*mp*(3-2*mp)*0.62*(1-climb*0.4),rl=bank*1.6+Math.sin(t*1.3)*0.12,yaw=Math.sin(t*0.9)*0.1;
+ cx.rotate(-bank);drawShip3D(0,0,sc,G.ship,tilt,rl,yaw,1);
+ if(mp<0.5){cx.globalAlpha=1-mp*2;cx.rotate(bank);cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.globalAlpha=1}
+ cx.restore();
  // where it is going, over the top
  textFit(R.name,W/2,SAFE.t+H*0.09,Math.min(26,W*0.06),rgba(0.75+0.25*Math.sin(t*4)),W*0.8);
  // the flash it leaves in
@@ -2219,7 +2309,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

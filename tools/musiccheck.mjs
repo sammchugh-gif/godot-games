@@ -131,7 +131,7 @@ check('an open gate adds to it', gate.events > plain.events,
   `${gate.events} events with the gate open`);
 
 /* --------------------------------------------------------- the pickup sounds */
-const SOUNDS = ['gem', 'pick', 'magnet', 'chest', 'level', 'boss', 'warp', 'win', 'launch', 'evolve', 'nuke'];
+const SOUNDS = ['gem', 'pick', 'magnet', 'chest', 'level', 'boss', 'warp', 'win', 'launch', 'evolve', 'nuke', 'warpDive', 'warpRun'];
 const quiet = [];
 for (const s of SOUNDS) {
   const r = await render(s, 1.6);
