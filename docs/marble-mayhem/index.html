@@ -458,7 +458,7 @@ function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
  textFit("PUZZLES \u00b7 "+WORLDS[worldIdx],SAFE.l+(W-SAFE.l-SAFE.r)/2,hy,hz,"#ffd05a",W-32-SAFE.l-SAFE.r);
  const tabW=Math.min(150,(W-24-SAFE.l-SAFE.r-6*(NW-1))/NW),tabH=Math.min(40,H*0.06),tabL=SAFE.l+(W-SAFE.l-SAFE.r-(tabW*NW+6*(NW-1)))/2,tabY=hy+hz*0.6+8;
  for(let k=0;k<NW;k++){const open=(progress["L"+(k*WN-1)]||0)>0||k===0;
-  btn(tabL+k*(tabW+6),tabY,tabW,tabH,"WORLD "+(k+1),()=>{worldIdx=k},{size:Math.min(15,tabW*0.16),fill:k===worldIdx?"#2a8a3a":open?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:open?"#fff":"#667"})}
+  btn(tabL+k*(tabW+6),tabY,tabW,tabH,"WORLD "+(k+1),()=>{worldIdx=k},{size:Math.min(15,tabW*0.16),fill:k===worldIdx?"#2a8a3a":open?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:open||k===worldIdx?"#fff":"#667"})}
  const bkh=Math.min(44,H*0.075),y0=tabY+tabH+10;
  const availW=W-24-SAFE.l-SAFE.r,availH=H-SAFE.b-12-bkh-10-y0;
  // pick the column count that gives the roomiest cell rather than assuming two

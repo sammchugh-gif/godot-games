@@ -39,7 +39,7 @@ const srv = await new Promise(r => {
       else { rs.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'text/plain' }); rs.end(d); }
     });
   });
-  s.listen(8402, () => r(s));
+  s.listen(+(process.env.PORT || 8402), () => r(s));
 });
 const browser = await chromium.launch({ executablePath: CHROME,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
@@ -61,7 +61,10 @@ const mid = b => ({ x: Math.round(b.x + b.w / 2), y: Math.round(b.y + b.h / 2) }
 const finger = (cdp, type, pts = []) =>
   cdp.send('Input.dispatchTouchEvent', { type,
     touchPoints: pts.map(p => ({ x: p.x, y: p.y, radiusX: 9, radiusY: 9, force: 1, id: p.id || 0 })) });
-async function tap(cdp, p) { await finger(cdp, 'touchStart', [p]); await sleep(60); await finger(cdp, 'touchEnd'); await sleep(120); }
+/* returns how long the finger was down in wall time: under load the lift can
+   arrive late, and a rotate button that repeats while held is then right to
+   have turned more than once */
+async function tap(cdp, p) { const t = Date.now(); await finger(cdp, 'touchStart', [p]); await sleep(60); await finger(cdp, 'touchEnd'); const held = Date.now() - t; await sleep(120); return held; }
 const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 for (const [W, H, tag] of SIZES) {
@@ -71,7 +74,7 @@ for (const [W, H, tag] of SIZES) {
   const pg = await ctx.newPage();
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
   const cdp = await ctx.newCDPSession(pg);
-  await pg.goto('http://127.0.0.1:8402/docs/marble-mayhem/', { waitUntil: 'load', timeout: 20000 });
+  await pg.goto(`http://127.0.0.1:${process.env.PORT || 8402}/docs/marble-mayhem/`, { waitUntil: 'load', timeout: 20000 });
   await sleep(1200);
   await pg.evaluate(() => { for (const id of ['shelf-menu-stuck', 'shelf-menu-veil']) { const el = document.getElementById(id); if (el) el.remove(); } });
 
@@ -168,9 +171,10 @@ for (const [W, H, tag] of SIZES) {
 
   /* a real tap turns the piece by one step; a hold keeps turning it */
   let a0 = await pg.evaluate(() => window.MM.sel.a);
-  await tap(cdp, mid(cw));
+  const down = await tap(cdp, mid(cw));
   let a1 = await pg.evaluate(() => window.MM.sel.a);
-  check('tap on ↻ turns 15°', Math.abs((a1 - a0) - Math.PI / 12) < 1e-6, `${((a1 - a0) * 180 / Math.PI).toFixed(1)}°`);
+  const turned = Math.round((a1 - a0) / (Math.PI / 12));
+  check('tap on ↻ turns 15°', turned === 1 || (down > 350 && turned >= 1), `${((a1 - a0) * 180 / Math.PI).toFixed(1)}°${down > 350 ? ' (finger down ' + down + 'ms)' : ''}`);
   await finger(cdp, 'touchStart', [mid(cw)]);
   await sleep(1100);
   await finger(cdp, 'touchEnd');
@@ -202,10 +206,11 @@ for (const [W, H, tag] of SIZES) {
   await pg.evaluate(() => { if (window.MM.running) window.MM.go(); });
 
   /* ---- hints come one piece at a time */
-  await pg.evaluate(() => window.MM.loadLevel(1));
   const hints = await pg.evaluate(() => { const M = window.MM, out = [];
-    for (const m of [0, 2, 3, 5, 6, 99]) { M.misses = m; out.push(M.hintPieces().length); } return out; });
-  check('hint reveals one piece per three misses', hints.join() === '0,0,1,1,2,3', hints.join());
+    /* the first level whose answer has three pieces or more */
+    const i = M.LEVELS.findIndex(L => L.sol && L.sol.length >= 3); M.loadLevel(i);
+    for (const m of [0, 2, 3, 5, 6, 99]) { M.misses = m; out.push(M.hintPieces().length); } return { i, n: M.LEVELS[i].sol.length, out }; });
+  check('hint reveals one piece per three misses', hints.out.join() === `0,0,1,1,2,${hints.n}`, `level ${hints.i + 1}: ${hints.out.join()}`);
 
   /* ---- sandbox: rain, the run meter, RESET keeps the machine */
   await pg.evaluate(() => { window.MM.loadSandbox(0); });

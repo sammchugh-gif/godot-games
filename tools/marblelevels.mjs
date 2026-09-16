@@ -24,7 +24,8 @@
      PLAYWRIGHT=... node tools/marblelevels.mjs --verify   re-proves all 64
      PLAYWRIGHT=... node tools/marblelevels.mjs --fix=2,10 --write
                                      re-solves hand-made levels on their board
-       --only=17-24   a range (1-based)   --pages=6   --seed=N   --port=N */
+       --only=17-24   a range (1-based)   --missing   only levels not yet in
+       the file   --pages=6   --seed=N   --port=N                          */
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -46,7 +47,7 @@ const flag = n => args.includes('--' + n);
 const opt = (n, d) => { const a = args.find(x => x.startsWith('--' + n + '=')); return a ? a.slice(n.length + 3) : d; };
 const WRITE = flag('write'), VERIFY = flag('verify');
 const PAGES = +opt('pages', 6), SEED = +opt('seed', 20260915);
-const ONLY = opt('only', null), PORT = +opt('port', 8404), FIX = opt('fix', null);
+const ONLY = opt('only', null), PORT = +opt('port', 8404), FIX = opt('fix', null), MISSING = flag('missing');
 /* Hand-made levels re-solved on their own board. Two of the originals were
    won with nothing placed - the marble fell straight into the cup - so they
    get a tweak first; the rest keep their board and only get a sturdier
@@ -84,7 +85,7 @@ const DIFF = [
   null, null,
   { planks: [1, 2], ledges: [1, 2], wall: 0.3, funnel: 0.85, min: 2, stars: [1, 2], gap: 300 },
   { planks: [1, 2], ledges: [1, 3], wall: 0.6, funnel: 0.75, min: 2, stars: [2, 2], gap: 380 },
-  { planks: [1, 2], ledges: [2, 3], wall: 0.8, funnel: 0.65, min: 3, stars: [2, 3], gap: 420 },
+  { planks: [1, 2], ledges: [2, 3], wall: 0.8, funnel: 0.65, min: 2, stars: [2, 3], gap: 420 },
 ];
 
 /* mulberry32: a seed gives the same board every time */
@@ -363,8 +364,15 @@ if (FIX) {
     todo.push({ idx, spec: [L.name, want], board });
   }
   await pg.close();
-} else for (let i = range[0]; i <= range[1]; i++) todo.push({ idx: i, spec: PLAN[i - FIRST] });
-const out = new Map();
+} else {
+  /* --missing: only the levels the file does not have yet */
+  const had = new Set();
+  if (MISSING) { const g = fs.readFileSync(GAME, 'utf8'); const a = g.indexOf('/*GEN-START*/'), b = g.indexOf('/*GEN-END*/');
+    for (const m of g.slice(a, b).matchAll(/^ \{name:("(?:[^"\\]|\\.)*"),/gm)) had.add(JSON.parse(m[1])); }
+  for (let i = range[0]; i <= range[1]; i++) if (!had.has(PLAN[i - FIRST][0])) todo.push({ idx: i, spec: PLAN[i - FIRST] });
+}
+const out = new Map(), todoCount = todo.length;
+console.log(`${todoCount} levels to make`);
 async function worker(pg) {
   for (;;) {
     const job = todo.shift(); if (job == null) return;
@@ -389,7 +397,7 @@ await Promise.all(pages.map(worker));
 await browser.close(); srv.close();
 
 const made = [...out.keys()].sort((a, b) => a - b);
-const wanted = FIX ? FIX.split(',').length : range[1] - range[0] + 1;
+const wanted = FIX ? FIX.split(',').length : todoCount;
 console.log(`\n${made.length}/${wanted} levels in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 /* rewrite the GEN block from what this run has made plus what the file
    already had for the rest; a level this run has not reached yet keeps its
