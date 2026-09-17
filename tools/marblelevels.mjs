@@ -99,8 +99,17 @@ const d2 = (a, b, c, d) => Math.hypot(a - c, b - d);
 function genBoard(r, idx, spec) {
   const world = Math.floor(idx / WN) + 1, D = DIFF[world];
   const [, want, wantWall] = spec;
-  const sx = ri(r, 100, 860);
-  let gx; do { gx = ri(r, 100, 860); } while (Math.abs(gx - sx) < D.gap);
+  /* the cup goes on whichever side has room for the world's gap; a spawn
+     near the middle of a wide-gap world had neither, and the old rejection
+     loop here spun for ever */
+  let sx, gx;
+  for (;;) {
+    sx = ri(r, 100, 860);
+    const left = sx - D.gap >= 100, right = sx + D.gap <= 860;
+    if (!left && !right) continue;
+    gx = left && (!right || r() < 0.5) ? ri(r, 100, sx - D.gap) : ri(r, sx + D.gap, 860);
+    break;
+  }
   const gy = pick(r, [600, 600, 600, 560, 500, 440]);
   const fixed = [];
   if (r() < D.funnel) {
