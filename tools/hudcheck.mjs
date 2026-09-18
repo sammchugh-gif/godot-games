@@ -154,6 +154,47 @@ for (const [W, H, tag] of SIZES) {
   await pg.close();
 }
 
+/* ------------------------------------------- the canvas fills the screen
+   A phone reported the game drawn into the top of the screen with a dead
+   band under it: iOS had grown the viewport and the page never heard, so
+   everything was laid out for a screen that was no longer there. The size
+   comes from the visual viewport now and is checked a few times a second,
+   which is what this proves - including that a viewport change the event
+   got wrong is still picked up, and that a canvas reset from anywhere is
+   put back. */
+console.log('\nstar-swarm fills the screen');
+{
+  const pg = await browser.newPage({ viewport: { width: 393, height: 740 }, deviceScaleFactor: 3 });
+  const errs = []; pg.on('pageerror', e => errs.push(e.message));
+  await pg.goto('http://127.0.0.1:8341/docs/star-swarm/', { waitUntil: 'load', timeout: 20000 });
+  await sleep(1600);
+  const look = () => pg.evaluate(`(() => { const S = window.SW, c = document.getElementById('c'), r = c.getBoundingClientRect();
+    const vw = Math.round(window.visualViewport ? visualViewport.width : innerWidth);
+    const vh = Math.round(window.visualViewport ? visualViewport.height : innerHeight);
+    const s = S.screen();
+    return { vw, vh, W: s.W, H: s.H, cw: s.cw, ch: s.ch, DPR: s.DPR,
+             rx: Math.round(r.left), ry: Math.round(r.top), rw: Math.round(r.width), rh: Math.round(r.height) }; })()`);
+  const fits = (o) => o.W === o.vw && o.H === o.vh && o.rw === o.vw && o.rh === o.vh && o.rx === 0 && o.ry === 0
+                   && o.cw === Math.round(o.vw * o.DPR) && o.ch === Math.round(o.vh * o.DPR);
+  const rows = [];
+  rows.push(['as it loads', await look()]);
+  await pg.setViewportSize({ width: 393, height: 852 }); await sleep(400);
+  rows.push(['the screen grows', await look()]);
+  await pg.setViewportSize({ width: 852, height: 393 }); await sleep(400);
+  rows.push(['turned sideways', await look()]);
+  /* and something resets the canvas out from under it */
+  await pg.evaluate(`(() => { const c = document.getElementById('c'); c.width = 200; c.height = 200; c.style.height = '120px'; })()`);
+  await sleep(600);
+  rows.push(['after a reset', await look()]);
+  for (const [tag, o] of rows) {
+    const ok = fits(o); if (!ok) bad++;
+    console.log(`  ${tag.padEnd(17)} screen ${o.vw}x${o.vh} | game ${o.W}x${o.H} | canvas ${o.rw}x${o.rh} at ${o.rx},${o.ry}` +
+      ` | backing ${o.cw}x${o.ch} ${ok ? 'ok' : '<-- FAIL'}`);
+  }
+  if (errs.length) { bad++; console.log('   error: ' + errs[0].slice(0, 90)); }
+  await pg.close();
+}
+
 console.log(bad ? `\n${bad} sizes have a HUD that writes over itself` : '\nboth HUDs keep out of their own way, and every card line fits its card');
 await browser.close();
 srv.close();
