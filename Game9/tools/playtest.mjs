@@ -85,7 +85,7 @@ for (let ci = startCi; ci < COUNTRIES.length; ci++) {
       check(await state() === "ending", `ending of act ${COUNTRIES[ci].act}`);
       await wait(800); await shot(`60_ending_act${COUNTRIES[ci].act}`);
       await skipDialogue(); await wait(400); await shot(`61_medal_act${COUNTRIES[ci].act}`);
-      if (ci < COUNTRIES.length - 1) { await ev(() => __spy.debug.press("nextact")); await finishFade(); await wait(300); check(await state() === "briefing", "act two briefing"); await shot("62_briefing_act2"); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", "map after act one"); await shot("63_map_act2"); }
+      if (ci < COUNTRIES.length - 1) { await ev(() => __spy.debug.press("nextact")); await finishFade(); await wait(300); check(await state() === "briefing", `act ${COUNTRIES[ci + 1].act} briefing`); await shot(`62_briefing_act${COUNTRIES[ci + 1].act}`); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", `map after act ${COUNTRIES[ci].act}`); await shot(`63_map_act${COUNTRIES[ci + 1].act}`); }
     }
   }
 }

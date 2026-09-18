@@ -103,5 +103,26 @@ ck(written && written.stars && Object.keys(written.stars).length > 0 && Array.is
   "and the upgraded save is written back with stars and bugs");
 await page.close();
 
+// ---- a save that finished the game when it had two acts carries on into the third
+page = await open();
+await page.evaluate(() => {
+  const C = __spy.debug.COUNTRIES;
+  localStorage.setItem("agentrory.save", JSON.stringify({
+    version: 2, country: 13, done: C.filter(c => c.act <= 2).flatMap(c => c.missions.map(m => m.id)),
+    code: [0,1,2,3,4], arrived: Object.fromEntries(C.filter(c => c.act <= 2).map(c => [c.id, true])), briefed: { 1: true, 2: true }, finished: true, stars: {}, bugs: []
+  }));
+});
+await page.close();
+page = await open();
+const carried = await page.evaluate(() => ({ finished: __spy.save.finished, country: __spy.save.country, act: __spy.debug.COUNTRIES[__spy.save.country].act, done: __spy.save.done.length }));
+ck(carried.finished === false && carried.act === 3, `a finished two-act save is carried into act three (country ${carried.country}, act ${carried.act})`);
+ck(carried.done === 60, "with its sixty finished missions kept");
+await page.evaluate(() => __spy.debug.press("start"));
+await page.waitForTimeout(600);
+await page.evaluate(() => __spy.debug.press("continue"));
+await page.waitForTimeout(900);
+ck(await page.evaluate(() => __spy.state) === "briefing", "and continuing it opens the act three briefing");
+await page.close();
+
 console.log("fails:", fail);
 await browser.close(); server.kill(); process.exit(fail ? 1 : 0);

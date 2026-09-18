@@ -44,6 +44,23 @@ function vehicle(kind) {
       const fl = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.8, 8), new THREE.MeshBasicMaterial({ color: 0xffb347, transparent: true, opacity: 0.85 }));
       fl.position.set(sx * 0.3, 0.4, -0.28); fl.rotation.x = Math.PI; g.add(fl); (g.userData.flames = g.userData.flames || []).push(fl);
     }
+  } else if (kind === "cargobike") {
+    const frame = M(0x2a3038, 0.4), tyre = M(0x111111, 0.9);
+    box(1.0, 0.7, 1.4, M(0x8a5a2a), 0, 0.85, -1.2);                       // the cargo box up front
+    box(0.06, 0.06, 2.6, frame, 0, 0.6, 0.2); box(0.06, 0.8, 0.06, frame, 0, 0.9, 0.9);
+    for (const z of [-2.0, 1.3]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.08, 14), tyre); w.rotation.z = Math.PI / 2; w.position.set(0, 0.34, z); g.add(w); }
+    const coat = M(0x4a2a6a), skin = M(0xe8d0c0);
+    box(0.44, 0.6, 0.28, coat, 0, 1.35, 0.7); const head = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), skin); head.position.set(0, 1.85, 0.7); g.add(head);
+    box(0.4, 0.14, 0.4, M(0xd94f3d), 0, 1.98, 0.7);                        // a helmet
+    for (const sx of [-1, 1]) box(0.14, 0.5, 0.14, coat, sx * 0.22, 1.25, 0.3);
+    box(0.5, 0.2, 0.18, new THREE.MeshBasicMaterial({ color: 0xff3b30 }), 0, 0.9, 1.6);
+  } else if (kind === "snowcat") {
+    const body = M(0xd94f3d, 0.5), track = M(0x1a1a1a, 0.9);
+    box(2.4, 1.3, 4.6, body, 0, 1.4, 0); box(2.2, 1.1, 2.0, body, 0, 2.55, -0.6);
+    box(2.0, 0.6, 0.08, M(0x2a3038, 0.2), 0, 2.6, -1.62);
+    for (const sx of [-1, 1]) { box(0.9, 0.9, 5.0, track, sx * 1.5, 0.5, 0); for (let i = 0; i < 6; i++) box(1.0, 0.16, 0.3, M(0x3a3a3a), sx * 1.5, 0.95, -2.2 + i * 0.85); }
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffa000 })); beacon.position.set(0, 3.25, -0.6); g.add(beacon);
+    for (const x of [-0.8, 0.8]) box(0.4, 0.2, 0.08, new THREE.MeshBasicMaterial({ color: 0xff3b30 }), x, 1.3, 2.32);
   } else {  // a van
     const body = M(0xe8eef2); box(2.1, 1.7, 4.6, body, 0, 1.15, 0);
     box(2.0, 0.5, 0.1, M(0x2a3038, 0.2), 0, 1.55, -2.3);
@@ -96,6 +113,31 @@ function hazard(kind) {
   } else if (kind === "banner") {
     for (const sx of [-1, 1]) { const m2 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.5, 6), M(0x5a5f68, 0.4)); m2.position.set(sx * 2.2, 0, 0); g.add(m2); }
     const cloth = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.3, 0.06), M(0xd94f3d, 0.9)); cloth.position.y = 1.1; g.add(cloth);
+  } else if (kind === "bollard") {
+    const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 1.0, 10), M(0x8a1a1a)); p2.position.y = 0.5; g.add(p2);
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.12, 10), M(0xf0f0f0)); band.position.y = 0.8; g.add(band);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), M(0x8a1a1a)); cap.position.y = 1.0; g.add(cap);
+  } else if (kind === "bin") {
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.8), M(0x2f7a3a)); b2.position.y = 0.5; g.add(b2);
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.9), M(0x1f5a2a)); lid.position.y = 1.05; g.add(lid);
+    for (const x of [-0.3, 0.3]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 8), M(0x111111)); w.rotation.z = Math.PI / 2; w.position.set(x, 0.1, 0.35); g.add(w); }
+  } else if (kind === "icechunk") {
+    const c = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 0), M(0xbfe8ff, 0.3)); c.position.y = 0.55; c.rotation.set(0.4, 0.3, 0.2); g.add(c);
+  } else if (kind === "drum") {
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.1, 12), M(0xf0b429)); c.position.y = 0.55; g.add(c);
+    for (const y of [0.3, 0.8]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.1, 12), M(0x1a1a1a)); r.position.y = y; g.add(r); }
+  } else if (kind === "flagpole") {
+    const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.4, 6), M(0x3a3a3a, 0.5)); p2.position.y = 1.2; g.add(p2);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.8), M(0xff6b2b, 0.9)); f.position.set(0, 2.1, 0.4); g.add(f);
+  } else if (kind === "sled") {
+    const b2 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 1.6), M(0x8a5a2a)); b2.position.y = 0.4; g.add(b2);
+    for (const x of [-0.4, 0.4]) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 1.8), M(0x5a4a3a)); r.position.set(x, 0.1, 0); g.add(r); const s2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.3, 0.08), M(0x5a4a3a)); s2.position.set(x, 0.25, 0.6); g.add(s2); }
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 1.0), M(0xd94f3d, 0.9)); bag.position.y = 0.75; g.add(bag);
+  } else if (kind === "crevasse") {
+    const c = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.0), new THREE.MeshBasicMaterial({ color: 0x0a1a3a, transparent: true, opacity: 0.85 }));
+    c.rotation.x = -Math.PI / 2; c.position.y = 0.03; g.add(c);
+    const rim = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 3.4), new THREE.MeshBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.4 }));
+    rim.rotation.x = -Math.PI / 2; rim.position.y = 0.02; g.add(rim);
   } else {  // a puddle or ice patch: still a hit, just flatter
     const c = new THREE.Mesh(new THREE.CircleGeometry(0.8, 14), new THREE.MeshBasicMaterial({ color: 0x7fdcff, transparent: true, opacity: 0.45 }));
     c.rotation.x = -Math.PI / 2; c.position.y = 0.03; g.add(c);
@@ -276,6 +318,12 @@ export class Chase extends MG {
     } else if (kind === "cactus") {
       const b = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.4, 3.2, 9), M(0x3f6a3a)); b.position.y = 1.6; g.add(b);
       for (const sx of [-1, 1]) { const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 1.4, 8), M(0x3f6a3a)); arm.position.set(sx * 0.55, 2.1, 0); arm.rotation.z = sx * 0.9; g.add(arm); }
+    } else if (kind === "tree") {
+      const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.28, 3.6, 7), M(0x5a4632)); tr.position.y = 1.8; g.add(tr);
+      const c = new THREE.Mesh(new THREE.SphereGeometry(2.4, 9, 7), M(0x3a6a2a)); c.position.y = 4.6; c.scale.y = 1.25; g.add(c);
+    } else if (kind === "flag") {
+      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 2.6, 6), M(0x3a3a3a, 0.5)); p2.position.y = 1.3; g.add(p2);
+      const f = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.45, 0.9), M(seed % 16 < 8 ? 0xff6b2b : 0x1a1a1a, 0.9)); f.position.set(0, 2.3, 0.45); g.add(f);
     } else {  // a street lamp
       const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.4, 6), M(0x2a2a30, 0.5)); p2.position.y = 2.2; g.add(p2);
       const arm = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 0.08), M(0x2a2a30, 0.5)); arm.position.set(0.45, 4.3, 0); g.add(arm);
