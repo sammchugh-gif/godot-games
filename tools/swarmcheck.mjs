@@ -289,6 +289,14 @@ const WARPC = await pg.evaluate(`(() => {
 })()`);
 check('the gate is a cutscene, not a cut', WARPC.started && WARPC.fieldWiped === 0 && WARPC.sectorDuring === 2 && +WARPC.atHalfDive < +WARPC.atHole + 1000 && +WARPC.atHole < 3 && WARPC.tunnel && WARPC.sectorTunnel === 2,
   `warp starts on entry, the field is wiped, the ship is ${WARPC.atHalfDive}px from the hole mid-dive and ${WARPC.atHole}px at its end, still in sector ${WARPC.sectorTunnel} for the tunnel`);
+const LEFT = await pg.evaluate(`(() => {
+  const S = window.SW; S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
+  for (let i = 0; i < 20; i++) G.gems.push({ x: G.px + 300 + i * 10, y: G.py + 200, v: 2, big: 0 }); G.pk.push({ k: 'chest', x: G.px + 400, y: G.py, r: 22, life: 60 }, { k: 'nuke', x: G.px - 400, y: G.py, r: 18, life: 60 });
+  const before = { gems: G.gems.length, pk: G.pk.length }; G.sector = 2; G.secT = 290; G.gate = { x: G.px + 40, y: G.py, r: 60 }; S.sim(0.1);
+  const out = { before, gems: G.gems.length, pk: G.pk.length, warp: !!S.warp }; S.scene = 'title'; return out;
+})()`);
+check('nothing on the field follows you through the gate', LEFT.warp && LEFT.before.gems === 20 && LEFT.before.pk === 2 && LEFT.gems === 0 && LEFT.pk === 0,
+  `${LEFT.before.gems} gems and ${LEFT.before.pk} pickups lying about before the gate; ${LEFT.gems} and ${LEFT.pk} the moment it takes the ship`);
 check('and comes out flying into the next one', WARPC.over && WARPC.sectorAfter === 3 && WARPC.arriving && (WARPC.scene === 'play' || WARPC.scene === 'levelup'),
   `${WARPC.total}s later: sector ${WARPC.sectorAfter}, arrival playing, then ${WARPC.scene}`);
 
