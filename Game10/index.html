@@ -58,7 +58,7 @@ function shade(hex,amt){const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)
  const f=v=>Math.max(0,Math.min(255,Math.round(amt<0?v*(1+amt):v+(255-v)*amt)));
  return "rgb("+f(r)+","+f(g)+","+f(b)+")"}
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")"}
-const ART={glow:{},grad:{},en:{},ship:{},back:{}};
+const ART={glow:{},grad:{},en:{},ship:{},back:{},sun:null};
 const NEB=[["rgba(96,64,190,0.17)","rgba(48,28,116,0.05)"],["rgba(176,58,140,0.14)","rgba(84,18,72,0.04)"],
            ["rgba(40,108,198,0.16)","rgba(18,44,112,0.05)"],["rgba(28,148,140,0.13)","rgba(10,62,62,0.04)"],
            ["rgba(198,116,58,0.10)","rgba(92,46,20,0.03)"]];
@@ -323,15 +323,29 @@ const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06
  // swells, a low sawtooth climbing under it, and a bright sweep as it leaves
  launch(){noise(1.5,0.28);tone(48,70,0.55,"sawtooth",0.14);tone(70,520,0.9,"sawtooth",0.16,0.55);
   tone(300,1800,0.55,"sine",0.12,0.85);noise(0.5,0.18,0.9,true);tone(1200,2400,0.3,"triangle",0.08,1.1)},
+ // A gem is a soft ping that climbs with a streak - a fifth lower than it
+ // was, half the volume, without the top overtone, and the climb stops at
+ // seven semitones: a hundred of these in a minute should not grate.
  gem(){const now=AC?AC.currentTime:0;if(now-gemLast>0.5)gemStreak=0;gemLast=now;
-  const f=880*Math.pow(2,Math.min(gemStreak,12)/12);gemStreak++;
-  tone(f,f*1.01,0.13,"sine",0.22);tone(f*1.5,f*1.5,0.08,"triangle",0.08,0.02);tone(f*2,f*2,0.05,"sine",0.05,0.04)},
+  const f=587*Math.pow(2,Math.min(gemStreak,7)/12);gemStreak++;
+  tone(f,f*1.01,0.1,"sine",0.16);tone(f*1.5,f*1.5,0.06,"triangle",0.045,0.02)},
+ // The nuke clears the screen, and sounds like it: a crack, a sawtooth boom
+ // falling away, a sub that rolls on for a second and a half, a long rumble
+ // and a bright shimmer riding the tail.
+ nuke(){noise(0.08,0.45,0,true);tone(180,28,0.9,"sawtooth",0.3);tone(64,20,1.5,"sine",0.58);noise(1.1,0.3,0.05);tone(2600,500,0.7,"sine",0.07,0.08);tone(120,40,0.5,"triangle",0.18,0.12)},
  hurt(){tone(180,80,0.25,"sawtooth",0.25);noise(0.12,0.25)},shieldhit(){tone(900,400,0.08,"sine",0.15)},
  // a riser into a three-note fanfare with a chord under the last one
  level(){tone(220,880,0.32,"sine",0.12);[659,784,1047].forEach((f,i)=>tone(f,f,0.14,"square",0.13,0.3+i*0.1));stab([523,659,784,1047],0.5,"triangle",0.3,0.6);noise(0.25,0.06,0.6,true)},
  pick(){[659,988,1319].forEach((f,i)=>tone(f,f*1.01,0.12,"triangle",0.26,i*0.06));stab([1319,1661,1976],0.35,"triangle",0.3,0.18);tone(2637,2637,0.2,"sine",0.1,0.18)},
  magnet(){tone(300,1900,0.3,"sawtooth",0.16);tone(150,950,0.3,"sawtooth",0.1);tone(1200,2400,0.14,"sine",0.22,0.22);noise(0.2,0.08,0.05,true)},
  chest(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,f,0.13,"triangle",0.14,i*0.08));stab([784,1047,1319,1568],0.7,"square",0.28,0.42);tone(3136,2093,0.5,"sine",0.06,0.45);noise(0.3,0.07,0.42,true)},
+ // The warp has three sounds of its own. The dive: a long fall in pitch
+ // with a swell of noise under it. The run: a throbbing rumble, a whistle
+ // climbing the whole way, and a tick of pulses going past. The exit is
+ // the launch, because it is the launch.
+ warpDive(){tone(900,50,1.1,"sine",0.22);tone(1800,100,1.0,"triangle",0.08,0.05);noise(1.2,0.22);tone(40,80,1.2,"sawtooth",0.12,0.2)},
+ warpRun(){for(let i=0;i<6;i++){tone(55+i*9,70+i*9,0.8,"sawtooth",0.16,i*0.42);noise(0.5,0.12,i*0.42)}
+  tone(200,1800,2.4,"sine",0.06);tone(300,2400,2.4,"triangle",0.03,0.1);for(let i=0;i<10;i++)tone(1200+i*120,900+i*120,0.08,"square",0.03,0.3+i*0.22)},
  rock(){noise(0.14,0.3);tone(150,60,0.12,"triangle",0.2)},boss(){tone(80,40,0.7,"sawtooth",0.35);noise(0.5,0.3);stab([110,165,220],1.2,"sawtooth",0.25,0.2)},warp(){[262,330,392,523,659,784,1047,1319].forEach((f,i)=>tone(f,f*1.02,0.2,"sine",0.2,i*0.1));tone(400,3200,0.9,"sawtooth",0.05)},
  die(){[392,349,330,294,262].forEach((f,i)=>tone(f,f*0.98,0.22,"square",0.2,i*0.17))},win(){[523,659,784,1047,784,1047,1319,1568].forEach((f,i)=>tone(f,f,0.16,"square",0.18,i*0.12));stab([523,659,784,1047],1.4,"triangle",0.35,1.0)},click(){tone(1200,900,0.04,"square",0.08)},zap(){tone(1800,300,0.1,"sawtooth",0.1)}};
 
@@ -339,42 +353,62 @@ const SFX={laser(){tone(1200,500,0.07,"sawtooth",0.04)},shot(){tone(600,250,0.06
 // Six tracks, one per realm. Notes are scale degrees, 1 to 14 across two
 // octaves, 0 for a rest, over eight bars of eighths; chords are degrees of the
 // scale, one per bar; drums are a bar of sixteenths.
-const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10];
+const MAJ=[0,2,4,5,7,9,11],MIN=[0,2,3,5,7,8,10],DOR=[0,2,3,5,7,9,10],PHR=[0,1,3,5,7,8,10];
 const TRACKS=[
  {name:"giant",bpm:128,root:57,scale:MAJ,chords:[0,4,5,3,0,4,5,3],
   lead:[1,0,3,5,0,8,0,7, 5,0,3,0,1,0,0,0, 2,0,4,5,0,7,0,9, 8,0,7,0,5,0,0,0, 1,0,3,5,0,8,0,10, 9,0,8,0,7,0,5,0, 6,0,8,9,0,10,9,8, 7,0,5,0,3,0,0,0],
-  bass:[1,0,1,1,0,1,0,1],kick:[0,4,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[14],pad:0.028,arp:0.022,arpOct:0},
- {name:"fleet",bpm:142,root:52,scale:MIN,chords:[0,5,2,6,0,5,2,6],
-  lead:[1,1,0,1,0,3,0,1, 0,1,0,5,0,4,3,0, 1,1,0,1,0,3,0,1, 0,6,0,5,0,4,3,0, 8,8,0,8,0,7,0,5, 0,5,0,7,0,8,7,0, 6,6,0,6,0,5,0,3, 0,3,0,2,0,1,0,0],
-  bass:[1,0,1,0,1,1,0,1],kick:[0,3,8,10],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[],pad:0.014,arp:0,arpOct:0},
+  bass:[1,0,1,1,0,1,0,1],kick:[0,4,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[14],pad:0.028,arp:0.022,arpOct:0,
+  chords2:[3,4,0,5,3,4,1,4],lead2:[5,0,6,0,8,0,10,0, 9,0,8,0,7,0,5,0, 3,0,5,0,6,0,8,0, 7,0,0,0,5,0,3,0, 10,0,10,0,9,0,8,0, 9,0,0,0,7,0,8,0, 6,0,8,0,9,0,10,0, 8,0,0,0,0,0,0,0]},
+ {name:"fleet",bpm:126,root:52,scale:DOR,chords:[0,3,0,6,0,3,4,6],
+  lead:[1,0,5,0,8,7,0,5, 0,4,0,5,0,0,0,0, 1,0,5,0,8,10,0,9, 0,7,0,8,7,0,0,0, 12,0,11,0,10,0,8,0, 9,0,8,0,7,0,5,0, 6,0,8,0,10,0,9,8, 7,0,0,0,5,0,0,0],
+  bass:[1,0,1,1,0,1,1,0],kick:[0,7,8,12],snare:[4,12],hat:[0,2,4,6,8,10,12,14],open:[10],pad:0.03,arp:0.024,arpOct:1,
+  chords2:[5,6,0,3,5,6,4,0],lead2:[8,0,0,7,0,5,0,4, 5,0,0,0,7,0,8,0, 10,0,0,9,0,8,0,7, 8,0,0,0,5,0,0,0, 3,0,4,0,5,0,7,0, 8,0,7,0,5,0,4,0, 6,0,0,5,0,4,0,2, 1,0,0,0,0,0,0,0]},
  {name:"ember",bpm:118,root:51,scale:MIN,chords:[0,3,5,6,0,3,5,6],
   lead:[1,0,0,0,5,0,0,0, 8,0,0,0,7,0,5,0, 4,0,0,0,6,0,0,0, 5,0,0,0,3,0,1,0, 8,0,0,0,12,0,0,0, 11,0,0,0,10,0,8,0, 6,0,0,0,7,0,0,0, 8,0,0,0,5,0,0,0],
-  bass:[1,0,0,0,0,0,1,0],kick:[0,10],snare:[8],hat:[0,2,4,6,8,10,12,14],open:[6],pad:0.04,arp:0,arpOct:0},
+  bass:[1,0,0,0,0,0,1,0],kick:[0,10],snare:[8],hat:[0,2,4,6,8,10,12,14],open:[6],pad:0.04,arp:0,arpOct:0,
+  chords2:[5,6,3,0,5,6,4,0],lead2:[12,0,0,0,0,0,11,0, 10,0,0,0,8,0,0,0, 9,0,0,0,0,0,8,0, 7,0,0,0,5,0,0,0, 8,0,0,0,0,0,10,0, 12,0,0,0,0,0,0,0, 11,0,0,0,10,0,9,0, 8,0,0,0,0,0,0,0]},
  {name:"hive",bpm:134,root:58,scale:MIN,chords:[0,0,5,6,0,0,5,6],
   lead:[1,3,5,3,1,3,5,8, 7,5,3,5,7,5,3,1, 1,3,5,3,1,3,5,8, 6,8,10,8,6,8,7,5, 1,3,5,3,1,3,5,8, 7,5,3,5,7,5,3,1, 8,6,8,6,8,6,8,10, 7,8,7,5,3,5,3,1],
-  bass:[1,1,1,1,1,1,1,1],kick:[0,4,8,12],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[7,15],pad:0.012,arp:0.03,arpOct:1},
+  bass:[1,1,1,1,1,1,1,1],kick:[0,4,8,12],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[7,15],pad:0.012,arp:0.03,arpOct:1,
+  chords2:[3,3,5,6,3,3,4,4],lead2:[5,7,8,7,5,7,8,10, 9,8,7,8,9,8,7,5, 5,7,8,7,5,7,8,10, 11,10,9,10,11,10,9,8, 8,10,12,10,8,10,12,13, 12,11,10,11,12,11,10,8, 6,8,10,8,6,8,10,12, 11,10,9,8,7,6,5,0]},
  {name:"moon",bpm:108,root:48,scale:MIN,chords:[0,5,3,6,0,5,3,6],
   lead:[1,0,0,0,0,0,5,0, 0,0,3,0,0,0,0,0, 8,0,0,0,0,0,7,0, 0,0,5,0,0,0,0,0, 1,0,0,0,0,0,5,0, 0,0,3,0,0,0,4,0, 6,0,0,0,5,0,0,0, 3,0,0,0,1,0,0,0],
-  bass:[1,0,0,0,1,0,0,0],kick:[0,10],snare:[8],hat:[0,4,8,12],open:[12],pad:0.045,arp:0.026,arpOct:2},
+  bass:[1,0,0,0,1,0,0,0],kick:[0,10],snare:[8],hat:[0,4,8,12],open:[12],pad:0.045,arp:0.026,arpOct:2,
+  chords2:[3,6,0,5,3,6,4,5],lead2:[8,0,0,0,0,0,10,0, 0,0,9,0,0,0,0,0, 7,0,0,0,0,0,8,0, 0,0,5,0,0,0,0,0, 10,0,0,0,0,0,12,0, 0,0,11,0,0,0,10,0, 9,0,0,0,8,0,0,0, 7,0,0,0,5,0,0,0]},
  {name:"hole",bpm:136,root:55,scale:MIN,chords:[0,5,6,0,3,5,6,6],
   lead:[1,0,1,0,3,0,5,0, 8,0,0,0,7,0,5,0, 6,0,6,0,8,0,10,0, 9,0,0,0,8,0,7,0, 1,0,1,0,3,0,5,0, 8,0,0,0,10,0,12,0, 11,0,10,0,9,0,8,0, 7,0,0,0,8,0,0,0],
-  bass:[1,0,1,0,1,0,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[15],pad:0.036,arp:0.028,arpOct:1},
+  bass:[1,0,1,0,1,0,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[15],pad:0.036,arp:0.028,arpOct:1,
+  chords2:[3,4,5,6,3,4,0,0],lead2:[12,0,11,0,10,0,8,0, 9,0,0,0,10,0,9,0, 8,0,7,0,6,0,5,0, 7,0,0,0,8,0,0,0, 12,0,12,0,13,0,12,0, 11,0,0,0,10,0,8,0, 9,0,8,0,7,0,6,0, 5,0,0,0,0,0,0,0]},
 ];
 let musicTrack=-1,musicLog=null,musicKind="",musicForce=null;  // musicLog collects what was scheduled, for the checker
 // the title theme sits after the six sectors
 TRACKS.push({name:"title",bpm:66,root:45,scale:MIN,chords:[0,5,3,0,0,5,6,4],
   lead:[1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 8,0,0,0,0,0,7,0, 6,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, 5,0,0,0,0,0,0,0, 4,0,0,0,0,0,3,0, 2,0,0,0,0,0,0,0],
-  bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13});
-const TITLE_TRACK=TRACKS.length-1;
+  bass:[0,0,0,0,0,0,0,0],kick:[],snare:[],hat:[0,8],open:[],pad:0.075,arp:0.042,arpOct:1,title:true,hold:13,
+  chords2:[3,0,5,6,3,0,4,4],lead2:[8,0,0,0,0,0,0,0, 7,0,0,0,0,0,5,0, 6,0,0,0,0,0,0,0, 5,0,0,0,0,0,3,0, 4,0,0,0,0,0,0,0, 5,0,0,0,0,0,6,0, 7,0,0,0,0,0,0,0, 2,0,0,0,0,0,0,0]});
+const TITLE_TRACK=TRACKS.length-1,SECTOR_TRACKS=6;
+// The boss has a piece of its own: a phrygian riff hammering the flat second
+// over a bass on every eighth, double kicks, a drone under it all. It is
+// played in whichever key the sector was in, so the switch is a change of
+// mood, not a change of song.
+const BOSS_TRACK=TRACKS.length;
+TRACKS.push({name:"boss",bpm:150,root:52,scale:PHR,chords:[0,1,0,1,0,1,6,1],
+  lead:[1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 1,1,0,1,3,0,2,0, 8,0,7,0,5,0,4,0, 1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 6,0,8,0,9,0,8,0, 2,0,1,0,0,0,0,0],
+  bass:[1,1,1,1,1,1,1,1],kick:[0,4,6,8,12,14],snare:[4,12],hat:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],open:[14],pad:0.02,arp:0.03,arpOct:1,drone:true,loud:1.35,
+  chords2:[5,6,5,6,0,1,0,1],lead2:[8,8,0,8,10,0,9,0, 8,8,0,8,11,0,9,0, 5,5,0,5,7,0,6,0, 12,0,11,0,10,0,9,0, 1,1,0,1,3,0,2,0, 1,1,0,1,4,0,2,0, 8,0,7,0,6,0,5,0, 2,0,1,0,2,0,1,0]});
 const midiHz=m=>440*Math.pow(2,(m-69)/12);
 // scale degree (1-based, two octaves) to a MIDI note in this track's key
 function degNote(T,deg,oct){const d=deg-1;return T.root+T.scale[((d%7)+7)%7]+12*Math.floor(d/7)+12*(oct||0)}
-function chordNotes(T,bar){const c=T.chords[bar%T.chords.length];return[degNote(T,c+1),degNote(T,c+3),degNote(T,c+5)]}
+function chordNotes(T,bar,ch){ch=ch||T.chords;const c=ch[bar%ch.length];return[degNote(T,c+1),degNote(T,c+3),degNote(T,c+5)]}
 // Which track should be playing: the checker can force one; the hangar and
 // the credits get the theme; a run gets its sector.
 function wantTrack(){if(musicForce!=null)return musicForce;
- if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun")return TITLE_TRACK;
- return G?Math.max(0,G.sector-1)%(TRACKS.length-1):0}
+ if(scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")return TITLE_TRACK;
+ if(G&&(G.bossAlive||G.bonus))return BOSS_TRACK;
+ return G?sectorTrack():0}
+function sectorTrack(){return Math.max(0,G.sector-1)%SECTOR_TRACKS}
+// the boss piece borrows the sector's key
+function trackAt(i){return i===BOSS_TRACK&&G?Object.assign({},TRACKS[i],{root:TRACKS[sectorTrack()].root}):TRACKS[i]}
 function osc(type,f,t,dur,vol,dest,f1,drum){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);
  if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
@@ -389,36 +423,50 @@ function drum(kind,t,vol){
 function musicSchedule(until){
  while(musicNext<until){
   if(musicTrack<0)musicTrack=wantTrack();
-  const T=TRACKS[musicTrack],s16=60/T.bpm/4,s=musicStep,t=musicNext;
+  const T=trackAt(musicTrack),s=musicStep,t=musicNext;
   const bar=Math.floor(s/16),inBar=s%16,eighth=Math.floor(s/2);
-  const boss=!!(G&&G.bossAlive),gate=!!(G&&G.gate);
+  const gate=!!(G&&G.gate);
+  // Once the sector's boss is down the same piece comes back at ease: a
+  // touch slower, the kit down to a kick on the one, the bass on the
+  // downbeats, the lead softer and longer, the pad up. The gate sparkle
+  // still rides on top when it opens.
+  const calm=!!(G&&G.secBoss&&!G.bossAlive)&&musicTrack!==BOSS_TRACK&&!T.title;
+  const s16=60/(T.bpm*(calm?0.88:1))/4;
   // a new track is taken up at a bar line, so the key changes on the beat -
-  // except between the hangar and a run, where it changes now
-  const kind=wantTrack()===TITLE_TRACK?"title":"run";
-  if(wantTrack()!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=wantTrack();musicKind=kind;musicStep=0;continue}
+  // except between the hangar and a run, or in and out of a boss, where it
+  // changes now
+  const want=wantTrack(),kind=want===TITLE_TRACK?"title":want===BOSS_TRACK?"boss":"run";
+  if(want!==musicTrack&&(inBar===0||kind!==musicKind)){musicTrack=want;musicKind=kind;musicStep=0;continue}
   musicKind=kind;
-  const chord=chordNotes(T,bar);
+  // Thirty-two bars, not eight: the tune, the tune with a harmony a third
+  // up, a second tune over its own chords, then the tune again doubled an
+  // octave up with a drum fill into the top.
+  const sec=Math.floor(bar/8)%4,useB=sec===2&&!!T.lead2,lead=useB?T.lead2:T.lead,chord=chordNotes(T,bar,useB?T.chords2:T.chords),dress=!T.title&&!calm;
   // drums
   const kickV=0.42,snV=0.3,hatV=T.title?0.025:0.05;
   if(!T.title){
-   if(T.kick.includes(inBar)||(boss&&inBar%2===0))drum("kick",t,kickV);
-   if(T.snare.includes(inBar)||(boss&&(inBar===6||inBar===14)))drum("snare",t,snV);}
-  if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar)||(boss&&!T.title))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
+   if(calm?inBar===0:T.kick.includes(inBar))drum("kick",t,kickV*(calm?0.7:1));
+   if(!calm&&T.snare.includes(inBar))drum("snare",t,snV);
+   if(dress&&sec===3&&bar%8===7&&inBar>=8&&inBar%2===0)drum("snare",t,snV*0.7);}
+  if(calm){if(inBar%4===0)drum("hat",t,hatV*0.6)}
+  else if(T.open.includes(inBar))drum("open",t,hatV);else if(T.hat.includes(inBar))drum("hat",t,hatV*(inBar%4===0?1.4:0.8));
   // bass, on the eighths
-  if(inBar%2===0){const b=T.bass[(inBar/2)%8];if(b){const n=chord[0]-12,jump=(T.name==="fleet"&&inBar===10)?12:0;
-   osc("triangle",midiHz(n+jump),t,s16*1.7,0.16);osc("square",midiHz(n+jump),t,s16*1.2,0.04)}}
+  if(inBar%2===0&&!(calm&&inBar%8)){const b=T.bass[(inBar/2)%8];if(b){const n=chord[0]-12;
+   osc("triangle",midiHz(n),t,s16*(calm?3.2:1.7),0.16);if(!calm)osc("square",midiHz(n),t,s16*1.2,0.04)}}
   // pad, one chord per bar, held
-  if(inBar===0&&T.pad){const dur=s16*16;
-   for(const n of chord){osc("sawtooth",midiHz(n)*1.003,t,dur,T.pad,padBus);osc("sawtooth",midiHz(n)*0.997,t,dur,T.pad,padBus)}
-   // the boss drone sits an octave under the root; the theme has one always
-   if(boss||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
+  if(inBar===0&&T.pad){const dur=s16*16,pv=T.pad*(calm?1.6:1);
+   for(const n of chord){osc("sawtooth",midiHz(n)*1.003,t,dur,pv,padBus);osc("sawtooth",midiHz(n)*0.997,t,dur,pv,padBus)}
+   // the boss piece and the theme carry a drone an octave under the root
+   if(T.drone||T.title)osc("sawtooth",midiHz(chord[0]-24),t,dur,T.title?0.075:0.06,padBus)}
   // lead, on the eighths
-  if(inBar%2===0){const d=T.lead[eighth%64];if(d){const n=degNote(T,d);
-   const v=boss?0.075:0.055,hold=T.hold||1.8;
-   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:0.9),v*0.25)}}
+  if(inBar%2===0){const d=lead[eighth%64];if(d){const n=degNote(T,d);
+   const v=calm?0.04:0.055*(T.loud||1),hold=calm?3.2:(T.hold||1.8);
+   osc("sawtooth",midiHz(n),t,s16*hold,T.title?0.055:v);osc("square",midiHz(n)*2,t,s16*(T.title?hold:calm?2:0.9),v*0.25);
+   if(dress&&sec===1)osc("sawtooth",midiHz(degNote(T,d+2)),t,s16*hold,v*0.45);
+   if(dress&&sec===3)osc("triangle",midiHz(n+12),t,s16*hold*0.8,v*0.5)}}
   // arpeggio on the sixteenths, up and down the chord across two octaves
-  if(T.arp){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
-   osc("triangle",midiHz(n),t,s16*0.9,T.arp)}
+  if(T.arp&&!(calm&&inBar%2)){const seq=[0,1,2,3,4,5,4,3,2,1],k=seq[inBar%seq.length],n=chord[k%3]+12*Math.floor(k/3)+12*T.arpOct;
+   osc("triangle",midiHz(n),t,s16*(calm?1.8:0.9),T.arp*(calm?0.8:1))}
   // the gate is open: a high sparkle every other sixteenth
   if(gate&&inBar%2===1)osc("sine",midiHz(chord[(inBar>>1)%3]+36),t,s16*0.8,0.03);
   musicStep++;musicNext+=s16}}
@@ -436,12 +484,13 @@ async function audioRender(what,secs,opts){
  const ctx=new OfflineAudioContext(1,Math.ceil(44100*secs),44100);
  const save={AC,master,padBus,G,musicStep,musicNext,musicTrack};
  AC=ctx;const b=buildBus(ctx);master=b.master;padBus=b.pad;
- musicLog=[];
+ musicLog=[];let tname=what;
  try{
   if(what==="music"){
-   G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,gate:opts.gate?{}:null};
-   musicForce=opts.title?TITLE_TRACK:Math.min(TRACKS.length-2,(opts.sector||1)-1);
-   musicStep=0;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
+   G={sector:opts.sector||1,bossAlive:opts.boss?{}:null,secBoss:!!(opts.boss||opts.calm),gate:opts.gate?{}:null};
+   musicForce=opts.title?TITLE_TRACK:opts.boss?BOSS_TRACK:Math.min(SECTOR_TRACKS-1,(opts.sector||1)-1);
+   tname=TRACKS[musicForce].name+(opts.calm?" calm":"");
+   musicStep=(opts.bar||0)*16;musicNext=0;musicTrack=-1;musicKind="";musicSchedule(secs)}
   else if(SFX[what])SFX[what]();
  }finally{
   var log=musicLog;musicLog=null;musicForce=null;
@@ -449,7 +498,7 @@ async function audioRender(what,secs,opts){
   AC=save.AC;master=save.master;padBus=save.padBus;G=save.G;musicStep=save.musicStep;musicNext=save.musicNext;musicTrack=save.musicTrack;
   const d=buf.getChannelData(0);let peak=0,sum=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>peak)peak=a;sum+=d[i]*d[i]}
   const notes={};for(const f of log)notes[f]=(notes[f]||0)+1;
-  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:what==="music"?(opts.title?"title":TRACKS[Math.min(TRACKS.length-2,(opts.sector||1)-1)].name):what}}}
+  return{peak,rms:Math.sqrt(sum/d.length),events:log.length,notes,track:tname}}}
 // ---------------------------------------------------------------- input
 const keys={};window.addEventListener("keydown",e=>{keys[e.code]=true;audioWake();if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code))e.preventDefault();onKey(e.code)});window.addEventListener("keyup",e=>keys[e.code]=false);
 const touch={id:-1,ox:0,oy:0,x:0,y:0};let mouseDown=false;
@@ -528,7 +577,7 @@ const ghostMouse=()=>performance.now()-lastTouchAt<900;
 // finger that was not on the glass any more, and because the browser still
 // listed that finger nothing could ever claim it back. Tapping again is exactly
 // what a child does when it stops answering, so let tapping again fix it.
-window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioInit();
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioWake();
  if(touch.id===99){touch.id=-1;mouseDown=false}
  seeTouches(e);
  for(const t of e.changedTouches){const q=rectPos(t.clientX,t.clientY);noteTouch(t.identifier,q.x,q.y)}
@@ -557,7 +606,12 @@ function tend(e){lastTouchAt=performance.now();evN++;audioWake();
  if(!stillDown(e))touch.id=-1}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
 window.addEventListener("blur",()=>{if(touch.id!==99)touch.id=-1});
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1;if(!document.hidden&&AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})});
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&touch.id!==99)touch.id=-1;if(!document.hidden)audioNudge()});
+// A context the phone has interrupted (the screen locked, a call, another
+// app) comes back only when something asks. Every way back into the page
+// asks, and the frame loop keeps asking once a second until it is running.
+function audioNudge(){if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+window.addEventListener("pageshow",audioNudge);window.addEventListener("focus",audioNudge);let nudgeT=0;
 cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();const p=pos(e);if(uiTap(p))return;mouseDown=true;touch.id=99;touch.ox=touch.x=p.x;touch.oy=touch.y=p.y;fingers[99]={ox:p.x,oy:p.y,x:p.x,y:p.y}});
 window.addEventListener("mousemove",e=>{if(mouseDown){const p=pos(e);touch.x=p.x;touch.y=p.y;
  if(fingers[99]){fingers[99].x=p.x;fingers[99].y=p.y}}});
@@ -594,7 +648,7 @@ function drawButtons(){for(const b of buttons){const o=b.opt;
   rr(b.x,b.y,b.w,b.h,16);cx.fillStyle=f;cx.fill();cx.restore();
   cx.save();rr(b.x+3,b.y+3,b.w-6,b.h*0.42,12);cx.fillStyle="rgba(255,255,255,0.16)";cx.fill();cx.restore();
   rr(b.x,b.y,b.w,b.h,16);cx.lineWidth=2.5;cx.strokeStyle="rgba(210,240,255,0.9)";cx.stroke();
-  const sz=o.size||22;text(b.label,b.x+b.w/2-sz*0.35,b.y+b.h/2,sz,"#fff");
+  const sz=o.size||22;textFit(b.label,b.x+b.w/2-sz*0.5,b.y+b.h/2,sz,"#fff",b.w-sz*2.8);
   // a chevron on the right, pointing the way out of the hangar
   const gx=b.x+b.w-sz*1.1,gy=b.y+b.h/2;cx.fillStyle="#ffe060";
   for(let k=0;k<2;k++){cx.beginPath();cx.moveTo(gx+k*sz*0.34,gy-sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.3,gy);cx.lineTo(gx+k*sz*0.34,gy+sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.12,gy);cx.closePath();cx.fill()}
@@ -614,10 +668,22 @@ function wrapFit(s,x,y,w,maxH,size,col){let sz=size,lines;for(;;){lines=wrapLine
 function wrap(s,x,y,w,size,col){cx.font="bold "+size+"px sans-serif";const words=s.split(" ");let line="",ly=y;for(const wd of words){const t=line?line+" "+wd:wd;if(cx.measureText(t).width>w&&line){text(line,x,ly,size,col);line=wd;ly+=size+5}else line=t}if(line)text(line,x,ly,size,col)}
 // ---------------------------------------------------------------- content
 const SHIPS=[
- {id:"falcon",name:"DYLAN'S FALCON",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,shield:40,speed:1.1,col:"#e04040",col2:"#ffb0b0",unlock:""},
- {id:"comet",name:"RORY'S COMET",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,shield:30,speed:1.0,col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
- {id:"nova",name:"SOPHIA'S NOVA",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,shield:50,speed:0.95,col:"#c050e0",col2:"#f0c0ff",unlock:"Reach Sector 3"},
+ // The ids are what the records are keyed by, so they stay as they were.
+ // Speed, damage and shield are marks out of five, and the numbers the run
+ // uses come from those marks - so what the card says is what the ship does.
+ {id:"falcon",name:"VIPER",desc:"Laser. Fast and nimble.",weapon:"laser",hp:90,stats:{speed:4,damage:3,shield:2},col:"#e04040",col2:"#ffb0b0",unlock:""},
+ {id:"comet",name:"THUNDERHEAD",desc:"Spread cannon. Wide and loud.",weapon:"spread",hp:100,stats:{speed:3,damage:4,shield:1},col:"#30c060",col2:"#b0ffc0",unlock:"Clear Sector 1"},
+ {id:"nova",name:"HORNET",desc:"Drones. Tough as a rock.",weapon:"drones",hp:130,stats:{speed:1,damage:3,shield:5},col:"#f2c21b",col2:"#1a1a1a",unlock:"Reach Sector 3"},
+ // three more in the shop, each with a trick of its own
+ {id:"wraith",name:"GHOST",shape:"falcon",desc:"Missiles. Untouchable longer after a hit.",ab:"phase",abName:"Phase shift",abDesc:"A hit makes you untouchable for longer and throws the swarm back.",weapon:"missile",hp:85,stats:{speed:5,damage:3,shield:2},col:"#8090b0",col2:"#e0e8ff",cost:2500,unlock:"In the shop"},
+ {id:"glacier",name:"GLACIER",shape:"nova",desc:"Plasma wave. Freezes what touches you.",ab:"frost",abName:"Frost hull",abDesc:"Anything that touches you is slowed, and shields recharge half again as fast.",weapon:"wave",hp:110,stats:{speed:2,damage:2,shield:4},col:"#40b0e0",col2:"#d0f4ff",cost:3500,unlock:"In the shop"},
+ {id:"magnetar",name:"MAGNETAR",shape:"comet",desc:"Black hole. Gems come from twice as far.",ab:"gravity",abName:"Gravity well",abDesc:"Gems fly to you from twice as far, and you level 15% faster.",weapon:"hole",hp:95,stats:{speed:3,damage:4,shield:3},col:"#f0a030",col2:"#ffe8b0",cost:5000,unlock:"In the shop"},
+ // and the one for finishing: top marks in everything
+ {id:"ufo",name:"ECLIPSE",shape:"ufo",desc:"Space mines. Small aliens bounce off the hull.",ab:"saucer",abName:"Deflector hull",abDesc:"Scouts and swarmers bounce off without hurting you. Bigger things still do.",weapon:"mines",hp:100,stats:{speed:5,damage:5,shield:5},col:"#3fe6c4",col2:"#e6fff8",unlock:"Clear all six sectors"},
 ];
+function shipSpeed(sh){return 0.9+0.075*(sh.stats.speed-1)}    // 1 → 90%, 5 → 120%
+function shipDmg(sh){return 0.9+0.075*(sh.stats.damage-1)}     // 1 → 90%, 5 → 120%
+function shipShield(sh){return 10+10*sh.stats.shield}           // 1 → 20, 5 → 60
 const WEAPONS={
  laser:{name:"Laser",icon:"|",col:"#ff4060",desc:"Fires a beam at the nearest alien.",max:6,evo:{name:"Prism Beam",needs:"haste",col:"#ff80ff",desc:"Three beams that pierce everything."}},
  spread:{name:"Spread Cannon",icon:"⋀",col:"#ffd040",desc:"A fan of shots in front of the ship.",max:6,evo:{name:"Starburst",needs:"power",col:"#ffe080",desc:"Shots in every direction at once."}},
@@ -630,7 +696,10 @@ const WEAPONS={
 // A weapon at full rank, with the upgrade it pairs with, evolves at the next
 // chest: a new name, a new colour, and a good deal more of whatever it did.
 // It is the goal past "everything at max", which a run reached by sector 4.
-function evolvable(){if(!FEATURES.evolve||!G)return[];return Object.keys(G.weapons).filter(k=>{const w=WEAPONS[k];return w.evo&&G.weapons[k]>=w.max&&!G.evo[k]&&(G.passives[w.evo.needs]||0)>0})}
+// the partner has to be at rank two: with the sector 1 boss chest guaranteed,
+// a laser at six by level nine was evolving inside the first sector
+const EVO_NEEDS=2;
+function evolvable(){if(!FEATURES.evolve||!G)return[];return Object.keys(G.weapons).filter(k=>{const w=WEAPONS[k];return w.evo&&G.weapons[k]>=w.max&&!G.evo[k]&&(G.passives[w.evo.needs]||0)>=EVO_NEEDS})}
 function evolve(k){if(!WEAPONS[k].evo||G.evo[k])return false;G.evo[k]=true;G.evolved=(G.evolved||0)+1;
  announce(WEAPONS[k].name.toUpperCase()+" EVOLVED  ·  "+WEAPONS[k].evo.name.toUpperCase()+"!");SFX.evolve();flash=0.8;shake=1;
  for(let i=0;i<40;i++)G.parts.push({k:"dot",x:G.px,y:G.py,vx:rnd(-260,260),vy:rnd(-260,260),life:rnd(0.5,1.1),col:WEAPONS[k].evo.col,r:rnd(3,8)});return true}
@@ -662,9 +731,9 @@ const obj=(v,d)=>(v&&typeof v==="object"&&!Array.isArray(v))?v:d;
 const records=obj(store.get("records",{}),{}),unlocks=obj(store.get("unlocks",{falcon:true}),{falcon:true});
 // Easy keeps the original record key; it is a shade softer than the first
 // tuning, which a seven-year-old found hard by the end of sector 1.
-const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:0.85,dmg:0.9,elite:0.05,desc:"The swarm, a little thinner."},
- {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.5,rate:1.3,dmg:1.25,elite:0.07,desc:"Tougher, thicker, hits harder."},
- {id:"hard",name:"HARD",col:"#ff6060",hp:2.2,rate:1.65,dmg:1.6,elite:0.1,desc:"No mercy. Bring your best ship."}];
+const DIFFS=[{id:"easy",name:"EASY",col:"#8dff5a",hp:1,rate:0.85,dmg:0.9,elite:0.05,desc:"Where to start. A fair fight."},
+ {id:"medium",name:"MEDIUM",col:"#ffd040",hp:1.3,rate:1.2,dmg:1.25,elite:0.07,desc:"Tougher aliens, more of them, harder hits."},
+ {id:"hard",name:"HARD",col:"#ff6060",hp:1.7,rate:1.45,dmg:1.45,elite:0.1,desc:"No mercy. Bring your best ship."}];
 let diffIdx=Math.max(0,Math.min(DIFFS.length-1,parseInt(store.get("diff",0),10)||0));
 // Three ways to play. The campaign is the six sectors. Endless keeps going
 // past the sixth gate, the sectors and their bosses coming round again harder
@@ -681,7 +750,7 @@ const DAILY_MODS=[
  {id:"tide",name:"SWARM TIDE",desc:"Far more aliens, each far weaker.",rate:1.7,hp:0.55},
  {id:"rush",name:"BOSS RUSH",desc:"The boss comes at one minute, the gate right after.",bossAt:60,gateAt:130},
  {id:"turbo",name:"TURBO",desc:"You are faster. So are they.",speed:1.4,espd:1.25},
- {id:"loot",name:"TREASURE DAY",desc:"Every elite drops a chest, gems fly from far away.",chest:1,magnet:3}];
+ {id:"loot",name:"TREASURE DAY",desc:"Three elite chests a sector instead of one, gems fly from far away.",chests:3,magnet:2.5}];
 let modeIdx=FEATURES.modes?Math.max(0,Math.min(MODES.length-1,parseInt(store.get("mode",0),10)||0)):0;
 function dayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function strHash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -697,15 +766,16 @@ const SHOP=[
  {id:"power",name:"Weapon Tuning",icon:"✊",col:"#ffa040",desc:"+4% damage per level.",max:5},
  {id:"engine",name:"Engine Trim",icon:"»",col:"#80ff80",desc:"+3% speed per level.",max:3},
  {id:"gems",name:"Gem Polish",icon:"✦",col:"#c0a0ff",desc:"+8% XP from gems per level.",max:3},
- {id:"start",name:"Head Start",icon:"▲",col:"#ffe060",desc:"Begin every run at weapon rank 2.",max:1,cost:600},
- {id:"pod",name:"Escape Pod",icon:"✚",col:"#80ff90",desc:"Once a run, survive a killing blow.",max:1,cost:1500}];
-const SHOP_COST=[100,200,350,550,800];
+ {id:"start",name:"Head Start",icon:"▲",col:"#ffe060",desc:"Begin every run at weapon rank 2.",max:1,cost:1200},
+ {id:"pod",name:"Escape Pod",icon:"✚",col:"#80ff90",desc:"Once a run, survive a killing blow.",max:1,cost:3000}];
+const SHOP_COST=[200,400,700,1100,1600];
 let bank=Math.max(0,parseInt(store.get("bank",0),10)||0);
 const perks=obj(store.get("perks",{}),{});
 function perkLv(id){return FEATURES.shop?(perks[id]||0):0}
 function shopCost(it){const l=perks[it.id]||0;return l>=it.max?0:(it.cost||SHOP_COST[Math.min(l,SHOP_COST.length-1)])}
 function buy(id){const it=SHOP.find(x=>x.id===id);if(!it||!FEATURES.shop)return false;const c=shopCost(it);if(!c||bank<c)return false;
  bank-=c;perks[id]=(perks[id]||0)+1;store.set("bank",bank);store.set("perks",perks);return true}
+function buyShip(id){const sh=SHIPS.find(x=>x.id===id);if(!sh||!sh.cost||!FEATURES.shop||unlocks[id]||bank<sh.cost)return false;bank-=sh.cost;unlocks[id]=true;store.set("bank",bank);store.set("unlocks",unlocks);return true}
 function bankRun(){if(!G||G.banked||!FEATURES.shop)return;G.banked=true;const got=Math.round(G.gemsGot||0);if(got>0){bank+=got;store.set("bank",bank)}}
 const NOMOD={};
 function mod(){return (G&&G.mod)||NOMOD}
@@ -713,9 +783,10 @@ function recKeyFor(shipId,difId,mode){const k=difId==="easy"?shipId:shipId+"@"+d
 function dailyKey(){return "daily:"+dayKey()}
 unlocks.falcon=true;
 shipIdx=Math.max(0,Math.min(SHIPS.length-1,parseInt(store.get("ship",0),10)||0));
+let viewIdx=shipIdx;   // the ship the hangar is showing, which need not be the one you fly
 let cards=[];
 function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
- G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],mode,daily,mod:daily?daily.mod:null,rng:daily?mulberry(daily.seed):null,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:ship.shield,maxsh:ship.shield,shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
+ G={t:0,secT:0,sector:1,secBoss:false,ship,dif:DIFFS[diffIdx],mode,daily,mod:daily?daily.mod:null,rng:daily?mulberry(daily.seed):null,px:0,py:0,vx:0,vy:0,ang:-Math.PI/2,hp:ship.hp,maxhp:ship.hp,sh:shipShield(ship),maxsh:shipShield(ship),shT:0,level:1,xp:0,xpNext:8,kills:0,score:0,
  weapons:{},passives:{},evo:{},evolved:0,en:[],bul:[],gems:[],pk:[],parts:[],txt:[],rocks:[],drones:[],cds:{},inv:0,mineT:0,bossAlive:null,spawnAcc:0,arrive:ARRIVE_T,swarm:0,announce:"",announceT:0,lvlQueue:0,magnetT:0,gate:null,gateHeld:false,won:false,elite:0};
  G.xpNext=10;G.weapons[ship.weapon]=1;
  const m=mod();if(m.hull){G.maxhp=Math.round(G.maxhp*m.hull);G.hp=G.maxhp}if(m.shield!=null){G.maxsh=Math.round(G.maxsh*m.shield);G.sh=G.maxsh}
@@ -729,14 +800,19 @@ function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
 function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random=G.rng;try{return fn(a)}finally{Math.random=R}}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
-function moveSpeed(){return 210*G.ship.speed*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
-function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))}function magnetR(){return (100+45*(G.passives.tractor||0))*(mod().magnet||1)}function armor(){return G.passives.armor||0}
+function moveSpeed(){return 210*shipSpeed(G.ship)*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
+function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))*shipDmg(G.ship)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}// gems pull from 70px bare and 245 at full Tractor Beam; it was 100 and 325, and they came too easily
+function magnetR(){return (70+35*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
 // run peaked at sector 2 and got easier from sector 4 on - a motionless
 // player lost 168 hull to twenty seconds of sector 1 and 36 to sector 5 -
 // because health grew with time while damage grew with ranks. The numbers are
 // what tools/curve.mjs settled on.
-const SWARM={base:0.9,time:400,rank:0.055,rank2:0.0007,slotK:0.42,rate0:1.35,rateT:70,rateR:0.05,dmgR:0.03};
+// Scaling off the ranks held made levelling up the thing that killed you: a
+// scout carried 32x its hull by sector 4 and 94x by sector 6 with the build
+// a run actually holds. The rank terms are cut to a fraction and time carries
+// the difficulty, which is the part skill can answer.
+const SWARM={base:0.9,time:330,rank:0.03,rank2:0.00023,slotK:0.15,rate0:1.35,rateT:110,rateR:0.03,rateMax:9,dmgR:0.03};
 // both start biting past twelve ranks, so sector 1 is the intro it always
 // was and the pressure arrives with the build rather than before it
 function swarmDmg(){return 1+Math.max(0,ranksHeld()-12)*SWARM.dmgR}
@@ -744,7 +820,10 @@ function swarmDmg(){return 1+Math.max(0,ranksHeld()-12)*SWARM.dmgR}
 // beside it trebles what a build puts out - so the swarm's health carries a
 // term in weapons held, squared
 function hpMul(){const r=ranksHeld(),w=Math.max(0,Object.keys(G.weapons).length-2);return (SWARM.base+G.t/SWARM.time+r*SWARM.rank)*(1+r*r*SWARM.rank2)*(1+w*w*SWARM.slotK)*G.dif.hp*(mod().hp||1)}
-function swarmRate(){return (SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-12)*SWARM.rateR)*G.dif.rate*(mod().rate||1)}
+// the rate climbs with the clock to a ceiling: it reached 27 a second by
+// minute thirty and pinned the field at the cap from sector 3 on, which was
+// the wall and the source of the bolts that ended every run
+function swarmRate(){return Math.min(SWARM.rateMax,SWARM.rate0+G.t/SWARM.rateT+Math.max(0,ranksHeld()-12)*SWARM.rateR)*G.dif.rate*(mod().rate||1)}
 // How much you are carrying, counted in ranks. This is what a boss is measured
 // against now: the clock alone said a run got five times stronger, when in
 // truth a finished build does about thirty times the damage of a starting one,
@@ -758,8 +837,12 @@ function ranksHeld(){let r=0;
 function bossLap(){return Math.floor((G.sector-1)/BOSS_ORDER.length)}
 // the quarter on the end is what the boss carries in place of the swarm it
 // no longer has around it
-function bossHpMul(){return (1+ranksHeld()*0.085+G.t/900)*(1+bossLap()*1.6)*1.25*G.dif.hp}
-function spawnEnemy(type,x,y,elite){const d=ENEMY[type];const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd*(mod().espd||1),dmg:d.dmg*(d.boss?1.2*(1+bossLap()*0.25):swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
+// the difficulty multiplier applies at its square root here: at the full
+// 2.2x the hard Mothership never died in any run, and the gate stayed shut
+function bossHpMul(){return (1+ranksHeld()*0.05+G.t/900)*(1+bossLap()*1.4)*1.25*Math.sqrt(G.dif.hp)}
+// the cap holds for everything but a boss: rings and hatches used to walk
+// past it, and a run peaked at 577 on the field
+function spawnEnemy(type,x,y,elite){const d=ENEMY[type];if(!d.boss&&G.en.length>=MAX_EN)return null;const e={type,x,y,hp:d.hp*(d.boss?bossHpMul():hpMul())*(elite?4:1),maxhp:0,r:d.r*(elite?1.3:1),spd:d.spd*(mod().espd||1),dmg:d.dmg*(d.boss?1.2*(1+bossLap()*0.25):swarmDmg())*G.dif.dmg,xp:d.xp,col:d.col,score:d.score,boss:!!d.boss,elite:!!elite,flash:0,slow:0,wob:Math.random()*TAU,ai:0,dash:0,wind:0,vx:0,vy:0};e.maxhp=e.hp;G.en.push(e);return e}
 function edgePoint(){const a=Math.random()*TAU,R=Math.max(W,H)/S*0.62+40;return{x:G.px+Math.cos(a)*R,y:G.py+Math.sin(a)*R}}
 function spawnWave(dt){const t=G.t;let rate=swarmRate();
  // a boss is a duel, not a brawl: the ordinary swarm thins to a third while one
@@ -768,33 +851,38 @@ function spawnWave(dt){const t=G.t;let rate=swarmRate();
  // past the cap the swarm gets tougher rather than more numerous, which keeps
  // the frame rate honest on a phone thirty minutes into a run
  while(G.spawnAcc>=1){G.spawnAcc-=1;if(G.en.length>=MAX_EN){G.spawnAcc=0;break}
-  const p=edgePoint();let type="scout";const r=Math.random();if(t>250&&r<0.16)type="phantom";else if(t>170&&r<0.32)type="turret";else if(t>100&&r<0.5)type="drifter";else if(t>40&&r<0.72)type="swarmer";
+  const p=edgePoint();let type="scout";const r=Math.random();if(t>250&&r<0.16)type="phantom";else if(t>170&&r<0.26)type="turret";else if(t>100&&r<0.5)type="drifter";else if(t>40&&r<0.72)type="swarmer";
   const elite=t>90&&Math.random()<G.dif.elite;spawnEnemy(type,p.x,p.y,elite);if(elite)G.elite++;}
  if(t>75&&Math.floor((t-75)/75)>G.swarm&&!G.bossAlive){G.swarm++;const n=Math.min(60,18+G.swarm*6);for(let i=0;i<n;i++){const a=i/n*TAU,R=Math.max(W,H)/S*0.6;spawnEnemy(G.swarm%2?"swarmer":"scout",G.px+Math.cos(a)*R,G.py+Math.sin(a)*R)}announce("A SWARM CLOSES IN!")}
- // one boss per sector, three minutes in
- if(G.secT>=(mod().bossAt||165)&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
+ // one boss per sector, a little past three minutes in
+ if(G.secT>=(mod().bossAt||185)&&!G.secBoss&&!G.bossAlive){G.secBoss=true;const which=BOSS_ORDER[(G.sector-1)%BOSS_ORDER.length];const p=edgePoint();
   // Whatever is on the field when the boss arrives turns and leaves. A hundred
   // scouts between you and the Mothership is not a boss fight, it is the last
   // three minutes again with a bigger thing behind it - and the weapons, which
   // aim at the nearest alien, never reached it. The swarm parts, the boss
-  // brings its own escort, and the duel starts on an open field.
-  for(const e of G.en)if(!e.boss)e.flee=true;
-  G.bossAlive=spawnEnemy(which,p.x,p.y);
+  // brings its own escort, and the duel starts on an open field. Not quite
+  // empty, though: about one in six stays and fights, so the parting reads
+  // as the swarm giving way rather than the field being wiped.
+  for(const e of G.en)if(!e.boss&&Math.random()<0.85)e.flee=true;
+  G.bossAlive=spawnEnemy(which,p.x,p.y);G.bossT=0;
   // the second time you meet one it is a different animal, and it says so
   announce(ENEMY[which].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"")+" APPROACHES!");SFX.boss();shake=1}
  // The gate is the way out of a sector, and it should not be a way round the
  // boss. It opened on the clock alone, so you could let the kraken chase you
- // for ninety seconds and simply leave - which made every boss optional. The
- // clock still decides the earliest it can open; the boss decides whether it
- // does. Nobody can get stuck behind one: its health is fixed the moment it
- // arrives while yours keeps levelling, so the fight always resolves.
- if(G.secT>=(mod().gateAt||SECTOR_LEN-45)&&!G.gate){
-  if(G.bossAlive){
+ // for ninety seconds and simply leave - which made every boss optional.
+ // Now the boss decides: kill it and the gate opens that moment, nine
+ // seconds' flight away so the win is a run to the exit rather than a wait
+ // beside it. The clock is the backstop: at its time a boss that has held
+ // out for two and a half minutes cannot hold the gate shut any longer, so
+ // no run ever stalls behind one.
+ const bossDown=G.secBoss&&!G.bossAlive,gateAt=mod().gateAt||SECTOR_LEN-45;
+ if(!G.gate&&(bossDown||G.secT>=gateAt)){
+  if(G.bossAlive&&(G.bossT||0)<150){
    if(!G.gateHeld){G.gateHeld=true;
     announce(ENEMY[G.bossAlive.type].name+" IS HOLDING THE GATE SHUT")}}
-  else{const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
-   announce(G.sector>=SECTORS&&G.mode!=="endless"?"THE FINAL GATE IS OPEN!"
-    :G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
+  else{const a=Math.random()*TAU,far=bossDown?clamp(moveSpeed()*9,1200,2200):700;G.gate={x:G.px+Math.cos(a)*far,y:G.py+Math.sin(a)*far,r:60};
+   announce(G.bossAlive?"THE GATE FORCES OPEN - GO!":G.sector>=SECTORS&&G.mode!=="endless"?"THE FINAL GATE IS OPEN - FLY TO IT!"
+    :bossDown&&G.lastBoss?G.lastBoss+" DESTROYED  \u00b7  GATE OPEN - FLY TO IT!":G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
 function announce(s){G.announce=s;G.announceT=3}
 // "Nearest" leans toward a boss and away from anything running off: a hatchling
 // at 90 px used to take every shot while the Mothership sat at 200.
@@ -816,12 +904,28 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
   // Elites are five percent of every spawn, so a chest from each of them meant
   // one was always on screen. Bosses still always drop; elites about one in
   // seven, which is roughly an 85% cut.
-  if(e.boss||Math.random()<(mod().chest||0.15))G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
-  if(e.boss){announce(ENEMY[e.type].name+" DESTROYED!");shake=1}}
- else if(Math.random()<(e.type==="drifter"?0.06:0.012)){const r=Math.random();G.pk.push({k:r<0.45?"repair":r<0.8?"magnet":"nuke",x:e.x,y:e.y,r:16,life:25})}}
-function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2){const r=Math.random();G.pk.push({k:r<0.5?"repair":r<0.85?"magnet":"nuke",x:rk.x,y:rk.y,r:16,life:25})}}}
+  // Chests are the evolution path and the big prize, so they are rationed:
+  // one from the elites per sector (three on Treasure Day) and one from the
+  // boss. Fifteen percent of twenty-five elites a sector was five, and
+  // every elite on Treasure Day was twenty-five.
+  if(e.boss)G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
+  else if((G.secChests||0)<(mod().chests||1)&&Math.random()<(mod().chests?0.5:0.2)){G.secChests=(G.secChests||0)+1;G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60})}
+  if(e.boss){G.lastBoss=ENEMY[e.type].name;announce(G.lastBoss+" DESTROYED!");shake=1}}
+ else if(Math.random()<(e.type==="drifter"?0.06:0.012))dropPickup(e.x,e.y)}
+// Pickups are rationed the way chests are: a dozen a sector used to come out
+// as six repairs, four tractor beams and two or three nukes, which made the
+// hull bar and the screen-clear both cheap. One nuke, three repairs and
+// three tractor beams a sector; a roll that lands on a spent kind drops
+// nothing at all.
+const RATION={nuke:1,repair:3,magnet:3};
+function dropPickup(x,y){const r=Math.random();const k=r<0.45?"repair":r<0.8?"magnet":"nuke";
+ G.secDrops=G.secDrops||{};if((G.secDrops[k]||0)>=RATION[k])return;G.secDrops[k]=(G.secDrops[k]||0)+1;
+ G.pk.push({k,x,y,r:16,life:25})}
+function hitRock(rk,n){rk.hp-=n;G.parts.push({k:"dot",x:rk.x+rnd(-rk.r,rk.r),y:rk.y+rnd(-rk.r,rk.r),vx:rnd(-60,60),vy:rnd(-60,60),life:0.4,col:"#9a8a7a",r:4});if(rk.hp<=0){rk.dead=true;SFX.rock();for(let i=0;i<10;i++)G.parts.push({k:"dot",x:rk.x,y:rk.y,vx:rnd(-160,160),vy:rnd(-160,160),life:0.6,col:"#8a7a6a",r:rnd(3,8)});const g=rint(2,4);for(let i=0;i<g;i++)G.gems.push({x:rk.x+rnd(-20,20),y:rk.y+rnd(-20,20),v:1,big:1});if(Math.random()<0.2)dropPickup(rk.x,rk.y)}}
 function explode(x,y,R,dmg){G.parts.push({k:"ring",x,y,r:R,life:0.35,col:"#ffa040"});for(let i=0;i<14;i++)G.parts.push({k:"dot",x,y,vx:rnd(-200,200),vy:rnd(-200,200),life:0.4,col:"#ff8040",r:6});for(const e of G.en){if(dist(x,y,e.x,e.y)<R+e.r)damage(e,dmg)}for(const rk of G.rocks){if(dist(x,y,rk.x,rk.y)<R+rk.r)hitRock(rk,2)}SFX.boom();shake=Math.max(shake,0.4)}
-function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;
+function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)-armor());G.inv=0.6;
+ // the Ghost's phase shift: longer untouchable, and the swarm thrown back
+ if(G.ship.ab==="phase"){G.inv=1.6;for(const e of G.en){const dx=e.x-G.px,dy=e.y-G.py,dd=Math.hypot(dx,dy)||1;if(dd<240&&!e.boss){e.vx+=dx/dd*340;e.vy+=dy/dd*340}}}G.shT=3.5;if(G.sh>0){G.sh-=amt;SFX.shieldhit();G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.7,col:"#40d0ff"});if(G.sh<0){G.hp+=G.sh;G.sh=0}}else{G.hp-=amt;SFX.hurt();flash=0.6;G.txt.push({x:G.px,y:G.py-30,s:"-"+amt,life:0.8,col:"#ff5050"})}shake=Math.max(shake,0.4);if(G.hp<=0){G.hp=0;
   // the escape pod: once a run, a killing blow is survived instead, at half
   // hull, with everything nearby blown clear
   if(G.lives>0){G.lives--;G.hp=Math.round(G.maxhp/2);G.sh=G.maxsh;G.inv=2.5;flash=1;shake=1.2;SFX.boom();announce("ESCAPE POD!  ONE MORE CHANCE");
@@ -829,7 +933,10 @@ function hurt(d,src){G.lastHit=src||G.lastHit;const amt=Math.max(1,Math.round(d)
   die()}}
 // the first few ranks come quickly, so the first boss is met with a build
 // rather than a starting weapon; the curve is unchanged from level six
-function xpFor(l){return Math.round((8+l*5+l*l*0.4)*1.2*(l<6?0.8:1))}
+// Quick to level five, then a good deal slower: the bot reached level 25 by
+// the second gate and 34 by the third, with two weapons maxed and an
+// evolution by sector 2. The build should fill by sector 5, not sector 2.
+function xpFor(l){return Math.round((8+l*5+l*l*0.4)*(l<6?0.96:2.8))}
 function gainXP(v){G.xp+=v*xpMul();SFX.gem();while(G.xp>=G.xpNext){G.xp-=G.xpNext;G.level++;G.xpNext=xpFor(G.level);G.lvlQueue++}}
 // The last run, kept whole: what was flown, how it went, what was held, who
 // ended it. The title and the end screen show it and a SHARE button hands
@@ -863,11 +970,11 @@ function shareNow(){if(!shareAsk)return;const text=shareAsk;shareAsk=null;
 window.addEventListener("touchend",shareNow);window.addEventListener("mouseup",shareNow);window.addEventListener("keyup",shareNow);
 function die(){if(scene==="over")return;scene="over";SFX.die();musicStop();saveRecord();bankRun();noteRun("died")}
 // Flying into the gate leaves the whole swarm behind: the field is wiped, the
-// asteroids are new, shields come back, and clearing a sector pays an upgrade.
-function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;
+// asteroids are new, shields come back, and a quarter of the hull with them.
+function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;G.secChests=0;G.secDrops={};
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
- G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
- G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;G.lvlQueue++;
+ G.en.length=0;G.bul.length=0;G.gems.length=0;G.pk.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
+ G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;
  // a sector that opens a slot says so, because otherwise the only sign is a
  // card you have never been offered turning up at the next level
  announce(G.sector===2||G.sector===4||G.sector===6
@@ -882,7 +989,7 @@ function saveRecord(){
   d.board.push({score:G.score,ship:G.ship.id,sector:G.sector,lvl:G.level,dif:G.dif.id});d.board.sort((a,b)=>b.score-a.score);d.board.length=Math.min(5,d.board.length);
   records[id]=d;store.set("records",records);G.dailyRank=d.board.findIndex(b=>b.score===G.score&&b.ship===G.ship.id)+1;return}
  const id=recKeyFor(G.ship.id,G.dif.id,G.mode),r=records[id]||{best:0,time:0,runs:0,sector:0};r.runs++;if(G.score>r.best)r.best=G.score;if(G.t>r.time)r.time=G.mode==="endless"?G.t:Math.min(G.t,RUN_LEN);if(G.sector>(r.sector||0))r.sector=G.sector;records[id]=r;store.set("records",records);
- let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
+ let u=false;if(G.sector>=2&&!unlocks.comet){unlocks.comet=true;u=true}if((G.sector>=3||G.won)&&!unlocks.nova){unlocks.nova=true;u=true}if(G.won&&!unlocks.ufo){unlocks.ufo=true;u=true}if(u){store.set("unlocks",unlocks);G.unlocked=true}}
 // How many different weapons, and how many passives, you may carry at once.
 // It was four of each from the word go, which is why everything was collected
 // inside two sectors and the twenty minutes after that were only ranking up
@@ -905,10 +1012,39 @@ function openChest(){const ev=evolvable();if(ev.length){evolve(ev[0]);return}con
 // stick does nothing - the hand-off from the launch is one continuous shot.
 const ARRIVE_T=0.9;
 function arriveOff(){if(!G||!(G.arrive>0))return 0;const k=G.arrive/ARRIVE_T;return k*k*(H/2/S+70)}
+function stepParts(dt){for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0)}
+// ---------------------------------------------------------------- the warp
+// Flying into the gate is a cutscene in three acts. The dive: the camera
+// pushes in on the black hole while the ship spirals down into it. The
+// tunnel: a run down a wormhole drawn in perspective, dressed for wherever
+// it comes out. The exit: the ship blasts off the top of the screen the way
+// it leaves the hangar, and the next sector opens with it flying in from
+// the bottom. On the last gate of the campaign the dive is the ending.
+const WARP={dive:1.2,tunnel:2.6,exit:0.5};
+function startWarp(){const g=G.gate,dx=G.px-g.x,dy=G.py-g.y;
+ G.warp={t:0,gx:g.x,gy:g.y,r0:Math.max(30,Math.hypot(dx,dy)),a0:Math.atan2(dy,dx),win:G.sector>=SECTORS&&G.mode!=="endless",to:G.sector+1};
+ // the field is wiped the moment the gate takes the ship, in a burst of dust
+ // - and the gems and pickups still lying on it go with it, rather than
+ // turning up around the ship in the next sector
+ for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
+ G.en.length=0;G.bul.length=0;G.gems.length=0;G.pk.length=0;G.vx=G.vy=0;G.inv=99;SFX.warpDive()}
+function warpStep(dt){const w=G.warp;w.t+=dt;stepParts(dt);
+ if(!w.ran&&w.t>=WARP.dive&&!w.win){w.ran=true;SFX.warpRun()}
+ if(!w.out&&w.t>=WARP.dive+WARP.tunnel){w.out=true;SFX.launch()}
+ if(w.t<WARP.dive){const e=Math.min(1,w.t/WARP.dive),k=e*e,r=w.r0*(1-k),a=w.a0+k*7;
+  G.px=w.gx+Math.cos(a)*r;G.py=w.gy+Math.sin(a)*r;G.ang=a+Math.PI/2;return}
+ if(w.win){G.warp=null;startBonus();return}
+ if(w.t>=WARP.dive+WARP.tunnel+WARP.exit){G.warp=null;nextSector();G.arrive=ARRIVE_T;G.ang=-Math.PI/2}}
+// the camera during the dive: from the ship to the hole, pushing in
+function camView(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return{x:G.px,y:G.py,z:1};
+ const e=Math.min(1,w.t/WARP.dive),k=e*e;return{x:G.px+(w.gx-G.px)*k,y:G.py+(w.gy-G.py)*k,z:1+k*2.5}}
+function warpShrink(){const w=G&&G.warp;if(!w||w.t>=WARP.dive)return 1;const e=Math.min(1,w.t/WARP.dive);return 1-e*e*0.9}
 function update(dt){return seeded(updateRun,dt)}
 function updateRun(dt){
+ if(G.warp){warpStep(dt);return}
+ if(G.bonus){bonusStep(dt);return}
  if(G.arrive>0){G.arrive-=dt;G.vx=G.vy=0;G.ang=-Math.PI/2;G.inv=Math.max(G.inv,0.4);return}
- G.t+=dt;G.secT+=dt;
+ G.t+=dt;G.secT+=dt;if(G.bossAlive)G.bossT=(G.bossT||0)+dt;
  const st=stickVec(),sp=moveSpeed();
  // ship: velocity follows the stick with a little drift
  G.vx=lerp(G.vx,st.x*sp,dt*7);G.vy=lerp(G.vy,st.y*sp,dt*7);
@@ -916,14 +1052,14 @@ function updateRun(dt){
  for(const rk of G.rocks){const d=dist(nx,ny,rk.x,rk.y);if(d<rk.r+14){const px=(nx-rk.x)/d,py=(ny-rk.y)/d;nx=rk.x+px*(rk.r+14);ny=rk.y+py*(rk.r+14);G.vx*=0.5;G.vy*=0.5}}
  G.px=nx;G.py=ny;if(st.l>0.1)G.ang=Math.atan2(G.vy,G.vx);
  G.inv=Math.max(0,G.inv-dt);G.magnetT=Math.max(0,G.magnetT-dt);G.shT=Math.max(0,G.shT-dt);
- if(G.shT<=0&&G.sh<G.maxsh)G.sh=Math.min(G.maxsh,G.sh+(6.5+4*(G.passives.shield||0))*dt);
+ if(G.shT<=0&&G.sh<G.maxsh)G.sh=Math.min(G.maxsh,G.sh+(6.5+4*(G.passives.shield||0))*(G.ship.ab==="frost"?1.5:1)*dt);
  spawnWave(dt);fireWeapons(dt);
  for(const e of G.en){let s=e.spd*(e.slow>0?0.45:1);e.slow=Math.max(0,e.slow-dt);e.flash=Math.max(0,e.flash-dt);e.wob+=dt*6;
   const dx=G.px-e.x,dy=G.py-e.y,d=Math.hypot(dx,dy)||1;
   let mx=0,my=0;
   if(e.flee){mx=-dx/d*Math.max(s,140)*1.8;my=-dy/d*Math.max(s,140)*1.8;e.fleeT=(e.fleeT||0)+dt;if(d>1400||e.fleeT>8)e.dead=true}
   else if(e.type==="swarmer"){e.ai+=dt*5;const px=-dy/d,py=dx/d;mx=dx/d*s+px*Math.sin(e.ai)*120;my=dy/d*s+py*Math.sin(e.ai)*120}
-  else if(e.type==="turret"){if(d>280){mx=dx/d*s;my=dy/d*s}else if(d<200){mx=-dx/d*s*0.7;my=-dy/d*s*0.7}e.ai-=dt;if(e.ai<=0&&d<460){e.ai=2.2;G.bul.push({k:"plasma",x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,r:9,dmg:e.dmg,life:3,enemy:true})}}
+  else if(e.type==="turret"){if(d>280){mx=dx/d*s;my=dy/d*s}else if(d<200){mx=-dx/d*s*0.7;my=-dy/d*s*0.7}e.ai-=dt;if(e.ai<=0&&d<460){e.ai=3.0;G.bul.push({k:"plasma",x:e.x,y:e.y,vx:dx/d*200,vy:dy/d*200,r:9,dmg:e.dmg,life:3,enemy:true})}}
   else if(e.type==="phantom"){e.ai+=dt;if(e.ai%3<2){mx=dx/d*s;my=dy/d*s}}
   else if(e.type==="kraken"){
    // Three tempers, and it shows you which one it is in. It used to be one
@@ -971,7 +1107,10 @@ function updateRun(dt){
   e.x+=(mx+e.vx)*dt;e.y+=(my+e.vy)*dt;e.vx*=0.9;e.vy*=0.9;
   // a leaving alien is not pinned to a rock
   if(!e.boss&&!e.flee)for(const rk of G.rocks){const rd=dist(e.x,e.y,rk.x,rk.y);if(rd<rk.r+e.r){const px=(e.x-rk.x)/rd,py=(e.y-rk.y)/rd;e.x=rk.x+px*(rk.r+e.r);e.y=rk.y+py*(rk.r+e.r)}}
-  if(d<e.r+16&&G.inv<=0&&!e.flee)hurt(e.dmg,ENEMY[e.type].name||e.type)}
+  if(d<e.r+16&&G.inv<=0&&!e.flee){
+   // the Eclipse's deflector hull: the small ones bounce off, with a ping
+   if(G.ship.ab==="saucer"&&(e.type==="scout"||e.type==="swarmer")&&!e.elite){e.vx-=dx/d*420;e.vy-=dy/d*420;e.x-=dx/d*6;e.y-=dy/d*6;if(Math.random()<0.5)SFX.shieldhit()}
+   else{hurt(e.dmg,ENEMY[e.type].name||e.type);if(G.ship.ab==="frost")e.slow=Math.max(e.slow,2.5)}}}   // the Glacier chills what touches it
  const en=G.en;for(let i=0;i<en.length;i++){const a=en[i];for(let j=i+1;j<en.length;j++){const b=en[j];const dx=b.x-a.x,dy=b.y-a.y,md=a.r+b.r-6;if(Math.abs(dx)<md&&Math.abs(dy)<md){const d=Math.hypot(dx,dy)||1;if(d<md){const push=(md-d)*0.5,nx2=dx/d,ny2=dy/d;if(!a.boss){a.x-=nx2*push;a.y-=ny2*push}if(!b.boss){b.x+=nx2*push;b.y+=ny2*push}}}}}
  G.en=G.en.filter(e=>!e.dead);G.rocks=G.rocks.filter(r=>!r.dead);
  for(const b of G.bul){b.life-=dt;
@@ -991,12 +1130,12 @@ function updateRun(dt){
   if(dist(p.x,p.y,G.px,G.py)<p.r+18){p.life=0;
    if(p.k==="repair"){G.hp=Math.min(G.maxhp,G.hp+40);SFX.pick();G.txt.push({x:G.px,y:G.py-30,s:"+40",life:0.8,col:"#80ff90"})}
    else if(p.k==="magnet"){G.magnetT=3;SFX.magnet();announce("TRACTOR BEAM!")}
-   else if(p.k==="nuke"){SFX.boom();shake=1.2;flash=0.5;for(const e of G.en){if(!e.boss)damage(e,999);else damage(e,150)}}
+   else if(p.k==="nuke"){SFX.nuke();shake=1.6;flash=0.7;for(const e of G.en){if(!e.boss)damage(e,999);else damage(e,150)}}
    else if(p.k==="chest"){SFX.chest();openChest()}}}
  G.pk=G.pk.filter(p=>p.life>0);
- for(const p of G.parts){p.life-=dt;if(p.k==="dot"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9}}G.parts=G.parts.filter(p=>p.life>0);
+ stepParts(dt);
  for(const t of G.txt){t.life-=dt;t.y-=40*dt}G.txt=G.txt.filter(t=>t.life>0);
- if(G.gate&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r){if(G.sector>=SECTORS&&G.mode!=="endless"){win();return}nextSector()}
+ if(G.gate&&!G.warp&&!G.won&&dist(G.px,G.py,G.gate.x,G.gate.y)<G.gate.r)startWarp();
  shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
  if(G.lvlQueue>0){G.lvlQueue--;scene="levelup";makeCards()}}
 // ---------------------------------------------------------------- drawing
@@ -1078,8 +1217,7 @@ function backSprite(k){let sp=ART.back[k];if(sp)return sp;
    core.addColorStop(0,"rgba(255,246,222,0.95)");core.addColorStop(0.45,"rgba(255,160,70,0.9)");
    core.addColorStop(1,"rgba(198,58,20,0.78)");
    g.fillStyle=core;g.beginPath();g.arc(0,0,38,0,TAU);g.fill();
-   g.strokeStyle="rgba(255,172,92,0.35)";g.lineWidth=2.5;
-   for(let i=0;i<3;i++){const a=i*2.1;g.beginPath();g.arc(Math.cos(a)*40,Math.sin(a)*40,15+i*6,a-1.2,a+1.2);g.stroke()}
+   // the surface and the flares are live, in drawSunLive, because they move
   }
   else if(k==="hive"){
    const hex=r2=>{g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU+0.26;g.lineTo(Math.cos(a)*r2,Math.sin(a)*r2)}g.closePath()};
@@ -1123,8 +1261,44 @@ function drawBackdrop(R){if(!R.back)return;
   const h=hash(i*19+5,j*23+11),s2=sz*(0.8+h*0.45);
   const bx=i*gs+h*gs*0.6+ox,by=j*gs+hash(i*3,j*7)*gs*0.6+oy;
   if(Math.abs(bx-G.px)>W/S+s2||Math.abs(by-G.py)>H/S+s2)continue;
-  cx.drawImage(sp,bx-s2/2,by-s2/2,s2,s2)}
+  cx.drawImage(sp,bx-s2/2,by-s2/2,s2,s2);
+  if(R.back==="ember")drawSunLive(bx,by,s2)}
  cx.globalAlpha=1}
+// A sheet of granules: soft bright and dark cells, the way a star's surface
+// boils. Two of them turn against each other inside the disc, which reads
+// as a slow churn without anything on it to follow with the eye.
+function granuleSprite(){if(ART.sun)return ART.sun;const N=256;
+ ART.sun=bake(N,N,g=>{g.translate(N/2,N/2);g.scale(N/96,N/96);
+  for(let i=0;i<260;i++){const a=hash(i,31)*TAU,d=Math.sqrt(hash(i+5,31))*46,r=2.5+hash(i+9,31)*5.5,x=Math.cos(a)*d,y=Math.sin(a)*d;
+   const hot=hash(i+2,31)>0.5,gr=g.createRadialGradient(x,y,0,x,y,r);
+   gr.addColorStop(0,hot?"rgba(255,246,210,0.55)":"rgba(170,40,10,0.5)");gr.addColorStop(1,hot?"rgba(255,220,150,0)":"rgba(170,40,10,0)");
+   g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,TAU);g.fill()}});
+ return ART.sun}
+// The live part of the Ember Star: the churning surface, and four
+// prominences that loop out of the limb, swell and sink on their own clocks.
+function drawSunLive(x,y,sz){const u=sz/200,t=frameT,A=0.72;cx.save();cx.translate(x,y);cx.scale(u,u);
+ cx.save();cx.beginPath();cx.arc(0,0,38,0,TAU);cx.clip();const gr=granuleSprite();
+ cx.globalAlpha=A*0.6;cx.rotate(t*0.05);cx.drawImage(gr,-48,-48,96,96);
+ cx.globalAlpha=A*0.4;cx.rotate(-t*0.085+1.7);cx.drawImage(gr,-48,-48,96,96);cx.restore();
+ // Prominences are light, so they add to whatever is behind them: five
+ // arches of different sizes, each on its own clock, a wide faint halo under
+ // a thin bright thread, and low tongues of flame flickering along the limb.
+ cx.lineCap="round";cx.globalCompositeOperation="lighter";
+ const SZ=[1,0.55,0.8,0.45,0.7];
+ for(let i=0;i<5;i++){const z=SZ[i],ph=t*0.4+i*1.37,h=(4.5+4*Math.sin(ph)+1.5*Math.sin(ph*2.3+i))*z,f=10*z,k=0.5+0.5*Math.sin(ph*0.8+i);
+  cx.save();cx.rotate(i*1.25+0.3+0.05*Math.sin(ph*0.5));
+  const loop=(w)=>{cx.beginPath();cx.moveTo(36,-f-w);cx.bezierCurveTo(38+h*1.3,-f*0.9-h*0.5,38+h*1.3,f*0.9+h*0.5,36,f+w);cx.stroke()};
+  cx.strokeStyle="rgba(255,110,30,"+(A*(0.1+0.08*k)).toFixed(3)+")";cx.lineWidth=4.5;loop(1);
+  cx.strokeStyle="rgba(255,170,70,"+(A*(0.25+0.2*k)).toFixed(3)+")";cx.lineWidth=1.8;loop(0);
+  cx.strokeStyle="rgba(255,240,205,"+(A*(0.4+0.35*k)).toFixed(3)+")";cx.lineWidth=0.9;loop(-0.5);
+  cx.restore()}
+ for(let j=0;j<9;j++){const th=3+2.5*Math.sin(t*1.3+j*2.1)+1.5*Math.sin(t*3.1+j*0.7);
+  cx.save();cx.rotate(j*0.7+0.15);
+  cx.fillStyle="rgba(255,140,50,"+(A*0.3).toFixed(3)+")";cx.beginPath();cx.moveTo(36.5,-2.6);cx.quadraticCurveTo(38+th*0.7,-1,37.5+th,0);cx.quadraticCurveTo(38+th*0.7,1,36.5,2.6);cx.closePath();cx.fill();
+  cx.fillStyle="rgba(255,230,180,"+(A*0.3).toFixed(3)+")";cx.beginPath();cx.moveTo(36.8,-1.2);cx.quadraticCurveTo(37.5+th*0.4,-0.4,37.2+th*0.6,0);cx.quadraticCurveTo(37.5+th*0.4,0.4,36.8,1.2);cx.closePath();cx.fill();
+  cx.restore()}
+ cx.globalCompositeOperation="source-over";
+ cx.restore()}
 function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
  const RL=realm();
  // A landmark is a very large translucent sprite: cheap on a GPU, but it is
@@ -1156,12 +1330,76 @@ function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
 // panel lines and canopy survive a retina screen, then stamped each frame.
 // Only the engine fire is drawn live, because it has to flicker.
 const SHIPRES=4,SHIPP=32;
-const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],
+const NOZZLE={falcon:[[-13,0,1.25]],comet:[[-12,-7,0.85],[-12,7,0.85]],ufo:[[-18,-4.5,0.7],[-18,4.5,0.7]],
               nova:[[-14,0,1.0],[-11,-11,0.72],[-11,11,0.72]]};
-function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
+// Brushed metal, painted inside whatever is clipped when it is called: fine
+// streaks along the axis with a little noise, a specular sweep across the
+// top, a darker underside, and a row of rivets where there are seams.
+function brush(g,x0,x1,y0,y1,rivets){
+ for(let i=0;i<60;i++){const yy=y0+(y1-y0)*(i+0.5)/60,a=0.03+hash(i*7+3,91)*0.11;
+  g.strokeStyle=(i%3?"rgba(255,255,255,":"rgba(0,0,0,")+a.toFixed(3)+")";g.lineWidth=0.3;
+  g.beginPath();g.moveTo(x0,yy);g.lineTo(x1,yy+hash(i,93)*0.8-0.4);g.stroke()}
+ const spec=g.createLinearGradient(0,y0,0,y1);spec.addColorStop(0,"rgba(255,255,255,0.04)");spec.addColorStop(0.3,"rgba(255,255,255,0.3)");
+ spec.addColorStop(0.48,"rgba(255,255,255,0.04)");spec.addColorStop(1,"rgba(0,0,0,0.22)");g.fillStyle=spec;g.fillRect(x0,y0,x1-x0,y1-y0);
+ if(rivets){g.fillStyle="rgba(0,0,0,0.4)";for(const ry of rivets)for(let x=x0+4;x<x1-4;x+=4.5){g.beginPath();g.arc(x,ry,0.5,0,TAU);g.fill();
+  g.fillStyle="rgba(255,255,255,0.25)";g.beginPath();g.arc(x-0.25,ry-0.25,0.28,0,TAU);g.fill();g.fillStyle="rgba(0,0,0,0.4)"}}}
+function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
  const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
  const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
  sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";g.lineCap="round";
+  // The Eclipse is its own thing: a black faceted disc with light leaking
+  // round its leading edge, two swept blades at the back, and a smoked-glass
+  // dome with a lit core. Nothing about it should look like a pie plate.
+  if(shape==="ufo"){
+   const body="#2b3342",edge="#0b0e14",plate="#1a202c";
+   // corona first, fading toward the tail, so everything else sits on it
+   g.save();const cor=g.createRadialGradient(0,0,19,0,0,27);cor.addColorStop(0,hexA(col,0));cor.addColorStop(0.25,hexA(col,0.6));cor.addColorStop(1,hexA(col,0));
+   g.fillStyle=cor;g.beginPath();g.arc(0,0,27,0,TAU);g.fill();
+   g.globalCompositeOperation="destination-out";const fd=g.createLinearGradient(-24,0,12,0);fd.addColorStop(0,"rgba(0,0,0,0.9)");fd.addColorStop(1,"rgba(0,0,0,0)");
+   g.fillStyle=fd;g.fillRect(-28,-28,56,56);g.restore();
+   // twin blades swept back from the disc, each with a lit trailing edge
+   for(const s of [-1,1]){g.beginPath();g.moveTo(-4,s*19);g.lineTo(-22,s*24);g.lineTo(-28,s*20);g.lineTo(-19,s*6);g.closePath();
+    const bg=g.createLinearGradient(0,s*6,0,s*24);bg.addColorStop(0,body);bg.addColorStop(1,edge);g.fillStyle=bg;g.fill();
+    g.strokeStyle="rgba(0,0,0,0.8)";g.lineWidth=1;g.stroke();
+    g.strokeStyle=hexA(col,0.9);g.lineWidth=1.2;g.beginPath();g.moveTo(-8,s*19.6);g.lineTo(-22.5,s*23.5);g.stroke()}
+   // engine bells tucked between the blades
+   for(const[nx,ny,ns] of NOZZLE.ufo){g.fillStyle="#0c1220";g.beginPath();g.ellipse(nx,ny,2.4*ns,4.2*ns,0,0,TAU);g.fill();
+    g.strokeStyle=hexA(col,0.9);g.lineWidth=0.9;g.stroke()}
+   // the disc: dark, lit from the upper left, split into twelve armour plates
+   const dg=g.createRadialGradient(-6,-7,2,0,0,22);dg.addColorStop(0,"#525d70");dg.addColorStop(0.5,body);dg.addColorStop(1,edge);
+   g.fillStyle=dg;g.beginPath();g.arc(0,0,21,0,TAU);g.fill();
+   g.save();g.beginPath();g.arc(0,0,21,0,TAU);g.clip();
+   for(let i=0;i<12;i++){const a0=i/12*TAU,a1=(i+1)/12*TAU;g.beginPath();g.moveTo(0,0);g.arc(0,0,21,a0,a1);g.closePath();
+    g.fillStyle=i%2?"rgba(255,255,255,0.05)":"rgba(0,0,0,0.14)";g.fill()}
+   // brushed along the radius, the way a turned disc is
+   for(let i=0;i<96;i++){const a=i/96*TAU+hash(i,41)*0.04,al=0.03+hash(i*3,43)*0.1;g.strokeStyle=(i%3?"rgba(255,255,255,":"rgba(0,0,0,")+al.toFixed(3)+")";g.lineWidth=0.35;
+    g.beginPath();g.moveTo(Math.cos(a)*10,Math.sin(a)*10);g.lineTo(Math.cos(a)*21,Math.sin(a)*21);g.stroke()}
+   g.strokeStyle="rgba(0,0,0,0.6)";g.lineWidth=0.7;
+   for(let i=0;i<12;i++){const a=i/12*TAU;g.beginPath();g.moveTo(Math.cos(a)*11,Math.sin(a)*11);g.lineTo(Math.cos(a)*21,Math.sin(a)*21);g.stroke()}
+   // a glowing vent slit in every other plate, near the rim
+   for(let i=0;i<6;i++){g.save();g.rotate((2*i+1.5)/12*TAU);g.shadowColor=col;g.shadowBlur=3*R;g.fillStyle=hexA(col,0.95);g.fillRect(14.5,-0.7,4,1.4);g.restore()}
+   const sg=g.createRadialGradient(-8,-9,1,-5,-5,26);sg.addColorStop(0,"rgba(255,255,255,0.28)");sg.addColorStop(0.45,"rgba(255,255,255,0.03)");sg.addColorStop(1,"rgba(0,0,0,0.3)");g.fillStyle=sg;g.fillRect(-22,-22,44,44);
+   g.restore();
+   // rim bevel: lit on the upper left, in shadow on the lower right
+   g.lineWidth=1.1;g.strokeStyle="rgba(255,255,255,0.28)";g.beginPath();g.arc(0,0,20,Math.PI*0.95,Math.PI*1.6);g.stroke();
+   g.strokeStyle="rgba(0,0,0,0.45)";g.beginPath();g.arc(0,0,20,-0.1,Math.PI*0.6);g.stroke();
+   // the bright crescent where the disc leads, the eclipse itself
+   g.save();g.shadowColor=col;g.shadowBlur=4*R;g.strokeStyle=hexA(col,0.95);g.lineWidth=1.9;g.beginPath();g.arc(0,0,20,-0.85,0.85);g.stroke();g.restore();
+   g.strokeStyle="rgba(255,255,255,0.7)";g.lineWidth=0.6;g.beginPath();g.arc(0,0,20.3,-0.6,0.6);g.stroke();
+   g.strokeStyle="rgba(0,0,0,0.85)";g.lineWidth=1.1;g.beginPath();g.arc(0,0,21,0,TAU);g.stroke();
+   // raised collar round the dome
+   const kg=g.createRadialGradient(-3,-3,2,0,0,11.5);kg.addColorStop(0,"#3b4454");kg.addColorStop(1,"#12161e");
+   g.fillStyle=kg;g.beginPath();g.arc(0,0,11,0,TAU);g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=0.9;g.stroke();
+   g.strokeStyle="rgba(255,255,255,0.3)";g.lineWidth=0.9;g.beginPath();g.arc(0,0,10.2,Math.PI*0.95,Math.PI*1.6);g.stroke();
+   // smoked-glass dome with a lit core and a thin ring of light at its edge
+   const mg=g.createRadialGradient(2,2,1,0,0,8.5);mg.addColorStop(0,"#16303a");mg.addColorStop(0.65,"#0a1218");mg.addColorStop(1,"#03050a");
+   g.fillStyle=mg;g.beginPath();g.arc(0,0,8.5,0,TAU);g.fill();
+   g.save();g.shadowColor=col;g.shadowBlur=3*R;const cg2=g.createRadialGradient(0,0,0,0,0,4.5);cg2.addColorStop(0,"#ffffff");cg2.addColorStop(0.3,hexA(col,0.95));cg2.addColorStop(1,hexA(col,0));
+   g.fillStyle=cg2;g.beginPath();g.arc(0,0,4.5,0,TAU);g.fill();g.restore();
+   g.strokeStyle=hexA(col,0.85);g.lineWidth=0.8;g.beginPath();g.arc(0,0,8.5,0,TAU);g.stroke();
+   g.strokeStyle="rgba(255,255,255,0.55)";g.lineWidth=1.1;g.beginPath();g.arc(0,0,7.2,Math.PI*1.05,Math.PI*1.6);g.stroke();
+   g.fillStyle="rgba(255,255,255,0.5)";g.beginPath();g.ellipse(-3,-3.6,2.4,1.2,-0.7,0,TAU);g.fill();
+   return}
   const hull=g.createLinearGradient(0,-12,0,12);
   hull.addColorStop(0,lite);hull.addColorStop(0.34,col);hull.addColorStop(0.7,mid);hull.addColorStop(1,dark);
   const poly=(pts)=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);
@@ -1170,7 +1408,10 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   const wing=(pts)=>{poly(pts);
    const wg=g.createLinearGradient(0,-20,0,20);
    wg.addColorStop(0,shade(col,0.12));wg.addColorStop(0.5,mid);wg.addColorStop(1,deep);
-   g.fillStyle=wg;g.fill();g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1;g.stroke();
+   g.fillStyle=wg;g.fill();g.save();poly(pts);g.clip();brush(g,-24,8,-24,24,null);g.restore();
+   // the brush leaves its last streak as the current path, so the outline is
+   // stated again before it is stroked
+   poly(pts);g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1;g.stroke();
    // leading-edge highlight so the wing reads as a solid plate, not a flat slab
    g.save();poly(pts);g.clip();g.strokeStyle="rgba(255,255,255,0.28)";g.lineWidth=1.4;
    g.beginPath();g.moveTo(pts[0][0],pts[0][1]);g.lineTo(pts[1][0],pts[1][1]);g.stroke();g.restore()};
@@ -1181,7 +1422,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
    g.lineTo(x-w/2+h*0.4,y+h/2);g.quadraticCurveTo(x-w/2,y,x-w/2+h*0.4,y-h/2);g.closePath();g.fill();
    g.strokeStyle="rgba(0,0,0,0.5)";g.lineWidth=0.7;g.stroke()};
   let body,tips,nose,fin;
-  if(ship.id==="comet"){
+  if(shape==="comet"){
    const w=[[3,-4],[-11,-18],[-18,-16],[-6,-3]];wing(w);wing(mirror(w));
    strake(-14.5,-17,7,-1);strake(-14.5,17,7,1);
    tips=[[-13.5,-16.2],[-13.5,16.2]];nose=29;fin=[[-4,0],[-16,0],[-19,0]];
@@ -1189,7 +1430,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
    body=()=>{g.beginPath();g.moveTo(29,0);g.quadraticCurveTo(15,-4.2,8,-5.4);g.lineTo(-11,-5.6);
     g.quadraticCurveTo(-15,-3,-15,0);g.quadraticCurveTo(-15,3,-11,5.6);g.lineTo(8,5.4);
     g.quadraticCurveTo(15,4.2,29,0);g.closePath()}}
-  else if(ship.id==="nova"){
+  else if(shape==="nova"){
    const w=[[7,-6],[-9,-20],[-19,-18],[-8,-5]];wing(w);wing(mirror(w));
    strake(-15,-18.2,8,-1);strake(-15,18.2,8,1);
    tips=[[-14,-17.6],[-14,17.6]];nose=24;fin=[[-2,0],[-17,0],[-20,0]];
@@ -1212,6 +1453,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   body();g.fillStyle=hull;g.fill();
   g.strokeStyle="rgba(0,0,0,0.7)";g.lineWidth=1.1;g.stroke();
   body();g.save();g.clip();
+  brush(g,-16,nose,-12,12,[-6.4,6.4]);
   // accent spine in the ship's trim colour
   g.fillStyle=hexA(c2,0.4);
   g.beginPath();g.moveTo(nose-1,0);g.lineTo(-2,-1.8);g.lineTo(-14,-1.4);g.lineTo(-14,1.4);g.lineTo(-2,1.8);g.closePath();g.fill();
@@ -1229,7 +1471,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   g.strokeStyle="rgba(255,255,255,0.6)";g.lineWidth=0.8;
   g.beginPath();g.moveTo(nose,0);g.lineTo(nose-6,-2.1);g.stroke();
   // teardrop canopy: pointed forward, dark glass with a sky reflection
-  const cxp=ship.id==="comet"?7:ship.id==="nova"?3:4,cl=ship.id==="nova"?11:9.5,cw=ship.id==="nova"?4.4:3.7;
+  const cxp=shape==="comet"?7:shape==="nova"?3:4,cl=shape==="nova"?11:9.5,cw=shape==="nova"?4.4:3.7;
   const canopy=()=>{g.beginPath();g.moveTo(cxp+cl*0.62,0);
    g.quadraticCurveTo(cxp+cl*0.2,-cw,cxp-cl*0.2,-cw*0.92);
    g.quadraticCurveTo(cxp-cl*0.55,-cw*0.7,cxp-cl*0.6,0);
@@ -1244,7 +1486,7 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   g.fillStyle="rgba(255,255,255,0.9)";g.beginPath();
   g.ellipse(cxp+cl*0.16,-cw*0.42,cl*0.2,cw*0.17,-0.3,0,TAU);g.fill();
   // engine bells with a hot core
-  for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+  for(const[nx,ny,ns] of NOZZLE[shape]||NOZZLE.falcon){
    g.fillStyle="#0c1220";g.beginPath();g.ellipse(nx,ny,2.4*ns,4.2*ns,0,0,TAU);g.fill();
    g.strokeStyle=hexA(c2,0.9);g.lineWidth=0.9;g.stroke();
    const eg=g.createRadialGradient(nx+0.8*ns,ny,0.2,nx,ny,3.4*ns);
@@ -1259,10 +1501,25 @@ function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;
   body();g.save();g.clip();g.strokeStyle="rgba(255,255,255,0.5)";g.lineWidth=1.6;
   g.beginPath();g.moveTo(nose-3,-1.5);g.quadraticCurveTo(6,-8,-14,-7);g.stroke();g.restore()});
  ART.ship[ship.id]=sp;return sp}
+// A ship not yet earned is a shape in the dark: you can see it is a ship
+// and nothing else, which is what keeps the next one worth reaching.
+// A ship not yet earned is drawn as this instead: one generic grey hull, the
+// same for every locked ship, so not even its outline gives it away.
+function mysterySprite(){if(ART.mystery)return ART.mystery;const P=SHIPP,R=SHIPRES;
+ ART.mystery=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";
+  g.fillStyle="#3a4260";g.strokeStyle="#6b7590";g.lineWidth=1.2;
+  g.beginPath();g.moveTo(24,0);g.quadraticCurveTo(10,-7,-8,-7);g.lineTo(-16,-4);g.lineTo(-16,4);g.lineTo(-8,7);g.quadraticCurveTo(10,7,24,0);g.closePath();g.fill();g.stroke();
+  g.fillStyle="#2c334d";g.beginPath();g.moveTo(-2,-6);g.lineTo(-14,-18);g.lineTo(-18,-16);g.lineTo(-12,-5);g.closePath();g.fill();g.stroke();
+  g.beginPath();g.moveTo(-2,6);g.lineTo(-14,18);g.lineTo(-18,16);g.lineTo(-12,5);g.closePath();g.fill();g.stroke();
+  g.fillStyle="#4d5878";g.beginPath();g.ellipse(6,0,6,3,0,0,TAU);g.fill()});
+ return ART.mystery}
+function drawSil(x,y,ang){const P=SHIPP;cx.save();cx.translate(x,y);cx.rotate(ang);cx.globalAlpha=0.75;cx.drawImage(mysterySprite(),-P,-P,P*2,P*2);cx.globalAlpha=1;
+ cx.strokeStyle="rgba(255,255,255,0.18)";cx.lineWidth=1;cx.beginPath();cx.arc(0,0,P*0.72,0,TAU);cx.stroke();
+ cx.rotate(-ang);text("?",0,1,20,"rgba(255,255,255,0.55)");cx.restore()}   // the mark stays upright whichever way the hull points
 function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
  cx.save();cx.translate(x,y);cx.rotate(ang);
  const th=Math.min(1,thrust);
- if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.id]||NOZZLE.falcon){
+ if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.shape||ship.id]||NOZZLE.falcon){
    const fl=(13+th*19+Math.random()*6)*ns;
    if(FX)glow(nx-fl*0.4,ny,fl*1.25,"rgba(255,214,140,0.55)","rgba(255,110,30,0.14)");
    cx.fillStyle="rgba(255,140,40,0.8)";
@@ -1367,7 +1624,226 @@ function drawGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
  cx.strokeStyle="rgba(255,255,255,0.95)";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
  cx.strokeStyle="rgba(170,200,255,"+(0.35+0.2*Math.sin(frameT*5)).toFixed(2)+")";cx.lineWidth=7;cx.beginPath();cx.arc(0,0,gt.r*0.68,0,TAU);cx.stroke();
  cx.restore()}
-function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);cx.scale(S,S);cx.translate(-G.px,-G.py);
+// ------------------------------------------------------- the ship in 3-D
+// For the tunnel the flat sprite becomes a solid: a hull lofted from a row
+// of cross-sections, wings and fins as thin plates, a glass canopy, or for
+// the Eclipse a disc turned on a lathe. Model space is the sprite's: x is
+// forward, y across, z up. Faces are wound outward once, when built.
+const MESH={};
+function shipMesh(shape){if(MESH[shape])return MESH[shape];const F=[];
+ const face=(pts,kind,cen)=>{const [a,b,c]=pts,u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+  let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];const l=Math.hypot(...n)||1;n=n.map(q=>q/l);
+  const m=[0,0,0];for(const q of pts){m[0]+=q[0]/pts.length;m[1]+=q[1]/pts.length;m[2]+=q[2]/pts.length}
+  const d=(m[0]-cen[0])*n[0]+(m[1]-cen[1])*n[1]+(m[2]-cen[2])*n[2];if(d<0){pts=pts.slice().reverse();n=n.map(q=>-q)}
+  if(l>1e-6)F.push({p:pts,n,kind})};
+ // a body lofted along x: sections of [x, half-width, half-height, z centre, y centre]
+ const loft=(secs,n,kind)=>{const rings=secs.map(([x,ry,rz,zc,yc])=>{const r=[];for(let k=0;k<n;k++){const a=k/n*TAU;r.push([x,(yc||0)+Math.cos(a)*ry,(zc||0)+Math.sin(a)*rz])}return r});
+  const cen=[(secs[0][0]+secs[secs.length-1][0])/2,secs[0][4]||0,secs[Math.floor(secs.length/2)][3]||0];
+  for(let s=0;s<rings.length-1;s++)for(let k=0;k<n;k++)face([rings[s][k],rings[s][(k+1)%n],rings[s+1][(k+1)%n],rings[s+1][k]],kind,cen);
+  face(rings[rings.length-1],kind,cen)};
+ // a flat plate in the x-y plane with a little thickness
+ const plate=(poly,z0,z1,kind)=>{const top=poly.map(([x,y])=>[x,y,z1]),bot=poly.map(([x,y])=>[x,y,z0]);
+  const cen=[0,0,(z0+z1)/2];for(const q of poly){cen[0]+=q[0]/poly.length;cen[1]+=q[1]/poly.length}
+  face(top,kind,cen);face(bot,kind,cen);for(let k=0;k<poly.length;k++){const j=(k+1)%poly.length;face([bot[k],bot[j],top[j],top[k]],kind,cen)}};
+ // an upright plate in the x-z plane, for a fin
+ const fin=(poly,kind)=>{const l=poly.map(([x,z])=>[x,-0.6,z]),r=poly.map(([x,z])=>[x,0.6,z]);
+  const cen=[0,0,0];for(const q of poly){cen[0]+=q[0]/poly.length;cen[2]+=q[1]/poly.length}
+  face(l,kind,cen);face(r,kind,cen);for(let k=0;k<poly.length;k++){const j=(k+1)%poly.length;face([l[k],l[j],r[j],r[k]],kind,cen)}};
+ const mirror=pts=>pts.map(([x,y])=>[x,-y]);
+ if(shape==="ufo"){
+  // a disc on a lathe: rings of [radius, height], the top of the dome glass
+  const prof=[[0,4.6],[4,4.3],[7.5,3.2],[10,1.8],[13,1.2],[19,0.4],[21,-0.6],[16,-1.8],[9,-2.6],[0,-3]],n=18,cen=[0,0,0.5];
+  const rings=prof.map(([r,z])=>{const q=[];for(let k=0;k<n;k++){const a=k/n*TAU;q.push([Math.cos(a)*r,Math.sin(a)*r,z])}return q});
+  for(let s=0;s<rings.length-1;s++)for(let k=0;k<n;k++)face([rings[s][k],rings[s][(k+1)%n],rings[s+1][(k+1)%n],rings[s+1][k]],s<3?"glass":s===5?"rim":"hull",cen);
+  for(const sg of [-1,1])plate([[-4,sg*19],[-22,sg*24],[-28,sg*20],[-19,sg*6]],-1,1,"fin")}
+ else if(shape==="comet"){
+  loft([[29,0.4,0.3],[22,2.2,1.8],[12,4.8,3.8],[2,5.6,4.4],[-8,5.6,4.4],[-15,3.2,2.6]],10,"hull");
+  loft([[16,0.5,0.4,3.4],[11,2.2,1.9,3.6],[5,2.8,2.3,3.6],[0,2.2,1.9,3.6],[-3,0.5,0.4,3.4]],8,"glass");
+  const w=[[3,-4],[-11,-18],[-18,-16],[-6,-3]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  for(const sg of [-1,1])loft([[-5,2.4,2.4,0,sg*7.5],[-11,3.2,3.2,0,sg*7.5],[-16,2.2,2.2,0,sg*7.5]],8,"fin");
+  fin([[-4,1.5],[-16,1.5],[-19,7],[-13,6.5]],"fin")}
+ else if(shape==="nova"){
+  loft([[24,0.4,0.3],[16,4,3.2],[7,8.5,6.2],[-2,10.2,7],[-10,10,6.8],[-16,6,4.6]],12,"hull");
+  loft([[15,0.5,0.4,5.2],[9,2.8,2.4,5.6],[3,3.6,3,5.8],[-3,2.8,2.4,5.8],[-6,0.5,0.4,5.4]],8,"glass");
+  const w=[[7,-6],[-9,-20],[-19,-18],[-8,-5]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  for(const sg of [-1,1])loft([[2,2.8,2.8,0,sg*12.5],[-6,3.5,3.5,0,sg*12.5],[-14,2.4,2.4,0,sg*12.5]],8,"fin");
+  fin([[-2,2],[-17,2],[-20,8],[-12,7]],"fin")}
+ else{
+  loft([[27,0.4,0.3],[21,2.6,2],[13,5.2,4.2],[4,7.4,5.6],[-6,7.8,5.8],[-12,6.4,5],[-15,4.2,3.4]],10,"hull");
+  loft([[16,0.5,0.4,4.2],[11,2.6,2.2,4.6],[5,3.4,2.8,4.6],[-1,2.6,2.4,4.6],[-4,0.5,0.4,4.4]],8,"glass");
+  const w=[[6,-3],[-14,-22],[-22,-20],[-6,-2]];plate(w,-0.8,0.8,"wing");plate(mirror(w),-0.8,0.8,"wing");
+  loft([[-8,4.6,5.6,0],[-13,5,6,0],[-18,3.6,4.4,0]],8,"fin");
+  fin([[-3,2],[-17,2],[-21,9],[-14,8]],"fin")}
+ MESH[shape]=F;return F}
+// Draw the solid at (x,y) on the screen, nose up, tilted `pitch` into the
+// screen (0 is the sprite's own view from above), rolled by `roll`, turned
+// by `yaw`. Faces are lit from the upper left and painted far to near.
+function drawShip3D(x,y,sc,ship,pitch,roll,yaw,thrust){const shape=ship.shape||ship.id,F=shipMesh(shape);
+ const hull=shape==="ufo"?"#2b3342":ship.col,cr=Math.cos(roll),sr=Math.sin(roll),cw=Math.cos(yaw),sw=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch),f=150;
+ const xf=(v)=>{let [px,py,pz]=v;let y1=py*cr-pz*sr,z1=py*sr+pz*cr;let x2=px*cw-y1*sw,y2=px*sw+y1*cw;
+  // to the screen: right is y, up is x, into the screen is -z, then tilt the nose in
+  let sx=y2,sy=-x2,d=-z1;const sy2=sy*cp+d*sp,d2=-sy*sp+d*cp;return[sx,sy2,d2]};
+ const L=[-0.3,-0.55,-0.78],out=[];
+ for(const fc of F){const n=xf(fc.n);if(n[2]>0.02)continue;
+  const pts=fc.p.map(xf);let dm=0;for(const q of pts)dm+=q[2]/pts.length;
+  const lit=Math.max(0,n[0]*L[0]+n[1]*L[1]+n[2]*L[2]),k=0.3+0.7*lit;
+  out.push({pts,dm,lit,k,kind:fc.kind})}
+ out.sort((a,b)=>b.dm-a.dm);
+ cx.save();cx.translate(x,y);cx.scale(sc,sc);cx.lineJoin="round";cx.lineWidth=0.22;
+ for(const o of out){const base=o.kind==="glass"?"#2f6fd0":o.kind==="rim"?ship.col:o.kind==="wing"?shade(hull,-0.15):o.kind==="fin"?shade(hull,-0.4):hull;
+  cx.fillStyle=shade(base,-0.6+o.k*1.05);cx.strokeStyle="rgba(0,0,0,0.22)";cx.beginPath();
+  for(let i=0;i<o.pts.length;i++){const [px,py,pd]=o.pts[i],kk=f/(f+pd);if(i)cx.lineTo(px*kk,py*kk);else cx.moveTo(px*kk,py*kk)}
+  cx.closePath();cx.fill();cx.stroke();
+  if(o.kind==="glass"&&o.lit>0.85){cx.fillStyle="rgba(255,255,255,"+((o.lit-0.85)*3).toFixed(2)+")";cx.fill()}}
+ // the engines, lit, so the view from behind has something to look at
+ if(thrust>0)for(const[nx,ny,ns] of NOZZLE[shape]||NOZZLE.falcon){const [px,py,pd]=xf([nx,ny,0]),kk=f/(f+pd),r=(2.2+Math.random()*0.6)*ns*kk;
+  const eg=cx.createRadialGradient(px*kk,py*kk,0,px*kk,py*kk,r*2.2);eg.addColorStop(0,"rgba(255,255,255,"+(0.95*thrust).toFixed(2)+")");eg.addColorStop(0.35,"rgba(255,200,90,"+(0.8*thrust).toFixed(2)+")");eg.addColorStop(1,"rgba(255,120,30,0)");
+  cx.fillStyle=eg;cx.beginPath();cx.arc(px*kk,py*kk,r*2.2,0,TAU);cx.fill()}
+ cx.restore()}
+// The dive's last moment: the hole's light swallows the screen.
+function drawDive(){const w=G.warp,e=Math.min(1,w.t/WARP.dive),k=Math.max(0,(e-0.72)/0.28);if(k<=0)return;
+ cx.save();cx.setTransform(1,0,0,1,0,0);cx.fillStyle="rgba(235,225,255,"+(k*k).toFixed(3)+")";cx.fillRect(0,0,cv.width,cv.height);cx.restore()}
+// Each realm dresses the tunnel: its colour, the shape of its rings, how
+// much the way ahead bends, how fast it rolls.
+const WARP_LOOK={giant:{col:[255,196,110],ring:"arc",curve:0.35,spin:0.25,bg:"#150e05"},
+ fleet:{col:[120,190,255],ring:"box",curve:0.08,spin:0,bg:"#040914"},
+ ember:{col:[255,130,60],ring:"circle",curve:0.22,spin:0.6,bg:"#170503",pulse:1},
+ hive:{col:[110,255,170],ring:"hex",curve:0.18,spin:1.3,bg:"#03100a"},
+ moon:{col:[205,210,220],ring:"rock",curve:0.45,spin:0.15,bg:"#08080c"},
+ hole:{col:[175,120,255],ring:"spiral",curve:0.12,spin:2.6,bg:"#090316"}};
+// The tunnel itself: background, fog, rings and wall streaks, for a look
+// L at time t moving at `speed`. It hands back the frame's projection so
+// whatever rides in it - the ship, the bonus run's hoops - is placed the
+// same way: proj(depth, angle, radius fraction) gives a screen point.
+function tunnelWalls(L,t,speed){const [cr,cg,cb]=L.col,rgba=a=>"rgba("+cr+","+cg+","+cb+","+a.toFixed(3)+")";
+ cx.fillStyle=L.bg;cx.fillRect(0,0,W,H);
+ const K=Math.min(W,H)*0.62,Z=9,C={x:W/2,y:H*0.44};
+ // the way ahead drifts, and the rings follow it more the further off they are
+ const vp={x:C.x+Math.sin(t*0.8)*L.curve*W*0.3,y:C.y+Math.cos(t*0.6)*L.curve*H*0.14};
+ const proj=(z,a,rr)=>{const f=z/(z+1),ccx=C.x+(vp.x-C.x)*f,ccy=C.y+(vp.y-C.y)*f,pr=K/(z+0.2)*rr;return[ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr,pr,ccx,ccy]};
+ // depth: dark at the far end, the wall lit as it comes close
+ const fog=cx.createRadialGradient(vp.x,vp.y,K*0.05,vp.x,vp.y,K*1.6);fog.addColorStop(0,"rgba(0,0,0,0.6)");fog.addColorStop(0.35,rgba(0.06));fog.addColorStop(1,rgba(0.28));
+ cx.fillStyle=fog;cx.fillRect(0,0,W,H);
+ if(FX)glow(vp.x,vp.y,K*0.9,rgba(0.35),rgba(0.04));
+ // the rings, far to near
+ cx.lineCap="round";const N=26,roll=frameT*L.spin;
+ for(let i=N-1;i>=0;i--){const z=((i/N*Z+speed*t)%Z),depth=1-z/Z;let al=depth*depth*0.9;if(L.pulse)al*=0.7+0.3*Math.sin(t*9-z);
+  const [,,pr,ccx,ccy]=proj(z,0,1);cx.strokeStyle=rgba(al);cx.lineWidth=1.2+depth*2.4;cx.beginPath();
+  if(L.ring==="circle"){cx.arc(ccx,ccy,pr,0,TAU);for(let k=0;k<10;k++){const a=k/10*TAU+z*0.4+roll,lk=pr*(0.06+0.08*Math.abs(Math.sin(t*7+k*1.7+z)));cx.moveTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr);cx.lineTo(ccx+Math.cos(a)*(pr+lk),ccy+Math.sin(a)*(pr+lk))}}
+  else if(L.ring==="hex"||L.ring==="box"){const n=L.ring==="hex"?6:4;for(let k=0;k<=n;k++){const a=k/n*TAU+roll+z*0.3;cx.lineTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr)}}
+  else if(L.ring==="arc"){for(let k=0;k<3;k++){const a=k/3*TAU+roll+z*0.5;cx.moveTo(ccx+Math.cos(a)*pr,ccy+Math.sin(a)*pr);cx.arc(ccx,ccy,pr,a,a+1.3)}}
+  else if(L.ring==="rock"){for(let k=0;k<9;k++){const a=k/9*TAU+z*0.7+hash(k,i)*0.5,q=pr*(0.9+hash(k+3,i)*0.2);const rk=2+depth*4;cx.moveTo(ccx+Math.cos(a)*q+rk,ccy+Math.sin(a)*q);cx.arc(ccx+Math.cos(a)*q,ccy+Math.sin(a)*q,rk,0,TAU)}}
+  else{cx.arc(ccx,ccy,pr,0,TAU);for(let k=0;k<3;k++){const a=k/3*TAU+roll-z*0.8;cx.moveTo(ccx+Math.cos(a)*pr*0.2,ccy+Math.sin(a)*pr*0.2);cx.quadraticCurveTo(ccx+Math.cos(a+0.9)*pr*0.6,ccy+Math.sin(a+0.9)*pr*0.6,ccx+Math.cos(a+1.6)*pr,ccy+Math.sin(a+1.6)*pr)}}
+  cx.stroke();if(L.ring==="rock"){cx.fillStyle=rgba(al*0.6);cx.fill()}}
+ // streaks of light on the wall, rushing past
+ for(let i=0;i<110;i++){const a=hash(i,61)*TAU+roll*0.5,rr=0.9+hash(i,67)*0.15,z=((hash(i,71)*Z-speed*t*(0.8+hash(i,73)*0.6))%Z+Z)%Z;
+  const [x1,y1]=proj(z,a,rr),[x2,y2]=proj(z+0.8+speed*0.12,a,rr),depth=1-z/Z,wh=hash(i,79)>0.6;
+  cx.strokeStyle=wh?"rgba(255,255,255,"+(depth*depth*0.55).toFixed(3)+")":rgba(depth*depth*0.8);cx.lineWidth=0.6+depth*1.6;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke()}
+ return{vp,C,K,Z,proj,rgba}}
+// The ship riding the tunnel: an exhaust column, the solid hull tilted in
+// and rolled by `bank`, and (while `fade` is above zero) the sprite over it.
+function tunnelShip(x,y,sc,bank,tilt,fade,t){const len=SHIPP*sc*2.2,jx=(Math.random()*2-1)*1.5,jy=(Math.random()*2-1)*1.5;
+ cx.save();cx.translate(x+jx,y+jy);cx.rotate(bank);
+ const eg=cx.createLinearGradient(0,SHIPP*sc*0.5,0,SHIPP*sc*0.5+len);eg.addColorStop(0,"rgba(255,230,150,0.6)");eg.addColorStop(0.35,"rgba(255,140,40,0.35)");eg.addColorStop(1,"rgba(255,80,20,0)");
+ cx.fillStyle=eg;cx.beginPath();cx.moveTo(-9*sc,SHIPP*sc*0.45);cx.lineTo(9*sc,SHIPP*sc*0.45);cx.lineTo(2*sc,SHIPP*sc*0.45+len);cx.lineTo(-2*sc,SHIPP*sc*0.45+len);cx.closePath();cx.fill();
+ cx.rotate(-bank);drawShip3D(0,0,sc,G.ship,tilt,bank*1.6+Math.sin(t*1.3)*0.12,Math.sin(t*0.9)*0.1,1);
+ if(fade>0){cx.globalAlpha=fade;cx.rotate(bank);cx.scale(sc,sc);drawShip(0,0,-Math.PI/2,G.ship,1);cx.globalAlpha=1}
+ cx.restore()}
+function drawWarp(){const w=G.warp,t=w.t-WARP.dive,u=Math.min(1,t/WARP.tunnel),ex=Math.max(0,(w.t-WARP.dive-WARP.tunnel)/WARP.exit);
+ const R=REALMS[(w.to-1)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole;
+ cx.save();cx.scale(DPR,DPR);
+ const {vp,C,K,rgba}=tunnelWalls(L,t,2.2+u*2.5+ex*6);
+ // the far end: where it comes out grows to meet you
+ const far=Math.max(0,(u-0.6)/0.4);
+ if(far>0){const sp=backSprite(R.back);if(sp){const sz=K*(0.08+far*far*1.6);cx.globalAlpha=Math.min(1,far*1.6);cx.drawImage(sp,vp.x-sz/2,vp.y-sz/2,sz,sz);cx.globalAlpha=1}}
+ // the ship, banking into the bends, then climbing out of the top; the flat
+ // ship becomes a solid as it enters, tilting its nose into the tunnel
+ const climb=ex*ex*ex,sc=S*2.2*(1+climb*0.3),bank=(vp.x-C.x)/W*1.4,sx=W/2+(vp.x-C.x)*0.35,sy=H*0.7-climb*(H*0.7+SHIPP*3);
+ const mp=Math.min(1,t/0.6),tilt=mp*mp*(3-2*mp)*0.62*(1-climb*0.4);
+ tunnelShip(sx,sy,sc,bank,tilt,mp<0.5?1-mp*2:0,t);
+ // where it is going, over the top
+ textFit(R.name,W/2,SAFE.t+H*0.09,Math.min(26,W*0.06),rgba(0.75+0.25*Math.sin(t*4)),W*0.8);
+ // the flash it leaves in
+ const fl=Math.max(0,(ex-0.45)/0.55);if(fl>0){cx.fillStyle="rgba(255,255,255,"+fl.toFixed(2)+")";cx.fillRect(0,0,W,H)}
+ cx.restore()}
+// ------------------------------------------------------------ the bonus run
+// Clear all six sectors and the last gate's tunnel is a level of its own:
+// forty-five seconds down the wormhole in perspective, the look changing
+// every few seconds, steering the solid ship across the tunnel while its
+// guns fire ahead. Aliens fly at you and weave toward you; shoot them for a
+// combo that pays more each kill. Meteoroids tumble down the tunnel; dodge
+// them, or shoot them three times. A hit on the hull costs hull and the
+// combo, and a hull that runs out ends the run early. What it earns goes
+// on the run's total.
+const BONUS={t:45,speed:3.2,zShip:1.23,look:7.5,bolt:11,fire:0.16};
+function startBonus(){G.bonus={t:0,ox:0,oy:0,vx:0,vy:0,obj:[],bolts:[],spawn:1.0,n:0,shots:0,score:0,combo:0,best:0,kills:0,hits:0,hurt:0,fireT:0.3,ang:Math.random()*TAU};
+ G.hp=G.maxhp;G.sh=G.maxsh;announce("SHOOT THE SWARM  \u00b7  DODGE THE ROCKS");SFX.warpRun()}
+function bonusSpawn(b){b.n++;b.ang+=rnd(-1.1,1.1);
+ if(b.n%4===0)b.obj.push({k:"rock",a:b.ang+Math.PI*0.7,rr:0.2+Math.random()*0.55,z:9,hp:3,size:0.13+Math.random()*0.09,rot:Math.random()*TAU,spin:rnd(-2,2)});
+ else{const type=b.n%9===0?"drifter":b.n%2?"scout":"swarmer",d=ENEMY[type];
+  b.obj.push({k:"alien",type,a:b.ang,rr:0.15+Math.random()*0.55,z:9,hp:type==="drifter"?4:type==="scout"?2:1,maxhp:0,r:0,x:0,y:0,col:d.col,flash:0,ai:0,elite:false,boss:false,wob:Math.random()*TAU})}}
+function bonusStep(dt){const b=G.bonus;b.t+=dt;const st=stickVec(),k=Math.min(1,dt*8),zs=BONUS.zShip;
+ b.vx+=(st.x*2.4-b.vx)*k;b.vy+=(st.y*2.4-b.vy)*k;b.ox+=b.vx*dt;b.oy+=b.vy*dt;const l=Math.hypot(b.ox,b.oy);if(l>0.8){b.ox*=0.8/l;b.oy*=0.8/l}
+ b.spawn-=dt;if(b.spawn<=0&&b.t<BONUS.t-2.5){b.spawn=0.45;bonusSpawn(b)}
+ // the guns fire ahead on their own, as they do everywhere else
+ b.fireT-=dt;if(b.fireT<=0){b.fireT=BONUS.fire;b.shots++;b.bolts.push({x:b.ox,y:b.oy,z:zs+0.1});if(b.shots%2)SFX.shot()}
+ for(const o of b.obj){const z0=o.z;
+  if(o.k==="alien"){o.z-=2.3*dt;o.wob+=dt*3;o.flash=Math.max(0,o.flash-dt);
+   // aliens weave, and edge toward wherever you are
+   const ax=Math.cos(o.a)*o.rr,ay=Math.sin(o.a)*o.rr,tx=ax+(b.ox-ax)*0.4*dt+Math.sin(o.wob)*0.15*dt,ty=ay+(b.oy-ay)*0.4*dt;
+   o.a=Math.atan2(ty,tx);o.rr=Math.min(0.85,Math.hypot(tx,ty))}
+  else if(o.k==="rock"){o.z-=BONUS.speed*dt;o.rot+=o.spin*dt}
+  else if(o.k==="gem")o.z-=BONUS.speed*0.8*dt;
+  else{o.t+=dt;o.z-=BONUS.speed*dt}
+  if(z0>zs&&o.z<=zs&&!o.done){o.done=true;const d=Math.hypot(Math.cos(o.a)*o.rr-b.ox,Math.sin(o.a)*o.rr-b.oy);
+   if(o.k==="gem"&&d<0.26){o.hit=true;b.score+=20;SFX.gem()}
+   else if((o.k==="rock"&&d<o.size+0.12)||(o.k==="alien"&&d<0.2)){o.hit=true;b.hits++;b.combo=0;b.hurt=0.5;shake=1;SFX.hurt();
+    G.hp=Math.max(0,G.hp-Math.round(G.maxhp*(o.k==="rock"?0.15:0.1)));
+    if(G.hp<=0){G.hp=1;announce("HULL CRITICAL  \u00b7  PULLING OUT!");b.t=Math.max(b.t,BONUS.t-1.5)}}}}
+ for(const sb of b.bolts){sb.z+=BONUS.bolt*dt;if(sb.hit)continue;
+  for(const o of b.obj){if((o.k!=="alien"&&o.k!=="rock")||o.hit||o.z<zs)continue;
+   if(Math.abs(o.z-sb.z)<0.45&&Math.hypot(Math.cos(o.a)*o.rr-sb.x,Math.sin(o.a)*o.rr-sb.y)<(o.k==="rock"?o.size+0.08:0.2)){sb.hit=true;o.hp--;o.flash=0.1;SFX.hit();
+    if(o.hp<=0){o.hit=true;b.combo++;b.best=Math.max(b.best,b.combo);b.kills++;b.score+=(o.k==="rock"?30:100)*b.combo;SFX.kill();
+     b.obj.push({k:"gem",a:o.a,rr:o.rr,z:o.z},{k:"boom",a:o.a,rr:o.rr,z:o.z,t:0,col:o.k==="rock"?"#c0b8a8":o.col})}
+    break}}}
+ b.bolts=b.bolts.filter(sb=>!sb.hit&&sb.z<9.5);b.obj=b.obj.filter(o=>o.z>-0.5&&!(o.k==="boom"&&o.t>0.4)&&!(o.hit&&o.k!=="boom"));
+ b.hurt=Math.max(0,b.hurt-dt);shake=Math.max(0,shake-dt*2.5);flash=Math.max(0,flash-dt*2);G.announceT=Math.max(0,G.announceT-dt);
+ if(b.t>=BONUS.t){G.bonusScore=b.score;G.score+=b.score;G.kills+=b.kills;G.bonus=null;win()}}
+function drawBonus(){const b=G.bonus,t=b.t,R=REALMS[Math.floor(t/BONUS.look)%REALMS.length],L=WARP_LOOK[R.back]||WARP_LOOK.hole;
+ cx.save();cx.scale(DPR,DPR);const sh=(Math.random()-0.5)*shake*10;cx.translate(sh,sh*0.6);
+ const {proj,K}=tunnelWalls(L,t,BONUS.speed+1.2),zs=BONUS.zShip;
+ const drawObj=(o)=>{if(o.z<0||(o.hit&&o.k!=="boom"))return;const [x,y]=proj(o.z,o.a,o.rr),depth=Math.max(0,1-o.z/9),al=Math.min(1,depth*1.6),R1=K/(o.z+0.2);
+  cx.globalAlpha=al;
+  if(o.k==="rock"){const r=R1*o.size,v=o.hp>=3?0:o.hp===2?1:2;cx.save();cx.translate(x,y);cx.rotate(o.rot);cx.drawImage(ART.rock[v],-r,-r,r*2,r*2);cx.restore()}
+  else if(o.k==="alien"){o.x=x;o.y=y;o.r=R1*0.11*(o.type==="drifter"?1.8:1);if(!o.maxhp)o.maxhp=o.hp;drawEnemy(o)}
+  else if(o.k==="gem"){const g=R1*0.07;cx.fillStyle="rgba(120,220,255,1)";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.7,y);cx.lineTo(x,y+g);cx.lineTo(x-g*0.7,y);cx.closePath();cx.fill();
+   cx.fillStyle="rgba(255,255,255,0.7)";cx.beginPath();cx.moveTo(x,y-g);cx.lineTo(x+g*0.3,y-g*0.3);cx.lineTo(x-g*0.3,y-g*0.3);cx.closePath();cx.fill()}
+  else{const r=R1*(0.04+o.t*0.5);cx.globalAlpha=al*(1-o.t/0.4);cx.strokeStyle=o.col;cx.lineWidth=2+depth*3;cx.beginPath();cx.arc(x,y,r,0,TAU);cx.stroke()}
+  cx.globalAlpha=1};
+ const objs=b.obj.slice().sort((p,q)=>q.z-p.z);for(const o of objs)if(o.z>zs)drawObj(o);
+ // the bolts, streaking away down the tunnel
+ for(const sb of b.bolts){const a=Math.atan2(sb.y,sb.x),rr=Math.hypot(sb.x,sb.y),[x1,y1]=proj(sb.z,a,rr),[x2,y2]=proj(sb.z+0.7,a,rr),depth=Math.max(0,1-sb.z/9);
+  cx.strokeStyle=hexA(G.ship.col2,0.9);cx.lineWidth=1.5+depth*3;cx.lineCap="round";cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  cx.fillStyle="rgba(255,255,255,0.9)";cx.beginPath();cx.arc(x1,y1,1+depth*2.5,0,TAU);cx.fill()}
+ const [sx,sy]=proj(zs,Math.atan2(b.oy,b.ox),Math.hypot(b.ox,b.oy)),bank=b.vx*0.35;
+ if(!(b.hurt>0&&Math.floor(frameT*20)%2))tunnelShip(sx,sy,S*2,bank,0.62,0,t);
+ for(const o of objs)if(o.z<=zs)drawObj(o);
+ // The readout sits in a column down the right under the pause button, not
+ // across the top: the top centre of a phone is where the notch, the island
+ // and the browser's own bar all live, and the clock was lost among them.
+ const ST=SAFE.t,SR=SAFE.r,cz=Math.min(30,W*0.07),rx=W-16-SR,y0=ST+100;
+ buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});drawButtons();
+ cx.fillStyle="rgba(0,0,0,0.35)";rr(rx-cz*4.2,y0,cz*4.2+8,cz*(b.combo>1?3.4:2.5),8);cx.fill();
+ text(fmt(Math.max(0,BONUS.t-t)),rx,y0+cz*0.95,cz,"#fff","right");
+ text("+"+b.score,rx,y0+cz*1.85,cz*0.8,"#80ff90","right");
+ if(b.combo>1)text("x"+b.combo,rx,y0+cz*2.7,cz*0.7,"#ffe060","right");
+ const bw=cz*4,bh=8,bx=rx-bw,by=y0+cz*(b.combo>1?3.05:2.15);
+ cx.fillStyle="rgba(0,0,0,0.45)";rr(bx,by,bw,bh,4);cx.fill();cx.fillStyle=G.hp/G.maxhp>0.3?"#60e070":"#ff6060";rr(bx,by,Math.max(4,bw*G.hp/G.maxhp),bh,4);cx.fill();
+ if(G.announceT>0)textFit(G.announce,W/2,H*0.62,Math.min(24,W*0.055),"rgba(255,255,255,"+Math.min(1,G.announceT).toFixed(2)+")",W*0.9);
+ if(b.hurt>0){cx.fillStyle="rgba(255,60,60,"+(b.hurt*0.45).toFixed(2)+")";cx.fillRect(-20,-20,W+40,H+40)}
+ if(flash>0){cx.fillStyle="rgba(255,255,255,"+(flash*0.6).toFixed(2)+")";cx.fillRect(-20,-20,W+40,H+40)}
+ cx.restore()}
+function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5)*shake*14;cx.save();cx.scale(DPR,DPR);cx.translate(W/2+sx,H/2+sy);const cam=camView();cx.scale(S*cam.z,S*cam.z);cx.translate(-cam.x,-cam.y);
  drawStars();
  for(const rk of G.rocks){const v=rk.hp>=3?0:rk.hp===2?1:2,k=rk.r/58;
   cx.save();cx.translate(rk.x,rk.y);cx.rotate(rk.rot+frameT*0.1);
@@ -1408,15 +1884,15 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
   else if(b.k==="missile"){cx.fillStyle="#ff8040";rr(-12,-5,22,10,3);cx.fill();cx.fillStyle="#ffe0a0";cx.beginPath();cx.moveTo(10,-5);cx.lineTo(18,0);cx.lineTo(10,5);cx.fill()}
   else if(b.k==="plasma"){cx.fillStyle="#ff60ff";cx.beginPath();cx.arc(0,0,b.r,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(0,0,b.r*0.4,0,TAU);cx.fill()}
   cx.restore()}
-{const ao=arriveOff(),sy=G.py+ao;
+{const ao=arriveOff(),sy=G.py+ao,wk=warpShrink();cx.save();cx.translate(G.px,sy);cx.scale(wk,wk);cx.translate(-G.px,-sy);
  if(FX)glow(G.px,sy,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  if(ao>0){// exhaust column trailing the arrival
   const len=60+ao*0.6,g=cx.createLinearGradient(0,sy+14,0,sy+14+len);
   g.addColorStop(0,"rgba(255,230,150,0.5)");g.addColorStop(0.35,"rgba(255,140,40,0.3)");g.addColorStop(1,"rgba(255,80,20,0)");
   cx.fillStyle=g;cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px+8,sy+14);cx.lineTo(G.px+2,sy+14+len);cx.lineTo(G.px-2,sy+14+len);cx.closePath();cx.fill()}
- drawShip(G.px,sy,G.ang,G.ship,ao>0?1:stickVec().l);
+ drawShip(G.px,sy,G.ang,G.ship,(ao>0||G.warp)?1:stickVec().l);
  if(G.sh>0){cx.strokeStyle="rgba(64,208,255,"+(0.25+0.3*(G.sh/G.maxsh))+")";cx.lineWidth=3;cx.beginPath();cx.arc(G.px,sy,28,0,TAU);cx.stroke()}
- if(G.inv>0&&ao<=0&&Math.floor(frameT*20)%2){cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.arc(G.px,G.py,26,0,TAU);cx.fill()}}
+ if(G.inv>0&&ao<=0&&Math.floor(frameT*20)%2){cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.arc(G.px,G.py,26,0,TAU);cx.fill()}cx.restore()}
  for(const p of G.parts){if(p.k==="dot"){cx.globalAlpha=Math.min(1,p.life*2);cx.fillStyle=p.col;cx.beginPath();cx.arc(p.x,p.y,p.r,0,TAU);cx.fill();cx.globalAlpha=1}else if(p.k==="ring"){cx.strokeStyle=p.col;cx.lineWidth=6;cx.globalAlpha=p.life*2;cx.beginPath();cx.arc(p.x,p.y,p.r*(1.2-p.life),0,TAU);cx.stroke();cx.globalAlpha=1}}
  for(const t of G.txt){cx.globalAlpha=Math.min(1,t.life*2);text(t.s,t.x,t.y,16,t.col);cx.globalAlpha=1}
  cx.restore();cx.save();cx.scale(DPR,DPR);vignette();cx.restore()}
@@ -1433,7 +1909,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
  // when the clock runs out the number gives way to what you are waiting on,
  // which is the gate unless something is sitting on it
- const left=Math.max(0,SECTOR_LEN-G.secT);
+ const left=G.gate?0:Math.max(0,SECTOR_LEN-G.secT);
  // bounded, because "BEAT IT!" is a good deal wider than "2:31" and the level
  // and the kill count are sitting on either side of it
  textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
@@ -1441,6 +1917,14 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  textFit(G.mode==="endless"?"SECTOR "+G.sector+"   ·   ENDLESS   ·   "+G.dif.name:G.mode==="daily"?"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.mod.name:"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.mode==="endless"?"#ff9040":G.mode==="daily"?"#c0a0ff":G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
+ // A gate nine seconds away is off the screen, so an arrow on the edge of
+ // the screen points the way, with the distance under it.
+ if(G.gate&&!G.warp){const dx=(G.gate.x-G.px)*S,dy=(G.gate.y-G.py)*S,hx=W/2-46,hy=H/2-110;
+  if(Math.abs(dx)>hx||Math.abs(dy)>hy){const k=Math.min(hx/Math.abs(dx||1e-6),hy/Math.abs(dy||1e-6)),ax=W/2+dx*k,ay=H/2+dy*k,a=Math.atan2(dy,dx),pulse=0.75+0.25*Math.sin(frameT*6);
+   cx.save();cx.translate(ax,ay);if(FX)glow(0,0,44,"rgba(170,120,255,"+(0.35*pulse).toFixed(2)+")","rgba(120,60,220,0.03)");
+   cx.rotate(a);cx.fillStyle="rgba(210,190,255,"+pulse.toFixed(2)+")";cx.beginPath();cx.moveTo(18,0);cx.lineTo(-10,-13);cx.lineTo(-4,0);cx.lineTo(-10,13);cx.closePath();cx.fill();
+   cx.strokeStyle="rgba(255,255,255,0.8)";cx.lineWidth=1.5;cx.stroke();cx.rotate(-a);
+   text(Math.round(dist(G.px,G.py,G.gate.x,G.gate.y)/10)*10+"m",0,dy>0?-22:30,13,"rgba(220,210,255,0.9)");cx.restore()}}
  // The bottom of the screen, laid out rather than assumed. The tiles used to
  // march left from the edge 44 pixels at a time until they walked over the
  // health bar, which eight of them did. They size themselves to the room they
@@ -1606,7 +2090,7 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const bob=Math.sin(frameT*2)*6,SB=SAFE.b;
  buttons=[];
  const n=SHIPS.length;
- const pick=i=>{const s=SHIPS[i];if(unlocks[s.id]){shipIdx=i;store.set("ship",i)}else SFX.click()};
+ if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;
  const difId=DIFFS[diffIdx].id;
  // Everything used to sit at a fixed offset from a fraction of the height,
  // which on a phone in landscape put the tag line through the difficulty
@@ -1617,10 +2101,11 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const gap=clamp(H*0.022,6,12);
  const mh=clamp(H*0.085,34,46),bh=clamp(H*0.115,42,64);
  const bot=H-12-SB,hs=Math.min(14,W*0.03);
- const rowCw=Math.min(300,(W-60)/n-10),stack=rowCw<170;
- const minShip=stack?n*56+(n-1)*8:118;
+ const stack=W<560;
+ // one ship at a time, with arrows: this is the least it needs
+ const minShip=W>=700?128:170;
  const musicY=bot-mh;
- let showHelp=true;
+ let showHelp=false;   // no help lines under the launch button any more
  const helpH=()=>showHelp?hs*2+8:0;
  const helpTop=()=>musicY-gap-helpH();
  let launchY=helpTop()-gap-bh;
@@ -1645,17 +2130,24 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  if(need()<minShip)showTag=false;
  if(need()<minShip)showDesc=false;
  if(need()<minShip){showHelp=false;launchY=helpTop()-gap-bh;contentBottom=launchY-gap}
+ // still short, on a wide screen: LAUNCH sits in the bottom row between the
+ // small buttons rather than on top of the ship cards
+ let launchInline=false;
+ if(need()<minShip&&W>=700){launchInline=true;launchY=musicY;contentBottom=launchY-gap}
  {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r);cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
  if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // the mode, then the difficulty, as segmented rows above the ships
  const seg=dw/3,dx0=twoUp?W/2+10:W/2-dw/2;
- if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2;
-  MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*seg;
-   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,seg-4,dh,10);cx.fill();
+ if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2,qs=Math.min(dh,34),mseg=(dw-qs-6)/3;
+  MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*mseg;
+   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,mseg-4,dh,10);cx.fill();
    cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?m.col:"rgba(255,255,255,0.3)";cx.stroke();
-   textFit(m.name,x+seg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",seg-14);
-   btn(x+2,my,seg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+   textFit(m.name,x+mseg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",mseg-14);
+   btn(x+2,my,mseg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  // what the modes are, one tap away
+  const qx=mx0+dw-qs;
+  btn(qx,my+(dh-qs)/2,qs,qs,"?",()=>{scene="help"},{size:18,fill:"rgba(255,224,96,0.14)",stroke:"#ffe060",color:"#ffe060"});
   if(!twoUp)cursor=my+dh}
  const dy=cursor+gap;
  DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
@@ -1669,47 +2161,54 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   const line=mid==="daily"?"TODAY: "+dailyInfo().mod.name+"  ·  "+dailyInfo().mod.desc:mid==="endless"?MODES[1].desc:DIFFS[diffIdx].desc;
   textFit(line,W/2,cursor+11,12,mid==="daily"?"#c0a0ff":mid==="endless"?"#ff9040":"#9fb0c8",W-40);cursor+=18}
  const listTop=cursor+gap,avail=contentBottom-listTop;
- if(stack){
-  const cw=Math.min(440,W-28),x0=W/2-cw/2;
-  const ch=clamp(avail/n-8,50,104),px=ch*0.86;
-  const nz=Math.min(20,ch*0.23),dz=Math.min(14,ch*0.16),rz=Math.min(13,ch*0.145);
-  SHIPS.forEach((s,i)=>{const y=listTop+i*(ch+8),sel=i===shipIdx,un=!!unlocks[s.id];
-   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x0,y,cw,ch,16);cx.fill();
-   cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-   if(sel)shipSlot={x:x0+px/2+4,y:y+ch/2,s:1};
-   if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;drawShip(x0+px/2+4,y+ch/2,-Math.PI/2,s,sel?0.6:0);cx.restore()}
-   const tx=x0+px+14,tw=cw-px-28,r=recLine(s.id,difId);
-   textFit(un?s.name:"LOCKED",tx,y+ch*0.26,nz,sel?"#ffe060":"#fff",tw,"left");
-   textFit(un?s.desc:s.unlock,tx,y+ch*0.55,dz,"#cde",tw,"left");
-   textFit(un?r:"",tx,y+ch*0.82,rz,"#bfe",tw,"left");
-   btn(x0,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- }else{
-  const cw=rowCw,ch=clamp(avail,108,250),y=listTop+Math.max(0,(avail-ch)/2);
-  const nz=Math.min(22,ch*0.115),dz=Math.min(14,ch*0.082),rz=Math.min(13,ch*0.076);
-  SHIPS.forEach((s,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,sel=i===shipIdx,un=!!unlocks[s.id];
-   cx.fillStyle=sel?"rgba(255,255,255,0.18)":"rgba(0,0,0,0.4)";rr(x,y,cw,ch,18);cx.fill();
-   cx.lineWidth=sel?5:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
-   if(sel)shipSlot={x:x+cw/2,y:y+ch*0.28,s:Math.min(1,ch/190)};
-   if(!(sel&&launching)){cx.save();if(!un)cx.globalAlpha=0.4;
-   cx.translate(x+cw/2,y+ch*0.28);cx.scale(Math.min(1,ch/190),Math.min(1,ch/190));
-   drawShip(0,0,-Math.PI/2,s,sel?0.6:0);cx.restore()}
-   const r=recLine(s.id,difId);
-   textFit(un?s.name:"LOCKED",x+cw/2,y+ch*0.62,nz,sel?"#ffe060":"#fff",cw-16);
-   textFit(un?s.desc:s.unlock,x+cw/2,y+ch*0.78,dz,"#cde",cw-16);
-   textFit(un?r:"",x+cw/2,y+ch*0.92,rz,"#bfe",cw-16);
-   btn(x,y,cw,ch,"",()=>pick(i),{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
- }
- const lw=Math.min(300,W-48);
- btn(W/2-lw/2,launchY,lw,bh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ")[1],()=>launch(),
-  {launch:true,size:Math.min(26,bh*0.42)});
- if(showHelp){const ht=helpTop();
-  textFit("Thumb anywhere to fly.   Weapons fire themselves.",W/2,ht+hs*0.6,hs,"#cde",W-24);
-  if(lastRun){const l="LAST RUN:  sector "+lastRun.sector+"  ·  "+lastRun.score+"  ·  "+(lastRun.how==="won"?"cleared":lastRun.how==="quit"?"quit":"died")+"   ▸";
-   btn(W/2-Math.min(300,W-40)/2,ht+hs*1.2,Math.min(300,W-40),hs*1.6+6,l,()=>{scene="lastrun"},{size:hs,fill:"rgba(0,0,0,0.25)",stroke:"rgba(255,255,255,0.25)",color:"#ffe060"})}
-  else textFit("Hide behind asteroids, shoot them for gems.",W/2,ht+hs*1.7+6,hs,"#cde",W-24)}
+ // One ship at a time. Arrows step through the hangar; a ship you have earned
+ // becomes the one you fly as you pass it, a ship you have not is a shape in
+ // the dark with its marks and its price. The marks are what the numbers are.
+ {const v=SHIPS[viewIdx],un=!!unlocks[v.id],sel=viewIdx===shipIdx&&un;
+  const cw=Math.min(560,W-28),x0=W/2-cw/2,ch=clamp(avail,minShip,400),y=listTop;
+  cx.fillStyle=sel?"rgba(255,255,255,0.14)":"rgba(0,0,0,0.42)";rr(x0,y,cw,ch,18);cx.fill();
+  cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
+  const aw=Math.min(44,cw*0.1),step=d=>{viewIdx=(viewIdx+d+n)%n;if(unlocks[SHIPS[viewIdx].id]){shipIdx=viewIdx;store.set("ship",shipIdx)}SFX.click()};
+  btn(x0+6,y+ch/2-26,aw,52,"◀",()=>step(-1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
+  btn(x0+cw-6-aw,y+ch/2-26,aw,52,"▶",()=>step(1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
+  const ix=x0+aw+14,inner=cw-2*(aw+14),tall=ch>=230;
+  const name=un?v.name:"???",line=un?v.desc:(v.cost?"In the shop  ·  ◆ "+v.cost:v.unlock);
+  // the marks, or ???? for a ship not yet earned
+  const bars=(bx,by,bw,rowH,fz)=>{const cats=[["SPEED",v.stats.speed,"#8dff5a"],["DAMAGE",v.stats.damage,"#ffa040"],["SHIELD",v.stats.shield,"#40d0ff"]];
+   const lw2=Math.min(72,bw*0.3),pw=Math.min(22,(bw-lw2-8)/5-4),ph=Math.max(6,rowH*0.42);
+   cats.forEach(([lab,val,col],i)=>{const ry=by+i*rowH;textFit(lab,bx,ry+rowH/2,fz,un?"#9fb0c8":"#6b7590",lw2-6,"left");
+    if(!un){textFit("????",bx+lw2,ry+rowH/2,fz+1,"#6b7590",bw-lw2,"left");return}
+    for(let p=0;p<5;p++){cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(bx+lw2+p*(pw+4),ry+rowH/2-ph/2,pw,ph,3);cx.fill()}})};
+  const r=recLine(v.id,difId);
+  // The hull is drawn 32px each way from its centre, with up to 30px of
+  // exhaust below that. It gets the top 40% of the card and is scaled to fit
+  // that, so on a phone with less room it shrinks rather than leaving the box.
+  if(tall){const room=ch*0.4-16,sc=Math.max(0.6,Math.min(2.2,room/(32+30+32))),sx=W/2,sy=y+8+sc*32;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.35:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
+   // the name sits just under the exhaust, wherever that ends up
+   const ny=Math.min(y+ch*0.47,sy+sc*62+14);
+   textFit(name,W/2,ny,Math.min(24,ch*0.08),sel?"#ffe060":un?"#fff":"#9fb0c8",inner);
+   textFit(line,W/2,ny+ch*0.085,Math.min(14,ch*0.05),"#cde",inner);
+   const bw=Math.min(300,inner-20),rowH=Math.min(24,ch*0.08);bars(W/2-bw/2,ny+ch*0.14,bw,rowH,Math.min(12,rowH*0.5));
+   textFit(un?r:"Hull ????",W/2,y+ch*0.9,Math.min(13,ch*0.045),un?"#bfe":"#6b7590",inner)}
+  else{const sc=Math.max(0.6,Math.min(1.5,(ch-16)/(32+30+32))),sx=ix+inner*0.17,sy=y+ch/2-sc*12;shipSlot={x:sx,y:sy,s:sc};
+   if(!(sel&&launching)){cx.save();cx.translate(sx,sy);cx.scale(sc,sc);if(un)drawShip(0,0,-Math.PI/2,v,sel?0.35:0);else drawSil(0,0,-Math.PI/2);cx.restore()}
+   const tx=ix+inner*0.36,tw=inner*0.64;
+   textFit(name,tx,y+ch*0.15,Math.min(20,ch*0.15),sel?"#ffe060":un?"#fff":"#9fb0c8",tw,"left");
+   textFit(line,tx,y+ch*0.31,Math.min(13,ch*0.1),"#cde",tw,"left");
+   const rowH=Math.min(20,ch*0.14),by=y+ch*0.4;bars(tx,by,Math.min(300,tw),rowH,Math.min(11,rowH*0.55));
+   // the record line sits under the bars, wherever they end
+   textFit(un?r:"Hull ????",tx,Math.min(y+ch-24,by+rowH*3.5),Math.min(12,ch*0.09),un?"#bfe":"#6b7590",tw,"left")}
+  // where you are in the hangar
+  for(let i=0;i<n;i++){const dx=W/2+(i-(n-1)/2)*12;cx.fillStyle=i===viewIdx?"#ffe060":unlocks[SHIPS[i].id]?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.18)";cx.beginPath();cx.arc(dx,y+ch-9,i===viewIdx?3.5:2.5,0,TAU);cx.fill()}}
+ const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
+ btn(W/2-lw/2,launchY,lw,lbh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),()=>launch(),
+  {launch:true,size:Math.min(26,lbh*0.42)});
+ // the help lines are gone: the game is learnt by playing it
  // music, shop, credits: three across when they fit, or spread to the edges
- const three=FEATURES.shop,mw=three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
- const bx=i=>showHelp||three?W/2+(i-(three?1:0.5))*(mw+10)-mw/2:(i===0?14+SAFE.l:W-14-SAFE.r-mw);
+ const three=FEATURES.shop,mw=launchInline?Math.min(130,(W-lw-60-SAFE.l-SAFE.r)/4-8):three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
+ // inline: music and shop to the left of LAUNCH, credits to its right
+ const bx=i=>launchInline?(i===0?14+SAFE.l:i===1&&three?14+SAFE.l+mw+8:W-14-SAFE.r-mw):showHelp||three?W/2+(i-(three?1:0.5))*(mw+10)-mw/2:(i===0?14+SAFE.l:W-14-SAFE.r-mw);
  btn(bx(0),musicY,mw,mh,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:fs});
  if(three)btn(bx(1),musicY,mw,mh,"SHOP  ◆ "+bank,()=>{scene="shop"},{size:fs,color:"#ffe060"});
  btn(bx(three?2:1),musicY,mw,mh,"CREDITS",()=>{creditsT=0;scene="credits"},{size:fs});
@@ -1723,8 +2222,8 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
   // room for both.
   let hint=null;
   if(FEATURES.evolve){
-   if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name,col:d.evo.col};
-   else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX",col:w.evo.col};break}}}}
+   if(c.w&&d.evo&&c.l===d.max)hint={a:"MAX → "+d.evo.name,b:"needs "+PASSIVES[d.evo.needs].name+" "+EVO_NEEDS,col:d.evo.col};
+   else if(!c.w&&c.k!=="heal"){for(const k in G.weapons){const w=WEAPONS[k];if(w.evo&&w.evo.needs===c.k&&!G.evo[k]){hint={a:"Evolves "+w.name,b:"→ "+w.evo.name+" at MAX"+(c.l<EVO_NEEDS?" (rank "+EVO_NEEDS+")":""),col:w.evo.col};break}}}}
   if(hint&&c.l>1){textFit(hint.a,x+cw/2,y+ch*0.74,14,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.82,13,"#dde",cw-16)}
   else{const showHint=hint&&cw>=200;
    wrapFit(d.desc,x+cw/2,y+ch*0.7,cw-26,(showHint?ch*0.86:ch)-12-ch*0.7,15,"#dde");
@@ -1733,7 +2232,7 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);drawPanel("LEVEL "+G.level+"!
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);shareSaidT=Math.max(0,shareSaidT-1/60);
  const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
  drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+tail,won?"#80c0ff":"#ff8080");
- const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(FEATURES.shop&&G.gemsGot>0?"     +"+Math.round(G.gemsGot)+" gems banked":""),W/2,y+46,20,"#fff",W-32);
+ const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(G.bonusScore?"     Tunnel bonus +"+G.bonusScore:"")+(FEATURES.shop&&G.gemsGot>0?"     +"+Math.round(G.gemsGot)+" gems banked":""),W/2,y+46,20,"#fff",W-32);
  if(G.mode==="daily"){const d=records[dailyKey()];
   if(G.dailyRank===1&&G.score>0)text("TODAY\u2019S BEST!",W/2,y+80,26,"#80ff90");
   // the day's board, where there is room for it under the score
@@ -1807,13 +2306,57 @@ function drawLastRun(dt){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];shareS
   btn(W/2+6,back,bw,bh,"HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)})}
  if(!r)btn(W/2-110,bot-48,220,48,"HANGAR",()=>{scene="title"},{size:18});
  drawButtons();cx.restore()}
+let shopTab=0;
+// The help screen: what the three ways to play are, and today's twist.
+function drawHelp(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
+ const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b,bh=clamp(H*0.09,40,52);
+ textFit("WAYS TO PLAY",W/2,top+18,Math.min(30,W/12),"#ffe060",W-100-SL-SR);
+ const d=dailyInfo();
+ const blocks=[
+  ["CAMPAIGN","#80c0ff","Six sectors, five minutes each. Survive, beat the boss, fly into the black hole. Clear all six and something is waiting in the hangar."],
+  ["ENDLESS","#ff9040","Past the sixth gate the sectors keep coming, and every lap the bosses come back harder. How far can you get?"],
+  ["DAILY","#c0a0ff","The campaign with one twist chosen by the date - the same run for everyone that day, so scores can be compared. Today: "+d.mod.name+"  ·  "+d.mod.desc],
+  ["SHIPS","#ffe060","Speed, damage and shield are marks out of five, and they are exactly what the ship does. Earn ships by playing, or buy them with banked gems. A ship you have not earned stays a mystery."]];
+ const rw=Math.min(600,W-24-SL-SR),x0=W/2-rw/2;let y=top+52;const avail=bot-bh-16-y,per=avail/blocks.length,fz=clamp(per*0.13,11,15);
+ for(const [t,col,body] of blocks){cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,per-8,12);cx.fill();
+  textFit(t,x0+14,y+16,Math.min(16,fz+2),col,rw-28,"left");
+  const lines=wrapLines(body,rw-28,fz);let ly=y+34;for(const l of lines.slice(0,Math.floor((per-44)/(fz+4)))){textFit(l,x0+14,ly,fz,"#dde",rw-28,"left");ly+=fz+4}
+  y+=per}
+ btn(W/2-110,bot-bh,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
+ drawButtons();cx.restore()}
 function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b;
  const bh=clamp(H*0.09,40,52),back=bot-bh;
  textFit("HANGAR SHOP",W/2,top+18,Math.min(30,W/12),"#ffe060",W-100-SL-SR);
  textFit("◆ "+bank+" gems banked",W/2,top+46,16,"#c0e8ff",W-40);
+ // two tabs: the upgrades, and the ships for sale
+ const tw=Math.min(300,W-40),tx0=W/2-tw/2,ty=top+62,th=32;
+ ["UPGRADES","SHIPS"].forEach((t,i)=>{const sel=shopTab===i,x=tx0+i*tw/2;
+  cx.fillStyle=sel?"rgba(255,224,96,0.18)":"rgba(0,0,0,0.42)";rr(x+2,ty,tw/2-4,th,9);cx.fill();cx.lineWidth=sel?2.5:1.5;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.3)";cx.stroke();
+  textFit(t,x+tw/4,ty+th/2,15,sel?"#ffe060":"#ccd6e4",tw/2-16);
+  btn(x+2,ty,tw/2-4,th,"",()=>{shopTab=i},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+ const rw=Math.min(560,W-24-SL-SR),x0=W/2-rw/2,ly=ty+th+10,avail=back-12-ly;
+ if(shopTab===1){const ships=SHIPS.filter(x=>x.cost);const n=ships.length,rh=clamp((avail-(n-1)*8)/n,64,120),k=rh/120,bw=Math.min(112,rw*0.24);
+  ships.forEach((sh,i)=>{const y=ly+i*(rh+8),own=!!unlocks[sh.id],can=!own&&bank>=sh.cost;
+   cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=own?hexA(sh.col,0.7):"rgba(255,255,255,0.25)";cx.stroke();
+   cx.save();cx.translate(x0+Math.min(rh,92)*0.5,y+rh*0.5);cx.scale(Math.min(1,rh/120,0.8),Math.min(1,rh/120,0.8));if(own)drawShip(0,0,-Math.PI/2,sh,0.5);else drawSil(0,0,-Math.PI/2);cx.restore();
+   const tx=x0+Math.min(rh,92),tw2=rw-Math.min(rh,92)-bw-24;
+   if(own){textFit(sh.name+"  ·  "+WEAPONS[sh.weapon].name,tx,y+rh*0.16,Math.min(17,12+7*k),sh.col2,tw2,"left");
+    // the ability, wrapped to its column: three lines at most, never under the button
+    const az=Math.min(12,8+5*k),al=wrapLines(sh.abName+": "+sh.abDesc,tw2,az).slice(0,3);
+    al.forEach((l,j)=>textFit(l,tx,y+rh*(0.34+j*0.14),az,hexA(sh.col2,0.9),tw2,"left"))}
+   else{textFit("???",tx,y+rh*0.16,Math.min(17,12+7*k),"#fff",tw2,"left");
+    textFit("A mystery until it is yours.",tx,y+rh*0.34,Math.min(12,8+5*k),"#cde",tw2,"left")}
+   // the marks once it is yours; ???? until then
+   const cats=[["SPD",sh.stats.speed,"#8dff5a"],["DMG",sh.stats.damage,"#ffa040"],["SHD",sh.stats.shield,"#40d0ff"]],gw=tw2/3,pw=Math.max(5,Math.min(12,(gw-36)/5-3));
+   cats.forEach(([lab,val,col],ci)=>{const bx=tx+ci*gw;textFit(lab,bx,y+rh*0.8,Math.min(10,7+4*k),own?"#9fb0c8":"#6b7590",28,"left");
+    if(!own){textFit("???",bx+30,y+rh*0.8,Math.min(11,8+4*k),"#6b7590",gw-42,"left");return}
+    for(let q=0;q<5;q++){cx.fillStyle=q<val?col:"rgba(255,255,255,0.14)";rr(bx+30+q*(pw+3),y+rh*0.8-3.5,pw,7,2);cx.fill()}});
+   btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),own?"OWNED":"◆ "+sh.cost,()=>{if(buyShip(sh.id)){SFX.chest();shipIdx=SHIPS.indexOf(sh);store.set("ship",shipIdx)}else SFX.click()},
+    {size:Math.min(16,10+7*k),fill:own?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:own?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
+ else{
  // seven rows that share whatever height is left
- const n=SHOP.length,ly=top+66,avail=back-12-ly,rh=clamp((avail-(n-1)*6)/n,40,72),rw=Math.min(560,W-24-SL-SR),x0=W/2-rw/2;
+ const n=SHOP.length,rh=clamp((avail-(n-1)*6)/n,40,72);
  const k=rh/72,bw=Math.min(112,rw*0.24);
  SHOP.forEach((it,i)=>{const y=ly+i*(rh+6),lv=perks[it.id]||0,cost=shopCost(it),can=cost>0&&bank>=cost,maxed=lv>=it.max;
   cx.fillStyle="rgba(0,0,0,0.42)";rr(x0,y,rw,rh,12);cx.fill();cx.lineWidth=1.5;cx.strokeStyle=maxed?hexA(it.col,0.6):"rgba(255,255,255,0.25)";cx.stroke();
@@ -1824,11 +2367,11 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
   // level pips
   for(let p=0;p<it.max;p++){cx.fillStyle=p<lv?it.col:"rgba(255,255,255,0.18)";rr(tx+p*14,y+rh*(rh<52?0.66:0.84)-4,10,8,3);cx.fill()}
   btn(x0+rw-bw-10,y+rh*0.5-Math.min(20,rh*0.36),bw,Math.min(40,rh*0.72),maxed?"MAX":"◆ "+cost,()=>{if(buy(it.id))SFX.chest();else SFX.click()},
-   {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})});
+   {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
  btn(W/2-110,back,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
  drawButtons();cx.restore()}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord();bankRun();noteRun("quit")},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();cx.restore()}
-function start(){if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
+function start(ship){if(ship&&typeof ship==="object"&&SHIPS.indexOf(ship)>=0)shipIdx=SHIPS.indexOf(ship);if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
 // LAUNCH does not cut straight to the fight. The chosen ship lights its
 // engines in its card, shakes for half a second, then climbs off the top of
 // the screen while the stars streak past, and the run begins on a flash.
@@ -1868,19 +2411,22 @@ function drawWipe(dt){if(wipeT<=0)return;wipeT-=dt;cx.save();cx.setTransform(1,0
 function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene="pause";musicStop()}else if(scene==="pause"){scene="play";musicStart()}}
  if(scene==="title"&&(code==="Space"||code==="Enter"))launch();if(scene==="levelup"&&["Digit1","Digit2","Digit3"].includes(code)){const i=+code[5]-1;if(cards[i]){applyCard(cards[i]);scene="play"}}
  if((scene==="over"||scene==="win")&&(code==="Space"||code==="Enter"))start()}
-function frame(ts){requestAnimationFrame(frame);inputWatch();
+// the checker can halt the loop and step it by hand, so a cutscene can be
+// caught at an exact moment on a machine that renders slowly
+let halted=false;
+function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
  // the hangar and the credits have a theme, and it starts the moment audio can
- if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
+ if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
- if(["play","levelup","pause","over","win"].includes(scene)&&G){drawWorld();drawHUD()}
- if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
+ if(["play","levelup","pause","over","win"].includes(scene)&&G){if(G.warp&&G.warp.t>=WARP.dive)drawWarp();else if(G.bonus)drawBonus();else{drawWorld();if(G.warp)drawDive();else drawHUD()}}
+ if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
  drawDiag();
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
