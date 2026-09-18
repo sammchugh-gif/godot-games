@@ -203,9 +203,11 @@ What the pass changed, and why:
   and 1.45x damage (was 2.2, 1.65, 1.6).
 - An evolution needs its partner upgrade at rank two, so the guaranteed
   sector 1 boss chest cannot evolve a weapon in the first sector.
-- The boss arrives at 185 seconds into a sector (was 165); the gate's
-  earliest is unchanged at 255, so the duel has seventy seconds before
-  the clock can force the gate.
+- The boss arrives at 185 seconds into a sector (was 165). The gate
+  opens the moment the boss dies, nine seconds' flight away (1200 to
+  2200 px, by the ship's speed), with an arrow on the screen edge and
+  the distance pointing to it; the clock's 255 seconds is only the
+  backstop for a boss that has held out two and a half minutes.
 - When the boss arrives about five in six of the swarm turn and leave
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.

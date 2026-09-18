@@ -230,13 +230,19 @@ const GATE = `(function(){
   S.sim(1, 1/60);
   out.openedAfter = !!G.gate;
 
-  /* and the ordinary case: no boss left, gate opens on the clock as before */
+  /* and the ordinary case: no boss left, the gate is open */
   S.start(S.SHIPS[0]);
   const H = S.G;
   H.sector = 1; H.secT = S.SECTOR_LEN - 50; H.secBoss = true; H.bossAlive = null;
   H.hp = H.maxhp = 1e9; H.en.length = 0; H.gate = null;
   S.sim(8, 1/60);
   out.openedNormally = !!H.gate;
+  /* an early kill opens it that moment, a flight away rather than beside you */
+  S.start(S.SHIPS[0]); const K = S.G; K.arrive = 0; K.hp = K.maxhp = 1e9; K.spawnAcc = -1e9; K.en.length = 0; K.rocks.length = 0;
+  K.sector = 1; K.secT = 200; K.secBoss = true; const m = S.spawnEnemy('mother', K.px + 320, K.py); K.bossAlive = m; m.hp = 1;
+  for (let i = 0; i < 60 * 6 && K.bossAlive; i++) S.sim(1/60, 1/60);
+  S.sim(0.1, 1/60); out.earlyOpen = !!K.gate && K.secT < 210; out.earlyDist = K.gate ? Math.round(Math.hypot(K.gate.x - K.px, K.gate.y - K.py)) : 0; out.earlySaid = K.announce;
+  out.flight = K.gate ? +(out.earlyDist / S.moveSpeed()).toFixed(1) : 0;
   return out;
 })()`;
 const gate = await pg.evaluate(GATE);
@@ -247,7 +253,9 @@ check('killing it opens the gate', gate.bossDied && gate.openedAfter,
   gate.bossDied ? 'the boss went down and the gate followed'
                 : 'the boss would not die, so this proves nothing');
 check('no boss, no hold-up', gate.openedNormally,
-  'with the boss already dead the gate opens on the clock as before');
+  'with the boss already dead the gate is open');
+check('an early kill opens it at once, a flight away', gate.earlyOpen && gate.earlyDist >= 1200 && gate.flight >= 5 && /GATE OPEN/.test(gate.earlySaid),
+  `boss down at 200s: gate open at ${gate.earlyDist}px, ${gate.flight}s of flight, and it says "${gate.earlySaid}"`);
 
 /* difficulty does not touch any of this - worth stating, because the obvious
    guess is that a harder level paces upgrades differently, and it does not */
@@ -264,13 +272,14 @@ const part = await pg.evaluate(`(() => {
   const S = window.SW; S.fx = false; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0;
   G.hp = G.maxhp = 1e9; G.secT = 180; G.spawnAcc = -1e9;
   for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; S.spawnEnemy(['scout','swarmer','drifter'][i % 3], G.px + Math.cos(a) * 320, G.py + Math.sin(a) * 320); }
-  const before = G.en.length; let bossT = null;
-  for (let i = 0; i < 55; i++) { S.sim(0.1); if (G.bossAlive && bossT == null) bossT = +G.secT.toFixed(1); }
-  const out = { before, bossT, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
+  const before = G.en.length; let bossT = null, stay0 = 0, flee0 = 0;
+  for (let i = 0; i < 55; i++) { S.sim(0.1); if (G.bossAlive && bossT == null) { bossT = +G.secT.toFixed(1); stay0 = G.en.filter(e => !e.boss && !e.flee).length; flee0 = G.en.filter(e => e.flee).length; } }
+  const out = { before, bossT, stay0, flee0, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
   S.sim(6); out.later = G.en.filter(e => !e.boss && !e.flee).length; out.straggle = G.en.filter(e => e.flee).length; S.scene = 'title'; return out;
 })()`);
-check('most of the swarm parts for the boss', part.boss && part.after >= 3 && part.after <= 16 && part.later <= 20 && part.straggle <= 2,
-  `${part.before} on the field at 180s; boss up, ${part.after} of them still fighting 0.5s in (about one in six should), ${part.later} six seconds later (with its escort) and ${part.straggle} still leaving`);
+/* the split is judged the instant the boss lands, before the guns thin the stayers */
+check('most of the swarm parts for the boss', part.boss && part.flee0 >= 40 && part.stay0 >= 3 && part.stay0 <= 18 && part.after <= 16 && part.later <= 20 && part.straggle <= 2,
+  `${part.before} on the field at 180s; boss lands and ${part.flee0} turn to leave while ${part.stay0} stay (about one in six should); ${part.after} still fighting 0.5s in, ${part.later} six seconds later (with its escort) and ${part.straggle} still leaving`);
 check('and it parts at 185 seconds, not before', part.bossT != null && part.bossT >= 184 && part.bossT <= 186.2,
   `the boss arrived at ${part.bossT}s into the sector`);
 

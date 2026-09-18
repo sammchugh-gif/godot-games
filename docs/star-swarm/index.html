@@ -869,19 +869,20 @@ function spawnWave(dt){const t=G.t;let rate=swarmRate();
   announce(ENEMY[which].name+(bossLap()?" MK "+"I".repeat(bossLap()+1):"")+" APPROACHES!");SFX.boss();shake=1}
  // The gate is the way out of a sector, and it should not be a way round the
  // boss. It opened on the clock alone, so you could let the kraken chase you
- // for ninety seconds and simply leave - which made every boss optional. The
- // clock still decides the earliest it can open; the boss decides whether it
- // does. Nobody can get stuck behind one: its health is fixed the moment it
- // arrives while yours keeps levelling, so the fight always resolves.
- if(G.secT>=(mod().gateAt||SECTOR_LEN-45)&&!G.gate){
-  // and a backstop: a boss that has held out for two and a half minutes
-  // cannot hold the gate any longer, so no run ever stalls behind one
+ // for ninety seconds and simply leave - which made every boss optional.
+ // Now the boss decides: kill it and the gate opens that moment, nine
+ // seconds' flight away so the win is a run to the exit rather than a wait
+ // beside it. The clock is the backstop: at its time a boss that has held
+ // out for two and a half minutes cannot hold the gate shut any longer, so
+ // no run ever stalls behind one.
+ const bossDown=G.secBoss&&!G.bossAlive,gateAt=mod().gateAt||SECTOR_LEN-45;
+ if(!G.gate&&(bossDown||G.secT>=gateAt)){
   if(G.bossAlive&&(G.bossT||0)<150){
    if(!G.gateHeld){G.gateHeld=true;
     announce(ENEMY[G.bossAlive.type].name+" IS HOLDING THE GATE SHUT")}}
-  else{const a=Math.random()*TAU;G.gate={x:G.px+Math.cos(a)*700,y:G.py+Math.sin(a)*700,r:60};
-   announce(G.bossAlive?"THE GATE FORCES OPEN - GO!":G.sector>=SECTORS&&G.mode!=="endless"?"THE FINAL GATE IS OPEN!"
-    :G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
+  else{const a=Math.random()*TAU,far=bossDown?clamp(moveSpeed()*9,1200,2200):700;G.gate={x:G.px+Math.cos(a)*far,y:G.py+Math.sin(a)*far,r:60};
+   announce(G.bossAlive?"THE GATE FORCES OPEN - GO!":G.sector>=SECTORS&&G.mode!=="endless"?"THE FINAL GATE IS OPEN - FLY TO IT!"
+    :bossDown&&G.lastBoss?G.lastBoss+" DESTROYED  \u00b7  GATE OPEN - FLY TO IT!":G.gateHeld?"THE GATE OPENS - GO!":"WARP GATE OPEN - FLY TO IT!");SFX.warp()}}}
 function announce(s){G.announce=s;G.announceT=3}
 // "Nearest" leans toward a boss and away from anything running off: a hatchling
 // at 90 px used to take every shot while the Mothership sat at 200.
@@ -909,7 +910,7 @@ function killEnemy(e){if(e.dead)return;e.dead=true;G.kills++;G.score+=e.score*(e
   // every elite on Treasure Day was twenty-five.
   if(e.boss)G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60});
   else if((G.secChests||0)<(mod().chests||1)&&Math.random()<(mod().chests?0.5:0.2)){G.secChests=(G.secChests||0)+1;G.pk.push({k:"chest",x:e.x,y:e.y,r:22,life:60})}
-  if(e.boss){announce(ENEMY[e.type].name+" DESTROYED!");shake=1}}
+  if(e.boss){G.lastBoss=ENEMY[e.type].name;announce(G.lastBoss+" DESTROYED!");shake=1}}
  else if(Math.random()<(e.type==="drifter"?0.06:0.012))dropPickup(e.x,e.y)}
 // Pickups are rationed the way chests are: a dozen a sector used to come out
 // as six repairs, four tractor beams and two or three nukes, which made the
@@ -1908,7 +1909,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
  // when the clock runs out the number gives way to what you are waiting on,
  // which is the gate unless something is sitting on it
- const left=Math.max(0,SECTOR_LEN-G.secT);
+ const left=G.gate?0:Math.max(0,SECTOR_LEN-G.secT);
  // bounded, because "BEAT IT!" is a good deal wider than "2:31" and the level
  // and the kill count are sitting on either side of it
  textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
@@ -1916,6 +1917,14 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  textFit(G.mode==="endless"?"SECTOR "+G.sector+"   ·   ENDLESS   ·   "+G.dif.name:G.mode==="daily"?"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.mod.name:"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.mode==="endless"?"#ff9040":G.mode==="daily"?"#c0a0ff":G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
+ // A gate nine seconds away is off the screen, so an arrow on the edge of
+ // the screen points the way, with the distance under it.
+ if(G.gate&&!G.warp){const dx=(G.gate.x-G.px)*S,dy=(G.gate.y-G.py)*S,hx=W/2-46,hy=H/2-110;
+  if(Math.abs(dx)>hx||Math.abs(dy)>hy){const k=Math.min(hx/Math.abs(dx||1e-6),hy/Math.abs(dy||1e-6)),ax=W/2+dx*k,ay=H/2+dy*k,a=Math.atan2(dy,dx),pulse=0.75+0.25*Math.sin(frameT*6);
+   cx.save();cx.translate(ax,ay);if(FX)glow(0,0,44,"rgba(170,120,255,"+(0.35*pulse).toFixed(2)+")","rgba(120,60,220,0.03)");
+   cx.rotate(a);cx.fillStyle="rgba(210,190,255,"+pulse.toFixed(2)+")";cx.beginPath();cx.moveTo(18,0);cx.lineTo(-10,-13);cx.lineTo(-4,0);cx.lineTo(-10,13);cx.closePath();cx.fill();
+   cx.strokeStyle="rgba(255,255,255,0.8)";cx.lineWidth=1.5;cx.stroke();cx.rotate(-a);
+   text(Math.round(dist(G.px,G.py,G.gate.x,G.gate.y)/10)*10+"m",0,dy>0?-22:30,13,"rgba(220,210,255,0.9)");cx.restore()}}
  // The bottom of the screen, laid out rather than assumed. The tiles used to
  // march left from the edge 44 pixels at a time until they walked over the
  // health bar, which eight of them did. They size themselves to the room they
@@ -2417,7 +2426,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();if(frame
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,WARP,BONUS,get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
