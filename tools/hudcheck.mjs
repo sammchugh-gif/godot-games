@@ -111,7 +111,50 @@ for (const [W, H, tag] of SIZES) {
   await pg.close();
 }
 }
-console.log(bad ? `\n${bad} sizes have a HUD that writes over itself` : '\nboth HUDs keep out of their own way');
+/* ------------------------------------------------- the upgrade cards
+   Twice now a line has walked out through the side of a card on a phone:
+   the font stopped shrinking at a floor and the words kept going. Every
+   line the level-up screen draws is logged with the width it was given,
+   and none of them may be painted wider than its box - nor squeezed so
+   hard to get there that it stops reading. */
+const CARDS = `(() => {
+  const S = window.SW; S.fx = false; S.start(S.SHIPS[0]); const G = S.G;
+  G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
+  /* the worst case the game can offer: a weapon going to max with its long
+     partner name, and a passive that evolves a long-named weapon */
+  for (const k in S.WEAPONS) G.weapons[k] = S.WEAPONS[k].max;
+  G.weapons.missile = 5;
+  for (const k in S.PASSIVES) G.passives[k] = S.PASSIVES[k].max;
+  G.passives.tractor = 1; G.passives.hull = 1;
+  G.lvlQueue = 1; S.sim(0.05);
+  return S.cards.map(c => c.k + ':' + c.l);
+})()`;
+console.log('\nstar-swarm upgrade cards');
+for (const [W, H, tag] of SIZES) {
+  const pg = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
+  const errs = []; pg.on('pageerror', e => errs.push(e.message));
+  await pg.goto('http://127.0.0.1:8341/docs/star-swarm/', { waitUntil: 'load', timeout: 20000 });
+  await sleep(1600);
+  const picked = await pg.evaluate(CARDS);
+  await sleep(300);
+  await pg.evaluate('window.SW.fitLog = []');
+  await sleep(300);                                   /* a frame or two of the real screen */
+  const log = await pg.evaluate('window.SW.fitLog');
+  await pg.evaluate('window.SW.fitLog = null');
+  const over = log.filter(e => e.w > e.maxw + 0.5);
+  const crushed = log.filter(e => e.squeeze < 0.72);
+  const tight = log.reduce((a, e) => e.squeeze < a.squeeze ? e : a, { squeeze: 1, s: 'nothing' });
+  const ok = !over.length && !crushed.length && log.length > 6 && !errs.length;
+  if (!ok) bad++;
+  console.log(`  ${tag.padEnd(15)} ${String(log.length).padStart(2)} lines | ` +
+    `${over.length ? 'OUT OF ITS BOX: ' + over[0].s : 'all inside their boxes'}` +
+    `${crushed.length ? ' | CRUSHED: ' + crushed.map(e => '"' + e.s + '" to ' + Math.round(e.squeeze * 100) + '%').join(', ') : ''}` +
+    ` | tightest "${tight.s}" at ${Math.round(tight.squeeze * 100)}% ${ok ? 'ok' : '<-- FAIL'}` +
+    `${errs.length ? '\n   error: ' + errs[0].slice(0, 90) : ''}`);
+  await pg.close();
+}
+
+console.log(bad ? `\n${bad} sizes have a HUD that writes over itself` : '\nboth HUDs keep out of their own way, and every card line fits its card');
 await browser.close();
 srv.close();
 process.exit(bad ? 1 : 0);

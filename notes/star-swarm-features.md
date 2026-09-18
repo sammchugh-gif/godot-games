@@ -212,6 +212,32 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## Cards that fit, and the hole that is not a gate
+
+`textFit` used to stop shrinking at eleven pixels and then let the line
+run on out of its box, which is how an evolution line walked through the
+side of a phone card. It now squeezes the glyphs to the width it was
+given once shrinking runs out, so a fitted line can never be wider than
+its box; `wrapFit` ellipsises a description that is a line too many and
+puts every line through `textFit`. On a screen narrow enough that three
+cards would be under 150 px wide, the level-up cards become rows across
+the screen instead: icon at the left, name and level on one line, the
+rest under it. `drawPanel` returns where its words end so the cards start
+below them rather than on top, which a phone held sideways needed.
+
+`tools/hudcheck.mjs` renders the level-up screen at four sizes with the
+worst cards the game can offer and reads back every line `textFit` drew:
+none may be painted wider than its box, and none squeezed below 72% of
+its natural width.
+
+The Black Hole weapon and the warp gate are both holes and must not be
+confused. The gate is wide and calm: violet rings, fat orange-lit arms, a
+thin white eye. The weapon is small and violent: matter drawn into
+threads that run cold indigo at the rim and white-hot at the throat,
+wound in by two counter-turning copies of one baked sprite, a hard white
+photon ring with one side beamed bright, a lensing arc behind it, and
+streaks still falling in from outside.
+
 ## The warp
 
 Flying into the gate is a cutscene in three acts, all drawn on the same
