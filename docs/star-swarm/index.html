@@ -6,7 +6,7 @@
 <style>
 html,body{margin:0;padding:0;height:100%;background:#050614;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
-body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
 </style><script>window.__shelfPaused=function(){try{return scene!=="play"}catch(e){return true}};</script><script src="../menu.js" defer></script>
 <script src="../fresh.js" defer></script>
 </head><body><canvas id="c"></canvas>
@@ -33,8 +33,34 @@ const SAFE={t:0,r:0,b:0,l:0};
 function readSafe(){const st=getComputedStyle(safeProbe);
  SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
  SAFE.b=parseFloat(st.paddingBottom)||0;SAFE.l=parseFloat(st.paddingLeft)||0}
-function resize(){readSafe();DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;S=Math.min(H/720,W/1100);if(S<0.55)S=0.55}
-window.addEventListener("resize",resize);window.addEventListener("orientationchange",()=>setTimeout(resize,150));resize();
+// iOS does not reliably tell a page that the screen it has just grew. Hiding
+// the browser's bars, coming back from the app switcher and rotating can all
+// leave the page sized to a viewport that is no longer there, and the game
+// then draws into the top of the screen with a dead band under it. So: the
+// size comes from the visual viewport rather than the layout one, the canvas
+// is given that size in pixels rather than a percentage of something that may
+// itself be wrong, and the whole thing is checked a few times a second in
+// case nothing ever fired.
+function screenSize(){const vv=window.visualViewport;
+ return{w:Math.max(1,Math.round(vv&&vv.width?vv.width:innerWidth)),
+        h:Math.max(1,Math.round(vv&&vv.height?vv.height:innerHeight)),
+        d:Math.min(window.devicePixelRatio||1,2)}}
+function resize(){readSafe();const z=screenSize();DPR=z.d;W=z.w;H=z.h;
+ cv.style.width=W+"px";cv.style.height=H+"px";
+ cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+ S=Math.min(H/720,W/1100);if(S<0.55)S=0.55}
+// and it repairs the canvas itself, not just the numbers, so anything that
+// resets the backing store is put back too
+function sizeWatch(){const z=screenSize();
+ if(z.w!==W||z.h!==H||z.d!==DPR||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))resize()}
+// The event can arrive before the numbers behind it have settled - measured
+// here: a viewport that had already grown still reported its old height to
+// the handler - so every notice is taken twice more on a short delay.
+function reflow(){resize();setTimeout(resize,60);setTimeout(resize,250)}
+window.addEventListener("resize",reflow);window.addEventListener("orientationchange",()=>setTimeout(reflow,150));
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+resize();
 // Six sectors, five minutes each. The warp gate opens near the end of every
 // sector once its boss is dead; flying into it clears the field and starts the
 // next one.
@@ -2505,7 +2531,8 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
 // the checker can halt the loop and step it by hand, so a cutscene can be
 // caught at an exact moment on a machine that renders slowly
 let halted=false;
-function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
+let sizeTick=0;
+function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTick+1)%5)===0)sizeWatch();inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
  // the hangar and the credits have a theme, and it starts the moment audio can
  if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
@@ -2517,7 +2544,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);inputWatch();if(frame
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

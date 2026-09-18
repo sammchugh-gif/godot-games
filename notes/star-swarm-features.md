@@ -212,6 +212,26 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## Filling the screen on a phone
+
+A phone showed the game drawn into the top of the screen with a dead band
+under it: iOS had grown the viewport and the page never heard, so
+everything was laid out for a screen that was no longer there. Three
+changes, all in `resize`:
+
+- the size comes from `visualViewport` when there is one, not the layout
+  viewport, so hidden browser bars are accounted for;
+- the canvas is `position:fixed` and given its size in pixels rather than
+  a percentage of a body that may itself be wrong;
+- every resize notice is taken twice more on a short delay (the event can
+  arrive before the numbers behind it settle - measured, not guessed),
+  and `sizeWatch` re-checks every fifth frame and repairs the canvas if
+  anything, including the backing store, has drifted.
+
+`tools/hudcheck.mjs` proves it: the canvas must cover the visual viewport
+as the page loads, when the screen grows, turned sideways, and after
+something resets the canvas out from under it.
+
 ## Cards that fit, and the hole that is not a gate
 
 `textFit` used to stop shrinking at eleven pixels and then let the line

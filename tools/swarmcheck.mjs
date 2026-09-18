@@ -278,8 +278,12 @@ const part = await pg.evaluate(`(() => {
   S.sim(6); out.later = G.en.filter(e => !e.boss && !e.flee).length; out.straggle = G.en.filter(e => e.flee).length; S.scene = 'title'; return out;
 })()`);
 /* the split is judged the instant the boss lands, before the guns thin the stayers */
-check('most of the swarm parts for the boss', part.boss && part.flee0 >= 40 && part.stay0 >= 3 && part.stay0 <= 18 && part.after <= 16 && part.later <= 20 && part.straggle <= 2,
-  `${part.before} on the field at 180s; boss lands and ${part.flee0} turn to leave while ${part.stay0} stay (about one in six should); ${part.after} still fighting 0.5s in, ${part.later} six seconds later (with its escort) and ${part.straggle} still leaving`);
+/* the rule is a share, not a count, so it is checked as one: counting fled
+   heads failed about once in six runs on ordinary binomial spread */
+const parted = part.flee0 + part.stay0, share = parted ? part.flee0 / parted : 0;
+check('most of the swarm parts for the boss', part.boss && parted >= 30 && share >= 0.7 && share <= 0.97
+  && part.after <= 20 && part.later <= 20 && part.straggle <= 2,
+  `${part.before} on the field at 180s; boss lands and ${part.flee0} of ${parted} turn to leave (${(share * 100).toFixed(0)}%, about five in six should); ${part.after} still fighting 0.5s in, ${part.later} six seconds later (with its escort) and ${part.straggle} still leaving`);
 check('and it parts at 185 seconds, not before', part.bossT != null && part.bossT >= 184 && part.bossT <= 186.2,
   `the boss arrived at ${part.bossT}s into the sector`);
 
@@ -349,7 +353,12 @@ const CHEST = await pg.evaluate(`(() => {
   const farm = (mod) => { S.fx = false; S.mode = 0; S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.inv = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0;
     if (mod) G.mod = mod;
     for (let i = 0; i < 60; i++) { const e = S.spawnEnemy('scout', G.px + 400, G.py, true); e.hp = 1; }
-    S.sim(16); const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* long enough to kill most of them, rocks cleared so none hides */
+    /* run until they are all dead or a chest has dropped, rather than for a
+       fixed sixteen seconds: each elite is a one-in-five roll, so a window
+       that happened to hold only eight kills failed about once in six runs */
+    const want = (mod && mod.chests) || 1;
+    for (let i = 0; i < 160 && G.en.length && G.pk.filter(p => p.k === 'chest').length < want; i++) S.sim(0.5);
+    const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* rocks cleared so none hides */
   out.normal = farm(null); out.treasure = farm(S.DAILY_MODS.find(m => m.id === 'loot'));
   /* and the boss */
   S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0; G.secChests = 1;
