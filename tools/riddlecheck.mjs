@@ -11,17 +11,19 @@
      Sounds The Same  exactly one option is the listed sound-alike
      Hide And Seek    exactly one option is inside the sentence, and the
                       answer is not sitting there as a word of its own
-     Odd One Out      three options are in the category and one is not
-     Which One        one option is in the category and three are not
-     First Letters    exactly one option starts with those letters
-     Rhyme Time       exactly one option rhymes (or three do, for the NOT ones)
      Rhyme Pairs      two words, and the clue does not give the answer away
                       (whether they rhyme is authored, not machine-checked -
                       WHALE and PAIL rhyme and share no letters)
 
+   Four families were dropped for being quizzes rather than riddles - naming
+   the odd one out of a category, naming one that is in it, naming the one
+   that starts with two letters, naming the one that rhymes. They were 57% of
+   the bank and every one of them was obvious. Nothing may bring them back.
+
    Plus the rules that apply to everything: four different options, the right
    one among them exactly once, nothing so long it will not fit on a button,
-   and no two puzzles asking the same thing.
+   no two puzzles asking the same thing, and a fresh game that does not ask
+   the same kind twice running.
 
      PLAYWRIGHT=... node tools/riddlecheck.mjs        */
 
@@ -41,7 +43,7 @@ catch {
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png' };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const WANT = 2000;
+const WANT = 800;
 
 const srv = await new Promise(r => {
   const s = http.createServer((rq, rs) => {
@@ -79,12 +81,6 @@ const note = (fam, why, p) => {
 const compound = new Set(SEED.compound.map(([a, b]) => a + '|' + b));
 const partner = {};
 for (const [a, b] of SEED.homophone) { partner[norm(a)] = norm(b); partner[norm(b)] = norm(a); }
-const rhymeOf = {};
-for (const k of Object.keys(SEED.rhyme)) for (const w of SEED.rhyme[k]) rhymeOf[norm(w)] = k;
-const catOf = {};
-for (const c of Object.keys(SEED.odd)) for (const m of SEED.odd[c]) {
-  const n = norm(m); catOf[n] = catOf[n] ? 'MANY' : c;
-}
 /* The hink-pink answers are a pair of words I wrote down because they rhyme,
    and no letter-matching rule can hear that - WHALE and PAIL rhyme and share
    nothing, MOVE and LOVE share three letters and do not. So this family is
@@ -134,52 +130,6 @@ const RULES = {
     if (new RegExp('\\b' + p.a + '\\b', 'i').test(m[1])) return 'the answer is not hidden, it is just there';
     const also = p.w.filter(x => flat.indexOf(norm(x)) >= 0);
     if (also.length) return 'a wrong answer is in there too: ' + also.join(', ');
-    return null;
-  },
-  'Odd One Out': p => {
-    const m = p.q.match(/NOT a (.+)\?/);
-    if (!m) return 'no category';
-    const c = m[1];
-    if (catOf[norm(p.a)] === c) return 'the odd one out is in the category';
-    const strays = p.w.filter(x => catOf[norm(x)] !== c);
-    if (strays.length) return 'a "wrong" answer is not in the category either: ' + strays.join(', ');
-    return null;
-  },
-  'Which One': p => {
-    const m = p.q.match(/IS a (.+)\?/);
-    if (!m) return 'no category';
-    const c = m[1];
-    if (catOf[norm(p.a)] !== c) return 'the answer is not in the category';
-    const also = p.w.filter(x => catOf[norm(x)] === c);
-    if (also.length) return 'a wrong answer is in the category too: ' + also.join(', ');
-    return null;
-  },
-  'First Letters': p => {
-    const m = p.q.match(/Which (.+) starts with ([A-Z]+)\?/);
-    if (!m) return 'no category or letters';
-    const [, c, pre] = m;
-    if (catOf[norm(p.a)] !== c) return 'the answer is not in the category';
-    if (!norm(p.a).startsWith(pre.toLowerCase())) return 'the answer does not start with those letters';
-    const also = p.w.filter(x => norm(x).startsWith(pre.toLowerCase()));
-    if (also.length) return 'a wrong answer starts with them too: ' + also.join(', ');
-    return null;
-  },
-  'Rhyme Time': p => {
-    const m = p.q.match(/rhymes? with ([A-Z]+)\?/);
-    if (!m) return null;                      /* the hink-pink style, see below */
-    const g = rhymeOf[norm(m[1])];
-    if (!g) return 'the target is not in a rhyme group';
-    const not = /does NOT rhyme/.test(p.q);
-    const match = x => rhymeOf[norm(x)] === g;
-    if (not) {
-      if (match(p.a)) return 'the "odd" one rhymes after all';
-      const strays = p.w.filter(x => !match(x));
-      if (strays.length) return 'a "wrong" answer does not rhyme either: ' + strays.join(', ');
-    } else {
-      if (!match(p.a)) return 'the answer does not rhyme';
-      const also = p.w.filter(match);
-      if (also.length) return 'a wrong answer rhymes too: ' + also.join(', ');
-    }
     return null;
   },
   'Rhyme Pairs': p => {
@@ -241,6 +191,33 @@ if (kinds.length) {
 const enough = BANK.length >= WANT;
 if (!enough) bad++;
 console.log(`\n${BANK.length} puzzles, ${enough ? 'past' : 'SHORT OF'} the ${WANT} asked for`);
+
+/* ------------------------------------------------- the quizzes stay dropped
+   Naming the odd one out of a category, or the one that starts with BA, is a
+   spelling test with four buttons. They were more than half the bank and the
+   whole of the complaint. */
+const GONE = ['Odd One Out', 'Which One', 'First Letters', 'Rhyme Time'];
+const back = GONE.filter(f => byFamily[f]);
+if (back.length) bad++;
+console.log(back.length ? `the quiz families are back: ${back.join(', ')} <-- FAIL`
+  : `no category quizzes, no spelling tests: ${GONE.join(', ')} all stayed out`);
+
+/* ------------------------------------------------------ and a fresh shuffle
+   Two games in a row must not open the same way, and one game must not ask
+   the same kind of puzzle twice running while it has anything else left. */
+const orders = await pg.evaluate(`(() => {
+  const R = window.RD, out = [];
+  for (let n = 0; n < 3; n++) { R.start('quiz', 0); out.push(R.G.order.slice(0, 40).map(i => R.bank[i])); }
+  R.scene = 'title';
+  return out.map(g => ({ q: g.map(p => p.q), f: g.map(p => p.f) }));
+})()`);
+const sameStart = orders[0].q[0] === orders[1].q[0] && orders[1].q[0] === orders[2].q[0];
+const runs = orders.map(g => g.f.filter((f, i) => i && f === g.f[i - 1]).length);
+const shuffled = !sameStart && runs.every(r => r === 0);
+if (!shuffled) bad++;
+console.log(shuffled
+  ? `three games open on three different puzzles, and none asks the same kind twice running`
+  : `SHUFFLE: ${sameStart ? 'three games opened on the same puzzle' : ''} ${runs.some(r => r) ? 'a game asked the same kind twice running (' + runs.join(', ') + ' times)' : ''} <-- FAIL`);
 
 /* ------------------------------------------------ and can a finger play it?
    A bank of perfect puzzles is no use if the buttons are dead. This is a real
