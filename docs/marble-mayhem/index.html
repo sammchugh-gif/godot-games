@@ -34,10 +34,10 @@ function safeRead(){const d=window.__safeProbe;if(!d)return;const c=getComputedS
 // the shelf's exit button owns the top-left corner of every game
 const EXITB=46;
 const HELP1="Planks, curves, bumpers, trampolines, fans, spinners, cannons and portals.";
-const HELP2="Tap a piece to select it, then use \u21ba \u21bb to turn it. Drag it off the board to remove it.";
+const HELP2="Tap a piece to select it, then tap or hold \u21ba \u21bb to turn it. Drag it off the board to remove it.";
 // the landscape hint line needs a strip of its own, or it lands on the goal cup
 const HINTH=26;
-function topH(){return SAFE.t+(W<620?94:56)}
+function topH(){return SAFE.t+(W<620?116:72)}
 function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;safeRead();const top=topH();
  if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w-SAFE.r;tray.y=top;tray.h=H-top-SAFE.b;const aw=W-tray.w-16-SAFE.l-SAFE.r,ah=H-top-8-SAFE.b-HINTH;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
  else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h-SAFE.b;tray.w=W;const aw=W-16-SAFE.l-SAFE.r,ah=H-top-tray.h-8-SAFE.b;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
@@ -52,18 +52,36 @@ window.addEventListener("resize",layout);layout();
 // where there is one, re-anchors to now.
 function audioWake(){audioInit();if(!AC)return;
  if(!AC.__anch){AC.__anch=1;AC.onstatechange=()=>{if(AC.state==="running"&&typeof musicTimer!=="undefined"&&musicTimer)musicNext=AC.currentTime+0.05}}
- if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+ if(AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{});musicStart()}
 for(const ev of ["touchend","pointerup","keydown","mousedown"])window.addEventListener(ev,audioWake);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC)audioWake()});
 window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:typeof musicNext!=="undefined"?musicNext:null,timer:!!(typeof musicTimer!=="undefined"&&musicTimer)}:null;
 window.__audioCtx=()=>AC;
-let AC=null,master=null;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
+let AC=null,master=null,musicOn=store.get("music",true)!==false,musicTimer=null,musicStep=0,musicNext=0;function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=0.45;master.connect(AC.destination)}catch(e){}}
 function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+0.02)}
 let lastPing=0;
 const SFX={click(){tone(1200,900,0.04,"square",0.08)},place(){tone(500,800,0.08,"triangle",0.15)},pick(){tone(700,500,0.06,"triangle",0.1)},
  bounce(sp){const now=performance.now();if(now-lastPing<40)return;lastPing=now;const f=300+Math.min(900,sp*0.8);tone(f,f*0.7,0.06,"sine",Math.min(0.25,0.05+sp/2500))},
  star(){[1047,1319,1568].forEach((f,i)=>tone(f,f,0.1,"triangle",0.18,i*0.07))},goal(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,f,0.16,"square",0.15,i*0.1))},
- lost(){tone(300,120,0.35,"sawtooth",0.15)},cannon(){tone(200,60,0.2,"sawtooth",0.25)},portal(){tone(600,1800,0.2,"sine",0.15)},fan(){},go(){tone(660,990,0.15,"square",0.15)}};
+ ding(){tone(900,1400,0.08,"triangle",0.12)},lost(){tone(300,120,0.35,"sawtooth",0.15)},cannon(){tone(200,60,0.2,"sawtooth",0.25)},portal(){tone(600,1800,0.2,"sine",0.15)},fan(){},go(){tone(660,990,0.15,"square",0.15)}};
+// ---------------------------------------------------------------- music
+// A gentle loop for a building game: triangle lead over a sine bass, C major
+// at 128 BPM, scheduled a beat ahead the way the other games do it. It
+// starts on the first tap and plays on every screen; the switch on the title
+// screen turns it off and remembers that.
+const LEAD=[72,0,76,0,79,0,76,0, 74,0,77,0,81,0,77,0, 76,0,79,0,84,0,79,0, 81,0,79,0,76,74,72,0,
+            72,0,76,79,0,84,0,79, 74,0,77,81,0,86,0,81, 76,0,81,84,0,88,0,84, 86,0,84,0,83,0,79,0];
+const BASS=[48,0,0,48,0,55,0,0, 50,0,0,50,0,57,0,0, 52,0,0,52,0,59,0,0, 53,0,0,53,55,0,55,0,
+            48,0,0,48,0,55,0,0, 50,0,0,50,0,57,0,0, 45,0,0,45,0,52,0,0, 55,0,0,55,0,50,0,55];
+function musicTick(){if(!AC||!musicOn||AC.state!=="running")return;const spb=60/128/2;
+ while(musicNext<AC.currentTime+0.25){const i=musicStep%LEAD.length,t=musicNext,l=LEAD[i],b=BASS[i];
+  if(l){const f=440*Math.pow(2,(l-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="triangle";o.frequency.value=f;g.gain.setValueAtTime(0.05,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*0.95);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb)}
+  if(b){const f=440*Math.pow(2,(b-69)/12);const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0.09,t);g.gain.exponentialRampToValueAtTime(0.001,t+spb*1.8);o.connect(g);g.connect(master);o.start(t);o.stop(t+spb*1.9)}
+  if(i%4===0){const o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(i%8?1400:900,t);g.gain.setValueAtTime(0.03,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.03);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.04)}
+  musicStep++;musicNext+=spb}}
+function musicStart(){if(!AC||musicTimer||!musicOn)return;musicNext=AC.currentTime+0.1;musicStep=0;musicTimer=setInterval(musicTick,100)}
+function musicStop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+function musicToggle(){musicOn=!musicOn;store.set("music",musicOn);if(musicOn){audioInit();musicStart()}else musicStop()}
 // ---------------------------------------------------------------- pieces
 const PIECES={
  plank:{name:"Plank",col:"#c98a4b",len:140,e:0.35},
@@ -87,26 +105,99 @@ function segsOf(p,time){const s=[];const c=Math.cos(p.a),sn=Math.sin(p.a);
 const P=(t,x,y,a,extra)=>Object.assign({t,x,y,a:(a||0)*Math.PI/180,fixed:true},extra||{});
 const LEVELS=[
  {name:"First Drop",spawn:[180, 60],goal:[500, 600],tray:{plank: 1},fixed:[P("plank",390,515,30),P("plank",610,515,-30)],stars:[[330, 400]],sol:[{t:"plank",x:132,y:219,a:0.79}]},
- {name:"Zigzag",spawn:[120, 60],goal:[280, 600],tray:{plank: 3},fixed:[P("plank",170,515,30),P("plank",390,515,-30)],stars:[[300, 280], [380, 480]],sol:[{t:"plank",x:469,y:607,a:-0.26},{t:"plank",x:131,y:149,a:0.52},{t:"plank",x:715,y:198,a:-0.79}]},
- {name:"Bumper Bounce",spawn:[200, 60],goal:[760, 600],tray:{bumper: 1, plank: 1},fixed:[P("plank",240,260,20),P("plank",650,515,30),P("plank",870,515,-30)],stars:[[560, 300]],sol:[{t:"bumper",x:400,y:362,a:0},{t:"plank",x:283,y:346,a:0.79}]},
+ {name:"Zigzag",seed:20264668,spawn:[60,60],goal:[280,600],tray:{plank:1},fixed:[P("plank",170,515,30),P("plank",390,515,-30)],stars:[[60,350]],sol:[{t:"plank",x:71,y:444,a:0.26}]},
+ {name:"Bumper Bounce",seed:20570424,spawn:[200,60],goal:[760,600],tray:{bumper:1,plank:1},fixed:[P("plank",240,260,20),P("plank",650,515,30),P("plank",870,515,-30)],stars:[[572,305]],sol:[{t:"bumper",x:431,y:405,a:0},{t:"plank",x:511,y:193,a:-0.52}]},
  {name:"Big Jump",spawn:[100, 60],goal:[820, 600],tray:{tramp: 1, plank: 1},fixed:[P("plank",120,240,25),P("plank",560,520,90),P("plank",710,515,30),P("plank",930,515,-30)],stars:[[560, 320]],sol:[{t:"tramp",x:248,y:387,a:0.26},{t:"plank",x:853,y:358,a:0}]},
  {name:"Fan Blast",spawn:[150, 60],goal:[760, 600],tray:{fan: 1, plank: 2},fixed:[P("plank",200,300,25),P("plank",420,370,90),P("plank",420,510,90),P("plank",420,650,90),P("plank",650,515,30),P("plank",870,515,-30)],stars:[[420, 220], [600, 400]],sol:[{t:"fan",x:42,y:87,a:1.57},{t:"plank",x:472,y:30,a:0.52},{t:"plank",x:677,y:260,a:-0.26}]},
  {name:"Round the Bend",spawn:[860, 60],goal:[120, 600],tray:{curve: 2, plank: 1},fixed:[P("plank",760,250,-15),P("plank",10,515,30),P("plank",230,515,-30)],stars:[[600, 320], [340, 410]],sol:[{t:"curve",x:401,y:389,a:1.05},{t:"curve",x:787,y:83,a:-0.26},{t:"plank",x:436,y:71,a:0}]},
  {name:"Cannon Shot",spawn:[100, 60],goal:[860, 320],tray:{cannon: 1, plank: 1},fixed:[P("plank",480,400,90),P("plank",480,540,90),P("plank",750,235,30),P("plank",970,235,-30)],stars:[[480, 80]],sol:[{t:"cannon",x:107,y:165,a:-0.52},{t:"plank",x:289,y:269,a:1.31}]},
  {name:"Spin Cycle",spawn:[480, 60],goal:[860, 600],tray:{spinner: 1, plank: 2},fixed:[P("plank",480,280,10),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[640, 380], [760, 500]],sol:[{t:"spinner",x:604,y:456,a:0},{t:"plank",x:852,y:444,a:0.79},{t:"plank",x:68,y:371,a:0.26}]},
  {name:"Portal Hop",spawn:[120, 60],goal:[820, 560],tray:{portal: 1, plank: 2},fixed:[P("plank",700,500,90),P("plank",940,500,90),P("plank",820,400,0),P("plank",710,475,30),P("plank",930,475,-30)],stars:[[300, 400]],sol:[{t:"portal",x:724,y:420,a:0,link:0,half:0},{t:"portal",x:124,y:274,a:0,link:0,half:1},{t:"plank",x:30,y:556,a:-1.05},{t:"plank",x:804,y:444,a:0.52}]},
- {name:"Star Collector",spawn:[480, 60],goal:[480, 600],tray:{plank: 3, curve: 1},fixed:[P("plank",370,515,30),P("plank",590,515,-30)],stars:[[300, 250], [640, 420]],sol:[{t:"plank",x:509,y:162,a:0.26},{t:"plank",x:775,y:463,a:-1.31},{t:"plank",x:152,y:83,a:-1.05},{t:"curve",x:231,y:378,a:-2.36}]},
+ {name:"Star Collector",seed:21353063,spawn:[480,60],goal:[480,600],tray:{plank:1,curve:1},fixed:[P("plank",370,515,30),P("plank",590,515,-30),P("plank",480,370,0)],stars:[[362,222],[347,459]],sol:[{t:"plank",x:345,y:204,a:-1.31},{t:"curve",x:421,y:97,a:6.02}]},
  {name:"Pinball",spawn:[100, 60],goal:[860, 600],tray:{bumper: 3, plank: 2},fixed:[P("plank",160,220,20),P("plank",660,340,-20),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[420, 340], [600, 480]],sol:[{t:"bumper",x:250,y:102,a:0},{t:"bumper",x:377,y:551,a:0},{t:"bumper",x:356,y:200,a:0},{t:"plank",x:866,y:100,a:-0.52},{t:"plank",x:736,y:377,a:0.26}]},
  {name:"Up and Over",spawn:[100, 60],goal:[860, 600],tray:{fan: 2, plank: 2},fixed:[P("plank",500,270,90),P("plank",500,410,90),P("plank",500,550,90),P("plank",500,690,90),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[500, 120], [720, 380]],sol:[{t:"fan",x:48,y:103,a:1.31},{t:"fan",x:193,y:71,a:-0.52},{t:"plank",x:596,y:473,a:2.62},{t:"plank",x:381,y:322,a:1.31}]},
  {name:"Double Cannon",spawn:[480, 60],goal:[480, 600],tray:{cannon: 2, plank: 1},fixed:[P("plank",300,250,0),P("plank",660,250,0),P("plank",480,420,0),P("plank",370,515,30),P("plank",590,515,-30)],stars:[[300, 150], [580, 300]],sol:[{t:"cannon",x:809,y:551,a:-0.79},{t:"cannon",x:320,y:537,a:-1.57},{t:"plank",x:455,y:55,a:0.79}]},
- {name:"Mixer",spawn:[120, 60],goal:[840, 600],tray:{spinner: 2, tramp: 1, plank: 1},fixed:[P("plank",240,220,15),P("plank",730,515,30),P("plank",950,515,-30)],stars:[[480, 300], [700, 450]],sol:[{t:"spinner",x:609,y:372,a:0},{t:"spinner",x:73,y:148,a:0},{t:"tramp",x:363,y:428,a:-0.52},{t:"plank",x:439,y:336,a:0}]},
+ {name:"Mixer",seed:20756365,spawn:[120,60],goal:[840,600],tray:{spinner:1,tramp:1,plank:1},fixed:[P("plank",240,220,15),P("plank",730,515,30),P("plank",950,515,-30)],stars:[[322,220],[636,362]],sol:[{t:"spinner",x:126,y:191,a:0},{t:"tramp",x:666,y:290,a:-0.79},{t:"plank",x:521,y:397,a:0}]},
  {name:"Teleport Tangle",spawn:[100, 60],goal:[860, 600],tray:{portal: 2, plank: 2},fixed:[P("plank",480,120,90),P("plank",480,320,90),P("plank",480,520,90)],stars:[[300, 450], [700, 300]],sol:[{t:"portal",x:167,y:433,a:0,link:0,half:0},{t:"portal",x:826,y:500,a:0,link:0,half:1},{t:"portal",x:90,y:518,a:0,link:1,half:0},{t:"portal",x:803,y:321,a:0,link:1,half:1},{t:"plank",x:84,y:170,a:1.31},{t:"plank",x:336,y:359,a:-1.05}]},
  {name:"Grand Finale",spawn:[100, 60],goal:[860, 600],tray:{plank: 2, curve: 1, bumper: 1, fan: 1, cannon: 1},fixed:[P("plank",480,300,0),P("plank",750,515,30),P("plank",970,515,-30)],stars:[[300, 200], [700, 200], [480, 480]],sol:[{t:"plank",x:287,y:69,a:0.26},{t:"plank",x:164,y:557,a:-1.31},{t:"curve",x:444,y:279,a:0.79},{t:"bumper",x:816,y:153,a:0},{t:"fan",x:273,y:573,a:-1.57},{t:"cannon",x:120,y:138,a:0.26}]},
 ];
+/*GEN-START*/
+// Worlds 2-4 are written by tools/marblelevels.mjs: a seeded layout generator
+// whose every level is solved by search against this file's own physics and
+// kept only when the solution survives a ten-pixel nudge of every piece.
+// Edit the tool, not this block.
+const GEN=[
+ {name:"Ledge Hop",seed:22121093,spawn:[766,60],goal:[210,600],tray:{plank:2},fixed:[P("plank",100,515,30),P("plank",320,515,-30),P("plank",249,197,-15)],stars:[[602,318]],sol:[{t:"plank",x:717,y:293,a:-0.26},{t:"plank",x:506,y:420,a:-0.26}]},
+ {name:"Two Step",seed:22171797,spawn:[780,60],goal:[209,600],tray:{plank:2},fixed:[P("plank",99,515,30),P("plank",319,515,-30),P("plank",228,374,5),P("plank",630,436,10)],stars:[[476,410]],sol:[{t:"plank",x:809,y:294,a:-0.79},{t:"plank",x:506,y:444,a:0.26}]},
+ {name:"Bank Shot",seed:21534992,spawn:[206,60],goal:[555,440],tray:{bumper:1,plank:1},fixed:[P("plank",445,355,30),P("plank",665,355,-30),P("plank",690,175,20),P("plank",365,492,10)],stars:[[470,208]],sol:[{t:"bumper",x:184,y:113,a:0},{t:"plank",x:275,y:139,a:0}]},
+ {name:"Long Slide",seed:22187575,spawn:[702,60],goal:[184,600],tray:{plank:2},fixed:[P("plank",74,515,30),P("plank",294,515,-30),P("plank",514,470,-10),P("plank",766,296,20),P("plank",478,410,90),P("plank",478,550,90),P("plank",478,690,90)],stars:[[462,308]],sol:[{t:"plank",x:711,y:75,a:-0.79},{t:"plank",x:575,y:263,a:-0.53}]},
+ {name:"Bowl Roll",seed:22283873,spawn:[454,60],goal:[126,560],tray:{curve:1,plank:1},fixed:[P("plank",681,308,-10),P("plank",333,200,-20)],stars:[[362,307]],sol:[{t:"curve",x:438,y:216,a:0.26},{t:"plank",x:276,y:436,a:-0.52}]},
+ {name:"Short Bounce",seed:20737267,spawn:[672,60],goal:[185,560],tray:{tramp:1,plank:1},fixed:[P("plank",815,177,-10)],stars:[[303,128]],sol:[{t:"tramp",x:709,y:394,a:-0.26},{t:"plank",x:67,y:296,a:0.52}]},
+ {name:"Corner Pocket",seed:21043023,spawn:[655,60],goal:[135,560],tray:{curve:1,plank:1},fixed:[P("plank",245,475,-30),P("plank",542,479,-10)],stars:[[480,237],[298,285]],sol:[{t:"curve",x:594,y:159,a:0.26},{t:"plank",x:378,y:337,a:0.26}]},
+ {name:"Sky Ramp",seed:21385515,spawn:[766,60],goal:[139,600],tray:{tramp:1,plank:1},fixed:[P("plank",249,515,-30),P("plank",569,479,15)],stars:[[573,236],[282,390]],sol:[{t:"tramp",x:783,y:98,a:-1.05},{t:"plank",x:570,y:324,a:-0.26}]},
+ {name:"Trickle Down",seed:21796000,spawn:[235,60],goal:[815,560],tray:{plank:2},fixed:[P("plank",705,475,30),P("plank",487,384,-20)],stars:[[546,330]],sol:[{t:"plank",x:330,y:318,a:0.26},{t:"plank",x:237,y:202,a:0.79}]},
+ {name:"Half Pipe",seed:20537238,spawn:[164,60],goal:[664,600],tray:{curve:1,plank:1},fixed:[P("plank",554,515,30),P("plank",774,515,-30),P("plank",434,358,-10),P("plank",309,442,15),P("plank",367,410,90),P("plank",367,550,90),P("plank",367,690,90)],stars:[[481,318]],sol:[{t:"curve",x:89,y:185,a:4.97},{t:"plank",x:278,y:295,a:0.52}]},
+ {name:"Ricochet",seed:21995013,spawn:[744,60],goal:[370,500],tray:{bumper:1,plank:1},fixed:[P("plank",260,415,30),P("plank",480,415,-30),P("plank",384,190,-25)],stars:[[481,237]],sol:[{t:"bumper",x:763,y:59,a:0},{t:"plank",x:616,y:369,a:-0.52}]},
+ {name:"Over the Wall",seed:20971932,spawn:[758,60],goal:[276,440],tray:{tramp:1,plank:1},fixed:[P("plank",166,355,30),P("plank",386,355,-30),P("plank",390,197,0),P("plank",558,340,90),P("plank",558,480,90),P("plank",558,620,90)],stars:[[235,152]],sol:[{t:"tramp",x:746,y:383,a:-0.26},{t:"plank",x:262,y:220,a:0.79}]},
+ {name:"Tilt-a-Roll",seed:20963501,spawn:[624,60],goal:[198,600],tray:{plank:2},fixed:[P("plank",88,515,30),P("plank",308,515,-30),P("plank",785,433,25),P("plank",774,210,10)],stars:[[482,287]],sol:[{t:"plank",x:589,y:131,a:-0.26},{t:"plank",x:523,y:461,a:-0.26}]},
+ {name:"Drop Shot",seed:22454036,spawn:[174,60],goal:[630,440],tray:{bumper:1,plank:1},fixed:[P("plank",520,355,30),P("plank",740,355,-30),P("plank",151,192,0),P("plank",309,409,-25),P("plank",356,340,90),P("plank",356,480,90),P("plank",356,620,90)],stars:[[404,157],[469,254]],sol:[{t:"bumper",x:156,y:130,a:0},{t:"plank",x:377,y:250,a:0.52}]},
+ {name:"Switchback",seed:23702353,spawn:[122,60],goal:[661,560],tray:{curve:1,plank:2},fixed:[P("plank",551,475,30),P("plank",771,475,-30),P("plank",811,300,25),P("plank",319,195,5)],stars:[[243,249],[498,362]],sol:[{t:"curve",x:435,y:297,a:1.31},{t:"plank",x:237,y:279,a:0.26},{t:"plank",x:61,y:141,a:0.26}]},
+ {name:"Bumper Alley",seed:20459483,spawn:[492,60],goal:[128,560],tray:{bumper:2,plank:1},fixed:[P("plank",238,475,-30),P("plank",778,245,25),P("plank",305,410,90),P("plank",305,550,90),P("plank",305,690,90)],stars:[[373,215]],sol:[{t:"bumper",x:83,y:302,a:0},{t:"bumper",x:563,y:211,a:0},{t:"plank",x:508,y:229,a:0.26}]},
+ {name:"Updraft",seed:20588549,spawn:[612,60],goal:[188,600],tray:{fan:1,plank:1},fixed:[P("plank",470,287,-20),P("plank",155,345,-15)],stars:[[559,346],[392,449]],sol:[{t:"fan",x:732,y:189,a:4.45},{t:"plank",x:566,y:460,a:-0.26}]},
+ {name:"Gust Front",seed:20580142,spawn:[348,60],goal:[790,600],tray:{fan:1,plank:1},fixed:[P("plank",680,515,30),P("plank",787,301,15),P("plank",249,303,15),P("plank",561,200,90),P("plank",561,60,90),P("plank",561,480,90),P("plank",561,620,90)],stars:[[422,232],[627,365]],sol:[{t:"fan",x:544,y:437,a:0.26},{t:"plank",x:389,y:244,a:0.26}]},
+ {name:"Twister",seed:22619902,spawn:[112,60],goal:[496,600],tray:{spinner:1,plank:1},fixed:[P("plank",386,515,30),P("plank",606,515,-30),P("plank",677,248,-25),P("plank",292,60,90),P("plank",292,340,90),P("plank",292,480,90),P("plank",292,620,90),P("plank",496,370,0)],stars:[[277,200],[347,299]],sol:[{t:"spinner",x:129,y:154,a:0},{t:"plank",x:523,y:384,a:0.78}]},
+ {name:"Cannonball Run",seed:19993246,spawn:[509,60],goal:[123,600],tray:{cannon:1,plank:1},fixed:[P("plank",233,515,-30),P("plank",659,375,-15),P("plank",308,279,-25),P("plank",307,60,90),P("plank",307,340,90),P("plank",307,480,90),P("plank",307,620,90)],stars:[[356,195],[94,159]],sol:[{t:"cannon",x:514,y:330,a:3.67},{t:"plank",x:427,y:293,a:0.79}]},
+ {name:"Whirlpool",seed:21797976,spawn:[636,60],goal:[163,560],tray:{spinner:1,plank:2},fixed:[P("plank",273,475,-30),P("plank",288,263,-15),P("plank",670,461,0),P("plank",461,340,90),P("plank",461,480,90),P("plank",461,620,90),P("plank",163,330,0)],stars:[[495,221],[384,271]],sol:[{t:"spinner",x:690,y:206,a:0},{t:"plank",x:362,y:375,a:-0.79},{t:"plank",x:522,y:237,a:-0.26}]},
+ {name:"Crosswind",seed:20428060,spawn:[750,60],goal:[324,560],tray:{fan:1,plank:1},fixed:[P("plank",608,177,-25),P("plank",434,333,-5)],stars:[[737,300],[593,337]],sol:[{t:"fan",x:705,y:307,a:4.45},{t:"plank",x:769,y:323,a:-0.26}]},
+ {name:"Blast Off",seed:21294197,spawn:[561,60],goal:[113,600],tray:{cannon:1,plank:1},fixed:[P("plank",827,462,5),P("plank",356,270,90),P("plank",356,410,90),P("plank",356,550,90),P("plank",356,690,90)],stars:[[561,268],[238,158]],sol:[{t:"cannon",x:634,y:337,a:3.93},{t:"plank",x:548,y:60,a:1.05}]},
+ {name:"Vortex",seed:22333056,spawn:[338,60],goal:[741,500],tray:{spinner:1,plank:1},fixed:[P("plank",631,415,30),P("plank",851,415,-30),P("plank",171,249,-25),P("plank",587,270,90),P("plank",587,410,90),P("plank",587,550,90),P("plank",587,690,90)],stars:[[411,235],[567,343]],sol:[{t:"spinner",x:551,y:394,a:0},{t:"plank",x:370,y:244,a:0.26}]},
+ {name:"Air Lift",seed:20577000,spawn:[369,60],goal:[835,600],tray:{fan:1,plank:1},fixed:[P("plank",725,515,30),P("plank",469,418,-5),P("plank",549,277,-10),P("plank",132,325,-5),P("plank",551,200,90),P("plank",551,60,90),P("plank",551,480,90),P("plank",551,620,90)],stars:[[469,337],[608,375]],sol:[{t:"fan",x:416,y:72,a:2.88},{t:"plank",x:389,y:341,a:0.52}]},
+ {name:"Loop the Loop",seed:20149645,spawn:[191,60],goal:[660,600],tray:{curve:1,plank:1},fixed:[P("plank",122,319,20)],stars:[[273,270],[426,423]],sol:[{t:"curve",x:110,y:269,a:5.24},{t:"plank",x:321,y:431,a:0.26}]},
+ {name:"Spin Doctor",seed:21927904,spawn:[646,60],goal:[193,600],tray:{spinner:1,bumper:1,plank:1},fixed:[P("plank",83,515,30),P("plank",303,515,-30),P("plank",680,299,-15),P("plank",329,279,-25),P("plank",147,331,20),P("plank",421,130,90),P("plank",421,410,90),P("plank",421,550,90),P("plank",421,690,90)],stars:[[427,291]],sol:[{t:"spinner",x:668,y:39,a:0},{t:"bumper",x:359,y:546,a:0},{t:"plank",x:438,y:332,a:0}]},
+ {name:"Slingshot",seed:21814744,spawn:[159,60],goal:[665,500],tray:{tramp:1,bumper:1},fixed:[P("plank",555,415,30),P("plank",775,415,-30),P("plank",797,254,0),P("plank",317,248,-10),P("plank",324,60,90),P("plank",324,340,90),P("plank",324,480,90),P("plank",324,620,90)],stars:[[396,193]],sol:[{t:"tramp",x:166,y:131,a:1.05},{t:"bumper",x:243,y:253,a:0}]},
+ {name:"Tail Wind",seed:20058688,spawn:[374,60],goal:[821,440],tray:{fan:1,curve:1},fixed:[P("plank",711,355,30),P("plank",330,495,-20),P("plank",482,365,20),P("plank",302,267,-5)],stars:[[626,123]],sol:[{t:"fan",x:375,y:156,a:0.26},{t:"curve",x:524,y:203,a:4.45}]},
+ {name:"Tumble Dryer",seed:20992810,spawn:[155,60],goal:[617,600],tray:{spinner:1,tramp:1},fixed:[P("plank",507,515,30),P("plank",727,515,-30),P("plank",519,237,20),P("plank",461,270,90),P("plank",461,410,90),P("plank",461,550,90),P("plank",461,690,90)],stars:[[648,266],[536,223]],sol:[{t:"spinner",x:706,y:270,a:0},{t:"tramp",x:141,y:276,a:0.26}]},
+ {name:"Fire and Fall",seed:20175091,spawn:[632,60],goal:[159,500],tray:{cannon:1,curve:1},fixed:[P("plank",286,274,-25),P("plank",368,60,90),P("plank",368,340,90),P("plank",368,480,90),P("plank",368,620,90)],stars:[[402,177],[139,159]],sol:[{t:"cannon",x:544,y:245,a:3.67},{t:"curve",x:675,y:192,a:4.19}]},
+ {name:"Hurricane",seed:20376118,spawn:[747,60],goal:[217,600],tray:{fan:1,spinner:1,plank:1},fixed:[P("plank",107,515,30),P("plank",327,515,-30),P("plank",681,470,-25),P("plank",532,253,-10),P("plank",470,270,90),P("plank",470,410,90),P("plank",470,550,90),P("plank",470,690,90)],stars:[[196,304],[131,415]],sol:[{t:"fan",x:826,y:145,a:5.24},{t:"spinner",x:802,y:291,a:0},{t:"plank",x:572,y:203,a:0.26}]},
+ {name:"Wormhole",seed:21447745,spawn:[180,60],goal:[757,600],tray:{portal:1,plank:1},fixed:[P("plank",647,515,30),P("plank",867,515,-30),P("plank",776,310,20),P("plank",476,471,5),P("plank",352,410,90),P("plank",352,550,90),P("plank",352,690,90),P("plank",757,370,0)],stars:[[454,120],[535,232]],sol:[{t:"portal",x:447,y:51,a:0,link:0,half:0},{t:"portal",x:175,y:294,a:0,link:0,half:1},{t:"plank",x:453,y:160,a:1.05}]},
+ {name:"Chain Reaction",seed:21648668,spawn:[599,60],goal:[150,600],tray:{bumper:1,spinner:1,plank:1},fixed:[P("plank",260,515,-30),P("plank",784,365,-5),P("plank",402,194,5),P("plank",648,264,5)],stars:[[455,255],[265,467]],sol:[{t:"bumper",x:839,y:236,a:0},{t:"spinner",x:225,y:463,a:0},{t:"plank",x:554,y:215,a:-0.52}]},
+ {name:"Double Trouble",seed:20128413,spawn:[214,60],goal:[696,560],tray:{cannon:1,plank:2},fixed:[P("plank",463,330,-25),P("plank",818,392,15),P("plank",429,130,90),P("plank",429,410,90),P("plank",429,550,90),P("plank",429,690,90)],stars:[[472,302],[597,209]],sol:[{t:"cannon",x:227,y:205,a:0.26},{t:"plank",x:684,y:302,a:1.31},{t:"plank",x:595,y:186,a:0.52}]},
+ {name:"Warp Speed",seed:20224711,spawn:[638,60],goal:[162,600],tray:{portal:1,cannon:1},fixed:[P("plank",272,515,-30),P("plank",702,173,15),P("plank",423,304,0),P("plank",568,498,15),P("plank",424,200,90),P("plank",424,60,90),P("plank",424,480,90),P("plank",424,620,90)],stars:[[82,300]],sol:[{t:"portal",x:658,y:136,a:0,link:0,half:0},{t:"portal",x:268,y:226,a:0,link:0,half:1},{t:"cannon",x:252,y:238,a:2.88}]},
+ {name:"Pinball Wizard",seed:22448357,spawn:[526,60],goal:[105,560],tray:{bumper:2,plank:1},fixed:[P("plank",215,475,-30),P("plank",445,369,25),P("plank",653,435,-5),P("plank",833,285,-15),P("plank",304,200,90),P("plank",304,60,90),P("plank",304,480,90),P("plank",304,620,90),P("plank",105,330,0)],stars:[[462,269],[364,325],[249,385]],sol:[{t:"bumper",x:567,y:368,a:0},{t:"bumper",x:652,y:248,a:0},{t:"plank",x:489,y:305,a:-0.26}]},
+ {name:"The Gauntlet",seed:20977680,spawn:[277,60],goal:[760,440],tray:{fan:1,bumper:1,plank:1},fixed:[P("plank",650,355,30),P("plank",870,355,-30),P("plank",336,422,0),P("plank",428,287,0),P("plank",539,200,90),P("plank",539,60,90),P("plank",539,480,90),P("plank",539,620,90)],stars:[[463,268],[598,283],[820,342]],sol:[{t:"fan",x:408,y:375,a:1.05},{t:"bumper",x:823,y:466,a:0},{t:"plank",x:256,y:233,a:0.52}]},
+ {name:"Clockwork",seed:20164185,spawn:[293,60],goal:[724,500],tray:{spinner:1,plank:1},fixed:[P("plank",614,415,30),P("plank",834,415,-30),P("plank",666,191,-10),P("plank",421,393,-10),P("plank",532,60,90),P("plank",532,340,90),P("plank",532,480,90),P("plank",532,620,90)],stars:[[445,180],[617,255]],sol:[{t:"spinner",x:311,y:136,a:0},{t:"plank",x:465,y:257,a:0}]},
+ {name:"Triple Jump",seed:20574670,spawn:[842,60],goal:[100,600],tray:{tramp:2},fixed:[P("plank",668,440,0),P("plank",648,254,-25)],stars:[[750,334],[410,460]],sol:[{t:"tramp",x:473,y:520,a:0},{t:"tramp",x:835,y:423,a:0.52}]},
+ {name:"Thread the Needle",seed:20599007,spawn:[622,60],goal:[176,600],tray:{portal:1,plank:1},fixed:[P("plank",286,515,-30),P("plank",479,274,25),P("plank",818,176,-5),P("plank",820,341,10),P("plank",328,340,90),P("plank",328,480,90),P("plank",328,620,90)],stars:[[622,223],[258,435]],sol:[{t:"portal",x:598,y:416,a:0,link:0,half:0},{t:"portal",x:311,y:365,a:0,link:0,half:1},{t:"plank",x:648,y:372,a:-1.05}]},
+ {name:"Mission Control",seed:21742459,spawn:[284,60],goal:[724,600],tray:{cannon:1,fan:1,plank:1},fixed:[P("plank",614,515,30),P("plank",834,515,-30),P("plank",175,329,15),P("plank",328,225,15),P("plank",549,188,0),P("plank",527,60,90),P("plank",527,340,90),P("plank",527,480,90),P("plank",527,620,90),P("plank",724,370,0)],stars:[[441,259],[559,222]],sol:[{t:"cannon",x:302,y:388,a:0},{t:"fan",x:463,y:366,a:0.26},{t:"plank",x:542,y:463,a:-1.31}]},
+ {name:"Perpetual Motion",seed:21530995,spawn:[150,60],goal:[648,440],tray:{spinner:1,curve:1},fixed:[P("plank",538,355,30),P("plank",758,355,-30),P("plank",166,487,-5),P("plank",402,257,20),P("plank",336,60,90),P("plank",336,340,90),P("plank",336,480,90),P("plank",336,620,90)],stars:[[225,175],[512,282]],sol:[{t:"spinner",x:199,y:305,a:0},{t:"curve",x:188,y:124,a:3.67}]},
+ {name:"Big Bang",seed:23826602,spawn:[787,60],goal:[311,600],tray:{cannon:1,bumper:1,plank:2},fixed:[P("plank",201,515,30),P("plank",421,515,-30),P("plank",302,182,-25),P("plank",758,474,0),P("plank",473,60,90),P("plank",473,340,90),P("plank",473,480,90),P("plank",473,620,90)],stars:[[425,241],[282,331]],sol:[{t:"cannon",x:781,y:105,a:2.88},{t:"bumper",x:414,y:400,a:0},{t:"plank",x:65,y:544,a:-1.31},{t:"plank",x:188,y:297,a:-1.57}]},
+ {name:"The Works",seed:21965817,spawn:[137,60],goal:[820,560],tray:{fan:1,spinner:1,cannon:1},fixed:[P("plank",640,301,-20),P("plank",360,342,5),P("plank",686,476,-10),P("plank",421,60,90),P("plank",421,340,90),P("plank",421,480,90),P("plank",421,620,90),P("plank",820,330,0)],stars:[[533,325],[776,390]],sol:[{t:"fan",x:747,y:332,a:0.52},{t:"spinner",x:267,y:307,a:0},{t:"cannon",x:118,y:91,a:0.26}]},
+ {name:"Marble Madness",seed:20817519,spawn:[651,60],goal:[109,600],tray:{portal:1,bumper:1,plank:1},fixed:[P("plank",631,390,20),P("plank",352,295,20),P("plank",261,130,90),P("plank",261,410,90),P("plank",261,550,90),P("plank",261,690,90)],stars:[[651,350],[241,433]],sol:[{t:"portal",x:138,y:421,a:0,link:0,half:0},{t:"portal",x:683,y:368,a:0,link:0,half:1},{t:"bumper",x:614,y:506,a:0},{t:"plank",x:220,y:505,a:-0.79}]},
+ {name:"Master Builder",seed:22798939,spawn:[203,60],goal:[834,600],tray:{curve:1,tramp:1,cannon:1},fixed:[P("plank",724,515,30),P("plank",366,441,-25),P("plank",340,219,15),P("plank",679,306,25)],stars:[[402,258],[554,319],[705,416]],sol:[{t:"curve",x:349,y:462,a:3.66},{t:"tramp",x:678,y:172,a:1.05},{t:"cannon",x:187,y:232,a:6.28}]},
+ {name:"The Big Finish",seed:20728696,spawn:[404,60],goal:[834,500],tray:{portal:1,fan:1,cannon:1},fixed:[P("plank",657,427,0),P("plank",340,491,0),P("plank",384,269,0),P("plank",645,60,90),P("plank",645,340,90),P("plank",645,480,90),P("plank",645,620,90)],stars:[[596,122],[758,382]],sol:[{t:"portal",x:694,y:257,a:0,link:0,half:0},{t:"portal",x:754,y:310,a:0,link:0,half:1},{t:"fan",x:257,y:212,a:0.79},{t:"cannon",x:640,y:250,a:0.79}]},
+];
+/*GEN-END*/
+LEVELS.push(...GEN);
+const WORLDS=["First Rolls","Rolling On","Wind and Fire","Grand Machines"],WN=16;let worldIdx=0;
 // ---------------------------------------------------------------- state
-let hintOn=false,misses=0,trayDraw=false;
+let hintOn=false,misses=0,trayDraw=false,clearArm=0,bestFlash=0,held=null;
+// the sandbox keeps score: the longest a marble has stayed moving, per slot
+const NSAND=6,runBest=store.get("runbest",[]);while(runBest.length<NSAND)runBest.push(0);
+const MCOLS=["#ff5a5a","#5ad0ff","#7fff6a","#ffd05a","#d07aff"],MAXM=30;
 let scene="title",mode="puzzle",levelIdx=0,pieces=[],marbles=[],running=false,simT=0,won=false,lost=0,starsGot=[],trayCount={},sel=null,drag=null,parts=[],trail=[],resultT=0,cannonCd=new Map(),portalCd=new Map(),msg="",msgT=0,frameT=0,tPrev=0;
-const progress=store.get("progress",{}),sandbox=store.get("sandbox",{slots:[null,null,null]});let sandboxSlot=0;
+const progress=store.get("progress",{}),sandbox=store.get("sandbox",{slots:[]});let sandboxSlot=0;
+while(sandbox.slots.length<NSAND)sandbox.slots.push(null);
+// Every marble enters through the hopper, and the hopper is the child's to
+// place: marbles used to come back at a random point along the top, so a
+// machine built on the left got its second marble on the right.
+const hopper=store.get("hopper",[]);while(hopper.length<NSAND)hopper.push(200);
+function hopX(){return hopper[sandboxSlot]||200}
+// ...and leaves through a cup at the bottom, also the child's to place. A
+// marble that lands in it is counted and goes back round through the hopper.
+const cup=store.get("cup",[]);while(cup.length<NSAND)cup.push(760);
+const caughtBest=store.get("caught",[]);while(caughtBest.length<NSAND)caughtBest.push(0);
+let caught=0;
+function cupX(){return cup[sandboxSlot]||760}
 let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb,opt:opt||{}})}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 function textW(s,size){cx.font="bold "+size+"px sans-serif";return cx.measureText(s).width}
@@ -133,16 +224,28 @@ function wrapFit(s,x,y,size,color,maxw,maxLines,lineH,align){
 function text(s,x,y,size,color,align,noStroke){cx.font="bold "+size+"px sans-serif";cx.textAlign=align||"center";cx.textBaseline="middle";if(!noStroke){cx.lineWidth=Math.max(3,size/7);cx.strokeStyle="rgba(0,0,0,0.6)";cx.lineJoin="round";cx.strokeText(s,x,y)}cx.fillStyle=color||"#fff";cx.fillText(s,x,y)}
 function drawButtons(){for(const b of buttons){const o=b.opt;rr(b.x,b.y,b.w,b.h,12);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=2.5;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();text(b.label,b.x+b.w/2,b.y+b.h/2,o.size||20,o.color||"#fff","center",true)}}
 function level(){return LEVELS[levelIdx]}
-function loadLevel(i){levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
-function loadSandbox(slot){slot=(slot|0)||0;mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
+// One piece of the answer per three misses, in the order the search wrote
+// them. The whole layout used to appear at once, which finishes the level
+// for the child instead of getting them unstuck.
+function hintPieces(){const s=level().sol||[];return s.slice(0,Math.min(s.length,Math.floor(misses/3)))}
+function loadLevel(i){resetRun();levelIdx=i;mode="puzzle";hintOn=false;misses=0;const L=LEVELS[i];pieces=L.fixed.map(p=>Object.assign({},p));trayCount=Object.assign({},L.tray);resetRun();scene="play"}
+function loadSandbox(slot){slot=(slot|0)||0;resetRun();mode="sandbox";sandboxSlot=slot;const saved=sandbox.slots[slot];pieces=saved?saved.map(p=>Object.assign({},p)):[];trayCount={};for(const k of ORDER)trayCount[k]=99;resetRun();scene="play"}
 function saveSandbox(){if(mode!=="sandbox")return;sandbox.slots[sandboxSlot]=pieces.filter(p=>!p.fixed).map(p=>({t:p.t,x:p.x,y:p.y,a:p.a,link:p.link}));store.set("sandbox",sandbox)}
-function resetRun(){running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
+function resetRun(){if(mode==="sandbox"){for(const m of marbles)endRun(m);caught=0}running=false;won=false;lost=0;simT=0;marbles=[];trail=[];parts=[];resultT=0;cannonCd.clear();portalCd.clear();const L=mode==="puzzle"?level():null;starsGot=L?L.stars.map(()=>false):[];sel=null}
 function spawnMarbles(){marbles=[];if(mode==="puzzle"){const L=level();marbles.push({x:L.spawn[0],y:L.spawn[1],vx:0,vy:0,r:12,col:"#ff5a5a",alive:true})}
- else{const cols=["#ff5a5a","#5ad0ff","#7fff6a","#ffd05a","#d07aff"];for(let i=0;i<5;i++)marbles.push({x:120+i*40,y:40,vx:0,vy:0,r:12,col:cols[i],alive:true,delay:i*0.5})}}
+ else{for(let i=0;i<5;i++)marbles.push({x:hopX()+rnd(-18,18),y:-14,vx:0,vy:0,r:12,col:MCOLS[i],alive:true,delay:i*0.4,run:0,still:0})}}
 function go(){if(running){resetRun();return}running=true;simT=0;won=false;lost=0;spawnMarbles();SFX.go();sel=null}
+// Marble rain: hold the button and marbles pour from the hopper, up to a
+// board's worth. It is the most repeated thing anyone does with a marble toy.
+function rain(){if(mode!=="sandbox")return;if(!running)go();if(marbles.filter(m=>m.alive).length>=MAXM)return;
+ marbles.push({x:hopX()+rnd(-18,18),y:-14,vx:rnd(-40,40),vy:0,r:12,col:MCOLS[marbles.length%MCOLS.length],alive:true,run:0,still:0});SFX.pick()}
+// A run is how long a marble keeps moving. It ends when the marble drops off
+// the board or settles for two seconds; a marble parked in a bowl for ever
+// would otherwise hold the record.
+function endRun(m){if(m.run>runBest[sandboxSlot]+0.05){runBest[sandboxSlot]=Math.round(m.run*10)/10;store.set("runbest",runBest);if(m.run>=2){bestFlash=2;SFX.star()}}m.run=0;m.still=0}
 // ---------------------------------------------------------------- physics
 function cupSegs(g){const e=0.25,th=4;return[{ax:g[0]-44,ay:g[1]-36,bx:g[0]-30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]+44,ay:g[1]-36,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}},{ax:g[0]-30,ay:g[1]+20,bx:g[0]+30,by:g[1]+20,e,th,piece:{t:"cup"}}]}
-function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segsOf(p,simT));if(mode==="puzzle")segs.push(...cupSegs(level().goal));
+function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segsOf(p,simT));if(mode==="puzzle")segs.push(...cupSegs(level().goal));else segs.push(...cupSegs([cupX(),600]));
  for(const m of marbles){if(!m.alive)continue;if(m.delay>0){m.delay-=dt;continue}
   m.vy+=900*dt;
   // fans
@@ -166,10 +269,12 @@ function step(dt){simT+=dt;const segs=[];for(const p of pieces)segs.push(...segs
    else if(p.t==="portal"){const d=dist(m.x,m.y,p.x,p.y);const cd=portalCd.get(m)||0;if(d<PIECES.portal.r&&simT>cd){const other=pieces.find(q=>q!==p&&q.t==="portal"&&q.link===p.link);if(other){portalCd.set(m,simT+0.5);m.x=other.x;m.y=other.y;SFX.portal();for(let i=0;i<8;i++)parts.push({x:other.x,y:other.y,vx:rnd(-150,150),vy:rnd(-150,150),life:0.4,col:"#ffd080",r:4})}}}}
   if(mode==="puzzle"){const L=level();L.stars.forEach((s,i)=>{if(!starsGot[i]&&dist(m.x,m.y,s[0],s[1])<m.r+16){starsGot[i]=true;SFX.star();for(let k=0;k<10;k++)parts.push({x:s[0],y:s[1],vx:rnd(-150,150),vy:rnd(-150,150),life:0.5,col:"#ffe060",r:4})}});
    if(!won&&Math.abs(m.x-L.goal[0])<30&&m.y>L.goal[1]-14&&m.y<L.goal[1]+24){winLevel(m)}}
+  else if(mode==="sandbox"){const gx=cupX();if(Math.abs(m.x-gx)<30&&m.y>586&&m.y<624){caught++;if(caught>caughtBest[sandboxSlot]){caughtBest[sandboxSlot]=caught;store.set("caught",caughtBest)}SFX.ding();for(let k=0;k<10;k++)parts.push({x:m.x,y:m.y,vx:rnd(-150,150),vy:rnd(-250,-50),life:0.5,col:"#8dff5a",r:4});endRun(m);m.x=hopX()+rnd(-18,18);m.y=-14;m.vx=0;m.vy=0}}
   // walls
   if(m.x<m.r){m.x=m.r;m.vx=Math.abs(m.vx)*0.5}if(m.x>BW-m.r){m.x=BW-m.r;m.vx=-Math.abs(m.vx)*0.5}if(m.y<m.r){m.y=m.r;m.vy=Math.abs(m.vy)*0.5}
-  if(m.y>BH+40){m.alive=false;if(mode==="puzzle"&&!won){lost=1;resultT=1.2;misses++;SFX.lost()}else if(mode==="sandbox"){m.x=120+Math.random()*700;m.y=-20;m.vx=0;m.vy=0;m.alive=true}}
+  if(m.y>BH+40){m.alive=false;if(mode==="puzzle"&&!won){lost=1;resultT=1.2;misses++;SFX.lost()}else if(mode==="sandbox"){endRun(m);m.x=hopX()+rnd(-18,18);m.y=-14;m.vx=0;m.vy=0;m.alive=true}}
   const sp=Math.hypot(m.vx,m.vy);if(sp>1600){m.vx*=1600/sp;m.vy*=1600/sp}
+  if(mode==="sandbox"&&m.alive){if(sp>25){m.run=(m.run||0)+dt;m.still=0}else if((m.still=(m.still||0)+dt)>2)endRun(m)}
   if(Math.floor(simT*60)%2===0)trail.push({x:m.x,y:m.y,life:0.5,col:m.col})}
  // marble vs marble
  for(let i=0;i<marbles.length;i++)for(let j=i+1;j<marbles.length;j++){const a=marbles[i],b=marbles[j];if(!a.alive||!b.alive)continue;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||0.001,R=a.r+b.r;if(d<R){const nx=dx/d,ny=dy/d,push=(R-d)/2;a.x-=nx*push;a.y-=ny*push;b.x+=nx*push;b.y+=ny*push;const va=a.vx*nx+a.vy*ny,vb=b.vx*nx+b.vy*ny;if(va>vb){const dv=(va-vb)*0.9;a.vx-=nx*dv;a.vy-=ny*dv;b.vx+=nx*dv;b.vy+=ny*dv}}}
@@ -186,20 +291,31 @@ function trayItems(){const items=[];const keys=ORDER.filter(k=>mode==="sandbox"|
  if(tray.vertical){const cell=Math.min(78,(tray.h-20)/n);keys.forEach((k,i)=>items.push({k,cw:tray.w-14,x:tray.x+tray.w/2,y:tray.y+16+cell*i+cell/2,sz:Math.min(cell-8,tray.w-30)}))}
  else{const cell=Math.min(110,(tray.w-20)/n);keys.forEach((k,i)=>items.push({k,cw:cell-3,x:tray.x+10+cell*i+cell/2+(tray.w-20-cell*n)/2,y:tray.y+tray.h/2,sz:Math.min(cell-8,tray.h-30)}))}
  return items}
-function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
+// A finger is not a point. A tap up to SLOP px outside a button still counts,
+// and goes to the nearest one, so the gap between two controls is not a hole.
+const SLOP=10;
+function btnAt(p){let best=null,bd=1e9;for(const b of buttons){const dx=Math.max(b.x-p.x,0,p.x-b.x-b.w),dy=Math.max(b.y-p.y,0,p.y-b.y-b.h);const d=Math.hypot(dx,dy);if(d<=SLOP&&d<bd){bd=d;best=b}}return best}
+function uiTap(p){const b=btnAt(p);if(!b)return false;SFX.click();b.cb();if(b.opt.repeat)held={b,next:performance.now()+(b.opt.first==null?400:b.opt.first)};return true}
 let pointerId=null;
-cv.addEventListener("pointerdown",e=>{audioInit();if(pointerId!==null)return;const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;if(scene!=="play")return;pointerId=e.pointerId;
+// Buttons come before the one-finger gate: a thumb resting on the tray used
+// to count as a drag and every tap on GO after it was thrown away.
+cv.addEventListener("pointerdown",e=>{audioInit();const p={x:e.clientX,y:e.clientY};if(uiTap(p))return;if(pointerId!==null)return;if(scene!=="play")return;pointerId=e.pointerId;
  for(const it of trayItems()){if(dist(p.x,p.y,it.x,it.y)<it.sz/2+8&&(trayCount[it.k]||0)>0){const bp=toBoard(p.x,p.y);const np={t:it.k,x:bp.x,y:bp.y,a:0,fixed:false,fromTray:true};if(it.k==="portal"){const n=pieces.filter(q=>q.t==="portal").length;np.link=Math.floor(n/2);np.half=n%2}drag={p:np,ox:0,oy:0};SFX.pick();sel=null;return}}
- const bp=toBoard(p.x,p.y);const hit=pieceAt(bp);if(hit&&!running){drag={p:hit,ox:hit.x-bp.x,oy:hit.y-bp.y};sel=hit;SFX.pick()}else{sel=null;pointerId=null}});
-cv.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId||!drag)return;const bp=toBoard(e.clientX,e.clientY);drag.p.x=bp.x+drag.ox;drag.p.y=bp.y+drag.oy;drag.screen={x:e.clientX,y:e.clientY}});
-function pointerUp(e){if(e.pointerId!==pointerId)return;pointerId=null;if(!drag)return;const p=drag.p;const bp=toBoard(e.clientX,e.clientY);
+ const bp=toBoard(p.x,p.y);
+ if(mode==="sandbox"&&bp.y<70&&Math.abs(bp.x-hopX())<48){drag={hopper:true};sel=null;SFX.pick();return}
+ const hit=pieceAt(bp);if(hit&&!running){drag={p:hit,ox:hit.x-bp.x,oy:hit.y-bp.y};sel=hit;SFX.pick()}
+ else if(mode==="sandbox"&&bp.y>540&&Math.abs(bp.x-cupX())<64){drag={cup:true};sel=null;SFX.pick()}
+ else{sel=null;pointerId=null}});
+cv.addEventListener("pointermove",e=>{if(e.pointerId!==pointerId||!drag)return;const bp=toBoard(e.clientX,e.clientY);if(drag.hopper){hopper[sandboxSlot]=clamp(bp.x,50,BW-50);return}if(drag.cup){cup[sandboxSlot]=clamp(bp.x,60,BW-60);return}drag.p.x=bp.x+drag.ox;drag.p.y=bp.y+drag.oy;drag.screen={x:e.clientX,y:e.clientY}});
+function pointerUp(e){if(e.pointerId!==pointerId)return;pointerId=null;if(!drag)return;if(drag.hopper){drag=null;store.set("hopper",hopper);SFX.place();return}if(drag.cup){drag=null;store.set("cup",cup);SFX.place();return}const p=drag.p;const bp=toBoard(e.clientX,e.clientY);
  if(p.fromTray){if(inBoard(bp)){p.fromTray=false;p.x=clamp(p.x,10,BW-10);p.y=clamp(p.y,10,BH-10);pieces.push(p);trayCount[p.t]=(trayCount[p.t]||0)-1;sel=p;SFX.place();
   if(p.t==="portal"&&p.half===0){const b=Object.assign({},p,{x:clamp(p.x+160,10,BW-10),half:1});pieces.push(b);trayCount.portal=Math.max(0,trayCount.portal);}}
   }else{if(!inBoard(bp)){removePiece(p);sel=null}else{p.x=clamp(p.x,10,BW-10);p.y=clamp(p.y,10,BH-10);SFX.place()}}
  drag=null;saveSandbox()}
 cv.addEventListener("pointerup",pointerUp);cv.addEventListener("pointercancel",pointerUp);
+for(const ev of ["pointerup","pointercancel"])window.addEventListener(ev,()=>{held=null});
 function removePiece(p){if(p.t==="portal"){pieces=pieces.filter(q=>!(q.t==="portal"&&q.link===p.link));trayCount.portal=(trayCount.portal||0)+1;return}pieces=pieces.filter(q=>q!==p);trayCount[p.t]=(trayCount[p.t]||0)+1}
-window.addEventListener("keydown",e=>{if(scene==="play"){if(e.code==="Space")go();if(e.code==="KeyR"&&sel)sel.a+=Math.PI/12;if(e.code==="KeyQ"&&sel)sel.a-=Math.PI/12;if((e.code==="Delete"||e.code==="Backspace")&&sel){removePiece(sel);sel=null}if(e.code==="Escape")scene=mode==="puzzle"?"levels":"title"}});
+window.addEventListener("keydown",e=>{if(scene==="play"){if(e.code==="Space")go();if(e.code==="KeyR"&&sel)sel.a+=Math.PI/12;if(e.code==="KeyQ"&&sel)sel.a-=Math.PI/12;if((e.code==="Delete"||e.code==="Backspace")&&sel){removePiece(sel);sel=null}if(e.code==="Escape"){if(mode==="puzzle"){worldIdx=Math.floor(levelIdx/WN);scene="levels"}else scene="sandboxes"}}});
 // ---------------------------------------------------------------- drawing
 function drawPiece(p,ghost){cx.save();cx.translate(p.x,p.y);if(ghost)cx.globalAlpha=ghost===2?0.28:0.6;const d=PIECES[p.t];const sq=p.squish||0;
  if(p.t==="plank"||p.t==="tramp"){cx.rotate(p.a);const L=d.len;cx.fillStyle=p.fixed?"#8a8fa3":d.col;rr(-L/2,-7,L,14,6);cx.fill();if(p.t==="tramp"){cx.fillStyle="#fff";for(let i=-2;i<=2;i++){cx.beginPath();cx.arc(i*20,0,3,0,TAU);cx.fill()}cx.scale(1,1-sq*0.4)}else{cx.strokeStyle="rgba(0,0,0,0.2)";cx.lineWidth=2;cx.beginPath();cx.moveTo(-L/2+10,0);cx.lineTo(L/2-10,0);cx.stroke()}}
@@ -210,6 +326,7 @@ function drawPiece(p,ghost){cx.save();cx.translate(p.x,p.y);if(ghost)cx.globalAl
  else if(p.t==="cannon"){cx.rotate(p.a);cx.fillStyle=d.col;cx.beginPath();cx.arc(0,0,d.r,0,TAU);cx.fill();cx.fillStyle="#2b2d42";rr(0,-9,42-sq*8,18,4);cx.fill();cx.fillStyle="#ff9f43";cx.beginPath();cx.moveTo(44,0);cx.lineTo(32,-8);cx.lineTo(32,8);cx.fill()}
  else if(p.t==="portal"){const col=["#f39c12","#8e44ad","#16a085"][p.link%3];cx.strokeStyle=col;cx.lineWidth=5;cx.beginPath();cx.ellipse(0,0,d.r,d.r*1.4,0,0,TAU);cx.stroke();cx.fillStyle=col;cx.globalAlpha*=0.35;cx.beginPath();cx.ellipse(0,0,d.r-4,d.r*1.4-4,0,0,TAU);cx.fill();cx.globalAlpha=ghost?0.6:1;text(String.fromCharCode(65+p.link)+(p.half?"'":""),0,0,16,"#fff")}
  cx.restore()}
+function drawCup(g,label){cx.strokeStyle="#8dff5a";cx.lineWidth=9;cx.lineCap="round";cx.lineJoin="round";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.stroke();cx.fillStyle="rgba(141,255,90,0.18)";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.closePath();cx.fill();text(label,g[0],g[1]-2,14,"#8dff5a")}
 function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,board.s);
  cx.fillStyle="#0f1526";rr(0,0,BW,BH,10);cx.fill();cx.save();rr(0,0,BW,BH,10);cx.clip();cx.strokeStyle="rgba(255,255,255,0.06)";cx.lineWidth=1;for(let x=0;x<=BW;x+=40){cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,BH);cx.stroke()}for(let y=0;y<=BH;y+=40){cx.beginPath();cx.moveTo(0,y);cx.lineTo(BW,y);cx.stroke()}
  if(mode==="puzzle"){const L=level();
@@ -217,10 +334,19 @@ function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,bo
   cx.fillStyle="#5ad0ff";cx.beginPath();cx.moveTo(L.spawn[0]-26,L.spawn[1]-30);cx.lineTo(L.spawn[0]+26,L.spawn[1]-30);cx.lineTo(L.spawn[0]+10,L.spawn[1]-4);cx.lineTo(L.spawn[0]-10,L.spawn[1]-4);cx.closePath();cx.fill();
   if(!running){cx.fillStyle="#ff5a5a";cx.beginPath();cx.arc(L.spawn[0],L.spawn[1],12,0,TAU);cx.fill()}
   // goal cup
-  const g=L.goal;cx.strokeStyle="#8dff5a";cx.lineWidth=9;cx.lineCap="round";cx.lineJoin="round";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.stroke();cx.fillStyle="rgba(141,255,90,0.18)";cx.beginPath();cx.moveTo(g[0]-44,g[1]-36);cx.lineTo(g[0]-30,g[1]+20);cx.lineTo(g[0]+30,g[1]+20);cx.lineTo(g[0]+44,g[1]-36);cx.closePath();cx.fill();text("GOAL",g[0],g[1]-2,14,"#8dff5a");
+  drawCup(L.goal,"GOAL");
   L.stars.forEach((s,i)=>{if(starsGot[i])return;cx.save();cx.translate(s[0],s[1]);cx.rotate(frameT*2);cx.fillStyle="#ffe060";cx.beginPath();for(let k=0;k<10;k++){const a=k/10*TAU-Math.PI/2,r=k%2?7:16;cx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}cx.closePath();cx.fill();cx.restore()})}
- else{for(let i=0;i<5;i++){cx.fillStyle="rgba(90,208,255,0.3)";cx.fillRect(100+i*40,0,40,12)}}
- if(hintOn&&mode==="puzzle"&&level().sol&&!running){for(const p of level().sol){drawPiece(p,2);cx.strokeStyle="rgba(255,255,255,0.5)";cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,p.t==="curve"?100:p.t==="plank"?80:p.t==="spinner"?68:p.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}}
+ else{const hx=hopX();cx.fillStyle="#5ad0ff";cx.beginPath();cx.moveTo(hx-30,2);cx.lineTo(hx+30,2);cx.lineTo(hx+12,34);cx.lineTo(hx-12,34);cx.closePath();cx.fill();
+  if(drag&&drag.hopper){cx.strokeStyle="#fff";cx.setLineDash([6,6]);cx.lineWidth=2;cx.beginPath();cx.arc(hx,18,46,0,TAU);cx.stroke();cx.setLineDash([])}
+  else if(!running)text("\u2194",hx,50,16,"#5ad0ff");
+  const gx=cupX();drawCup([gx,600],"END");
+  if(drag&&drag.cup){cx.strokeStyle="#fff";cx.setLineDash([6,6]);cx.lineWidth=2;cx.beginPath();cx.arc(gx,596,60,0,TAU);cx.stroke();cx.setLineDash([])}
+  else if(!running)text("\u2194",gx,632,16,"#8dff5a");
+  const cur=marbles.reduce((a,m)=>m.alive&&m.run>a?m.run:a,0);
+  text("RUN "+cur.toFixed(1)+"s \u00b7 BEST "+(runBest[sandboxSlot]||0).toFixed(1)+"s",BW-16,24,18,bestFlash>0?"#ffe060":"#cfd8e8","right");
+  text("CAUGHT "+caught+" \u00b7 MOST "+(caughtBest[sandboxSlot]||0),BW-16,50,18,"#8dff5a","right");
+  if(bestFlash>0)text("NEW BEST!",BW/2,70,40+Math.sin(frameT*12)*3,"#ffe060")}
+ if(hintOn&&mode==="puzzle"&&level().sol&&!running){for(const p of hintPieces()){drawPiece(p,2);cx.strokeStyle="rgba(255,255,255,0.5)";cx.setLineDash([5,5]);cx.lineWidth=2;cx.beginPath();cx.arc(p.x,p.y,p.t==="curve"?100:p.t==="plank"?80:p.t==="spinner"?68:p.t==="fan"?50:40,0,TAU);cx.stroke();cx.setLineDash([])}}
  for(const p of pieces)drawPiece(p,false);
  // links between portals
  const portals=pieces.filter(p=>p.t==="portal");for(const p of portals){if(p.half)continue;const o=portals.find(q=>q!==p&&q.link===p.link);if(o){cx.strokeStyle="rgba(255,255,255,0.15)";cx.setLineDash([6,8]);cx.lineWidth=2;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(o.x,o.y);cx.stroke();cx.setLineDash([])}}
@@ -228,7 +354,7 @@ function drawBoard(){cx.save();cx.translate(board.x,board.y);cx.scale(board.s,bo
  for(const t of trail){cx.globalAlpha=t.life;cx.fillStyle=t.col;cx.beginPath();cx.arc(t.x,t.y,5,0,TAU);cx.fill()}cx.globalAlpha=1;
  for(const m of marbles){if(!m.alive||m.delay>0)continue;cx.fillStyle=m.col;cx.beginPath();cx.arc(m.x,m.y,m.r,0,TAU);cx.fill();cx.fillStyle="rgba(255,255,255,0.6)";cx.beginPath();cx.arc(m.x-4,m.y-4,4,0,TAU);cx.fill()}
  for(const p of parts){cx.globalAlpha=Math.min(1,p.life*2);cx.fillStyle=p.col;cx.beginPath();cx.arc(p.x,p.y,p.r,0,TAU);cx.fill()}cx.globalAlpha=1;
- cx.restore();if(drag&&drag.p.fromTray)drawPiece(drag.p,true);
+ cx.restore();if(drag&&drag.p&&drag.p.fromTray)drawPiece(drag.p,true);
  cx.restore()}
 function drawTray(){cx.fillStyle="#141a2b";cx.fillRect(tray.x,tray.y,tray.w,tray.h);cx.strokeStyle="rgba(255,255,255,0.12)";cx.strokeRect(tray.x+0.5,tray.y+0.5,tray.w-1,tray.h-1);
  for(const it of trayItems()){const n=trayCount[it.k]||0;cx.save();cx.beginPath();cx.rect(it.x-it.sz/2-4,it.y-it.sz/2-2,it.sz+8,it.sz-8);cx.clip();cx.translate(it.x,it.y-4);cx.globalAlpha=n>0?1:0.3;const sc=it.sz/150;cx.scale(sc,sc);trayDraw=true;drawPiece({t:it.k,x:it.k==="curve"?-32:0,y:it.k==="curve"?-32:0,a:it.k==="plank"||it.k==="tramp"?-0.3:it.k==="curve"?0.1:it.k==="cannon"?-0.6:0,link:0,half:0},false);trayDraw=false;cx.restore();
@@ -239,34 +365,42 @@ function drawTop(){
  cx.fillStyle="rgba(255,255,255,0.10)";cx.fillRect(0,th-1,W,1);
  buttons=[];
  const padL=8+SAFE.l,padR=8+SAFE.r;
- const bh=Math.min(40,th-SAFE.t-(two?52:16));
- const by=two?SAFE.t+48:SAFE.t+8;
+ const bh=Math.min(56,th-SAFE.t-(two?60:16));
+ const by=two?SAFE.t+52:SAFE.t+8;
  const rowL=two?padL:padL+EXITB,rowR=W-padR;
- const rot=!!sel&&!running;
- const showHint=mode==="puzzle"&&misses>=3&&level().sol&&!running;
- // size the controls from the width the row actually has
- const items=[["go",82],["rot",rot?132:0],["hint",showHint?68:0],["reset",72],["menu",74]].filter(i=>i[1]>0);
- const gap=6,want=items.reduce((a,i)=>a+i[1],0)+gap*(items.length-1);
- const k=Math.min(1,(rowR-rowL)/want),rowW=want*k;
- let x=two?rowL+(rowR-rowL-rowW)/2:rowR-rowW;
- const fs=v=>Math.max(11,Math.round(v*k));
- for(const [id,w0] of items){
-  const w=w0*k;
-  if(id==="go")btn(x,by,w,bh,running?"■ STOP":"▶ GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:fs(20)});
-  else if(id==="rot"){const u=(w-2*gap*k)/3;
-   btn(x,by,u,bh,"↺",()=>{sel.a-=Math.PI/12},{size:fs(22)});
-   btn(x+u+gap*k,by,u,bh,"↻",()=>{sel.a+=Math.PI/12},{size:fs(22)});
-   btn(x+2*(u+gap*k),by,u,bh,"✕",()=>{removePiece(sel);sel=null;saveSandbox()},{size:fs(18),fill:"#733"})}
-  else if(id==="hint")btn(x,by,w,bh,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:fs(14),fill:hintOn?"#555":"#8a6a2a"});
-  else if(id==="reset")btn(x,by,w,bh,"RESET",()=>{if(mode==="puzzle")loadLevel(levelIdx);else{pieces=[];resetRun();saveSandbox()}},{size:fs(14)});
-  else btn(x,by,w,bh,"MENU",()=>{scene=mode==="puzzle"?"levels":"title"},{size:fs(14)});
-  x+=w+gap*k;
- }
+ const sand=mode==="sandbox",canRot=!!sel&&!running;
+ const showHint=!sand&&misses>=3&&level().sol&&!running;
+ // Every slot is laid out whether or not its button is showing, so GO and the
+ // turn buttons never move: a child aims for where a button was a moment ago,
+ // and the row used to reflow under the finger whenever a piece was picked
+ // up or put down. The turn buttons sit dim until a piece is selected.
+ const gap=6,sum=a=>a.reduce((s,i)=>s+i[1],0)+gap*(a.length-1);
+ const main=[["go",120],["rot",184],[sand?"rain":"hint",76]];
+ const side=sand?[["reset",72],["clear",72],["menu",72]]:[["reset",72],["menu",72]];
+ const dim={fill:"rgba(255,255,255,0.04)",stroke:"rgba(255,255,255,0.18)",color:"rgba(255,255,255,0.3)"};
+ const draw=(items,x,k,y,h)=>{const fs=v=>Math.max(11,Math.round(v*k));
+  for(const [id,w0] of items){const w=w0*k;
+   if(id==="go")btn(x,y,w,h,running?"\u25a0 STOP":"\u25b6 GO",()=>go(),{fill:running?"#a33":"#2a8a3a",size:fs(22)});
+   else if(id==="rot"){const g=8*k,u=(w-2*g)/3;
+    btn(x,y,u,h,"\u21ba",()=>{if(sel)sel.a-=Math.PI/12},Object.assign({size:fs(28),repeat:true},canRot?{}:dim));
+    btn(x+u+g,y,u,h,"\u21bb",()=>{if(sel)sel.a+=Math.PI/12},Object.assign({size:fs(28),repeat:true},canRot?{}:dim));
+    btn(x+2*(u+g),y,u,h,"\u2715",()=>{if(sel){removePiece(sel);sel=null;saveSandbox()}},Object.assign({size:fs(20),fill:"#733"},canRot?{}:dim))}
+   else if(id==="hint"){if(showHint)btn(x,y,w,h,hintOn?"HIDE":"HINT",()=>{hintOn=!hintOn},{size:fs(15),fill:hintOn?"#555":"#8a6a2a"})}
+   else if(id==="rain")btn(x,y,w,h,"RAIN",()=>rain(),{size:fs(15),fill:"#2a4a8a",repeat:true,first:120,every:120});
+   else if(id==="reset")btn(x,y,w,h,"RESET",()=>{if(sand)resetRun();else loadLevel(levelIdx)},{size:fs(14)});
+   else if(id==="clear")btn(x,y,w,h,clearArm>0?"SURE?":"CLEAR",()=>{if(clearArm>0){pieces=[];resetRun();saveSandbox();clearArm=0}else clearArm=2.5},{size:fs(14),fill:clearArm>0?"#a33":"rgba(255,255,255,0.12)"});
+   else btn(x,y,w,h,"MENU",()=>{if(sand)scene="sandboxes";else{worldIdx=Math.floor(levelIdx/WN);scene="levels"}},{size:fs(14)});
+   x+=w+gap*k}};
+ let tR;
+ if(two){
+  const w2=sum(main),k2=Math.min(1,(rowR-rowL)/w2);draw(main,rowL+(rowR-rowL-w2*k2)/2,k2,by,bh);
+  const w1=sum(side),k1=Math.min(1,(rowR-rowL-EXITB-40)/w1);draw(side,rowR-w1*k1,k1,SAFE.t+6,40);tR=rowR-w1*k1-10}
+ else{const all=main.concat(side),wA=sum(all),k=Math.min(1,(rowR-rowL)/wA);draw(all,rowR-wA*k,k,by,bh);tR=rowR-wA*k-12}
  // the title gets whatever is left, and always starts clear of the exit button
- const tL=padL+EXITB,tR=two?rowR:Math.max(tL+40,(two?rowR:rowR-rowW)-12);
- const ty=SAFE.t+(two?24:8+bh/2);
- const title=mode==="puzzle"?(levelIdx+1)+". "+level().name:"SANDBOX  slot "+(sandboxSlot+1);
- const star=mode==="puzzle"?"\u2605 "+starsGot.filter(Boolean).length+"/"+level().stars.length:"";
+ const tL=padL+EXITB;tR=Math.max(tL+40,tR);
+ const ty=SAFE.t+(two?26:8+bh/2);
+ const title=sand?"SANDBOX "+(sandboxSlot+1):(levelIdx+1)+". "+level().name;
+ const star=sand?"":"\u2605 "+starsGot.filter(Boolean).length+"/"+level().stars.length;
  const sw=star?textW(star,16)+14:0;
  const band=tR-tL;
  if(band>60)textFit(title,tL,ty,18,"#fff",Math.max(30,band-sw),"left");
@@ -285,10 +419,11 @@ function drawPlay(){drawBoard();drawTray();drawTop();
  const hintX=SAFE.l+(W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0))/2;
  const hintY=H-SAFE.b-(tray.vertical?HINTH/2:tray.h+20);
  const hintW=W-SAFE.l-SAFE.r-(tray.vertical?tray.w:0)-20;
- if(hintOn&&!running&&!won&&mode==="puzzle"){textFit("Hint: match the faded shapes (rotate with \u21ba \u21bb), then press GO",hintX,hintY,15,"#ffd080",hintW,"center",false,10)}
+ if(hintOn&&!running&&!won&&mode==="puzzle"){const n=hintPieces().length,m=level().sol.length;textFit("Hint "+n+"/"+m+": match the faded shape"+(n>1?"s":"")+", then GO."+(n<m?" Miss 3 more for the next.":""),hintX,hintY,15,"#ffd080",hintW,"center",false,10)}
  else if(!running&&!won&&mode==="puzzle"&&pieces.filter(p=>!p.fixed).length===0){textFit("Drag pieces from the tray, then press GO",hintX,hintY,15,"#cfd8e8",hintW,"center",false,10)}}
 function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<30;i++){const x=(i*173+frameT*40*(1+i%3))%(W+100)-50,y=(i*97)%H;cx.fillStyle=["#ff5a5a","#5ad0ff","#ffd05a","#7fff6a"][i%4];cx.beginPath();cx.arc(x,y,8+i%5*3,0,TAU);cx.fill()}
  buttons=[];
+ btn(W-8-SAFE.r-104,SAFE.t+6,104,44,musicOn?"\u266a ON":"\u266a OFF",()=>musicToggle(),{size:18,fill:musicOn?"#2a4a8a":"rgba(255,255,255,0.12)"});
  const wide=W-32-SAFE.l-SAFE.r,cxm=SAFE.l+(W-SAFE.l-SAFE.r)/2;
  const gap=Math.max(6,Math.min(14,H*0.018));
  const bh=Math.min(64,H*0.11),sh=Math.min(60,H*0.095);
@@ -298,7 +433,7 @@ function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<3
  const helpH=()=>helpN?(helpLines(HELP1)+(helpN>1?helpLines(HELP2):0))*18+6:0;
  let sy=bot-helpH()-(helpN?gap:0)-sh;
  let py=sy-gap-bh;
- const top=SAFE.t+10+(W<620?EXITB:0);
+ const top=SAFE.t+10+(W<620||H<520?EXITB:0);
  // headline and strapline take what is left above the buttons
  let lz=Math.min(80,W/9);
  while(lz>18&&textW("MARBLE MAYHEM",lz)>wide)lz-=2;
@@ -311,20 +446,36 @@ function drawTitle(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);for(let i=0;i<3
  textFit("Build a run. Press GO. Watch the marble.",cxm,ly+lz*0.55+subz*0.9,subz,"#dfe6f0",wide,"center",false,10);
  const bw=Math.min(340,wide);
  btn(cxm-bw/2,py,bw,bh,"PUZZLES",()=>{scene="levels"},{fill:"#2a8a3a",size:Math.min(26,bw*0.1)});
- // three sandbox slots sized so their labels fit inside them
- const sgap=6,sw=(bw-sgap*2)/3;
- let sz=15;while(sz>9&&textW("SANDBOX 1 \u25cf",sz)>sw-10)sz-=1;
- const lbl=sz<11?"SLOT ":"SANDBOX ";
- for(let i=0;i<3;i++){const has=!!sandbox.slots[i];
-  btn(cxm-bw/2+i*(sw+sgap),sy,sw,sh,lbl+(i+1)+(has?" \u25cf":""),()=>loadSandbox(i),{size:sz<11?Math.min(15,sw*0.2):sz,fill:"#2a4a8a"})}
+ btn(cxm-bw/2,sy,bw,sh,"CUSTOM SANDBOX",()=>{scene="sandboxes"},{fill:"#2a4a8a",size:Math.min(24,bw*0.08)});
  if(helpN>0)wrapFit(HELP1,cxm,bot-helpH()+9,15,"#cfd8e8",wide,2,18);
  if(helpN>1)wrapFit(HELP2,cxm,bot-helpH()+9+helpLines(HELP1)*18,15,"#cfd8e8",wide,2,18);
  drawButtons()}
+function drawSandboxes(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
+ const hz=Math.min(40,W*0.1),hy=SAFE.t+(W<620?EXITB+6:14)+hz*0.55,mid=SAFE.l+(W-SAFE.l-SAFE.r)/2;
+ textFit("CUSTOM SANDBOX",mid,hy,hz,"#ffd05a",W-32-SAFE.l-SAFE.r);
+ const bkh=Math.min(44,H*0.075),y0=hy+hz*0.6+14;
+ const availW=W-24-SAFE.l-SAFE.r,availH=H-SAFE.b-12-bkh-10-y0;
+ const cols=W>H?3:2,rows=Math.ceil(NSAND/cols);
+ const cw=Math.min(300,availW/cols-10),ch=Math.min(110,availH/rows-10);
+ const gx=cw+10,gy=ch+10,left=SAFE.l+(W-SAFE.l-SAFE.r-(cols*gx-10))/2;
+ const cells=[];
+ for(let i=0;i<NSAND;i++){const x=left+(i%cols)*gx,y=y0+Math.floor(i/cols)*gy,has=!!sandbox.slots[i]&&sandbox.slots[i].length>0;
+  btn(x,y,cw,ch,"",()=>loadSandbox(i),{fill:has?"#2a4a8a":"rgba(255,255,255,0.08)"});cells.push({x,y,has,i})}
+ const bw=Math.min(180,W-40-SAFE.l-SAFE.r);
+ btn(mid-bw/2,H-SAFE.b-12-bkh,bw,bkh,"BACK",()=>{scene="title"},{size:Math.min(18,bkh*0.42)});
+ drawButtons();
+ for(const c of cells){textFit("SANDBOX "+(c.i+1),c.x+cw/2,c.y+ch*0.36,Math.min(22,ch*0.3),"#fff",cw-12,"center",true,9);
+  textFit(c.has?sandbox.slots[c.i].length+" pieces \u00b7 best "+(runBest[c.i]||0).toFixed(1)+"s \u00b7 caught "+(caughtBest[c.i]||0):"empty",c.x+cw/2,c.y+ch*0.72,Math.min(15,ch*0.22),c.has?"#8dff5a":"#889",cw-12,"center",true,8)}}
+// The puzzles come in worlds of sixteen, one tab each; the grid below shows
+// the world in view. Unlocking is still one level at a time across all of them.
 function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
- const n=LEVELS.length;
+ const NW=Math.ceil(LEVELS.length/WN);worldIdx=clamp(worldIdx,0,NW-1);const first=worldIdx*WN,n=Math.min(WN,LEVELS.length-first);
  const hz=Math.min(40,W*0.1),hy=SAFE.t+(W<620?EXITB+6:14)+hz*0.55;
- text("PUZZLES",SAFE.l+(W-SAFE.l-SAFE.r)/2,hy,hz,"#ffd05a");
- const bkh=Math.min(44,H*0.075),y0=hy+hz*0.6+10;
+ textFit("PUZZLES \u00b7 "+WORLDS[worldIdx],SAFE.l+(W-SAFE.l-SAFE.r)/2,hy,hz,"#ffd05a",W-32-SAFE.l-SAFE.r);
+ const tabW=Math.min(150,(W-24-SAFE.l-SAFE.r-6*(NW-1))/NW),tabH=Math.min(40,H*0.06),tabL=SAFE.l+(W-SAFE.l-SAFE.r-(tabW*NW+6*(NW-1)))/2,tabY=hy+hz*0.6+8;
+ for(let k=0;k<NW;k++){const open=(progress["L"+(k*WN-1)]||0)>0||k===0;
+  btn(tabL+k*(tabW+6),tabY,tabW,tabH,"WORLD "+(k+1),()=>{worldIdx=k},{size:Math.min(15,tabW*0.16),fill:k===worldIdx?"#2a8a3a":open?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)",color:open||k===worldIdx?"#fff":"#667"})}
+ const bkh=Math.min(44,H*0.075),y0=tabY+tabH+10;
  const availW=W-24-SAFE.l-SAFE.r,availH=H-SAFE.b-12-bkh-10-y0;
  // pick the column count that gives the roomiest cell rather than assuming two
  let best=null;
@@ -341,20 +492,21 @@ function drawLevels(){cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);buttons=[];
  const {cols,rows,cw,ch}=best;
  const gx=cw+10,gy=ch+10;
  const gridW=cols*gx-10,left=SAFE.l+(W-SAFE.l-SAFE.r-gridW)/2;
- LEVELS.forEach((L,i)=>{const c=i%cols,r=Math.floor(i/cols);
+ for(let j=0;j<n;j++){const i=first+j,L=LEVELS[i],c=j%cols,r=Math.floor(j/cols);
   const x=left+c*gx,y=y0+r*gy;
   const st=progress["L"+i]||0,unlocked=i===0||(progress["L"+(i-1)]||0)>0;
   btn(x,y,cw,ch,"",()=>{if(unlocked)loadLevel(i)},{fill:unlocked?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.03)"});
   textFit((i+1)+". "+L.name,x+cw/2,y+ch*0.34,Math.min(15,ch*0.26),unlocked?"#fff":"#667",cw-8,"center",true,7);
-  textFit(unlocked?"\u2605".repeat(st)+"\u2606".repeat(1+L.stars.length-st):"locked",x+cw/2,y+ch*0.72,Math.min(16,ch*0.28),unlocked?"#ffe060":"#667",cw-8,"center",true,7)});
+  textFit(unlocked?"\u2605".repeat(st)+"\u2606".repeat(1+L.stars.length-st):"locked",x+cw/2,y+ch*0.72,Math.min(16,ch*0.28),unlocked?"#ffe060":"#667",cw-8,"center",true,7)}
  const bw=Math.min(180,W-40-SAFE.l-SAFE.r);
  btn(SAFE.l+(W-SAFE.l-SAFE.r)/2-bw/2,H-SAFE.b-12-bkh,bw,bkh,"BACK",()=>{scene="title"},{size:Math.min(18,bkh*0.42)});
  drawButtons()}
-function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
+function frame(ts){requestAnimationFrame(frame);/*loop*/const dt=Math.min(0.033,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;
+ if(held&&performance.now()>=held.next){held.b.cb();held.next=performance.now()+(held.b.opt.every||120)}if(clearArm>0)clearArm-=dt;if(bestFlash>0)bestFlash-=dt;cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="#1c2233";cx.fillRect(0,0,W,H);
  if(scene==="play"&&running&&!won){const n=4;for(let i=0;i<n;i++)step(dt/n)}else if(scene==="play"){for(const p of parts){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}parts=parts.filter(p=>p.life>0);for(const t of trail)t.life-=dt;trail=trail.filter(t=>t.life>0)}
- if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="play")drawPlay();
+ if(scene==="title")drawTitle();else if(scene==="levels")drawLevels();else if(scene==="sandboxes")drawSandboxes();else if(scene==="play")drawPlay();
 }
 requestAnimationFrame(frame);
 function simulate(pcs,maxT){const keep=pieces;pieces=pcs;resetRun();running=true;spawnMarbles();const dt=1/240;let t=0;const traj=[];let k=0;while(t<(maxT||12)&&!won&&!lost){step(dt);t+=dt;if(++k%48===0&&marbles[0])traj.push([Math.round(marbles[0].x),Math.round(marbles[0].y)])}const res={won,lost,stars:starsGot.filter(Boolean).length,t:+t.toFixed(2),traj};pieces=keep;resetRun();return res}
-window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};
+window.MM={simulate,get misses(){return misses},set misses(v){misses=v},get hintOn(){return hintOn},set hintOn(v){hintOn=v},get sel(){return sel},set sel(v){sel=v},buttons:()=>buttons,hintPieces,rain,runBest,hopper,cup,get caught(){return caught},NSAND,WORLDS,WN,get worldIdx(){return worldIdx},set worldIdx(v){worldIdx=v},get sandboxSlot(){return sandboxSlot},music:()=>!!musicTimer,get musicOn(){return musicOn},get scene(){return scene},set scene(v){scene=v},get pieces(){return pieces},set pieces(v){pieces=v},get marbles(){return marbles},get won(){return won},get lost(){return lost},get running(){return running},loadLevel,loadSandbox,go,LEVELS,get trayCount(){return trayCount},get progress(){return progress},resetRun,board:()=>board,tray:()=>tray};
 </script></body></html>
