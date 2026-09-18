@@ -124,7 +124,7 @@ export class Morse extends MG {
     if (ch === want) { this.typed += ch; SFX.key(this.typed.length); if (this.typed === this.word) { this.say(`It spells ${this.word}.`, true, 2.4); this.win(); } }
     else { this.say(`Not ${ch}. Watch the flashes for the letter after ${this.typed ? this.typed : "the start"}.`, false, 2.2); }
   }
-  geom() { const { W, H, s } = this.G; const kw = Math.min(W - 60 * s, 560 * s), cols = 6, cw = kw / cols; return { kx: W / 2 - kw / 2, ky: H - 190 * s, cw, cols }; }
+  geom() { const { W, H, s } = this.G; const cols = 6, cw = Math.min((W - 180 * s) / cols, 74 * s), kw = cw * cols; return { kx: W / 2 - kw / 2, ky: H - (2 * cw + 46 * s), cw, cols }; }
   down(x, y) { const { kx, ky, cw, cols } = this.geom(); const cx = Math.floor((x - kx) / cw), cy = Math.floor((y - ky) / cw); if (cx < 0 || cy < 0 || cx >= cols || cy >= 2) return; const ch = this.keys[cy * cols + cx]; if (ch) this.press(ch); }
   hint() { const i = this.typed.length; const ch = this.word[i]; return `The next letter is ${ch}: ${MORSE[ch].split("").map(c => c === "." ? "dot" : "dash").join(" ")}.`; }
   solve() { for (const ch of this.word.slice(this.typed.length)) this.press(ch); }
@@ -140,15 +140,17 @@ export class Morse extends MG {
     this.btn("replay", cx - 60 * s, cy + R + 22 * s, 120 * s, 40 * s, "REPLAY", "blue", 15 * s);
     // the chart
     const px = W * 0.5, pw = W - px - 24 * s, py = 66 * s;
-    panel(g, px, py, pw, H - py - 210 * s, s, { bg: "rgba(255,248,225,.95)", border: "#c9a15a", r: 10 * s });
+    const phh = this.geom().ky - 96 * s - py;
+    panel(g, px, py, pw, phh, s, { bg: "rgba(255,248,225,.95)", border: "#c9a15a", r: 10 * s });
     text(g, "MORSE CHART", px + pw / 2, py + 20 * s, 13 * s, "#7a4a10", "center", 900, MONO);
-    const rows = 7, cols2 = 4, ch = (H - py - 210 * s - 40 * s) / rows, cw2 = pw / cols2;
+    const rows = 7, cols2 = 4, ch = (phh - 40 * s) / rows, cw2 = pw / cols2;
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((c, i) => { const x = px + (i % cols2) * cw2 + 10 * s, y = py + 38 * s + Math.floor(i / cols2) * ch + ch / 2; text(g, c, x, y, Math.min(16 * s, ch * 0.7), "#2a1a0a", "left", 900, MONO); text(g, MORSE[c].replace(/\./g, "•").replace(/-/g, "—"), x + 22 * s, y, Math.min(15 * s, ch * 0.65), "#7a4a10", "left", 800, MONO); });
     // what has been typed
-    const slots = this.word.length, sw = 46 * s, sx = W / 2 - slots * sw / 2, sy = H - 236 * s;
-    for (let i = 0; i < slots; i++) { g.fillStyle = "rgba(255,255,255,.1)"; rrect(g, sx + i * sw + 4 * s, sy - 20 * s, sw - 8 * s, 40 * s, 6 * s); g.fill(); if (this.typed[i]) text(g, this.typed[i], sx + i * sw + sw / 2, sy + 1, 24 * s, "#7fffb0", "center", 900, MONO); }
-    // the keyboard
     const { kx, ky, cw, cols } = this.geom();
+    const slots = this.word.length, sw = 52 * s, sx = W / 2 - slots * sw / 2, sy = ky - 40 * s;
+    text(g, "THE WORD", W / 2, sy - 32 * s, 12 * s, "rgba(255,255,255,.5)", "center", 800, MONO);
+    for (let i = 0; i < slots; i++) { g.fillStyle = "rgba(255,255,255,.12)"; rrect(g, sx + i * sw + 4 * s, sy - 22 * s, sw - 8 * s, 44 * s, 6 * s); g.fill(); g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 1.5; g.stroke(); if (this.typed[i]) text(g, this.typed[i], sx + i * sw + sw / 2, sy + 1, 26 * s, "#7fffb0", "center", 900, MONO); }
+    // the keyboard
     this.keys.forEach((k, i) => { const x = kx + (i % cols) * cw + 4 * s, y = ky + Math.floor(i / cols) * cw + 4 * s; g.fillStyle = "#2a3550"; rrect(g, x, y, cw - 8 * s, cw - 8 * s, 8 * s); g.fill(); g.strokeStyle = "rgba(255,255,255,.2)"; g.lineWidth = 1.5; g.stroke(); text(g, k, x + (cw - 8 * s) / 2, y + (cw - 8 * s) / 2 + 1, cw * 0.42, "#fff", "center", 900, MONO); });
     this.btn("del", kx + cw * cols + 10 * s, ky + cw * 0.5, 80 * s, 40 * s, "⌫", "grey", 18 * s);
     this.drawMsg(g, W, H, s);
@@ -274,7 +276,7 @@ export class Balance extends MG {
     if (id === "mg:accuse") { this.accuse = !this.accuse; SFX.click(); }
     if (id === "mg:clear") { this.pan.fill(0); this.tiltTo = 0; SFX.back(); }
   }
-  geom() { const { W, H, s } = this.G; const cw = Math.min(64 * s, (W * 0.55) / Math.ceil(this.n / 2)); return { rx: W * 0.06, ry: H - 150 * s, cw, per: Math.ceil(this.n / 2) }; }
+  geom() { const { W, H, s } = this.G; const cw = Math.min(62 * s, (W * 0.55) / Math.ceil(this.n / 2)); return { rx: W * 0.06, ry: H - (2 * cw + 54 * s), cw, per: Math.ceil(this.n / 2) }; }
   coinAt(x, y) { const { rx, ry, cw, per } = this.geom(); const cx = Math.floor((x - rx) / cw), cy = Math.floor((y - ry) / cw); if (cx < 0 || cy < 0 || cx >= per || cy >= 2) return -1; const i = cy * per + cx; return i < this.n ? i : -1; }
   down(x, y) {
     if (this.done) return; const i = this.coinAt(x, y); if (i < 0) return;
@@ -308,7 +310,7 @@ export class Balance extends MG {
     this.btn("weigh", bx, 70 * s, bw, 50 * s, `WEIGH (${this.left} left)`, this.left > 0 ? "primary" : "grey", 16 * s);
     this.btn("clear", bx, 130 * s, bw, 44 * s, "CLEAR PANS", "grey", 14 * s);
     this.btn("accuse", bx, 184 * s, bw, 50 * s, this.accuse ? "ACCUSING: tap it" : "ACCUSE", this.accuse ? "gold" : "dark", 15 * s);
-    sidePanel(g, this, bx, 250 * s, bw, H - 270 * s, s, `${this.n} ${this.thing.toUpperCase()}S, ONE FAKE`, "The fake is heavier. Split them into three groups: two on the pans, one off. Level means it is in the group you left off.");
+    sidePanel(g, this, bx, 250 * s, bw, H - 306 * s, s, `${this.n} ${this.thing.toUpperCase()}S, ONE FAKE`, "The fake is heavier. Split them into three groups: two on the pans, one off. Level means it is in the group you left off.");
     this.drawMsg(g, W, H, s);
   }
   coin(g, x, y, r, i, s) {
@@ -373,28 +375,28 @@ export class StarChart extends MG {
     const sc = 0.55 / Math.max(maxx - minx, maxy - miny, 0.3);
     this.pat = pat.map(p => [(p[0] - (minx + maxx) / 2) * sc, (p[1] - (miny + maxy) / 2) * sc]);
     const rot = rnd(-0.4, 0.4), ox = rnd(0.35, 0.65), oy = rnd(0.35, 0.65);
-    this.stars = this.pat.map(([x, y], i) => ({ x: ox + x * Math.cos(rot) - y * Math.sin(rot), y: oy + x * Math.sin(rot) + y * Math.cos(rot), k: i }));
-    let tries = 0; while (this.stars.length < this.n + this.decoys && tries++ < 500) { const x = rnd(0.05, 0.95), y = rnd(0.06, 0.94); if (this.stars.every(q => Math.hypot(q.x - x, q.y - y) > 0.07)) this.stars.push({ x, y, k: -1 }); }
+    this.sky = this.pat.map(([x, y], i) => ({ x: ox + x * Math.cos(rot) - y * Math.sin(rot), y: oy + x * Math.sin(rot) + y * Math.cos(rot), k: i }));
+    let tries = 0; while (this.sky.length < this.n + this.decoys && tries++ < 500) { const x = rnd(0.05, 0.95), y = rnd(0.06, 0.94); if (this.sky.every(q => Math.hypot(q.x - x, q.y - y) > 0.07)) this.sky.push({ x, y, k: -1 }); }
     this.next = 0;
   }
   geom() { const { W, H, s } = this.G; const sw = W * 0.62, sh = H - 100 * s; return { sx: 24 * s, sy: 66 * s, sw, sh }; }
   down(x, y) {
     if (this.done) return; const { sx, sy, sw, sh } = this.geom();
-    let best = null, bd = 30 * this.G.s; for (const st of this.stars) { const d = Math.hypot(sx + st.x * sw - x, sy + st.y * sh - y); if (d < bd) { bd = d; best = st; } }
+    let best = null, bd = 30 * this.G.s; for (const st of this.sky) { const d = Math.hypot(sx + st.x * sw - x, sy + st.y * sh - y); if (d < bd) { bd = d; best = st; } }
     if (!best) return;
     if (best.k === this.next) { this.next++; SFX.beep(500 + this.next * 60); if (this.next >= this.n) { this.say("That's the constellation.", true, 2.2); this.win(); } }
     else { this.say(best.k < 0 ? "That star isn't in the chart." : `That's star ${best.k + 1}; you need ${this.next + 1}.`, false, 1.8); this.next = 0; }
   }
-  hint() { const st = this.stars.find(q => q.k === this.next); return `Star ${this.next + 1} is ${st.x < 0.4 ? "on the left" : st.x > 0.6 ? "on the right" : "in the middle"}, ${st.y < 0.4 ? "near the top" : st.y > 0.6 ? "near the bottom" : "halfway down"} of the sky. Match the chart's shape, not its size.`; }
-  solve() { const { sx, sy, sw, sh } = this.geom(); for (let k = this.next; k < this.n; k++) { const st = this.stars.find(q => q.k === k); this.down(sx + st.x * sw, sy + st.y * sh); } }
+  hint() { const st = this.sky.find(q => q.k === this.next); return `Star ${this.next + 1} is ${st.x < 0.4 ? "on the left" : st.x > 0.6 ? "on the right" : "in the middle"}, ${st.y < 0.4 ? "near the top" : st.y > 0.6 ? "near the bottom" : "halfway down"} of the sky. Match the chart's shape, not its size.`; }
+  solve() { const { sx, sy, sw, sh } = this.geom(); for (let k = this.next; k < this.n; k++) { const st = this.sky.find(q => q.k === k); this.down(sx + st.x * sw, sy + st.y * sh); } }
   draw(g, W, H, s) {
     this.frame(g, W, H, s, ["#050a1c", "#02030a"]);
     const { sx, sy, sw, sh } = this.geom();
     g.fillStyle = "#070b1e"; rrect(g, sx, sy, sw, sh, 10 * s); g.fill();
     for (let i = 0; i < 60; i++) { const x = sx + ((i * 97) % 100) / 100 * sw, y = sy + ((i * 61) % 100) / 100 * sh; g.fillStyle = `rgba(255,255,255,${0.15 + (i % 3) * 0.1})`; g.fillRect(x, y, 1.5 * s, 1.5 * s); }
     // the line so far
-    g.strokeStyle = "#7fdcff"; g.lineWidth = 2 * s; g.beginPath(); for (let k = 0; k < this.next; k++) { const st = this.stars.find(q => q.k === k); if (k) g.lineTo(sx + st.x * sw, sy + st.y * sh); else g.moveTo(sx + st.x * sw, sy + st.y * sh); } g.stroke();
-    for (const st of this.stars) { const x = sx + st.x * sw, y = sy + st.y * sh, done = st.k >= 0 && st.k < this.next; const tw = 0.8 + Math.sin(this.t * 3 + st.x * 20) * 0.2; g.fillStyle = done ? "#7fffb0" : "#fff"; g.beginPath(); g.arc(x, y, (done ? 6 : 4.5) * s * tw, 0, TAU); g.fill(); if (done) text(g, String(st.k + 1), x + 10 * s, y - 10 * s, 12 * s, "#7fffb0", "left", 800, MONO); }
+    g.strokeStyle = "#7fdcff"; g.lineWidth = 2 * s; g.beginPath(); for (let k = 0; k < this.next; k++) { const st = this.sky.find(q => q.k === k); if (k) g.lineTo(sx + st.x * sw, sy + st.y * sh); else g.moveTo(sx + st.x * sw, sy + st.y * sh); } g.stroke();
+    for (const st of this.sky) { const x = sx + st.x * sw, y = sy + st.y * sh, done = st.k >= 0 && st.k < this.next; const tw = 0.8 + Math.sin(this.t * 3 + st.x * 20) * 0.2; g.fillStyle = done ? "#7fffb0" : "#fff"; g.beginPath(); g.arc(x, y, (done ? 6 : 4.5) * s * tw, 0, TAU); g.fill(); if (done) text(g, String(st.k + 1), x + 10 * s, y - 10 * s, 12 * s, "#7fffb0", "left", 800, MONO); }
     // the chart
     const px = sx + sw + 20 * s, pw = W - px - 24 * s, ph = Math.min(pw, H * 0.4);
     panel(g, px, sy, pw, ph + 30 * s, s, { bg: "rgba(255,248,225,.95)", border: "#c9a15a", r: 10 * s });
@@ -417,9 +419,9 @@ export class Grapple extends MG {
     this.wind = this.level >= 3 ? rnd(-0.16, 0.16) : 0; this.g = 0.9;
     this.angle = 0.9; this.power = 0.7; this.shot = null; this.drag = null; this.shots = 0;
   }
-  geom() { const { W, H, s } = this.G; const x0 = W * 0.12, y0 = H * 0.78; return { x0, y0, tx: x0 + this.dist * W * 0.9, ty: y0 - this.height * H, R: this.ring * H }; }
+  geom() { const { W, H, s } = this.G; const U = W, x0 = W * 0.12, y0 = H * 0.78; return { U, x0, y0, tx: x0 + this.dist * U * 0.82, ty: y0 - this.height * U * 0.62, R: this.ring * U * 0.9 }; }
   // where a shot lands: the flight is simulated with the same step the draw uses
-  fly(angle, power) { const { x0, y0, tx, ty, R } = this.geom(); const { W, H } = this.G; const pts = []; let x = x0, y = y0, vx = Math.cos(angle) * power * W * 0.95, vy = -Math.sin(angle) * power * W * 0.95; const dt = 1 / 60; let hit = false; for (let i = 0; i < 400; i++) { vx += this.wind * W * 0.35 * dt; vy += this.g * H * 1.6 * dt; x += vx * dt; y += vy * dt; pts.push([x, y]); if (Math.hypot(x - tx, y - ty) < R) { hit = true; break; } if (y > y0 + 10 || x > W + 20 || x < -20) break; } return { pts, hit }; }
+  fly(angle, power) { const { U, x0, y0, tx, ty, R } = this.geom(); const { W } = this.G; const pts = []; let x = x0, y = y0, vx = Math.cos(angle) * power * U * 1.3, vy = -Math.sin(angle) * power * U * 1.3; const dt = 1 / 60; let hit = false; for (let i = 0; i < 400; i++) { vx += this.wind * U * 0.3 * dt; vy += this.g * U * 1.25 * dt; x += vx * dt; y += vy * dt; pts.push([x, y]); if (Math.hypot(x - tx, y - ty) < R) { hit = true; break; } if (y > y0 + 10 || x > W + 20 || x < -20) break; } return { pts, hit }; }
   down(x, y, id) { if (this.done || this.shot) return; const { x0, y0 } = this.geom(); if (Math.hypot(x - x0, y - y0) < 220 * this.G.s) this.drag = { id }; this.move(x, y, id); }
   move(x, y, id) { if (!this.drag || this.drag.id !== id) return; const { x0, y0 } = this.geom(); const dx = x - x0, dy = y0 - y; if (dx < 10) return; this.angle = clamp(Math.atan2(dy, dx), 0.05, 1.45); this.power = clamp(Math.hypot(dx, dy) / (200 * this.G.s), 0.25, 1); }
   up(x, y, id) { if (this.drag && this.drag.id === id) this.drag = null; }
@@ -439,7 +441,7 @@ export class Grapple extends MG {
     // wind
     if (this.wind) { text(g, `WIND ${this.wind > 0 ? "→" : "←"} ${Math.round(Math.abs(this.wind) * 100)}`, W / 2, 70 * s, 16 * s, "#7fdcff", "center", 800, MONO); }
     // the aim
-    if (!this.shot) { const pv = this.fly(this.angle, this.power).pts; g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 2 * s; g.setLineDash([4 * s, 8 * s]); g.beginPath(); pv.slice(0, 40).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); g.setLineDash([]); }
+    if (!this.shot) { const pv = this.fly(this.angle, this.power).pts; g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 2 * s; g.setLineDash([4 * s, 8 * s]); g.beginPath(); pv.slice(0, 22).forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); g.setLineDash([]); }
     // the launcher
     g.save(); g.translate(x0, y0); g.rotate(-this.angle); g.fillStyle = "#3a3f48"; rrect(g, -10 * s, -10 * s, 60 * s, 20 * s, 6 * s); g.fill(); g.restore();
     g.fillStyle = "#23262c"; g.beginPath(); g.arc(x0, y0, 16 * s, 0, TAU); g.fill();
@@ -585,7 +587,7 @@ export class FogMaze extends MG {
       if (c.n) { g.moveTo(px, py); g.lineTo(px + cs, py); } if (c.s) { g.moveTo(px, py + cs); g.lineTo(px + cs, py + cs); } if (c.w) { g.moveTo(px, py); g.lineTo(px, py + cs); } if (c.e) { g.moveTo(px + cs, py); g.lineTo(px + cs, py + cs); } g.stroke();
     }
     // fog
-    const fx = x0 + (this.px + 0.5) * cs, fy = y0 + (this.py + 0.5) * cs; const gr = g.createRadialGradient(fx, fy, cs * this.sight * 0.8, fx, fy, cs * (this.sight + 1.6)); gr.addColorStop(0, "rgba(200,210,230,0)"); gr.addColorStop(1, "rgba(200,210,230,.35)"); g.fillStyle = gr; g.fillRect(x0, y0, cs * this.cols, cs * this.rows);
+    const fx = x0 + (this.px + 0.5) * cs, fy = y0 + (this.py + 0.5) * cs; const gr = g.createRadialGradient(fx, fy, cs * this.sight * 0.7, fx, fy, cs * (this.sight + 1.4)); gr.addColorStop(0, "rgba(10,12,18,0)"); gr.addColorStop(0.6, "rgba(10,12,18,.55)"); gr.addColorStop(1, "rgba(10,12,18,.85)"); g.fillStyle = gr; g.fillRect(x0, y0, cs * this.cols, cs * this.rows);
     drawPortrait(g, "rory", fx - cs * 0.32, fy - cs * 0.4, cs * 0.64, 0, this.t);
     if (this.bumpT > 0) { g.fillStyle = `rgba(230,57,70,${this.bumpT * 0.5})`; g.fillRect(0, 0, W, H); }
     // arrows
@@ -658,7 +660,7 @@ export class Triangulation extends MG {
     this.instr = "Each ring is one tower's distance to the target. Drag the marker to where every ring crosses, then LOCK.";
     this.reset();
   }
-  reset() { this.tx = rnd(0.3, 0.7); this.ty = rnd(0.3, 0.7); this.tw = []; for (let i = 0; i < this.towers; i++) { const a = i * TAU / this.towers + rnd(-0.4, 0.4); this.tw.push({ x: clamp(0.5 + Math.cos(a) * rnd(0.32, 0.46), 0.05, 0.95), y: clamp(0.5 + Math.sin(a) * rnd(0.32, 0.46), 0.06, 0.94) }); } for (const t of this.tw) t.r = Math.hypot(t.x - this.tx, t.y - this.ty); this.mx = 0.5; this.my = 0.5; this.drag = null; }
+  reset() { do { this.tx = rnd(0.28, 0.72); this.ty = rnd(0.28, 0.72); } while (Math.hypot(this.tx - 0.5, this.ty - 0.5) < 0.16); this.tw = []; for (let i = 0; i < this.towers; i++) { const a = i * TAU / this.towers + rnd(-0.4, 0.4); this.tw.push({ x: clamp(0.5 + Math.cos(a) * rnd(0.32, 0.46), 0.05, 0.95), y: clamp(0.5 + Math.sin(a) * rnd(0.32, 0.46), 0.06, 0.94) }); } for (const t of this.tw) t.r = Math.hypot(t.x - this.tx, t.y - this.ty); this.mx = 0.5; this.my = 0.5; this.drag = null; }
   geom() { const { W, H, s } = this.G; const sh = H - 100 * s, sw = Math.min(W * 0.62, sh * 1.3); return { sx: 24 * s, sy: 66 * s, sw, sh }; }
   down(x, y, id) { if (this.done) return; const { sx, sy, sw, sh } = this.geom(); if (x < sx || x > sx + sw || y < sy || y > sy + sh) return; this.drag = { id }; this.move(x, y, id); }
   move(x, y, id) { if (!this.drag || this.drag.id !== id) return; const { sx, sy, sw, sh } = this.geom(); this.mx = clamp((x - sx) / sw, 0, 1); this.my = clamp((y - sy) / sh, 0, 1); }

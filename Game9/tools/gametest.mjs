@@ -1,4 +1,6 @@
 // Starts every mission's mini-game directly and drives it with its solver.
+// A filter argument narrows it to a comma-separated list of mission-id
+// prefixes or game kinds, e.g. 'ist,mar' or 'picross'.
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -21,7 +23,7 @@ const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.w
 const list = await ev(() => __spy.debug.COUNTRIES.map((c, ci) => c.missions.map((m, mi) => ({ ci, mi, id: m.id, game: m.game, level: m.level, scene: c.id }))).flat());
 let fails = 0; const seen = new Set();
 for (const m of list) {
-  if (only && !m.id.startsWith(only) && m.game !== only) continue;
+  if (only && !only.split(",").some(o => m.id.startsWith(o) || m.game === o)) continue;
   const r = await ev(m => { try { __spy.debug.startMission(m.ci, m.mi); return { ok: __spy.state === "minigame" && !!__spy.mg, state: __spy.state, needsWorld: !!(__spy.mg && __spy.mg.needsWorld) }; } catch (e) { return { ok: false, err: e.stack }; } }, m);
   if (!r.ok) { fails++; console.log("FAIL start", m.id, m.game, JSON.stringify(r).slice(0, 300)); continue; }
   await waitGame(0.6);

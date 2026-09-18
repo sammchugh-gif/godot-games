@@ -1,11 +1,12 @@
 // Automated playthrough: title -> briefing -> every country, both missions,
 // every mini-game solved by its own solver -> ending -> credits. Screenshots
-// every mini-game. Usage: node tools/playtest.mjs [outdir]
+// every mini-game. Usage: node tools/playtest.mjs [outdir] [fromCountry] [toCountry]
+// The country range lets a long playthrough be run in segments.
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 const out = process.argv[2] || "/tmp/playtest"; fs.mkdirSync(out, { recursive: true });
-const port = 8766;
+const port = +(process.env.PORT || 8766);
 const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl", "--autoplay-policy=no-user-gesture-required"] });
@@ -42,8 +43,9 @@ await shot("01_map");
 
 const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
 const startCi = +(process.argv[3] || 0);
+const endCi = Math.min(COUNTRIES.length - 1, +(process.argv[4] || COUNTRIES.length - 1));
 if (startCi > 0) { await ev(ci => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; }, startCi); await wait(300); }
-for (let ci = startCi; ci < COUNTRIES.length; ci++) {
+for (let ci = startCi; ci <= endCi; ci++) {
   const c = COUNTRIES[ci];
   // fly
   await ev(() => __spy.debug.press("fly")); await waitGame(0.2);
@@ -89,9 +91,11 @@ for (let ci = startCi; ci < COUNTRIES.length; ci++) {
     }
   }
 }
-await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
-check(await state() === "credits", "credits");
-const save = await ev(() => JSON.parse(localStorage.getItem("agentrory.save")));
-check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
+if (endCi === COUNTRIES.length - 1) {
+  await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
+  check(await state() === "credits", "credits");
+  const save = await ev(() => JSON.parse(localStorage.getItem("agentrory.save")));
+  check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
+}
 console.log("errors:", errors.length, "fails:", fail);
 await browser.close(); server.kill(); process.exit(fail || errors.length ? 1 : 0);
