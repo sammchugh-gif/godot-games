@@ -972,7 +972,7 @@ function die(){if(scene==="over")return;scene="over";SFX.die();musicStop();saveR
 // asteroids are new, shields come back, and a quarter of the hull with them.
 function nextSector(){G.sector++;G.secT=0;G.secBoss=false;G.gate=null;G.gateHeld=false;G.bossAlive=null;G.secChests=0;G.secDrops={};
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
- G.en.length=0;G.bul.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
+ G.en.length=0;G.bul.length=0;G.gems.length=0;G.pk.length=0;G.rocks.length=0;seedRocks(G.px,G.py);
  G.sh=G.maxsh;G.hp=Math.min(G.maxhp,G.hp+Math.round(G.maxhp*0.25));G.inv=2.5;
  // a sector that opens a slot says so, because otherwise the only sign is a
  // card you have never been offered turning up at the next level
@@ -1023,8 +1023,10 @@ const WARP={dive:1.2,tunnel:2.6,exit:0.5};
 function startWarp(){const g=G.gate,dx=G.px-g.x,dy=G.py-g.y;
  G.warp={t:0,gx:g.x,gy:g.y,r0:Math.max(30,Math.hypot(dx,dy)),a0:Math.atan2(dy,dx),win:G.sector>=SECTORS&&G.mode!=="endless",to:G.sector+1};
  // the field is wiped the moment the gate takes the ship, in a burst of dust
+ // - and the gems and pickups still lying on it go with it, rather than
+ // turning up around the ship in the next sector
  for(const e of G.en)G.parts.push({k:"dot",x:e.x,y:e.y,vx:rnd(-140,140),vy:rnd(-140,140),life:0.5,col:e.col,r:5});
- G.en.length=0;G.bul.length=0;G.vx=G.vy=0;G.inv=99;SFX.warpDive()}
+ G.en.length=0;G.bul.length=0;G.gems.length=0;G.pk.length=0;G.vx=G.vy=0;G.inv=99;SFX.warpDive()}
 function warpStep(dt){const w=G.warp;w.t+=dt;stepParts(dt);
  if(!w.ran&&w.t>=WARP.dive&&!w.win){w.ran=true;SFX.warpRun()}
  if(!w.out&&w.t>=WARP.dive+WARP.tunnel){w.out=true;SFX.launch()}
