@@ -6,7 +6,7 @@
 <style>
 html,body{margin:0;padding:0;height:100%;background:#1c2233;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
-body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
 </style><script src="../menu.js" defer></script>
 <script src="../fresh.js" defer></script>
 </head><body><canvas id="c"></canvas>
@@ -38,10 +38,25 @@ const HELP2="Tap a piece to select it, then tap or hold \u21ba \u21bb to turn it
 // the landscape hint line needs a strip of its own, or it lands on the goal cup
 const HINTH=26;
 function topH(){return SAFE.t+(W<620?116:72)}
-function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;safeRead();const top=topH();
+function layout(){DPR=Math.min(window.devicePixelRatio||1,2);W=vpW();H=vpH();cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";safeRead();const top=topH();
  if(W/H>1.15){tray.vertical=true;tray.w=Math.max(120,Math.min(170,W*0.18));tray.x=W-tray.w-SAFE.r;tray.y=top;tray.h=H-top-SAFE.b;const aw=W-tray.w-16-SAFE.l-SAFE.r,ah=H-top-8-SAFE.b-HINTH;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}
  else{tray.vertical=false;tray.h=Math.max(110,Math.min(150,H*0.18));tray.x=0;tray.y=H-tray.h-SAFE.b;tray.w=W;const aw=W-16-SAFE.l-SAFE.r,ah=H-top-tray.h-8-SAFE.b;board.s=Math.min(aw/BW,ah/BH);board.x=8+SAFE.l+(aw-BW*board.s)/2;board.y=top+(ah-BH*board.s)/2}}
-window.addEventListener("resize",layout);layout();
+
+// The canvas follows the screen it is actually on. iOS does not always tell a
+// page that its viewport changed - hiding the browser's bars, coming back from
+// the app switcher, rotating - and the event it does send can carry the old
+// numbers. So the size comes from the visual viewport, the canvas is sized in
+// pixels rather than a percentage of a body that may itself be wrong, every
+// notice is taken twice more on a short delay, and a watchdog five times a
+// second puts back anything that has drifted, the backing store included.
+function vpW(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.width?vv.width:innerWidth))}
+function vpH(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.height?vv.height:innerHeight))}
+function reflow(){layout();setTimeout(layout,60);setTimeout(layout,250)}
+function fitWatch(){if(vpW()!==W||vpH()!==H||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))layout()}
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+setInterval(fitWatch,200);
+window.addEventListener("resize",reflow);layout();
 // ---------------------------------------------------------------- audio
 // iOS lets a page start sound only inside a gesture it recognises, and a
 // touchstart is not one - a touchend, a click or a key is. The context used

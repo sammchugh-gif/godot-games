@@ -6,7 +6,7 @@
 <style>
 html,body{margin:0;padding:0;height:100%;background:#151a22;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
-body{position:fixed;inset:0}canvas{display:block;position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
 </style><script src="../menu.js" defer></script>
 <script src="../fresh.js" defer></script>
 </head><body><canvas id="c"></canvas>
@@ -22,7 +22,7 @@ document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{p
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
 const cv=document.getElementById("c"),cx=cv.getContext("2d");
-let W=0,H=0,DPR=1;function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;layout()}
+let W=0,H=0,DPR=1;function resize(){DPR=Math.min(window.devicePixelRatio||1,2);W=vpW();H=vpH();cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";layout()}
 const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 function hash(x,y){let h=(x*374761393+y*668265263)|0;h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296}
 const store={get(k,d){try{const v=localStorage.getItem("tanktussle."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("tanktussle."+k,JSON.stringify(v))}catch(e){}}};
@@ -59,7 +59,22 @@ function safeRead(){const d=window.__safeProbe;if(!d)return;const c=getComputedS
  SAFE.t=parseFloat(c.paddingTop)||0;SAFE.r=parseFloat(c.paddingRight)||0;
  SAFE.b=parseFloat(c.paddingBottom)||0;SAFE.l=parseFloat(c.paddingLeft)||0}
 function layout(){safeRead();strip=Math.floor(W*0.25);const aw=W-strip*2-24,ah=H-28;cell=Math.floor(aw/C);let rows=Math.floor(ah/cell);if(rows%2===0)rows--;R=clamp(rows,11,23);cell=Math.min(cell,Math.floor(ah/R));ar.w=C*cell;ar.h=R*cell;ar.x=Math.floor((W-ar.w)/2);ar.y=Math.floor((H-ar.h)/2);}
-window.addEventListener("resize",resize);
+
+// The canvas follows the screen it is actually on. iOS does not always tell a
+// page that its viewport changed - hiding the browser's bars, coming back from
+// the app switcher, rotating - and the event it does send can carry the old
+// numbers. So the size comes from the visual viewport, the canvas is sized in
+// pixels rather than a percentage of a body that may itself be wrong, every
+// notice is taken twice more on a short delay, and a watchdog five times a
+// second puts back anything that has drifted, the backing store included.
+function vpW(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.width?vv.width:innerWidth))}
+function vpH(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.height?vv.height:innerHeight))}
+function reflow(){resize();setTimeout(resize,60);setTimeout(resize,250)}
+function fitWatch(){if(vpW()!==W||vpH()!==H||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))resize()}
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+setInterval(fitWatch,200);
+window.addEventListener("resize",reflow);
 // ---------------------------------------------------------------- state
 const COLS=[{main:"#e04040",dark:"#8a2020",light:"#ff8080",name:"RED"},{main:"#3070e0",dark:"#1a3a8a",light:"#80b0ff",name:"BLUE"}];
 let scene="title",mode="2p",botLevel=1,grid=[],hp=[],tanks=[],shells=[],mines=[],pickups=[],parts=[],marks=[],round=1,wins=[0,0],roundT=0,countdown=0,banner="",bannerT=0,pickT=0,shake=0,frameT=0,tPrev=0,winner=-1,matchOver=false;

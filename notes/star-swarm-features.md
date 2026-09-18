@@ -232,6 +232,13 @@ changes, all in `resize`:
 as the page loads, when the screen grows, turned sideways, and after
 something resets the canvas out from under it.
 
+The same three changes are in every other game that fills the screen with
+a canvas - Slime Storm, Dungeon Dash, Turbo Karts, Riddle Rumble, Super
+Strikers, Marble Mayhem, Tank Tussle - with the watchdog on a timer
+rather than the frame loop. Paws of Fury letterboxes a fixed stage and
+already re-measured; it only needed to read the visual viewport.
+`tools/fitcheck.mjs` checks all nine.
+
 ## Cards that fit, and the hole that is not a gate
 
 `textFit` used to stop shrinking at eleven pixels and then let the line

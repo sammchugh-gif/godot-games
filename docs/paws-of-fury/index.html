@@ -2130,13 +2130,17 @@ function checkOrient(){
 }
 function fitStageTouch(){
   const box=document.getElementById('stagebox');
-  const iw = innerWidth||VW, ih = innerHeight||VH;
+  /* the visual viewport, not the layout one: when iOS hides the browser's
+     bars the page keeps its old height and the stage stays too small */
+  const vv=window.visualViewport;
+  const iw = (vv&&vv.width)||innerWidth||VW, ih = (vv&&vv.height)||innerHeight||VH;
   const pad = IS_TOUCH? 0 : 30;
   const s = Math.max(0.15, Math.min(iw/VW,(ih-pad)/VH));
   box.style.width=(VW*s)+'px'; box.style.height=(VH*s)+'px';
   checkOrient();
 }
 addEventListener('resize',fitStageTouch);
+if(window.visualViewport){visualViewport.addEventListener('resize',fitStageTouch);visualViewport.addEventListener('scroll',fitStageTouch)}
 addEventListener('orientationchange',()=>setTimeout(fitStageTouch,120));
 /* Layout is not always settled when this runs, and some embeddings report a
    zero-size viewport at first — which used to leave the game stuck at the

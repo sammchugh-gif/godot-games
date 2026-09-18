@@ -29,7 +29,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* how each game starts a run, for the ones whose music only plays in one */
 const GAMES = {
-  'star-swarm':     { audio: 'window.SW.audio', ctx: 'window.SW.ctx', music: true },
+  /* Star Swarm keeps asking until its context is awake, so it must not need
+     the finger at all: a phone that interrupts the sound (a call, the screen
+     locking, another app) has to get it back on its own. */
+  'star-swarm':     { audio: 'window.SW.audio', ctx: 'window.SW.ctx', music: true, selfWakes: true },
   'slime-storm':    { start: "window.SS.start('dylan')", music: true },
   'dungeon-dash':   { start: "window.DD.start('dylan')", music: true },
   'turbo-karts':    { start: "window.TK.start(0,'dylan');window.TK.go()", music: true },
@@ -71,25 +74,37 @@ for (const slug of slugs) {
   if (cfg.start) await pg.evaluate(cfg.start);
   await sleep(250);
   await pg.evaluate(`(${actx}) && (${actx}).suspend()`);
-  await sleep(400);
-  const asleep = await pg.evaluate(audio);
-  await sleep(500);
-  const still = await pg.evaluate(audio);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await sleep(600);
-  const a0 = await pg.evaluate(audio);
-  await sleep(1000);
-  const a1 = await pg.evaluate(audio);
+  let asleep, still, a0, a1;
+  if (cfg.selfWakes) {
+    /* nothing is touched: the game has to notice and come back by itself */
+    asleep = await pg.evaluate(audio);
+    await sleep(1600);
+    a0 = await pg.evaluate(audio); still = asleep;
+    await sleep(1000);
+    a1 = await pg.evaluate(audio);
+  } else {
+    await sleep(400);
+    asleep = await pg.evaluate(audio);
+    await sleep(500);
+    still = await pg.evaluate(audio);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await sleep(600);
+    a0 = await pg.evaluate(audio);
+    await sleep(1000);
+    a1 = await pg.evaluate(audio);
+  }
   await ctx.close();
   let ok, detail;
   if (!asleep) { ok = false; detail = 'no audio context was made by the tap'; }
-  else if (asleep.state !== 'suspended') { ok = false; detail = `could not put the context to sleep (${asleep.state})`; }
-  else if (!a0 || a0.state !== 'running') { ok = false; detail = `${a0 && a0.state} after the finger lifted - the tap did not wake it`; }
+  else if (!cfg.selfWakes && asleep.state !== 'suspended') { ok = false; detail = `could not put the context to sleep (${asleep.state})`; }
+  else if (!a0 || a0.state !== 'running') { ok = false; detail = cfg.selfWakes ? `${a0 && a0.state} a second and a half after being interrupted - it did not come back` : `${a0 && a0.state} after the finger lifted - the tap did not wake it`; }
   else if (cfg.music) {
     const held = still.next === asleep.next, moving = a1.timer && a1.next > a0.next && a1.next > a1.now;
-    ok = held && moving;
-    detail = `asleep with the finger down, scheduler ${held ? 'held' : 'WRITING INTO A FROZEN CLOCK'}; running once it lifts, scheduler ${moving ? 'moving' : 'STALLED'}`;
-  } else { ok = true; detail = 'asleep with the finger down, running once it lifts'; }
+    ok = (cfg.selfWakes || held) && moving;
+    detail = cfg.selfWakes
+      ? `interrupted with nothing touched, running again on its own, scheduler ${moving ? 'moving' : 'STALLED'}`
+      : `asleep with the finger down, scheduler ${held ? 'held' : 'WRITING INTO A FROZEN CLOCK'}; running once it lifts, scheduler ${moving ? 'moving' : 'STALLED'}`;
+  } else { ok = true; detail = cfg.selfWakes ? 'interrupted with nothing touched, running again on its own' : 'asleep with the finger down, running once it lifts'; }
   if (errs.length) { ok = false; detail += ' | page error: ' + errs[0].slice(0, 80); }
   if (!ok) bad++;
   console.log(`${slug.padEnd(15)} ${detail} ${ok ? 'ok' : '<-- FAIL'}`);
