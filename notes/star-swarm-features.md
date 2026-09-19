@@ -212,6 +212,16 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## The vitals dial
+
+Hull and shield were two bars stretched across the bottom of the screen,
+which is where a thumb sits. They are one dial in the bottom-left corner
+now: a thin outer ring for the shield, a thick inner ring for the hull,
+both sweeping three quarters of a turn from the lower left, and the hull
+in figures in the middle. Under 30% the hull ring goes red and the dial
+pulses. The upgrade tiles get the rest of the width and wrap as before.
+One `HUDBOX.vitals` replaces `hull` and `shield`.
+
 ## Filling the screen on a phone
 
 A phone showed the game drawn into the top of the screen with a dead band

@@ -2027,7 +2027,11 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  // have now, and everything goes in HUDBOX so a test can check it.
  const BY=H-SB;
  HUDBOX={};
- const wide=W-32-SL-SR;
+ // Hull and shield live in the bottom-left corner as one dial. Two bars
+ // stretched across the bottom of the screen are two bars under a thumb,
+ // and a number you cannot read while you are flying is not a HUD.
+ const GR=Math.max(24,Math.min(40,Math.min(W,H)*0.078));
+ const wide=W-32-SL-SR-(GR*2+14);
  const ups=[];
  for(const k in G.weapons){const ev=G.evo[k]&&WEAPONS[k].evo;ups.push({icon:WEAPONS[k].icon,col:ev?ev.col:WEAPONS[k].col,n:ev?"★":G.weapons[k],big:22,bg:ev?"rgba(60,20,90,0.6)":"rgba(0,0,0,0.45)"})}
  for(const k in G.passives)ups.push({icon:PASSIVES[k].icon,col:PASSIVES[k].col,n:G.passives[k],big:20,bg:"rgba(0,0,0,0.3)"});
@@ -2051,21 +2055,27 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  if(ups.length){const n0=Math.min(perRow,ups.length);
   const x0=W-16-SR-(n0*ts+(n0-1)*gap);
   HUDBOX.ups={x:x0,y:rowY,w:W-16-SR-x0,h:blockH}}
- // hull and shield get lines of their own above the tiles
- const hw=Math.min(280,wide),hh=22,sh=14;
- const hy=rowY-(ups.length?8:0)-hh;
- cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,hy,hw,hh,8);cx.fill();
- cx.fillStyle=G.hp<G.maxhp*0.3?"#ff3040":"#40e060";
- rr(18+SL,hy+2,(hw-4)*clamp(G.hp/G.maxhp,0,1),hh-4,7);cx.fill();
- text(Math.ceil(G.hp)+" / "+G.maxhp,16+SL+hw/2,hy+hh/2,14,"#fff");
- HUDBOX.hull={x:16+SL,y:hy,w:hw,h:hh};
- const sy=hy-4-sh;
- cx.fillStyle="rgba(0,0,0,0.5)";rr(16+SL,sy,hw,sh,6);cx.fill();
- cx.fillStyle="#40d0ff";rr(18+SL,sy+2,(hw-4)*clamp(G.sh/Math.max(1,G.maxsh),0,1),sh-4,5);cx.fill();
- // the label used to be drawn at a fixed eleven pixels across the middle of
- // the bar, so on a narrow phone it sat on top of the fill
- textFit("SHIELD",16+SL+hw/2,sy+sh/2,Math.min(10,hw*0.1),"rgba(255,255,255,0.85)",hw-12);
- HUDBOX.shield={x:16+SL,y:sy,w:hw,h:sh};
+ // The dial: a thin outer ring for the shield, a thick inner ring for the
+ // hull, and the hull in figures in the middle. Both sweep three quarters of
+ // a turn from the lower left, so a glance at the corner says how you are.
+ const gx=16+SL+GR,gy=BY-12-GR,A0=Math.PI*0.75,SWEEP=Math.PI*1.5;
+ const hpF=clamp(G.hp/Math.max(1,G.maxhp),0,1),shF=clamp(G.sh/Math.max(1,G.maxsh),0,1);
+ const low=hpF<0.3;
+ cx.save();cx.lineCap="round";
+ if(FX)glow(gx,gy,GR*1.9,low?"rgba(255,60,70,"+(0.2+0.14*Math.sin(frameT*7)).toFixed(2)+")":"rgba(60,180,255,0.10)","rgba(0,0,0,0)");
+ cx.fillStyle="rgba(4,8,22,0.62)";cx.beginPath();cx.arc(gx,gy,GR,0,TAU);cx.fill();
+ cx.strokeStyle="rgba(255,255,255,0.13)";cx.lineWidth=1;cx.beginPath();cx.arc(gx,gy,GR,0,TAU);cx.stroke();
+ // the empty tracks, so a dial that is nearly gone still reads as a dial
+ cx.strokeStyle="rgba(255,255,255,0.10)";
+ cx.lineWidth=GR*0.13;cx.beginPath();cx.arc(gx,gy,GR*0.85,A0,A0+SWEEP);cx.stroke();
+ cx.lineWidth=GR*0.24;cx.beginPath();cx.arc(gx,gy,GR*0.58,A0,A0+SWEEP);cx.stroke();
+ if(G.maxsh>0&&shF>0){cx.strokeStyle="#40d0ff";cx.lineWidth=GR*0.13;
+  cx.beginPath();cx.arc(gx,gy,GR*0.85,A0,A0+SWEEP*shF);cx.stroke()}
+ if(hpF>0){cx.strokeStyle=low?"#ff3040":"#40e060";cx.lineWidth=GR*0.24;
+  cx.beginPath();cx.arc(gx,gy,GR*0.58,A0,A0+SWEEP*hpF);cx.stroke()}
+ textFit(String(Math.ceil(G.hp)),gx,gy-GR*0.02,GR*0.58,low?"#ffd2d2":"#fff",GR*1.05);
+ cx.restore();
+ HUDBOX.vitals={x:gx-GR,y:gy-GR,w:GR*2,h:GR*2};
  if(G.bossAlive){const b=G.bossAlive;
   // narrow enough to stay clear of the pause button on a small screen
   const pauseL=W-64-SR;
