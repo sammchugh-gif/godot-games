@@ -469,3 +469,21 @@ black over its own labels.
 
 Adding a third skin means another entry in `SKINS` and another set of twins;
 nothing else in the game needs to know.
+
+## Drones
+
+A drone was a nine-pixel triangle, and four to six of them round the ship read
+as litter rather than a squadron. Each one is now a little ship in its own
+right: a tapered hull lit from the top, two outrigger pods on struts with a
+muzzle on each, a dark socket with a hot lens in it, and a nozzle with the
+engine burning behind it. It rocks as it flies, and the pods flash for an
+eighth of a second after it shoots, which is the only way to tell at a glance
+which of them is actually firing.
+
+`droneSprite(evo)` bakes one per rank per skin - the evolved Drone Swarm is the
+paler, hotter one - so six on screen cost six `drawImage` calls. The vector skin
+gets its own: the same silhouette as an outline with a phosphor halo, a ring
+for the lens and a V of flame behind.
+
+The one engine-side change is cosmetic: a drone now carries `fire`, a timer set
+when it shoots so the flash has something to read.
