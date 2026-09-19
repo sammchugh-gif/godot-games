@@ -119,7 +119,9 @@ for (const [W, H, tag] of SIZES) {
    hard to get there that it stops reading. */
 const CARDS = `(() => {
   const S = window.SW; S.fx = false; S.start(S.SHIPS[0]); const G = S.G;
-  G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
+  /* the field is empty and nothing spawns, so the ship needs no fake hull -
+     and a hull of a billion is a number no HUD should be asked to print */
+  G.arrive = 0; G.inv = 1e9; G.spawnAcc = -1e9; G.en.length = 0;
   /* the worst case the game can offer: a weapon going to max with its long
      partner name, and a passive that evolves a long-named weapon */
   for (const k in S.WEAPONS) G.weapons[k] = S.WEAPONS[k].max;

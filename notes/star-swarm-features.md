@@ -212,6 +212,33 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## A quieter HUD
+
+Three changes, all about what the screen asks you to look at.
+
+- The upgrade tiles are a reference, not a readout. They sit at a third
+  of their opacity and come up for a moment whenever a rank changes,
+  which is the only time they are worth reading.
+- The clock was the largest thing on the screen and is not what you are
+  watching. It is about two thirds the size, and for the first four and a
+  half seconds of a sector the realm's name stands in its place. The
+  middle of the top row is measured against the level on the left and the
+  kills on the right rather than taking a fraction of the width, because
+  "THE SHATTERED MOON" beside "LV 100" and "9999" fits in neither.
+- Damage used to put a sheet of red over the whole screen, hiding the
+  ship at the moment you most need to see it. It comes in from the edges
+  now, as a vignette.
+
+## The vitals dial
+
+Hull and shield were two bars stretched across the bottom of the screen,
+which is where a thumb sits. They are one dial in the bottom-left corner
+now: a thin outer ring for the shield, a thick inner ring for the hull,
+both sweeping three quarters of a turn from the lower left, and the hull
+in figures in the middle. Under 30% the hull ring goes red and the dial
+pulses. The upgrade tiles get the rest of the width and wrap as before.
+One `HUDBOX.vitals` replaces `hull` and `shield`.
+
 ## Filling the screen on a phone
 
 A phone showed the game drawn into the top of the screen with a dead band
@@ -227,6 +254,18 @@ changes, all in `resize`:
   arrive before the numbers behind it settle - measured, not guessed),
   and `sizeWatch` re-checks every fifth frame and repairs the canvas if
   anything, including the backing store, has drifted.
+
+Two more things the page does not own, both of which read as the game
+being cut off at the bottom of an iPhone. In a browser tab iOS keeps a
+strip along the bottom of the screen for its collapsed toolbar and fills
+it with the page's own background colour, so a sky that ends on a
+nebula-tinted blue showed a step where the flat page ground began: the
+page is now kept the colour the canvas ends on, sampled from its bottom
+edge twice a second, whatever the game is showing. And the home
+indicator lives inside that strip while iOS still reports a bottom
+inset, so honouring it left the game floating a finger's width above the
+screen; the inset is only honoured when the page owns the whole screen,
+which `navigator.standalone` answers.
 
 `tools/hudcheck.mjs` proves it: the canvas must cover the visual viewport
 as the page loads, when the screen grows, turned sideways, and after
