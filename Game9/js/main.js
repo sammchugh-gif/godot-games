@@ -26,6 +26,10 @@ window.__spy = G;
 function newSave() { return { version: 2, country: 0, done: [], code: null, arrived: {}, briefed: {}, finished: false, stars: {}, bugs: [] }; }
 const TOTAL = ALL_MISSIONS.length;
 const actOf = ci => COUNTRIES[Math.min(ci, COUNTRIES.length - 1)].act;
+const cityDone = ci => COUNTRIES[ci].missions.every(m => G.save.done.includes(m.id));
+// the game is a straight line, so skip any city that is already finished: a
+// save made before the running order changed can have gaps anywhere in it
+const firstUnfinished = () => { const i = COUNTRIES.findIndex((c, k) => !cityDone(k)); return i < 0 ? -1 : i; };
 const isActEnd = ci => ci === COUNTRIES.length - 1 || COUNTRIES[ci + 1].act !== COUNTRIES[ci].act;
 function saveGame() { store.set("save", G.save); }
 
@@ -147,7 +151,7 @@ function pressButton(id, b) {
     case "mgquit": quitMinigame(); break;
     case "skip": if (G.dialogue.active) { G.dialogue.shown = 1e9; G.dialogue.tap(); } break;
     case "credits": fadeOut(() => { G.credits = { t: 0 }; setState("credits"); fadeIn(); }); break;
-    case "nextact": briefingFor(G.endingAct + 1); break;
+    case "nextact": briefingFor(actOf(G.save.country)); break;
     case "titleFromCredits": fadeOut(() => { setState("title"); Music.setMode("calm"); fadeIn(); }); break;
     default:
       if (id.startsWith("replay:")) { const m = ALL_MISSIONS.find(q => q.id === id.slice(7)); if (m) startReplay(m); }
@@ -307,16 +311,25 @@ function afterOutro(m) {
     // chapter close: Kolya runs off, then the plane
     const run = KOLYA_RUNS[c.id];
     if (run) G.world.kolyaRun(run[0], run[1], run[2]);
-    G.dialogue.show(c.leave, () => { G.save.country = G.country + 1; saveGame(); goMap(); });
+    G.dialogue.show(c.leave, () => { goNextCountry(G.country + 1); });
   } else {
     refreshStations();
     const nxt = currentMission();
     if (nxt) toast("New objective: " + nxt.stationLabel, 3);
   }
 }
+// move on to the next city that still has work in it, and stop for the act's
+// briefing if that city belongs to an act the player has not been briefed on
+function goNextCountry(from) {
+  let i = from;
+  while (i < COUNTRIES.length - 1 && cityDone(i)) i++;
+  G.save.country = i; saveGame();
+  const act = COUNTRIES[i].act;
+  if (!G.save.briefed[act]) briefingFor(act); else goMap();
+}
 function finishAct(act) {
   const final = act >= ACTS.length;
-  if (final) G.save.finished = true; else G.save.country = G.country + 1;
+  if (final) G.save.finished = true; else { let i = G.country + 1; while (i < COUNTRIES.length - 1 && cityDone(i)) i++; G.save.country = i; }
   saveGame();
   fadeOut(() => { setState("ending"); G.endingPhase = 0; G.endingAct = act; Ambience.stop(); Music.setMode("calm"); fadeIn(); G.dialogue.show(ACTS[act - 1].ending, () => { SFX.medal(); G.endingPhase = 1; }); });
 }
@@ -552,8 +565,11 @@ async function boot() {
   try { await import("./scenes2.js"); } catch (e) { console.warn("scenes2.js not loaded", e); }
   try { await import("./scenes3.js"); } catch (e) { console.warn("scenes3.js not loaded", e); }
   const sv = store.get("save", null); G.save = sv && sv.version === 2 ? sv : newSave(); if (!G.save.stars) G.save.stars = {}; if (!G.save.bugs) G.save.bugs = [];
-  // a save that finished the game before a later act existed carries on into it
-  { const briefed = Object.keys(G.save.briefed || {}).map(Number); const top = briefed.length ? Math.max(...briefed) : 0; const next = COUNTRIES.findIndex(c => c.act === top + 1); if (G.save.finished && top < ACTS.length && next >= 0) { G.save.finished = false; G.save.country = next; saveGame(); } }
+  // an older save may have been made when the cities ran in a different order,
+  // so trust the finished missions rather than the stored position
+  { const i = firstUnfinished();
+    if (i < 0) { G.save.finished = true; G.save.country = COUNTRIES.length - 1; }
+    else if (G.save.finished || G.save.country !== i) { G.save.finished = false; G.save.country = i; saveGame(); } }
   const msg = document.getElementById("bootmsg");
   await G.world.loadTextures(p => { msg.textContent = "loading textures " + Math.round(p * 100) + "%"; });
   document.getElementById("boot").style.display = "none";

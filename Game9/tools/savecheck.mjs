@@ -76,7 +76,9 @@ await page.evaluate(() => {
 await page.close();
 page = await open();
 const old = await save(page);
-ck(old && old.done.length === 9 && old.country === 5, `an older save still loads intact (${old && old.done.length} missions, country ${old && old.country})`);
+ck(old && old.done.length === 9, `an older save still loads intact (${old && old.done.length} missions)`);
+const where = await page.evaluate(() => ({ ci: __spy.save.country, id: __spy.debug.COUNTRIES[__spy.save.country].id, left: __spy.debug.COUNTRIES[__spy.save.country].missions.filter(m => !__spy.save.done.includes(m.id)).length }));
+ck(where.left > 0, `and picks up at the first city with work left (${where.id}, ${where.left} missions to go)`);
 const mem = await page.evaluate(() => ({ stars: __spy.save.stars, bugs: __spy.save.bugs, done: __spy.save.done.length }));
 ck(mem.stars && typeof mem.stars === "object", "the new stars map is filled in on load rather than the save being thrown away");
 ck(Array.isArray(mem.bugs), "and the new bugs list");
@@ -86,7 +88,9 @@ await page.waitForTimeout(600);
 const lbl = await page.evaluate(() => __spy.buttons.list.map(x => x.opts.label).filter(Boolean));
 ck(lbl.some(l => /CONTINUE/.test(l)), `the older save can be continued (${lbl.find(l => /CONTINUE/.test(l)) || "none"})`);
 await page.evaluate(() => __spy.debug.press("continue"));
-await page.waitForTimeout(900);
+// the fade between screens takes over a second under a software renderer, so
+// wait for the screen rather than guessing at a delay
+await page.waitForFunction(() => ["map", "world", "briefing"].includes(__spy.state), null, { timeout: 15000 }).catch(() => {});
 ck(["map", "world", "briefing"].includes(await page.evaluate(() => __spy.state)), "and continuing it does not crash");
 // once anything is written, the new fields are on disk too
 await page.evaluate(() => { __spy.save.bugs.push("london:0"); __spy.debug.goto(0, 0); });
@@ -114,13 +118,13 @@ await page.evaluate(() => {
 });
 await page.close();
 page = await open();
-const carried = await page.evaluate(() => ({ finished: __spy.save.finished, country: __spy.save.country, act: __spy.debug.COUNTRIES[__spy.save.country].act, done: __spy.save.done.length }));
+const carried = await page.evaluate(() => ({ finished: __spy.save.finished, country: __spy.save.country, act: __spy.debug.COUNTRIES[__spy.save.country].act, done: __spy.save.done.length, expect: __spy.debug.COUNTRIES.filter(c => c.act <= 2).reduce((n, c) => n + c.missions.length, 0) }));
 ck(carried.finished === false && carried.act === 3, `a finished two-act save is carried into act three (country ${carried.country}, act ${carried.act})`);
-ck(carried.done === 60, "with its sixty finished missions kept");
+ck(carried.done === carried.expect, `with its ${carried.expect} finished missions kept`);
 await page.evaluate(() => __spy.debug.press("start"));
 await page.waitForTimeout(600);
 await page.evaluate(() => __spy.debug.press("continue"));
-await page.waitForTimeout(900);
+await page.waitForFunction(() => ["map", "world", "briefing"].includes(__spy.state), null, { timeout: 15000 }).catch(() => {});
 ck(await page.evaluate(() => __spy.state) === "briefing", "and continuing it opens the act three briefing");
 await page.close();
 

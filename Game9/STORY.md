@@ -83,134 +83,137 @@ without sound.
 
 ## The routes
 
-Act One: London, Venice, Cairo, Tokyo, New York, Rio de Janeiro, Zima
-Station (Siberia). Act Two, leaving from London again: Paris, Nairobi, Agra,
-Beijing, Sydney, Chichen Itza, the Alps. Act Three, once more from London:
-Istanbul, Marrakech, Reykjavik, Singapore, Machu Picchu, Amsterdam and the
-Curator's vault under the Antarctic ice.
+Act One: London, Venice, Istanbul, Cairo, Marrakech, Tokyo, New York, Rio de
+Janeiro, Zima Station (Siberia). Act Two, leaving from London again: Paris,
+Nairobi, Reykjavik, Agra, Singapore, Beijing, Sydney, Chichen Itza, the Alps.
+Act Three: Machu Picchu, Amsterdam and the Curator's vault under the Antarctic
+ice.
+
+The seven newest cities are spread across all three acts rather than saved for
+the end, so a new mechanic turns up every few missions all the way through.
 
 ## The missions
 
-Difficulty levels run 1 to 4. Act One sits at 1 and 2, Act Two at 3 and 4;
-every mini-game gets bigger, faster or subtler with the level. Act Three is
-built on fourteen mini-games that appear nowhere else: each is met once at
-level 2 or 3, to learn it, and once more later at level 4.
+Difficulty levels run 1 to 4. Act One sits at 1 and 2, Act Two at 3 and 4,
+Act Three at 3 and 4; every mini-game gets bigger, faster or subtler with the
+level. The fourteen newest mini-games are each met twice, far apart: once in
+Act One or Two at a gentle level, to learn them, and once more at level 4 in
+the closing cities.
 
 ### Act One: Operation Eclipse
 
+The trail of the stolen Helios Lens plans, from the Observatory robbery to a launch site in the snow.
+Nine cities; Istanbul and Marrakech are where the crate changes hands.
+
 | # | Where | Mission | Mini-game | Level | Intel won |
 | --- | --- | --- | --- | --- | --- |
-| 1 | London | The Door Code | Codebreaker | 1 | The Observatory was opened from the inside |
-| 2 | London | Nothing But the Truth | Lie detector | 2 | Fingers Malone, the flat on Baker Street |
-| 3 | London | Dashcam | Spot the difference | 1 | A safe behind the painting of the horse |
-| 4 | London | Fingers' Flat | Safe cracker | 2 | The letter from "E"; Venice |
-| 5 | Venice | Il Vetraio | Cipher wheel | 2 | A 40 m lens; the courier wears the golden mask |
-| 6 | Venice | The Glass Vault | Vault rings | 1 | The delivery note; the manifest is in a loft |
-| 7 | Venice | Carnival of Masks | Masked ball | 2 | The courier is caught; the loft has lasers |
-| 8 | Venice | Lasers in the Loft | Laser hall | 1 | Lens ships to Cairo; test on the Great Pyramid |
-| 9 | Cairo | The Listening Post | Radio tuner | 2 | Fetch the Eye from the tomb |
-| 10 | Cairo | The Sun Rods | Reactor rods | 1 | The tomb's inner door is primed |
-| 11 | Cairo | The Tomb of Light | Mirror maze | 2 | The Eye of Ra recovered |
-| 12 | Cairo | Satellite Sweep | Satellite photo | 1 | UMBRA's plane went to Tokyo; Kaito Labs |
-| 13 | Tokyo | Kaito Labs | Keypad memory | 2 | The keypad door is open |
-| 14 | Tokyo | The Corridor | Laser hall | 2 | The chip is gone; the servers remember |
-| 15 | Tokyo | Trace the Ghost | Circuit hack | 2 | The log is behind the root password |
-| 16 | Tokyo | Root Password | Codebreaker | 2 | Paid by Marcus Sterling, New York |
-| 17 | New York | Window Watch | Spot the difference | 2 | The vault is behind the bookcase |
-| 18 | New York | Sterling's Vault | Lock pick | 2 | The ledger: mirror, chip, rocket; Pier 9 |
-| 19 | New York | Ticking | Wire cut | 2 | Rocket sails Friday, crate marked ZIMA |
-| 20 | New York | The Bug | Sonar | 1 | ZIMA is a place, not a person |
-| 21 | Rio | Crew Manifest | Passport match | 1 | Kolya is the Severnaya's cook |
-| 22 | Rio | Sugarloaf Lens | Telephoto | 2 | ZIMA STATION, the Severnaya, Kolya in Rio |
-| 23 | Rio | Pier 9 | Stealth yard | 2 | 64°N 100°E, Siberia, three days |
-| 24 | Rio | Winter Satellite | Satellite photo | 2 | Zima Station from orbit |
-| 25 | Siberia | The Ice Fortress | Shredder | 2 | The launch schedule and the abort code |
-| 26 | Siberia | The Reactor | Reactor rods | 2 | The countdown will pause at T-minus 90 |
-| 27 | Siberia | The Vault Door | Vault rings | 2 | The control room is open |
-| 28 | Siberia | Countdown | Override | 2 | The Engine grounded; Eclipse escapes |
+| 1 | London | The Door Code | Codebreaker | 1 | The door log |
+| 2 | London | Nothing But the Truth | Lie detector | 2 | The thief |
+| 3 | London | Dashcam | Spot the difference | 1 | The dashcam |
+| 4 | London | Fingers' Flat | Safe cracker | 2 | The letter from "E" |
+| 5 | London | Downriver | Chase (boat) | 1 | Kolya's boarding pass |
+| 6 | Venice | Il Vetraio | Cipher wheel | 2 | The order book |
+| 7 | Venice | The Glass Vault | Vault rings | 1 | The delivery note |
+| 8 | Venice | Carnival of Masks | Masked ball | 2 | The courier |
+| 9 | Venice | Lasers in the Loft | Laser hall | 1 | The manifest |
+| 10 | Istanbul | The Tea Glass | Fingerprints | 2 | Mr Silver |
+| 11 | Istanbul | The Lighthouse | Morse code | 2 | DOCK |
+| 12 | Istanbul | Under the Bazaar | Tangled wires | 2 | The empty crate |
+| 13 | Istanbul | The Cups | Shell game | 2 | The customs seal |
+| 14 | Cairo | The Listening Post | Radio tuner | 2 | Eclipse's transmission |
+| 15 | Cairo | The Sun Rods | Reactor rods | 1 | The counterweights |
+| 16 | Cairo | The Tomb of Light | Mirror maze | 2 | The Eye of Ra |
+| 17 | Cairo | Satellite Sweep | Satellite photo | 1 | The satellite picture |
+| 18 | Marrakech | The Spice Scales | Balance scale | 2 | The fake coin |
+| 19 | Marrakech | The Torn Map | Anagram | 2 | The camel camp |
+| 20 | Marrakech | Desert Stars | Star chart | 2 | The riad |
+| 21 | Marrakech | The Riad Roof | Grapple gun | 2 | The mirror mount |
+| 22 | Tokyo | Kaito Labs | Keypad memory | 2 | Kaito Labs, ground floor |
+| 23 | Tokyo | The Corridor | Laser hall | 2 | Floor 44 |
+| 24 | Tokyo | Trace the Ghost | Circuit hack | 2 | The server log |
+| 25 | Tokyo | Root Password | Codebreaker | 2 | The root log |
+| 26 | New York | Window Watch | Spot the difference | 2 | The penthouse photos |
+| 27 | New York | Sterling's Vault | Lock pick | 2 | Sterling's ledger |
+| 28 | New York | Ticking | Wire cut | 2 | The last page |
+| 29 | New York | The Bug | Sonar | 1 | The transmitter |
+| 30 | Rio de Janeiro | Crew Manifest | Passport match | 1 | The crew list |
+| 31 | Rio de Janeiro | Sugarloaf Lens | Telephoto | 2 | The photographs |
+| 32 | Rio de Janeiro | Pier 9 | Stealth yard | 2 | The tracker |
+| 33 | Rio de Janeiro | Winter Satellite | Satellite photo | 2 | Zima Station from orbit |
+| 34 | Zima Station | The Ice Fortress | Shredder | 2 | The launch schedule |
+| 35 | Zima Station | The Reactor | Reactor rods | 2 | The reactor |
+| 36 | Zima Station | The Vault Door | Vault rings | 2 | The vault door |
+| 37 | Zima Station | Countdown | Override | 2 | Operation Eclipse: stopped |
 
 ### Act Two: Operation Midnight
 
+Seven Shadow Lanterns over seven cities, and the supply line that feeds them: the glassworks in
+Iceland that grinds their mirrors and the relay in Singapore that gives them their orders.
+
 | # | Where | Mission | Mini-game | Level | Intel won |
 | --- | --- | --- | --- | --- | --- |
-| 29 | Paris | The Flower Man | Lie detector | 3 | The lantern is in the Louvre pyramid roof |
-| 30 | Paris | Louvre After Dark | Laser hall | 3 | The lantern's panel takes five symbols |
-| 31 | Paris | The Panel | Codebreaker | 3 | Lantern 1 of 7 dark; Nairobi |
-| 32 | Paris | The Iron Lady | Telephoto | 3 | The van marked ALPINE DAIRY |
-| 33 | Nairobi | Camera Trap | Spot the difference | 3 | The truck went to the watering hole |
-| 34 | Nairobi | The Watering Hole | Sonar | 3 | The tether runs to UMBRA's camp |
-| 35 | Nairobi | The Camp | Stealth yard | 3 | The disarm frequency is on the ranger channel |
-| 36 | Nairobi | The Ranger Tower | Radio tuner | 3 | Lantern 2 of 7 dark; Agra |
-| 37 | Agra | Festival of Colour | Masked ball | 3 | The courier's coded message |
-| 38 | Agra | The Coded Message | Cipher wheel | 3 | The lantern is in the sundial observatory |
-| 39 | Agra | The Sundial | Mirror maze | 3 | The keypad is exposed |
-| 40 | Agra | The Keypad | Keypad memory | 3 | Lantern 3 of 7 dark; Beijing |
-| 41 | Beijing | The Tea-House Safe | Safe cracker | 3 | One of three watchtowers |
-| 42 | Beijing | The Dish | Satellite photo | 3 | The third watchtower |
-| 43 | Beijing | Watchtower Wiring | Circuit hack | 3 | The lantern's lift is down |
-| 44 | Beijing | The Lantern's Lock | Reactor rods | 3 | Lantern 4 of 7 dark; Sydney |
-| 45 | Sydney | Ferry Passengers | Passport match | 2 | The diver surfaces at the south pylon |
-| 46 | Sydney | The Lookout | Telephoto | 4 | The hatch under the pylon, seven pins |
-| 47 | Sydney | The Hatch | Lock pick | 3 | The lantern is on a wired timer |
-| 48 | Sydney | The Timer | Wire cut | 3 | Lantern 5 of 7 dark; Chichen Itza |
-| 49 | Chichen Itza | The Shredded Map | Shredder | 3 | The jaguar chamber; the master abort code |
-| 50 | Chichen Itza | The Serpent Stairs | Stealth yard | 4 | Inside the chamber |
-| 51 | Chichen Itza | The Jaguar Vault | Vault rings | 3 | The jaguar door is open |
-| 52 | Chichen Itza | The Old Code | Codebreaker | 4 | Lantern 6 of 7 dark; the Alps |
-| 53 | The Alps | The Entrance Hall | Laser hall | 4 | Inside the lair |
-| 54 | The Alps | The Chairman's Lie | Lie detector | 4 | The switch can be turned off; Eclipse is on the peak |
-| 55 | The Alps | A Hundred Rooms | Sonar | 4 | The master switch room |
-| 56 | The Alps | Midnight | Override | 4 | All seven lanterns dark; the Chairman arrested |
-| 57 | London | The Getaway | Chase (boat) | 1 | Kolya's launch, caught on the Thames |
-| 58 | Paris | The Rocket Backpack | Chase (air) | 2 | Madame Eclipse in custody |
-| 59 | Agra | The Tuk-Tuk | Chase | 3 | The courier's van, caught |
-| 60 | Chichen Itza | The Jeep | Chase | 4 | The last van, caught at the pyramid |
-
-(The four chases sit at the end of their own cities in the game: missions
-5 of London, Paris, Agra and Chichen Itza. They are numbered here after the
-puzzle missions of the acts they belong to.)
+| 38 | Paris | The Flower Man | Lie detector | 3 | Jean-Luc's confession |
+| 39 | Paris | Louvre After Dark | Laser hall | 3 | The lantern's panel |
+| 40 | Paris | The Panel | Codebreaker | 3 | Lantern 1 of 7 |
+| 41 | Paris | The Iron Lady | Telephoto | 3 | The meeting |
+| 42 | Paris | The Rocket Backpack | Chase (jetpack) | 2 | Madame Eclipse |
+| 43 | Nairobi | Camera Trap | Spot the difference | 3 | The camera trap |
+| 44 | Nairobi | The Watering Hole | Sonar | 3 | The tether |
+| 45 | Nairobi | The Camp | Stealth yard | 3 | The crate |
+| 46 | Nairobi | The Ranger Tower | Radio tuner | 3 | Lantern 2 of 7 |
+| 47 | Reykjavik | Thin Ice | Thin ice | 3 | The rig |
+| 48 | Reykjavik | The Seismograph | Oscilloscope | 3 | The drill |
+| 49 | Reykjavik | The Lava Tube | Fog maze | 3 | The decoy |
+| 50 | Reykjavik | Harbour Cargo | Crate stacking | 3 | The mirror blanks |
+| 51 | Agra | Festival of Colour | Masked ball | 3 | The courier's message |
+| 52 | Agra | The Coded Message | Cipher wheel | 3 | The coded pages |
+| 53 | Agra | The Sundial | Mirror maze | 3 | The star disc |
+| 54 | Agra | The Keypad | Keypad memory | 3 | Lantern 3 of 7 |
+| 55 | Agra | The Tuk-Tuk Dash | Chase (tuktuk) | 2 | The courier's chip |
+| 56 | Singapore | Three Towers | Triangulation | 3 | The drone |
+| 57 | Singapore | The Menu Board | Picross | 3 | GARDENS, MIDNIGHT |
+| 58 | Singapore | Gardens by Night | Fingerprints | 4 | Mr Silver again |
+| 59 | Singapore | The Supertrees | Morse code | 4 | The relay |
+| 60 | Beijing | The Tea-House Safe | Safe cracker | 3 | The wall map |
+| 61 | Beijing | The Dish | Satellite photo | 3 | The satellite picture |
+| 62 | Beijing | Watchtower Wiring | Circuit hack | 3 | The lift |
+| 63 | Beijing | The Lantern's Lock | Reactor rods | 3 | Lantern 4 of 7 |
+| 64 | Sydney | Ferry Passengers | Passport match | 2 | The diver |
+| 65 | Sydney | The Lookout | Telephoto | 4 | The harbour photos |
+| 66 | Sydney | The Hatch | Lock pick | 3 | The hatch |
+| 67 | Sydney | The Timer | Wire cut | 3 | Lantern 5 of 7 |
+| 68 | Chichen Itza | The Shredded Map | Shredder | 3 | The pyramid map |
+| 69 | Chichen Itza | The Serpent Stairs | Stealth yard | 4 | The jaguar chamber |
+| 70 | Chichen Itza | The Jaguar Vault | Vault rings | 3 | The jaguar door |
+| 71 | Chichen Itza | The Old Code | Codebreaker | 4 | Lantern 6 of 7 |
+| 72 | Chichen Itza | Through the Jungle | Chase (taxi) | 3 | The circled valley |
+| 73 | The Alps | The Entrance Hall | Laser hall | 4 | The entrance hall |
+| 74 | The Alps | The Chairman's Lie | Lie detector | 4 | The Chairman's lies |
+| 75 | The Alps | A Hundred Rooms | Sonar | 4 | The switch room |
+| 76 | The Alps | Midnight | Override | 4 | Operation Midnight: stopped |
 
 ### Act Three: Operation Aurora
 
-The Chairman's mountain kept a ledger, and every lantern and mirror in it was
-built for one buyer: the Curator, who collects things nobody can own. His
-last wish is the Northern Lights. Seven Prism Keys, hidden in seven cities,
-fit the Aurora Engine under the Antarctic ice; turn them all and the lights
-come down into his vault, and every compass and satellite with them. Kolya,
-lately of the chip shop and still unpaid for Siberia, comes along to help.
+The Curator has been shadowing Rory the whole way. His people took a Prism Key out of Istanbul,
+Marrakech, Reykjavik and Singapore about a week after Rory left each of them. Three keys are
+still loose, and the last of those is already in the Aurora Engine.
 
 | # | Where | Mission | Mini-game | Level | Intel won |
 | --- | --- | --- | --- | --- | --- |
-| 61 | Istanbul | The Tea Glass | Fingerprints | 2 | The print is Mr Silver's, the Curator's courier |
-| 62 | Istanbul | The Lighthouse | Morse code | 2 | PUMP: the cistern pump room |
-| 63 | Istanbul | Under the Bazaar | Tangled wires | 2 | The pumps are off; the cup trader |
-| 64 | Istanbul | The Cups | Shell game | 2 | Prism Key 1 of 7; Marrakech |
-| 65 | Marrakech | The Spice Scales | Balance scale | 2 | The fake coin; the torn map |
-| 66 | Marrakech | The Torn Map | Anagram | 2 | The camel camp |
-| 67 | Marrakech | Desert Stars | Star chart | 2 | The riad with the blue door |
-| 68 | Marrakech | The Riad Roof | Grapple gun | 2 | Prism Key 2 of 7; Reykjavik |
-| 69 | Reykjavik | Thin Ice | Thin ice | 3 | The rig on the far shore |
-| 70 | Reykjavik | The Seismograph | Oscilloscope | 3 | The drill is in the lava tube |
-| 71 | Reykjavik | The Lava Tube | Fog maze | 3 | The drill was a decoy; the fish crate |
-| 72 | Reykjavik | Harbour Cargo | Crate stacking | 3 | Prism Key 3 of 7; Singapore |
-| 73 | Singapore | Three Towers | Triangulation | 3 | The drone landed on the hawker centre |
-| 74 | Singapore | The Menu Board | Picross | 3 | GARDENS, MIDNIGHT |
-| 75 | Singapore | Gardens by Night | Fingerprints | 4 | The Curator was here himself |
-| 76 | Singapore | The Supertrees | Morse code | 4 | Prism Key 4 of 7; CUSCO |
 | 77 | Machu Picchu | The Sun Gate | Star chart | 4 | The lowest terrace |
-| 78 | Machu Picchu | The Terraces | Loose stones | 4 | The rope bridge |
-| 79 | Machu Picchu | The Gorge | Grapple gun | 4 | Prism Key 5 of 7; the temple scales |
-| 80 | Machu Picchu | The Inca Scales | Balance scale | 4 | AMSTERDAM |
-| 81 | Amsterdam | The Auction Board | Anagram | 4 | The lot: tulip pots |
-| 82 | Amsterdam | The Tulip Pots | Shell game | 4 | Prism Key 6 of 7; LOCK GATES |
-| 83 | Amsterdam | The Lock Gates | Tangled wires | 4 | The barge is coming through |
-| 84 | Amsterdam | The Barge | Crate stacking | 4 | The courier has the last label |
+| 78 | Machu Picchu | The Terraces | Thin ice | 4 | The rope bridge |
+| 79 | Machu Picchu | The Gorge | Grapple gun | 4 | The temple scales |
+| 80 | Machu Picchu | The Inca Scales | Balance scale | 4 | Prism Key 5 of 7 |
+| 81 | Amsterdam | The Auction Board | Anagram | 4 | The lot |
+| 82 | Amsterdam | The Tulip Pots | Shell game | 4 | Prism Key 6 of 7 |
+| 83 | Amsterdam | The Lock Gates | Tangled wires | 4 | The barge |
+| 84 | Amsterdam | The Barge | Crate stacking | 4 | The courier |
 | 85 | Amsterdam | The Bicycle Chase | Chase (bicycle) | 3 | ANTARCTICA |
-| 86 | Antarctica | Whiteout | Fog maze | 4 | The far hut and its seismographs |
-| 87 | Antarctica | Three Stations | Triangulation | 4 | The vault, two kilometres out |
-| 88 | Antarctica | The Curator's Ledger | Picross | 4 | The snowflake; the vault is open |
-| 89 | Antarctica | The Aurora Engine | Oscilloscope | 4 | The engine cancels itself |
-| 90 | Antarctica | The Snowmobile | Chase (snowmobile) | 4 | The Curator caught; the lights back |
+| 86 | The Ice Vault | Whiteout | Fog maze | 4 | The far hut |
+| 87 | The Ice Vault | Three Stations | Triangulation | 4 | The vault |
+| 88 | The Ice Vault | The Curator's Ledger | Picross | 4 | The snowflake |
+| 89 | The Ice Vault | The Aurora Engine | Oscilloscope | 4 | The engine is off |
+| 90 | The Ice Vault | The Snowmobile | Chase (snowmobile) | 4 | Operation Aurora: complete |
 
 ## The mini-games
 
