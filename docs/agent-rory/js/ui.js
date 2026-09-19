@@ -1,7 +1,7 @@
 // 2D user interface on the overlay canvas: drawing helpers, immediate-mode
 // buttons, procedural portraits and flags, the dialogue box, the HUD, the
 // world map, the dossier, the title, the briefing and the intel stamp.
-import { CHARS, COUNTRIES, ACTS, SYMBOLS } from "./story.js";
+import { CHARS, COUNTRIES, ACTS, SYMBOLS, actWord } from "./story.js";
 import { SFX } from "./audio.js";
 import { Speech } from "./speech.js";
 
@@ -128,6 +128,13 @@ export function drawFlag(g, id, x, y, w, h) {
     case "au": g.fillStyle = "#00008B"; g.fillRect(x, y, w, h); g.save(); g.beginPath(); g.rect(x, y, w / 2, h / 2); g.clip(); drawFlag(g, "uk", x, y, w / 2, h / 2); g.restore(); g.fillStyle = "#fff"; for (const [sx, sy, r] of [[0.25, 0.75, 0.09], [0.75, 0.2, 0.05], [0.65, 0.5, 0.05], [0.85, 0.42, 0.05], [0.75, 0.8, 0.05]]) { g.beginPath(); for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * Math.PI / 7, rr = i % 2 ? r * h * 0.45 : r * h; g.lineTo(x + w * sx + Math.cos(a) * rr, y + h * sy + Math.sin(a) * rr); } g.closePath(); g.fill(); } break;
     case "mx": band(["#006847", "#fff", "#CE1126"], true); g.fillStyle = "#8a6a2a"; g.beginPath(); g.arc(x + w / 2, y + h / 2, h * 0.12, 0, TAU); g.fill(); g.fillStyle = "#2a6a2a"; g.beginPath(); g.arc(x + w / 2, y + h * 0.62, h * 0.06, 0, TAU); g.fill(); break;
     case "ch": g.fillStyle = "#D52B1E"; g.fillRect(x, y, w, h); g.fillStyle = "#fff"; g.fillRect(x + w / 2 - h * 0.1, y + h * 0.2, h * 0.2, h * 0.6); g.fillRect(x + w / 2 - h * 0.3, y + h * 0.4, h * 0.6, h * 0.2); break;
+    case "tr": g.fillStyle = "#E30A17"; g.fillRect(x, y, w, h); g.fillStyle = "#fff"; g.beginPath(); g.arc(x + w * 0.36, y + h / 2, h * 0.28, 0, TAU); g.fill(); g.fillStyle = "#E30A17"; g.beginPath(); g.arc(x + w * 0.42, y + h / 2, h * 0.22, 0, TAU); g.fill(); g.fillStyle = "#fff"; { const st = (cx, cy, r) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } g.closePath(); g.fill(); }; st(x + w * 0.6, y + h / 2, h * 0.12); } break;
+    case "ma": g.fillStyle = "#C1272D"; g.fillRect(x, y, w, h); g.strokeStyle = "#006233"; g.lineWidth = h * 0.05; g.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * 4 * Math.PI / 5; const px = x + w / 2 + Math.cos(a) * h * 0.3, py = y + h / 2 + Math.sin(a) * h * 0.3; if (i) g.lineTo(px, py); else g.moveTo(px, py); } g.closePath(); g.stroke(); break;
+    case "is": g.fillStyle = "#02529C"; g.fillRect(x, y, w, h); g.fillStyle = "#fff"; g.fillRect(x + w * 0.28, y, w * 0.16, h); g.fillRect(x, y + h * 0.4, w, h * 0.2); g.fillStyle = "#DC1E35"; g.fillRect(x + w * 0.32, y, w * 0.08, h); g.fillRect(x, y + h * 0.45, w, h * 0.1); break;
+    case "sg": band(["#EF3340", "#fff"]); g.fillStyle = "#fff"; g.beginPath(); g.arc(x + w * 0.2, y + h * 0.25, h * 0.16, 0, TAU); g.fill(); g.fillStyle = "#EF3340"; g.beginPath(); g.arc(x + w * 0.25, y + h * 0.25, h * 0.14, 0, TAU); g.fill(); g.fillStyle = "#fff"; for (const [sx2, sy2] of [[0.3, 0.14], [0.36, 0.22], [0.24, 0.22], [0.27, 0.34], [0.33, 0.34]]) { g.beginPath(); g.arc(x + w * sx2, y + h * sy2, h * 0.025, 0, TAU); g.fill(); } break;
+    case "pe": band(["#D91023", "#fff", "#D91023"], true); break;
+    case "nl": band(["#AE1C28", "#fff", "#21468B"]); break;
+    case "aq": g.fillStyle = "#3A7DC9"; g.fillRect(x, y, w, h); g.fillStyle = "#fff"; g.beginPath(); g.moveTo(x + w * 0.32, y + h * 0.2); g.quadraticCurveTo(x + w * 0.55, y + h * 0.1, x + w * 0.7, y + h * 0.3); g.quadraticCurveTo(x + w * 0.8, y + h * 0.55, x + w * 0.62, y + h * 0.78); g.quadraticCurveTo(x + w * 0.45, y + h * 0.9, x + w * 0.34, y + h * 0.7); g.quadraticCurveTo(x + w * 0.22, y + h * 0.5, x + w * 0.32, y + h * 0.2); g.closePath(); g.fill(); break;
     default: g.fillStyle = "#888"; g.fillRect(x, y, w, h);
   }
   g.restore();
@@ -334,6 +341,8 @@ const CONTINENTS = [
   [[131,-1],[141,-3],[150,-10],[146,-8],[140,-8],[135,-4]],
   [[-180,-62],[180,-62],[180,-90],[-180,-90]],
 ];
+// one colour of route per act
+const ACT_COLORS = ["#ffd166", "#ff9f43", "#7fdcff"];
 export class WorldMap {
   constructor(game) { this.G = game; this.t = 0; this.flight = null; this.pulse = 0; }
   project(lon, lat, r) { return [r.x + (lon + 180) / 360 * r.w, r.y + (90 - lat) / 180 * r.h]; }
@@ -376,7 +385,7 @@ export class WorldMap {
       const chain = a.countries.map(id => COUNTRIES.findIndex(c => c.id === id)); if (a.n > 1) chain.unshift(0);
       for (let k = 0; k < chain.length - 1; k++) {
         const i = chain[k], j = chain[k + 1];
-        g.strokeStyle = j <= progress ? (a.n === 1 ? "#ffd166" : "#ff9f43") : "rgba(255,255,255,.18)";
+        g.strokeStyle = j <= progress ? (ACT_COLORS[a.n - 1] || "#ffd166") : "rgba(255,255,255,.18)";
         g.beginPath(); g.moveTo(pts[i][0], pts[i][1]); const [mx, my] = mid(pts[i], pts[j]); g.quadraticCurveTo(mx, my, pts[j][0], pts[j][1]); g.stroke();
       }
     }
@@ -390,9 +399,9 @@ export class WorldMap {
       g.fillStyle = done ? "#2ecc71" : cur ? "#ffd166" : "rgba(255,255,255,.35)";
       g.beginPath(); g.arc(x, y, 6 * s, 0, TAU); g.fill();
       g.strokeStyle = "#000"; g.lineWidth = 1.5; g.stroke();
-      const above = c.pinBelow ? false : c.lat > 0;
-      drawFlag(g, c.flag, x - 14 * s, above ? y - 34 * s : y + 12 * s, 28 * s, 19 * s);
-      if (cur || done) text(g, c.city, x, above ? y - 44 * s : y + 42 * s, 13 * s, done ? "#9be7b6" : "#ffd166", "center", 700);
+      const above = c.pinBelow ? false : (c.lat > 0 || y > r.y + r.h * 0.82), fx = x + (c.pinDx || 0) * s;
+      drawFlag(g, c.flag, fx - 14 * s, above ? y - 34 * s : y + 12 * s, 28 * s, 19 * s);
+      if (cur || done) text(g, c.city, fx, above ? y - 44 * s : y + 42 * s, 13 * s, done ? "#9be7b6" : "#ffd166", "center", 700);
     });
     // plane
     if (this.flight) {
@@ -540,15 +549,15 @@ export function drawDossier(g, W, H, s, save, scroll, t, abortCode, rows) {
     drawStars(g, W / 2 - lw / 2 - 40 * s, 92 * s, 15 * s, 3);
     text(g, label, W / 2 + 14 * s, 97 * s, 15 * s, "#ffd166", "center", 800, MONO); }
   { const nb = (save.bugs || []).length;
-    g.fillStyle = nb >= 42 ? "#2ecc71" : "#ff4d5e"; g.beginPath(); g.arc(W / 2 - 58 * s, 112 * s, 4 * s, 0, TAU); g.fill();
-    text(g, `UMBRA BUGS FOUND  ${nb} / 42`, W / 2 - 46 * s, 116 * s, 12 * s, nb >= 42 ? "#2ecc71" : "#94a2bb", "left", 700, MONO); }
+    g.fillStyle = nb >= COUNTRIES.length * 3 ? "#2ecc71" : "#ff4d5e"; g.beginPath(); g.arc(W / 2 - 58 * s, 112 * s, 4 * s, 0, TAU); g.fill();
+    text(g, `UMBRA BUGS FOUND  ${nb} / ${COUNTRIES.length * 3}`, W / 2 - 46 * s, 116 * s, 12 * s, nb >= COUNTRIES.length * 3 ? "#2ecc71" : "#94a2bb", "left", 700, MONO); }
   const cw = Math.min(W - 80 * s, 820 * s), cx = (W - cw) / 2;
   let y = 136 * s - scroll;
   let n = 0;
   g.save(); g.beginPath(); g.rect(0, 128 * s, W, H - 128 * s - 80 * s); g.clip();
   let lastAct = 0;
   for (const c of COUNTRIES) {
-    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 122 * s && y < H) text(g, `ACT ${c.act === 1 ? "ONE" : "TWO"}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
+    if (c.act !== lastAct) { lastAct = c.act; if (y + 40 * s > 122 * s && y < H) text(g, `ACT ${actWord(c.act)}  ·  ${ACTS[c.act - 1].title.toUpperCase()}`, cx, y + 16 * s, 16 * s, "#ff9f43", "left", 900, MONO); y += 40 * s; }
     for (const m of c.missions) {
       n++;
       const done = save.done.includes(m.id);

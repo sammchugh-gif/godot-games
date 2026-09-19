@@ -12,6 +12,9 @@ const HOOKED = ["agent-rory", "star-swarm", "slime-storm", "super-strikers"];
 const games = fs.readdirSync(root).filter(d => fs.existsSync(`${root}/${d}/index.html`));
 let fail = 0; const ck = (c, m) => { if (!c) { fail++; console.log("FAIL:", m); } else console.log("ok:", m); };
 const shown = page => page.evaluate(() => { const b = document.getElementById("shelf-menu-btn"); return !!b && getComputedStyle(b).display !== "none"; });
+// the shared menu re-checks every 150 ms, and under load that can take a while,
+// so wait for the state rather than guessing at a delay
+const settles = async (page, want, ms) => { const t0 = Date.now(); while (Date.now() - t0 < (ms || 6000)) { if (await shown(page) === want) return true; await page.waitForTimeout(120); } return await shown(page) === want; };
 const state = page => page.evaluate(() => ({
   built: !!document.getElementById("shelf-menu-btn"),
   loaded: typeof window.__shelfMenu !== "undefined",
@@ -34,23 +37,18 @@ for (const g of games) {
     if (g === "agent-rory") {
       await page.waitForFunction(() => window.__spy, null, { timeout: 30000 });
       await page.evaluate(() => __spy.debug.goto(0, 0));
-      await page.waitForTimeout(900);
-      ck(!(await shown(page)), "agent-rory: button steps aside while playing");
+      ck(await settles(page, false), "agent-rory: button steps aside while playing");
       await page.evaluate(() => __spy.debug.press("pause"));
-      await page.waitForTimeout(600);
-      ck(await shown(page), "agent-rory: button comes back on the pause screen");
+      ck(await settles(page, true), "agent-rory: button comes back on the pause screen");
       await page.evaluate(() => __spy.debug.press("resume"));
-      await page.waitForTimeout(600);
-      ck(!(await shown(page)), "agent-rory: and steps aside again on resume");
+      ck(await settles(page, false), "agent-rory: and steps aside again on resume");
     } else {
       const reads = await page.evaluate(() => { try { return typeof scene !== "undefined"; } catch (e) { return false; } });
       ck(reads, `${g}: the hook can read the game's scene`);
       await page.evaluate(() => { try { scene = "play"; } catch (e) {} });
-      await page.waitForTimeout(500);
-      ck(!(await shown(page)), `${g}: button steps aside while playing`);
+      ck(await settles(page, false), `${g}: button steps aside while playing`);
       await page.evaluate(() => { try { scene = "pause"; } catch (e) {} });
-      await page.waitForTimeout(500);
-      ck(await shown(page), `${g}: button comes back when paused`);
+      ck(await settles(page, true), `${g}: button comes back when paused`);
     }
   } catch (e) { fail++; console.log("FAIL:", g, String(e).slice(0, 90)); }
   await page.close();

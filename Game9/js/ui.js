@@ -399,7 +399,7 @@ export class WorldMap {
       g.fillStyle = done ? "#2ecc71" : cur ? "#ffd166" : "rgba(255,255,255,.35)";
       g.beginPath(); g.arc(x, y, 6 * s, 0, TAU); g.fill();
       g.strokeStyle = "#000"; g.lineWidth = 1.5; g.stroke();
-      const above = c.pinBelow ? false : c.lat > 0, fx = x + (c.pinDx || 0) * s;
+      const above = c.pinBelow ? false : (c.lat > 0 || y > r.y + r.h * 0.82), fx = x + (c.pinDx || 0) * s;
       drawFlag(g, c.flag, fx - 14 * s, above ? y - 34 * s : y + 12 * s, 28 * s, 19 * s);
       if (cur || done) text(g, c.city, fx, above ? y - 44 * s : y + 42 * s, 13 * s, done ? "#9be7b6" : "#ffd166", "center", 700);
     });
