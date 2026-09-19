@@ -1,14 +1,18 @@
 # Agent Rory: Operation Eclipse
 
-A first-person spy adventure for the iPad's browser, in two acts. In
+A first-person spy adventure for the iPad's browser, in three acts. In
 **Operation Eclipse** Rory, the youngest field agent of M.I.S.T., follows the
 stolen plans for a sun-blotting mirror through London, Venice, Cairo, Tokyo,
 New York, Rio de Janeiro and a frozen launch site in Siberia. In **Operation
 Midnight** UMBRA's Chairman has hidden seven Shadow Lanterns over seven
 cities, and the trail runs through Paris, Nairobi, Agra, Beijing, Sydney,
-Chichen Itza and the Alps. Fourteen countries, four missions in each,
-sixty in all, and every mission is a mini-game that wins a piece of
-intel. The intel is the thread: each piece tells you where to go next.
+Chichen Itza and the Alps. In **Operation Aurora** the buyer behind it all,
+the Curator, wants the Northern Lights themselves, and the seven Prism Keys
+that unlock his Aurora Engine are scattered from Istanbul and Marrakech to
+Reykjavik, Singapore, Machu Picchu, Amsterdam and the Antarctic ice.
+Twenty-one countries, ninety missions, and every mission is a mini-game
+that wins a piece of intel. The intel is the thread: each piece tells you
+where to go next.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/agent-rory/>. On the
 iPad, open the link in Safari, then Share → Add to Home Screen for a fullscreen
@@ -41,20 +45,26 @@ The whole story, cast and mission design is in [STORY.md](STORY.md).
 Every mission scores one to three stars (three for no hint and a clean run),
 kept as a best in the dossier alongside a running total, and any finished
 mission can be replayed from there. Three UMBRA listening devices are hidden
-in each city, forty-two in all, counted on the spy watch and in the dossier.
+in each city, sixty-three in all, counted on the spy watch and in the dossier.
 
-## The twenty-three mini-games
+## The thirty-seven mini-games
 
 Lie detector, safe cracker, cipher wheel, masked ball, radio tuner, mirror
 maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
 inside the 3D world), stealth yard, shredder, the countdown override,
 codebreaker, reactor rods (towers of Hanoi), satellite photo (swap the
 tiles), sonar, vault rings, spot the difference, laser hall and passport
-match. Every mission carries a difficulty level from 1 to 4, and each game
+match; and in Act Three fourteen more that appear nowhere else: fingerprints,
+Morse code, tangled wires, the shell game, the balance scale, anagrams, the
+star chart, the grapple gun, thin ice, the oscilloscope, the fog maze, crate
+stacking, triangulation and picross, each met once to learn it and once
+more at full difficulty. Six missions are chases: a boat, a rocket backpack,
+a tuk-tuk, a jeep, a bicycle and a snowmobile.
+Every mission carries a difficulty level from 1 to 4, and each game
 grows with it: more statements and subtler spikes on the polygraph, four
 numbers on the safe, up to 24 dancers and five clues, 11 by 11 mirror
 chambers, eight pins, a fifth wiring rule, a second searchlight, five-symbol
-codes and seventy-second countdowns. The full list of all sixty missions,
+codes and seventy-second countdowns. The full list of all ninety missions,
 with their levels and the intel each one wins, is in [STORY.md](STORY.md).
 
 ## How it is built
@@ -67,14 +77,15 @@ and loads in a couple of seconds.
   drag, immediate-mode buttons), HUD, mission flow, save, and a `window.__spy`
   debug handle the tests use.
 - `js/story.js` — the story as data: characters with voice and portrait
-  attributes, two acts, fourteen countries, sixty missions with dialogue
-  and intel.
-- `js/world.js`, `js/scenes.js` and `js/scenes2.js` — the first-person world on three.js:
+  attributes, three acts, twenty-one countries, ninety missions with
+  dialogue and intel.
+- `js/world.js`, `js/scenes.js`, `js/scenes2.js` and `js/scenes3.js` — the first-person world on three.js:
   procedural textures (windows, brick, plaster, neon, hieroglyphs, flags),
   building helpers, collision, people built from boxes, weather, water, an
-  aurora shader, and the fourteen scenes with their landmarks.
-- `js/minigames.js`, `js/minigames2.js`, `js/chase.js`, `js/mgbase.js` — the twenty-three
-  mini-games, each with a hint, a solver and difficulty scaling.
+  aurora shader, and the twenty-one scenes with their landmarks.
+- `js/minigames.js`, `js/minigames2.js`, `js/minigames3.js`, `js/chase.js`,
+  `js/mgbase.js` — the thirty-seven mini-games, each with a hint, a solver
+  and difficulty scaling.
 - `js/ui.js` — canvas drawing, procedural portraits, the dialogue box, the
   world map (simplified continents), the dossier, the intel stamp.
 - `js/audio.js` — every sound and the theme are synthesised with WebAudio;

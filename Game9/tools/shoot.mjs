@@ -25,7 +25,7 @@ await shot("title");
 if (what === "scenes" || what === "all") {
   await page.evaluate(() => { __spy.debug.press("start"); });
   await page.waitForTimeout(500); await shot("menu");
-  const ids = ["london", "venice", "cairo", "tokyo", "newyork", "rio", "siberia", "paris", "kenya", "india", "china", "australia", "mexico", "alps"];
+  const ids = await page.evaluate(() => __spy.debug.COUNTRIES.map(c => c.id));
   const onlyScene = process.argv[4] || "";
   for (let i = 0; i < ids.length; i++) {
     if (onlyScene && !onlyScene.split(",").includes(ids[i])) continue;
@@ -42,7 +42,7 @@ if (what === "scenes" || what === "all") {
     const info = await page.evaluate(() => { const r = __spy.world.r.info; return { calls: r.render.calls, tris: r.render.triangles, geos: r.memory.geometries, tex: r.memory.textures }; });
     console.log(ids[i], "fps(swiftshader)", fps, JSON.stringify(info));
   }
-  await page.evaluate(() => { __spy.debug.goto(0, 0); __spy.save.briefed = { 1: true, 2: true }; __spy.debug.press("pause"); });
+  await page.evaluate(() => { __spy.debug.goto(0, 0); __spy.debug.press("pause"); });
   await page.waitForTimeout(300); await shot("pause");
   await page.evaluate(() => { __spy.debug.press("dossier"); });
   await page.waitForTimeout(300); await shot("dossier");

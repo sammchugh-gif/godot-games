@@ -358,7 +358,11 @@ export class World {
     o = o || {};
     const cols = o.colors || [0xd94f3d, 0x2a6fdb, 0xe8e4dc, 0x2a2a30, 0xf0b429, 0x3f7a5a];
     for (let i = 0; i < n; i++) {
+      // the car is built at the origin and driven by the updater below, so the
+      // collider car() registers there would be a phantom wall: drop it
+      const nC = this.colliders.length, nR = this.circles.length;
       const g = o.build ? o.build.call(this, i) : this.car(0, 0, 0, cols[i % cols.length], o.carOpts);
+      this.colliders.length = nC; this.circles.length = nR;
       const speed = (o.speed || 7) * (0.85 + (i % 4) * 0.1);
       const off = (i / n) * 1000;
       this.updaters.push(dt => {

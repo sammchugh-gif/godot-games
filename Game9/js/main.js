@@ -3,7 +3,7 @@ import { World } from "./world.js";
 import "./scenes.js";
 import { Audio, SFX, Music, Ambience } from "./audio.js";
 import { Speech } from "./speech.js";
-import { CHARS, COUNTRIES, ACTS, ALL_MISSIONS, CREDITS, SYMBOLS, countryOf } from "./story.js";
+import { CHARS, COUNTRIES, ACTS, ALL_MISSIONS, CREDITS, SYMBOLS, countryOf, actWord } from "./story.js";
 import * as UI from "./ui.js";
 import { makeMinigame } from "./minigames.js";
 
@@ -162,7 +162,7 @@ function beginGame(fresh) {
   if (!G.save.briefed[act]) briefingFor(act); else goMap();
 }
 function briefingFor(act) {
-  fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("tense"); G.card = { title: `ACT ${act === 1 ? "ONE" : "TWO"}`, sub: ACTS[act - 1].title.toUpperCase(), flag: "uk", t: 0, dur: 3 }; G.dialogue.show(ACTS[act - 1].briefing, () => { G.save.briefed[act] = true; saveGame(); goMap(); }); });
+  fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("tense"); G.card = { title: `ACT ${actWord(act)}`, sub: ACTS[act - 1].title.toUpperCase(), flag: "uk", t: 0, dur: 3 }; G.dialogue.show(ACTS[act - 1].briefing, () => { G.save.briefed[act] = true; saveGame(); goMap(); }); });
 }
 function goMap() {
   fadeOut(() => { Ambience.stop(); Music.setMode("calm"); setState("map"); fadeIn(); });
@@ -205,7 +205,7 @@ function interact(it) {
     if (!G.save.bugs.includes(it.id)) G.save.bugs.push(it.id);
     G.world.removeBug(it); saveGame(); SFX.unlock();
     const here = bugsIn(c.id), all = G.save.bugs.length;
-    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/42)` : `UMBRA bug disabled.  ${here} of 3 in ${c.city}`, 3);
+    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/${COUNTRIES.length * 3})` : `UMBRA bug disabled.  ${here} of 3 in ${c.city}`, 3);
     Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : "One of UMBRA's listening devices. Off it goes.", CHARS.vi.voice, null);
     return;
   }
@@ -429,7 +429,7 @@ function drawMenu() {
   button("sfx", tx + tw + gap, y, tw, 46 * s, "SOUND " + (G.settings.sfx ? "ON" : "OFF"), G.settings.sfx ? "blue" : "grey", 14 * s);
   button("voice", tx + (tw + gap) * 2, y, tw, 46 * s, "VOICES " + (G.settings.voice ? "ON" : "OFF"), G.settings.voice ? "blue" : "grey", 14 * s);
   if (!Speech.available) text(g, "This browser has no voices; the text boxes carry the story.", W / 2, y + 66 * s, 13 * s, "#94a2bb", "center", 500);
-  text(g, "Seven countries. Fourteen missions. One very dark plan.", W / 2, H - 46 * s, 16 * s, "#c8d0e0", "center", 600);
+  text(g, "Twenty-one countries. Ninety missions. One very dark plan.", W / 2, H - 46 * s, 16 * s, "#c8d0e0", "center", 600);
   text(g, "Left thumb walks, right thumb looks, green button interacts.", W / 2, H - 24 * s, 13 * s, "rgba(255,255,255,.5)", "center", 500);
 }
 function drawMap() {
@@ -440,11 +440,11 @@ function drawMap() {
   const py = r.y + r.h + 14 * s, ph = H - py - 12 * s;
   panel(g, r.x, py, r.w, ph, s);
   UI.drawFlag(g, c.flag, r.x + 18 * s, py + ph / 2 - 20 * s, 60 * s, 40 * s);
-  if (G.save.finished) { text(g, `${ACTS[ACTS.length - 1].title.toUpperCase()}: COMPLETE`, r.x + 96 * s, py + ph / 2 - 12 * s, 24 * s, "#2ecc71", "left", 900); text(g, "Both operations closed. Every light on Earth is still on. Watch the credits, or start again from the menu.", r.x + 96 * s, py + ph / 2 + 16 * s, 15 * s, "#c8d0e0", "left", 500); button("fly", r.x + r.w - 230 * s, py + ph / 2 - 28 * s, 210 * s, 56 * s, "CREDITS", "gold"); }
+  if (G.save.finished) { text(g, `${ACTS[ACTS.length - 1].title.toUpperCase()}: COMPLETE`, r.x + 96 * s, py + ph / 2 - 12 * s, 24 * s, "#2ecc71", "left", 900); text(g, "Every operation closed. Every light on Earth is still on, and so are the northern ones. Watch the credits, or start again from the menu.", r.x + 96 * s, py + ph / 2 + 16 * s, 15 * s, "#c8d0e0", "left", 500); button("fly", r.x + r.w - 230 * s, py + ph / 2 - 28 * s, 210 * s, 56 * s, "CREDITS", "gold"); }
   else if (!G.map.flight) {
     const n = missionNumber(c.missions[0]);
     text(g, `CHAPTER ${G.save.country + 1}: ${c.chapter.toUpperCase()}`, r.x + 96 * s, py + ph / 2 - 12 * s, 22 * s, "#ffd166", "left", 900);
-    text(g, `${c.city}, ${c.country}.  Missions ${n} to ${n + c.missions.length - 1}.  Act ${c.act === 1 ? "One" : "Two"}: ${ACTS[c.act - 1].title}.`, r.x + 96 * s, py + ph / 2 + 16 * s, 15 * s, "#c8d0e0", "left", 500);
+    text(g, `${c.city}, ${c.country}.  Missions ${n} to ${n + c.missions.length - 1}.  Act ${actWord(c.act).charAt(0) + actWord(c.act).slice(1).toLowerCase()}: ${ACTS[c.act - 1].title}.`, r.x + 96 * s, py + ph / 2 + 16 * s, 15 * s, "#c8d0e0", "left", 500);
     button("fly", r.x + r.w - 230 * s, py + ph / 2 - 28 * s, 210 * s, 56 * s, G.save.country === 0 || G.save.arrived[c.id] ? "GO" : "FLY", "primary");
     button("dossier", r.x + r.w - 380 * s, py + ph / 2 - 28 * s, 130 * s, 56 * s, "DOSSIER", "dark", 16 * s);
   } else text(g, `Flying to ${c.city}...`, r.x + 96 * s, py + ph / 2, 22 * s, "#fff", "left", 800);
@@ -527,10 +527,10 @@ function drawEnding() {
     g.strokeStyle = "#8a6a10"; g.lineWidth = 4 * s; g.stroke();
     UI.drawSymbol(g, "star", cx, cy, R * 0.55, "#8a6a10");
     const final = G.endingAct >= ACTS.length;
-    textShadow(g, final ? "AGENT RORY" : "ACT ONE COMPLETE", cx, cy + R + 40 * s, 40 * s, "#fff", "center", 900);
-    textShadow(g, final ? "Saved the sun. Twice, probably." : "Madame Eclipse is still out there. Act Two: Operation Midnight.", cx, cy + R + 80 * s, 20 * s, "#ffd166", "center", 700);
+    textShadow(g, final ? "AGENT RORY" : `ACT ${actWord(G.endingAct)} COMPLETE`, cx, cy + R + 40 * s, 40 * s, "#fff", "center", 900);
+    textShadow(g, ACTS[G.endingAct - 1].after || "", cx, cy + R + 80 * s, 20 * s, "#ffd166", "center", 700);
     if (final) button("credits", W / 2 - 120 * s, H - 100 * s, 240 * s, 60 * s, "CREDITS", "gold");
-    else button("nextact", W / 2 - 140 * s, H - 100 * s, 280 * s, 60 * s, "ACT TWO", "gold");
+    else button("nextact", W / 2 - 140 * s, H - 100 * s, 280 * s, 60 * s, `ACT ${actWord(G.endingAct + 1)}`, "gold");
   }
 }
 function drawCredits() {
@@ -550,7 +550,10 @@ async function boot() {
   G.dialogue = new UI.Dialogue(G); G.map = new UI.WorldMap(G);
   Speech.init(); Speech.enabled = G.settings.voice;
   try { await import("./scenes2.js"); } catch (e) { console.warn("scenes2.js not loaded", e); }
+  try { await import("./scenes3.js"); } catch (e) { console.warn("scenes3.js not loaded", e); }
   const sv = store.get("save", null); G.save = sv && sv.version === 2 ? sv : newSave(); if (!G.save.stars) G.save.stars = {}; if (!G.save.bugs) G.save.bugs = [];
+  // a save that finished the game before a later act existed carries on into it
+  { const briefed = Object.keys(G.save.briefed || {}).map(Number); const top = briefed.length ? Math.max(...briefed) : 0; const next = COUNTRIES.findIndex(c => c.act === top + 1); if (G.save.finished && top < ACTS.length && next >= 0) { G.save.finished = false; G.save.country = next; saveGame(); } }
   const msg = document.getElementById("bootmsg");
   await G.world.loadTextures(p => { msg.textContent = "loading textures " + Math.round(p * 100) + "%"; });
   document.getElementById("boot").style.display = "none";
@@ -562,7 +565,7 @@ boot();
 
 // ------------------------------------------------------------- debug / test hooks
 G.debug = {
-  goto(ci, mi) { G.save = G.save || newSave(); G.save.briefed = { 1: true, 2: true }; G.save.country = ci; G.save.done = []; for (let i = 0; i < ci; i++) G.save.done.push(...COUNTRIES[i].missions.map(m => m.id)); for (let k = 0; k < (mi || 0); k++) G.save.done.push(COUNTRIES[ci].missions[k].id); G.save.arrived[COUNTRIES[ci].id] = true; G.fade = 0; G.fadeTo = 0; G.fadeCb = null; G.country = ci; loadScene(COUNTRIES[ci].id); refreshStations(); setState("world"); G.pause = false; G.dialogue.active = false; },
+  goto(ci, mi) { G.save = G.save || newSave(); G.save.briefed = Object.fromEntries(ACTS.map(a => [a.n, true])); G.save.country = ci; G.save.done = []; for (let i = 0; i < ci; i++) G.save.done.push(...COUNTRIES[i].missions.map(m => m.id)); for (let k = 0; k < (mi || 0); k++) G.save.done.push(COUNTRIES[ci].missions[k].id); G.save.arrived[COUNTRIES[ci].id] = true; G.fade = 0; G.fadeTo = 0; G.fadeCb = null; G.country = ci; loadScene(COUNTRIES[ci].id); refreshStations(); setState("world"); G.pause = false; G.dialogue.active = false; },
   startMission(ci, mi) { this.goto(ci, mi); const m = COUNTRIES[ci].missions[mi]; startMinigame(m); G.fade = 0; G.fadeTo = 0; if (G.fadeCb) { const cb = G.fadeCb; G.fadeCb = null; cb(); } },
   skipDialogue() { if (G.dialogue.active) { G.dialogue.lines = []; G.dialogue.i = -1; G.dialogue.next(); } },
   finishFade() { if (G.fadeCb) { const cb = G.fadeCb; G.fadeCb = null; G.fade = 1; cb(); } G.fade = 0; G.fadeTo = 0; },

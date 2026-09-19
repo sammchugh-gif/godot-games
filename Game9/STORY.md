@@ -4,7 +4,7 @@ This is the plan the game is built from. Every line of dialogue, every piece
 of intel and every mission in `js/story.js` comes from here. If the two ever
 disagree, this file is the intent and the code is the bug.
 
-The game is two acts, fourteen countries and sixty missions. Every
+The game is three acts, twenty-one countries and ninety missions. Every
 country is one 3D scene with four mission stations, in order. Every mission
 is a mini-game that wins a piece of intel, and the intel is the thread that
 names the next station or the next country.
@@ -68,6 +68,14 @@ mini-game briefings.
 | **Matilda** | Sydney surf lifesaver. | en-AU | Cheerful. |
 | **Diego** | Chichen Itza archaeologist and mariachi. | es-MX | Sings. |
 | **Klaus** | Alpine cable-car operator. | de-DE | "It is not a dairy." |
+| **The Curator** | The buyer behind UMBRA. Collects things nobody can own; wants the Northern Lights. Silver hair, monocle, never raises his voice. | en-GB, low | "Collectors never explain." |
+| **Emre** | Istanbul tea seller by the Bosphorus ferry. | tr-TR | "Tea first." |
+| **Yasmin** | Marrakech spice merchant. Sells information by the gram. | ar-MA | Dry, exact. |
+| **Sigrún** | Reykjavik volcanologist. | is-IS | Cheerfully alarming. |
+| **Wei Lin** | Singapore hawker chef and drone racer. | en-SG | "Sit." |
+| **Mateo** | Machu Picchu llama herder and guide. | es-PE | Slow, kind. |
+| **Femke** | Amsterdam canal-boat skipper and bicycle mechanic. | nl-NL | "That's the bike lane." |
+| **Dr Okafor** | Chief of the Antarctic research station. | en-NG | Unflappable. |
 | **Nigel Pratt** | Observatory night guard. | en-GB, nasal | "I never saw nothing." |
 
 Every line is also a text box with a drawn portrait, so the game is complete
@@ -77,12 +85,16 @@ without sound.
 
 Act One: London, Venice, Cairo, Tokyo, New York, Rio de Janeiro, Zima
 Station (Siberia). Act Two, leaving from London again: Paris, Nairobi, Agra,
-Beijing, Sydney, Chichen Itza, the Alps.
+Beijing, Sydney, Chichen Itza, the Alps. Act Three, once more from London:
+Istanbul, Marrakech, Reykjavik, Singapore, Machu Picchu, Amsterdam and the
+Curator's vault under the Antarctic ice.
 
 ## The missions
 
 Difficulty levels run 1 to 4. Act One sits at 1 and 2, Act Two at 3 and 4;
-every mini-game gets bigger, faster or subtler with the level.
+every mini-game gets bigger, faster or subtler with the level. Act Three is
+built on fourteen mini-games that appear nowhere else: each is met once at
+level 2 or 3, to learn it, and once more later at level 4.
 
 ### Act One: Operation Eclipse
 
@@ -149,6 +161,56 @@ every mini-game gets bigger, faster or subtler with the level.
 | 54 | The Alps | The Chairman's Lie | Lie detector | 4 | The switch can be turned off; Eclipse is on the peak |
 | 55 | The Alps | A Hundred Rooms | Sonar | 4 | The master switch room |
 | 56 | The Alps | Midnight | Override | 4 | All seven lanterns dark; the Chairman arrested |
+| 57 | London | The Getaway | Chase (boat) | 1 | Kolya's launch, caught on the Thames |
+| 58 | Paris | The Rocket Backpack | Chase (air) | 2 | Madame Eclipse in custody |
+| 59 | Agra | The Tuk-Tuk | Chase | 3 | The courier's van, caught |
+| 60 | Chichen Itza | The Jeep | Chase | 4 | The last van, caught at the pyramid |
+
+(The four chases sit at the end of their own cities in the game: missions
+5 of London, Paris, Agra and Chichen Itza. They are numbered here after the
+puzzle missions of the acts they belong to.)
+
+### Act Three: Operation Aurora
+
+The Chairman's mountain kept a ledger, and every lantern and mirror in it was
+built for one buyer: the Curator, who collects things nobody can own. His
+last wish is the Northern Lights. Seven Prism Keys, hidden in seven cities,
+fit the Aurora Engine under the Antarctic ice; turn them all and the lights
+come down into his vault, and every compass and satellite with them. Kolya,
+lately of the chip shop and still unpaid for Siberia, comes along to help.
+
+| # | Where | Mission | Mini-game | Level | Intel won |
+| --- | --- | --- | --- | --- | --- |
+| 61 | Istanbul | The Tea Glass | Fingerprints | 2 | The print is Mr Silver's, the Curator's courier |
+| 62 | Istanbul | The Lighthouse | Morse code | 2 | PUMP: the cistern pump room |
+| 63 | Istanbul | Under the Bazaar | Tangled wires | 2 | The pumps are off; the cup trader |
+| 64 | Istanbul | The Cups | Shell game | 2 | Prism Key 1 of 7; Marrakech |
+| 65 | Marrakech | The Spice Scales | Balance scale | 2 | The fake coin; the torn map |
+| 66 | Marrakech | The Torn Map | Anagram | 2 | The camel camp |
+| 67 | Marrakech | Desert Stars | Star chart | 2 | The riad with the blue door |
+| 68 | Marrakech | The Riad Roof | Grapple gun | 2 | Prism Key 2 of 7; Reykjavik |
+| 69 | Reykjavik | Thin Ice | Thin ice | 3 | The rig on the far shore |
+| 70 | Reykjavik | The Seismograph | Oscilloscope | 3 | The drill is in the lava tube |
+| 71 | Reykjavik | The Lava Tube | Fog maze | 3 | The drill was a decoy; the fish crate |
+| 72 | Reykjavik | Harbour Cargo | Crate stacking | 3 | Prism Key 3 of 7; Singapore |
+| 73 | Singapore | Three Towers | Triangulation | 3 | The drone landed on the hawker centre |
+| 74 | Singapore | The Menu Board | Picross | 3 | GARDENS, MIDNIGHT |
+| 75 | Singapore | Gardens by Night | Fingerprints | 4 | The Curator was here himself |
+| 76 | Singapore | The Supertrees | Morse code | 4 | Prism Key 4 of 7; CUSCO |
+| 77 | Machu Picchu | The Sun Gate | Star chart | 4 | The lowest terrace |
+| 78 | Machu Picchu | The Terraces | Loose stones | 4 | The rope bridge |
+| 79 | Machu Picchu | The Gorge | Grapple gun | 4 | Prism Key 5 of 7; the temple scales |
+| 80 | Machu Picchu | The Inca Scales | Balance scale | 4 | AMSTERDAM |
+| 81 | Amsterdam | The Auction Board | Anagram | 4 | The lot: tulip pots |
+| 82 | Amsterdam | The Tulip Pots | Shell game | 4 | Prism Key 6 of 7; LOCK GATES |
+| 83 | Amsterdam | The Lock Gates | Tangled wires | 4 | The barge is coming through |
+| 84 | Amsterdam | The Barge | Crate stacking | 4 | The courier has the last label |
+| 85 | Amsterdam | The Bicycle Chase | Chase (bicycle) | 3 | ANTARCTICA |
+| 86 | Antarctica | Whiteout | Fog maze | 4 | The far hut and its seismographs |
+| 87 | Antarctica | Three Stations | Triangulation | 4 | The vault, two kilometres out |
+| 88 | Antarctica | The Curator's Ledger | Picross | 4 | The snowflake; the vault is open |
+| 89 | Antarctica | The Aurora Engine | Oscilloscope | 4 | The engine cancels itself |
+| 90 | Antarctica | The Snowmobile | Chase (snowmobile) | 4 | The Curator caught; the lights back |
 
 ## The mini-games
 
@@ -205,6 +267,36 @@ progress the player has already made.
   slows them right down for a few seconds.
 - **Passport match** (new): memory pairs of the cast's faces.
 
+Act Three adds fourteen more, none of them a repeat of anything above:
+
+- **Fingerprints**: match the lifted print to the one on file by its core
+  (whorl, loop or arch), its ridge breaks and its scar. 4 to 8 on file.
+- **Morse code**: a lamp blinks a word; spell it on a twelve-letter keyboard
+  with the chart beside you. Words get longer and the lamp faster.
+- **Tangled wires**: numbered sockets, lettered terminals, and the wires cross
+  over each other. Say where the lit one ends. 4 to 7 wires.
+- **Shell game**: the key goes under a cup, the cups shuffle, tap the right
+  one. 3 to 5 cups, 4 to 11 swaps.
+- **Balance scale**: one coin (or gold llama) is heavier; two or three
+  weighings, then accuse. 6 to 12 to choose from.
+- **Anagram**: unscramble a word from its clue. 5 to 8 letters.
+- **Star chart**: find the chart's constellation in a sky full of decoys and
+  join it in order. 4 to 7 stars.
+- **Grapple gun**: set the angle and power and hook the ledge. Further, and
+  with wind, at the higher levels.
+- **Thin ice** (loose stones at Machu Picchu): cross a grid where every safe
+  tile counts its dangerous neighbours; a minesweeper you walk across.
+- **Oscilloscope**: slide two or three dials until your wave lies on the
+  recorded one. The tolerance tightens with the level.
+- **Fog maze**: find the way out seeing only a few steps ahead; where you've
+  been stays lit. 7 by 5 up to 13 by 9.
+- **Crate stacking**: balance a deck so weight times distance matches on
+  both sides. 3 to 6 crates.
+- **Triangulation**: three (or four) rings, one crossing; drag the marker
+  onto it and lock.
+- **Picross**: fill a grid from its row and column numbers to reveal a
+  picture; a wrong square marks itself.
+
 ## Stars, replay and the bugs
 
 Every mission is scored out of three stars: three for finishing with no hint
@@ -213,18 +305,20 @@ finishing at all. The dossier lists the best score for each mission and a
 running total, and any finished mission can be replayed from there with the
 REPLAY chip. A replay never removes what was already won.
 
-Three UMBRA listening devices are hidden in each of the fourteen cities,
-forty-two in all: small black boxes with a stub antenna and an LED that
+Three UMBRA listening devices are hidden in each of the twenty-one cities,
+sixty-three in all: small black boxes with a stub antenna and an LED that
 blinks once a second, left on the ground where they are worth walking around
 to find. Standing next to one and tapping DISABLE takes it out of play. The
 spy watch shows the count for the city you are in, the dossier the total.
 
 ## The chase missions
 
-Four missions are chases rather than puzzles, for a change of tempo: a night
+Six missions are chases rather than puzzles, for a change of tempo: a night
 launch down the Thames after Kolya in London, a rocket backpack after Madame
 Eclipse around the Eiffel Tower, Priya's tuk-tuk after a courier van in Agra,
-and a jeep around the pyramid in Chichen Itza. Each lays its own route through
+a jeep around the pyramid in Chichen Itza, Femke's bicycle after a cargo bike
+over the canal bridges of Amsterdam, and a snowmobile after the Curator's
+snowcat across the Antarctic ice. Each lays its own route through
 the city it is set in, verified clear of anything solid by
 `tools/routecheck.mjs`. Drag left and right to steer, and in the air up and
 down to climb and dive. The gap to the quarry closes only while the driving is
@@ -237,11 +331,11 @@ see it from fifty metres up.
 
 ## Living cities
 
-Every city has people walking their own routes, seven have traffic passing
-outside the barriers, and thirteen have birds overhead. The routes were found
+Every city has people walking their own routes, most have traffic passing
+outside the barriers, and nearly all have birds overhead. The routes were found
 by search rather than by eye: the largest clear rectangle in each city that
 also stays seven metres clear of where the player lands. `tools/lifecheck.mjs`
-runs the clock forward two full laps in all fourteen to confirm nobody walks
+runs the clock forward two full laps in all twenty-one to confirm nobody walks
 through a wall or into the player.
 
 ## Controls

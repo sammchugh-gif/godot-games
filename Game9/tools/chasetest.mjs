@@ -20,7 +20,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 120000 }); };
 let fail = 0; const ck = (c, m) => { if (!c) { fail++; console.log("FAIL:", m); } else console.log("ok:", m); };
 const chases = await ev(() => __spy.debug.COUNTRIES.flatMap((c, ci) => c.missions.map((m, mi) => ({ ci, mi, id: m.id, city: c.id, game: m.game }))).filter(r => r.game === "chase"));
-ck(chases.length === 4, `four chase missions (${chases.length})`);
+ck(chases.length === 6, `six chase missions (${chases.length})`);
 for (const r of chases) {
   await ev(r => __spy.debug.startMission(r.ci, r.mi), r);
   await waitGame(0.5);
