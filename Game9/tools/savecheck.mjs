@@ -88,7 +88,9 @@ await page.waitForTimeout(600);
 const lbl = await page.evaluate(() => __spy.buttons.list.map(x => x.opts.label).filter(Boolean));
 ck(lbl.some(l => /CONTINUE/.test(l)), `the older save can be continued (${lbl.find(l => /CONTINUE/.test(l)) || "none"})`);
 await page.evaluate(() => __spy.debug.press("continue"));
-await page.waitForTimeout(900);
+// the fade between screens takes over a second under a software renderer, so
+// wait for the screen rather than guessing at a delay
+await page.waitForFunction(() => ["map", "world", "briefing"].includes(__spy.state), null, { timeout: 15000 }).catch(() => {});
 ck(["map", "world", "briefing"].includes(await page.evaluate(() => __spy.state)), "and continuing it does not crash");
 // once anything is written, the new fields are on disk too
 await page.evaluate(() => { __spy.save.bugs.push("london:0"); __spy.debug.goto(0, 0); });
@@ -122,7 +124,7 @@ ck(carried.done === carried.expect, `with its ${carried.expect} finished mission
 await page.evaluate(() => __spy.debug.press("start"));
 await page.waitForTimeout(600);
 await page.evaluate(() => __spy.debug.press("continue"));
-await page.waitForTimeout(900);
+await page.waitForFunction(() => ["map", "world", "briefing"].includes(__spy.state), null, { timeout: 15000 }).catch(() => {});
 ck(await page.evaluate(() => __spy.state) === "briefing", "and continuing it opens the act three briefing");
 await page.close();
 
