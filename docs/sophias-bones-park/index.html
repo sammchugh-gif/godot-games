@@ -1,0 +1,2447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#E4EEE5">
+<meta name="description" content="Times tables to 12, division fact families, multiples of ten.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sophia">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%237A4FA3'/%3E%3Cg stroke='%2316261F' stroke-width='9' fill='%23F3E7D0'%3E%3Cpath d='M56 74a15 15 0 1 0-11 25 15 15 0 1 0 26 9h38a15 15 0 1 0 26-9 15 15 0 1 0-11-25 15 15 0 0 0-28 5H84a15 15 0 0 0-28-5z'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+/* standalone wrapper: keeps the app inside the notch / home-indicator
+   safe area when launched from a phone or tablet home-screen icon */
+html,body{height:100%;margin:0;padding:0;background:#E4EEE5}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden}
+#app{height:100% !important}
+</style>
+<style>
+/* On the shelf the close button owns the top-left corner of every game, and
+   it was sitting on this game's own home button. Room is made for it. */
+#app .topbar{padding-left:46px}
+</style>
+<script>window.__shelfStatic=true</script>
+<script src="../menu.js" defer></script>
+<script src="../fresh.js" defer></script>
+</head>
+<body>
+<title>Sophia's Bones Park</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Andika:wght@400;700&display=swap">
+<style>
+/* ---------- Ten Bones Park -------------------------------------------
+   One codebase, three children. The ONLY difference between the three
+   published files is the CHILD constant near the top of the script.
+   Visual world: enamelled playground signage — flat colour, thick ink
+   outlines, hard offset shadows. Committed to a single daylight theme
+   on purpose; every colour is painted explicitly so the page holds on
+   any host ground.
+   -------------------------------------------------------------------- */
+:root{
+  --ink:#16261F;
+  --ink-soft:#4B6B5D;
+  --ground:#E4EEE5;
+  --paper:#FFFDF6;
+  --grass:#4CA36B;
+  --grass-deep:#2F6B45;
+  --sky:#BFE3F2;
+  --sky-deep:#4A9BCB;
+  --sun:#F6BE4A;
+  --ball:#E4572E;
+  --plum:#7A4FA3;
+  --bone:#F3E7D0;
+  --sea:#5FBFD6;
+  --good:#3E9B63;
+  --bad:#D2483A;
+  --r:18px;
+  --edge:3px;
+  --shadow:0 4px 0 var(--ink);
+  --shadow-lg:0 6px 0 var(--ink);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:"Andika","Trebuchet MS",system-ui,sans-serif;
+  font-size:17px;line-height:1.45;overscroll-behavior:none;
+}
+h1,h2,h3,.display,.num{font-family:"Baloo 2",system-ui,sans-serif;font-weight:800;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:4px solid var(--plum);outline-offset:3px}
+
+#app{
+  max-width:860px;margin:0 auto;height:100vh;height:100dvh;overflow:hidden;
+  display:flex;flex-direction:column;padding:10px 12px 16px;gap:10px;
+}
+.topbar{display:flex;align-items:center;gap:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;background:var(--paper);
+  border:var(--edge) solid var(--ink);border-radius:999px;padding:6px 14px 6px 8px;
+  box-shadow:var(--shadow);
+}
+.chip .num{font-size:1.2rem;line-height:1}
+.iconbtn{
+  width:46px;height:46px;flex:0 0 auto;display:grid;place-items:center;background:var(--paper);
+  border:var(--edge) solid var(--ink);border-radius:14px;box-shadow:var(--shadow);
+  transition:transform .08s,box-shadow .08s;
+}
+.iconbtn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.iconbtn.on{background:var(--sun)}
+.spacer{flex:1}
+
+.screen{display:none;flex:1;flex-direction:column;gap:10px;min-height:0}
+.screen.show{display:flex}
+#scHome{overflow:hidden}
+#scHome .menu{flex:1 1 auto;align-content:center}
+#scHome .menu:last-of-type{flex:0 0 auto}
+#scHome .bigbtn{height:100%;min-height:72px;max-height:112px}
+#scPlay,#scEnd{overflow:hidden}
+#scEnd .stage{overflow-y:auto;max-height:none;justify-content:flex-start;gap:6px}
+#scEnd .stage h2{margin:2px 0 0;font-size:clamp(1.6rem,5vw,2.4rem)}
+.scroller{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0;padding-bottom:10px}
+
+.park{
+  flex:1 1 auto;min-height:140px;max-height:32vh;position:relative;border:var(--edge) solid var(--ink);
+  border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-lg);background:var(--sky);
+}
+.park svg{display:block;width:100%;height:100%}
+.park .tail{animation:sway 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:80% 80%}
+
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bigbtn{
+  display:flex;align-items:center;gap:11px;text-align:left;background:var(--paper);
+  border:var(--edge) solid var(--ink);border-radius:var(--r);padding:12px;
+  box-shadow:var(--shadow);transition:transform .08s,box-shadow .08s;
+}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.bigbtn .glyph{
+  width:54px;height:54px;flex:0 0 auto;border-radius:14px;border:var(--edge) solid var(--ink);
+  display:grid;place-items:center;background:var(--sun);
+}
+.bigbtn .glyph svg{width:34px;height:34px;display:block}
+.bigbtn b{font-family:"Baloo 2",system-ui,sans-serif;font-size:1.22rem;font-weight:800;display:block;line-height:1.1}
+.bigbtn small{color:var(--ink-soft);font-size:.85rem;display:block}
+.bigbtn.locked{opacity:.5}
+
+.stage{
+  background:var(--paper);border:var(--edge) solid var(--ink);border-radius:var(--r);
+  box-shadow:var(--shadow-lg);padding:14px;display:flex;flex-direction:column;gap:10px;
+  align-items:center;justify-content:center;flex:1 1 auto;min-height:0;max-height:58vh;
+}
+.ask{font-family:"Baloo 2",system-ui,sans-serif;font-weight:700;font-size:clamp(1.25rem,3.2vw,1.95rem);text-align:center;line-height:1.2;margin:0}
+.ask .big{font-size:clamp(2.1rem,6.6vw,3.4rem);display:inline-block;vertical-align:-4px;font-variant-numeric:tabular-nums}
+.visual{width:100%;flex:1;min-height:70px;display:grid;place-items:center;overflow:hidden}
+.visual.teaching{overflow-y:auto;place-items:start center;padding-right:2px}
+.visual svg{width:100%;height:auto;max-height:100%;display:block}
+.playtop{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.buddy{width:clamp(64px,16vw,110px);flex:0 0 auto;transform-origin:50% 90%}
+.buddy svg{width:100%;height:auto;display:block}
+.progress{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;flex:1}
+.pip{width:13px;height:13px;border-radius:50%;border:2.5px solid var(--ink);background:var(--paper)}
+.pip.ok{background:var(--good)}
+.pip.no{background:var(--bad)}
+.pip.now{background:var(--sun)}
+
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:0 0 auto}
+.ans{
+  background:var(--paper);border:var(--edge) solid var(--ink);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:12px 8px;min-height:clamp(70px,11vh,124px);
+  font-family:"Baloo 2",system-ui,sans-serif;font-weight:800;
+  font-size:clamp(1.7rem,5vw,3rem);font-variant-numeric:tabular-nums;
+  display:grid;place-items:center;transition:transform .08s,box-shadow .08s,background .15s;
+}
+.ans:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.ans.word{font-size:clamp(1.2rem,3.4vw,1.9rem)}
+.ans.right{background:var(--good);color:#fff}
+.ans.wrong{background:var(--bad);color:#fff}
+.ans.dim{opacity:.45}
+
+.teach{
+  background:var(--sun);border:var(--edge) solid var(--ink);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:12px;display:flex;flex-direction:column;gap:8px;align-items:center;
+}
+.teach p{margin:0;text-align:center;font-size:1.02rem;font-weight:700}
+.teach{width:100%}
+#answers .cta.full{grid-column:1/-1;min-height:clamp(64px,9vh,96px);font-size:1.4rem}
+.teach svg{max-width:100%;height:auto}
+.cta{
+  background:var(--grass);color:#fff;border:var(--edge) solid var(--ink);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:11px 24px;font-family:"Baloo 2",system-ui,sans-serif;
+  font-weight:800;font-size:1.22rem;transition:transform .08s,box-shadow .08s;
+}
+.cta:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.cta.alt{background:var(--paper);color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.grid.tight{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.card{
+  background:var(--paper);border:var(--edge) solid var(--ink);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:9px;display:flex;flex-direction:column;gap:5px;
+  align-items:center;text-align:center;transition:transform .08s,box-shadow .08s;
+}
+button.card:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.card svg{width:100%;height:auto;display:block}
+.card .shot{width:100%;aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden;background:#F3F8F3;border-radius:12px;border:2px solid #CBD9CC}
+.card .shot svg{max-height:100%}
+.card b{font-family:"Baloo 2",system-ui,sans-serif;font-size:1.02rem;line-height:1.1}
+.card small{color:var(--ink-soft);font-size:.78rem;line-height:1.2}
+.card .price{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:.92rem}
+.card.locked{background:#DCE6DD}
+.card.locked .silhouette{filter:brightness(0) opacity(.22)}
+.card.sel{background:var(--sun)}
+.card.owned{background:#DCEEE1}
+.sectionhead{display:flex;align-items:baseline;gap:10px;margin:6px 2px 2px}
+.sectionhead h2{font-size:1.28rem;margin:0}
+.sectionhead span{color:var(--ink-soft);font-size:.88rem}
+.hint{color:var(--ink-soft);font-size:.88rem;text-align:center;margin:6px 0 0}
+
+.roomwrap{border:var(--edge) solid var(--ink);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-lg);flex:0 0 auto}
+.roomwrap svg{display:block;width:100%;height:auto}
+.dogbox{width:min(300px,62%);margin:0 auto}
+.dogbox svg{width:100%;height:auto;display:block}
+.rowbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rowbtns .cta{font-size:1rem;padding:9px 16px}
+
+#toast{
+  position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-160%);
+  background:var(--ink);color:var(--paper);border-radius:999px;padding:10px 20px;font-weight:700;
+  box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .28s;z-index:50;max-width:92vw;text-align:center;
+}
+#toast.up{transform:translateX(-50%) translateY(0)}
+
+.gtable{width:100%;border-collapse:collapse;font-size:.93rem}
+.gtable th,.gtable td{text-align:left;padding:6px 8px;border-bottom:2px solid #D3DFD4}
+.gtable th{font-family:"Baloo 2",system-ui,sans-serif;font-size:.93rem}
+.gtable td.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:12px;border:2px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden;min-width:64px}
+.bar i{display:block;height:100%;background:var(--grass)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:9px}
+.tile{background:var(--paper);border:var(--edge) solid var(--ink);border-radius:var(--r);padding:9px 12px;box-shadow:var(--shadow)}
+.tile .k{font-family:"Baloo 2",system-ui,sans-serif;font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+.tile .l{color:var(--ink-soft);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+.panel{background:var(--paper);border:var(--edge) solid var(--ink);border-radius:var(--r);box-shadow:var(--shadow);padding:12px;margin-top:10px}
+.panel h3{margin:0 0 6px;font-size:1.08rem}
+.panel p{margin:0 0 8px;font-size:.9rem;color:var(--ink-soft)}
+.warn{background:#FBE0DC;border-color:var(--bad)}
+.warn h3{color:var(--bad)}
+
+@media (max-width:430px){
+  .bigbtn{padding:10px;gap:8px}
+  .bigbtn .glyph{width:46px;height:46px}
+  .bigbtn b{font-size:1.08rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.pop{animation:pop .32s ease-out}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes swim{0%{transform:translateX(0)}50%{transform:translateX(26px)}100%{transform:translateX(0)}}
+.swimmer{animation:swim 6s ease-in-out infinite}
+</style>
+
+<div id="app">
+  <div class="topbar">
+    <button class="iconbtn" id="btnHome" aria-label="Go to the park">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="#16261F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+    </button>
+    <div class="chip" title="Bones to spend">
+      <svg viewBox="0 0 40 20" width="32" height="17" aria-hidden="true"><g stroke="#16261F" stroke-width="2.4" fill="#F3E7D0"><path d="M8 6a4 4 0 1 0-3 6.6A4 4 0 1 0 12 15h16a4 4 0 1 0 7-2.4A4 4 0 1 0 28 5H12a4 4 0 0 0-4 1z"/></g></svg>
+      <span class="num" id="bonesLbl">0</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn on" id="btnSound" aria-label="Read the question out loud" aria-pressed="true">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="#16261F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 8.5a5 5 0 0 1 0 7"/></svg>
+    </button>
+    <button class="iconbtn" id="btnGrown" aria-label="Grown-ups">
+      <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="#16261F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg>
+    </button>
+  </div>
+
+  <section class="screen show" id="scHome">
+    <div class="park" id="parkArt"></div>
+    <div class="menu" id="actMenu"></div>
+    <div class="menu">
+      <button class="bigbtn" id="btnHouse">
+        <span class="glyph" style="background:#F0C9A0"><svg viewBox="0 0 24 24" fill="none" stroke="#16261F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M9.5 20v-5h5v5"/></svg></span>
+        <span><b>My House</b><small id="houseSub">animals and toys</small></span>
+      </button>
+      <button class="bigbtn" id="btnShop">
+        <span class="glyph" style="background:#DCEEE1"><svg viewBox="0 0 24 24" fill="none" stroke="#16261F" stroke-width="2.2" stroke-linejoin="round"><path d="M4 8h16l-1.5 11h-13z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg></span>
+        <span><b>Shop</b><small>hats, coats, park things</small></span>
+      </button>
+    </div>
+  </section>
+
+  <section class="screen" id="scPlay">
+    <div class="playtop">
+      <div class="buddy" id="buddy" aria-hidden="true"></div>
+      <div class="progress" id="pips"></div>
+    </div>
+    <div class="stage">
+      <p class="ask" id="ask"></p>
+      <div class="visual" id="visual"></div>
+    </div>
+    <div class="answers" id="answers"></div>
+  </section>
+
+  <section class="screen" id="scEnd">
+    <div class="stage" id="endStage"></div>
+    <div class="menu">
+      <button class="cta" id="btnAgain">Play again</button>
+      <button class="cta alt" id="btnBack">Back to the park</button>
+    </div>
+  </section>
+
+  <section class="screen" id="scHouse"><div class="scroller" id="houseBody"></div></section>
+  <section class="screen" id="scShop"><div class="scroller" id="shopBody"></div></section>
+  <section class="screen" id="scGrown"><div class="scroller" id="grownBody"></div></section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   BONES PARK — one engine, three children.
+   The only line that differs between the three published files is the
+   CHILD constant immediately below. Everything else — art, economy,
+   adaptive engine, house, shop — is shared, so a fix in one is a fix
+   in all three.
+   ===================================================================== */
+const CHILD = "sophia";
+
+const PROFILES = {
+  dylan:  { name:'Dylan',  grade:'Grade 1', round:8,  key:'bonesPark.dylan.v2',
+            bank:'g1', fast:5.0,
+            blurb:'tens and ones, counting in tens, ten more and ten less' },
+  rory:   { name:'Rory',   grade:'Grade 2', round:10, key:'bonesPark.rory.v2',
+            bank:'g2', fast:4.6,
+            blurb:'facts to 20, adding within 100, hundreds tens and ones' },
+  sophia: { name:'Sophia', grade:'Grade 4', round:10, key:'bonesPark.sophia.v2',
+            bank:'g4', fast:4.6,
+            blurb:'times tables, 2 to 12' }
+};
+const P = PROFILES[CHILD];
+/* Bones are earned for correct answers only. There is no payment for
+   finishing a round and none for opening the app — the one bonus is for
+   getting every question in a round right. */
+const PER_RIGHT = 20, PERFECT_BONUS = 50;
+
+/* ---------------------------------------------------------------- util */
+const $ = s => document.querySelector(s);
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const today = () => new Date().toISOString().slice(0, 10);
+
+/* ------------------------------------------------------------- animals
+   30 to collect. Costs are LIFETIME bones, so nothing bought in the shop
+   can ever slow the collection down. kind picks the renderer; food and
+   habitat drive the house. */
+const ANIMALS = [
+  { id:'biscuit', name:'Biscuit', species:'golden retriever', cost:0,     kind:'quad', food:'bone', tongue:1,   body:'#E3B274', patch:'#C9924F', ear:'floppy', tail:'plume', fluff:2 },
+  { id:'zoe',     name:'Zoe',     species:'lagotto romagnolo',cost:160,   kind:'quad', food:'bone',   body:'#F6F1E6', patch:'#A97A52', ear:'floppy', tail:'curl',  fluff:3, spots:1 },
+  { id:'sooty',   name:'Sooty',   species:'black cat',        cost:340,   kind:'quad', food:'fish',   body:'#3A3A42', patch:'#2A2A31', ear:'cat',    tail:'whip',  fluff:1, cat:1 },
+  { id:'clover',  name:'Clover',  species:'rabbit',           cost:530,   kind:'quad', food:'carrot', body:'#EDE6DA', patch:'#C2AE96', ear:'lop',    tail:'puff',  fluff:1, small:1 },
+  { id:'nacho',   name:'Nacho',   species:'corgi',            cost:750,   kind:'quad', food:'bone', tongue:1,   body:'#DE9B4E', patch:'#FBF3E6', ear:'perk',   tail:'stub',  fluff:1, low:1 },
+  { id:'pickle',  name:'Pickle',  species:'guinea pig',       cost:980,   kind:'quad', food:'carrot', body:'#C98A55', patch:'#F5EDE0', ear:'fold',   tail:'none',  fluff:0, small:1, spots:1 },
+  { id:'ginger',  name:'Ginger',  species:'tabby cat',        cost:1230,  kind:'quad', food:'fish',   body:'#E09A52', patch:'#B7702F', ear:'cat',    tail:'whip',  fluff:1, cat:1, stripes:1 },
+  { id:'splash',  name:'Splash',  species:'duck',             cost:1500,  kind:'bird', food:'seed',   body:'#F7F2E6', patch:'#E3D8C2', beak:'flat',  legs:'web',  crest:0 },
+  { id:'pepper',  name:'Pepper',  species:'dalmatian',        cost:1780,  kind:'quad', food:'bone',   body:'#FBF7EF', patch:'#2B2B2B', ear:'floppy', tail:'whip',  fluff:0, spots:2 },
+  { id:'quill',   name:'Quill',   species:'hedgehog',         cost:2090,  kind:'quad', food:'leaf',   body:'#D8B98F', patch:'#6E5238', ear:'fold',   tail:'none',  fluff:0, small:1, low:1, spiky:1 },
+  { id:'tilly',   name:'Tilly',   species:'sheep',            cost:2410,  kind:'quad', food:'hay',    body:'#F7F3EA', patch:'#3A3A42', ear:'lop',    tail:'puff',  fluff:3 },
+  { id:'hoot',    name:'Hoot',    species:'owl',              cost:2750,  kind:'bird', food:'seed',   body:'#B08B5E', patch:'#EFE3CE', beak:'hook',  legs:'stick',crest:2, big:1 },
+  { id:'domino',  name:'Domino',  species:'border collie',    cost:3110,  kind:'quad', food:'bone',   body:'#2F2F33', patch:'#FBF7EF', ear:'fold',   tail:'plume', fluff:1, spots:1 },
+  { id:'peproni', name:'Pepperoni',species:'pig',             cost:3480,  kind:'quad', food:'hay', snout:1,    body:'#EFAEB4', patch:'#DE8E96', ear:'perk',   tail:'curl',  fluff:0, snout:1, low:1 },
+  { id:'rusty',   name:'Rusty',   species:'fox',              cost:3880,  kind:'quad', food:'fish',   body:'#E07B3C', patch:'#FBF7EF', ear:'perk',   tail:'plume', fluff:1 },
+  { id:'shelby',  name:'Shelby',  species:'tortoise',         cost:4290,  kind:'quad', food:'leaf',   body:'#A8C083', patch:'#6B7C46', ear:'none',   tail:'none',  fluff:0, shell:1, small:1 },
+  { id:'marsh',   name:'Marshmallow',species:'samoyed',       cost:4720,  kind:'quad', food:'bone',   body:'#FDFCF9', patch:'#DCD3C4', ear:'perk',   tail:'plume', fluff:3 },
+  { id:'butter',  name:'Buttercup',species:'cow',             cost:5170,  kind:'quad', food:'hay',    body:'#FBF7EF', patch:'#3A3A42', ear:'fold',   tail:'flag',  fluff:0, spots:2, big:1, horns:1 },
+  { id:'kiwi',    name:'Kiwi',    species:'parrot',           cost:5630,  kind:'bird', food:'seed',   body:'#3EA35F', patch:'#E4572E', beak:'hook',  legs:'stick',crest:1 },
+  { id:'otto',    name:'Otto',    species:'otter',            cost:6120,  kind:'quad', food:'fish',   body:'#8A6141', patch:'#D8C3A5', ear:'fold',   tail:'whip',  fluff:1, low:1 },
+  { id:'waddle',  name:'Waddle',  species:'penguin',          cost:6620,  kind:'bird', food:'fish',   body:'#2F3540', patch:'#FBF7EF', beak:'flat',  legs:'web',  crest:0, upright:1 },
+  { id:'nutmeg',  name:'Nutmeg',  species:'red panda',        cost:7140,  kind:'quad', food:'leaf',   body:'#C4622F', patch:'#FBF7EF', ear:'perk',   tail:'ring',  fluff:1 },
+  { id:'comet',   name:'Comet',   species:'pony',             cost:7680,  kind:'quad', food:'carrot', body:'#B98A57', patch:'#4A3524', ear:'perk',   tail:'mane',  fluff:0, big:1, blaze:1 },
+  { id:'willow',  name:'Willow',  species:'deer',             cost:8230,  kind:'quad', food:'leaf',   body:'#C08A5C', patch:'#F2E5D2', ear:'perk',   tail:'puff',  fluff:0, longleg:1, spots:2 },
+  { id:'shelly',  name:'Shelly',  species:'sea turtle',       cost:8810,  kind:'sea',  food:'leaf',   body:'#5B9E6E', patch:'#3E6E4C', shape:'turtle' },
+  { id:'bubbles', name:'Bubbles', species:'octopus',          cost:9400,  kind:'sea',  food:'fish',   body:'#C25FA0', patch:'#9C4480', shape:'octopus' },
+  { id:'stripe',  name:'Stripe',  species:'tiger cub',        cost:10010, kind:'quad', food:'fish',   body:'#E9A03C', patch:'#2B2B2B', ear:'cat',    tail:'whip',  fluff:1, cat:1, stripes:2 },
+  { id:'finn',    name:'Finn',    species:'dolphin',          cost:10640, kind:'sea',  food:'fish',   body:'#7FA8C4', patch:'#EAF2F6', shape:'dolphin' },
+  { id:'luna',    name:'Luna',    species:'whale',            cost:11280, kind:'sea',  food:'fish',   body:'#5C7FA8', patch:'#D9E6EE', shape:'whale' },
+  { id:'bruno',   name:'Bruno',   species:'shark',            cost:11950, kind:'sea',  food:'fish',   body:'#8C9BA8', patch:'#F2F5F7', shape:'shark' }
+];
+
+const FOODS = {
+  bone:   { name:'a bone',    },
+  fish:   { name:'a fish',    },
+  carrot: { name:'a carrot',  },
+  seed:   { name:'some seeds',},
+  hay:    { name:'some hay',  },
+  leaf:   { name:'some leaves'}
+};
+
+const WEAR = [
+  { id:'cap',     slot:'hat',     name:'Ball cap',      cost:40 },
+  { id:'party',   slot:'hat',     name:'Party hat',     cost:60 },
+  { id:'bobble',  slot:'hat',     name:'Bobble hat',    cost:90 },
+  { id:'chef',    slot:'hat',     name:'Chef hat',      cost:110 },
+  { id:'flower',  slot:'hat',     name:'Flower crown',  cost:130 },
+  { id:'ranger',  slot:'hat',     name:'Ranger hat',    cost:150 },
+  { id:'pirate',  slot:'hat',     name:'Pirate hat',    cost:200 },
+  { id:'crown',   slot:'hat',     name:'Gold crown',    cost:220 },
+  { id:'wizard',  slot:'hat',     name:'Wizard hat',    cost:250 },
+  { id:'round',   slot:'glasses', name:'Round specs',   cost:70 },
+  { id:'star',    slot:'glasses', name:'Star shades',   cost:120 },
+  { id:'heart',   slot:'glasses', name:'Heart shades',  cost:140 },
+  { id:'goggles', slot:'glasses', name:'Goggles',       cost:180 },
+  { id:'snorkel', slot:'glasses', name:'Snorkel mask',  cost:210 },
+  { id:'bandana', slot:'neck',    name:'Bandana',       cost:40 },
+  { id:'bell',    slot:'neck',    name:'Bell collar',   cost:70 },
+  { id:'bowtie',  slot:'neck',    name:'Bow tie',       cost:80 },
+  { id:'scarf',   slot:'neck',    name:'Stripy scarf',  cost:100 },
+  { id:'lei',     slot:'neck',    name:'Flower lei',    cost:150 },
+  { id:'medal',   slot:'neck',    name:'Gold medal',    cost:260 },
+  { id:'sweater', slot:'outfit',  name:'Stripy jumper', cost:110 },
+  { id:'pyjamas', slot:'outfit',  name:'Pyjamas',       cost:140 },
+  { id:'raincoat',slot:'outfit',  name:'Raincoat',      cost:160 },
+  { id:'tutu',    slot:'outfit',  name:'Tutu',          cost:190 },
+  { id:'cape',    slot:'outfit',  name:'Hero cape',     cost:240 },
+  { id:'knight',  slot:'outfit',  name:'Knight armour', cost:280 },
+  { id:'dino',    slot:'outfit',  name:'Dinosaur suit', cost:300 },
+  { id:'space',   slot:'outfit',  name:'Space suit',    cost:340 }
+];
+
+const PARKS = [
+  { id:'flowers', name:'Flower bed',    cost:100 },
+  { id:'hydrant', name:'Fire hydrant',  cost:120 },
+  { id:'tree',    name:'Big tree',      cost:140 },
+  { id:'bench',   name:'Bench',         cost:150 },
+  { id:'picnic',  name:'Picnic rug',    cost:170 },
+  { id:'birdbath',name:'Bird bath',     cost:190 },
+  { id:'tunnel',  name:'Crawl tunnel',  cost:210 },
+  { id:'hoop',    name:'Jump hoop',     cost:230 },
+  { id:'lights',  name:'Fairy lights',  cost:260 },
+  { id:'sandpit', name:'Sand pit',      cost:290 },
+  { id:'house',   name:'Kennel',        cost:320 },
+  { id:'swing',   name:'Swing',         cost:350 },
+  { id:'pond',    name:'Duck pond',     cost:390 },
+  { id:'slide',   name:'Slide',         cost:430 },
+  { id:'statue',  name:'Stone statue',  cost:470 },
+  { id:'lagoon',  name:'Sea pool',      cost:520 }
+];
+
+/* Toys are WON, never bought. Each one is a receipt for something he did. */
+const TOYS = [
+  { id:'bone',    name:'Squeaky bone', how:'a perfect round',        test:s => s.perfect >= 1 },
+  { id:'ball',    name:'Tennis ball',  how:'5 rounds played',        test:s => s.rounds >= 5 },
+  { id:'rope',    name:'Rope tug',     how:'10 rounds played',       test:s => s.rounds >= 10 },
+  { id:'frisbee', name:'Frisbee',      how:'25 rounds played',       test:s => s.rounds >= 25 },
+  { id:'duck',    name:'Rubber duck',  how:'50 rounds played',       test:s => s.rounds >= 50 },
+  { id:'chest',   name:'Treasure chest',how:'100 rounds played',     test:s => s.rounds >= 100 },
+  { id:'star',    name:'Star ball',    how:'3 days in a row',        test:s => s.bestStreak >= 3 },
+  { id:'trophy',  name:'Gold trophy',  how:'7 days in a row',        test:s => s.bestStreak >= 7 },
+  { id:'puzzle',  name:'Puzzle cube',  how:'5 skills mastered',      test:s => mastered(s) >= 5 },
+  { id:'medal',   name:'Big medal',    how:'10 skills mastered',     test:s => mastered(s) >= 10 },
+  { id:'crown',   name:'Park crown',   how:'every skill mastered',   test:s => mastered(s) >= liveSkills().length },
+  { id:'album',   name:'Photo album',  how:'10 animals',             test:s => s.animals.length >= 10 },
+  { id:'cushion', name:'Big cushion',  how:'20 animals',             test:s => s.animals.length >= 20 },
+  { id:'gold',    name:'Golden bone',  how:'every animal',           test:s => s.animals.length >= ANIMALS.length }
+];
+
+const CARE = [
+  { id:'feed',  name:'Feed',  cost:20, joy:8,  verb:'ate it all up' },
+  { id:'play',  name:'Play',  cost:15, joy:6,  verb:'had a good run about' },
+  { id:'brush', name:'Brush', cost:30, joy:10, verb:'looks very smart' },
+  { id:'nap',   name:'Nap',   cost:0,  joy:4,  verb:'had a lovely snooze' }
+];
+</script>
+
+<script>
+"use strict";
+/* =====================================================================
+   SKILLS — three banks. Only the one named by the profile is used, but
+   all three ship in every file so the three children run identical code.
+   w is a difficulty weight: the higher it is, the more often the engine
+   serves that skill once strengths are equal. Weight is where the
+   pedagogy lives — it is set high for the things children actually get
+   wrong, low for the things they recite.
+   ===================================================================== */
+const BANKS = {
+
+  /* ---- Dylan · Grade 1 · CCSS 1.NBT and 1.OA -------------------- */
+  g1: {
+    skills: [
+      { id:'read50',  act:'bags', label:'Reading bags and bones to 50',       w:0.8 },
+      { id:'read99',  act:'bags', label:'Reading bags and bones to 99',       w:0.9 },
+      { id:'match',   act:'bags', label:'Making a number from tens and ones', w:1.0 },
+      { id:'compare', act:'bags', label:'Which number is bigger',             w:1.2 },
+      { id:'up10',    act:'hops', label:'Counting up in tens',                w:0.6 },
+      { id:'down10',  act:'hops', label:'Counting back in tens',              w:1.0 },
+      { id:'any10',   act:'hops', label:'Counting in tens from any number',   w:1.3 },
+      { id:'plus1',   act:'step', label:'One more',                           w:0.4 },
+      { id:'minus1',  act:'step', label:'One less',                           w:0.5 },
+      { id:'plus1x',  act:'step', label:'One more over a ten (29 → 30)',      w:1.5 },
+      { id:'minus1x', act:'step', label:'One less over a ten (40 → 39)',      w:1.6 },
+      { id:'plus10',  act:'jump', label:'Ten more',                           w:1.3 },
+      { id:'minus10', act:'jump', label:'Ten less',                           w:1.4 },
+      { id:'makeTen', act:'add',  label:'Making ten (8 + ? = 10)',            w:1.5 },
+      { id:'doubles', act:'add',  label:'Doubles (7 + 7)',                    w:1.0 },
+      { id:'addOnes', act:'add',  label:'Two-digit add a few (34 + 5)',       w:1.4 },
+      { id:'addTens', act:'jump', label:'Adding whole tens (30 + 40)',        w:1.5 },
+      { id:'subTens', act:'jump', label:'Taking away whole tens (70 − 30)',   w:1.6 }
+    ],
+    acts: [
+      { id:'bags', name:'Bone Bags', sub:'tens and ones',        glyph:'bag',  col:'var(--sun)' },
+      { id:'hops', name:'Ten Hops',  sub:'count in tens',        glyph:'hop',  col:'var(--sky-deep)' },
+      { id:'step', name:'One Step',  sub:'one more, one less',   glyph:'step', col:'var(--ball)' },
+      { id:'jump', name:'Big Jump',  sub:'tens more, tens less', glyph:'jump', col:'var(--plum)' },
+      { id:'add',  name:'Bone Sums', sums:1, sub:'adding',       glyph:'plus', col:'#2FA8A0' }
+    ]
+  },
+
+  /* ---- Rory · end of Grade 1 · CCSS 1.OA and 1.NBT --------------
+     Rory has FINISHED Grade 1, so this is consolidation of the Grade 1
+     standards, not a preview of Grade 2. The one Grade 2 activity is
+     fenced off as "Stretch" and is left out of Park Walk.
+     -------------------------------------------------------------- */
+  g2: {
+    skills: [
+      { id:'add10',    act:'facts', label:'Adding within 10',                    w:0.5 },
+      { id:'sub10',    act:'facts', label:'Taking away within 10',               w:0.6 },
+      { id:'makeTen',  act:'facts', label:'Making ten (8 + ? = 10)',             w:1.0 },
+      { id:'doubles',  act:'facts', label:'Doubles (7 + 7)',                     w:0.8 },
+      { id:'nearDbl',  act:'facts', label:'Near doubles (7 + 8)',                w:1.5 },
+      { id:'add20',    act:'facts', label:'Adding over ten (8 + 7)',             w:1.3 },
+      { id:'sub20',    act:'facts', label:'Taking away over ten (15 − 8)',       w:1.6 },
+      { id:'missing20',act:'facts', label:'Missing number (9 + ? = 16)',         w:1.7 },
+      { id:'trueFalse',act:'facts', label:'Is the number sentence true?',        w:1.5 },
+
+      { id:'teens',    act:'place', label:'Teen numbers are ten and some more',  w:1.0 },
+      { id:'read99',   act:'place', label:'Reading bags and bones to 99',        w:0.8 },
+      { id:'match',    act:'place', label:'Making a number from tens and ones',  w:1.0 },
+      { id:'decades',  act:'place', label:'How many tens in 70',                 w:0.9 },
+      { id:'compare',  act:'place', label:'Which two-digit number is bigger',    w:1.2 },
+
+      { id:'count1',   act:'count', label:'Counting on past a ten, up to 120',   w:1.1 },
+      { id:'back1',    act:'count', label:'Counting back past a ten',            w:1.4 },
+      { id:'up10',     act:'count', label:'Counting up in tens',                 w:0.6 },
+      { id:'any10',    act:'count', label:'Counting in tens from any number',    w:1.3 },
+      { id:'plus10',   act:'count', label:'Ten more',                            w:1.1 },
+      { id:'minus10',  act:'count', label:'Ten less',                            w:1.3 },
+
+      { id:'addOnes',  act:'sums',  label:'Two-digit add a few (34 + 5)',        w:1.0 },
+      { id:'add2d1x',  act:'sums',  label:'Two-digit add over a ten (38 + 5)',   w:1.9 },
+      { id:'sub2d1x',  act:'sums',  label:'Two-digit take away over a ten (42 − 5)', w:1.9 },
+      { id:'addTens',  act:'sums',  label:'Adding whole tens (30 + 40)',         w:1.0 },
+      { id:'add2dTen', act:'sums',  label:'Adding a whole ten on (43 + 20)',     w:1.5 },
+      { id:'subTens',  act:'sums',  label:'Taking away whole tens (70 − 30)',    w:1.3 },
+
+      { id:'oclock',   act:'clock', label:'Telling the time — o’clock',          w:0.9 },
+      { id:'halfpast', act:'clock', label:'Telling the time — half past',        w:1.4 },
+
+      { id:'groups',   act:'stretch', label:'Rows and groups (3 rows of 4)',     w:1.2 },
+      { id:'mult2',    act:'stretch', label:'The 2 times table',                 w:1.0 },
+      { id:'mult5',    act:'stretch', label:'The 5 times table',                 w:1.2 },
+      { id:'mult10',   act:'stretch', label:'The 10 times table',                w:0.9 },
+      { id:'share2',   act:'stretch', label:'Sharing between 2',                 w:1.2 },
+      { id:'share5',   act:'stretch', label:'Sharing between 5',                 w:1.4 },
+      { id:'share10',  act:'stretch', label:'Sharing between 10',                w:1.1 }
+    ],
+    acts: [
+      { id:'facts', name:'Bone Facts', sums:1, sub:'adding and taking away',  glyph:'plus', col:'var(--sun)' },
+      { id:'place', name:'Bone Bags',  sub:'tens and ones',                   glyph:'bag',  col:'var(--sky-deep)' },
+      { id:'count', name:'Long Hops',  sub:'counting on and in tens',         glyph:'hop',  col:'var(--ball)' },
+      { id:'sums',  name:'Big Sums',   sums:1, sub:'over a ten, whole tens',  glyph:'jump', col:'var(--plum)' },
+      { id:'clock', name:'Bone O’Clock', sub:'telling the time',              glyph:'step', col:'#7BA23F' },
+      { id:'stretch', name:'Stretch',  sums:1, sub:'groups and sharing · next year', glyph:'grid', col:'#C25FA0', extra:1 }
+    ]
+  },
+
+  /* ---- Sophia · times tables only · CCSS 3.OA.C.7 ---------------
+     Multiplication and nothing else, tables 2 to 12, at Sophia's own
+     request. This is automaticity work: she has met these facts, and
+     the job is making them instant rather than counted.
+
+     The tables are grouped by how hard they actually are to retrieve,
+     not by numerical order, so she can go straight at the ones that
+     need work. Division, missing factors, fractions, area and rounding
+     are PARKED — their generators are still in GEN.g4 below, so any of
+     them comes back by adding one line to this list.
+     -------------------------------------------------------------- */
+  g4: {
+    skills: [
+      { id:'t2',  act:'easy',   label:'The 2 times table',  n:2,  w:0.6 },
+      { id:'t5',  act:'easy',   label:'The 5 times table',  n:5,  w:0.7 },
+      { id:'t10', act:'easy',   label:'The 10 times table', n:10, w:0.5 },
+      { id:'t3',  act:'middle', label:'The 3 times table',  n:3,  w:1.1 },
+      { id:'t4',  act:'middle', label:'The 4 times table',  n:4,  w:1.2 },
+      { id:'t6',  act:'middle', label:'The 6 times table',  n:6,  w:1.6 },
+      { id:'t7',  act:'tricky', label:'The 7 times table',  n:7,  w:1.9 },
+      { id:'t8',  act:'tricky', label:'The 8 times table',  n:8,  w:1.8 },
+      { id:'t9',  act:'tricky', label:'The 9 times table',  n:9,  w:1.5 },
+      { id:'t11', act:'bigt',   label:'The 11 times table', n:11, w:1.0 },
+      { id:'t12', act:'bigt',   label:'The 12 times table', n:12, w:1.7 },
+      /* hidden until the park is finished — see secretOpen() */
+      { id:'d2',  act:'secret', label:'Dividing by 2',  n:2,  w:0.6 },
+      { id:'d3',  act:'secret', label:'Dividing by 3',  n:3,  w:1.2 },
+      { id:'d4',  act:'secret', label:'Dividing by 4',  n:4,  w:1.3 },
+      { id:'d5',  act:'secret', label:'Dividing by 5',  n:5,  w:0.7 },
+      { id:'d6',  act:'secret', label:'Dividing by 6',  n:6,  w:1.7 },
+      { id:'d7',  act:'secret', label:'Dividing by 7',  n:7,  w:1.9 },
+      { id:'d8',  act:'secret', label:'Dividing by 8',  n:8,  w:1.8 },
+      { id:'d9',  act:'secret', label:'Dividing by 9',  n:9,  w:1.5 },
+      { id:'d10', act:'secret', label:'Dividing by 10', n:10, w:0.5 },
+      { id:'d11', act:'secret', label:'Dividing by 11', n:11, w:1.1 },
+      { id:'d12', act:'secret', label:'Dividing by 12', n:12, w:1.8 }
+    ],
+    acts: [
+      { id:'easy',   name:'Easy Tables',   sums:1, sub:'2, 5 and 10',  glyph:'plus', col:'var(--sun)' },
+      { id:'middle', name:'Middle Tables', sums:1, sub:'3, 4 and 6',   glyph:'grid', col:'var(--sky-deep)' },
+      { id:'tricky', name:'Tricky Tables', sums:1, sub:'7, 8 and 9',   glyph:'jump', col:'var(--ball)' },
+      { id:'bigt',   name:'Big Tables',    sums:1, sub:'11 and 12',    glyph:'hop',  col:'var(--plum)' },
+      { id:'secret', name:'The Secret Gate',sums:1, sub:'division — unlocked!', glyph:'split', col:'#C9A227', hidden:1 }
+    ]
+  }
+};
+
+const SKILLS = BANKS[P.bank].skills;
+const SKILL = Object.fromEntries(SKILLS.map(s => [s.id, s]));
+const ACTS = {};
+BANKS[P.bank].acts.forEach(a => { ACTS[a.id] = Object.assign({}, a, { skills: SKILLS.filter(s => s.act === a.id).map(s => s.id) }); });
+/* Everything in the park bought, and every animal collected. */
+const secretOpen = () => S.animals.length >= ANIMALS.length
+  && S.wear.length >= WEAR.length && S.parks.length >= PARKS.length;
+const hiddenAct = id => !!(ACTS[id] || {}).hidden;
+const liveSkills = () => SKILLS.filter(s => !hiddenAct(s.act) || secretOpen());
+const CORE = SKILLS.filter(s => !(ACTS[s.act] || {}).extra && !(ACTS[s.act] || {}).hidden).map(s => s.id);
+ACTS.walk = { id:'walk', name:CHILD === 'sophia' ? 'All Tables' : 'Park Walk',
+              sub:CHILD === 'sophia' ? 'every table, mixed up' : 'a bit of everything', glyph:'paw', col:'var(--grass)',
+              skills: CORE.length ? CORE : SKILLS.map(s => s.id) };
+const ACT_ORDER = BANKS[P.bank].acts.map(a => a.id).concat('walk');
+
+/* ---------------------------------------------------------------- state */
+let STORAGE_OK = true;
+(function probe() {
+  try {
+    localStorage.setItem('__probe__', '1');
+    if (localStorage.getItem('__probe__') !== '1') STORAGE_OK = false;
+    localStorage.removeItem('__probe__');
+  } catch (e) { STORAGE_OK = false; }
+})();
+
+const fresh = () => ({
+  lifetime:0, spend:0,
+  animals:['biscuit'], active:'biscuit',
+  wear:[], parks:[], toys:[], outfits:{}, joy:{},
+  streak:0, bestStreak:0, lastDay:'', sound:true,
+  stats:Object.fromEntries(SKILLS.map(s => [s.id, { n:0, ok:0, fast:0, str:0 }])),
+  rounds:0, perfect:0, seen:0, right:0, secretSeen:0
+});
+let S = fresh();
+try {
+  const raw = localStorage.getItem(P.key);
+  if (raw) { const o = JSON.parse(raw); S = Object.assign(fresh(), o); S.stats = Object.assign(fresh().stats, o.stats || {}); }
+} catch (e) {}
+function save() { try { localStorage.setItem(P.key, JSON.stringify(S)); } catch (e) { STORAGE_OK = false; } }
+function mastered(s) { return liveSkills().filter(k => (s.stats[k.id] || {}).str >= 5).length; }
+
+/* ---------------------------------------------------------------- audio */
+let voice = null;
+function loadVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /en-GB/i.test(v.lang) && /female|kate|serena|moira/i.test(v.name))
+       || vs.find(v => /^en/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function say(text) {
+  if (!S.sound || !text || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = CHILD === 'dylan' ? 0.88 : 0.95; u.pitch = 1.05; if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('up');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('up'), 2000);
+}
+</script>
+
+<script>
+"use strict";
+/* ===================================================================
+   ART — everything is drawn in SVG; nothing is loaded from anywhere.
+   =================================================================== */
+const INK = '#16261F';
+
+function bone(cx, cy, s, fill) {
+  s = s || 1; fill = fill || '#F3E7D0';
+  const w = 7 * s, r = 2.6 * s, h = 2 * s, sw = (1.6 * s).toFixed(2);
+  return `<g stroke="${INK}" stroke-width="${sw}" fill="${fill}" stroke-linejoin="round">
+    <circle cx="${cx - w}" cy="${cy - r}" r="${r}"/><circle cx="${cx - w}" cy="${cy + r}" r="${r}"/>
+    <circle cx="${cx + w}" cy="${cy - r}" r="${r}"/><circle cx="${cx + w}" cy="${cy + r}" r="${r}"/>
+    <rect x="${cx - w}" y="${cy - h}" width="${w * 2}" height="${h * 2}" rx="${h}"/></g>`;
+}
+
+/* a bag = ten bones, drawn as a visible ten-frame so "ten" is shown */
+function bag(x, y) {
+  const px = x + 11, py = y + 33, cw = 9.2, ch = 11;
+  let cells = '', bones = '';
+  for (let i = 0; i < 10; i++) {
+    const c = i % 5, r = (i / 5) | 0;
+    cells += `<rect x="${(px + c * cw).toFixed(2)}" y="${(py + r * ch).toFixed(2)}" width="${cw}" height="${ch}" fill="none" stroke="${INK}" stroke-width="1"/>`;
+    bones += bone(px + c * cw + cw / 2, py + r * ch + ch / 2, 0.3, '#FBF3E6');
+  }
+  return `<g>
+    <path d="M${x + 5} ${y + 16} h58 q4 0 4 5 l-4 46 a7 7 0 0 1-7 6 h-44 a7 7 0 0 1-7-6 l-4-46 q0-5 4-5z"
+          fill="#E9C892" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M${x + 5} ${y + 16} q7-11 29-11 t29 11 z" fill="#D8B172" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="${px}" y="${py}" width="${cw * 5}" height="${ch * 2}" rx="2" fill="#FFFDF6" stroke="${INK}" stroke-width="1.6"/>
+    ${cells}${bones}</g>`;
+}
+
+/* a crate = ten bags = one hundred, drawn as a 10 × 10 flat */
+function crate(x, y) {
+  let cells = '';
+  for (let r = 0; r < 10; r++) for (let c = 0; c < 10; c++)
+    cells += `<rect x="${(x + 8 + c * 6.8).toFixed(1)}" y="${(y + 12 + r * 5.6).toFixed(1)}" width="6.8" height="5.6" fill="${(r + c) % 2 ? '#F0DDB6' : '#E4C68F'}" stroke="${INK}" stroke-width=".6"/>`;
+  return `<g>
+    <rect x="${x + 4}" y="${y + 8}" width="76" height="64" rx="5" fill="#E9C892" stroke="${INK}" stroke-width="3"/>
+    ${cells}
+    <rect x="${x + 8}" y="${y + 12}" width="68" height="56" fill="none" stroke="${INK}" stroke-width="2"/>
+    <rect x="${x + 4}" y="${y + 8}" width="76" height="64" rx="5" fill="none" stroke="${INK}" stroke-width="3"/></g>`;
+}
+
+function looseFrame(ones, x, y) {
+  const cw = 34, ch = 31;
+  let g = `<rect x="${x}" y="${y}" width="${cw * 5}" height="${ch * 2}" rx="4" fill="#FFFDF6" stroke="${INK}" stroke-width="2.5"/>`;
+  for (let i = 0; i < 10; i++) {
+    const c = i % 5, r = (i / 5) | 0;
+    g += `<rect x="${x + c * cw}" y="${y + r * ch}" width="${cw}" height="${ch}" fill="none" stroke="${INK}" stroke-width="1.4" opacity=".45"/>`;
+    if (i < ones) g += bone(x + c * cw + cw / 2, y + r * ch + ch / 2, 1.05);
+  }
+  return g;
+}
+
+/* tens-and-ones picture, 0–99 */
+function bagsPicture(n) {
+  const tens = Math.floor(n / 10), ones = n % 10;
+  const perRow = 5, bw = 68, bh = 78;
+  const cols = Math.min(tens, perRow), rows = Math.ceil(tens / perRow) || 0;
+  const bagsW = cols * bw, frameW = ones ? 182 : 0;
+  const W = Math.max(bagsW + frameW, 160) + 12;
+  const H = Math.max(rows * bh, ones ? 74 : 0, 56) + 10;
+  let g = '';
+  for (let i = 0; i < tens; i++) g += bag(6 + (i % perRow) * bw, 6 + ((i / perRow) | 0) * bh);
+  if (ones) g += looseFrame(ones, 6 + bagsW + 8, 8);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${tens} bags of ten and ${ones} bones">${g}</svg>`;
+}
+
+/* hundreds-tens-ones picture, 0–999 — hundreds on one row, tens and
+   ones beneath, so the three sizes stay visibly different */
+function pilesPicture(n) {
+  const h = Math.floor(n / 100), t = Math.floor(n / 10) % 10, o = n % 10;
+  const hCols = Math.min(h, 5), hRows = h ? Math.ceil(h / 5) : 0;
+  const row2W = t * 68 + (o ? 190 : 0);
+  const W = Math.max(hCols * 88, row2W, 200) + 12;
+  const H = hRows * 84 + (t || o ? 86 : 0) + 8;
+  let g = '';
+  for (let i = 0; i < h; i++) g += crate(6 + (i % 5) * 88, 6 + ((i / 5) | 0) * 84);
+  const y2 = hRows * 84 + 2;
+  for (let i = 0; i < t; i++) g += bag(6 + i * 68, y2);
+  if (o) g += looseFrame(o, 10 + t * 68, y2 + 4);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${h} hundreds, ${t} tens and ${o} ones">${g}</svg>`;
+}
+
+/* dot array for a multiplication fact */
+function arrayPicture(rows, cols) {
+  const s = 22, W = cols * s + 20, H = rows * s + 20;
+  let g = '';
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+    g += bone(14 + c * s, 14 + r * s, 0.72);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${rows} rows of ${cols}">${g}</svg>`;
+}
+
+/* stepping stones for a counting sequence */
+function stones(seq, blankIdx) {
+  const w = 132, W = seq.length * w + 16, H = 118;
+  let g = `<rect x="0" y="88" width="${W}" height="30" fill="#4CA36B"/>`;
+  seq.forEach((v, i) => {
+    const x = 12 + i * w, blank = i === blankIdx;
+    g += `<ellipse cx="${x + 54}" cy="86" rx="54" ry="20" fill="${blank ? '#F6BE4A' : '#CFC5B4'}" stroke="${INK}" stroke-width="3"/>`;
+    g += `<text x="${x + 54}" y="96" text-anchor="middle" font-family="Baloo 2,sans-serif" font-weight="800" font-size="${blank ? 40 : 32}" fill="${INK}">${blank ? '?' : v}</text>`;
+    if (i < seq.length - 1) g += `<path d="M${x + 80} 52 q26-30 52 0" fill="none" stroke="${INK}" stroke-width="4" stroke-dasharray="8 7" stroke-linecap="round"/>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+</script>
+
+<script>
+"use strict";
+/* ===================================================================
+   ANIMALS — three renderers behind one interface. Each returns the
+   drawing plus a head anchor (hx, hy, hr) and a neck point, so hats,
+   glasses and collars are positioned by the same code for a corgi, a
+   parrot and a shark.
+   =================================================================== */
+/* ===================================================================
+   ANIMALS — front-facing, sitting, no outlines.
+   This is the pose and the flat-fill style from Sophia's original dog
+   park, brought across because clothes fit it far better: a symmetric
+   head takes a hat squarely, a symmetric chest takes a collar and a
+   coat, and nothing has to be re-registered per breed.
+
+   Canvas is 220 × 230. Every renderer returns the drawing plus the
+   anchors the wearables need:
+     hx, hy, hr  head centre and radius
+     ny          the neck line, where a collar sits
+     bx, bt, bw  body centre, its top, and its half-width at the chest
+   =================================================================== */
+const AW = 220, AH = 230;
+const shade = (hex, f) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b2 = Math.round((n & 255) * f);
+  return '#' + [r, g, b2].map(v => Math.min(255, v).toString(16).padStart(2, '0')).join('');
+};
+const SHADOW = '<ellipse cx="110" cy="214" rx="72" ry="10" fill="#16261F" opacity=".13"/>';
+
+function faceParts(a, hx, hy, hr) {
+  const cream = a.body === '#FFFFFF' ? '#F1EADC' : '#F8F0E2';
+  let g = '';
+  const mz = hy + hr * 0.50;
+  if (a.snout) {
+    g += `<ellipse cx="${hx}" cy="${mz}" rx="${hr * .46}" ry="${hr * .34}" fill="${shade(a.patch, 1.05)}"/>
+          <ellipse cx="${hx - hr * .17}" cy="${mz}" rx="${hr * .075}" ry="${hr * .1}" fill="${shade(a.patch, .55)}"/>
+          <ellipse cx="${hx + hr * .17}" cy="${mz}" rx="${hr * .075}" ry="${hr * .1}" fill="${shade(a.patch, .55)}"/>`;
+  } else if (a.beak) {
+    g += `<path d="M${hx - hr * .3} ${mz - hr * .12} h${hr * .6} l-${hr * .3} ${hr * .42}z" fill="#E9A13C"/>`;
+  } else {
+    g += `<ellipse cx="${hx}" cy="${mz}" rx="${hr * .64}" ry="${hr * .5}" fill="${cream}"/>`;
+    g += `<ellipse cx="${hx}" cy="${mz - hr * .30}" rx="${hr * .21}" ry="${hr * .17}" fill="${INK}"/>`;
+    g += `<path d="M${hx} ${mz - hr * .14} v${hr * .12} M${hx} ${mz - hr * .02} q-${hr * .17} ${hr * .17} -${hr * .30} 0
+             M${hx} ${mz - hr * .02} q${hr * .17} ${hr * .17} ${hr * .30} 0"
+             stroke="${INK}" stroke-width="${(hr * .062).toFixed(2)}" fill="none" stroke-linecap="round"/>`;
+    if (a.tongue) g += `<path d="M${hx - hr * .13} ${mz + hr * .12} h${hr * .26} a${hr * .13} ${hr * .16} 0 0 1 -${hr * .26} 0z" fill="#E8788C"/>`;
+    if (a.cat) g += `<g stroke="${INK}" stroke-width="${(hr * .035).toFixed(2)}" stroke-linecap="round" opacity=".8">
+      <path d="M${hx - hr * .5} ${mz - hr * .1} h-${hr * .42} M${hx - hr * .5} ${mz + hr * .06} h-${hr * .4}
+               M${hx + hr * .5} ${mz - hr * .1} h${hr * .42} M${hx + hr * .5} ${mz + hr * .06} h${hr * .4}"/></g>`;
+  }
+  const ex = hr * 0.38, ey = hy - hr * 0.18, er = hr * 0.185;
+  g += `<circle cx="${hx - ex}" cy="${ey}" r="${er}" fill="${INK}"/><circle cx="${hx + ex}" cy="${ey}" r="${er}" fill="${INK}"/>
+        <circle cx="${hx - ex + er * .34}" cy="${ey - er * .36}" r="${er * .36}" fill="#fff"/>
+        <circle cx="${hx + ex + er * .34}" cy="${ey - er * .36}" r="${er * .36}" fill="#fff"/>
+        <circle cx="${hx - ex - er * .28}" cy="${ey + er * .34}" r="${er * .17}" fill="#fff" opacity=".9"/>
+        <circle cx="${hx + ex - er * .28}" cy="${ey + er * .34}" r="${er * .17}" fill="#fff" opacity=".9"/>`;
+  if (a.blush !== false) g += `<ellipse cx="${hx - hr * .72}" cy="${hy + hr * .3}" rx="${hr * .19}" ry="${hr * .12}" fill="#F0847E" opacity=".34"/>
+        <ellipse cx="${hx + hr * .72}" cy="${hy + hr * .3}" rx="${hr * .19}" ry="${hr * .12}" fill="#F0847E" opacity=".34"/>`;
+  return g;
+}
+
+function earArt(a, hx, hy, hr) {
+  const p = a.patch;
+  switch (a.ear) {
+    case 'perk': return `<path d="M${hx - hr * .82} ${hy - hr * .38} l-${hr * .1}-${hr * .78} ${hr * .74} ${hr * .40}z" fill="${p}"/>
+      <path d="M${hx + hr * .82} ${hy - hr * .38} l${hr * .1}-${hr * .78} -${hr * .74} ${hr * .40}z" fill="${p}"/>`;
+    case 'cat': return `<path d="M${hx - hr * .84} ${hy - hr * .34} l-${hr * .06}-${hr * .66} ${hr * .68} ${hr * .34}z" fill="${a.body}"/>
+      <path d="M${hx - hr * .74} ${hy - hr * .42} l-${hr * .03}-${hr * .36} ${hr * .38} ${hr * .19}z" fill="#F0A6A8" opacity=".85"/>
+      <path d="M${hx + hr * .84} ${hy - hr * .34} l${hr * .06}-${hr * .66} -${hr * .68} ${hr * .34}z" fill="${a.body}"/>
+      <path d="M${hx + hr * .74} ${hy - hr * .42} l${hr * .03}-${hr * .36} -${hr * .38} ${hr * .19}z" fill="#F0A6A8" opacity=".85"/>`;
+    case 'lop': return `<ellipse cx="${hx - hr * 1.02}" cy="${hy + hr * .40}" rx="${hr * .30}" ry="${hr * .82}" fill="${p}" transform="rotate(16 ${hx - hr * 1.02} ${hy + hr * .40})"/>
+      <ellipse cx="${hx + hr * 1.02}" cy="${hy + hr * .40}" rx="${hr * .30}" ry="${hr * .82}" fill="${p}" transform="rotate(-16 ${hx + hr * 1.02} ${hy + hr * .40})"/>`;
+    case 'fold': return `<ellipse cx="${hx - hr * .90}" cy="${hy - hr * .16}" rx="${hr * .34}" ry="${hr * .28}" fill="${p}"/>
+      <ellipse cx="${hx + hr * .90}" cy="${hy - hr * .16}" rx="${hr * .34}" ry="${hr * .28}" fill="${p}"/>`;
+    case 'none': return '';
+    default: return `<ellipse cx="${hx - hr * 1.00}" cy="${hy + hr * .18}" rx="${hr * .34}" ry="${hr * .62}" fill="${p}" transform="rotate(10 ${hx - hr * 1.00} ${hy + hr * .18})"/>
+      <ellipse cx="${hx + hr * 1.00}" cy="${hy + hr * .18}" rx="${hr * .34}" ry="${hr * .62}" fill="${p}" transform="rotate(-10 ${hx + hr * 1.00} ${hy + hr * .18})"/>`;
+  }
+}
+
+function tailArt(a, bx, base) {
+  const c = shade(a.body, 0.92), p = a.patch;
+  const sx = bx + 58, sy = base - 34;
+  switch (a.tail) {
+    case 'none': return '';
+    case 'stub': return `<circle cx="${sx - 2}" cy="${sy + 6}" r="15" fill="${c}"/>`;
+    case 'puff': return `<circle cx="${sx + 2}" cy="${sy + 2}" r="18" fill="${p}"/>`;
+    case 'curl': return `<path d="M${sx - 6} ${sy + 6} q34 6 30-24 q-4-20-22-12 q-10 6-2 16" fill="none" stroke="${c}" stroke-width="17" stroke-linecap="round"/>`;
+    case 'plume': return `<path d="M${sx - 8} ${sy + 10} q40-2 44-46 q2-22-14-24 q-6 20-30 32z" fill="${c}"/>`;
+    case 'ring': return `<path d="M${sx - 6} ${sy + 8} q36 2 38-40" fill="none" stroke="${c}" stroke-width="18" stroke-linecap="round"/>
+      <path d="M${sx + 12} ${sy + 4} l3-11 M${sx + 26} ${sy - 8} l4-11 M${sx + 32} ${sy - 24} l4-10" stroke="${p}" stroke-width="11" stroke-linecap="round"/>`;
+    case 'mane': return `<path d="M${sx - 10} ${sy} q36 4 40 48 q-24-14-46-22z" fill="${p}"/>`;
+    case 'flag': return `<path d="M${sx - 6} ${sy + 8} q30-4 34-40" fill="none" stroke="${c}" stroke-width="16" stroke-linecap="round"/>
+      <circle cx="${sx + 28}" cy="${sy - 32}" r="11" fill="${p}"/>`;
+    default: return `<path d="M${sx - 6} ${sy + 8} q34-2 36-42 q1-16-11-16 q-9 2-6 14" fill="none" stroke="${c}" stroke-width="16" stroke-linecap="round"/>`;
+  }
+}
+
+function quadArt(a) {
+  const sc = a.small ? 0.90 : a.big ? 1.05 : 1;
+  const hr = 52 * sc, hx = 110, hy = 80 * sc + (1 - sc) * 30;
+  const bx = 110, bt = hy + hr * 0.80, base = 206;
+  const bw = 66 * sc;                       /* half-width at the base   */
+  const cw = 34 * sc;                       /* half-width at the chest  */
+  let g = SHADOW;
+
+  g += tailArt(a, bx, base);
+
+  /* fluffy breeds get a scalloped silhouette behind everything */
+  if (a.fluff >= 3) {
+    let puff = '';
+    for (let k = 0; k <= 22; k++) {
+      const t = k / 22, y = bt + t * (base - bt);
+      const w = cw + (bw - cw) * Math.pow(t, .75);
+      puff += `<circle cx="${(bx - w).toFixed(1)}" cy="${y.toFixed(1)}" r="${(13 * sc).toFixed(1)}" fill="${a.body}"/>
+               <circle cx="${(bx + w).toFixed(1)}" cy="${y.toFixed(1)}" r="${(13 * sc).toFixed(1)}" fill="${a.body}"/>`;
+    }
+    g += puff;
+  }
+
+  /* the sitting body: a bell, narrow at the shoulders, wide at the base */
+  const body = `M${bx - cw} ${bt} C${bx - bw - 6} ${bt + (base - bt) * .62}, ${bx - bw} ${base - 30}, ${bx - bw + 4} ${base - 8}
+    Q${bx - bw + 6} ${base}, ${bx - bw + 20} ${base} L${bx + bw - 20} ${base}
+    Q${bx + bw - 6} ${base}, ${bx + bw - 4} ${base - 8} C${bx + bw} ${base - 30}, ${bx + bw + 6} ${bt + (base - bt) * .62}, ${bx + cw} ${bt} Z`;
+  g += `<path d="${body}" fill="${a.body}"/>`;
+  g += `<ellipse cx="${bx}" cy="${base - 46}" rx="${bw * .62}" ry="${(base - bt) * .40}" fill="${shade(a.patch, 1.12)}" opacity="${a.spots === 2 ? .0 : .45}"/>`;
+
+  if (a.saddle) g += `<path d="M${bx - cw - 4} ${bt + 6} q${cw + 4} -14 ${(cw + 4) * 2} 0 l6 ${(base - bt) * .5} q-${bw} 16 -${bw * 2} 0z" fill="${a.patch}" opacity=".9"/>`;
+  if (a.stripes) {
+    const n = a.stripes === 2 ? 4 : 3, w = a.stripes === 2 ? 8 : 5;
+    for (let k = 0; k < n; k++) g += `<path d="M${bx - 34 + k * 24} ${bt + 14} q6 30 2 ${(base - bt) * .62}" stroke="${a.patch}" stroke-width="${w}" fill="none" stroke-linecap="round" opacity=".9"/>`;
+  }
+  if (a.spots === 2) [[-30, 34, 12], [22, 20, 10], [6, 62, 13], [-14, 88, 9], [38, 66, 8]].forEach(pt =>
+    g += `<circle cx="${bx + pt[0] * sc}" cy="${bt + pt[1] * sc}" r="${pt[2] * sc}" fill="${a.patch}"/>`);
+  else if (a.spots === 1) g += `<ellipse cx="${bx + 24 * sc}" cy="${bt + 40 * sc}" rx="${24 * sc}" ry="${26 * sc}" fill="${a.patch}" opacity=".85"/>`;
+  if (a.spiky) {
+    for (let k = 0; k <= 12; k++) {
+      const t = k / 12, y = bt + 6 + t * (base - bt - 30);
+      const w = cw + (bw - cw) * Math.pow(t, .75);
+      g += `<path d="M${(bx - w).toFixed(1)} ${y.toFixed(1)} l-16-4 14 12z" fill="${a.patch}"/>
+            <path d="M${(bx + w).toFixed(1)} ${y.toFixed(1)} l16-4 -14 12z" fill="${a.patch}"/>`;
+    }
+  }
+  if (a.shell) g += `<path d="M${bx - bw - 2} ${base - 16} a${bw + 2} ${(base - bt) * .78} 0 0 1 ${(bw + 2) * 2} 0z" fill="${a.patch}"/>
+    ${[-2, -1, 0, 1, 2].map(k => `<path d="M${bx + k * bw * .38} ${base - 16} q3-30 0-${(base - bt) * .62}" stroke="${shade(a.patch, .62)}" stroke-width="3.4" fill="none" opacity=".85"/>`).join('')}`;
+
+  /* front paws */
+  const pw = 23 * sc, ph = 18 * sc;
+  g += `<ellipse cx="${bx - 28 * sc}" cy="${base - 12}" rx="${pw}" ry="${ph}" fill="${shade(a.body, 1.12) === a.body ? '#F8F0E2' : '#F8F0E2'}"/>
+        <ellipse cx="${bx + 28 * sc}" cy="${base - 12}" rx="${pw}" ry="${ph}" fill="#F8F0E2"/>`;
+
+  g += earArt(a, hx, hy, hr);
+  if (a.fluff >= 2) {
+    let ruff = '';
+    for (let k = 0; k < 16; k++) { const t = (k / 16) * Math.PI * 2;
+      ruff += `<circle cx="${(hx + Math.cos(t) * hr * .94).toFixed(1)}" cy="${(hy + Math.sin(t) * hr * .94).toFixed(1)}" r="${(hr * .27).toFixed(1)}" fill="${a.body}"/>`; }
+    g += ruff;
+  }
+  g += `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="${a.body}"/>`;
+  if (a.spots === 2) g += `<circle cx="${hx + hr * .52}" cy="${hy - hr * .40}" r="${hr * .30}" fill="${a.patch}"/>`;
+  if (a.spots === 1) g += `<ellipse cx="${hx - hr * .46}" cy="${hy - hr * .26}" rx="${hr * .36}" ry="${hr * .32}" fill="${a.patch}" opacity=".85"/>`;
+  if (a.blaze) g += `<path d="M${hx - hr * .16} ${hy - hr} h${hr * .32} l${hr * .1} ${hr * .9} h-${hr * .52}z" fill="${a.patch}"/>`;
+  if (a.horns) g += `<path d="M${hx - hr * .78} ${hy - hr * .58} q-${hr * .34}-${hr * .3} -${hr * .12}-${hr * .48} q${hr * .3} ${hr * .1} ${hr * .38} ${hr * .38}z
+    M${hx + hr * .78} ${hy - hr * .58} q${hr * .34}-${hr * .3} ${hr * .12}-${hr * .48} q-${hr * .3} ${hr * .1} -${hr * .38} ${hr * .38}z" fill="#E8DCC0"/>`;
+  if (a.antlers) g += `<g stroke="#9A7549" stroke-width="${hr * .1}" fill="none" stroke-linecap="round">
+    <path d="M${hx - hr * .34} ${hy - hr * .9} l-${hr * .2}-${hr * .44} M${hx - hr * .54} ${hy - hr * 1.34} l-${hr * .26} ${hr * .1} M${hx - hr * .54} ${hy - hr * 1.34} l${hr * .1}-${hr * .26}"/>
+    <path d="M${hx + hr * .34} ${hy - hr * .9} l${hr * .2}-${hr * .44} M${hx + hr * .54} ${hy - hr * 1.34} l${hr * .26} ${hr * .1} M${hx + hr * .54} ${hy - hr * 1.34} l-${hr * .1}-${hr * .26}"/></g>`;
+  g += faceParts(a, hx, hy, hr);
+
+  return { inner:g, hx, hy, hr, ny:hy + hr * 0.92, bx, bt, bw:cw + 8 };
+}
+
+function birdArt(a) {
+  const sc = a.big ? 1.06 : 1;
+  const hr = 44 * sc, hx = 110, hy = 76 * sc, bx = 110, bt = hy + hr * 0.72, base = 204;
+  const bw = 56 * sc, cw = 34 * sc;
+  let g = SHADOW;
+  g += `<path d="M${bx - cw} ${bt} C${bx - bw - 4} ${bt + 60}, ${bx - bw} ${base - 26}, ${bx - bw + 6} ${base - 6}
+    Q${bx - bw + 8} ${base}, ${bx - bw + 22} ${base} L${bx + bw - 22} ${base}
+    Q${bx + bw - 8} ${base}, ${bx + bw - 6} ${base - 6} C${bx + bw} ${base - 26}, ${bx + bw + 4} ${bt + 60}, ${bx + cw} ${bt} Z" fill="${a.body}"/>`;
+  g += `<ellipse cx="${bx}" cy="${base - 44}" rx="${bw * .60}" ry="52" fill="${a.patch}"/>`;
+  g += `<ellipse cx="${bx - bw + 4}" cy="${bt + 54}" rx="${20 * sc}" ry="${38 * sc}" fill="${shade(a.body, .92)}" transform="rotate(12 ${bx - bw + 4} ${bt + 54})"/>`;
+  g += `<ellipse cx="${bx + bw - 4}" cy="${bt + 54}" rx="${20 * sc}" ry="${38 * sc}" fill="${shade(a.body, .92)}" transform="rotate(-12 ${bx + bw - 4} ${bt + 54})"/>`;
+  const lf = a.legs === 'web' ? '#E9A13C' : '#D9A05B';
+  [-22, 22].forEach(o => g += a.legs === 'web'
+    ? `<path d="M${bx + o - 17} ${base - 2} q17 14 34 0 q-5 7-17 7 q-12 0-17-7z" fill="${lf}"/>`
+    : `<g stroke="${lf}" stroke-width="5" stroke-linecap="round"><path d="M${bx + o} ${base - 10} v10 M${bx + o - 9} ${base + 1} h18"/></g>`);
+  if (a.crest === 2) g += `<path d="M${hx - hr * .8} ${hy - hr * .5} l-${hr * .1}-${hr * .62} ${hr * .66} ${hr * .3}z
+    M${hx + hr * .8} ${hy - hr * .5} l${hr * .1}-${hr * .62} -${hr * .66} ${hr * .3}z" fill="${a.body}"/>`;
+  if (a.crest === 1) g += `<path d="M${hx - 6} ${hy - hr} q-6-32 12-40 q-2 14 5 20 q9-12 16-7 q-8 10-5 24z" fill="${a.patch}"/>`;
+  g += `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="${a.body}"/>`;
+  if (a.big) g += `<circle cx="${hx - hr * .38}" cy="${hy - hr * .16}" r="${hr * .40}" fill="${a.patch}"/><circle cx="${hx + hr * .38}" cy="${hy - hr * .16}" r="${hr * .40}" fill="${a.patch}"/>`;
+  if (a.upright) g += `<path d="M${hx - hr * .92} ${hy + hr * .3} a${hr * .92} ${hr * .8} 0 0 0 ${hr * 1.84} 0 a${hr} ${hr} 0 0 1 -${hr * 1.84} 0z" fill="${a.patch}"/>`;
+  g += a.beak === 'flat'
+    ? `<path d="M${hx - hr * .34} ${hy + hr * .34} h${hr * .68} q0 ${hr * .3} -${hr * .34} ${hr * .3} q-${hr * .34} 0 -${hr * .34}-${hr * .3}z" fill="#E9A13C"/>`
+    : `<path d="M${hx - hr * .26} ${hy + hr * .24} h${hr * .52} q-${hr * .04} ${hr * .5} -${hr * .26} ${hr * .5} q-${hr * .22} 0 -${hr * .26}-${hr * .5}z" fill="#E9A13C"/>`;
+  g += faceParts(Object.assign({}, a, { beak:1 }), hx, hy, hr).replace(/<path d="M[\d.]+ [\d.]+ h[\d.-]+ l[\d.-]+ [\d.]+z" fill="#E9A13C"\/>/, '');
+  return { inner:g, hx, hy, hr, ny:hy + hr * 0.9, bx, bt, bw:cw + 6 };
+}
+
+function seaArt(a) {
+  const c = a.body, p = a.patch;
+  let g = SHADOW, hx = 152, hy = 96, hr = 34;
+  const fin = d => `<path d="${d}" fill="${shade(c, .9)}"/>`;
+  if (a.shape === 'dolphin' || a.shape === 'shark' || a.shape === 'whale') {
+    const fat = a.shape === 'whale';
+    g += fin('M40 120 l-24-30 q-6 28 6 38 q-14 12-4 32 q26-8 30-30z');
+    g += `<path d="M44 116 q22-${fat ? 62 : 52} 82-${fat ? 56 : 48} q46 2 66 28 q-16 32-64 38 q-58 6-84-14z" fill="${c}"/>`;
+    g += `<path d="M56 134 q40 26 96 18 q22-4 38-14 q-16 28-62 32 q-52 4-72-16z" fill="${p}"/>`;
+    g += fin(a.shape === 'shark' ? 'M104 76 l14-48 22 48z' : 'M104 80 q14-32 34-18 q-6 8-8 20z');
+    g += fin('M110 148 q10 26 32 24 q-8-16-8-26z');
+    if (a.shape === 'shark') g += `<g stroke="${shade(c, .78)}" stroke-width="3" fill="none"><path d="M124 108 q-4 12 0 24M134 106 q-4 13 0 26M144 105 q-4 14 0 27"/></g>
+      <path d="M176 122 q22 4 32 12 q-20 8-34 2z" fill="#F6D9D2"/>`;
+    if (fat) g += `<g fill="#BFE3F2"><path d="M136 66 q-10-18-4-28 q5 10 11 12 q9-10 14-2 q-7 8-5 20z"/><circle cx="124" cy="32" r="6"/><circle cx="156" cy="40" r="4.5"/></g>`;
+    hx = 168; hy = 104; hr = 30;
+    g += `<ellipse cx="${hx}" cy="${hy - 6}" rx="7" ry="7.6" fill="${INK}"/><circle cx="${hx + 2.4}" cy="${hy - 8.6}" r="2.8" fill="#fff"/>
+          <ellipse cx="${hx - 14}" cy="${hy + 12}" rx="8" ry="5" fill="#F0847E" opacity=".34"/>
+          <path d="M${hx + 4} ${hy + 12} q8 7 16 1" stroke="${INK}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  } else if (a.shape === 'turtle') {
+    [[52, 158], [168, 158], [48, 108], [172, 108]].forEach(f => g += fin(`M${f[0]} ${f[1]} q-24 6-24 22 q4 14 26 6 q11-6 13-20z`));
+    g += `<circle cx="176" cy="112" r="30" fill="${c}"/>`;
+    g += `<path d="M34 130 a76 52 0 0 1 152 0z" fill="${p}"/><path d="M34 130 h152" stroke="${shade(p, .82)}" stroke-width="4"/>`;
+    for (let k = 0; k < 5; k++) g += `<path d="M${60 + k * 26} 130 q3-28 0-38" stroke="${shade(p, .8)}" stroke-width="3" fill="none" opacity=".8"/>`;
+    hx = 176; hy = 112; hr = 30;
+    g += faceParts({ blush:true }, hx, hy, hr).replace(/<ellipse cx="[\d.]+" cy="[\d.]+" rx="[\d.]+" ry="[\d.]+" fill="#F8F0E2"\/>/, '');
+  } else {
+    for (let k = 0; k < 8; k++) {
+      const x = 40 + k * 20, dir = k % 2 ? 1 : -1;
+      const d = `M${x} 128 q${dir * 12} 30 ${dir * 3} 50 q${-dir * 14} 14 ${-dir * 3} 20`;
+      g += `<path d="${d}" fill="none" stroke="${k % 2 ? p : c}" stroke-width="13" stroke-linecap="round"/>`;
+    }
+    g += `<path d="M36 130 a76 62 0 0 1 152 0z" fill="${c}"/><ellipse cx="112" cy="108" rx="46" ry="26" fill="${p}" opacity=".4"/>`;
+    hx = 112; hy = 96; hr = 40;
+    g += faceParts({ blush:true }, hx, hy, hr).replace(/<ellipse cx="[\d.]+" cy="[\d.]+" rx="[\d.]+" ry="[\d.]+" fill="#F8F0E2"\/>/, '');
+  }
+  return { inner:g, hx, hy, hr, ny:hy + hr * .9, bx:112, bt:hy + hr, bw:44 };
+}
+
+/* ---- wearables, placed from the anchors above --------------------- */
+function wearArt(w, A, a) {
+  const { hx, hy, hr, ny } = A; let g = '';
+  const ex = hr * 0.38, ey = hy - hr * 0.18;
+  const GL = {
+    round:  `<g fill="#CFE9F5" fill-opacity=".5" stroke="${INK}" stroke-width="3"><circle cx="${hx - ex}" cy="${ey}" r="${hr * .32}"/><circle cx="${hx + ex}" cy="${ey}" r="${hr * .32}"/><path d="M${hx - hr * .06} ${ey} h${hr * .12}" fill="none"/></g>`,
+    star:   `<g><rect x="${hx - ex - hr * .38}" y="${ey - hr * .26}" width="${hr * .76}" height="${hr * .52}" rx="4" fill="#E4572E"/><rect x="${hx + ex - hr * .38}" y="${ey - hr * .26}" width="${hr * .76}" height="${hr * .52}" rx="4" fill="#E4572E"/><rect x="${hx - hr * .1}" y="${ey - hr * .06}" width="${hr * .2}" height="${hr * .12}" fill="#E4572E"/></g>`,
+    heart:  `<g fill="#EE5C82">${[-1, 1].map(sn => { const cxx = hx + sn * ex, r2 = hr * .36; return `<path d="M${cxx} ${ey + r2 * .66} c-${r2}-${r2 * .74} -${r2 * .64}-${r2 * 1.4} 0-${r2 * .64} c${r2 * .64}-${r2 * .76} ${r2}-${r2 * .1} 0 ${r2 * .64}z"/>`; }).join('')}</g>`,
+    goggles:`<g><rect x="${hx - hr * 1.02}" y="${ey - hr * .08}" width="${hr * 2.04}" height="${hr * .14}" fill="${shade('#8FD3B0', .7)}"/><rect x="${hx - ex - hr * .34}" y="${ey - hr * .3}" width="${hr * .68}" height="${hr * .6}" rx="${hr * .28}" fill="#8FD3B0"/><rect x="${hx + ex - hr * .34}" y="${ey - hr * .3}" width="${hr * .68}" height="${hr * .6}" rx="${hr * .28}" fill="#8FD3B0"/></g>`,
+    snorkel:`<g><rect x="${hx - hr * 1.02}" y="${ey - hr * .1}" width="${hr * 2.04}" height="${hr * .14}" fill="#E4A64A"/><rect x="${hx - hr * .74}" y="${ey - hr * .36}" width="${hr * 1.48}" height="${hr * .72}" rx="10" fill="#9BD8E8" opacity=".92"/><path d="M${hx + hr * .74} ${ey - hr * .24} q16-4 16-24 v-12" fill="none" stroke="#F6BE4A" stroke-width="7"/></g>`
+  };
+  const top = hy - hr;
+  const HAT = {
+    cap:   `<g><path d="M${hx - hr * .96} ${top + hr * .22} a${hr * .96} ${hr * .84} 0 0 1 ${hr * 1.92} 0z" fill="#4A9BCB"/><path d="M${hx + hr * .5} ${top + hr * .22} q${hr * .84} 0 ${hr * .92} ${hr * .2} l-${hr * 1.0} ${hr * .06}z" fill="#3C7FA6"/></g>`,
+    party: `<g><path d="M${hx} ${top - hr * .84} l${hr * .58} ${hr * .96} h-${hr * 1.16}z" fill="#E4572E"/><circle cx="${hx}" cy="${top - hr * .88}" r="${hr * .16}" fill="#F6BE4A"/></g>`,
+    bobble:`<g><path d="M${hx - hr * .94} ${top + hr * .26} a${hr * .94} ${hr * .88} 0 0 1 ${hr * 1.88} 0z" fill="#4CA36B"/><rect x="${hx - hr}" y="${top + hr * .16}" width="${hr * 2}" height="${hr * .26}" rx="${hr * .13}" fill="#FBF7EF"/><circle cx="${hx}" cy="${top - hr * .58}" r="${hr * .22}" fill="#FBF7EF"/></g>`,
+    chef:  `<g><circle cx="${hx - hr * .36}" cy="${top - hr * .18}" r="${hr * .3}" fill="#FFFDF6"/><circle cx="${hx + hr * .36}" cy="${top - hr * .18}" r="${hr * .3}" fill="#FFFDF6"/><circle cx="${hx}" cy="${top - hr * .38}" r="${hr * .34}" fill="#FFFDF6"/><rect x="${hx - hr * .62}" y="${top - hr * .06}" width="${hr * 1.24}" height="${hr * .32}" rx="${hr * .1}" fill="#FBF7EF"/></g>`,
+    flower:`<g><path d="M${hx - hr * .96} ${top + hr * .34} q${hr * .96}-${hr * .5} ${hr * 1.92} 0" fill="none" stroke="#4CA36B" stroke-width="${hr * .11}"/>${[-0.72, -0.25, 0.25, 0.72].map((o, i) => { const fx = hx + o * hr * .95, fy = top + hr * .34 - Math.cos(o * 1.5) * hr * .3; return `<g>${[0, 1, 2, 3, 4].map(k => { const t = k / 5 * Math.PI * 2; return `<circle cx="${(fx + Math.cos(t) * hr * .12).toFixed(1)}" cy="${(fy + Math.sin(t) * hr * .12).toFixed(1)}" r="${hr * .1}" fill="${['#EE7EA6', '#F6BE4A', '#FBF7EF', '#C25FA0'][i % 4]}"/>`; }).join('')}<circle cx="${fx.toFixed(1)}" cy="${fy.toFixed(1)}" r="${hr * .07}" fill="#F6BE4A"/></g>`; }).join('')}</g>`,
+    ranger:`<g><ellipse cx="${hx}" cy="${top + hr * .3}" rx="${hr * 1.18}" ry="${hr * .2}" fill="#8A6A3E"/><path d="M${hx - hr * .58} ${top + hr * .3} q${hr * .12}-${hr * .74} ${hr * .58}-${hr * .74} t${hr * .58} ${hr * .74}z" fill="#A5814D"/></g>`,
+    pirate:`<g><path d="M${hx - hr * 1.06} ${top + hr * .3} q${hr * 1.06}-${hr * .9} ${hr * 2.12} 0 q-${hr} ${hr * .3} -${hr * 2.12} 0z" fill="#2F3540"/><circle cx="${hx}" cy="${top + hr * .06}" r="${hr * .17}" fill="#FBF7EF"/><path d="M${hx - hr * .2} ${top + hr * .18} l${hr * .4}-${hr * .34} M${hx + hr * .2} ${top + hr * .18} l-${hr * .4}-${hr * .34}" stroke="#FBF7EF" stroke-width="${hr * .07}"/></g>`,
+    crown: `<path d="M${hx - hr * .84} ${top + hr * .3} l${hr * .04}-${hr * .66} ${hr * .4} ${hr * .3} ${hr * .4}-${hr * .46} ${hr * .4} ${hr * .46} ${hr * .4}-${hr * .3} ${hr * .04} ${hr * .66}z" fill="#F6BE4A"/>`,
+    wizard:`<g><path d="M${hx} ${top - hr * 1.2} q${hr * .3} ${hr * .8} ${hr * .82} ${hr * 1.44} h-${hr * 1.64} q${hr * .52}-${hr * .64} ${hr * .82}-${hr * 1.44}z" fill="#4A3A82"/><ellipse cx="${hx}" cy="${top + hr * .26}" rx="${hr * 1.06}" ry="${hr * .18}" fill="#3A2E68"/><path d="M${hx + hr * .1} ${top - hr * .5} l${hr * .07} ${hr * .16} ${hr * .16} ${hr * .02}-${hr * .12} ${hr * .12} ${hr * .03} ${hr * .16}-${hr * .14}-${hr * .07}-${hr * .14} ${hr * .07} ${hr * .03}-${hr * .16}-${hr * .12}-${hr * .12} ${hr * .16}-${hr * .02}z" fill="#F6BE4A"/></g>`
+  };
+  const NECK = {
+    bandana:`<path d="M${hx - hr * .8} ${ny - hr * .1} q${hr * .8} ${hr * .34} ${hr * 1.6} 0 l-${hr * .76} ${hr * .74}z" fill="#E4572E"/>`,
+    bell:   `<g><path d="M${hx - hr * .78} ${ny - hr * .06} q${hr * .78} ${hr * .34} ${hr * 1.56} 0" stroke="#E4572E" stroke-width="${hr * .2}" fill="none" stroke-linecap="round"/><circle cx="${hx}" cy="${ny + hr * .34}" r="${hr * .19}" fill="#F6BE4A"/><circle cx="${hx}" cy="${ny + hr * .41}" r="${hr * .06}" fill="${INK}"/></g>`,
+    bowtie: `<g><path d="M${hx - hr * .52} ${ny - hr * .14} v${hr * .38} l${hr * .38}-${hr * .19}z M${hx + hr * .52} ${ny - hr * .14} v${hr * .38} l-${hr * .38}-${hr * .19}z" fill="#7A4FA3"/><circle cx="${hx}" cy="${ny + hr * .05}" r="${hr * .11}" fill="#F6BE4A"/></g>`,
+    scarf:  `<g><path d="M${hx - hr * .84} ${ny - hr * .12} q${hr * .84} ${hr * .36} ${hr * 1.68} 0 l-${hr * .08} ${hr * .34} q-${hr * .76} ${hr * .3} -${hr * 1.52} 0z" fill="#E4572E"/><path d="M${hx + hr * .3} ${ny + hr * .28} l${hr * .22} ${hr * .8} h-${hr * .34} l-${hr * .14}-${hr * .7}z" fill="#E4572E"/><path d="M${hx - hr * .7} ${ny + hr * .08} q${hr * .7} ${hr * .26} ${hr * 1.4} 0" stroke="#FBF7EF" stroke-width="${hr * .09}" fill="none"/></g>`,
+    lei:    `<g>${[0, 1, 2, 3, 4, 5, 6].map(k => { const t = -0.6 + k * 0.2, lx = hx + Math.sin(t * 2.2) * hr * .84, ly = ny + hr * .1 + Math.cos(t * 2.2) * hr * .22; return `<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="${hr * .15}" fill="${['#EE7EA6', '#F6BE4A', '#FBF7EF'][k % 3]}"/>`; }).join('')}</g>`,
+    medal:  `<g><path d="M${hx - hr * .5} ${ny - hr * .1} q${hr * .5} ${hr * .3} ${hr} 0" stroke="#4A9BCB" stroke-width="${hr * .11}" fill="none"/><circle cx="${hx}" cy="${ny + hr * .42}" r="${hr * .24}" fill="#F6BE4A"/><path d="M${hx} ${ny + hr * .26} l${hr * .06} ${hr * .12} ${hr * .13} .02-${hr * .1} ${hr * .1} ${hr * .03} ${hr * .13}-${hr * .12}-${hr * .06}-${hr * .12} ${hr * .06} ${hr * .03}-${hr * .13}-${hr * .1}-${hr * .1} ${hr * .13}-.02z" fill="#E4572E"/></g>`
+  };
+  if (w.glasses && GL[w.glasses]) g += GL[w.glasses];
+  if (w.neck && NECK[w.neck] && a.kind !== 'sea') g += NECK[w.neck];
+  if (w.hat && HAT[w.hat]) g += HAT[w.hat];
+  return g;
+}
+
+/* outfits wrap the sitting body, so one shape fits every animal */
+const OUTFIT = (w, a, A) => {
+  if (a.kind === 'sea' || !w.outfit) return '';
+  const { bx, ny, bw } = A, top = ny - 4, bot = 178, half = bw + 30;
+  const shell = `M${bx - bw} ${top} C${bx - half - 4} ${top + (bot - top) * .6}, ${bx - half} ${bot - 18}, ${bx - half + 8} ${bot}
+    L${bx + half - 8} ${bot} C${bx + half} ${bot - 18}, ${bx + half + 4} ${top + (bot - top) * .6}, ${bx + bw} ${top} Z`;
+  const O = {
+    sweater:`<g><path d="${shell}" fill="#E4572E"/><path d="M${bx - half + 6} ${top + 34} q${half - 6} 16 ${(half - 6) * 2} 0 M${bx - half + 2} ${top + 58} q${half - 2} 16 ${(half - 2) * 2} 0" stroke="#FBF7EF" stroke-width="7" fill="none"/></g>`,
+    pyjamas:`<g><path d="${shell}" fill="#9BC3E8"/>${[0, 1, 2].map(r => [0, 1, 2, 3].map(c => `<circle cx="${bx - 33 + c * 22 + (r % 2 ? 11 : 0)}" cy="${top + 26 + r * 26}" r="4.6" fill="#FBF7EF"/>`).join('')).join('')}</g>`,
+    raincoat:`<g><path d="${shell}" fill="#F6BE4A"/><circle cx="${bx}" cy="${top + 30}" r="5" fill="${INK}" opacity=".7"/><circle cx="${bx}" cy="${top + 54}" r="5" fill="${INK}" opacity=".7"/><circle cx="${bx}" cy="${top + 78}" r="5" fill="${INK}" opacity=".7"/></g>`,
+    tutu:`<g><path d="M${bx - half - 6} ${bot - 46} q${half + 6} -22 ${(half + 6) * 2} 0 q-14 40-${half + 6} 40 q-${half + 6} 0-${half + 6}-40z" fill="#EE7EA6"/><path d="M${bx - 40} ${bot - 40} q6 24 3 34 M${bx - 14} ${bot - 36} q2 22 0 30 M${bx + 14} ${bot - 36} q-2 22 0 30 M${bx + 40} ${bot - 40} q-6 24-3 34" stroke="#FBF7EF" stroke-width="4" fill="none"/></g>`,
+    cape:`<path d="M${bx - bw - 6} ${top} C${bx - half - 16} ${top + 60}, ${bx - half - 12} ${bot - 6}, ${bx - half + 2} ${bot + 6} L${bx + half - 2} ${bot + 6} C${bx + half + 12} ${bot - 6}, ${bx + half + 16} ${top + 60}, ${bx + bw + 6} ${top} Z" fill="#7A4FA3"/>`,
+    knight:`<g><path d="${shell}" fill="#C3CCD4"/><path d="M${bx - half + 8} ${top + 28} h${(half - 8) * 2} M${bx - half + 4} ${top + 54} h${(half - 4) * 2} M${bx - half + 2} ${top + 80} h${(half - 2) * 2}" stroke="#9AA6B0" stroke-width="5" fill="none"/><path d="M${bx} ${top + 24} l14 24-14 26-14-26z" fill="#E4572E"/></g>`,
+    dino:`<g><path d="${shell}" fill="#5FBF7E"/><path d="M${bx - 40} ${top + 4} l10-18 10 18 M${bx - 12} ${top - 2} l11-20 11 20 M${bx + 18} ${top + 2} l11-18 11 18" fill="#F6BE4A"/><ellipse cx="${bx}" cy="${bot - 30}" rx="${half * .62}" ry="26" fill="#CFE9A8"/></g>`,
+    space:`<g><path d="${shell}" fill="#DCE6ED"/><circle cx="${bx}" cy="${top + 52}" r="20" fill="#4A9BCB"/><rect x="${bx - half + 8}" y="${top + 34}" width="14" height="26" rx="5" fill="#E4572E"/></g>`
+  };
+  return O[w.outfit] || '';
+};
+
+function animalSVG(a, opt) {
+  opt = opt || {}; const w = opt.wear || {};
+  const A = a.kind === 'bird' ? birdArt(a) : a.kind === 'sea' ? seaArt(a) : quadArt(a);
+  return `<svg viewBox="0 0 ${AW} ${AH}" role="img" aria-label="${a.name} the ${a.species}">${A.inner}${OUTFIT(w, a, A)}${wearArt(w, A, a)}</svg>`;
+}
+const inner = svg => svg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+</script>
+
+<script>
+"use strict";
+/* -------------------------------------------------------- toys (won) */
+function toyArt(id, s) {
+  s = s || 1;
+  const T = {
+    bone:   `${bone(30, 30, 1.9)}`,
+    ball:   `<circle cx="30" cy="30" r="17" fill="#C8E04A" stroke="${INK}" stroke-width="3"/><path d="M16 22 q14 8 28 0 M16 38 q14-8 28 0" stroke="${INK}" stroke-width="2.6" fill="none"/>`,
+    rope:   `<path d="M10 34 q20-18 40 0" stroke="#C9A36B" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M10 34 q20-18 40 0" stroke="${INK}" stroke-width="2" fill="none" stroke-dasharray="4 5"/><circle cx="10" cy="34" r="7" fill="#C9A36B" stroke="${INK}" stroke-width="2.6"/><circle cx="50" cy="34" r="7" fill="#C9A36B" stroke="${INK}" stroke-width="2.6"/>`,
+    frisbee:`<ellipse cx="30" cy="32" rx="22" ry="9" fill="#E4572E" stroke="${INK}" stroke-width="3"/><ellipse cx="30" cy="29" rx="13" ry="5" fill="#F6BE4A" stroke="${INK}" stroke-width="2.4"/>`,
+    duck:   `<ellipse cx="28" cy="38" rx="17" ry="12" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/><circle cx="41" cy="25" r="10" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/><path d="M50 25 q9 2 9 6 q-9 3-11-1z" fill="#E4572E" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="44" cy="23" r="2.2" fill="${INK}"/>`,
+    chest:  `<rect x="9" y="28" width="42" height="22" rx="4" fill="#B07A42" stroke="${INK}" stroke-width="3"/><path d="M9 28 a21 13 0 0 1 42 0z" fill="#C9924F" stroke="${INK}" stroke-width="3"/><rect x="26" y="30" width="8" height="12" rx="2" fill="#F6BE4A" stroke="${INK}" stroke-width="2.4"/>`,
+    star:   `<circle cx="30" cy="30" r="17" fill="#7A4FA3" stroke="${INK}" stroke-width="3"/><path d="M30 17 l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#F6BE4A" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"/>`,
+    trophy: `<path d="M19 14 h22 v10 a11 11 0 0 1-22 0z" fill="#F6BE4A" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><path d="M19 16 q-9 0-9 7 t9 7 M41 16 q9 0 9 7 t-9 7" fill="none" stroke="${INK}" stroke-width="3"/><rect x="26" y="34" width="8" height="9" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/><rect x="17" y="43" width="26" height="7" rx="2" fill="#B07A42" stroke="${INK}" stroke-width="3"/>`,
+    puzzle: `<rect x="12" y="14" width="36" height="36" rx="5" fill="#4A9BCB" stroke="${INK}" stroke-width="3"/><path d="M30 14 v36 M12 32 h36" stroke="${INK}" stroke-width="2.6"/><rect x="14" y="16" width="14" height="14" fill="#E4572E"/><rect x="32" y="34" width="14" height="14" fill="#F6BE4A"/>`,
+    medal:  `<path d="M20 10 l6 18 M40 10 l-6 18" stroke="#4A9BCB" stroke-width="6"/><circle cx="30" cy="37" r="14" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/><path d="M30 28 l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#E4572E" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/>`,
+    crown:  `<path d="M10 44 l2-30 12 12 6-20 6 20 12-12 2 30z" fill="#F6BE4A" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="34" r="4" fill="#E4572E" stroke="${INK}" stroke-width="2"/>`,
+    album:  `<rect x="12" y="14" width="36" height="36" rx="3" fill="#7A4FA3" stroke="${INK}" stroke-width="3"/><rect x="18" y="20" width="24" height="18" fill="#FBF7EF" stroke="${INK}" stroke-width="2.4"/><path d="M20 34 l6-7 5 5 4-4 7 6z" fill="#4CA36B"/><circle cx="24" cy="25" r="2.4" fill="#F6BE4A"/>`,
+    cushion:`<path d="M10 24 q20-8 40 0 q6 14 0 24 q-20 8-40 0 q-6-10 0-24z" fill="#E4572E" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="36" r="4" fill="#F6BE4A" stroke="${INK}" stroke-width="2.2"/>`,
+    gold:   `${bone(30, 30, 1.9, '#F6BE4A')}<path d="M22 24 l3 5-3 5" stroke="#FFF3CE" stroke-width="2.4" fill="none" stroke-linecap="round"/>`
+  };
+  return `<svg viewBox="0 0 60 60" role="img" aria-label="${id}">${T[id] || ''}</svg>`;
+}
+const toyInner = id => inner(toyArt(id));
+
+/* ---- park pieces -----------------------------------------------------
+   Each piece is drawn once, inside a 120 × 120 box with the ground at
+   y = 110. The park places them with a transform and the shop shows the
+   same drawing as its picture, so what you see in the shop is exactly
+   what lands in the park. */
+const PARKART = {
+  flowers: () => [[24, 104], [58, 96], [92, 106]].map(pt => `<g><path d="M${pt[0]} ${pt[1]} v-26" stroke="#2F6B45" stroke-width="5"/>` +
+      [0, 1, 2, 3, 4].map(k => { const t = k / 5 * Math.PI * 2;
+        return `<circle cx="${(pt[0] + Math.cos(t) * 10).toFixed(1)}" cy="${(pt[1] - 32 + Math.sin(t) * 10).toFixed(1)}" r="8" fill="#EE7EA6" stroke="${INK}" stroke-width="2.6"/>`; }).join('') +
+      `<circle cx="${pt[0]}" cy="${pt[1] - 32}" r="6" fill="#F6BE4A" stroke="${INK}" stroke-width="2.6"/></g>`).join(''),
+  hydrant: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><rect x="46" y="46" width="30" height="64" rx="11" fill="#E4572E"/><rect x="34" y="60" width="54" height="13" rx="6.5" fill="#E4572E"/><path d="M48 46 q13-17 26 0z" fill="#C33F1E"/><circle cx="61" cy="66" r="5" fill="#C33F1E"/></g>`,
+  tree: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><rect x="52" y="60" width="18" height="52" rx="5" fill="#8A6234"/><circle cx="40" cy="48" r="26" fill="#4CA36B"/><circle cx="80" cy="46" r="24" fill="#3E8F5C"/><circle cx="60" cy="26" r="26" fill="#5FB779"/><circle cx="60" cy="52" r="22" fill="#4CA36B"/></g>`,
+  bench: () => `<g stroke="${INK}" stroke-width="3.4"><rect x="14" y="76" width="92" height="11" rx="4" fill="#C08A4E"/><rect x="14" y="58" width="92" height="10" rx="4" fill="#C08A4E"/><rect x="20" y="87" width="10" height="24" fill="#8A6234"/><rect x="90" y="87" width="10" height="24" fill="#8A6234"/></g>`,
+  picnic: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><path d="M10 96 l24-16h56l20 16-24 16H32z" fill="#E4572E"/><path d="M34 80 l-8 32M58 80 l-10 32M82 80 l-12 32M22 88 h84M16 100 h84" stroke="#FBF7EF" stroke-width="3" fill="none"/><path d="M74 74 h26 l-4 20H78z" fill="#C9A36B"/><path d="M76 74 a11 8 0 0 1 22 0" fill="none"/></g>`,
+  birdbath: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><rect x="52" y="62" width="16" height="48" fill="#B9BCC0"/><rect x="38" y="104" width="44" height="10" rx="4" fill="#A5A9AE"/><path d="M30 54 h60 q-6 18-30 18 t-30-18z" fill="#CBCFD3"/><ellipse cx="60" cy="54" rx="30" ry="9" fill="#9BD8E8"/><g transform="translate(74,36) scale(.5)"><ellipse cx="0" cy="12" rx="16" ry="12" fill="#E4572E" stroke="${INK}" stroke-width="5"/><circle cx="14" cy="0" r="10" fill="#E4572E" stroke="${INK}" stroke-width="5"/><path d="M23 0 l10 3-10 3z" fill="#F6BE4A" stroke="${INK}" stroke-width="4"/></g></g>`,
+  tunnel: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><path d="M12 110 v-22 a48 40 0 0 1 96 0 v22z" fill="#4A9BCB"/><path d="M34 110 v-22 a26 22 0 0 1 52 0 v22z" fill="#2B4A5E"/><path d="M22 74 a40 34 0 0 1 10-16M96 96 v-8a36 30 0 0 0-8-18" stroke="#7FC7E8" stroke-width="5" fill="none"/></g>`,
+  hoop: () => `<g><rect x="55" y="66" width="10" height="46" fill="#8A6234" stroke="${INK}" stroke-width="3.4"/><ellipse cx="60" cy="48" rx="44" ry="38" fill="none" stroke="#E4572E" stroke-width="12"/><ellipse cx="60" cy="48" rx="44" ry="38" fill="none" stroke="${INK}" stroke-width="3"/></g>`,
+  lights: () => `<g><path d="M6 34 q54 34 108 0" fill="none" stroke="${INK}" stroke-width="3.4"/>${[0, 1, 2, 3, 4, 5].map(i => { const t = i / 5, x = 6 + t * 108, y = 34 + Math.sin(t * Math.PI) * 26; return `<circle cx="${x.toFixed(0)}" cy="${(y + 10).toFixed(0)}" r="9" fill="${['#F6BE4A', '#E4572E', '#7A4FA3', '#4A9BCB', '#6FBF8B', '#EE7EA6'][i]}" stroke="${INK}" stroke-width="3"/>`; }).join('')}</g>`,
+  sandpit: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><path d="M10 84 h100 l-10 28H20z" fill="#E7D3A8"/><path d="M10 84 h100 M10 84 l-4-8h108l-4 8" fill="#C9A36B"/><path d="M62 84 h22 l-4 22H66z" fill="#E4572E"/><path d="M60 84 a12 8 0 0 1 26 0" fill="none"/><path d="M34 106 l6-24 M34 82 l-7-10h14z" fill="#4A9BCB" stroke-width="3"/></g>`,
+  house: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><rect x="20" y="52" width="80" height="58" rx="5" fill="#D07B4F"/><path d="M12 54 l48-32 48 32z" fill="#9C4F2C"/><path d="M46 110 V84 a14 14 0 0 1 28 0 v26z" fill="#3B2A1E"/></g>`,
+  swing: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><path d="M16 110 L40 26 M104 110 L80 26" stroke-width="7" stroke="#8A6234"/><rect x="34" y="20" width="52" height="9" rx="4" fill="#A5814D"/><path d="M48 28 v42 M76 28 v42" stroke-width="4" stroke="${INK}"/><rect x="40" y="70" width="44" height="10" rx="4" fill="#E4572E"/></g>`,
+  pond: () => `<g><ellipse cx="60" cy="88" rx="54" ry="24" fill="#7FC7E8" stroke="${INK}" stroke-width="3.4"/><path d="M20 80 q14-6 28 0 t28 0" stroke="#BFE3F2" stroke-width="4" fill="none" stroke-linecap="round"/><g transform="translate(52,58) scale(.62)"><ellipse cx="0" cy="18" rx="26" ry="17" fill="#FBF7EF" stroke="${INK}" stroke-width="5"/><circle cx="24" cy="0" r="13" fill="#FBF7EF" stroke="${INK}" stroke-width="5"/><path d="M35 0 l14 4-14 5z" fill="#F6BE4A" stroke="${INK}" stroke-width="4"/><circle cx="27" cy="-3" r="2.6" fill="${INK}"/></g></g>`,
+  slide: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><path d="M84 22 L104 110 M70 26 L36 110" stroke-width="7" stroke="#8A6234"/><path d="M78 18 q-58 42-64 88 l16 4 q10-40 60-76z" fill="#F6BE4A"/><path d="M92 30 v58 M78 30 v6" stroke="#C9A36B" stroke-width="4"/>${[0, 1, 2, 3].map(k => `<path d="M${88 - k * 4} ${40 + k * 18} h16" stroke="#A5814D" stroke-width="5"/>`).join('')}</g>`,
+  statue: () => `<g stroke="${INK}" stroke-width="3.4" stroke-linejoin="round"><rect x="28" y="90" width="64" height="22" rx="4" fill="#A5A9AE"/><rect x="36" y="80" width="48" height="12" rx="3" fill="#BFC3C8"/><g fill="#CBCFD3"><ellipse cx="58" cy="62" rx="22" ry="18"/><circle cx="78" cy="42" r="16"/><path d="M68 30 l-4-16 16 8z"/><path d="M88 30 l8-14-16 6z"/><path d="M38 62 q-14-6-14-22 6 10 16 12z"/><rect x="44" y="74" width="11" height="16" rx="5"/><rect x="66" y="74" width="11" height="16" rx="5"/></g><circle cx="72" cy="40" r="2.8" fill="${INK}"/><circle cx="86" cy="40" r="2.8" fill="${INK}"/></g>`,
+  lagoon: () => `<g><ellipse cx="60" cy="86" rx="56" ry="26" fill="#5FBFD6" stroke="${INK}" stroke-width="3.4"/><path d="M18 78 q14-6 28 0 t28 0 t20 0" stroke="#BFE3F2" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M26 96 q16-5 32 0 t30 0" stroke="#BFE3F2" stroke-width="3.4" fill="none" stroke-linecap="round"/><g transform="translate(30,46) scale(.28)">${inner(animalSVG(ANIMALS.find(a => a.id === 'finn'), {}))}</g></g>`
+};
+/* where each piece stands. base is where its feet meet the ground. */
+const PLACE = {
+  tree:[18,206,1.5], slide:[112,224,0.95], pond:[6,250,1.05], picnic:[178,250,0.9],
+  bench:[244,232,0.92], flowers:[152,254,0.85], tunnel:[318,250,0.85], hoop:[352,224,0.95],
+  lagoon:[392,252,1.45], hydrant:[452,236,0.8], swing:[500,224,1.05], sandpit:[566,252,0.9],
+  house:[596,236,0.95], birdbath:[672,236,0.85], statue:[716,232,0.85]
+};
+
+/* ------------------------------------------------------------ the park */
+function parkSVG() {
+  const owned = S.parks;
+  const seaOwned = S.animals.map(id => ANIMALS.find(a => a.id === id)).filter(a => a && a.kind === 'sea');
+  let g = `<rect width="800" height="260" fill="#BFE3F2"/>
+    <circle cx="700" cy="46" r="34" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/>
+    <g fill="#FFFFFF" stroke="${INK}" stroke-width="3" stroke-linejoin="round" opacity=".95">
+      <path d="M96 58 a20 20 0 0 1 38-6 a16 16 0 0 1 26 8 a14 14 0 0 1-4 26 H108 a18 18 0 0 1-12-28z"/>
+      <path d="M406 34 a16 16 0 0 1 30-5 a13 13 0 0 1 21 7 a11 11 0 0 1-3 21H416 a14 14 0 0 1-10-23z"/></g>
+    <g stroke="${INK}" stroke-width="3" fill="none" stroke-linecap="round">
+      <path d="M556 62 q10-8 20 0 M576 62 q10-8 20 0"/><path d="M620 90 q8-7 16 0 M636 90 q8-7 16 0"/></g>
+    <path d="M0 168 q120-56 250-16 q130 40 250-10 q150-62 300-4 v122 H0z" fill="#6FBF8B" stroke="${INK}" stroke-width="3"/>
+    <path d="M0 196 q200-34 400 6 q200 40 400-2 v60 H0z" fill="#4CA36B" stroke="${INK}" stroke-width="3"/>`;
+  if (owned.includes('tree')) { const [x, base, sc] = PLACE.tree; g += `<g transform="translate(${x},${base - 110 * sc}) scale(${sc})">${PARKART.tree()}</g>`; }
+  for (let x = 8; x < 800; x += 44) g += `<rect x="${x}" y="120" width="12" height="60" rx="4" fill="#C9A36B" stroke="${INK}" stroke-width="3"/>`;
+  g += `<rect y="134" width="800" height="9" fill="#C9A36B" stroke="${INK}" stroke-width="3"/><rect y="158" width="800" height="9" fill="#C9A36B" stroke="${INK}" stroke-width="3"/>`;
+
+  Object.keys(PLACE).forEach(id => {
+    if (id === 'tree' || !owned.includes(id)) return;
+    const [x, base, sc] = PLACE[id];
+    g += `<g transform="translate(${x},${base - 110 * sc}) scale(${sc})">${PARKART[id]()}</g>`;
+  });
+  if (owned.includes('lagoon')) {
+    seaOwned.filter(x => x.id !== S.active).slice(0, 3).forEach((a, i) =>
+      g += `<g transform="translate(${330 + i * 88},${182 + (i % 2) * 12}) scale(${0.24 - i * 0.02})"><g class="swimmer" style="animation-delay:${i * 1.3}s">${inner(animalSVG(a, {}))}</g></g>`);
+  }
+  if (owned.includes('lights')) {
+    let l = `<path d="M4 108 q200 46 400 0 q200-46 396 4" fill="none" stroke="${INK}" stroke-width="3"/>`;
+    const cols = ['#F6BE4A', '#E4572E', '#7A4FA3', '#4A9BCB', '#6FBF8B'];
+    for (let i = 0; i <= 16; i++) { const t = i / 16, x = 4 + t * 796;
+      const y = t < .5 ? 108 + Math.sin(t * Math.PI * 2) * 20 : 108 - Math.sin((t - .5) * Math.PI * 2) * 22;
+      l += `<circle cx="${x.toFixed(0)}" cy="${(y + 8).toFixed(0)}" r="7" fill="${cols[i % 5]}" stroke="${INK}" stroke-width="2.5"/>`; }
+    g += l;
+  }
+  const a = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  if (a.kind === 'sea') {
+    if (owned.includes('lagoon')) g += `<g transform="translate(410,128) scale(0.56)"><g class="swimmer">${inner(animalSVG(a, { wear:S.outfits[a.id] || {} }))}</g></g>`;
+    else { const land = ANIMALS.find(x => S.animals.includes(x.id) && x.kind !== 'sea') || ANIMALS[0];
+      g += `<g transform="translate(196,52) scale(0.86)">${inner(animalSVG(land, { wear:S.outfits[land.id] || {} }))}</g>`; }
+  } else {
+    g += `<g transform="translate(196,52) scale(0.86)">${inner(animalSVG(a, { wear:S.outfits[a.id] || {} }))}</g>`;
+  }
+  return `<svg viewBox="0 0 800 260" preserveAspectRatio="xMidYMax meet">${g}</svg>`;
+}
+
+/* ----------------------------------------------------------- the house */
+function roomSVG() {
+  const won = TOYS.filter(t => S.toys.includes(t.id));
+  const sea = S.animals.map(id => ANIMALS.find(a => a.id === id)).filter(a => a && a.kind === 'sea');
+  const a = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  let g = `<rect width="800" height="360" fill="#F6E7CE"/>
+    <path d="M0 258 h800 v102 H0z" fill="#C98F5B" stroke="${INK}" stroke-width="3"/>
+    <path d="M0 252 h800 v10 H0z" fill="#A9713F" stroke="${INK}" stroke-width="3"/>`;
+  for (let x = 20; x < 800; x += 58) g += `<path d="M${x} 262 v96" stroke="#A9713F" stroke-width="2.5" opacity=".7"/>`;
+  // window
+  g += `<g><rect x="40" y="34" width="150" height="112" rx="6" fill="#BFE3F2" stroke="${INK}" stroke-width="4"/>
+    <path d="M40 122 q40-30 80-10 q40 20 70-6 v40 H40z" fill="#6FBF8B"/>
+    <circle cx="152" cy="66" r="17" fill="#F6BE4A" stroke="${INK}" stroke-width="3"/>
+    <path d="M115 34 v112 M40 90 h150" stroke="${INK}" stroke-width="4"/></g>`;
+  // shelves with the toys he has won
+  [0, 1].forEach(row => {
+    const y = 66 + row * 84;
+    g += `<rect x="236" y="${y + 46}" width="286" height="11" rx="3" fill="#B07A42" stroke="${INK}" stroke-width="3"/>`;
+    for (let i = 0; i < 7; i++) {
+      const t = TOYS[row * 7 + i]; if (!t) continue;
+      const has = S.toys.includes(t.id);
+      g += `<g transform="translate(${240 + i * 41},${y}) scale(0.78)" opacity="${has ? 1 : 0.16}"${has ? '' : ' filter="url(#flat)"'}>${toyInner(t.id)}</g>`;
+    }
+  });
+  // fish tank
+  g += `<g><rect x="568" y="96" width="200" height="150" rx="10" fill="#9BD8E8" stroke="${INK}" stroke-width="4"/>
+    <rect x="568" y="216" width="200" height="30" fill="#E7D3A8"/>
+    <rect x="568" y="96" width="200" height="150" rx="10" fill="none" stroke="${INK}" stroke-width="4"/>
+    <path d="M596 236 q10-22 22 0z M636 236 q8-16 16 0z M690 236 q12-26 24 0z" fill="#4CA36B" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
+  if (sea.length) sea.slice(0, 3).forEach((s, i) =>
+      g += `<g transform="translate(${562 + i * 66},${78 + i * 42}) scale(${0.42 - i * 0.06})"><g class="swimmer" style="animation-delay:${i * 1.1}s">${inner(animalSVG(s, {}))}</g></g>`);
+  else g += `<text x="668" y="176" text-anchor="middle" font-family="Andika,sans-serif" font-size="17" fill="#3E6E82">the tank is ready</text>`;
+  g += `<path d="M604 210 q4-14 0-24 M614 214 q5-16 0-28" stroke="#FFFFFF" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/></g>`;
+  // rug + bed + the animal that is out
+  g += `<ellipse cx="300" cy="316" rx="150" ry="34" fill="#E4572E" stroke="${INK}" stroke-width="3"/>
+        <ellipse cx="300" cy="316" rx="110" ry="22" fill="#F0846A"/>`;
+  g += `<g><path d="M60 300 q22-14 46 0 q8 18 0 34 q-24 10-46 0 q-8-16 0-34z" fill="#7A4FA3" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/></g>`;
+  const shown = a.kind === 'sea' ? (ANIMALS.find(x => S.animals.includes(x.id) && x.kind !== 'sea') || ANIMALS[0]) : a;
+  g += `<g transform="translate(222,172) scale(0.70)">${inner(animalSVG(shown, { wear:S.outfits[shown.id] || {} }))}</g>`;
+  // bowl
+  g += `<g><path d="M470 320 q34 22 68 0 q-6 22-34 22 q-28 0-34-22z" fill="#4A9BCB" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <ellipse cx="504" cy="318" rx="36" ry="10" fill="#7FC7E8" stroke="${INK}" stroke-width="3"/></g>`;
+  return `<svg viewBox="0 0 800 360"><defs><filter id="flat"><feColorMatrix type="saturate" values="0"/></filter></defs>${g}</svg>`;
+}
+</script>
+
+<script>
+"use strict";
+/* ===================================================================
+   QUESTION ENGINE
+   Distractors are never random. Every one is an error children actually
+   make — digit reversal, changing the ones when you meant the tens,
+   losing the tens when the ones roll over, forgetting to carry, taking
+   the smaller digit from the larger, dropping the zero in 7 × 30. If a
+   child can win by elimination the question has taught nothing.
+   =================================================================== */
+const MAXV = { g1:130, g2:1300, g4:100000 }[P.bank];
+const IN = v => Number.isInteger(v) && v >= 0 && v <= MAXV;
+const rev2 = n => { const s = String(n); return (s.length === 2 && s[1] !== '0') ? Number(s[1] + s[0]) : null; };
+const swapHT = n => { const s = String(n); return s.length === 3 ? Number(s[1] + s[0] + s[2]) : null; };
+const swapTO = n => { const s = String(n); return s.length === 3 ? Number(s[0] + s[2] + s[1]) : null; };
+
+function build(answer, pool) {
+  const out = [answer], seen = new Set([answer]);
+  for (const c of pool) {
+    if (out.length === 4) break;
+    if (c == null || !IN(c) || seen.has(c) || (c === 0 && answer !== 0)) continue;
+    seen.add(c); out.push(c);
+  }
+  let d = 1;
+  while (out.length < 4 && d < 200) {
+    for (const c of [answer + d, answer - d]) {
+      if (out.length === 4) break;
+      if (IN(c) && c !== 0 && !seen.has(c)) { seen.add(c); out.push(c); }
+    }
+    d++;
+  }
+  return shuffle(out);
+}
+const numChoices = (answer, pool) => build(answer, pool).map(v => ({ value:v, label:String(v) }));
+
+function legend(parts) {   /* e.g. crate ×3, bag ×4, bone ×7 */
+  let g = '', x = 6;
+  parts.forEach(p => {
+    if (p.n === 0) return;
+    const art = p.t === 'h' ? `<g transform="translate(${x},4) scale(0.72)">${crate(0, 0)}</g>`
+              : p.t === 't' ? `<g transform="translate(${x},2) scale(0.78)">${bag(0, 0)}</g>`
+              : `<g transform="translate(${x + 18},46)">${bone(0, 0, 1.7)}</g>`;
+    const w = p.t === 'h' ? 64 : p.t === 't' ? 56 : 44;
+    g += art + `<text x="${x + w + 8}" y="62" font-family="Baloo 2,sans-serif" font-size="40" font-weight="800" fill="${INK}">× ${p.n}</text>`;
+    x += w + (String(p.n).length > 1 ? 96 : 78);
+  });
+  return `<svg viewBox="0 0 ${Math.max(x, 200)} 90">${g}</svg>`;
+}
+
+function twoRows(a, b) {
+  const W = Math.max(a, b) * 24 + 20;
+  let g = '';
+  for (let i = 0; i < a; i++) g += bone(14 + i * 24, 18, 0.8);
+  for (let i = 0; i < b; i++) g += bone(14 + i * 24, 48, 0.8, '#F6BE4A');
+  return `<svg viewBox="0 0 ${W} 68" role="img" aria-label="${a} and ${b}">${g}</svg>`;
+}
+
+function teachTwo(aHtml, mid, bHtml) {
+  return `<div style="display:flex;flex-direction:column;gap:4px;align-items:center;width:100%">
+    <div style="width:100%;max-width:430px">${aHtml}</div>
+    <div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.15rem">${mid}</div>
+    <div style="width:100%;max-width:430px">${bHtml}</div></div>`;
+}
+const bigNum = t => `<p class="num" style="font-family:'Baloo 2',sans-serif;font-size:1.9rem;margin:0">${t}</p>`;
+
+/* column layout for a two-digit sum, so the carry is visible */
+function columnSum(a, b, op, hide) {
+  const r = op === '+' ? a + b : a - b;
+  const w = Math.max(String(a).length, String(b).length + 1, String(r).length);
+  const rows = [String(a).padStart(w, ' '), (op + String(b)).padStart(w, ' '), hide ? '' : String(r).padStart(w, ' ')];
+  const cw = 34, W = w * cw + 12;
+  let g = '';
+  rows.forEach((t, i) => {
+    for (let k = 0; k < t.length; k++) {
+      const ch = t[k]; if (ch === ' ') continue;
+      g += `<text x="${18 + k * cw}" y="${40 + i * 44}" text-anchor="middle" font-family="Baloo 2,sans-serif" font-size="36" font-weight="800" fill="${INK}">${ch}</text>`;
+    }
+  });
+  g += `<path d="M4 96 h${W - 8}" stroke="${INK}" stroke-width="4"/>`;
+  return `<svg viewBox="0 0 ${W} 158">${g}</svg>`;
+}
+
+/* a fraction as a divided bar — the representation Grade 3 is taught on */
+function fracBar(num, den, colour) {
+  const W = 360, H = 76, cw = W / den;
+  let g = '';
+  for (let i = 0; i < den; i++)
+    g += `<rect x="${(i * cw).toFixed(2)}" y="6" width="${cw.toFixed(2)}" height="60" fill="${i < num ? (colour || '#4CA36B') : '#FFFDF6'}" stroke="${INK}" stroke-width="3"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${num} out of ${den} parts shaded">${g}</svg>`;
+}
+function twoBars(a, b, c, d) {
+  return `<div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:430px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:10px"><span class="num" style="font-family:'Baloo 2',sans-serif;font-size:1.4rem;min-width:52px">${a}/${b}</span>${fracBar(a, b)}</div>
+    <div style="display:flex;align-items:center;gap:10px"><span class="num" style="font-family:'Baloo 2',sans-serif;font-size:1.4rem;min-width:52px">${c}/${d}</span>${fracBar(c, d, '#E4572E')}</div></div>`;
+}
+
+/* a rectangle on squared paper, for area and perimeter */
+function gridRect(w, h) {
+  const u = 26, W = w * u + 30, H = h * u + 30;
+  let g = `<rect x="15" y="15" width="${w * u}" height="${h * u}" fill="#CFE9D8" stroke="${INK}" stroke-width="3.5"/>`;
+  for (let i = 1; i < w; i++) g += `<path d="M${15 + i * u} 15 v${h * u}" stroke="${INK}" stroke-width="1.4" opacity=".55"/>`;
+  for (let i = 1; i < h; i++) g += `<path d="M15 ${15 + i * u} h${w * u}" stroke="${INK}" stroke-width="1.4" opacity=".55"/>`;
+  g += `<text x="${15 + w * u / 2}" y="${H - 2}" text-anchor="middle" font-family="Andika,sans-serif" font-size="15" fill="${INK}">${w}</text>`;
+  g += `<text x="6" y="${18 + h * u / 2}" text-anchor="middle" font-family="Andika,sans-serif" font-size="15" fill="${INK}">${h}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="a ${w} by ${h} rectangle">${g}</svg>`;
+}
+
+/* ------------------------------------------------------------- BANK g1 */
+const GEN = {};
+GEN.g1 = function (id) {
+  const q = { skill:id, visual:'' };
+  switch (id) {
+    case 'read50': case 'read99': {
+      const n = id === 'read50' ? ri(11, 50) : ri(51, 99);
+      const t = Math.floor(n / 10), o = n % 10;
+      q.answer = n; q.ask = 'How many bones?'; q.speak = 'How many bones?';
+      q.visual = bagsPicture(n);
+      q.choices = numChoices(n, [rev2(n), n + 10, n - 10, o * 10 + t + 1, n + 1, n - 1, t + o]);
+      q.teach = { html:bagsPicture(n), say:`${t} bags of ten is ${t * 10}. And ${o} more bones. That makes ${n}.`,
+                  text:`${t} bags of ten is <b>${t * 10}</b>, and ${o} bones. That makes <b>${n}</b>.` };
+      return q;
+    }
+    case 'match': {
+      const t = ri(2, 9), o = ri(1, 9), n = t * 10 + o;
+      q.answer = n;
+      q.ask = `<span class="big">${t}</span> bags and <span class="big">${o}</span> bones. Which number?`;
+      q.speak = `${t} bags of ten and ${o} bones. Which number is that?`;
+      q.visual = legend([{ t:'t', n:t }, { t:'o', n:o }]);
+      q.choices = numChoices(n, [rev2(n), t + o, n + 10, n - 10, n + 1]);
+      q.teach = { html:bagsPicture(n), say:`${t} bags of ten is ${t * 10}. And ${o} bones. That makes ${n}.`,
+                  text:`${t} tens and ${o} ones is <b>${n}</b>. The bags always go first.` };
+      return q;
+    }
+    case 'compare': {
+      const t = ri(2, 8), a = t * 10 + ri(1, 8);
+      const set = [a, a + 1, rev2(a), t * 10 + ri(1, 9) + 10];
+      const uniq = [...new Set(set.filter(v => IN(v) && v >= 10 && v <= 99))];
+      while (uniq.length < 4) { const c = ri(11, 99); if (!uniq.includes(c)) uniq.push(c); }
+      const four = uniq.slice(0, 4);
+      const ans = Math.max(...four);
+      q.answer = ans; q.ask = 'Which is the <b>biggest</b> number?';
+      q.speak = 'Which is the biggest number?';
+      q.visual = bagsPicture(ans);
+      q.choices = shuffle(four).map(v => ({ value:v, label:String(v) }));
+      q.teach = { html:bagsPicture(ans), say:`Look at the bags first. ${ans} has the most bags, so it is the biggest.`,
+                  text:`Count the <b>bags</b> first. The most bags wins; only if the bags match do the bones decide.` };
+      return q;
+    }
+    case 'up10': case 'down10': case 'any10': {
+      let start, step;
+      if (id === 'up10') { start = ri(0, 7) * 10; step = 10; }
+      else if (id === 'down10') { start = ri(4, 12) * 10; step = -10; }
+      else { const o = ri(1, 9);
+        if (Math.random() < .5) { start = o + 10 * ri(0, 7); step = 10; } else { start = o + 10 * ri(4, 8); step = -10; } }
+      const seq = [0, 1, 2, 3, 4].map(i => start + i * step);
+      if (seq.some(v => v < 0 || v > 130)) return GEN.g1(id);
+      const bi = ri(1, 4), a = seq[bi];
+      q.answer = a;
+      q.ask = step > 0 ? 'Count on in tens. Which stone?' : 'Count back in tens. Which stone?';
+      q.speak = (step > 0 ? 'Count on in tens. ' : 'Count back in tens. ') + seq.map((v, i) => i === bi ? 'hmm' : v).join(', ');
+      q.visual = stones(seq, bi);
+      q.choices = numChoices(a, [a + 1, a - 1, rev2(a), a + 9, a - 9, a + 11]);
+      q.teach = { html:stones(seq, -1), say:'Count in tens. ' + seq.join(', '),
+                  text:`In tens: ${seq.join(', ')}. Only the <b>bags</b> change.` };
+      return q;
+    }
+    case 'plus1': case 'minus1': case 'plus1x': case 'minus1x': {
+      const up = id[0] === 'p', cross = id.endsWith('x');
+      let n;
+      if (cross) n = up ? ri(1, 10) * 10 - 1 : ri(2, 12) * 10;
+      else { do { n = ri(11, 98); } while (up ? n % 10 === 9 : n % 10 === 0); }
+      const a = up ? n + 1 : n - 1, ones = n % 10;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span><br>What is one ${up ? 'more' : 'less'}?`;
+      q.speak = `What is one ${up ? 'more' : 'less'} than ${n}?`;
+      q.visual = bagsPicture(n);
+      q.choices = numChoices(a, cross ? (up ? [n - 9, a + 10, a + 1, rev2(a)] : [n - 10, n + 1, a - 10, n - 11])
+                                      : [up ? n - 1 : n + 1, a + 10, a - 10, a + 1]);
+      if (cross && up) q.teach = { html:teachTwo(bagsPicture(n), '9 bones and 1 more = a whole new bag!', bagsPicture(a)),
+        say:`${ones} bones and one more makes ten. Ten bones make a new bag. So ${n} and one more is ${a}.`,
+        text:`${ones} bones and 1 more makes <b>ten</b> — and ten bones become a <b>new bag</b>. ${n} → <b>${a}</b>.` };
+      else if (cross) q.teach = { html:teachTwo(bagsPicture(n), 'open a bag to get 10 bones back', bagsPicture(a)),
+        say:`${n} has no loose bones, so open a bag. That gives ten bones. Take one away and you have ${a}.`,
+        text:`${n} has no loose bones — so <b>open a bag</b>. That's 10 bones. Take 1 away: <b>${a}</b>.` };
+      else q.teach = { html:teachTwo(bagsPicture(n), up ? 'add 1 bone' : 'take 1 bone away', bagsPicture(a)),
+        say:`The bags stay the same. Only the bones change. ${n} is ${a}.`,
+        text:`The <b>bags</b> stay the same. Only the <b>bones</b> change: <b>${a}</b>.` };
+      return q;
+    }
+    case 'plus10': case 'minus10': {
+      const up = id === 'plus10', n = up ? ri(4, 99) : ri(14, 120);
+      const a = up ? n + 10 : n - 10;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span><br>What is ten ${up ? 'more' : 'less'}?`;
+      q.speak = `What is ten ${up ? 'more' : 'less'} than ${n}?`;
+      q.visual = n <= 99 ? bagsPicture(n) : '';
+      q.choices = numChoices(a, [up ? n + 1 : n - 1, up ? n - 10 : n + 10, up ? n + 20 : n - 20, rev2(a)]);
+      q.teach = { html:(n <= 99 && a <= 99) ? teachTwo(bagsPicture(n), up ? 'one more bag of ten' : 'one bag of ten away', bagsPicture(a)) : bigNum(`${n} ${up ? '+' : '−'} 10 = ${a}`),
+        say:`Ten ${up ? 'more' : 'less'} means ${up ? 'one more bag' : 'one bag less'}. The loose bones do not change. ${n} becomes ${a}.`,
+        text:`Ten ${up ? 'more' : 'less'} = ${up ? 'one more <b>bag</b>' : 'one <b>bag</b> away'}. The loose bones <b>never change</b>.` };
+      return q;
+    }
+    case 'makeTen': {
+      const n = ri(1, 9), a = 10 - n;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> + ? = <span class="big">10</span>`;
+      q.speak = `${n} and how many more makes ten?`;
+      q.visual = `<svg viewBox="0 0 182 74">${looseFrame(n, 0, 4)}</svg>`;
+      q.choices = numChoices(a, [a + 1, a - 1, n, a + 2]);
+      q.teach = { html:`<svg viewBox="0 0 182 74">${looseFrame(10, 0, 4)}</svg>`,
+        say:`Count the empty spaces. ${n} and ${a} makes ten.`,
+        text:`Count the <b>empty spaces</b> in the frame — there are ${a}. So ${n} + <b>${a}</b> = 10.` };
+      return q;
+    }
+    case 'doubles': {
+      const n = ri(2, 10), a = n * 2;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> + <span class="big">${n}</span>`;
+      q.speak = `What is double ${n}? ${n} plus ${n}.`;
+      q.visual = arrayPicture(2, n);
+      q.choices = numChoices(a, [a + 1, a - 1, a + 2, n * 2 + n]);
+      q.teach = { html:arrayPicture(2, n), say:`Two rows of ${n}. That is ${a}.`,
+        text:`Two rows of ${n} — double ${n} is <b>${a}</b>.` };
+      return q;
+    }
+    case 'addOnes': {
+      const t = ri(1, 9), o = ri(0, 4), n = t * 10 + o, k = ri(2, 9 - o), a = n + k;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> + <span class="big">${k}</span>`;
+      q.speak = `What is ${n} add ${k}?`;
+      q.visual = bagsPicture(n);
+      q.choices = numChoices(a, [a + 10, a - 10, a + 1, o + k]);
+      q.teach = { html:teachTwo(bagsPicture(n), `add ${k} more bones`, bagsPicture(a)),
+        say:`The bags do not change. ${o} bones and ${k} more is ${o + k}. So the answer is ${a}.`,
+        text:`The <b>bags</b> stay the same. Only add to the bones: ${o} + ${k} = ${o + k}, so <b>${a}</b>.` };
+      return q;
+    }
+    case 'addTens': case 'subTens': {
+      const up = id === 'addTens';
+      let x, y;
+      if (up) { x = ri(1, 6) * 10; y = ri(1, 9 - x / 10) * 10; }
+      else { x = ri(3, 9) * 10; y = ri(1, x / 10 - 1) * 10; }
+      const a = up ? x + y : x - y;
+      q.answer = a;
+      q.ask = `<span class="big">${x}</span> ${up ? '+' : '−'} <span class="big">${y}</span>`;
+      q.speak = `What is ${x} ${up ? 'add' : 'take away'} ${y}?`;
+      q.visual = bagsPicture(x);
+      q.choices = numChoices(a, [a / 10, a + 10, a - 10, a + 1]);
+      q.teach = { html:teachTwo(bagsPicture(x), `${up ? 'add' : 'take away'} ${y / 10} bags`, bagsPicture(a)),
+        say:`${x / 10} bags ${up ? 'and' : 'take away'} ${y / 10} bags is ${a / 10} bags. ${a / 10} bags is ${a}.`,
+        text:`${x / 10} bags ${up ? '+' : '−'} ${y / 10} bags = ${a / 10} bags — and ${a / 10} bags is <b>${a}</b>.` };
+      return q;
+    }
+  }
+  throw new Error('g1 ' + id);
+};
+</script>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------- BANK g2
+   Rory · end of Grade 1. CCSS 1.OA.B.3–4 / C.5–6 / D.7–8 (facts within
+   20, missing numbers, the meaning of equals), 1.NBT.A.1 (to 120),
+   1.NBT.B.2–3 (tens and ones, teens, comparing), 1.NBT.C.4–6 (two-digit
+   plus one-digit or a whole ten, ten more and less, whole tens away)
+   and 1.MD.B.3 (o'clock and half past).
+
+   Everything Grade 1 shares with Dylan's bank is generated by the SAME
+   function, so a fix to a teaching panel fixes it for both children.
+   ------------------------------------------------------------------ */
+const G1_SHARED = new Set(['read99', 'match', 'compare', 'up10', 'any10',
+  'plus10', 'minus10', 'makeTen', 'doubles', 'addOnes', 'addTens', 'subTens']);
+
+/* a clock face — 1.MD.B.3 */
+function clockFace(h, m) {
+  const cx = 110, cy = 110, r = 92;
+  let g = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FFFDF6" stroke="${INK}" stroke-width="5"/>
+           <circle cx="${cx}" cy="${cy}" r="${r - 12}" fill="none" stroke="${INK}" stroke-width="1.6" opacity=".35"/>`;
+  for (let i = 1; i <= 12; i++) {
+    const ang = (i * 30 - 90) * Math.PI / 180;
+    g += `<text x="${(cx + Math.cos(ang) * (r - 24)).toFixed(1)}" y="${(cy + Math.sin(ang) * (r - 24) + 8).toFixed(1)}"
+            text-anchor="middle" font-family="Baloo 2,sans-serif" font-size="24" font-weight="800" fill="${INK}">${i}</text>`;
+  }
+  for (let i = 0; i < 60; i++) {
+    const ang = (i * 6 - 90) * Math.PI / 180, big = i % 5 === 0;
+    g += `<path d="M${(cx + Math.cos(ang) * (r - 6)).toFixed(1)} ${(cy + Math.sin(ang) * (r - 6)).toFixed(1)}
+             L${(cx + Math.cos(ang) * (r - (big ? 13 : 9))).toFixed(1)} ${(cy + Math.sin(ang) * (r - (big ? 13 : 9))).toFixed(1)}"
+             stroke="${INK}" stroke-width="${big ? 3 : 1.4}" stroke-linecap="round"/>`;
+  }
+  const ha = ((h % 12) * 30 + m * 0.5 - 90) * Math.PI / 180;
+  const ma = (m * 6 - 90) * Math.PI / 180;
+  g += `<path d="M${cx} ${cy} L${(cx + Math.cos(ma) * (r - 24)).toFixed(1)} ${(cy + Math.sin(ma) * (r - 24)).toFixed(1)}" stroke="#4A9BCB" stroke-width="7" stroke-linecap="round"/>`;
+  g += `<path d="M${cx} ${cy} L${(cx + Math.cos(ha) * (r - 46)).toFixed(1)} ${(cy + Math.sin(ha) * (r - 46)).toFixed(1)}" stroke="#E4572E" stroke-width="11" stroke-linecap="round"/>`;
+  g += `<circle cx="${cx}" cy="${cy}" r="7" fill="${INK}"/>`;
+  return `<svg viewBox="0 0 220 220" role="img" aria-label="a clock showing ${h} ${m ? 'thirty' : "o'clock"}">${g}</svg>`;
+}
+const clockLabel = (h, m) => `${h}:${m === 0 ? '00' : '30'}`;
+
+GEN.g2 = function (id) {
+  if (G1_SHARED.has(id)) return GEN.g1(id);
+  const q = { skill:id, visual:'' };
+  switch (id) {
+
+    /* ---- facts within 10 and within 20 · 1.OA.C.6 ---- */
+    case 'add10': case 'sub10': {
+      const up = id === 'add10';
+      const a = ri(2, 6), b = ri(2, 10 - a);
+      const x = up ? a : a + b, y = b, r = up ? a + b : a;
+      q.answer = r;
+      q.ask = `<span class="big">${x}</span> ${up ? '+' : '−'} <span class="big">${y}</span>`;
+      q.speak = `What is ${x} ${up ? 'add' : 'take away'} ${y}?`;
+      q.visual = up ? twoRows(a, b) : `<svg viewBox="0 0 182 74">${looseFrame(x, 0, 4)}</svg>`;
+      q.choices = numChoices(r, [r + 1, r - 1, r + 2, x]);
+      q.teach = { html:`<svg viewBox="0 0 182 74">${looseFrame(r, 0, 4)}</svg>`,
+        say:`${x} ${up ? 'and' : 'take away'} ${y} is ${r}.`,
+        text:`${x} ${up ? '+' : '−'} ${y} = <b>${r}</b>.` };
+      return q;
+    }
+    case 'add20': {
+      const a = ri(4, 9), b = ri(10 - a + 1, 9), r = a + b;   /* always crosses ten */
+      q.answer = r;
+      q.ask = `<span class="big">${a}</span> + <span class="big">${b}</span>`;
+      q.speak = `What is ${a} add ${b}?`;
+      q.visual = twoRows(a, b);
+      q.choices = numChoices(r, [r + 1, r - 1, r + 2, Math.abs(a - b)]);
+      q.teach = { html:teachTwo(`<svg viewBox="0 0 182 74">${looseFrame(10, 0, 4)}</svg>`, `fill ten first, then ${r - 10} left over`, `<svg viewBox="0 0 182 74">${looseFrame(r - 10, 0, 4)}</svg>`),
+        say:`Make ten first. ${a} needs ${10 - a} to fill the frame, and that leaves ${b - (10 - a)} over. Ten and ${r - 10} is ${r}.`,
+        text:`Make <b>ten</b> first: ${a} + ${10 - a} = 10, with ${b - (10 - a)} left over. 10 + ${r - 10} = <b>${r}</b>.` };
+      return q;
+    }
+    case 'sub20': {
+      const r = ri(3, 9), b = ri(10 - r + 1, 9), m = r + b;   /* always crosses back */
+      q.answer = r;
+      q.ask = `<span class="big">${m}</span> − <span class="big">${b}</span>`;
+      q.speak = `What is ${m} take away ${b}?`;
+      q.visual = `<svg viewBox="0 0 182 148">${looseFrame(10, 0, 4)}${looseFrame(m - 10, 0, 78)}</svg>`;
+      q.choices = numChoices(r, [r + 1, r - 1, r + 2, m - b + 10]);
+      q.teach = { html:bigNum(`${m} − ${m - 10} = 10<br>10 − ${b - (m - 10)} = <b>${r}</b>`),
+        say:`Drop to ten first. ${m} take away ${m - 10} is ten, then take away ${b - (m - 10)} more, which leaves ${r}.`,
+        text:`Drop to <b>ten</b> first: ${m} − ${m - 10} = 10, then − ${b - (m - 10)} = <b>${r}</b>.` };
+      return q;
+    }
+    case 'nearDbl': {
+      const a = ri(3, 9), r = a + a + 1;
+      q.answer = r;
+      q.ask = `<span class="big">${a}</span> + <span class="big">${a + 1}</span>`;
+      q.speak = `What is ${a} add ${a + 1}?`;
+      q.visual = twoRows(a, a + 1);
+      q.choices = numChoices(r, [a * 2, r + 1, r + 2, a * 2 + 2]);
+      q.teach = { html:teachTwo(arrayPicture(2, a), `double ${a} is ${a * 2}, then one more`, `<svg viewBox="0 0 182 74">${looseFrame(Math.min(r, 10), 0, 4)}</svg>`),
+        say:`It is nearly a double. Double ${a} is ${a * 2}, and one more makes ${r}.`,
+        text:`Use the double you know: ${a} + ${a} = ${a * 2}, then <b>one more</b> → <b>${r}</b>.` };
+      return q;
+    }
+    case 'missing20': {
+      const a = ri(4, 9), r = ri(3, 9), c = a + r;
+      q.answer = r;
+      q.ask = `<span class="big">${a}</span> + ? = <span class="big">${c}</span>`;
+      q.speak = `${a} add how many makes ${c}?`;
+      q.choices = numChoices(r, [r + 1, r - 1, c, c + a - 10]);
+      q.teach = { html:bigNum(`${c} − ${a} = <b>${r}</b>`),
+        say:`A missing add is really a take away. ${c} take away ${a} is ${r}.`,
+        text:`A missing add is really a <b>take away</b>: ${c} − ${a} = <b>${r}</b>.` };
+      return q;
+    }
+    /* ---- 1.OA.D.7 · does the equals sign really balance? ---- */
+    case 'trueFalse': {
+      const a = ri(3, 9), b = ri(3, 9), sum = a + b;
+      const good = Math.random() < .5 ? `${a} + ${b} = ${sum}` : `${sum} = ${a} + ${b}`;
+      const set = new Set([good]);
+      let guard = 0;
+      while (set.size < 4 && guard++ < 40) {
+        const x = ri(3, 9), y = ri(3, 9), off = pick([1, 2, -1, -2]);
+        set.add(Math.random() < .5 ? `${x} + ${y} = ${x + y + off}` : `${x + y + off} = ${x} + ${y}`);
+      }
+      while (set.size < 4) set.add(`${ri(2, 9)} + ${ri(2, 9)} = ${ri(3, 19)}`);
+      q.answer = good; q.text = true;
+      q.ask = 'Which one is <b>true</b>?';
+      q.speak = 'Which number sentence is true?';
+      q.choices = shuffle([...set].slice(0, 4)).map(v => ({ value:v, label:v }));
+      q.teach = { html:twoRows(a, b),
+        say:`The equals sign means both sides are worth the same. ${a} and ${b} really is ${sum}.`,
+        text:`Equals means <b>both sides are worth the same</b> — it is not "the answer goes here". ${good} balances.` };
+      return q;
+    }
+    /* ---- 1.NBT.B.2b · a teen number is a ten and some ones ---- */
+    case 'teens': {
+      const o = ri(1, 9), n = 10 + o;
+      const askOnes = Math.random() < .5;
+      q.answer = askOnes ? o : n;
+      q.ask = askOnes ? `<span class="big">${n}</span> is ten and how many more?`
+                      : `Ten and <span class="big">${o}</span> more`;
+      q.speak = askOnes ? `${n} is ten and how many more?` : `What is ten and ${o} more?`;
+      q.visual = bagsPicture(n);
+      q.choices = askOnes ? numChoices(o, [o + 1, o - 1, n, 10]) : numChoices(n, [o, rev2(n), n + 10, n + 1]);
+      q.teach = { html:bagsPicture(n),
+        say:`${n} is one full bag of ten and ${o} loose bones.`,
+        text:`Every teen number is <b>one bag of ten</b> and some loose bones: ${n} = 10 + ${o}.` };
+      return q;
+    }
+    /* ---- 1.NBT.B.2c · the decades ---- */
+    case 'decades': {
+      const t = ri(2, 9), n = t * 10;
+      const askTens = Math.random() < .5;
+      q.answer = askTens ? t : n;
+      q.ask = askTens ? `How many bags of ten make <span class="big">${n}</span>?`
+                      : `<span class="big">${t}</span> bags of ten`;
+      q.speak = askTens ? `How many tens are there in ${n}?` : `What is ${t} tens?`;
+      q.visual = bagsPicture(n);
+      q.choices = askTens ? numChoices(t, [t + 1, t - 1, n, t * 2]) : numChoices(n, [t, n + 10, n - 10, rev2(n)]);
+      q.teach = { html:bagsPicture(n),
+        say:`${t} bags of ten is ${n}. Count them in tens.`,
+        text:`${t} tens = <b>${n}</b>, and no loose bones at all.` };
+      return q;
+    }
+    /* ---- 1.NBT.A.1 · counting on and back to 120, over the tens ---- */
+    case 'count1': case 'back1': {
+      const up = id === 'count1';
+      const dec = ri(1, 11) * 10;                       /* land the run on a ten */
+      const start = up ? dec - 2 : dec + 2;
+      const seq = [0, 1, 2, 3, 4].map(i => start + (up ? i : -i));
+      if (seq.some(v => v < 0 || v > 120)) return GEN.g2(id);
+      const bi = ri(1, 4), a = seq[bi];
+      q.answer = a;
+      q.ask = up ? 'Count on. Which stone?' : 'Count back. Which stone?';
+      q.speak = (up ? 'Count on. ' : 'Count back. ') + seq.map((v, i) => i === bi ? 'hmm' : v).join(', ');
+      q.visual = stones(seq, bi);
+      q.choices = numChoices(a, [a + 1, a - 1, a + 10, a - 10, rev2(a)]);
+      q.teach = { html:stones(seq, -1), say:seq.join(', '),
+        text:`${seq.join(', ')} — when the ones fill up, the <b>next bag</b> starts.` };
+      return q;
+    }
+    /* ---- 1.NBT.C.4 / C.6 · two-digit work ---- */
+    case 'add2d1x': case 'sub2d1x': {
+      const up = id === 'add2d1x';
+      const t = ri(1, 8), o = up ? ri(5, 9) : ri(1, 4), n = t * 10 + o;
+      const k = up ? ri(10 - o, 9) : ri(o + 1, 9);       /* always crosses the ten */
+      const a = up ? n + k : n - k;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> ${up ? '+' : '−'} <span class="big">${k}</span>`;
+      q.speak = `What is ${n} ${up ? 'add' : 'take away'} ${k}?`;
+      q.visual = bagsPicture(n);
+      q.choices = numChoices(a, [up ? t * 10 + (o + k) % 10 : t * 10 - (k - o), a + 10, a - 10, a + 1]);
+      q.teach = { html:teachTwo(bagsPicture(n), up ? `${o} and ${k} fills a whole new bag` : `there are not enough bones — open a bag`, bagsPicture(a)),
+        say: up ? `${o} bones and ${k} more is ${o + k}. Ten of them make a new bag, leaving ${(o + k) % 10}. So ${a}.`
+                : `There are only ${o} loose bones, so open a bag for ten more. Then take ${k} away. That leaves ${a}.`,
+        text: up ? `${o} + ${k} = ${o + k} — that fills a <b>whole new bag</b> with ${(o + k) % 10} left over → <b>${a}</b>.`
+                 : `Only ${o} loose bones, so <b>open a bag</b> for ten more before taking ${k} away → <b>${a}</b>.` };
+      return q;
+    }
+    case 'add2dTen': {
+      const t = ri(1, 6), o = ri(1, 9), n = t * 10 + o, k = ri(1, 9 - t) * 10, a = n + k;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> + <span class="big">${k}</span>`;
+      q.speak = `What is ${n} add ${k}?`;
+      q.visual = bagsPicture(n);
+      q.choices = numChoices(a, [n + k / 10, a + 10, a - 10, a + 1]);
+      q.teach = { html:teachTwo(bagsPicture(n), `add ${k / 10} more bags`, bagsPicture(a)),
+        say:`Adding ${k} means adding ${k / 10} more bags. The loose bones do not change. ${a}.`,
+        text:`Adding ${k} = <b>${k / 10} more bags</b>. The loose bones <b>never change</b> → <b>${a}</b>.` };
+      return q;
+    }
+    /* ---- 1.MD.B.3 · o'clock and half past ---- */
+    case 'oclock': case 'halfpast': {
+      const half = id === 'halfpast';
+      const h = ri(1, 12), m = half ? 30 : 0;
+      q.answer = clockLabel(h, m); q.text = true;
+      q.ask = 'What time is it?';
+      q.speak = 'What time does the clock say?';
+      q.visual = clockFace(h, m);
+      const nextH = h === 12 ? 1 : h + 1, prevH = h === 1 ? 12 : h - 1;
+      const set = new Set([q.answer,
+        clockLabel(nextH, m),                 /* half past is often read as the next hour */
+        clockLabel(h, half ? 0 : 30),
+        clockLabel(prevH, m)]);
+      let guard = 0;
+      while (set.size < 4 && guard++ < 20) set.add(clockLabel(ri(1, 12), pick([0, 30])));
+      q.choices = shuffle([...set].slice(0, 4)).map(v => ({ value:v, label:v }));
+      q.teach = { html:clockFace(h, m),
+        say: half ? `The short hand has gone past the ${h}, and the long hand points at the 6. That is half past ${h}.`
+                  : `The long hand points straight up and the short hand points at the ${h}. That is ${h} o'clock.`,
+        text: half ? `The <b>short</b> hand is the hour, and it has only gone <b>past</b> the ${h} — it is not on the ${nextH} yet. Long hand on the 6 means half past. <b>${h}:30</b>.`
+                   : `Long hand straight up, short hand on the ${h} → <b>${h}:00</b>.` };
+      return q;
+    }
+    /* ---- Stretch · Grade 2 groups and sharing (2.OA.C.4) ---- */
+    case 'groups': {
+      const r = ri(2, 5), c = ri(2, 6), a = r * c;
+      q.answer = a;
+      q.ask = `<span class="big">${r}</span> rows of <span class="big">${c}</span>. How many?`;
+      q.speak = `${r} rows of ${c}. How many altogether?`;
+      q.visual = arrayPicture(r, c);
+      q.choices = numChoices(a, [r + c, a + c, a - c, a + 1]);
+      q.teach = { html:arrayPicture(r, c),
+        say:`${r} rows of ${c}. Count in ${c}s: ${Array.from({ length:r }, (_, i) => c * (i + 1)).join(', ')}.`,
+        text:`${r} rows of ${c} = ${Array.from({ length:r }, () => c).join(' + ')} = <b>${a}</b>.` };
+      return q;
+    }
+    case 'mult2': case 'mult5': case 'mult10': {
+      const n = Number(id.slice(4)), b = ri(2, 10), a = n * b;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> × <span class="big">${b}</span>`;
+      q.speak = `What is ${n} times ${b}?`;
+      q.visual = arrayPicture(Math.min(n, 10), b);
+      q.choices = numChoices(a, [n * (b + 1), n * (b - 1), a + 1, n + b]);
+      q.teach = { html:arrayPicture(Math.min(n, 10), b),
+        say:`${n} rows of ${b}. Count in ${b}s and you land on ${a}.`,
+        text:`${n} × ${b} is ${n} rows of ${b} → <b>${a}</b>.` };
+      return q;
+    }
+    case 'share2': case 'share5': case 'share10': {
+      const n = Number(id.slice(5)), a = ri(2, 10), pr = n * a;
+      q.answer = a;
+      q.ask = `<span class="big">${pr}</span> bones shared between <span class="big">${n}</span>`;
+      q.speak = `${pr} bones shared equally between ${n}. How many each?`;
+      q.visual = arrayPicture(Math.min(n, 10), a);
+      q.choices = numChoices(a, [a + 1, a - 1, pr - n, n]);
+      q.teach = { html:arrayPicture(Math.min(n, 10), a),
+        say:`${pr} shared between ${n} is ${a} each, because ${n} times ${a} is ${pr}.`,
+        text:`${pr} ÷ ${n} = <b>${a}</b>, because ${n} × ${a} = ${pr}.` };
+      return q;
+    }
+  }
+  throw new Error('g2 ' + id);
+};
+
+/* ------------------------------------------------------------- BANK g4
+   NOTE: only the t2–t12 cases are reachable from Sophia's menu. Everything
+   else here (division, missing factors, fractions, area, perimeter,
+   rounding, three-digit sums) is parked, kept working, and comes back by
+   adding its id to the g4 skills list above.
+   Sophia · rising Grade 4. CCSS 3.OA.C.7 asks for fluency with × and ÷
+   within 100 by the end of Grade 3, so this is automaticity work, not
+   first exposure; 4.NBT.B.5 builds multi-digit multiplication on top of
+   it, which is why multiples of ten are in here.
+   ------------------------------------------------------------------ */
+GEN.g4 = function (id) {
+  const q = { skill:id, visual:'' };
+  if (/^t\d+$/.test(id)) {
+    const n = Number(id.slice(1)), b = ri(2, 12), a = n * b;
+    const [r, c] = Math.random() < .5 ? [n, b] : [b, n];
+    q.answer = a;
+    q.ask = `<span class="big">${r}</span> × <span class="big">${c}</span>`;
+    q.speak = `What is ${r} times ${c}?`;
+    q.choices = numChoices(a, [n * (b + 1), n * (b - 1), a + 1, a - 1, a + 10, (n + 1) * b]);
+    q.teach = { html:arrayPicture(Math.min(r, 12), Math.min(c, 12)),
+      say:`${r} rows of ${c} is ${a}.`,
+      text:`${r} × ${c} = <b>${a}</b>. ${n === 9 ? 'For the 9s: the two digits of the answer always add to 9.' : `Nearby: ${n}×${b - 1}=${n * (b - 1)} and ${n}×${b + 1}=${n * (b + 1)}.`}` };
+    return q;
+  }
+  if (/^d\d+$/.test(id)) {
+    const n = Number(id.slice(1)), b = ri(2, 12), p = n * b;
+    q.answer = b;
+    q.ask = `<span class="big">${p}</span> ÷ <span class="big">${n}</span>`;
+    q.speak = `What is ${p} divided by ${n}?`;
+    q.choices = numChoices(b, [b + 1, b - 1, n, p - n, b + 2]);
+    q.teach = { html:arrayPicture(Math.min(n, 12), Math.min(b, 12)),
+      say:`${n} times ${b} is ${p}, so ${p} divided by ${n} is ${b}.`,
+      text:`Ask "what times ${n} makes ${p}?" — ${n} × <b>${b}</b> = ${p}. Division undoes multiplication.` };
+    return q;
+  }
+  switch (id) {
+    case 'missing': {
+      const n = ri(3, 12), b = ri(3, 12), p = n * b;
+      q.answer = b;
+      q.ask = `<span class="big">${n}</span> × ? = <span class="big">${p}</span>`;
+      q.speak = `${n} times what makes ${p}?`;
+      q.choices = numChoices(b, [b + 1, b - 1, p - n, n]);
+      q.teach = { html:arrayPicture(Math.min(n, 12), Math.min(b, 12)),
+        say:`A missing factor is a division. ${p} divided by ${n} is ${b}.`,
+        text:`A missing factor is a <b>division</b>: ${p} ÷ ${n} = <b>${b}</b>.` };
+      return q;
+    }
+    case 'tens': {
+      const n = ri(2, 9), b = ri(2, 9), a = n * b * 10;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> × <span class="big">${b * 10}</span>`;
+      q.speak = `What is ${n} times ${b * 10}?`;
+      q.choices = numChoices(a, [n * b, a + 10, a - 10, a * 10 > MAXV ? null : a * 10, n * (b + 1) * 10]);
+      q.teach = { html:bigNum(`${n} × ${b} = ${n * b},  so  ${n} × ${b * 10} = ${a}`),
+        say:`${n} times ${b} is ${n * b}. Ten times bigger, so ${a}.`,
+        text:`Do ${n} × ${b} = ${n * b}, then make it <b>ten times bigger</b>: <b>${a}</b>. Don't lose the zero.` };
+      return q;
+    }
+    case 'square': {
+      const n = ri(3, 12), a = n * n;
+      q.answer = a;
+      q.ask = `<span class="big">${n}</span> × <span class="big">${n}</span>`;
+      q.speak = `What is ${n} times ${n}?`;
+      q.choices = numChoices(a, [n * (n + 1), n * (n - 1), a + 1, n + n]);
+      q.teach = { html:arrayPicture(n, n),
+        say:`${n} squared is ${a}. It makes a perfect square.`,
+        text:`${n} × ${n} = <b>${a}</b> — a square number, ${n} rows of ${n}.` };
+      return q;
+    }
+
+    /* ---- 3.NF.A.1 · naming a fraction ---- */
+    case 'fracName': {
+      const gcd = (x, y) => y ? gcd(y, x % y) : x;
+      const den = pick([2, 3, 4, 6, 8]);
+      let num; do { num = ri(1, den - 1); } while (gcd(num, den) !== 1);
+      q.answer = `${num}/${den}`; q.text = true;
+      q.ask = 'Which fraction is shaded?';
+      q.speak = 'Which fraction is shaded?';
+      q.visual = fracBar(num, den);
+      const opts = new Set([q.answer, `${den}/${num}`, `${num}/${den - num}`, `${num + 1}/${den}`, `${num}/${den + 1}`]);
+      q.choices = shuffle([...opts].slice(0, 4)).map(v => ({ value:v, label:v }));
+      q.teach = { html:fracBar(num, den),
+        say:`The bar is split into ${den} equal parts and ${num} are shaded. That is ${num} over ${den}.`,
+        text:`Bottom = how many <b>equal parts altogether</b> (${den}). Top = how many are <b>shaded</b> (${num}).` };
+      return q;
+    }
+    /* ---- 4.NF.A.1 · equivalent fractions ---- */
+    case 'fracEq': {
+      /* 3.NF.A.3b keeps equivalents inside halves, thirds, quarters, sixths, eighths */
+      const [den, k] = pick([[2, 2], [2, 3], [2, 4], [3, 2], [4, 2]]);
+      const num = ri(1, den - 1);
+      const a = num * k;
+      q.answer = a;
+      q.ask = `<span class="big">${num}/${den}</span> = <span class="big">?/${den * k}</span>`;
+      q.speak = `${num} over ${den} is the same as how many over ${den * k}?`;
+      q.visual = fracBar(num, den);
+      q.choices = numChoices(a, [a + 1, a - 1, num + k, den * k - a]);
+      q.teach = { html:twoBars(num, den, a, den * k),
+        say:`The bottom was multiplied by ${k}, so the top is multiplied by ${k} too. ${num} times ${k} is ${a}.`,
+        text:`The bottom went × ${k}, so the top must go <b>× ${k}</b> as well: ${num} × ${k} = <b>${a}</b>. Same amount, more pieces.` };
+      return q;
+    }
+    /* ---- 3.NF.A.3d · comparing fractions ---- */
+    case 'fracCmp': {
+      let set, ans, mode;
+      if (Math.random() < .5) {                       /* same bottom */
+        mode = 'den';
+        const den = pick([6, 8]);
+        const nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9].filter(x => x < den)).slice(0, 4);
+        if (nums.length < 4) return GEN.g4(id);
+        set = nums.map(x => `${x}/${den}`);
+        ans = `${Math.max(...nums)}/${den}`;
+      } else {                                        /* same top */
+        mode = 'num';
+        const num = 1;
+        const dens = shuffle([2, 3, 4, 6, 8]).slice(0, 4);
+        set = dens.map(d => `${num}/${d}`);
+        ans = `${num}/${Math.min(...dens)}`;
+      }
+      q.answer = ans; q.text = true;
+      q.ask = 'Which fraction is the <b>biggest</b>?';
+      q.speak = 'Which fraction is the biggest?';
+      q.choices = shuffle(set).map(v => ({ value:v, label:v }));
+      const [an, ad] = ans.split('/').map(Number);
+      const other = set.find(x => x !== ans).split('/').map(Number);
+      q.teach = { html:twoBars(an, ad, other[0], other[1]),
+        say: mode === 'den' ? 'When the bottoms match, the biggest top wins.'
+                            : 'When the tops match, the smallest bottom wins, because the pieces are bigger.',
+        text: mode === 'den' ? 'Same bottom → the pieces are the same size, so the <b>biggest top</b> wins.'
+                             : 'Same top → a <b>bigger bottom means smaller pieces</b>, so the smallest bottom wins.' };
+      return q;
+    }
+    /* ---- a fraction of a set ---- */
+    case 'fracSet': {
+      const den = pick([2, 3, 4, 6]), m = ri(2, 6), total = den * m;
+      q.answer = m;
+      q.ask = `<span class="big">1/${den}</span> of <span class="big">${total}</span>`;
+      q.speak = `What is one ${den === 2 ? 'half' : den === 3 ? 'third' : den === 4 ? 'quarter' : den === 5 ? 'fifth' : 'sixth'} of ${total}?`;
+      q.visual = arrayPicture(den, m);
+      q.choices = numChoices(m, [den, total - m, m + 1, Math.round(total / 2)]);
+      q.teach = { html:arrayPicture(den, m),
+        say:`Share ${total} into ${den} equal rows. Each row has ${m}.`,
+        text:`One ${den}th means <b>split into ${den} equal groups</b>: ${total} ÷ ${den} = <b>${m}</b>.` };
+      return q;
+    }
+    /* ---- 3.MD.C.7 and 3.MD.D.8 · area and perimeter ---- */
+    case 'area': case 'perim': {
+      const w = ri(2, 9), h = ri(2, 8);
+      const ar = w * h, pe = 2 * (w + h);
+      const isArea = id === 'area';
+      q.answer = isArea ? ar : pe;
+      q.ask = isArea ? 'What is the <b>area</b>?' : 'What is the <b>perimeter</b>?';
+      q.speak = isArea ? 'What is the area of this rectangle?' : 'What is the distance all the way round?';
+      q.visual = gridRect(w, h);
+      q.choices = numChoices(q.answer, [isArea ? pe : ar, w + h, isArea ? ar + w : pe + 2, isArea ? ar - w : pe - 2]);
+      q.teach = { html:gridRect(w, h),
+        say: isArea ? `Area is the squares inside. ${w} times ${h} is ${ar}.`
+                    : `Perimeter is the fence round the outside. ${w} and ${h} and ${w} and ${h} is ${pe}.`,
+        text: isArea ? `<b>Area</b> = the squares <b>inside</b>: ${w} × ${h} = <b>${ar}</b>.`
+                     : `<b>Perimeter</b> = the fence <b>around</b>: ${w} + ${h} + ${w} + ${h} = <b>${pe}</b>.` };
+      return q;
+    }
+    /* ---- 3.NBT.A.1 · rounding ---- */
+    case 'round10': case 'round100': {
+      const to = id === 'round10' ? 10 : 100;
+      const n = to === 10 ? ri(23, 989) : ri(105, 989);   /* Grade 3 rounds inside 1000 */
+      if (n % to === 0) return GEN.g4(id);
+      const a = Math.round(n / to) * to;
+      const down = Math.floor(n / to) * to, up = down + to;
+      q.answer = a;
+      q.ask = `Round <span class="big">${n}</span> to the nearest <b>${to}</b>`;
+      q.speak = `Round ${n} to the nearest ${to}.`;
+      q.choices = numChoices(a, [a === down ? up : down, Math.round(n / (to * 10)) * to * 10, Math.round(n / (to / 10)) * (to / 10), a + to]);
+      q.teach = { html:bigNum(`${down} … <b>${n}</b> … ${up}<br>nearest is <b>${a}</b>`),
+        say:`${n} sits between ${down} and ${up}. It is closer to ${a}.`,
+        text:`Look at the digit to the <b>right</b> of the ${to === 10 ? 'tens' : 'hundreds'}: 5 or more rounds up, 4 or less stays. → <b>${a}</b>.` };
+      return q;
+    }
+    /* ---- 3.NBT.A.2 · three-digit column arithmetic ---- */
+    case 'add1000': case 'sub1000': {
+      const add = id === 'add1000';
+      let x, y;
+      /* a natural mix — not every single one forces a carry or a borrow */
+      if (add) { x = ri(105, 699); y = ri(105, 299); }
+      else { y = ri(105, 399); x = ri(y + 40, 989); }
+      const a = add ? x + y : x - y;
+      const cols = v => [Math.floor(v / 100), Math.floor(v / 10) % 10, v % 10];
+      const [xh, xt, xo] = cols(x), [yh, yt, yo] = cols(y);
+      let noCarry = add ? ((xh + yh) % 10) * 100 + ((xt + yt) % 10) * 10 + (xo + yo) % 10 : null;
+      if (noCarry != null && noCarry < a * 0.6) noCarry = null;   /* 679+468 → 37 is not a tempting wrong answer */
+      const smallFromLarge = add ? null : Math.abs(xh - yh) * 100 + Math.abs(xt - yt) * 10 + Math.abs(xo - yo);
+      q.answer = a;
+      q.ask = `<span class="big">${x}</span> ${add ? '+' : '−'} <span class="big">${y}</span>`;
+      q.speak = `What is ${x} ${add ? 'add' : 'take away'} ${y}?`;
+      q.visual = columnSum(x, y, add ? '+' : '−', true);
+      q.choices = numChoices(a, [noCarry, smallFromLarge, a + 100, a - 100, a + 10, a - 10]);
+      q.teach = { html:columnSum(x, y, add ? '+' : '−'),
+        say: add ? `Ones first, then tens, then hundreds, carrying each time a column goes past ten. The answer is ${a}.`
+                 : `Ones first. Where the top digit is too small, borrow from the column on its left. The answer is ${a}.`,
+        text: add ? `Ones, then tens, then hundreds — <b>carry</b> every time a column passes ten. The answer is <b>${a}</b>.`
+                  : `Where the top digit is smaller, <b>borrow</b> from the left. <b>${a}</b> — never just take the smaller digit from the bigger one (${smallFromLarge}).` };
+      return q;
+    }
+  }
+  throw new Error('g4 ' + id);
+};
+const makeQ = id => GEN[P.bank](id);
+
+/* --------------------------------------------------------- adaptivity */
+let repair = [], recent = [];
+function chooseSkill(act) {
+  for (let i = 0; i < repair.length; i++) if (repair[i].due <= 0) return repair.splice(i, 1)[0].id;
+  const ids = ACTS[act].skills;
+  const weights = ids.map(id => {
+    const st = S.stats[id];
+    let w = Math.pow(5.3 - st.str, 1.7) * SKILL[id].w;
+    if (st.n === 0) w *= 1.5;
+    if (recent.slice(-Math.min(4, ids.length - 1)).includes(id) && ids.length > 2) w *= 0.22;
+    return w;
+  });
+  let r = Math.random() * weights.reduce((x, y) => x + y, 0);
+  for (let i = 0; i < ids.length; i++) { r -= weights[i]; if (r <= 0) return ids[i]; }
+  return ids[ids.length - 1];
+}
+function record(id, ok, secs) {
+  const st = S.stats[id];
+  st.n++; S.seen++;
+  if (ok) {
+    st.ok++; S.right++;
+    const fast = secs <= P.fast;
+    if (fast) st.fast++;
+    st.str = clamp(st.str + (fast ? 1 : 0.5), 0, 5);
+  } else {
+    st.str = clamp(st.str - 2, 0, 5);
+    repair.push({ id, due:ri(3, 5) });
+  }
+  repair.forEach(r => r.due--);
+  recent.push(id);
+}
+</script>
+
+<script>
+"use strict";
+/* ===================================================================
+   FLOW
+   =================================================================== */
+const GLYPH = {
+  bag:  '<path d="M6 8h12l1.5 12h-15z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  hop:  '<path d="M3 19h4m5 0h4m5 0h1"/><path d="M4 15c2-6 6-6 8 0"/><path d="M13 15c2-6 6-6 8 0"/>',
+  step: '<path d="M5 12h14"/><path d="M14 7l5 5-5 5"/>',
+  jump: '<path d="M4 18c3-10 13-10 16 0"/><path d="M16 4h4v4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  grid: '<circle cx="8" cy="8" r="1.6"/><circle cx="12" cy="8" r="1.6"/><circle cx="16" cy="8" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="16" r="1.6"/><circle cx="12" cy="16" r="1.6"/><circle cx="16" cy="16" r="1.6"/>',
+  split:'<path d="M5 6h4l6 12h4"/><path d="M5 18h4l6-12h4"/><path d="M17 3l3 3-3 3M17 15l3 3-3 3"/>',
+  paw:  '<path d="M7 21c-1.5-2-2-4-1-6 1-2 3-2 4 0 1 2 .5 4-1 6z"/><circle cx="6" cy="8" r="2.2"/><circle cx="12" cy="6" r="2.2"/><circle cx="17.5" cy="9" r="2.2"/><circle cx="19" cy="15" r="2.2"/>'
+};
+const HINTS = {
+  read50:'Count the bags in tens first: 10, 20, 30…', read99:'Count the bags in tens first.',
+  match:'The bags are the first digit. The bones are the second.',
+  up10:'Only the tens change.', down10:'Count backwards: 50, 40, 30…', any10:'The ones digit never changes.',
+  plus1:'One more is the very next number.', minus1:'One less is the number just before.',
+  plus1x:'The frame is full. Ten bones make a whole new bag.', minus1x:'No loose bones — open a bag to get ten.',
+  plus10:'Ten more is one more bag.', minus10:'Ten less is one bag away.',
+  makeTen:'Count the empty spaces in the frame.', doubles:'Two rows the same.',
+  addOnes:'The bags do not change. Only add to the bones.', addTens:'How many bags altogether?', subTens:'Take the bags away, then count them.',
+  add10:'Count on from the bigger one.', sub10:'Count back.',
+  add20:'Make ten first, then add what is left.', sub20:'Drop back to ten first.',
+  nearDbl:'It is nearly a double.', missing20:'A missing add is really a take away.',
+  trueFalse:'Equals means both sides are worth the same.',
+  teens:'Every teen is one bag of ten and some bones.', decades:'Count the bags in tens.',
+  count1:'When the bones fill up, a new bag starts.', back1:'Open a bag when the bones run out.',
+  add2d1x:'The bones fill up — that makes a new bag.', sub2d1x:'Not enough bones? Open a bag.',
+  add2dTen:'Only the bags change.',
+  oclock:'The short hand is the hour.', halfpast:'The short hand has only gone PAST the hour.',
+  groups:'Count in the size of one row.',
+    missing:'A missing factor is a division.', tens:'Do the small one, then make it ten times bigger.',
+  square:'A number times itself.',
+  fracName:'Bottom = all the parts. Top = the shaded ones.',
+  fracEq:'Whatever you do to the bottom, do to the top.',
+  fracCmp:'Same bottom → biggest top. Same top → smallest bottom.',
+  fracSet:'Split it into that many equal groups.',
+  area:'The squares inside.', perim:'The fence all the way round.',
+  round10:'Look at the digit to the right.', round100:'Look at the digit to the right.',
+  add1000:'Ones, tens, hundreds — carry as you go.', sub1000:'Borrow from the left when the top is too small.'
+};
+HINTS.compare = CHILD === 'dylan' ? 'Count the bags before you look at the bones.' : 'Hundreds first, then tens, then ones.';
+for (let n = 2; n <= 12; n++) { HINTS['t' + n] = `Count on in ${n}s.`; HINTS['d' + n] = `What times ${n} makes it?`; }
+
+let R = null;
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('show', s.id === id));
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+function paintTop() {
+  $('#bonesLbl').textContent = S.spend;
+  $('#houseSub').textContent = `${S.animals.length} animals · ${S.toys.length} toys`;
+}
+function goHome() { paintTop(); buildMenu(); $('#parkArt').innerHTML = parkSVG(); show('scHome'); }
+
+function buildMenu() {
+  const m = $('#actMenu'); m.innerHTML = '';
+  ACT_ORDER.filter(k => !hiddenAct(k) || secretOpen()).forEach((k, i) => {
+    const A = ACTS[k];
+    const b = el('button', 'bigbtn');
+    if (k === 'walk' && ACT_ORDER.length % 2 === 1) b.style.gridColumn = '1/-1';
+    b.innerHTML = `<span class="glyph" style="background:${A.col}"><svg viewBox="0 0 24 24" fill="none" stroke="#16261F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${GLYPH[A.glyph]}</svg></span>
+      <span><b>${A.name}</b><small>${A.sub}</small></span>`;
+    b.onclick = () => startRound(k);
+    m.appendChild(b);
+  });
+}
+
+/* ------------------------------------------------------------- a round */
+function paintBuddy() {
+  const a = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  $('#buddy').innerHTML = animalSVG(a, { wear:S.outfits[a.id] || {} });
+}
+function startRound(act) { R = { act, i:0, right:0, earned:0, marks:[] }; paintBuddy(); show('scPlay'); nextQ(); }
+function pips() {
+  const p = $('#pips'); p.innerHTML = '';
+  for (let i = 0; i < P.round; i++)
+    p.appendChild(el('div', i < R.marks.length ? (R.marks[i] ? 'pip ok' : 'pip no') : (i === R.i ? 'pip now' : 'pip')));
+}
+function nextQ() {
+  if (R.i >= P.round) return endRound();
+  pips();
+  const id = chooseSkill(R.act), q = makeQ(id);
+  R.q = q; R.t0 = performance.now(); R.hinted = false;
+  $('#ask').innerHTML = q.ask;
+  const vis = $('#visual');
+  vis.classList.remove('teaching');
+  vis.innerHTML = q.visual;
+  const box = $('#answers'); box.innerHTML = '';
+  const wide = q.choices.some(c => String(c.label).length > 4);
+  q.choices.forEach(c => {
+    const b = el('button', 'ans' + (wide ? ' word' : ''), c.label);
+    b.onclick = () => answer(b, c.value);
+    box.appendChild(b);
+  });
+  say(q.speak);
+  clearTimeout(nextQ._h);
+  nextQ._h = setTimeout(() => {
+    if (R && R.q === q && !R.hinted && HINTS[id]) {
+      R.hinted = true;
+      const h = el('p', 'hint', HINTS[id]); h.style.margin = '4px 0 0';
+      $('#visual').appendChild(h);
+    }
+  }, 15000);
+}
+function answer(btn, v) {
+  clearTimeout(nextQ._h);
+  const q = R.q, secs = (performance.now() - R.t0) / 1000, ok = v === q.answer;
+  document.querySelectorAll('#answers .ans').forEach(b => { b.disabled = true; if (b !== btn) b.classList.add('dim'); });
+  record(q.skill, ok, secs);
+  R.marks.push(ok); R.i++;
+  if (ok) {
+    btn.classList.remove('dim'); btn.classList.add('right', 'pop');
+    R.right++; R.earned += PER_RIGHT; S.lifetime += PER_RIGHT; S.spend += PER_RIGHT;
+    paintTop(); save(); pips();
+    const bud = $('#buddy'); bud.classList.remove('pop'); void bud.offsetWidth; bud.classList.add('pop');
+    say(pick(['Yes!', 'Good one!', 'That’s it!', 'Nice work!', 'Spot on!']));
+    setTimeout(nextQ, 700);
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('#answers .ans').forEach(b => {
+      if (String(b.textContent) === String(q.answer)) { b.classList.remove('dim'); b.classList.add('right'); }
+    });
+    save(); pips();
+    const t = el('div', 'teach');
+    t.innerHTML = `<div style="width:100%">${q.teach.html}</div><p>${q.teach.text}</p>`;
+    const vis = $('#visual');
+    vis.innerHTML = ''; vis.classList.add('teaching'); vis.appendChild(t);
+    vis.scrollTop = 0;
+    $('#ask').innerHTML = `The answer is <span class="big">${q.answer}</span>`;
+    const box = $('#answers'); box.innerHTML = '';
+    const go = el('button', 'cta full', 'Got it — keep going');
+    go.onclick = () => nextQ();
+    box.appendChild(go);
+    go.focus({ preventScroll:true });
+    say(q.teach.say);
+  }
+}
+/* fires once, the first time the park is finished */
+function checkSecret(stage) {
+  if (!SKILLS.some(s => hiddenAct(s.act)) || !secretOpen() || S.secretSeen) return false;
+  S.secretSeen = 1; save();
+  const c = el('div', 'teach');
+  c.style.background = '#F3D779';
+  c.innerHTML = `<p style="font-size:1.15rem">You finished the whole park!</p>
+    <div style="width:110px;margin:0 auto">${toyArt('chest')}</div>
+    <p>A secret gate has opened: <b>${ACTS.secret.name}</b>.<br>
+    <span style="font-weight:400">Every times table, backwards.</span></p>`;
+  if (stage) stage.appendChild(c);
+  say('You finished the whole park! A secret gate has opened. Division!');
+  return true;
+}
+function checkToys() {
+  const won = [];
+  TOYS.forEach(t => { if (!S.toys.includes(t.id) && t.test(S)) { S.toys.push(t.id); won.push(t); } });
+  return won;
+}
+function endRound() {
+  S.rounds++;
+  const perfect = R.right === P.round;
+  if (perfect) { R.earned += PERFECT_BONUS; S.lifetime += PERFECT_BONUS; S.spend += PERFECT_BONUS; S.perfect++; }
+  const a = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  S.joy[a.id] = clamp((S.joy[a.id] == null ? 70 : S.joy[a.id]) + 6, 60, 100);
+  const newAnimals = ANIMALS.filter(x => !S.animals.includes(x.id) && S.lifetime >= x.cost);
+  newAnimals.forEach(x => S.animals.push(x.id));
+  const newToys = checkToys();
+  save(); paintTop();
+
+  const stage = $('#endStage'); stage.innerHTML = '';
+  stage.appendChild(el('h2', 'display', `${R.right} out of ${P.round}`));
+  const box = el('div', 'dogbox pop');
+  box.innerHTML = animalSVG(a, { wear:S.outfits[a.id] || {} });
+  stage.appendChild(box);
+  const e = el('p', 'display'); e.style.cssText = 'font-size:1.55rem;margin:0';
+  e.textContent = `+${R.earned} bones`; stage.appendChild(e);
+  if (perfect) stage.appendChild(el('p', 'hint', `every single one right — ${PERFECT_BONUS} bonus bones`));
+  else if (R.right) stage.appendChild(el('p', 'hint', `${R.right} × ${PER_RIGHT} bones. A whole round right is worth ${PERFECT_BONUS} more.`));
+  newAnimals.forEach(x => {
+    const c = el('div', 'teach');
+    c.innerHTML = `<p>A new friend! <b>${x.name}</b> the ${x.species}</p><div class="dogbox">${animalSVG(x, {})}</div>`;
+    stage.appendChild(c);
+  });
+  newToys.forEach(t => {
+    const c = el('div', 'teach');
+    c.innerHTML = `<p>New toy for the shelf: <b>${t.name}</b></p><div style="width:96px;margin:0 auto">${toyArt(t.id)}</div><p style="font-weight:400;font-size:.9rem">for ${t.how}</p>`;
+    stage.appendChild(c);
+  });
+  const opened = checkSecret(stage);
+  if (!newAnimals.length && !newToys.length && !opened) {
+    const next = ANIMALS.find(x => !S.animals.includes(x.id));
+    if (next) stage.appendChild(el('p', 'hint', `${next.cost - S.lifetime} more bones to meet ${next.name}`));
+    say(`${R.right} out of ${P.round}. You earned ${R.earned} bones.`);
+  } else {
+    say([].concat(newAnimals.map(x => `You unlocked ${x.name}`), newToys.map(t => `You won the ${t.name}`)).join('. ') + '!');
+  }
+  show('scEnd');
+}
+
+/* ------------------------------------------------------------ the house */
+function renderHouse() {
+  const b = $('#houseBody'); b.innerHTML = '';
+  const a = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  const joy = S.joy[a.id] == null ? 70 : S.joy[a.id];
+
+  const room = el('div', 'roomwrap'); room.innerHTML = roomSVG(); b.appendChild(room);
+
+  const p = el('div', 'panel');
+  p.innerHTML = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div style="flex:0 0 150px">${animalSVG(a, { wear:S.outfits[a.id] || {} })}</div>
+    <div style="flex:1 1 180px"><h3 style="margin:0">${a.name}</h3>
+      <p style="margin:2px 0 8px">${a.species} · likes ${FOODS[a.food].name}</p>
+      <div class="bar" style="height:16px"><i style="width:${joy}%"></i></div>
+      <small style="color:var(--ink-soft)">${joy >= 95 ? 'Absolutely delighted' : joy >= 85 ? 'Over the moon' : joy >= 72 ? 'Very happy' : 'Happy, pottering about'}</small>
+    </div></div>`;
+  const row = el('div', 'rowbtns'); row.style.marginTop = '10px';
+  CARE.forEach(c => {
+    const label = c.id === 'feed' ? `Feed ${FOODS[a.food].name} · ${c.cost}` : c.cost ? `${c.name} · ${c.cost}` : `${c.name} · free`;
+    const btn = el('button', 'cta alt', label);
+    btn.onclick = () => {
+      if (S.spend < c.cost) return toast('Not enough bones yet');
+      S.spend -= c.cost;
+      S.joy[a.id] = clamp(joy + c.joy, 60, 100);
+      save(); paintTop(); renderHouse(); toast(`${a.name} ${c.verb}`);
+    };
+    row.appendChild(btn);
+  });
+  p.appendChild(row);
+  b.appendChild(p);
+
+  const ownedWear = WEAR.filter(w => S.wear.includes(w.id));
+  if (ownedWear.length) {
+    b.appendChild(el('div', 'sectionhead', `<h2>Dress ${a.name}</h2><span>tap to try it on</span>`));
+    const g = el('div', 'grid');
+    ['hat', 'glasses', 'neck', 'outfit'].forEach(slot => ownedWear.filter(w => w.slot === slot).forEach(w => {
+      const on = (S.outfits[a.id] || {})[slot] === w.id;
+      const fits = !(a.kind === 'sea' && (slot === 'neck' || slot === 'outfit')) && !(a.kind === 'bird' && slot === 'outfit');
+      const c = el('button', 'card' + (on ? ' sel' : ''));
+      const shown = Object.assign({}, S.outfits[a.id] || {});
+      if (fits) shown[slot] = w.id;
+      c.innerHTML = `<div class="shot">${animalSVG(fits ? a : ANIMALS[0], { wear:fits ? shown : { [slot]:w.id } })}</div>
+        <b>${w.name}</b><small>${!fits ? 'not for ' + a.name : on ? 'wearing' : 'tap to wear'}</small>`;
+      c.onclick = () => {
+        if (!fits) return toast(`That does not fit ${a.name}`);
+        S.outfits[a.id] = S.outfits[a.id] || {};
+        if (on) delete S.outfits[a.id][slot]; else S.outfits[a.id][slot] = w.id;
+        save(); renderHouse();
+      };
+      g.appendChild(c);
+    }));
+    b.appendChild(g);
+  }
+
+  b.appendChild(el('div', 'sectionhead', `<h2>Toy shelf</h2><span>${S.toys.length} of ${TOYS.length} won</span>`));
+  const tg = el('div', 'grid tight');
+  TOYS.forEach(t => {
+    const has = S.toys.includes(t.id);
+    const c = el('div', 'card' + (has ? '' : ' locked'));
+    c.innerHTML = `<div class="${has ? '' : 'silhouette'}" style="width:70px">${toyArt(t.id)}</div>
+      <b>${has ? t.name : '???'}</b><small>${t.how}</small>`;
+    tg.appendChild(c);
+  });
+  b.appendChild(tg);
+  b.appendChild(el('p', 'hint', 'Toys can only be won, never bought.'));
+
+  b.appendChild(el('div', 'sectionhead', `<h2>All animals</h2><span>${S.animals.length} of ${ANIMALS.length}</span>`));
+  const g = el('div', 'grid');
+  ANIMALS.forEach(x => {
+    const have = S.animals.includes(x.id);
+    const c = el('button', 'card' + (have ? (x.id === S.active ? ' sel' : '') : ' locked'));
+    c.innerHTML = `<div class="${have ? '' : 'silhouette'}" style="width:100%">${animalSVG(x, { wear:have ? (S.outfits[x.id] || {}) : {} })}</div>
+      <b>${have ? x.name : '???'}</b><small>${have ? x.species : `${Math.max(0, x.cost - S.lifetime)} more bones`}</small>`;
+    c.onclick = () => {
+      if (!have) return toast(`Answer more questions to meet ${x.name}`);
+      S.active = x.id; save(); renderHouse(); toast(`${x.name} is out and about`);
+    };
+    g.appendChild(c);
+  });
+  b.appendChild(g);
+  b.appendChild(el('p', 'hint', 'Animals can only be earned by doing maths — never bought.'));
+  show('scHouse');
+}
+
+/* ---------------------------------------------------------------- shop */
+function renderShop() {
+  const box = $('#shopBody'); box.innerHTML = '';
+  const active = ANIMALS.find(x => x.id === S.active) || ANIMALS[0];
+  const fits = (slot, an) => !(an.kind === 'sea' && (slot === 'neck' || slot === 'outfit')) && !(an.kind === 'bird' && slot === 'outfit');
+  const modelFor = slot => fits(slot, active) ? active : ANIMALS[0];
+
+  box.appendChild(el('p', 'hint', `${S.spend} bones to spend. Everything here is just for fun — none of it changes the maths.`));
+
+  const priceTag = c => `<span class="price">${c} <svg viewBox="0 0 40 20" width="24" height="13"><g stroke="${INK}" stroke-width="2.6" fill="#F3E7D0"><path d="M8 6a4 4 0 1 0-3 6.6A4 4 0 1 0 12 15h16a4 4 0 1 0 7-2.4A4 4 0 1 0 28 5H12a4 4 0 0 0-4 1z"/></g></svg></span>`;
+
+  const section = (title, note, items, pic, owned, onBuy) => {
+    box.appendChild(el('div', 'sectionhead', `<h2>${title}</h2><span>${note}</span>`));
+    const g = el('div', 'grid');
+    items.forEach(it => {
+      const has = owned.includes(it.id);
+      const c = el('button', 'card' + (has ? ' owned' : ''));
+      c.innerHTML = `<div class="shot">${pic(it)}</div><b>${it.name}</b>${has ? '<small>bought</small>' : priceTag(it.cost)}`;
+      c.onclick = () => {
+        if (has) return toast('Already yours');
+        if (S.spend < it.cost) return toast(`${it.cost - S.spend} more bones needed`);
+        S.spend -= it.cost; onBuy(it); save(); paintTop();
+        if (secretOpen() && !S.secretSeen) {
+          S.secretSeen = 1; save(); goHome();
+          toast('The park is finished — a secret gate has opened!');
+          say('You finished the whole park! A secret gate has opened. Division!');
+          return;
+        }
+        renderShop(); toast(`Bought ${it.name}`);
+      };
+      g.appendChild(c);
+    });
+    box.appendChild(g);
+  };
+
+  const slots = [['hat', 'Hats', 'shown on ' + modelFor('hat').name],
+                 ['glasses', 'Glasses', 'shown on ' + modelFor('glasses').name],
+                 ['neck', 'Collars and scarves', 'shown on ' + modelFor('neck').name],
+                 ['outfit', 'Outfits', 'shown on ' + modelFor('outfit').name]];
+  slots.forEach(([slot, title, note]) => {
+    const model = modelFor(slot);
+    section(title, note, WEAR.filter(w => w.slot === slot),
+      it => animalSVG(model, { wear:{ [slot]:it.id } }), S.wear, it => S.wear.push(it.id));
+  });
+  section('Things for the park', 'they appear behind everything', PARKS,
+    it => `<svg viewBox="0 0 120 120">${(PARKART[it.id] || (() => ''))()}</svg>`, S.parks, it => S.parks.push(it.id));
+  show('scShop');
+}
+
+/* ----------------------------------------------------------- grown-ups */
+function renderGrown() {
+  const b = $('#grownBody'); b.innerHTML = '';
+  if (!STORAGE_OK) {
+    const w = el('div', 'panel warn');
+    w.innerHTML = `<h3>Progress is not being saved</h3><p style="margin:0">This browser is blocking storage for a file opened from disk — Safari does this on Mac and iPad. ${P.name}'s bones and animals will disappear when the tab closes. Open the file in Chrome, Edge or Firefox instead, or ask for the hosted link.</p>`;
+    b.appendChild(w);
+  }
+  const acc = S.seen ? Math.round(100 * S.right / S.seen) : 0;
+  const totFast = SKILLS.reduce((x, s) => x + S.stats[s.id].fast, 0);
+  const fastPct = S.right ? Math.round(100 * totFast / S.right) : 0;
+  const t = el('div', 'tiles');
+  [[S.rounds, 'rounds played'], [S.seen, 'questions'], [acc + '%', 'correct'], [fastPct + '%', 'answered fast'],
+   [mastered(S) + '/' + liveSkills().length, 'skills mastered']]
+    .forEach(x => { const d = el('div', 'tile'); d.innerHTML = `<div class="k">${x[0]}</div><div class="l">${x[1]}</div>`; t.appendChild(d); });
+  b.appendChild(t);
+
+  const p1 = el('div', 'panel');
+  p1.innerHTML = `<h3>Where ${P.name} is</h3><p>Strength is 0–5 per skill. A fast correct answer (under ${P.fast} seconds) adds a full point, a slow one half — so anything only reachable by counting stays pale and keeps coming back. Nothing on screen ever counts down.</p>`;
+  const tab = el('table', 'gtable');
+  tab.innerHTML = '<tr><th>Skill</th><th>Seen</th><th>Right</th><th style="width:32%">Strength</th></tr>';
+  liveSkills().forEach(s => {
+    const st = S.stats[s.id], pct = Math.round(st.str / 5 * 100);
+    const col = st.str >= 4 ? 'var(--good)' : st.str >= 2 ? 'var(--sun)' : 'var(--ball)';
+    const r = el('tr');
+    r.innerHTML = `<td>${s.label}</td><td class="n">${st.n}</td><td class="n">${st.n ? Math.round(100 * st.ok / st.n) + '%' : '—'}</td>
+      <td><div class="bar"><i style="width:${pct}%;background:${col}"></i></div></td>`;
+    tab.appendChild(r);
+  });
+  const wrap = el('div'); wrap.style.overflowX = 'auto'; wrap.appendChild(tab); p1.appendChild(wrap);
+  b.appendChild(p1);
+
+  const weak = liveSkills().sort((x, y) => S.stats[x.id].str - S.stats[y.id].str).slice(0, 3);
+  const p2 = el('div', 'panel');
+  p2.innerHTML = `<h3>Worth practising away from the screen</h3><ul style="margin:0;padding-left:20px">${weak.map(s => `<li>${s.label}</li>`).join('')}</ul>`;
+  b.appendChild(p2);
+
+  const p3 = el('div', 'panel');
+  p3.innerHTML = `<h3>Bones</h3><p style="margin:0">Earned altogether: <b>${S.lifetime}</b> · left to spend: <b>${S.spend}</b> · day streak: <b>${S.streak}</b> (best ${S.bestStreak})<br>
+    Animals: <b>${S.animals.length}/${ANIMALS.length}</b> · toys won: <b>${S.toys.length}/${TOYS.length}</b><br>
+    Bones are earned <b>only</b> for correct answers (${PER_RIGHT} each), plus <b>${PERFECT_BONUS}</b> for a round with every answer right. Nothing is paid for finishing a round or for opening the app.<br>
+    Lifetime bones unlock animals and never go down, so buying things in the shop can never slow the collection.</p>`;
+  b.appendChild(p3);
+
+  if (SKILLS.some(x => hiddenAct(x.act))) {
+    const need = ANIMALS.length - S.animals.length + (WEAR.length - S.wear.length) + (PARKS.length - S.parks.length);
+    const p5 = el('div', 'panel');
+    p5.innerHTML = `<h3>The secret gate</h3><p style="margin:0">${secretOpen()
+      ? 'Open. <b>Division</b> — every times table backwards — is now on the menu. This is the half that proves the tables are really known: a child who answers 56 ÷ 7 has retrieved 7 × 8, not counted up to it.'
+      : `Locked. It opens when the park is finished: <b>${S.animals.length}/${ANIMALS.length}</b> animals, <b>${S.wear.length}/${WEAR.length}</b> things to wear and <b>${S.parks.length}/${PARKS.length}</b> park things. ${need} to go. Behind it is division.`}</p>`;
+    b.appendChild(p5);
+  }
+  const p4 = el('div', 'panel');
+  p4.innerHTML = `<h3>Watch for</h3><p style="margin:0">High accuracy with pale strength bars means counting, not knowing. ${
+    CHILD === 'dylan' ? 'The one that matters most is <b>ten more / ten less</b>: the Grade 1 standard asks for it mentally, without counting.'
+    : CHILD === 'rory' ? 'Watch <b>adding with carrying</b> and <b>taking away with borrowing</b> — the two wrong answers offered there are the exact mistakes children make, so a miss is informative.'
+    : 'The <b>6, 7, 8 and 12 tables</b> are the last to become automatic — expect those bars to lag, and treat a slow-but-correct answer there as not yet learned. 7 × 8 is the single most-missed fact in the whole grid.'}</p>`;
+  b.appendChild(p4);
+
+  const reset = el('button', 'cta alt', 'Start the park again');
+  reset.style.marginTop = '10px';
+  reset.onclick = () => { if (confirm('Erase all progress and start again?')) { S = fresh(); save(); goHome(); } };
+  b.appendChild(reset);
+  show('scGrown');
+}
+
+/* ---------------------------------------------------------------- boot */
+buildMenu();
+$('#btnHouse').onclick = renderHouse;
+$('#btnShop').onclick = renderShop;
+$('#btnHome').onclick = goHome;
+$('#btnGrown').onclick = renderGrown;
+$('#btnBack').onclick = goHome;
+$('#btnAgain').onclick = () => startRound(R ? R.act : ACT_ORDER[0]);
+$('#btnSound').onclick = () => {
+  S.sound = !S.sound; save();
+  $('#btnSound').classList.toggle('on', S.sound);
+  $('#btnSound').setAttribute('aria-pressed', String(S.sound));
+  if (!S.sound && 'speechSynthesis' in window) speechSynthesis.cancel();
+  else if (R && R.q) say(R.q.speak);
+  toast(S.sound ? 'Reading out loud is on' : 'Reading out loud is off');
+};
+$('#btnSound').classList.toggle('on', S.sound);
+$('#btnSound').setAttribute('aria-pressed', String(S.sound));
+document.addEventListener('keydown', e => {
+  if (!$('#scPlay').classList.contains('show')) return;
+  const go = document.querySelector('#answers .cta.full');
+  if (go) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); go.click(); } return; }
+  const i = '1234'.indexOf(e.key);
+  if (i >= 0) { const b = document.querySelectorAll('#answers .ans')[i]; if (b && !b.disabled) b.click(); }
+});
+(function daily() {
+  const d = today();
+  if (S.lastDay !== d) {
+    const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    S.streak = (S.lastDay === y) ? S.streak + 1 : 1;
+    S.bestStreak = Math.max(S.bestStreak || 0, S.streak);
+    S.lastDay = d;
+    /* the streak is tracked because two toys are earned by it, but
+       turning up is not itself worth any bones */
+    checkToys(); save();
+    setTimeout(() => toast(`Welcome back ${P.name}!`), 700);
+  }
+})();
+checkToys();
+goHome();
+if (!STORAGE_OK) setTimeout(() => toast('Heads up: this browser is not saving progress'), 2600);
+</script>
+
+</body>
+</html>

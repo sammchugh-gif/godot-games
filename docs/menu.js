@@ -257,7 +257,9 @@ function build() {
     if (paused || document.hidden || veil.classList.contains("on")) { lastFrame = now(); return; }
     if (stuckShown) { if (now() - lastFrame < 1500) hideStuck(5); return; }
     if (everRan) { if (now() - lastFrame > 5000) showStuck("The game has stopped moving."); }
-    else if (now() - loadedAt > 25000) showStuck("This game is taking a long time to start.");
+    /* a page with no animation loop never asks for a frame, and is not stuck
+       for it: the maths games are DOM, not canvas, and say so */
+    else if (!window.__shelfStatic && now() - loadedAt > 25000) showStuck("This game is taking a long time to start.");
   }, 1000);
 
   window.__shelfMenu.open = open;
