@@ -378,3 +378,18 @@ calm mix is quieter with fewer notes than the fight.
 To re-measure after any change:
 
     PLAYWRIGHT=... node tools/playbot.mjs --dif easy --mode campaign --runs 4
+
+## Reading the screen on a phone
+
+The canvas is sized from the visual viewport, which is the right measure in a
+browser tab because it shrinks to make room for Safari's toolbars. A Home
+Screen app has no toolbars, so the layout viewport is the whole screen; when
+it reads taller than the visual viewport, `screenSize()` takes the larger of
+the two. Believing a short visual viewport is what leaves a band of bare page
+showing below the game.
+
+The pause screen prints the raw numbers along the bottom: the window, the
+visual viewport, the screen, the layout viewport, the canvas element and its
+backing store, the safe-area insets, whether the page thinks it owns the
+screen, and the pixel ratio. Two taps from play, so it works in a Home Screen
+app where a query string is awkward. `window.SW.geom()` returns the same text.
