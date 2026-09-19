@@ -212,6 +212,23 @@ What the pass changed, and why:
   (it was all of them); the rest stay and fight, so the field gives way
   rather than emptying.
 
+## A quieter HUD
+
+Three changes, all about what the screen asks you to look at.
+
+- The upgrade tiles are a reference, not a readout. They sit at a third
+  of their opacity and come up for a moment whenever a rank changes,
+  which is the only time they are worth reading.
+- The clock was the largest thing on the screen and is not what you are
+  watching. It is about two thirds the size, and for the first four and a
+  half seconds of a sector the realm's name stands in its place. The
+  middle of the top row is measured against the level on the left and the
+  kills on the right rather than taking a fraction of the width, because
+  "THE SHATTERED MOON" beside "LV 100" and "9999" fits in neither.
+- Damage used to put a sheet of red over the whole screen, hiding the
+  ship at the moment you most need to see it. It comes in from the edges
+  now, as a vignette.
+
 ## The vitals dial
 
 Hull and shield were two bars stretched across the bottom of the screen,

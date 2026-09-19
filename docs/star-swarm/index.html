@@ -1995,21 +1995,34 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
 function fmt(t){t=Math.max(0,Math.floor(t));return Math.floor(t/60)+":"+String(t%60).padStart(2,"0")}
 // Where the HUD actually put things, so a test can prove nothing overlaps
 // rather than somebody spotting it in a photograph.
-let HUDBOX={};
+let HUDBOX={},upSig="",upAt=-9,VIG=null,vigKey="";
 function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const ST=SAFE.t,SL=SAFE.l,SR=SAFE.r,SB=SAFE.b;
  cx.fillStyle="rgba(0,0,0,0.5)";cx.fillRect(0,0,W,ST+14);cx.fillStyle="#60c0ff";cx.fillRect(0,ST,W*clamp(G.xp/G.xpNext,0,1),14);
  // the top row scales with the width: at a fixed size the clock grew
  // into the kill count on a narrow phone
- const hz=Math.min(20,W*0.055),cz=Math.min(34,W*0.09);
+ // The clock was the biggest thing on the screen and it is not what you are
+ // watching. It is half the size now, and for the first few seconds of a
+ // sector the realm's name stands in its place.
+ const hz=Math.min(20,W*0.055),cz=Math.min(22,W*0.058);
  text("LV "+G.level,58+SL,42+ST,hz,"#c0e8ff","left");// clear of the shelf menu button
  // when the clock runs out the number gives way to what you are waiting on,
  // which is the gate unless something is sitting on it
  const left=G.gate?0:Math.max(0,SECTOR_LEN-G.secT);
  // bounded, because "BEAT IT!" is a good deal wider than "2:31" and the level
  // and the kill count are sitting on either side of it
- textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
-  left>0?"#fff":(G.bossAlive?"#ff8080":"#80c0ff"),W*0.46);
+ const opening=G.secT<4.5&&!G.gate;
+ // The middle of the top row gets whatever the level and the kill count
+ // leave it, measured rather than guessed: "THE SHATTERED MOON" beside
+ // "LV 13" and "499" does not fit in any fraction of the width that also
+ // suits a phone.
+ cx.font="bold "+hz+"px sans-serif";
+ const lvR=58+SL+cx.measureText("LV "+G.level).width,klL=W-16-SR-cx.measureText(G.kills+" \u2620").width;
+ const midW=Math.max(60,Math.min((W/2-lvR-10)*2,(klL-10-W/2)*2));
+ if(opening){const k=clamp(1-(G.secT-3.5)/1,0,1);cx.globalAlpha=k;
+  textFit(realm().name,W/2,40+ST,Math.min(24,W*0.062),"#ffe060",midW);cx.globalAlpha=1}
+ else textFit(left>0?fmt(left):(G.bossAlive?"BEAT IT!":"GATE!"),W/2,40+ST,cz,
+  left>0?"#fff":(G.bossAlive?"#ff8080":"#80c0ff"),midW);
  textFit(G.mode==="endless"?"SECTOR "+G.sector+"   ·   ENDLESS   ·   "+G.dif.name:G.mode==="daily"?"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.mod.name:"SECTOR "+G.sector+" / "+SECTORS+"   ·   "+G.dif.name,W/2,68+ST,15,G.mode==="endless"?"#ff9040":G.mode==="daily"?"#c0a0ff":G.dif.col,W*0.62);
  text(G.kills+" ☠",W-16-SR,34+ST,hz,"#ffd0d0","right");
  HUDBOX.topRow={x:0,y:40+ST-cz*0.6,w:W,h:cz*1.2};
@@ -2037,6 +2050,12 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  for(const k in G.passives)ups.push({icon:PASSIVES[k].icon,col:PASSIVES[k].col,n:G.passives[k],big:20,bg:"rgba(0,0,0,0.3)"});
  // Shrink to fit, and when they will not fit at the smallest size, wrap onto
  // a second row rather than walking off the side of the screen.
+ // A reference, not a readout: the tiles sit back at a third until a rank
+ // changes, then come up for a moment and settle again.
+ let sg="";for(const k in G.weapons)sg+=k+G.weapons[k];
+ for(const k in G.passives)sg+=k+G.passives[k];for(const k in G.evo)sg+="*"+k;
+ if(sg!==upSig){upSig=sg;upAt=frameT}
+ const upA=0.32+0.68*clamp(1.4-(frameT-upAt)/1.8,0,1);
  const gap=6,tmin=22;
  const ts=ups.length?Math.max(tmin,Math.min(38,(wide-gap*(ups.length-1))/ups.length)):0;
  const k2=ts/38;
@@ -2044,6 +2063,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const rowsN=ups.length?Math.ceil(ups.length/perRow):0;
  const blockH=rowsN?rowsN*ts+(rowsN-1)*gap:0;
  const rowY=BY-10-blockH;
+ cx.globalAlpha=upA;
  for(let r=0;r<rowsN;r++){
   const row=ups.slice(r*perRow,(r+1)*perRow);
   let tx=W-16-SR-ts;const ry=rowY+r*(ts+gap);
@@ -2052,6 +2072,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
    text(u.icon,tx+ts*0.5,ry+ts*0.47,u.big*k2,u.col);
    text(u.n,tx+ts*0.84,ry+ts*0.84,12*k2,"#fff");
    tx-=ts+gap}}
+ cx.globalAlpha=1;
  if(ups.length){const n0=Math.min(perRow,ups.length);
   const x0=W-16-SR-(n0*ts+(n0-1)*gap);
   HUDBOX.ups={x:x0,y:rowY,w:W-16-SR-x0,h:blockH}}
@@ -2088,7 +2109,12 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
   HUDBOX.boss={x:W/2-bw/2,y:by2,w:bw,h:18};
   HUDBOX.bossName={x:W/2-bw/2,y:by2+22,w:bw,h:16}}
  if(G.announceT>0){cx.globalAlpha=Math.min(1,G.announceT);textFit(G.announce,W/2,H*0.3,32,"#ffe060",W-32-SL-SR);cx.globalAlpha=1}
- if(flash>0){cx.fillStyle="rgba(255,40,40,"+flash*0.35+")";cx.fillRect(0,0,W,H)}
+ // A sheet of red over the whole screen hides the ship at the moment you
+ // most need to see it. The hurt comes in from the edges instead.
+ if(flash>0){const r0=Math.min(W,H)*0.3,r1=Math.hypot(W,H)*0.56;
+  if(!VIG||vigKey!==W+"x"+H){vigKey=W+"x"+H;VIG=cx.createRadialGradient(W/2,H/2,r0,W/2,H/2,r1);
+   VIG.addColorStop(0,"rgba(255,30,40,0)");VIG.addColorStop(0.45,"rgba(255,30,40,0.45)");VIG.addColorStop(1,"rgba(255,16,26,1)")}
+  cx.globalAlpha=clamp(flash*1.25,0,1);cx.fillStyle=VIG;cx.fillRect(0,0,W,H);cx.globalAlpha=1}
  buttons=[];btn(W-64-SR,52+ST,48,40,"II",()=>{scene="pause";musicStop()},{size:20});
  HUDBOX.pause={x:W-64-SR,y:52+ST,w:48,h:40};
  drawButtons();cx.restore()}
