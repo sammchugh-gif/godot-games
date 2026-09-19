@@ -516,6 +516,15 @@ function vecPickup(p){const S2=(col,lw)=>{cx.strokeStyle=col;cx.shadowColor=col;
    cx.lineTo(Math.cos(a)*(p.r+6),Math.sin(a)*(p.r+6));cx.stroke()}}
  cx.shadowBlur=0}
 
+// --------------------------------------------------------- the furniture
+// A wireframe game with painted buttons on top of it looks like two games. So
+// in vector every box on a menu is the same thing the ships are: a black hole
+// in space with a glowing outline round it.
+function vbox(x,y,w,h,r,col,lw,lit){
+ rr(x,y,w,h,r);cx.fillStyle=lit?hexA(col,0.13):"rgba(0,0,0,0.85)";cx.fill();
+ cx.save();cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=lw*4;cx.lineWidth=lw;
+ rr(x,y,w,h,r);cx.stroke();
+ cx.globalAlpha=0.3;cx.lineWidth=lw*2.6;cx.shadowBlur=lw*10;cx.stroke();cx.restore()}
 // ------------------------------------------------------------------- the tube
 // Scanlines and a soft bloom over everything, as one baked pattern and one
 // baked gradient, so the cost is two fills a frame rather than two hundred.
@@ -928,8 +937,19 @@ let buttons=[];function btn(x,y,w,h,label,cb,opt){buttons.push({x,y,w,h,label,cb
 function uiTap(p){for(const b of buttons){if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h){SFX.click();b.cb();return true}}return false}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
 function drawButtons(){for(const b of buttons){const o=b.opt;
+ // A ghost is a hit box laid over something already drawn - a difficulty
+ // segment, an upgrade card, the whole credits screen. It draws nothing.
+ if(o.ghost)continue;
  if(o.launch){ // the one button that matters, lit like it
   const pulse=0.55+0.45*Math.sin(frameT*3);
+  if(VEC()){const c="#8fdcff",sz=o.size||22;
+   vbox(b.x,b.y,b.w,b.h,16,c,2.4+pulse*1.4,true);
+   textFit(b.label,b.x+b.w/2-sz*0.5,b.y+b.h/2,sz,"#e8fbff",b.w-sz*2.8);
+   const gx=b.x+b.w-sz*1.1,gy=b.y+b.h/2;
+   cx.strokeStyle="#ffd23f";cx.shadowColor="#ffd23f";cx.shadowBlur=9;cx.lineWidth=2.4;
+   for(let k=0;k<2;k++){cx.beginPath();cx.moveTo(gx+k*sz*0.34,gy-sz*0.3);
+    cx.lineTo(gx+k*sz*0.34+sz*0.28,gy);cx.lineTo(gx+k*sz*0.34,gy+sz*0.3);cx.stroke()}
+   cx.shadowBlur=0;continue}
   cx.save();cx.shadowColor="rgba(79,209,255,"+(0.35+0.4*pulse).toFixed(2)+")";cx.shadowBlur=14+10*pulse;
   const f=cx.createLinearGradient(0,b.y,0,b.y+b.h);f.addColorStop(0,"#63b8ff");f.addColorStop(0.5,"#2a6ad0");f.addColorStop(1,"#12306e");
   rr(b.x,b.y,b.w,b.h,16);cx.fillStyle=f;cx.fill();cx.restore();
@@ -940,7 +960,9 @@ function drawButtons(){for(const b of buttons){const o=b.opt;
   const gx=b.x+b.w-sz*1.1,gy=b.y+b.h/2;cx.fillStyle="#ffe060";
   for(let k=0;k<2;k++){cx.beginPath();cx.moveTo(gx+k*sz*0.34,gy-sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.3,gy);cx.lineTo(gx+k*sz*0.34,gy+sz*0.34);cx.lineTo(gx+k*sz*0.34+sz*0.12,gy);cx.closePath();cx.fill()}
   continue}
- rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();cx.fillStyle=o.color||"#fff";cx.font=(o.size||22)+"px sans-serif";cx.textAlign="center";cx.textBaseline="middle";cx.fillText(b.label,b.x+b.w/2,b.y+b.h/2)}}
+ if(VEC()){vbox(b.x,b.y,b.w,b.h,14,o.color||"#8fdcff",2.2,false);cx.fillStyle=o.color||"#e8fbff"}
+ else{rr(b.x,b.y,b.w,b.h,14);cx.fillStyle=o.fill||"rgba(255,255,255,0.12)";cx.fill();cx.lineWidth=3;cx.strokeStyle=o.stroke||"rgba(255,255,255,0.5)";cx.stroke();cx.fillStyle=o.color||"#fff"}
+ cx.font=(o.size||22)+"px sans-serif";cx.textAlign="center";cx.textBaseline="middle";cx.fillText(b.label,b.x+b.w/2,b.y+b.h/2)}}
 // Long lines - boss announcements above all - used to run off both edges on a
 // phone. Shrink to fit rather than clip.
 // The font comes down until the line fits; below ten pixels it stops coming
@@ -2417,7 +2439,7 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
 // Returns the y the panel's words end at, so a screen that puts something
 // under them can start below rather than on top: a phone held sideways had
 // "Choose an upgrade" sitting across the top of the cards.
-function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);
+function drawPanel(title,sub,color){cx.fillStyle=VEC()?"rgba(0,0,0,0.82)":"rgba(2,4,16,0.75)";cx.fillRect(0,0,W,H);
  const tz=Math.min(64,W/10,H*0.15),ty=Math.max(SAFE.t+tz*0.6,H*0.2),gap=Math.min(52,tz*0.85);
  textFit(title,W/2,ty,tz,color||"#ffe060",W-32);
  if(!sub)return ty+tz*0.5;
@@ -2426,7 +2448,34 @@ function drawPanel(title,sub,color){cx.fillStyle="rgba(2,4,16,0.75)";cx.fillRect
 // planet's ring passing behind them and over their feet, a swarm crossing the
 // corner. It was a string of text with a drop shadow.
 let LOGO=null,logoKey="";
-function logoSprite(sz,maxW){
+// In vector the title is cut the way a cabinet cut it: hollow italic letters
+// with a phosphor halo, one wireframe ring leaning through them, and the swarm
+// across the corner as open darts.
+function vecLogoSprite(sz,maxW){
+ const fontFor=z=>"italic 900 "+z+"px -apple-system,BlinkMacSystemFont,system-ui,sans-serif";
+ const measure=z=>{let r=0;bake(8,8,g=>{g.font=fontFor(z);r=g.measureText("STAR SWARM").width});return r};
+ let tw=measure(sz);while(sz>18&&tw+sz*1.3>maxW){sz-=1;tw=measure(sz)}
+ const key="V"+sz+"@"+DPR;if(LOGO&&logoKey===key)return LOGO;
+ const w=Math.ceil(tw+sz*1.3),h=Math.ceil(sz*1.95);
+ LOGO=bake(Math.ceil(w*DPR),Math.ceil(h*DPR),g=>{g.scale(DPR,DPR);
+  const cx0=w/2,base=h*0.64;
+  g.save();g.translate(cx0,base-sz*0.36);g.rotate(-0.16);
+  g.beginPath();g.ellipse(0,0,w*0.52,sz*0.3,0,0,TAU);vline(g,"#ffb45a",Math.max(1.4,sz*0.035));
+  g.restore();
+  g.font=fontFor(sz);g.textAlign="center";g.textBaseline="alphabetic";
+  g.lineJoin="round";g.lineWidth=Math.max(1.6,sz*0.05);
+  g.strokeStyle="#8fdcff";g.shadowColor="#8fdcff";g.shadowBlur=sz*0.26;
+  g.strokeText("STAR SWARM",cx0,base);
+  g.save();g.globalAlpha=0.32;g.lineWidth=Math.max(3,sz*0.13);g.shadowBlur=sz*0.55;
+  g.strokeText("STAR SWARM",cx0,base);g.restore();g.shadowBlur=0;
+  for(let i=0;i<9;i++){const u=i/8,x=cx0+tw*0.18+u*tw*0.34,
+   y=base-sz*0.98-Math.sin(u*2.6)*sz*0.22,ss=sz*(0.05+u*0.045);
+   g.save();g.translate(x,y);g.rotate(-0.5+u*0.3);
+   g.beginPath();g.moveTo(ss,0);g.lineTo(-ss*0.8,ss*0.6);g.lineTo(-ss*0.4,0);
+   g.lineTo(-ss*0.8,-ss*0.6);g.closePath();
+   vline(g,i%3?"#ff5fa8":"#ffd23f",Math.max(1,sz*0.022));g.restore()}
+ });LOGO.cssW=w;LOGO.cssH=h;logoKey=key;return LOGO}
+function logoSprite(sz,maxW){if(VEC())return vecLogoSprite(sz,maxW);
  // shrink until the letters and their ring fit the width they are given -
  // italic black is a good deal wider than the plain text it replaced
  const fontFor=z=>"italic 900 "+z+"px -apple-system,BlinkMacSystemFont,system-ui,sans-serif";
@@ -2592,20 +2641,22 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  const seg=dw/3,dx0=twoUp?W/2+10:W/2-dw/2;
  if(FEATURES.modes){const my=cursor+gap,mx0=twoUp?W/2-10-dw:W/2-dw/2,qs=Math.min(dh,34),mseg=(dw-qs-6)/3;
   MODES.forEach((m,i)=>{const sel=i===modeIdx,x=mx0+i*mseg;
-   cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,mseg-4,dh,10);cx.fill();
-   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?m.col:"rgba(255,255,255,0.3)";cx.stroke();
+   if(VEC())vbox(x+2,my,mseg-4,dh,10,sel?m.col:"rgba(160,190,220,0.55)",sel?2.6:1.5,sel);
+   else{cx.fillStyle=sel?hexA(m.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,my,mseg-4,dh,10);cx.fill();
+   cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?m.col:"rgba(255,255,255,0.3)";cx.stroke()}
    textFit(m.name,x+mseg/2,my+dh/2,sel?18:16,sel?m.col:"#ccd6e4",mseg-14);
-   btn(x+2,my,mseg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+   btn(x+2,my,mseg-4,dh,"",()=>{modeIdx=i;store.set("mode",i)},{ghost:true})});
   // what the modes are, one tap away
   const qx=mx0+dw-qs;
   btn(qx,my+(dh-qs)/2,qs,qs,"?",()=>{scene="help"},{size:18,fill:"rgba(255,224,96,0.14)",stroke:"#ffe060",color:"#ffe060"});
   if(!twoUp)cursor=my+dh}
  const dy=cursor+gap;
  DIFFS.forEach((d,i)=>{const sel=i===diffIdx,x=dx0+i*seg;
-  cx.fillStyle=sel?hexA(d.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,dy,seg-4,dh,10);cx.fill();
-  cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?d.col:"rgba(255,255,255,0.3)";cx.stroke();
+  if(VEC())vbox(x+2,dy,seg-4,dh,10,sel?d.col:"rgba(160,190,220,0.55)",sel?2.6:1.5,sel);
+  else{cx.fillStyle=sel?hexA(d.col,0.2):"rgba(0,0,0,0.42)";rr(x+2,dy,seg-4,dh,10);cx.fill();
+  cx.lineWidth=sel?3:1.5;cx.strokeStyle=sel?d.col:"rgba(255,255,255,0.3)";cx.stroke()}
   textFit(d.name,x+seg/2,dy+dh/2,sel?18:16,sel?d.col:"#ccd6e4",seg-14);
-  btn(x+2,dy,seg-4,dh,"",()=>{diffIdx=i;store.set("diff",i)},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  btn(x+2,dy,seg-4,dh,"",()=>{diffIdx=i;store.set("diff",i)},{ghost:true})});
  cursor=dy+dh;
  // one line of small print: the twist of the day, the mode, or the difficulty
  if(showDesc){const mid=modeOf();
@@ -2617,8 +2668,9 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  // the dark with its marks and its price. The marks are what the numbers are.
  {const v=SHIPS[viewIdx],un=!!unlocks[v.id],sel=viewIdx===shipIdx&&un;
   const cw=Math.min(560,W-28),x0=W/2-cw/2,ch=clamp(avail,minShip,400),y=listTop;
-  cx.fillStyle=sel?"rgba(255,255,255,0.14)":"rgba(0,0,0,0.42)";rr(x0,y,cw,ch,18);cx.fill();
-  cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke();
+  if(VEC())vbox(x0,y,cw,ch,18,sel?"#ffe060":"rgba(160,190,220,0.5)",sel?3:1.8,false);
+  else{cx.fillStyle=sel?"rgba(255,255,255,0.14)":"rgba(0,0,0,0.42)";rr(x0,y,cw,ch,18);cx.fill();
+  cx.lineWidth=sel?4:2;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.35)";cx.stroke()}
   const aw=Math.min(44,cw*0.1),step=d=>{viewIdx=(viewIdx+d+n)%n;if(unlocks[SHIPS[viewIdx].id]){shipIdx=viewIdx;store.set("ship",shipIdx)}SFX.click()};
   btn(x0+6,y+ch/2-26,aw,52,"◀",()=>step(-1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
   btn(x0+cw-6-aw,y+ch/2-26,aw,52,"▶",()=>step(1),{size:20,fill:"rgba(255,255,255,0.08)",stroke:"rgba(255,255,255,0.3)"});
@@ -2629,7 +2681,11 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
    const lw2=Math.min(72,bw*0.3),pw=Math.min(22,(bw-lw2-8)/5-4),ph=Math.max(6,rowH*0.42);
    cats.forEach(([lab,val,col],i)=>{const ry=by+i*rowH;textFit(lab,bx,ry+rowH/2,fz,un?"#9fb0c8":"#6b7590",lw2-6,"left");
     if(!un){textFit("????",bx+lw2,ry+rowH/2,fz+1,"#6b7590",bw-lw2,"left");return}
-    for(let p=0;p<5;p++){cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(bx+lw2+p*(pw+4),ry+rowH/2-ph/2,pw,ph,3);cx.fill()}})};
+    for(let p=0;p<5;p++){const px2=bx+lw2+p*(pw+4),py2=ry+rowH/2-ph/2;
+     if(VEC()){rr(px2,py2,pw,ph,3);
+      if(p<val){cx.fillStyle=col;cx.shadowColor=col;cx.shadowBlur=8;cx.fill();cx.shadowBlur=0}
+      else{cx.strokeStyle="rgba(160,190,220,0.45)";cx.lineWidth=1.2;cx.stroke()}}
+     else{cx.fillStyle=p<val?col:"rgba(255,255,255,0.14)";rr(px2,py2,pw,ph,3);cx.fill()}}})};
   const r=recLine(v.id,difId);
   // The hull is drawn 32px each way from its centre, with up to 30px of
   // exhaust below that. It gets the top 40% of the card and is scaled to fit
@@ -2682,25 +2738,27 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);const head=drawPanel("LEVEL "
   const top=head+14,rw=Math.min(420,avail),rh=Math.min(120,(H-top-SAFE.b-16)/n-10),x=W/2-rw/2;
   let y=Math.max(top,H*0.5-(rh+10)*n/2);
   cards.forEach(c=>{const d=cardOf(c),hint=cardHint(c,d),ix=x+rh*0.5,tx=x+rh+2,tw=rw-rh-14;
-   cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,rw,rh,16);cx.fill();cx.lineWidth=3;cx.strokeStyle=d.col;cx.stroke();
+   if(VEC())vbox(x,y,rw,rh,16,d.col,3,false);
+   else{cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,rw,rh,16);cx.fill();cx.lineWidth=3;cx.strokeStyle=d.col;cx.stroke()}
    text(d.icon,ix,y+rh*0.5,Math.min(44,rh*0.44),d.col);
    const lvl=c.k==="heal"?"":(c.l===1?"NEW!":"Lv "+c.l),lw=lvl?Math.min(60,tw*0.3):0;
    textFit(d.name,tx,y+rh*0.28,20,"#fff",tw-lw-6,"left");
    if(lvl)textFit(lvl,x+rw-12,y+rh*0.28,15,"#ffe060",lw,"right");
    if(hint&&c.l>1){textFit(hint.a,tx,y+rh*0.56,14,hint.col,tw,"left");textFit(hint.b,tx,y+rh*0.79,13,"#dde",tw,"left")}
    else{const dy=y+rh*0.46,room=y+rh-8-dy;wrapFit(d.desc,tx,dy+7,tw,room,14,"#dde","left");}
-   btn(x,y,rw,rh,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});y+=rh+10});
+   btn(x,y,rw,rh,"",()=>{applyCard(c);scene="play"},{ghost:true});y+=rh+10});
   drawButtons();cx.restore();return}
  const cw=Math.min(280,colW),y=Math.max(head+14,H*0.35),ch=Math.min(300,H*0.5,H-y-SAFE.b-16);
  cards.forEach((c,i)=>{const x=W/2+(i-(n-1)/2)*(cw+14)-cw/2,d=cardOf(c),hint=cardHint(c,d);
-  cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke();
+  if(VEC())vbox(x,y,cw,ch,18,d.col,4,false);
+  else{cx.fillStyle="rgba(10,16,40,0.95)";rr(x,y,cw,ch,18);cx.fill();cx.lineWidth=4;cx.strokeStyle=d.col;cx.stroke()}
   text(d.icon,x+cw/2,y+ch*0.24,64,d.col);textFit(d.name,x+cw/2,y+ch*0.5,22,"#fff",cw-16);
   textFit(c.k==="heal"?"":(c.l===1?"NEW!":"Level "+c.l),x+cw/2,y+ch*0.6,16,"#ffe060",cw-16);
   if(hint&&c.l>1){textFit(hint.a,x+cw/2,y+ch*0.74,14,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.82,13,"#dde",cw-16)}
   else{const showHint=hint&&cw>=200;
    wrapFit(d.desc,x+cw/2,y+ch*0.7,cw-26,(showHint?ch*0.86:ch)-12-ch*0.7,15,"#dde");
    if(showHint){textFit(hint.a,x+cw/2,y+ch*0.9,13,hint.col,cw-16);textFit(hint.b,x+cw/2,y+ch*0.96,12,"#dde",cw-16)}}
-  btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});drawButtons();cx.restore()}
+  btn(x,y,cw,ch,"",()=>{applyCard(c);scene="play"},{ghost:true})});drawButtons();cx.restore()}
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);shareSaidT=Math.max(0,shareSaidT-1/60);
  const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
  drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+tail,won?"#80c0ff":"#ff8080");
@@ -2754,7 +2812,7 @@ function drawCredits(dt){cx.save();cx.scale(DPR,DPR);cx.fillStyle="#050614";cx.f
  const sh=SHIPS[shipIdx]||SHIPS[0];
  cx.save();cx.translate(W/2+Math.sin(frameT*0.7)*W*0.18,H-40-SAFE.b-Math.sin(frameT*1.3)*8);drawShip(0,0,-Math.PI/2,sh,0.8);cx.restore();
  textFit("tap to return",W-16-SAFE.r,SAFE.t+26,11,"rgba(255,255,255,0.4)",W*0.4,"right");
- buttons=[];btn(0,0,W,H,"",()=>{scene="title"},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"});
+ buttons=[];btn(0,0,W,H,"",()=>{scene="title"},{ghost:true});
  cx.restore()}
 function drawLastRun(dt){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];shareSaidT=Math.max(0,shareSaidT-dt);
  const SL=SAFE.l,SR=SAFE.r,top=SAFE.t+8+(W<560?40:0),bot=H-12-SAFE.b,r=lastRun;
@@ -2806,7 +2864,7 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
  ["UPGRADES","SHIPS"].forEach((t,i)=>{const sel=shopTab===i,x=tx0+i*tw/2;
   cx.fillStyle=sel?"rgba(255,224,96,0.18)":"rgba(0,0,0,0.42)";rr(x+2,ty,tw/2-4,th,9);cx.fill();cx.lineWidth=sel?2.5:1.5;cx.strokeStyle=sel?"#ffe060":"rgba(255,255,255,0.3)";cx.stroke();
   textFit(t,x+tw/4,ty+th/2,15,sel?"#ffe060":"#ccd6e4",tw/2-16);
-  btn(x+2,ty,tw/2-4,th,"",()=>{shopTab=i},{fill:"rgba(0,0,0,0)",stroke:"rgba(0,0,0,0)"})});
+  btn(x+2,ty,tw/2-4,th,"",()=>{shopTab=i},{ghost:true})});
  const rw=Math.min(560,W-24-SL-SR),x0=W/2-rw/2,ly=ty+th+10,avail=back-12-ly;
  if(shopTab===1){const ships=SHIPS.filter(x=>x.cost);const n=ships.length,rh=clamp((avail-(n-1)*8)/n,64,120),k=rh/120,bw=Math.min(112,rw*0.24);
   ships.forEach((sh,i)=>{const y=ly+i*(rh+8),own=!!unlocks[sh.id],can=!own&&bank>=sh.cost;

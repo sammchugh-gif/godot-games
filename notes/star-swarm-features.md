@@ -453,5 +453,19 @@ Two things in the skin cost frames, and both ride with `FX`, so a device that
 is already dropping frames loses them rather than stuttering: the scanline
 pattern over the screen and the wireframe landmark turning in the distance.
 
+The menus go with it. A wireframe game behind painted buttons looks like two
+games, so in vector the logo is cut as hollow letters with a phosphor halo and
+a wireframe ring through them, and every box on every screen - mode and
+difficulty rows, the ship card, upgrade cards, the shop, the buttons, LAUNCH
+itself - becomes a black hole in space with a glowing outline round it, drawn
+by `vbox()`.
+
+One thing that fell out of this: buttons that exist only as hit boxes laid over
+something already drawn (a difficulty segment, an upgrade card, the whole
+credits screen) used to be given a transparent fill and a transparent stroke,
+which drew nothing by luck rather than by intent. They now say `ghost: true`
+and `drawButtons` skips them, which is what stopped the vector skin painting
+black over its own labels.
+
 Adding a third skin means another entry in `SKINS` and another set of twins;
 nothing else in the game needs to know.
