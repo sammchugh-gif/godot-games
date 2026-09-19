@@ -2,17 +2,16 @@
 
 A first-person spy adventure for the iPad's browser, in three acts. In
 **Operation Eclipse** Rory, the youngest field agent of M.I.S.T., follows the
-stolen plans for a sun-blotting mirror through London, Venice, Cairo, Tokyo,
-New York, Rio de Janeiro and a frozen launch site in Siberia. In **Operation
-Midnight** UMBRA's Chairman has hidden seven Shadow Lanterns over seven
-cities, and the trail runs through Paris, Nairobi, Agra, Beijing, Sydney,
-Chichen Itza and the Alps. In **Operation Aurora** the buyer behind it all,
-the Curator, wants the Northern Lights themselves, and the seven Prism Keys
-that unlock his Aurora Engine are scattered from Istanbul and Marrakech to
-Reykjavik, Singapore, Machu Picchu, Amsterdam and the Antarctic ice.
-Twenty-one countries, ninety missions, and every mission is a mini-game
-that wins a piece of intel. The intel is the thread: each piece tells you
-where to go next.
+stolen plans for a sun-blotting mirror through London, Venice, Istanbul,
+Cairo, Marrakech, Tokyo, New York, Rio de Janeiro and a frozen launch site in
+Siberia. In **Operation Midnight** UMBRA's Chairman has hidden seven Shadow
+Lanterns over seven cities, and the hunt runs from Paris and Nairobi through
+Reykjavik, Agra, Singapore, Beijing, Sydney and Chichen Itza to the Alps. In
+**Operation Aurora** the buyer behind it all, the Curator, wants the Northern
+Lights themselves, and the last Prism Keys are at Machu Picchu, in Amsterdam
+and under the Antarctic ice. Twenty-one countries, ninety missions, and every
+mission is a mini-game that wins a piece of intel. The intel is the thread:
+each piece tells you where to go next.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/agent-rory/>. On the
 iPad, open the link in Safari, then Share → Add to Home Screen for a fullscreen
@@ -54,12 +53,13 @@ maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
 inside the 3D world), stealth yard, shredder, the countdown override,
 codebreaker, reactor rods (towers of Hanoi), satellite photo (swap the
 tiles), sonar, vault rings, spot the difference, laser hall and passport
-match; and in Act Three fourteen more that appear nowhere else: fingerprints,
-Morse code, tangled wires, the shell game, the balance scale, anagrams, the
-star chart, the grapple gun, thin ice, the oscilloscope, the fog maze, crate
-stacking, triangulation and picross, each met once to learn it and once
-more at full difficulty. Six missions are chases: a boat, a rocket backpack,
-a tuk-tuk, a jeep, a bicycle and a snowmobile.
+match; and fourteen more spread through all three acts: fingerprints, Morse
+code, tangled wires, the shell game, the balance scale, anagrams, the star
+chart, the grapple gun, thin ice, the oscilloscope, the fog maze, crate
+stacking, triangulation and picross. Each of those is met twice and a long way
+apart, once at a gentle level to learn it and once at full difficulty near the
+end. Six missions are chases: a boat, a rocket backpack, a tuk-tuk, a jeep, a
+bicycle and a snowmobile.
 Every mission carries a difficulty level from 1 to 4, and each game
 grows with it: more statements and subtler spikes on the polygraph, four
 numbers on the safe, up to 24 dancers and five clues, 11 by 11 mirror
