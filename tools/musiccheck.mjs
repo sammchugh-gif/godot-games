@@ -206,17 +206,18 @@ const a1 = await sp.evaluate('window.SW.audio');
 await strict.close();
 /* Star Swarm now nudges a suspended context awake once a second of its own
    accord, which is the stronger behaviour and the reason the hangar no longer
-   falls silent. So a held scheduler is one acceptable answer and a context
-   that has already picked itself up is the other; what is never acceptable is
-   a scheduler queueing notes into a clock that is still frozen. */
-const stalled = asleep && still && still.next === asleep.next;
-const selfWoke = still && still.state === 'running';
-check('a tap wakes the music on a phone', asleep && asleep.state === 'suspended'
-  && (stalled || selfWoke)
+   falls silent. It can therefore beat this sample to the punch, so being
+   caught suspended is not required - only that a context that IS caught
+   suspended has not queued notes into its frozen clock, and that the music is
+   running and the scheduler moving by the time the finger lifts. */
+const frozen = s => s && s.state === 'suspended';
+const wrote = frozen(asleep) && frozen(still) && still.next !== asleep.next;
+const how = frozen(still) ? (wrote ? 'WRITING INTO A FROZEN CLOCK' : 'held')
+          : frozen(asleep) ? 'woke itself' : 'never needed waking';
+check('a tap wakes the music on a phone', asleep && !wrote
   && a0 && a0.state === 'running' && a1.timer && a1.next > a0.next && a1.next > a1.now,
-  asleep ? `${asleep.state} with the finger down, scheduler `
-         + (selfWoke ? 'woke itself' : stalled ? 'held' : 'WRITING INTO A FROZEN CLOCK')
-         + `; ${a0 && a0.state} once it lifts, scheduler ${a1 && a1.next > a0.next ? 'moving' : 'STALLED'}`
+  asleep ? `${asleep.state} with the finger down, scheduler ${how}; `
+         + `${a0 && a0.state} once it lifts, scheduler ${a1 && a1.next > a0.next ? 'moving' : 'STALLED'}`
          : 'no audio context was made at all');
 
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 160)); }

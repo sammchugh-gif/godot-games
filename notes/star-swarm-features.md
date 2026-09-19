@@ -409,3 +409,18 @@ That combination comes from asking for `apple-mobile-web-app-status-bar-style:
 black-translucent`, so the page asks for the default status bar instead. The
 web view then matches the viewport it reports, and the 62 points the HUD was
 holding clear of the notch come back as usable screen.
+
+## Sectors 5 and 6 on easy
+
+Easy runs were reaching the last two sectors and dying there. The play bot
+says what is doing the killing: on a four-run sample it put down every boss up
+to sector 5 in between ten and fifty seconds, then took 461 damage in sector 6
+against a 185 hull. Late runs end on the swarm, not on a boss that will not
+fall.
+
+So from sector 5 on, and on easy only, the swarm and its bosses hit 15% softer
+(`LATE.dmg`) and carry 10% less health (`LATE.hp`) - the larger cut on the side
+that is actually doing the killing, the smaller one to shorten the fights.
+Medium and hard are untouched. `swarmcheck` holds the clock and the build still
+while it spawns one of each at sector 4 and again at sector 6, and checks both
+halves land and that medium sees none of it.
