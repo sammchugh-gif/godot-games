@@ -357,8 +357,11 @@ const CHEST = await pg.evaluate(`(() => {
        fixed sixteen seconds: each elite is a one-in-five roll, so a window
        that happened to hold only eight kills failed about once in six runs */
     const want = (mod && mod.chests) || 1;
-    for (let i = 0; i < 160 && G.en.length && G.pk.filter(p => p.k === 'chest').length < want; i++) S.sim(0.5);
-    const n = G.pk.filter(p => p.k === 'chest').length; S.scene = 'title'; return n; };   /* rocks cleared so none hides */
+    /* Counted as the elites hand them over, not by looking at what is still
+       lying on the floor at the end: a chest only lasts sixty seconds, and a
+       run long enough to kill sixty elites outlived the first one. */
+    for (let i = 0; i < 160 && G.en.length && (G.secChests || 0) < want; i++) S.sim(0.5);
+    const n = G.secChests || 0; S.scene = 'title'; return n; };   /* rocks cleared so none hides */
   out.normal = farm(null); out.treasure = farm(S.DAILY_MODS.find(m => m.id === 'loot'));
   /* and the boss */
   S.start(S.SHIPS[0]); const G = S.G; G.arrive = 0; G.hp = G.maxhp = 1e9; G.spawnAcc = -1e9; G.en.length = 0; G.pk.length = 0; G.rocks.length = 0; G.secChests = 1;

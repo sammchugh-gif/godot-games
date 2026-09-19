@@ -30,9 +30,16 @@ safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility
  "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
 document.body.appendChild(safeProbe);
 const SAFE={t:0,r:0,b:0,l:0};
+// In a browser tab iOS keeps a strip along the bottom of the screen for its
+// own toolbar, and the home indicator lives in that strip - but it still
+// reports a bottom inset to the page. Honouring it there leaves the game
+// floating a finger's width above the screen with a dark bar beneath. The
+// page only owes the indicator room when it owns the whole screen, which is
+// exactly what navigator.standalone says.
+function ownsTheScreen(){return navigator.standalone!==false}
 function readSafe(){const st=getComputedStyle(safeProbe);
  SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
- SAFE.b=parseFloat(st.paddingBottom)||0;SAFE.l=parseFloat(st.paddingLeft)||0}
+ SAFE.b=ownsTheScreen()?(parseFloat(st.paddingBottom)||0):0;SAFE.l=parseFloat(st.paddingLeft)||0}
 // iOS does not reliably tell a page that the screen it has just grew. Hiding
 // the browser's bars, coming back from the app switcher and rotating can all
 // leave the page sized to a viewport that is no longer there, and the game
@@ -2531,6 +2538,17 @@ function onKey(code){if(code==="KeyP"||code==="Escape"){if(scene==="play"){scene
 // the checker can halt the loop and step it by hand, so a cutscene can be
 // caught at an exact moment on a machine that renders slowly
 let halted=false;
+// iOS keeps a strip at the bottom of the screen for the browser's collapsed
+// toolbar, and the page never gets to draw in it: it is filled with the
+// page's own background colour instead. The sky ends on a nebula-tinted
+// blue, the strip was flat #050614, and the step between them read as the
+// game being cut off. So the page is kept the colour the canvas ends on,
+// whatever screen that is and whatever the game is showing.
+let groundT=0,groundC="";
+function groundWatch(){groundT=0.6;
+ try{const d=cx.getImageData(Math.max(0,(cv.width>>1)),Math.max(0,cv.height-1),1,1).data;
+  const c="rgb("+d[0]+","+d[1]+","+d[2]+")";
+  if(c!==groundC){groundC=c;document.documentElement.style.backgroundColor=c;document.body.style.backgroundColor=c}}catch(e){}}
 let sizeTick=0;
 function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTick+1)%5)===0)sizeWatch();inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
  // the hangar and the credits have a theme, and it starts the moment audio can
@@ -2540,11 +2558,12 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTic
  if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
  drawDiag();
+ groundT-=dt;if(groundT<=0)groundWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

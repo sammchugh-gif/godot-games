@@ -228,6 +228,18 @@ changes, all in `resize`:
   and `sizeWatch` re-checks every fifth frame and repairs the canvas if
   anything, including the backing store, has drifted.
 
+Two more things the page does not own, both of which read as the game
+being cut off at the bottom of an iPhone. In a browser tab iOS keeps a
+strip along the bottom of the screen for its collapsed toolbar and fills
+it with the page's own background colour, so a sky that ends on a
+nebula-tinted blue showed a step where the flat page ground began: the
+page is now kept the colour the canvas ends on, sampled from its bottom
+edge twice a second, whatever the game is showing. And the home
+indicator lives inside that strip while iOS still reports a bottom
+inset, so honouring it left the game floating a finger's width above the
+screen; the inset is only honoured when the page owns the whole screen,
+which `navigator.standalone` answers.
+
 `tools/hudcheck.mjs` proves it: the canvas must cover the visual viewport
 as the page loads, when the screen grows, turned sideways, and after
 something resets the canvas out from under it.
