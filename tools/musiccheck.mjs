@@ -204,11 +204,19 @@ const a0 = await sp.evaluate('window.SW.audio');
 await sleep(1000);
 const a1 = await sp.evaluate('window.SW.audio');
 await strict.close();
+/* Star Swarm now nudges a suspended context awake once a second of its own
+   accord, which is the stronger behaviour and the reason the hangar no longer
+   falls silent. So a held scheduler is one acceptable answer and a context
+   that has already picked itself up is the other; what is never acceptable is
+   a scheduler queueing notes into a clock that is still frozen. */
 const stalled = asleep && still && still.next === asleep.next;
-check('a tap wakes the music on a phone', asleep && asleep.state === 'suspended' && stalled
+const selfWoke = still && still.state === 'running';
+check('a tap wakes the music on a phone', asleep && asleep.state === 'suspended'
+  && (stalled || selfWoke)
   && a0 && a0.state === 'running' && a1.timer && a1.next > a0.next && a1.next > a1.now,
-  asleep ? `${asleep.state} with the finger down, scheduler ${stalled ? 'held' : 'WRITING INTO A FROZEN CLOCK'}; `
-         + `${a0 && a0.state} once it lifts, scheduler ${a1 && a1.next > a0.next ? 'moving' : 'STALLED'}`
+  asleep ? `${asleep.state} with the finger down, scheduler `
+         + (selfWoke ? 'woke itself' : stalled ? 'held' : 'WRITING INTO A FROZEN CLOCK')
+         + `; ${a0 && a0.state} once it lifts, scheduler ${a1 && a1.next > a0.next ? 'moving' : 'STALLED'}`
          : 'no audio context was made at all');
 
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 160)); }

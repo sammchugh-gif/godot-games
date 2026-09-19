@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Not black-translucent: on a Home Screen app iOS then hands the page a
+     viewport a status bar shorter than the screen while still reporting the
+     full safe-area insets, so the canvas stops short and a band of bare page
+     shows at the bottom. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Sophia, Rory and Dylan Games, Inc</title>
 <style>
   :root { color-scheme: dark; }

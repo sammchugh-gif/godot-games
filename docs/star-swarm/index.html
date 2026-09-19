@@ -2543,11 +2543,10 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
    {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
  btn(W/2-110,back,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
  drawButtons();cx.restore()}
-// What the page thinks the screen is, in one line on the pause screen. A
-// phone can then say what it is doing rather than be guessed at from a
-// photograph: the window, the visual viewport, the screen itself, the size
-// the canvas is actually painted at, the safe insets and whether the page
-// believes it owns the whole screen.
+// What the page thinks the screen is, as window.SW.geom(). The bottom band on
+// iPhone was diagnosed by printing this on the pause screen and reading it off
+// a photograph, which beat another round of guessing; it is kept here so the
+// next screen puzzle can be answered the same way.
 function geomLine(){const vv=window.visualViewport,c=cv.getBoundingClientRect(),sc=window.screen||{};
  return "win "+Math.round(innerWidth)+"x"+Math.round(innerHeight)
   +"  vv "+(vv?Math.round(vv.width)+"x"+Math.round(vv.height):"-")
@@ -2559,10 +2558,6 @@ function geomLine(){const vv=window.visualViewport,c=cv.getBoundingClientRect(),
   +"  safe "+Math.round(SAFE.t)+"/"+Math.round(SAFE.b)
   +"  own "+(ownsTheScreen()?1:0)+"  dpr "+DPR}
 function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord();bankRun();noteRun("quit")},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();
- const gl=geomLine().split("\n"),gy0=H-8-SAFE.b-gl.length*14;
- cx.fillStyle="rgba(4,6,19,0.86)";cx.fillRect(0,gy0-2,W,gl.length*14+8);
- for(let i=0;i<gl.length;i++)
-  textFit(gl[i],W/2,gy0+12+i*14,11,"rgba(150,180,210,0.9)",W-20-SAFE.l-SAFE.r);
  cx.restore()}
 function start(ship){if(ship&&typeof ship==="object"&&SHIPS.indexOf(ship)>=0)shipIdx=SHIPS.indexOf(ship);if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
 // LAUNCH does not cut straight to the fight. The chosen ship lights its
