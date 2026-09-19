@@ -116,7 +116,7 @@ let FX=1,fxAcc=0,fxN=0;
 function fxWatch(dt){fxAcc+=dt;fxN++;if(fxN<45)return;const avg=fxAcc/fxN;fxAcc=0;fxN=0;
  if(FX&&avg>1/44)FX=0;else if(!FX&&avg<1/56)FX=1}
 const EREF=48;
-function enemySprite(type,col,flash){const k=type+"|"+col+"|"+(flash?1:0);let sp=ART.en[k];if(sp)return sp;
+function enemySprite(type,col,flash){if(VEC())return vecEnemySprite(type,col,flash);const k=type+"|"+col+"|"+(flash?1:0);let sp=ART.en[k];if(sp)return sp;
  const R=EREF,pad=R*1.6,size=Math.ceil(pad*2);
  sp=bake(size,size,g=>{g.translate(pad,pad);
   const grad=(sx,sy,rr2)=>{if(flash){g.fillStyle="#fff";return}
@@ -145,7 +145,7 @@ function enemySprite(type,col,flash){const k=type+"|"+col+"|"+(flash?1:0);let sp
 // the reference size so it stays sharp scaled up, and eyes - which nothing
 // else in the swarm has.
 const BREF=96;
-function bossSprite(type,col,flash){const key="B"+type+"|"+col+"|"+(flash?1:0);let sp=ART.en[key];if(sp)return sp;
+function bossSprite(type,col,flash){if(VEC())return vecBossSprite(type,col,flash);const key="B"+type+"|"+col+"|"+(flash?1:0);let sp=ART.en[key];if(sp)return sp;
  const R=BREF,pad=R*1.7,size=Math.ceil(pad*2);
  const dark=shade(col,-0.62),deep=shade(col,-0.82),mid=shade(col,-0.26),lite=shade(col,0.45);
  sp=bake(size,size,g=>{g.translate(pad,pad);g.lineJoin="round";g.lineCap="round";
@@ -299,6 +299,236 @@ function bossSprite(type,col,flash){const key="B"+type+"|"+col+"|"+(flash?1:0);l
    eye(R*0.4,R*0.16,R*0.24,R*0.115,"#ff3a1e",false,-1)}
  });
  ART.en[key]=sp;return sp}
+// =========================================================== the vector skin
+// Star Swarm has two skins. CLASSIC is the painted art above. VECTOR is the
+// 1980 arcade cabinet: nothing is filled, every shape is an outline with a
+// phosphor halo around it, the void behind is true black and the whole screen
+// sits behind scanlines. A skin only ever touches drawing - nothing below can
+// change what an enemy does, what a weapon hits, or how long a sector runs.
+const VPAL={scout:"#5fff9a",swarmer:"#ff5fa8",drifter:"#c8a25a",turret:"#5fd8ff",
+ phantom:"#b98cff",mother:"#57ffd0",kraken:"#ff6ae0",warlord:"#ff7a4a",
+ shot:"#fff27a",gem:"#7ad8ff",rock:"#c8a25a",hole:"#a9b6ff",gate:"#d9c2ff",
+ drone:"#7dffc8",mine:"#ff8f6a",repair:"#7dff9a",magnet:"#ff6ae0",nuke:"#ffd44a",chest:"#6ad8ff"};
+// A phosphor line is a bright core inside a soft halo, which is the same path
+// stroked twice - crisp, then wide and dim. Baked into a sprite it is free.
+function vline(g,col,lw){g.lineJoin="round";g.lineCap="round";
+ g.strokeStyle=col;g.shadowColor=col;g.lineWidth=lw;g.shadowBlur=lw*4;g.stroke();
+ g.save();g.globalAlpha=0.34;g.lineWidth=lw*2.7;g.shadowBlur=lw*10;g.stroke();g.restore();
+ g.shadowBlur=0}
+function vpath(g,pts,close){g.beginPath();g.moveTo(pts[0][0],pts[0][1]);
+ for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);if(close!==false)g.closePath()}
+function vdraw(g,pts,col,lw,close){vpath(g,pts,close);vline(g,col,lw)}
+function vring(g,x,y,r,col,lw,a0,a1){g.beginPath();g.arc(x,y,r,a0||0,a1===undefined?TAU:a1);vline(g,col,lw)}
+function vshape(x,y,r,n,rot,jag,seed){const p=[];
+ for(let i=0;i<n;i++){const a=rot+i/n*TAU,rr=jag?r*(0.72+hash(i,seed||3)*0.4):r;
+  p.push([x+Math.cos(a)*rr,y+Math.sin(a)*rr])}return p}
+
+// ------------------------------------------------------------ the rank and file
+// Each type keeps the silhouette it has in classic - a swarmer is still a
+// dart, a drifter still a lump of rock - because that shape is what a player
+// reads at a glance and it must mean the same thing in both skins.
+function vecEnemySprite(type,col,flash){const k="V"+type+"|"+col+"|"+(flash?1:0);
+ let sp=ART.en[k];if(sp)return sp;
+ const R=EREF,pad=R*1.6,size=Math.ceil(pad*2),C=flash?"#ffffff":(VPAL[type]||col);
+ sp=bake(size,size,g=>{g.translate(pad,pad);
+  if(type==="swarmer"||type==="warlord"){const L=type==="warlord"?R*1.2:R,wing=R*(type==="warlord"?1:0.9);
+   vdraw(g,[[L,0],[-R,-wing],[-R*0.45,0],[-R,wing]],C,4);
+   vdraw(g,[[L*0.62,0],[-R*0.3,0]],C,3,false)}
+  else if(type==="drifter"){vdraw(g,vshape(0,0,R,9,0.4,true,5),C,4.5);
+   vdraw(g,vshape(0,0,R*0.42,6,1.1,true,9),C,3)}
+  else if(type==="turret"){vring(g,0,0,R,C,4.5);vring(g,0,0,R*0.46,C,3.5);
+   for(let i=0;i<4;i++){const a=i/4*TAU+0.4;
+    vdraw(g,[[Math.cos(a)*R*0.46,Math.sin(a)*R*0.46],[Math.cos(a)*R,Math.sin(a)*R]],C,2.6,false)}}
+  else if(type==="phantom"){vdraw(g,vshape(0,0,R,6,0,false),C,3.5);
+   vdraw(g,[[R,0],[-R*0.5,-R*0.5],[-R*0.5,R*0.5]],C,3)}
+  else{// scout: a blunt arrowhead with a lit cockpit slit
+   vdraw(g,[[R,0],[-R*0.55,-R*0.72],[-R*0.85,0],[-R*0.55,R*0.72]],C,4);
+   vdraw(g,[[R*0.3,-R*0.16],[R*0.3,R*0.16]],C,3,false)}});
+ ART.en[k]=sp;return sp}
+
+// ------------------------------------------------------------------- the bosses
+// A boss is the one thing a player stops and looks at, so in vector it gets
+// concentric hulls, ribs between them and a hot core - the trick every cabinet
+// used to make one big wireframe read as a machine rather than a shape.
+function vecBossSprite(type,col,flash){const k="VB"+type+"|"+col+"|"+(flash?1:0);
+ let sp=ART.en[k];if(sp)return sp;
+ const R=BREF,pad=R*1.7,size=Math.ceil(pad*2),C=flash?"#ffffff":(VPAL[type]||col),
+       HOT=flash?"#ffffff":"#ff4fa0";
+ sp=bake(size,size,g=>{g.translate(pad,pad);
+  const ribs=(n,rot,r0,r1,lw)=>{for(let i=0;i<n;i++){const a=rot+i/n*TAU;
+   vdraw(g,[[Math.cos(a)*r0,Math.sin(a)*r0],[Math.cos(a)*r1,Math.sin(a)*r1]],C,lw,false)}};
+  if(type==="warlord"){// a squat armoured wedge
+   vdraw(g,vshape(0,0,R,6,0,false),C,5);
+   vdraw(g,vshape(0,0,R*0.62,6,Math.PI/6,false),C,3.5);
+   ribs(6,0,R*0.62,R,2.6);
+   vdraw(g,[[R,0],[R*1.28,-R*0.16],[R*1.28,R*0.16]],C,3.5);
+   vring(g,0,0,R*0.2,HOT,4)}
+  else if(type==="kraken"){// a bulb with arms folded round it
+   vdraw(g,vshape(0,0,R*0.8,8,0.2,false),C,5);
+   for(let i=0;i<8;i++){const a=0.2+i/8*TAU,p=[[Math.cos(a)*R*0.8,Math.sin(a)*R*0.8]];
+    for(let s=1;s<=3;s++){const aa=a+s*0.38,d=R*(0.8+s*0.24);
+     p.push([Math.cos(aa)*d,Math.sin(aa)*d])}
+    vdraw(g,p,C,3,false)}
+   vring(g,0,0,R*0.26,HOT,4.5)}
+  else{// mother: a ringed disc, the shape it has in classic
+   vdraw(g,vshape(0,0,R,10,0.15,true,7),C,5);
+   vdraw(g,vshape(0,0,R*0.58,10,0.45,false),C,3.5);
+   ribs(10,0.15,R*0.58,R*0.92,2.4);
+   vdraw(g,vshape(0,0,R*0.22,6,0,false),HOT,4.5)}
+  // eyes: two hot slits, which is all a wireframe needs to look at you
+  const ey=type==="warlord"?-R*0.1:-R*0.12,ex=R*0.3;
+  for(const s of [-1,1])vdraw(g,[[s*ex-R*0.1,ey],[s*ex+R*0.1,ey-R*0.05]],HOT,3.5,false)});
+ ART.en[k]=sp;return sp}
+
+// ------------------------------------------------------------------- your ship
+// The four hulls keep their outlines so the hangar still tells them apart:
+// a delta, a twin-boom comet, a three-pronged nova and the Eclipse's disc.
+function vecShipSprite(ship){const k="V"+ship.id;let sp=ART.ship[k];if(sp)return sp;
+ const P=SHIPP,R=SHIPRES,shape=ship.shape||ship.id,C=ship.col2||ship.col,C2=ship.col;
+ sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);
+  if(shape==="ufo"){vring(g,0,0,19,C,2.6);vring(g,0,0,11,C2,2);
+   vdraw(g,[[-19,-7],[-27,-12],[-22,-3]],C2,2);
+   vdraw(g,[[-19,7],[-27,12],[-22,3]],C2,2);
+   vring(g,3,0,5,C,2.4)}
+  else if(shape==="comet"){vdraw(g,[[24,0],[2,-7],[-16,-9],[-12,0],[-16,9],[2,7]],C,2.6);
+   vdraw(g,[[6,-7],[10,-15],[-10,-13],[-13,-8]],C2,2.2);
+   vdraw(g,[[6,7],[10,15],[-10,13],[-13,8]],C2,2.2);
+   vring(g,6,0,4,C,2.2)}
+  else if(shape==="nova"){vdraw(g,[[25,0],[-6,-10],[-15,0],[-6,10]],C,2.6);
+   vdraw(g,[[-2,-9],[-6,-19],[-16,-11]],C2,2.2);
+   vdraw(g,[[-2,9],[-6,19],[-16,11]],C2,2.2);
+   vring(g,5,0,4.5,C,2.2)}
+  else{vdraw(g,[[26,0],[-8,-16],[-13,-6],[-20,0],[-13,6],[-8,16]],C,2.6);
+   vdraw(g,[[6,-6],[-10,-11]],C2,2,false);
+   vdraw(g,[[6,6],[-10,11]],C2,2,false);
+   vring(g,7,0,4.5,C,2.2)}});
+ ART.ship[k]=sp;return sp}
+
+// ------------------------------------------------------------------ the rocks
+function vecRocks(){const out=[];
+ for(let v=0;v<3;v++)out.push(bake(128,128,g=>{g.translate(64,64);
+  const C=["#d8b070","#c8a25a","#9c7c44"][v];
+  vdraw(g,vshape(0,0,54,11,0,true,v+1),C,3.4);
+  for(let c=0;c<2+v;c++){const a=hash(c+v*7,13)*TAU,d=26+hash(c,v+5)*16;
+   vring(g,Math.cos(a)*d,Math.sin(a)*d,5+hash(c,v)*7,C,2)}}));
+ return out}
+
+// ------------------------------------------------------------- the black hole
+function vecHoleSprite(){if(ART.hole)return ART.hole;const N=256,R=N/2;
+ ART.hole=bake(N,N,g=>{g.translate(R,R);
+  // an accretion disc drawn as nested ellipses leaning the same way, which is
+  // how a cabinet drew anything that was supposed to be spinning
+  for(let i=0;i<7;i++){const rr=R*(0.34+i*0.092);
+   g.beginPath();g.ellipse(0,0,rr,rr*0.42,0.5,0,TAU);
+   vline(g,i<3?"#e6ecff":VPAL.hole,2.4-i*0.18)}
+  vring(g,0,0,R*0.3,"#ffffff",3)});
+ return ART.hole}
+function vecHole(p){const R=p.r*2.3,f=Math.min(1,p.life*2.5);cx.globalAlpha=f;
+ cx.save();cx.rotate(frameT*1.8);cx.drawImage(vecHoleSprite(),-R,-R,R*2,R*2);cx.restore();
+ cx.fillStyle="#000";cx.beginPath();cx.arc(0,0,p.r*0.68,0,TAU);cx.fill();
+ cx.strokeStyle="#ffffff";cx.lineWidth=Math.max(1.6,p.r*0.08);
+ cx.beginPath();cx.arc(0,0,p.r*0.72,0,TAU);cx.stroke();
+ for(let i=0;i<7;i++){const t=(frameT*0.9+i/7)%1,a=frameT*2.4+i*2.4+t*5,d=p.r*(2.4-t*1.5);
+  cx.strokeStyle="rgba(214,228,255,"+((1-t)*0.8*f).toFixed(2)+")";cx.lineWidth=1.4;
+  cx.beginPath();cx.arc(0,0,d,a,a+0.35+t*0.5);cx.stroke()}
+ cx.globalAlpha=1}
+
+// ---------------------------------------------------------------- the gate
+function vecGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
+ cx.shadowColor=VPAL.gate;
+ for(let i=0;i<5;i++){const rr=R*(0.4+i*0.16),sp=frameT*(1.1-i*0.13);
+  cx.save();cx.rotate(sp);cx.beginPath();
+  for(let k=0;k<=9;k++){const a=k/9*TAU;const d=rr*(k%2?0.93:1);
+   k?cx.lineTo(Math.cos(a)*d,Math.sin(a)*d):cx.moveTo(Math.cos(a)*d,Math.sin(a)*d)}
+  cx.closePath();cx.strokeStyle=i<2?"#ffffff":VPAL.gate;cx.lineWidth=2.6-i*0.3;
+  cx.shadowBlur=12;cx.stroke();cx.shadowBlur=0;cx.restore()}
+ cx.fillStyle="#000";cx.beginPath();cx.arc(0,0,gt.r*0.6,0,TAU);cx.fill();
+ cx.strokeStyle="#ffffff";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
+ cx.restore()}
+
+// ------------------------------------------------------------- the starfield
+// No nebula and no painted planet: a vector screen had one colour of light and
+// a black void, and the sector is told apart by the colour of its stars and by
+// one wireframe landmark turning slowly in the distance.
+const VSTAR=["#8fffc4","#8fd4ff","#ffb46a","#ff8fd4","#d0c0ff","#a9b6ff"];
+function vecStars(){cx.fillStyle="#000";cx.fillRect(-W,-H,W*3,H*3);
+ const RL=realm(),tint=VSTAR[(G.sector-1)%VSTAR.length];
+ if(FX&&RL.back){// the landmark, as a slowly turning wireframe globe
+  const gs=9000,par=0.05,ox=G.px*(1-par),oy=G.py*(1-par);
+  const i0=Math.floor((G.px*par-W/S)/gs)-1,i1=Math.floor((G.px*par+W/S)/gs)+1;
+  const j0=Math.floor((G.py*par-H/S)/gs)-1,j1=Math.floor((G.py*par+H/S)/gs)+1;
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
+   // a painted landmark can fill half the sky because it is faint. The same
+   // size in bright lines swallows the screen, so the wireframe is a third of
+   // it and dimmer again.
+   const h=hash(i*19+5,j*23+11),r=(BACKSZ[RL.back]||1700)*(0.15+h*0.08);
+   const bx=i*gs+h*gs*0.6+ox,by=j*gs+hash(i*3,j*7)*gs*0.6+oy;
+   if(Math.abs(bx-G.px)>W/S+r||Math.abs(by-G.py)>H/S+r)continue;
+   cx.save();cx.translate(bx,by);cx.rotate(frameT*0.06);cx.globalAlpha=0.3;
+   cx.strokeStyle=tint;cx.shadowColor=tint;cx.shadowBlur=10;cx.lineWidth=2;
+   cx.beginPath();cx.arc(0,0,r,0,TAU);cx.stroke();
+   for(let k=1;k<4;k++){const rr=r*Math.cos(k*Math.PI/8);
+    cx.lineWidth=1.1;cx.beginPath();cx.ellipse(0,0,r,rr,0,0,TAU);cx.stroke();
+    cx.beginPath();cx.ellipse(0,0,rr,r,0,0,TAU);cx.stroke()}
+   cx.shadowBlur=0;cx.globalAlpha=1;cx.restore()}}
+ const layers=[[0.25,90,1.1],[0.5,140,1.5],[0.9,220,2.1]];
+ for(const [par,cs,sz] of layers){const ox=G.px*(1-par),oy=G.py*(1-par);
+  const x0=Math.floor((G.px*par-W/S)/cs)-1,x1=Math.floor((G.px*par+W/S)/cs)+1;
+  const y0=Math.floor((G.py*par-H/S)/cs)-1,y1=Math.floor((G.py*par+H/S)/cs)+1;
+  for(let j=y0;j<=y1;j++)for(let i=x0;i<=x1;i++){const h=hash(i*7+Math.round(par*10),j*13);
+   if(h<0.55)continue;
+   const wx=i*cs+hash(j,i)*cs+ox,wy=j*cs+hash(i*3,j)*cs+oy;
+   const tw=0.5+0.5*Math.sin(frameT*3+h*20),r=sz*(0.5+h);
+   cx.fillStyle=h>0.93?tint:"rgba(210,235,255,"+tw+")";
+   cx.fillRect(wx-r/2,wy-r/2,r,r)}}}
+
+// ----------------------------------------------------------- the small things
+function vecGem(g){const col=VPAL.gem,s=g.big>=10?12:g.big>=3?9:7;
+ cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);
+ cx.strokeStyle=g.big>=10?"#ffffff":col;cx.shadowColor=col;cx.shadowBlur=10;cx.lineWidth=2.2;
+ cx.beginPath();cx.moveTo(0,s);cx.lineTo(-s*0.8,0);cx.lineTo(0,-s);cx.lineTo(s*0.8,0);
+ cx.closePath();cx.stroke();cx.shadowBlur=0;cx.restore()}
+function vecBullet(b){const col={laser:b.evo?"#ff9fff":"#ff5f7a",shot:VPAL.shot,
+  missile:"#ff9a5a",plasma:"#ff7aff"}[b.k]||VPAL.shot;
+ cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=9;cx.lineWidth=2.4;cx.lineCap="round";
+ if(b.k==="laser"){cx.beginPath();cx.moveTo(-15,0);cx.lineTo(15,0);cx.stroke()}
+ else if(b.k==="shot"){cx.beginPath();cx.ellipse(0,0,9,4.5,0,0,TAU);cx.stroke()}
+ else if(b.k==="missile"){cx.beginPath();cx.moveTo(16,0);cx.lineTo(-10,-5);cx.lineTo(-10,5);
+  cx.closePath();cx.stroke()}
+ else if(b.k==="plasma"){cx.beginPath();cx.arc(0,0,b.r,0,TAU);cx.stroke();
+  cx.beginPath();cx.arc(0,0,b.r*0.45,0,TAU);cx.stroke()}
+ cx.shadowBlur=0}
+function vecPickup(p){const S2=(col,lw)=>{cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=10;
+  cx.lineWidth=lw||2.4;cx.lineJoin="round"};
+ if(p.k==="repair"){S2(VPAL.repair);cx.strokeRect(-11,-11,22,22);
+  cx.beginPath();cx.moveTo(-6,0);cx.lineTo(6,0);cx.moveTo(0,-6);cx.lineTo(0,6);cx.stroke()}
+ else if(p.k==="magnet"){S2(VPAL.magnet,3);cx.beginPath();cx.arc(0,0,11,Math.PI,TAU);cx.stroke();
+  cx.beginPath();cx.moveTo(-11,0);cx.lineTo(-11,9);cx.moveTo(11,0);cx.lineTo(11,9);cx.stroke()}
+ else if(p.k==="nuke"){S2(VPAL.nuke);cx.beginPath();cx.arc(0,0,12,0,TAU);cx.stroke();
+  for(let i=0;i<3;i++){const a=i*TAU/3+frameT;cx.beginPath();cx.moveTo(0,0);
+   cx.lineTo(Math.cos(a)*11,Math.sin(a)*11);cx.stroke()}}
+ else if(p.k==="chest"){S2(VPAL.chest);cx.strokeRect(-19,-11,38,24);
+  cx.beginPath();cx.moveTo(-19,-1);cx.lineTo(19,-1);cx.moveTo(0,-7);cx.lineTo(0,7);cx.stroke()}
+ else if(p.k==="mine"){S2(p.arm<=0&&Math.floor(frameT*6)%2?"#ff5050":VPAL.mine);
+  cx.beginPath();cx.arc(0,0,p.r,0,TAU);cx.stroke();
+  for(let i=0;i<6;i++){const a=i/6*TAU;cx.beginPath();
+   cx.moveTo(Math.cos(a)*p.r,Math.sin(a)*p.r);
+   cx.lineTo(Math.cos(a)*(p.r+6),Math.sin(a)*(p.r+6));cx.stroke()}}
+ cx.shadowBlur=0}
+
+// ------------------------------------------------------------------- the tube
+// Scanlines and a soft bloom over everything, as one baked pattern and one
+// baked gradient, so the cost is two fills a frame rather than two hundred.
+let VTUBE=null;
+function vecTube(){if(!VTUBE)VTUBE=bake(4,6,(g,w,h)=>{g.fillStyle="rgba(0,0,0,0.30)";
+  g.fillRect(0,0,w,2);g.fillStyle="rgba(0,0,0,0.13)";g.fillRect(0,2,w,1)});
+ return VTUBE}
+let VPAT=null;
+function vecScreen(){if(!FX)return;
+ cx.save();cx.setTransform(1,0,0,1,0,0);cx.scale(DPR,DPR);
+ if(!VPAT)VPAT=cx.createPattern(vecTube(),"repeat");
+ cx.fillStyle=VPAT;cx.fillRect(0,0,W,H);
+ cx.restore()}
 function buildArt(){
  ART.vigSprite=bake(256,180,(g,w,h)=>{const gr=g.createRadialGradient(w/2,h/2,h*0.36,w/2,h/2,w*0.74);
   gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(1,"rgba(0,0,10,0.6)");g.fillStyle=gr;g.fillRect(0,0,w,h)});
@@ -306,6 +536,7 @@ function buildArt(){
  // Asteroids: a hard-edged silhouette, one light direction (top-left) and
  // craters drawn as a lit rim plus a shadowed rim. Flat translucent discs
  // just read as soap bubbles, so each crater gets both arcs clipped to it.
+ if(VEC())ART.rock=vecRocks();else
  for(let v=0;v<3;v++)ART.rock.push(bake(128,128,g=>{g.translate(64,64);g.lineJoin="round";
   const base=["#5f564c","#4f473e","#413a32"][v];
   const outline=()=>{g.beginPath();
@@ -335,6 +566,16 @@ function buildArt(){
 }
 function vignette(){if(FX)cx.drawImage(ART.vigSprite,0,0,W,H)}
 const store={get(k,d){try{const v=localStorage.getItem("starswarm."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("starswarm."+k,JSON.stringify(v))}catch(e){}}};
+// Which skin the art is drawn in. The choice is remembered, it can be made
+// from the hangar at any time, and it reaches nothing but the drawing: every
+// sprite is cached per skin, so switching throws the cache away and rebuilds.
+const SKINS=[{id:"classic",name:"CLASSIC"},{id:"vector",name:"VECTOR"}];
+let skinIdx=Math.max(0,Math.min(SKINS.length-1,parseInt(store.get("skin",0),10)||0));
+function VEC(){return SKINS[skinIdx].id==="vector"}
+function skinName(){return SKINS[skinIdx].name}
+function setSkin(i){skinIdx=((i|0)%SKINS.length+SKINS.length)%SKINS.length;store.set("skin",skinIdx);artReset()}
+function artReset(){ART.glow={};ART.en={};ART.ship={};ART.back={};
+ ART.sun=null;ART.hole=null;ART.gate=null;ART.mystery=null;buildArt()}
 // ---------------------------------------------------------------- audio
 let AC=null,master=null,padBus=null,musicOn=store.get("music",true)!==false,musicTimer=null,musicStep=0,musicNext=0;
 // The bus: everything goes through master; the pad goes through a low-pass
@@ -1372,7 +1613,7 @@ function drawSunLive(x,y,sz){const u=sz/200,t=frameT,A=0.72;cx.save();cx.transla
   cx.restore()}
  cx.globalCompositeOperation="source-over";
  cx.restore()}
-function drawStars(){cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
+function drawStars(){if(VEC())return vecStars();cx.fillStyle="#050614";cx.fillRect(-W,-H,W*3,H*3);
  const RL=realm();
  // A landmark is a very large translucent sprite: cheap on a GPU, but it is
  // the first thing to drop when a device is already missing frames, so it
@@ -1440,7 +1681,7 @@ function holeSprite(){if(ART.hole)return ART.hole;const N=256,R=N/2,CORE=R*0.42;
   th.addColorStop(0,"rgba(255,255,255,0.4)");th.addColorStop(0.45,"rgba(150,190,255,0.2)");th.addColorStop(1,"rgba(80,90,220,0)");
   g.fillStyle=th;g.beginPath();g.arc(0,0,CORE*1.55,0,TAU);g.fill()});
  return ART.hole}
-function drawHole(p){const R=p.r*2.45,f=Math.min(1,p.life*2.5),t=frameT;
+function drawHole(p){if(VEC())return vecHole(p);const R=p.r*2.45,f=Math.min(1,p.life*2.5),t=frameT;
  cx.globalAlpha=f;
  if(FX)glow(0,0,R*1.3,"rgba(110,130,255,0.45)","rgba(20,20,120,0.04)");
  // two turns of the same threads, against each other, so it churns
@@ -1463,7 +1704,7 @@ function drawHole(p){const R=p.r*2.45,f=Math.min(1,p.life*2.5),t=frameT;
  cx.strokeStyle="rgba(255,255,255,"+(0.32*f).toFixed(2)+")";cx.lineWidth=1;
  cx.beginPath();cx.arc(0,0,CR*1.3,beam+2.1,beam+4.2);cx.stroke();
  cx.globalAlpha=1}
-function shipSprite(ship){let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
+function shipSprite(ship){if(VEC())return vecShipSprite(ship);let sp=ART.ship[ship.id];if(sp)return sp;const shape=ship.shape||ship.id;
  const P=SHIPP,R=SHIPRES,col=ship.col,c2=ship.col2;
  const dark=shade(col,-0.55),mid=shade(col,-0.2),lite=shade(col,0.5),deep=shade(col,-0.7);
  sp=bake(P*2*R,P*2*R,g=>{g.scale(R,R);g.translate(P,P);g.lineJoin="round";g.lineCap="round";
@@ -1641,6 +1882,12 @@ function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
  const th=Math.min(1,thrust);
  if(th>0.08){for(const[nx,ny,ns] of NOZZLE[ship.shape||ship.id]||NOZZLE.falcon){
    const fl=(13+th*19+Math.random()*6)*ns;
+   // a vector cabinet had no fire, only a flickering V behind the engine
+   if(VEC()){const c=Math.random()<0.3?"#fff8d0":VPAL.shot;
+    cx.strokeStyle=c;cx.shadowColor=c;cx.shadowBlur=10;cx.lineWidth=2*ns;cx.lineCap="round";
+    cx.beginPath();cx.moveTo(nx,ny-3.4*ns);cx.lineTo(nx-fl,ny);cx.lineTo(nx,ny+3.4*ns);cx.stroke();
+    cx.lineWidth=1.4*ns;cx.beginPath();cx.moveTo(nx,ny-1.6*ns);cx.lineTo(nx-fl*0.55,ny);
+    cx.lineTo(nx,ny+1.6*ns);cx.stroke();cx.shadowBlur=0;continue}
    if(FX)glow(nx-fl*0.4,ny,fl*1.25,"rgba(255,214,140,0.55)","rgba(255,110,30,0.14)");
    cx.fillStyle="rgba(255,140,40,0.8)";
    cx.beginPath();cx.moveTo(nx,ny-4.2*ns);cx.quadraticCurveTo(nx-fl*0.55,ny-2.2*ns,nx-fl,ny);
@@ -1664,10 +1911,11 @@ function krakenArms(e,r,t){const col=e.flash>0?"#fff":e.col;
   const c1x=Math.cos(a)*r*1.15*coil,c1y=Math.sin(a)*r*1.15*coil;
   const ex=Math.cos(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil,ey=Math.sin(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil;
   cx.lineCap="round";
-  cx.strokeStyle=dk;cx.lineWidth=r*0.2;
-  cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke();
-  cx.strokeStyle=col;cx.lineWidth=r*0.13;
-  cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke();
+  cx.strokeStyle=VEC()?col:dk;cx.lineWidth=VEC()?r*0.05:r*0.2;
+  cx.shadowColor=VEC()?col:"transparent";cx.shadowBlur=VEC()?10:0;
+  cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke();cx.shadowBlur=0;
+  if(!VEC()){cx.strokeStyle=col;cx.lineWidth=r*0.13;
+   cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke()}
   if(FX){cx.fillStyle=e.flash>0?"#fff":"rgba(255,150,240,0.75)";
    for(let j=1;j<=4;j++){const u=j/5,iu=1-u;
     const px=iu*iu*0+2*iu*u*c1x+u*u*ex,py=iu*iu*0+2*iu*u*c1y+u*u*ey;
@@ -1707,13 +1955,28 @@ function drawEnemy(e){const t=frameT,r=e.r,k=r/EREF,P=EREF*1.6;
   cx.drawImage(enemySprite("turret",e.col,e.flash>0),-P*k*0.8,-P*k*0.8,P*1.6*k,P*1.6*k)}
  else{const face=e.type==="drifter"?t*0.5:Math.atan2(G.py-e.y,G.px-e.x);
   cx.save();cx.rotate(face);cx.drawImage(enemySprite(e.type,e.col,e.flash>0),-P*k,-P*k,P*2*k,P*2*k);
-  if(e.type==="turret"){cx.fillStyle=e.flash>0?"#fff":"#806020";cx.fillRect(0,-4,r*1.4,8)}
+  if(e.type==="turret"){const bc=e.flash>0?"#fff":(VEC()?VPAL.turret:"#806020");
+   if(VEC()){cx.strokeStyle=bc;cx.shadowColor=bc;cx.shadowBlur=8;cx.lineWidth=3;
+    cx.strokeRect(r*0.4,-4,r,8);cx.shadowBlur=0}
+   else{cx.fillStyle=bc;cx.fillRect(0,-4,r*1.4,8)}}
   cx.restore()}
- if(!e.boss){cx.fillStyle="#fff";const er=Math.max(2.5,r*0.18);
-  cx.beginPath();cx.arc(r*0.35,-r*0.25,er,0,TAU);cx.arc(r*0.35,r*0.25,er,0,TAU);cx.fill();
-  cx.fillStyle="#111";cx.beginPath();cx.arc(r*0.42,-r*0.25,er*0.5,0,TAU);cx.arc(r*0.42,r*0.25,er*0.5,0,TAU);cx.fill()}
+ if(!e.boss){const er=Math.max(2.5,r*0.18);
+  if(VEC()){// a painted eyeball on a wireframe reads as a sticker, so the
+   // vector skin gives the same two eyes as short hot slits instead
+   cx.strokeStyle="#ff5f7a";cx.shadowColor="#ff5f7a";cx.shadowBlur=8;
+   cx.lineWidth=Math.max(1.6,er*0.7);cx.lineCap="round";
+   cx.beginPath();cx.moveTo(r*0.26,-r*0.25);cx.lineTo(r*0.48,-r*0.25);
+   cx.moveTo(r*0.26,r*0.25);cx.lineTo(r*0.48,r*0.25);cx.stroke();cx.shadowBlur=0}
+  else{cx.fillStyle="#fff";
+   cx.beginPath();cx.arc(r*0.35,-r*0.25,er,0,TAU);cx.arc(r*0.35,r*0.25,er,0,TAU);cx.fill();
+   cx.fillStyle="#111";cx.beginPath();cx.arc(r*0.42,-r*0.25,er*0.5,0,TAU);cx.arc(r*0.42,r*0.25,er*0.5,0,TAU);cx.fill()}}
  cx.restore();
  if(e.hp<e.maxhp&&r>=20){const w=r*2,f=Math.max(0,e.hp/e.maxhp);
+  if(VEC()){const c=e.boss?"#ff9a5a":"#ff5f7a";
+   cx.strokeStyle=c;cx.shadowColor=c;cx.shadowBlur=8;cx.lineWidth=1.4;
+   cx.strokeRect(e.x-w/2,e.y-r-13,w,6);
+   cx.fillStyle=c;cx.fillRect(e.x-w/2+1.5,e.y-r-11.5,Math.max(1,(w-3)*f),3);
+   cx.shadowBlur=0;return}
   cx.fillStyle="rgba(20,0,0,0.75)";rr(e.x-w/2,e.y-r-13,w,6,3);cx.fill();
   cx.fillStyle=e.boss?"#ff8040":"#f44";rr(e.x-w/2,e.y-r-13,Math.max(2,w*f),6,3);cx.fill();
   cx.fillStyle="rgba(255,255,255,0.3)";cx.fillRect(e.x-w/2+1,e.y-r-12,Math.max(1,w*f-2),2)}}
@@ -1733,7 +1996,7 @@ function gateSprite(){if(ART.gate)return ART.gate;const N=256,R=N/2;
   // the inner edge, hottest of all
   g.strokeStyle="rgba(255,255,255,0.85)";g.lineWidth=3;g.beginPath();g.arc(0,0,R*0.33,0,TAU);g.stroke()});
  return ART.gate}
-function drawGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
+function drawGate(gt){if(VEC())return vecGate(gt);const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
  if(FX)glow(0,0,R*1.7,"rgba(140,110,255,0.35)","rgba(40,20,120,0.04)");
  cx.save();cx.rotate(frameT*1.2);cx.drawImage(gateSprite(),-R,-R,R*2,R*2);cx.restore();
  // sparks spiralling in, brighter as they fall
@@ -1978,7 +2241,7 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
  // Gems are one hue on purpose: the small ones used to be green, the same
  // green as the commonest enemy, so "is that a pickup or a thing that bites"
  // was a real question. Size and brightness carry the tier instead.
- for(const g of G.gems){const col=g.big>=10?"#b8f6ff":g.big>=3?"#6ceaff":"#35dcff",s=g.big>=10?12:g.big>=3?9:7;
+ for(const g of G.gems){if(VEC()){vecGem(g);continue}const col=g.big>=10?"#b8f6ff":g.big>=3?"#6ceaff":"#35dcff",s=g.big>=10?12:g.big>=3?9:7;
   if(FX||g.big>=3)glow(g.x,g.y,s*2.6,hexA(col,0.6),hexA(col,0.14));
   cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);
   cx.fillStyle=shade(col,-0.3);cx.beginPath();cx.moveTo(0,s);cx.lineTo(-s*0.8,0);cx.lineTo(0,-s);cx.lineTo(s*0.8,0);cx.closePath();cx.fill();
@@ -1986,6 +2249,7 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
   cx.fillStyle=shade(col,0.55);cx.beginPath();cx.moveTo(0,-s);cx.lineTo(-s*0.35,-s*0.15);cx.lineTo(0,0);cx.lineTo(s*0.35,-s*0.15);cx.closePath();cx.fill();
   cx.restore()}
  for(const p of G.pk){cx.save();cx.translate(p.x,p.y+(p.k==="mine"||p.k==="hole"?0:Math.sin(frameT*4)*4));
+  if(VEC()&&p.k!=="hole"){vecPickup(p);cx.restore();continue}
   if(p.k==="repair"){cx.fillStyle="#80ff90";rr(-12,-12,24,24,5);cx.fill();cx.fillStyle="#124";cx.fillRect(-8,-3,16,6);cx.fillRect(-3,-8,6,16)}
   else if(p.k==="magnet"){cx.strokeStyle="#ff40ff";cx.lineWidth=7;cx.beginPath();cx.arc(0,0,11,Math.PI,TAU);cx.stroke();cx.fillStyle="#fff";cx.fillRect(-14,0,7,9);cx.fillRect(7,0,7,9)}
   else if(p.k==="nuke"){cx.fillStyle="#ffd040";cx.beginPath();cx.arc(0,0,13,0,TAU);cx.fill();cx.fillStyle="#222";for(let i=0;i<3;i++){cx.beginPath();cx.arc(0,0,11,i*TAU/3,i*TAU/3+1.05);cx.lineTo(0,0);cx.fill()}cx.fillStyle="#ffd040";cx.beginPath();cx.arc(0,0,3,0,TAU);cx.fill()}
@@ -1994,11 +2258,15 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
   else if(p.k==="hole")drawHole(p);
   cx.restore()}
  for(const e of G.en)drawEnemy(e);
- for(const d of G.drones){cx.save();cx.translate(d.x,d.y);cx.rotate(d.a+Math.PI/2);cx.fillStyle="#80ffc0";cx.beginPath();cx.moveTo(9,0);cx.lineTo(-6,-6);cx.lineTo(-6,6);cx.closePath();cx.fill();cx.restore()}
+ for(const d of G.drones){cx.save();cx.translate(d.x,d.y);cx.rotate(d.a+Math.PI/2);
+  cx.beginPath();cx.moveTo(9,0);cx.lineTo(-6,-6);cx.lineTo(-6,6);cx.closePath();
+  if(VEC()){cx.strokeStyle=VPAL.drone;cx.shadowColor=VPAL.drone;cx.shadowBlur=8;cx.lineWidth=2;cx.stroke();cx.shadowBlur=0}
+  else{cx.fillStyle="#80ffc0";cx.fill()}cx.restore()}
  for(const b of G.bul){
   if(FX){const bg={laser:"rgba(255,64,96,",shot:"rgba(255,208,64,",missile:"rgba(255,128,64,",plasma:"rgba(255,96,255,"}[b.k];
    if(bg)glow(b.x,b.y,(b.r||12)*2.4,bg+"0.55)",bg+"0.14)")}
   cx.save();cx.translate(b.x,b.y);cx.rotate(Math.atan2(b.vy,b.vx));
+  if(VEC()){vecBullet(b);cx.restore();continue}
   if(b.k==="laser"){cx.fillStyle=b.evo?"#ff80ff":"#ff4060";cx.fillRect(-16,-2.5,32,5);cx.fillStyle="#fff";cx.fillRect(-10,-1,20,2)}
   else if(b.k==="shot"){cx.fillStyle="#ffd040";cx.beginPath();cx.ellipse(0,0,10,5,0,0,TAU);cx.fill()}
   else if(b.k==="missile"){cx.fillStyle="#ff8040";rr(-12,-5,22,10,3);cx.fill();cx.fillStyle="#ffe0a0";cx.beginPath();cx.moveTo(10,-5);cx.lineTo(18,0);cx.lineTo(10,5);cx.fill()}
@@ -2007,9 +2275,13 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
 {const ao=arriveOff(),sy=G.py+ao,wk=warpShrink();cx.save();cx.translate(G.px,sy);cx.scale(wk,wk);cx.translate(-G.px,-sy);
  if(FX)glow(G.px,sy,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  if(ao>0){// exhaust column trailing the arrival
-  const len=60+ao*0.6,g=cx.createLinearGradient(0,sy+14,0,sy+14+len);
+  const len=60+ao*0.6;
+  if(VEC()){cx.strokeStyle=VPAL.shot;cx.shadowColor=VPAL.shot;cx.shadowBlur=12;cx.lineWidth=2;
+   cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px-1.5,sy+14+len);
+   cx.moveTo(G.px+8,sy+14);cx.lineTo(G.px+1.5,sy+14+len);cx.stroke();cx.shadowBlur=0}
+  else{const g=cx.createLinearGradient(0,sy+14,0,sy+14+len);
   g.addColorStop(0,"rgba(255,230,150,0.5)");g.addColorStop(0.35,"rgba(255,140,40,0.3)");g.addColorStop(1,"rgba(255,80,20,0)");
-  cx.fillStyle=g;cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px+8,sy+14);cx.lineTo(G.px+2,sy+14+len);cx.lineTo(G.px-2,sy+14+len);cx.closePath();cx.fill()}
+  cx.fillStyle=g;cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px+8,sy+14);cx.lineTo(G.px+2,sy+14+len);cx.lineTo(G.px-2,sy+14+len);cx.closePath();cx.fill()}}
  drawShip(G.px,sy,G.ang,G.ship,(ao>0||G.warp)?1:stickVec().l);
  if(G.sh>0){cx.strokeStyle="rgba(64,208,255,"+(0.25+0.3*(G.sh/G.maxsh))+")";cx.lineWidth=3;cx.beginPath();cx.arc(G.px,sy,28,0,TAU);cx.stroke()}
  if(G.inv>0&&ao<=0&&Math.floor(frameT*20)%2){cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.arc(G.px,G.py,26,0,TAU);cx.fill()}cx.restore()}
@@ -2229,6 +2501,14 @@ function skySprite(){const key=W+"x"+H+"@"+DPR;if(SKY&&skyKey===key)return SKY;
 // the world's drawStars - that one shipped broken for a day because this one
 // took its name and won, and every run played over the title sky.
 function drawSky(){
+ // In vector the hangar is the same void the game is fought in: black, a
+ // scatter of hard dots and nothing painted.
+ if(VEC()){cx.fillStyle="#000";cx.fillRect(0,0,W,H);
+  for(let i=0;i<110;i++){const x=hash(i,23)*W,y=hash(i,29)*H,
+   tw=0.45+0.55*Math.abs(Math.sin(frameT*(0.7+hash(i,13)*1.5)+i)),r=0.9+hash(i,5)*1.5;
+   cx.fillStyle=hash(i,3)>0.93?"rgba(143,220,255,"+tw.toFixed(2)+")":"rgba(210,235,255,"+(tw*0.8).toFixed(2)+")";
+   cx.fillRect(x-r/2,y-r/2,r,r)}
+  return}
  cx.drawImage(skySprite(),0,0,W,H);
  // near stars: fewer, brighter, drifting, and they twinkle
  for(let i=0;i<70;i++){const x=(hash(i,7)*W+frameT*(4+i%5*3))%W,y=hash(i,11)*H;
@@ -2275,6 +2555,10 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  let contentBottom=launchY-gap;
  // the shelf's exit button owns the top-left corner, so on a narrow screen
  // the logo starts below it rather than behind it
+ // The skin switch sits in the top-right corner, opposite the shelf's exit
+ // button, so it is one tap from the hangar and costs the layout no row. On a
+ // wide screen the logo gives up the same width at both ends to clear it.
+ const kw=clamp(W*0.28,96,124),kh=30,kx=W-12-SAFE.r-kw,ky=SAFE.t+8;
  const top=SAFE.t+8+(W<560?40:0);
  const logoSz=clamp(Math.min(88,W/8),26,Math.max(26,(contentBottom-top)*0.24));
  let cursor=top+logoSz*1.95+2;
@@ -2297,7 +2581,11 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
  // small buttons rather than on top of the ship cards
  let launchInline=false;
  if(need()<minShip&&W>=700){launchInline=true;launchY=musicY;contentBottom=launchY-gap}
- {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r);cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
+ {const L=logoSprite(logoSz,W-16-SAFE.l-SAFE.r-(W<560?0:(kw+16)*2));
+  cx.drawImage(L,W/2-L.cssW/2,top+bob,L.cssW,L.cssH)}
+ btn(kx,ky,kw,kh,"SKIN: "+skinName(),()=>setSkin(skinIdx+1),
+  {size:12,fill:"rgba(0,0,0,0.42)",stroke:VEC()?"#8fdcff":"rgba(255,255,255,0.32)",
+   color:VEC()?"#8fdcff":"#ccd6e4"});
  if(showTag){const tag="Six sectors. Survive five minutes, beat the boss, then fly to the gate.";
   wrap(tag,W/2,cursor+hs*0.6,W-36,hs,"#dfe8ff");cursor+=hs*2+8}
  // the mode, then the difficulty, as segmented rows above the ships
@@ -2627,18 +2915,19 @@ function groundWatch(){groundT=0.6;
 let sizeTick=0;
 function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTick+1)%5)===0)sizeWatch();inputWatch();if(frameT-nudgeT>1){nudgeT=frameT;audioNudge()}
  // the hangar and the credits have a theme, and it starts the moment audio can
- if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle="#050614";cx.fillRect(0,0,cv.width,cv.height);
+ if((scene==="title"||scene==="credits"||scene==="launch"||scene==="shop"||scene==="lastrun"||scene==="help")&&AC&&musicOn&&!musicTimer)musicStart();/*loop*/const dt=Math.min(0.05,(ts-tPrev)/1000||0.016);tPrev=ts;frameT+=dt;fxWatch(dt);cx.setTransform(1,0,0,1,0,0);cx.fillStyle=VEC()?"#000000":"#050614";cx.fillRect(0,0,cv.width,cv.height);
  if(scene==="play")update(dt);
  if(["play","levelup","pause","over","win"].includes(scene)&&G){if(G.warp&&G.warp.t>=WARP.dive)drawWarp();else if(G.bonus)drawBonus();else{drawWorld();if(G.warp)drawDive();else drawHUD()}}
  if(scene==="title")drawTitle();else if(scene==="launch")drawLaunch(dt);else if(scene==="credits")drawCredits(dt);else if(scene==="shop")drawShop();else if(scene==="help")drawHelp();else if(scene==="lastrun")drawLastRun(dt);else if(scene==="levelup")drawLevelUp();else if(scene==="pause")drawPause();else if(scene==="over")drawEnd(false);else if(scene==="win")drawEnd(true);
  if(scene==="play")drawWipe(dt);
+ if(VEC())vecScreen();
  drawDiag();
  groundT-=dt;if(groundT<=0)groundWatch();
 }
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,SKINS,setSkin,get skin(){return SKINS[skinIdx].id},options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

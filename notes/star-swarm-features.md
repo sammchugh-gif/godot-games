@@ -424,3 +424,34 @@ that is actually doing the killing, the smaller one to shorten the fights.
 Medium and hard are untouched. `swarmcheck` holds the clock and the build still
 while it spawns one of each at sector 4 and again at sector 6, and checks both
 halves land and that medium sees none of it.
+
+## Two skins
+
+The same game, drawn two ways, chosen from a switch in the top-right corner of
+the hangar and remembered between runs.
+
+**CLASSIC** is the painted art: gradients, lit hulls, a nebula behind
+everything. **VECTOR** is the 1980 arcade cabinet: nothing filled, every shape
+an outline with a phosphor halo, a true black void, and scanlines over the
+whole screen.
+
+The rule the skin obeys is that it touches drawing and nothing else. There is
+no balance, timing or hit box anywhere in it - `skincheck` renders the same
+pinned scene in both skins and checks the boss comes out with the same health,
+the same damage and the same radius either way, while the picture itself
+changes past recognition (around nine tenths of the vector frame is black
+against a twentieth of the classic one).
+
+How it is built: `VEC()` answers which skin is on, and the sprite builders
+(`enemySprite`, `bossSprite`, `shipSprite`, the rocks, the hole and the gate)
+hand over to a vector twin at their first line. Everything drawn live rather
+than baked - gems, bullets, pickups, drones, exhaust, eyes, health bars - takes
+a branch at the point of drawing. Sprites are cached per skin, so switching
+throws the cache away and rebuilds through `artReset()`.
+
+Two things in the skin cost frames, and both ride with `FX`, so a device that
+is already dropping frames loses them rather than stuttering: the scanline
+pattern over the screen and the wireframe landmark turning in the distance.
+
+Adding a third skin means another entry in `SKINS` and another set of twins;
+nothing else in the game needs to know.
