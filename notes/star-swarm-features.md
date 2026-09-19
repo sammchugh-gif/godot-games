@@ -379,17 +379,33 @@ To re-measure after any change:
 
     PLAYWRIGHT=... node tools/playbot.mjs --dif easy --mode campaign --runs 4
 
+
 ## Reading the screen on a phone
 
 The canvas is sized from the visual viewport, which is the right measure in a
 browser tab because it shrinks to make room for Safari's toolbars. A Home
 Screen app has no toolbars, so the layout viewport is the whole screen; when
 it reads taller than the visual viewport, `screenSize()` takes the larger of
-the two. Believing a short visual viewport is what leaves a band of bare page
-showing below the game.
+the two.
 
 The pause screen prints the raw numbers along the bottom: the window, the
 visual viewport, the screen, the layout viewport, the canvas element and its
 backing store, the safe-area insets, whether the page thinks it owns the
 screen, and the pixel ratio. Two taps from play, so it works in a Home Screen
 app where a query string is awkward. `window.SW.geom()` returns the same text.
+
+On an iPhone 16 Pro Max saved to the Home Screen they read:
+
+    win 440x894  vv 440x894  scr 440x956  doc 440x894
+    cv 440x894 @0  buf 880x1788  safe 62/34  own 1  dpr 2
+
+Every measurement of the viewport agrees at 894, which is the 956-point screen
+less a 62-point status bar, while the safe-area insets still report that same
+62 points at the top. The two halves disagree: the insets describe a
+full-screen web view, the viewport describes an inset one. The canvas obeys
+the viewport, stops short, and the bare page shows through underneath.
+
+That combination comes from asking for `apple-mobile-web-app-status-bar-style:
+black-translucent`, so the page asks for the default status bar instead. The
+web view then matches the viewport it reports, and the 62 points the HUD was
+holding clear of the notch come back as usable screen.
