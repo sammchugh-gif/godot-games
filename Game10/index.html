@@ -48,10 +48,17 @@ function readSafe(){const st=getComputedStyle(safeProbe);
 // is given that size in pixels rather than a percentage of something that may
 // itself be wrong, and the whole thing is checked a few times a second in
 // case nothing ever fired.
-function screenSize(){const vv=window.visualViewport;
- return{w:Math.max(1,Math.round(vv&&vv.width?vv.width:innerWidth)),
-        h:Math.max(1,Math.round(vv&&vv.height?vv.height:innerHeight)),
-        d:Math.min(window.devicePixelRatio||1,2)}}
+function screenSize(){const vv=window.visualViewport,de=document.documentElement;
+ let w=Math.round(vv&&vv.width?vv.width:innerWidth),
+     h=Math.round(vv&&vv.height?vv.height:innerHeight);
+ // The visual viewport is the right measure in a browser tab, where it shrinks
+ // to make room for the toolbars. A Home Screen app has no toolbars, so the
+ // layout viewport is the whole screen, and if it reads taller than the visual
+ // one the visual one is wrong: believe it and the canvas stops short of the
+ // bottom, leaving a band of bare page showing under the game.
+ if(ownsTheScreen()){w=Math.max(w,Math.round(de.clientWidth)||0);
+                     h=Math.max(h,Math.round(de.clientHeight)||0)}
+ return{w:Math.max(1,w),h:Math.max(1,h),d:Math.min(window.devicePixelRatio||1,2)}}
 function resize(){readSafe();const z=screenSize();DPR=z.d;W=z.w;H=z.h;
  cv.style.width=W+"px";cv.style.height=H+"px";
  cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
@@ -2530,7 +2537,27 @@ function drawShop(){cx.save();cx.scale(DPR,DPR);drawSky();buttons=[];
    {size:Math.min(16,10+7*k),fill:maxed?"rgba(255,255,255,0.06)":can?"#2a5aa0":"rgba(60,60,80,0.5)",color:maxed?"#9fb0c8":can?"#fff":"#8090a8",stroke:can?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.2)"})})}
  btn(W/2-110,back,220,bh,"BACK TO HANGAR",()=>{scene="title"},{size:Math.min(18,bh*0.4)});
  drawButtons();cx.restore()}
-function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord();bankRun();noteRun("quit")},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();cx.restore()}
+// What the page thinks the screen is, in one line on the pause screen. A
+// phone can then say what it is doing rather than be guessed at from a
+// photograph: the window, the visual viewport, the screen itself, the size
+// the canvas is actually painted at, the safe insets and whether the page
+// believes it owns the whole screen.
+function geomLine(){const vv=window.visualViewport,c=cv.getBoundingClientRect(),sc=window.screen||{};
+ return "win "+Math.round(innerWidth)+"x"+Math.round(innerHeight)
+  +"  vv "+(vv?Math.round(vv.width)+"x"+Math.round(vv.height):"-")
+  +"  scr "+(sc.width?Math.round(sc.width)+"x"+Math.round(sc.height):"-")
+  +"  doc "+Math.round(document.documentElement.clientWidth)+"x"+Math.round(document.documentElement.clientHeight)
+  +"\n"
+  +"cv "+Math.round(c.width)+"x"+Math.round(c.height)+" @"+Math.round(c.top)
+  +"  buf "+cv.width+"x"+cv.height
+  +"  safe "+Math.round(SAFE.t)+"/"+Math.round(SAFE.b)
+  +"  own "+(ownsTheScreen()?1:0)+"  dpr "+DPR}
+function drawPause(){cx.save();cx.scale(DPR,DPR);drawPanel("PAUSED","");buttons=[];btn(W/2-120,H*0.45,240,60,"RESUME",()=>{scene="play";musicStart()},{fill:"#2a5aa0",size:24});btn(W/2-120,H*0.45+80,240,60,"QUIT RUN",()=>{scene="title";saveRecord();bankRun();noteRun("quit")},{size:24});btn(W/2-120,H*0.45+160,240,60,musicOn?"MUSIC: ON":"MUSIC: OFF",()=>musicToggle(),{size:20});drawButtons();
+ const gl=geomLine().split("\n"),gy0=H-8-SAFE.b-gl.length*14;
+ cx.fillStyle="rgba(4,6,19,0.86)";cx.fillRect(0,gy0-2,W,gl.length*14+8);
+ for(let i=0;i<gl.length;i++)
+  textFit(gl[i],W/2,gy0+12+i*14,11,"rgba(150,180,210,0.9)",W-20-SAFE.l-SAFE.r);
+ cx.restore()}
 function start(ship){if(ship&&typeof ship==="object"&&SHIPS.indexOf(ship)>=0)shipIdx=SHIPS.indexOf(ship);if(!unlocks[SHIPS[shipIdx].id])shipIdx=0;newRun(SHIPS[shipIdx]);scene="play";audioInit();musicStart()}
 // LAUNCH does not cut straight to the fight. The chosen ship lights its
 // engines in its card, shakes for half a second, then climbs off the top of
@@ -2599,7 +2626,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTic
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
