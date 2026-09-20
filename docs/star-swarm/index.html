@@ -940,6 +940,13 @@ function drawButtons(){for(const b of buttons){const o=b.opt;
  // A ghost is a hit box laid over something already drawn - a difficulty
  // segment, an upgrade card, the whole credits screen. It draws nothing.
  if(o.ghost)continue;
+ // A button that is showing why it cannot be pressed. It is drawn cold and
+ // flat so it does not read as the way forward, and its tap does nothing.
+ if(o.off){const sz=o.size||22;
+  if(VEC())vbox(b.x,b.y,b.w,b.h,16,"rgba(150,170,195,0.5)",1.8,false);
+  else{rr(b.x,b.y,b.w,b.h,16);cx.fillStyle="rgba(255,255,255,0.05)";cx.fill();
+   cx.lineWidth=2;cx.strokeStyle="rgba(255,255,255,0.22)";cx.stroke()}
+  textFit(b.label,b.x+b.w/2,b.y+b.h/2,sz,"#8d99ad",b.w-24);continue}
  if(o.launch){ // the one button that matters, lit like it
   const pulse=0.55+0.45*Math.sin(frameT*3);
   if(VEC()){const c="#8fdcff",sz=o.size||22;
@@ -1101,7 +1108,17 @@ function shopCost(it){const l=perks[it.id]||0;return l>=it.max?0:(it.cost||SHOP_
 function buy(id){const it=SHOP.find(x=>x.id===id);if(!it||!FEATURES.shop)return false;const c=shopCost(it);if(!c||bank<c)return false;
  bank-=c;perks[id]=(perks[id]||0)+1;store.set("bank",bank);store.set("perks",perks);return true}
 function buyShip(id){const sh=SHIPS.find(x=>x.id===id);if(!sh||!sh.cost||!FEATURES.shop||unlocks[id]||bank<sh.cost)return false;bank-=sh.cost;unlocks[id]=true;store.set("bank",bank);store.set("unlocks",unlocks);return true}
-function bankRun(){if(!G||G.banked||!FEATURES.shop)return;G.banked=true;const got=Math.round(G.gemsGot||0);if(got>0){bank+=got;store.set("bank",bank)}}
+// A gem is worth its full value inside the run - it is the levelling curve,
+// and nothing here touches that. What it is worth afterwards is a quarter.
+// Every gem going straight into the bank had the whole shop and all three
+// ships, near enough thirty thousand, paid off inside four finished runs: the
+// play bot banks about eight thousand two hundred on a win. A quarter of that
+// makes the same shelf about fifteen runs of work, which is a season rather
+// than an evening, while a run that ends early still brings home enough to buy
+// something.
+const BANK_RATE=0.25;
+function banked(){return Math.round((G&&G.gemsGot||0)*BANK_RATE)}
+function bankRun(){if(!G||G.banked||!FEATURES.shop)return;G.banked=true;const got=banked();if(got>0){bank+=got;store.set("bank",bank)}}
 const NOMOD={};
 function mod(){return (G&&G.mod)||NOMOD}
 function recKeyFor(shipId,difId,mode){const k=difId==="easy"?shipId:shipId+"@"+difId;return mode==="endless"?k+"#endless":k}
@@ -1286,7 +1303,7 @@ function noteRun(how){if(!G||G.noted)return;G.noted=true;
  const d=new Date();
  lastRun={when:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),
   ship:G.ship.name,mode:G.mode,dif:G.dif.name,twist:G.mod?G.mod.name:"",how,sector:G.sector,time:fmt(G.t),level:G.level,score:G.score,kills:G.kills,
-  by:how==="died"?(G.lastHit||"the swarm"):"",weapons:w,upgrades:u,evolved:G.evolved||0,gems:Math.round(G.gemsGot||0),bank,perks:pk};
+  by:how==="died"?(G.lastHit||"the swarm"):"",weapons:w,upgrades:u,evolved:G.evolved||0,gems:banked(),bank,perks:pk};
  store.set("lastRun",lastRun)}
 function runSummary(r){r=r||lastRun;if(!r)return "";
  const cap=t=>t?t.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()):"";
@@ -2778,8 +2795,15 @@ function drawTitle(){cx.save();cx.scale(DPR,DPR);drawSky();
   // where you are in the hangar
   for(let i=0;i<n;i++){const dx=W/2+(i-(n-1)/2)*12;cx.fillStyle=i===viewIdx?"#ffe060":unlocks[SHIPS[i].id]?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.18)";cx.beginPath();cx.arc(dx,y+ch-9,i===viewIdx?3.5:2.5,0,TAU);cx.fill()}}
  const lw=launchInline?Math.min(300,W*0.34):Math.min(300,W-48),lbh=launchInline?mh:bh;
- btn(W/2-lw/2,launchY,lw,lbh,launching?"LAUNCHING":"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),()=>launch(),
-  {launch:true,size:Math.min(26,lbh*0.42)});
+ // You can walk the hangar and look at a ship you have not earned, but the
+ // button under it is then that ship's button, not the one you are flying -
+ // it said LAUNCH VIPER over a row of question marks and launched the Viper,
+ // which is a lie about what the tap does.
+ const locked=!unlocks[SHIPS[viewIdx].id];
+ btn(W/2-lw/2,launchY,lw,lbh,
+  launching?"LAUNCHING":locked?(SHIPS[viewIdx].cost&&FEATURES.shop?"LOCKED  \u00b7  \u25c6 "+SHIPS[viewIdx].cost:"LOCKED"):"LAUNCH "+SHIPS[shipIdx].name.split(" ").pop(),
+  ()=>{if(!locked)launch()},
+  {launch:!locked,off:locked,size:Math.min(26,lbh*0.42)});
  // the help lines are gone: the game is learnt by playing it
  // music, shop, credits: three across when they fit, or spread to the edges
  const three=FEATURES.shop,mw=launchInline?Math.min(130,(W-lw-60-SAFE.l-SAFE.r)/4-8):three?Math.min(130,(W-40-SAFE.l-SAFE.r)/3-8):Math.min(150,W*0.36),fs=Math.min(16,mh*0.38);
@@ -2831,7 +2855,7 @@ function drawLevelUp(){cx.save();cx.scale(DPR,DPR);const head=drawPanel("LEVEL "
 function drawEnd(won){cx.save();cx.scale(DPR,DPR);shareSaidT=Math.max(0,shareSaidT-1/60);
  const tail=G.mode==="endless"?"ENDLESS  ·  "+G.dif.name:G.mode==="daily"?"DAILY  ·  "+G.mod.name:G.dif.name;
  drawPanel(won?"ALL SIX SECTORS CLEAR!":"SHIP DESTROYED",(won?"You escaped the swarm!":"Sector "+G.sector+"  ·  survived "+fmt(G.t))+"  ·  "+tail,won?"#80c0ff":"#ff8080");
- const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(G.bonusScore?"     Tunnel bonus +"+G.bonusScore:"")+(FEATURES.shop&&G.gemsGot>0?"     +"+Math.round(G.gemsGot)+" gems banked":""),W/2,y+46,20,"#fff",W-32);
+ const y=H*0.42;text("Score "+G.score,W/2,y,40,"#ffe060");textFit(G.kills+" aliens blasted     Level "+G.level+(G.bonusScore?"     Tunnel bonus +"+G.bonusScore:"")+(FEATURES.shop&&banked()>0?"     +"+banked()+" gems banked":""),W/2,y+46,20,"#fff",W-32);
  if(G.mode==="daily"){const d=records[dailyKey()];
   if(G.dailyRank===1&&G.score>0)text("TODAY\u2019S BEST!",W/2,y+80,26,"#80ff90");
   // the day's board, where there is room for it under the score
@@ -3053,8 +3077,8 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTic
 }
 buildArt();
 requestAnimationFrame(frame);
-window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,droneSprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,SKINS,setSkin,get skin(){return SKINS[skinIdx].id},options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,droneSprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get buttonBoxes(){return buttons.map(b=>({label:b.label,x:b.x,y:b.y,w:b.w,h:b.h,off:!!b.opt.off}))},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,BANK_RATE,banked,SKINS,setSkin,get skin(){return SKINS[skinIdx].id},options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one

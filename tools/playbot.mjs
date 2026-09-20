@@ -121,7 +121,7 @@ const worker = async () => {
     r.run = i + 1; r.wall = Math.round((Date.now() - t0) / 1000); if (errs.length) r.pageError = errs[0].slice(0, 160);
     results.push(r);
     const line = r.error ? `run ${r.run}: ERROR ${r.error}` :
-      `run ${r.run}: ${r.end} in sector ${r.sector} at ${Math.floor(r.t / 60)}:${String(r.t % 60).padStart(2, '0')}  level ${r.level}  score ${r.score}  evolved ${r.evolved}  ${r.by ? 'killed by ' + r.by.toLowerCase() : ''}  (${r.wall}s)`;
+      `run ${r.run}: ${r.end} in sector ${r.sector} at ${Math.floor(r.t / 60)}:${String(r.t % 60).padStart(2, '0')}  level ${r.level}  score ${r.score}  gems ${r.gems}  evolved ${r.evolved}  ${r.by ? 'killed by ' + r.by.toLowerCase() : ''}  (${r.wall}s)`;
     console.log(line);
     for (const s of r.sectors || []) console.log(`    s${s.sector}${s.partial ? '*' : ' '} lvl ${String(s.level).padStart(2)} ranks ${String(s.ranks).padStart(2)} evo ${s.evolved}  lost ${String(Math.round(s.lost)).padStart(4)}/${s.pool}  boss ${s.fight == null ? (s.bossAt ? 'unfinished' : '   -   ') : String(s.fight + 's').padStart(6)}  peak ${String(s.peakEn).padStart(3)}  ${s.build}`);
     if (JSONL) fs.appendFileSync(JSONL, JSON.stringify(r) + '\n');

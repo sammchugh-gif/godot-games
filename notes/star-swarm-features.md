@@ -487,3 +487,29 @@ for the lens and a V of flame behind.
 
 The one engine-side change is cosmetic: a drone now carries `fire`, a timer set
 when it shoots so the flash has something to read.
+
+## What a gem is worth
+
+Inside a run a gem is worth its full value. That is the levelling curve and
+nothing touches it.
+
+Afterwards it is worth a quarter (`BANK_RATE`). Banking every gem in full paid
+off the entire shelf - all seven perks and all three ships, near enough thirty
+thousand gems - inside four finished runs: the play bot banks about eight
+thousand two hundred on a win and around three thousand on a run that dies in
+sector 3. A quarter makes the same shelf about fifteen runs of work, while a
+run that ends early still brings home enough to buy the cheapest upgrade.
+
+Everything the player is shown is the banked figure, not the collected one, so
+the end screen and the shop never disagree. `swarmcheck` holds both halves: a
+gem picked up still counts twenty for twenty and still levels the ship, and the
+bank still takes exactly a quarter.
+
+## The hangar will not launch a ship you have not earned
+
+You can walk the hangar past a ship you have not earned - that is the point of
+the arrows - but the button underneath used to say LAUNCH VIPER over a row of
+question marks, and launch the Viper. It is now that ship's button: LOCKED,
+with the price beside it when it is a shop ship, drawn cold and flat, and the
+tap does nothing. `swarmcheck` dispatches a real finger at it and checks the
+hangar is still the hangar afterwards.
