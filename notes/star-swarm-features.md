@@ -544,3 +544,29 @@ question marks, and launch the Viper. It is now that ship's button: LOCKED,
 with the price beside it when it is a shop ship, drawn cold and flat, and the
 tap does nothing. `swarmcheck` dispatches a real finger at it and checks the
 hangar is still the hangar afterwards.
+
+## One songbook, four bands
+
+Each skin has its own band playing the same eight pieces. The notes do not
+move - a sector's tune is that sector's tune, the boss still borrows the
+sector's key, the form is still thirty-two bars - but who plays them, how fast,
+how low and how long changes completely. That is four soundtracks out of one
+songbook, and it costs a table (`VOICES`) rather than four sets of melodies
+that would then have to be maintained four times over.
+
+| skin | the band |
+| --- | --- |
+| classic | the full lot: sawtooth lead, sawtooth pad, triangle bass |
+| vector | a cabinet: three square channels and one for noise, no pad, short stabs, a touch quicker and brighter |
+| pixel | NES: a pulse lead over a triangle bass, no pad, every lead note answered an octave up a sixteenth later |
+| neon | everything a sawtooth, a fourth lower, slower, notes held long over a pad twice the size |
+
+`musiccheck` renders the same sector in all four and holds them apart: each is
+audible and none clips, neon really is a fourth lower (87Hz against classic's
+117Hz) and the thickest of the four, vector the sparest, and no two of them
+render the same eight seconds.
+
+One thing that is easy to get wrong and was: a slower tempo does not mean
+fewer note events. Neon is slower and yet fires more oscillators in the same
+eight seconds, because it doubles its lead and carries a bigger pad. The
+tempo is read from the kit; the sound is judged on what the sound can show.
