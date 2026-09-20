@@ -487,11 +487,29 @@ is no cheap way to quantise a whole frame sixty times a second.
 So PIXEL has real art. Every sprite is baked once at full size, shrunk to a
 handful of pixels and snapped to a sixteen-colour palette (`PIXPAL`), all of it
 at bake time, so the cost per frame is one `drawImage` with the smoothing off.
-The camera is snapped to the grid, which is what stops the starfield swimming.
 The backdrop is drawn rather than shrunk: flat ground, square stars and patches
 of dithered cloud whose density is smoothed between its corners, because a
 dither laid flat across the screen is a chequerboard and one cut on a block
-boundary is a wall. There is no bloom and no vignette - an eight-bit machine
+boundary is a wall.
+
+Motion took two goes to get right, and the first diagnosis was wrong. The sky
+was not boiling; it was **hopping**. The cell a block belonged to was worked
+out from its world position measured against a drifting origin, which pinned
+the cloud to the world - no parallax at all - and then shunted the entire field
+a full block sideways every time that origin crossed one. Still, hop, still,
+hop. A parallax layer is now walked in its own cells, so a cell's identity is
+the loop variable and cannot change, and the offset that carries it is
+continuous.
+
+Snapping is only ever to the device pixel, never to a block - for the sky, for
+the stars and for the camera itself. Snapping the camera to blocks, which the
+first fix did, makes the whole world judder three pixels at a time under a ship
+that is moving smoothly, which is the same fault wearing a different hat.
+
+`skincheck` measures this rather than taking it on trust: five equal hops must
+move the cloud layer by the same small amount each time. The fix gives
+-9, -9, -9, -9, -9 samples with the rows matching at 99%; the old code gives
+-7, -12, -7, -31, -26, which is what still-then-hop looks like in numbers. There is no bloom and no vignette - an eight-bit machine
 had neither, and a soft radial gradient is the one thing that would put
 hundreds of colours back on a screen meant to have sixteen.
 

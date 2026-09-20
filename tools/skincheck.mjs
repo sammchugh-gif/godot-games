@@ -180,10 +180,20 @@ for (let i = 0; i < names.length; i++) {
 /* the same skin, rendered twice: everything below this is noise */
 await pg.evaluate(`window.SW.setSkin(0)`); await pg.evaluate(SCENE); await sleep(500);
 const floor = diff(grids.CLASSIC, await grid());
+/* Two skins are the same picture only if they agree on BOTH counts. Averaging
+   a frame into cells is blind to pixel art on purpose - pixel is classic's art
+   shrunk, so cell for cell it keeps classic's colours - and that is exactly
+   what the palette count catches instead. Either measure is enough to tell a
+   pair apart; needing both to fail is what stops this flagging a pair that is
+   obviously different on screen. */
 const pairs = [];
 for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
-  const d2 = diff(grids[names[i]], grids[names[j]]);
-  if (d2 < Math.max(floor * 3, 6)) pairs.push(`${names[i]}~${names[j]} ${d2.toFixed(1)}`);
+  const a = names[i], b = names[j];
+  const d2 = diff(grids[a], grids[b]);
+  const hueGap = Math.abs(frames[a].hues - frames[b].hues)
+    / Math.max(frames[a].hues, frames[b].hues);
+  if (d2 < Math.max(floor * 3, 6) && hueGap < 0.25)
+    pairs.push(`${a}~${b} grid ${d2.toFixed(1)}, colours within ${(hueGap*100).toFixed(0)}%`);
 }
 const closest = Math.min(...names.flatMap((n, i) =>
   names.slice(i + 1).map(m => diff(grids[n], grids[m]))));
@@ -197,6 +207,100 @@ check('and no two skins draw the same frame', pairs.length === 0,
    a small fraction of a painted frame, which is the claim. */
 check('pixel keeps to a handful of colours', frames.PIXEL.hues < pc.hues * 0.45,
   `${frames.PIXEL.hues} colours on screen against ${pc.hues} in classic`);
+
+/* ------------------------------------------------ the pixel sky scrolls, not boils
+   The first PIXEL sky decided which piece of cloud each block belonged to by
+   measuring the world against a drifting offset, so every block changed its
+   mind every frame and the whole sky boiled - which is what made the first
+   level rough to play. The fix is that a parallax layer is walked in its own
+   cells and carried by an offset snapped to whole blocks.
+   What that buys is testable: fly, and the sky must be the SAME PICTURE moved
+   sideways. So a row of it is read before and after, and the best whole-block
+   shift between the two must line up almost perfectly. A boiling sky lines up
+   with nothing. */
+await pg.evaluate(`window.SW.setSkin(window.SW.SKINS.findIndex(s => s.id === 'pixel'))`);
+await pg.evaluate(`(() => {
+  const S = window.SW; S.start(); const G = S.G;
+  G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.rocks.length = 0;
+  G.gems.length = 0; G.pk.length = 0; G.bul.length = 0; G.parts.length = 0;
+  G.px = 0; G.py = 0; G.vx = G.vy = 0; G.announce = ''; G.announceT = 0;
+})()`);
+await sleep(500);
+/* Find a row with cloud actually in it. The sky is deliberately sparse, so
+   most rows are empty space and would prove nothing either way - and the row
+   with the most VARIETY is the one full of stars and sprites, which is the
+   wrong row. This looks for the most cloud, flying on until it finds some. */
+const pickRow = () => pg.evaluate(`(() => {
+  const c = document.getElementById('c'), x = c.getContext('2d');
+  let bestY = -1, best = 0;
+  for (let k = 0; k < 26; k++) {
+    const y = Math.round(c.height * (0.2 + k * 0.021));
+    const d = x.getImageData(0, y, c.width, 1).data;
+    let n = 0;
+    for (let i = 0; i < c.width; i += 2) { const j = i * 4;
+      if (d[j] === 26 && d[j+1] === 24 && d[j+2] === 56) n++;
+      else if (d[j] === 58 && d[j+1] === 42 && d[j+2] === 99) n++; }
+    if (n > best) { best = n; bestY = y; }
+  }
+  return { y: bestY, n: best };
+})()`);
+const skyRowAt = y => pg.evaluate(`(() => {
+  const c = document.getElementById('c'), x = c.getContext('2d');
+  const d = x.getImageData(0, ${y}, c.width, 1).data;
+  const out = []; for (let i = 0; i < c.width; i += 2) { const j = i * 4;
+    out.push((d[j] >> 4) * 256 + (d[j+1] >> 4) * 16 + (d[j+2] >> 4)); }
+  return out;
+})()`);
+/* Only the cloud layer counts. The stars on the same row belong to three other
+   parallax layers moving at three other rates, so no single shift can line all
+   of them up and including them would measure nothing but the mixture. These
+   are the three colours the cloud layer is made of, bucketed the same way the
+   sampler buckets them: empty sky, thin cloud, thick cloud. */
+const SKYCOLS = new Set([1, 275, 806]);
+const bestShift = (a, b) => {
+  let best = 0, at = 0, seen = 0;
+  for (let sft = -70; sft <= 70; sft++) {
+    let hit = 0, n = 0;
+    for (let i = 0; i < a.length; i++) { const k = i + sft;
+      if (k < 0 || k >= b.length) continue;
+      if (!SKYCOLS.has(a[i]) || !SKYCOLS.has(b[k])) continue;
+      n++; if (a[i] === b[k]) hit++; }
+    if (n > 40 && hit / n > best) { best = hit / n; at = sft; seen = n; }
+  }
+  return { score: best, shift: at, n: seen };
+};
+let pick = await pickRow();
+for (let hop = 0; hop < 8 && pick.n < 30; hop++) {
+  await pg.evaluate(`window.SW.G.px += 700`); await sleep(400);
+  pick = await pickRow();
+}
+const rowY = pick.y;
+const rowA = await skyRowAt(rowY);
+const cloudy = rowA.filter(v => v === 275 || v === 806).length;
+/* Five equal hops. A parallax layer slides a little for each of them, by the
+   same little each time. The old sky did the opposite: it was pinned to the
+   world, so it slid by the FULL camera distance, and then jumped a whole block
+   sideways whenever its origin crossed one - still, then hop, still, then hop,
+   which is what made the first level rough. Both faults show up here as the
+   step size: too big, or uneven. */
+const shifts = [];
+let prev = rowA;
+for (let k = 0; k < 5; k++) {
+  await pg.evaluate(`window.SW.G.px += 200`); await sleep(380);
+  const now = await skyRowAt(rowY);
+  shifts.push(bestShift(prev, now));
+  prev = now;
+}
+const sv = shifts.map(m => m.shift), scores = shifts.map(m => m.score);
+const spread = Math.max(...sv) - Math.min(...sv);
+const gentle = sv.every(v => v <= -2 && v >= -22);
+const rigid = scores.every(v => v > 0.9);
+check('the pixel sky drifts instead of hopping',
+  cloudy > 20 && rigid && gentle && spread <= 5,
+  cloudy > 20
+    ? `five two-hundred-unit hops move it ${sv.join(', ')} samples (spread ${spread}), matching at ${Math.min(...scores.map(v => Math.round(v*100)))}% or better`
+    : `only ${cloudy} cloud samples on the row, so this proved nothing`);
+await pg.evaluate(`window.SW.setSkin(0)`);
 
 /* ------------------------------------------------- the dial in the corner
    Hull and shield are read at a glance by colour, so the pair has to belong to
