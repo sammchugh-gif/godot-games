@@ -198,6 +198,44 @@ check('and no two skins draw the same frame', pairs.length === 0,
 check('pixel keeps to a handful of colours', frames.PIXEL.hues < pc.hues * 0.45,
   `${frames.PIXEL.hues} colours on screen against ${pc.hues} in classic`);
 
+/* ------------------------------------------------- the dial in the corner
+   Hull and shield are read at a glance by colour, so the pair has to belong to
+   the skin rather than staying blue-and-green on a magenta screen - and no two
+   skins may share a pair, or the switch has not reached the one thing on the
+   HUD that matters most in a fight. */
+const vitals = await pg.evaluate(`window.SW.VITALS`);
+const vkeys = Object.keys(vitals);
+const vpairs = vkeys.map(k => vitals[k].hp + '|' + vitals[k].sh);
+check('every skin has its own hull and shield', new Set(vpairs).size === vkeys.length
+  && vkeys.every(k => vitals[k].hp !== vitals[k].sh && vitals[k].low !== vitals[k].hp),
+  vkeys.map(k => k + ' ' + vitals[k].hp + '/' + vitals[k].sh).join('   '));
+/* and the dial really is drawn in them: the pixels under it must change skin
+   to skin, which the frame grids already prove for the screen as a whole but
+   not for the one corner that was hard-coded */
+const dialHues = {};
+for (let i = 0; i < names.length; i++) {
+  await pg.evaluate(`window.SW.setSkin(${i})`);
+  await pg.evaluate(`(() => { const S = window.SW, G = S.G; G.hp = G.maxhp * 0.6;
+    if (G.maxsh > 0) G.sh = G.maxsh * 0.7; })()`);
+  await sleep(400);
+  dialHues[names[i]] = await pg.evaluate(`(() => {
+    const S = window.SW, b = S.hud().vitals, c = document.getElementById('c'), x = c.getContext('2d');
+    const D = S.screen().DPR, d = x.getImageData(Math.round(b.x*D), Math.round(b.y*D),
+      Math.round(b.w*D), Math.round(b.h*D)).data;
+    const seen = new Set();
+    for (let i = 0; i < d.length; i += 4) if (d[i+3] > 200 && d[i] + d[i+1] + d[i+2] > 150)
+      seen.add((d[i] >> 4) * 256 + (d[i+1] >> 4) * 16 + (d[i+2] >> 4));
+    return [...seen].sort((p, q) => p - q).join(',');
+  })()`);
+}
+await pg.evaluate(`window.SW.setSkin(0)`);
+const dialSame = [];
+for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++)
+  if (dialHues[names[i]] === dialHues[names[j]]) dialSame.push(names[i] + ' = ' + names[j]);
+check('and the dial is actually drawn in them', dialSame.length === 0
+  && names.every(n => dialHues[n].length > 0),
+  dialSame.length ? dialSame.join(', ') : 'four corners, four sets of colours');
+
 /* ------------------------------------------------------- and it is remembered */
 await pg.evaluate(`window.SW.setSkin(1)`);
 await pg.reload({ waitUntil: 'load' });
@@ -206,6 +244,6 @@ const after = await pg.evaluate(`window.SW.skin`);
 check('the choice survives a reload', after === 'vector', `came back as ${after}`);
 
 if (errs.length) { bad++; console.log('\npage error: ' + errs[0].slice(0, 160)); }
-console.log(bad ? `\n${bad} checks failed` : '\nthe same game, drawn two ways');
+console.log(bad ? `\n${bad} checks failed` : '\nthe same game, drawn four ways');
 await browser.close(); srv.close();
 process.exit(bad ? 1 : 0);
