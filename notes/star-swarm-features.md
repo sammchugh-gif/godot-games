@@ -510,8 +510,17 @@ The bloom is capped (`GLOWMAX`), because a sprite is baked into a box and a
 halo wider than the margin round the shape clips at the edge - which on the
 asteroids drew a visible square of light round every rock.
 
-Adding a fifth skin means another entry in `SKINS`, a palette, and whatever it
-does differently; nothing else in the game needs to know.
+The dial in the corner takes its colours from the skin too (`VITALS`). Hull and
+shield are read at a glance by colour rather than by reading a number, so
+leaving them blue-and-green on a magenta screen was the one place the switch
+had not reached: neon runs magenta hull against cyan shield, vector the cold
+greens and blues of a tube, pixel straight out of its sixteen. `skincheck`
+checks no two skins share a pair, and then reads the pixels under the dial in
+each of them to prove the pair is actually being drawn rather than merely
+declared.
+
+Adding a fifth skin means another entry in `SKINS`, a palette, a vitals pair,
+and whatever it does differently; nothing else in the game needs to know.
 
 ## Drones
 

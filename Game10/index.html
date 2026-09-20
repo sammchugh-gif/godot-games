@@ -330,6 +330,15 @@ const PALS={
   shot:"#fff0ff",gem:"#7ee8fa",rock:"#ff8ad0",hole:"#c46aff",gate:"#ff3cbe",
   drone:"#6affd8",mine:"#ff8a3c",repair:"#6affd8",magnet:"#ff3cbe",nuke:"#ffe95c",
   chest:"#3df5ff",ui:"#ff3cbe",ink:"#ffe6fb",ground:"#0b0018"}};
+// The dial in the corner reads at a glance because of its two colours, so it
+// takes them from the skin rather than staying blue-and-green on a magenta
+// screen. Shield, hull, hull in trouble, and the figure in the middle.
+const VITALS={
+ classic:{sh:"#40d0ff",hp:"#40e060",low:"#ff3040",ink:"#ffffff",lowInk:"#ffd2d2"},
+ vector:{sh:"#5fd8ff",hp:"#5fff9a",low:"#ff5f7a",ink:"#e8fbff",lowInk:"#ffd2dc"},
+ pixel:{sh:"#3fa9f5",hp:"#4ad66d",low:"#de4248",ink:"#ffffff",lowInk:"#ff7ab2"},
+ neon:{sh:"#3df5ff",hp:"#ff3cbe",low:"#ffe95c",ink:"#ffe6fb",lowInk:"#fff6c0"}};
+function VIT(){return VITALS[SK()]||VITALS.classic}
 let VPAL=PALS.vector;
 // How far the light bleeds past the line. Vector is a tube seen close up and
 // wants to stay legible; neon is a sign in the rain.
@@ -2674,18 +2683,21 @@ function drawHUD(){cx.save();cx.scale(DPR,DPR);
  const hpF=clamp(G.hp/Math.max(1,G.maxhp),0,1),shF=clamp(G.sh/Math.max(1,G.maxsh),0,1);
  const low=hpF<0.3;
  cx.save();cx.lineCap="round";
- if(FX)glow(gx,gy,GR*1.9,low?"rgba(255,60,70,"+(0.2+0.14*Math.sin(frameT*7)).toFixed(2)+")":"rgba(60,180,255,0.10)","rgba(0,0,0,0)");
+ const VT=VIT();
+ if(FX)glow(gx,gy,GR*1.9,low?hexA(VT.low,0.2+0.14*Math.sin(frameT*7)):hexA(VT.sh,0.1),"rgba(0,0,0,0)");
  cx.fillStyle="rgba(4,8,22,0.62)";cx.beginPath();cx.arc(gx,gy,GR,0,TAU);cx.fill();
  cx.strokeStyle="rgba(255,255,255,0.13)";cx.lineWidth=1;cx.beginPath();cx.arc(gx,gy,GR,0,TAU);cx.stroke();
  // the empty tracks, so a dial that is nearly gone still reads as a dial
  cx.strokeStyle="rgba(255,255,255,0.10)";
  cx.lineWidth=GR*0.13;cx.beginPath();cx.arc(gx,gy,GR*0.85,A0,A0+SWEEP);cx.stroke();
  cx.lineWidth=GR*0.24;cx.beginPath();cx.arc(gx,gy,GR*0.58,A0,A0+SWEEP);cx.stroke();
- if(G.maxsh>0&&shF>0){cx.strokeStyle="#40d0ff";cx.lineWidth=GR*0.13;
-  cx.beginPath();cx.arc(gx,gy,GR*0.85,A0,A0+SWEEP*shF);cx.stroke()}
- if(hpF>0){cx.strokeStyle=low?"#ff3040":"#40e060";cx.lineWidth=GR*0.24;
-  cx.beginPath();cx.arc(gx,gy,GR*0.58,A0,A0+SWEEP*hpF);cx.stroke()}
- textFit(String(Math.ceil(G.hp)),gx,gy-GR*0.02,GR*0.58,low?"#ffd2d2":"#fff",GR*1.05);
+ if(G.maxsh>0&&shF>0){cx.strokeStyle=VT.sh;cx.lineWidth=GR*0.13;
+  if(LINE()){cx.shadowColor=VT.sh;cx.shadowBlur=GR*0.3}
+  cx.beginPath();cx.arc(gx,gy,GR*0.85,A0,A0+SWEEP*shF);cx.stroke();cx.shadowBlur=0}
+ if(hpF>0){const hc=low?VT.low:VT.hp;cx.strokeStyle=hc;cx.lineWidth=GR*0.24;
+  if(LINE()){cx.shadowColor=hc;cx.shadowBlur=GR*0.3}
+  cx.beginPath();cx.arc(gx,gy,GR*0.58,A0,A0+SWEEP*hpF);cx.stroke();cx.shadowBlur=0}
+ textFit(String(Math.ceil(G.hp)),gx,gy-GR*0.02,GR*0.58,low?VT.lowInk:VT.ink,GR*1.05);
  cx.restore();
  HUDBOX.vitals={x:gx-GR,y:gy-GR,w:GR*2,h:GR*2};
  if(G.bossAlive){const b=G.bossAlive;
@@ -3296,7 +3308,7 @@ function frame(ts){if(!halted)requestAnimationFrame(frame);if((sizeTick=(sizeTic
 buildArt();
 requestAnimationFrame(frame);
 window.SW={get G(){return G},get scene(){return scene},start,launch,get launchT(){return launchT},set stick(v){botStick=v},get cards(){return cards},applyCard,FEATURES,evolvable,evolve,openChest,MODES,DAILY_MODS,set mode(i){modeIdx=i},get mode(){return modeIdx},dailyInfo,realm,records,SHOP,perks,buy,buyShip,magnetR,dropPickup,RATION,sprite:shipSprite,shipSpeed,shipDmg,shipShield,mysterySprite,droneSprite,get viewIdx(){return viewIdx},set viewIdx(i){viewIdx=i},get shipIdx(){return shipIdx},get lastRun(){return lastRun},runSummary,shareRun,shareNow,get bank(){return bank},set bank(v){bank=v},get buttonLabels(){return buttons.map(b=>b.label)},get buttonBoxes(){return buttons.map(b=>({label:b.label,x:b.x,y:b.y,w:b.w,h:b.h,off:!!b.opt.off}))},get audio(){return AC?{state:AC.state,now:AC.currentTime,next:musicNext,timer:!!musicTimer}:null},get ctx(){return AC},arriveOff,get buttons(){return buttons.length},get launchDraw(){return launchDraw},get shipSlot(){return shipSlot},SHIPS,set scene(v){scene=v},unlocks,get fx(){return FX},set fx(v){FX=v?1:0},get safe(){return SAFE},
- WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,BANK_RATE,banked,SKINS,setSkin,VOICES,get skin(){return SKINS[skinIdx].id},options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
+ WEAPONS,PASSIVES,DIFFS,ENEMY,SECTOR_LEN,SECTORS,LATE,lateEase,BANK_RATE,banked,SKINS,setSkin,VOICES,VITALS,get skin(){return SKINS[skinIdx].id},options,slots,spawnEnemy,moveSpeed,WARP,BONUS,geom(){return geomLine()},ground(){return groundC},get safe2(){return{...SAFE,owns:ownsTheScreen()}},screen(){return{W,H,DPR,cw:cv.width,ch:cv.height,sw:cv.style.width,sh:cv.style.height}},get fitLog(){return fitLog},set fitLog(v){fitLog=v},get bonus(){return G&&G.bonus},drawShip3D,shipMesh,get warp(){return G&&G.warp},halt(){halted=true},resume(){if(halted){halted=false;tPrev=0;requestAnimationFrame(frame)}},step(dt){if(halted)frame(tPrev+dt*1000)},get track(){return musicTrack},BOSS_TRACK,
  hud(){return HUDBOX},TRACKS,audioRender,SWARM,get credits(){return creditLines()},
  // step the fight without drawing it, so a test can time a boss rather than
  // somebody's impression of one
