@@ -467,8 +467,39 @@ which drew nothing by luck rather than by intent. They now say `ghost: true`
 and `drawButtons` skips them, which is what stopped the vector skin painting
 black over its own labels.
 
-Adding a third skin means another entry in `SKINS` and another set of twins;
-nothing else in the game needs to know.
+## Four skins
+
+CLASSIC is the painted art. VECTOR is the 1980 cabinet. PIXEL is the eight-bit
+port. NEON is the sign in the rain. One button in the top-right of the hangar
+cycles them, and the choice is remembered.
+
+VECTOR and NEON are the same drawing - `LINE()` is true for both - and part
+company only on palette (`PALS`), on how hard the light bleeds (`GLOWK()`), and
+on what is behind them: vector has a void and scanlines, neon has a grid that
+slides with the camera and no scanlines at all.
+
+PIXEL has no art of its own. The world is drawn exactly as it always was, then
+squeezed through a canvas a third of the size and blown back up with the
+smoothing off (`pixelScreen()`), so every sprite, bullet and spark lands on the
+same grid. One pass covers the lot, it cannot drift out of step with the art
+the way a second set of sprites would, and the HUD stays crisp because the
+squeeze happens at the end of `drawWorld`, before the HUD is drawn. The hangar
+uses the same trick on the sky and, through `pixelRect`, on the ship in its
+card. What PIXEL does not do is quantise colour: it is a coarse grid, not a
+sixteen-colour palette.
+
+Two things were sharpened after the first vector build went out. The furniture
+had the same double glowing stroke the ships do, which made every menu box read
+as slightly out of focus, so `vbox` now draws one crisp stroke and a short
+bloom. And the scanlines now only fall over the fight, not over the menus,
+where they were softening text that people are trying to read.
+
+The bloom is capped (`GLOWMAX`), because a sprite is baked into a box and a
+halo wider than the margin round the shape clips at the edge - which on the
+asteroids drew a visible square of light round every rock.
+
+Adding a fifth skin means another entry in `SKINS`, a palette, and whatever it
+does differently; nothing else in the game needs to know.
 
 ## Drones
 
