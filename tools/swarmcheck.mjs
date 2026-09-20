@@ -296,6 +296,60 @@ check('and medium and hard keep their teeth', mHp === 1 && LATEC.med6.dmg === LA
   && LATEC.med6.bhp === LATEC.med4.bhp,
   `medium sector 6 against sector 4: swarm health x${mHp}, unchanged`);
 
+/* ------------------------------------------------------ what a gem is worth
+   A gem is worth its full value inside the run, because that is the levelling
+   curve. Afterwards it is worth a quarter, because every gem banked in full
+   paid off the whole shop in four finished runs. Both halves are checked here,
+   since the tempting way to nerf the shop is to make gems worth less to pick
+   up, which would quietly slow the whole game down. */
+const ECON = await pg.evaluate(`(() => {
+  const S = window.SW; S.start(); const G = S.G;
+  G.arrive = 0; G.spawnAcc = -1e9; G.en.length = 0; G.rocks.length = 0; G.gems.length = 0;
+  const lvl0 = G.level;
+  /* twenty small gems dropped on the ship, so the magnet takes them at once */
+  for (let i = 0; i < 20; i++) G.gems.push({ x: G.px + 5, y: G.py, v: 1, big: 1 });
+  S.sim(0.5);
+  return { got: Math.round(G.gemsGot || 0), levelled: G.level > lvl0,
+           rate: S.BANK_RATE, banked: S.banked() };
+})()`);
+check('a gem is worth its full value in the run', ECON.got === 20 && ECON.levelled,
+  `twenty gems picked up read as ${ECON.got} collected, and levelled the ship`);
+check('and a quarter of it afterwards', ECON.rate === 0.25 && ECON.banked === 5,
+  `${ECON.got} collected banks ${ECON.banked} at a rate of ${ECON.rate}`);
+
+/* ------------------------------------------- the hangar will not lie to you
+   Walking the hangar past a ship you have not earned used to leave the button
+   underneath saying LAUNCH VIPER - and launching the Viper. The button belongs
+   to the ship on show. */
+const HANGAR = await pg.evaluate(`(() => {
+  const S = window.SW; S.scene = 'title';
+  const owned = S.SHIPS.findIndex(sh => S.unlocks[sh.id]);
+  const lockedIdx = S.SHIPS.findIndex(sh => !S.unlocks[sh.id]);
+  return { owned, lockedIdx, n: S.SHIPS.length };
+})()`);
+const buttonFor = async idx => pg.evaluate(`(() => {
+  const S = window.SW; S.viewIdx = ${idx}; S.scene = 'title';
+  return null;
+})()`).then(() => sleep(220)).then(() => pg.evaluate(`window.SW.buttonBoxes.find(b => /LAUNCH|LOCKED/.test(b.label))`));
+const own = await buttonFor(HANGAR.owned);
+const lock = await buttonFor(HANGAR.lockedIdx);
+check('a ship you own offers a launch', /^LAUNCH /.test(own.label) && !own.off, own.label);
+check('and one you have not earned does not', /^LOCKED/.test(lock.label) && lock.off === true, lock.label);
+/* and the tap really is inert, not merely drawn cold */
+const stayed = await pg.evaluate(`(() => {
+  const S = window.SW; S.viewIdx = ${HANGAR.lockedIdx}; S.scene = 'title'; return S.scene;
+})()`);
+await sleep(220);
+const box = await pg.evaluate(`window.SW.buttonBoxes.find(b => /LOCKED/.test(b.label))`);
+const cdpT = await pg.context().newCDPSession(pg);
+await cdpT.send('Input.dispatchTouchEvent', { type: 'touchStart',
+  touchPoints: [{ x: box.x + box.w / 2, y: box.y + box.h / 2 }] });
+await cdpT.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+await sleep(400);
+const after = await pg.evaluate(`window.SW.scene`);
+check('and tapping it starts nothing', stayed === 'title' && after === 'title',
+  `the hangar is still the hangar after a tap on "${box.label}"`);
+
 /* ----------------------------------------------------- the swarm parts
    Whatever is on the field when a boss arrives turns and leaves, so the
    duel starts on an open field rather than behind a hundred scouts -
@@ -305,7 +359,21 @@ const part = await pg.evaluate(`(() => {
   G.hp = G.maxhp = 1e9; G.secT = 180; G.spawnAcc = -1e9;
   for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2; S.spawnEnemy(['scout','swarmer','drifter'][i % 3], G.px + Math.cos(a) * 320, G.py + Math.sin(a) * 320); }
   const before = G.en.length; let bossT = null, stay0 = 0, flee0 = 0;
-  for (let i = 0; i < 55; i++) { S.sim(0.1); if (G.bossAlive && bossT == null) { bossT = +G.secT.toFixed(1); stay0 = G.en.filter(e => !e.boss && !e.flee).length; flee0 = G.en.filter(e => e.flee).length; } }
+  /* The share is only meaningful over the swarm that was actually there to be
+     scattered. A boss lands with an escort in the same step, and counting
+     those as heads that failed to turn dragged the figure anywhere from 67%
+     to 88% between runs - noise from the escort's size, not from the roll.
+     So the field is snapshotted before each step and judged over exactly the
+     ships that were standing when the boss arrived. */
+  for (let i = 0; i < 55; i++) {
+    const was = G.en.filter(e => !e.boss);
+    S.sim(0.1);
+    if (G.bossAlive && bossT == null) {
+      bossT = +G.secT.toFixed(1);
+      const live = was.filter(e => G.en.indexOf(e) >= 0);
+      flee0 = live.filter(e => e.flee).length; stay0 = live.length - flee0;
+    }
+  }
   const out = { before, bossT, stay0, flee0, boss: !!G.bossAlive, fleeing: G.en.filter(e => e.flee).length, after: G.en.filter(e => !e.boss && !e.flee).length };
   S.sim(6); out.later = G.en.filter(e => !e.boss && !e.flee).length; out.straggle = G.en.filter(e => e.flee).length; S.scene = 'title'; return out;
 })()`);
@@ -538,7 +606,8 @@ const SHOPT = await pg.evaluate(`(() => {
 await sleep(400);
 SHOPT.offButtons = await pg.evaluate('window.SW.buttonLabels');
 await pg.evaluate(`(() => { const S = window.SW; S.FEATURES.shop = true; for (const k in S.perks) delete S.perks[k]; S.bank = 0; S.scene = 'title'; })()`);
-check('a run banks its gems when it ends', SHOPT.got === 60 && SHOPT.died === 'over' && SHOPT.bank === 60,
+check('a run banks a quarter of its gems when it ends',
+  SHOPT.got === 60 && SHOPT.died === 'over' && SHOPT.bank === 15,
   `30 gems worth 2 picked up, ship destroyed, ${SHOPT.bank} in the bank`);
 check('buying costs what it says', SHOPT.poor === false && SHOPT.bought && SHOPT.left === 400 && SHOPT.lv === 2,
   `190 gems buys nothing; 1000 buys two hull levels (200 + 400) and leaves ${SHOPT.left}`);
@@ -637,7 +706,7 @@ const LAST = await pg.evaluate(`(() => {
 })()`);
 check('a run is written down when it ends', LAST.scene === 'over' && LAST.how === 'died' && LAST.sector === 3 && /KRAKEN/.test(LAST.by || '') && LAST.evolved === 1,
   `died in sector ${LAST.sector}, killed by ${LAST.by}, one evolution`);
-check('and reads as one line', /Viper/i.test(LAST.summary) && /died in sector 3/.test(LAST.summary) && /Prism Beam/.test(LAST.summary) && /score 777/.test(LAST.summary) && /\+55 gems/.test(LAST.summary),
+check('and reads as one line', /Viper/i.test(LAST.summary) && /died in sector 3/.test(LAST.summary) && /Prism Beam/.test(LAST.summary) && /score 777/.test(LAST.summary) && /\+\d+ gems \(bank \d+\)/.test(LAST.summary),
   LAST.summary.slice(0, 120) + '...');
 check('SHARE hands that line to the share sheet', LAST.shared, 'navigator.share received the summary');
 await sleep(400);
