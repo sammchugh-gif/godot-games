@@ -53,6 +53,7 @@ const SCENE = `(() => {
   G.rocks.length = 0; G.gems.length = 0; G.pk.length = 0; G.bul.length = 0;
   G.en.length = 0; G.parts.length = 0; G.txt.length = 0; G.drones.length = 0;
   G.sector = 3; G.t = 300; G.secT = 120; G.level = 14; G.px = 0; G.py = 0;
+  G.announce = ''; G.announceT = 0;   /* the banner is smooth text in every skin */
   /* the swarm is pinned so nothing drifts between the two renders; the boss
      keeps its real health, because that is one of the numbers being compared */
   const put = (t, dx, dy, r, keep) => { const e = S.spawnEnemy(t, dx, dy);
@@ -111,29 +112,28 @@ check('a skin changes nothing about the fight',
 /* --------------------------------------------- but it does change the picture */
 const px = async () => pg.evaluate(`(() => {
   const c = document.getElementById('c'), x = c.getContext('2d');
-  const d = x.getImageData(0, 0, c.width, c.height).data;
+  /* The world only. The HUD is drawn smooth in every skin, so counting it
+     puts the same few hundred anti-aliased colours into all four and buries
+     the difference this is trying to see. */
+  const y0 = Math.round(c.height * 0.22), y1 = Math.round(c.height * 0.78);
+  const d = x.getImageData(0, y0, c.width, y1 - y0).data;
   let black = 0, n = 0, sum = 0;
   const step = 4 * 7;                     /* every seventh pixel is plenty */
   for (let i = 0; i < d.length; i += step) {
     n++; const v = d[i] + d[i+1] + d[i+2];
     sum += v; if (v <= 24) black++;
   }
-  /* How often the colour changes along a row: a picture laid on a coarse grid
-     changes far less often than a painted one, which is the only honest way to
-     measure "chunky" from pixels alone. One row is too much at the mercy of
-     what happens to be under it, so this sums sixteen rows spread down the
-     middle of the frame. */
-  let blocks = 0;
-  for (let r = 0; r < 16; r++) {
-    const y = Math.round(c.height * (0.18 + r * 0.04));
-    const row = x.getImageData(0, y, c.width, 1).data;
-    let prev = -1;
-    for (let px2 = 0; px2 < c.width; px2++) {
-      const k = (row[px2*4] >> 4) * 289 + (row[px2*4+1] >> 4) * 17 + (row[px2*4+2] >> 4);
-      if (k !== prev) { blocks++; prev = k; }
-    }
+  /* How many different colours are on screen. Counting edges was the wrong
+     measure for pixel art: a dithered sky alternates two colours every block,
+     so real pixel art has MORE edges than a painted frame, not fewer. What it
+     has less of is colours - sixteen of them, fixed at bake time - and that is
+     both the thing being asked for and the thing that can be counted. */
+  const hues = new Set();
+  for (let i = 0; i < d.length; i += 4 * 3) {
+    if (d[i+3] < 8) continue;
+    hues.add((d[i] >> 3) * 1024 + (d[i+1] >> 3) * 32 + (d[i+2] >> 3));
   }
-  return { black: black / n, mean: sum / n / 3, blocks };
+  return { black: black / n, mean: sum / n / 3, hues: hues.size };
 })()`);
 const frames = {};
 for (let i = 0; i < names.length; i++) {
@@ -146,26 +146,57 @@ check('and it does change the picture', pv.black > pc.black + 0.25,
 check('the vector void is properly empty', pv.black > 0.6 && pv.mean < pc.mean,
   `mean brightness ${pv.mean.toFixed(1)} against ${pc.mean.toFixed(1)}`);
 /* four skins are only four skins if no two of them render the same frame */
-/* Brightness alone cannot tell classic from pixel, and should not: pixel IS
-   classic on a coarse grid, so it keeps the same average. The edge count is
-   what separates them, so all three go into the signature. */
-const sig = n => frames[n].black.toFixed(2) + '/' + frames[n].mean.toFixed(1) + '/' + frames[n].blocks;
+/* Summary numbers cannot decide this. Two obviously different pictures can
+   land on the same average brightness, and pixel keeps classic's average by
+   construction. So the frames themselves are compared: each is boiled down to
+   a grid of average colours, and two skins differ if their grids do - measured
+   against how much the SAME skin differs from itself between renders, which is
+   the twinkle and the drift and is the noise floor here. */
+const grid = () => pg.evaluate(`(() => {
+  const c = document.getElementById('c'), x = c.getContext('2d');
+  const CW = 24, CH = 48, out = [];
+  const y0 = Math.round(c.height * 0.22), y1 = Math.round(c.height * 0.78);
+  const d = x.getImageData(0, y0, c.width, y1 - y0).data, w = c.width, h = y1 - y0;
+  for (let gy = 0; gy < CH; gy++) for (let gx = 0; gx < CW; gx++) {
+    let r = 0, g2 = 0, b = 0, n = 0;
+    const xa = Math.floor(gx * w / CW), xb = Math.floor((gx + 1) * w / CW);
+    const ya = Math.floor(gy * h / CH), yb = Math.floor((gy + 1) * h / CH);
+    for (let yy = ya; yy < yb; yy += 2) for (let xx = xa; xx < xb; xx += 2) {
+      const i = (yy * w + xx) * 4; r += d[i]; g2 += d[i+1]; b += d[i+2]; n++;
+    }
+    out.push(r / n, g2 / n, b / n);
+  }
+  return out;
+})()`);
+const diff = (a, b) => {
+  let t = 0; for (let i = 0; i < a.length; i++) t += Math.abs(a[i] - b[i]);
+  return t / a.length;
+};
+const grids = {};
+for (let i = 0; i < names.length; i++) {
+  await pg.evaluate(`window.SW.setSkin(${i})`); await pg.evaluate(SCENE); await sleep(500);
+  grids[names[i]] = await grid();
+}
+/* the same skin, rendered twice: everything below this is noise */
+await pg.evaluate(`window.SW.setSkin(0)`); await pg.evaluate(SCENE); await sleep(500);
+const floor = diff(grids.CLASSIC, await grid());
 const pairs = [];
 for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
-  const a = frames[names[i]], b = frames[names[j]];
-  if (Math.abs(a.black - b.black) < 0.04 && Math.abs(a.mean - b.mean) < 1.2
-      && Math.abs(a.blocks - b.blocks) < Math.max(4, a.blocks * 0.25))
-    pairs.push(names[i] + ' = ' + names[j]);
+  const d2 = diff(grids[names[i]], grids[names[j]]);
+  if (d2 < Math.max(floor * 3, 6)) pairs.push(`${names[i]}~${names[j]} ${d2.toFixed(1)}`);
 }
+const closest = Math.min(...names.flatMap((n, i) =>
+  names.slice(i + 1).map(m => diff(grids[n], grids[m]))));
 check('and no two skins draw the same frame', pairs.length === 0,
-  pairs.length ? pairs.join(', ') : names.map(n => n.toLowerCase() + ' ' + sig(n)).join('   '));
+  pairs.length ? pairs.join(', ')
+    : `closest pair differs by ${closest.toFixed(1)} against a noise floor of ${floor.toFixed(1)}`);
 /* pixel is the one that lands everything on a grid: its frame has far fewer
    distinct edges than the painted one it is made from */
-/* Most of a Star Swarm frame is empty space, which is identical in both, so
-   the ratio is diluted: pixel lands around two thirds of classic rather than
-   the quarter the block size alone would suggest. */
-check('pixel really is chunky', frames.PIXEL.blocks < pc.blocks * 0.78,
-  `${frames.PIXEL.blocks} colour changes across sixteen rows against ${pc.blocks} in classic`);
+/* The world is quantised to sixteen colours at bake time. The HUD and the
+   text are still drawn smooth on top, so the count is not sixteen - but it is
+   a small fraction of a painted frame, which is the claim. */
+check('pixel keeps to a handful of colours', frames.PIXEL.hues < pc.hues * 0.45,
+  `${frames.PIXEL.hues} colours on screen against ${pc.hues} in classic`);
 
 /* ------------------------------------------------------- and it is remembered */
 await pg.evaluate(`window.SW.setSkin(1)`);
