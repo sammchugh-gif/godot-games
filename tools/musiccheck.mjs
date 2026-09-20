@@ -214,6 +214,54 @@ const frozen = s => s && s.state === 'suspended';
 const wrote = frozen(asleep) && frozen(still) && still.next !== asleep.next;
 const how = frozen(still) ? (wrote ? 'WRITING INTO A FROZEN CLOCK' : 'held')
           : frozen(asleep) ? 'woke itself' : 'never needed waking';
+/* ------------------------------------------------- one songbook, four bands
+   A skin changes who is playing, not what. The notes of a sector are that
+   sector's notes in every skin - the boss still borrows the key, the form is
+   still thirty-two bars - but the band is not the same band: vector is three
+   square channels and no pad, pixel answers every lead note an octave up,
+   neon plays it all on sawtooths a fourth down and slower. So this checks the
+   four renders are audibly different from each other, and that each one is
+   still a piece of music rather than a mess. */
+const bands = {};
+for (const skin of ['classic', 'vector', 'pixel', 'neon']) {
+  await pg.evaluate(`window.SW.setSkin(window.SW.SKINS.findIndex(s => s.id === '${skin}'))`);
+  const r = await render('music', SECS, { sector: 4 });
+  bands[skin] = r;
+  const top = Object.entries(r.notes).sort((a, b) => b[1] - a[1]).slice(0, 4).map(e => e[0] + 'Hz').join(' ');
+  console.log(`  ${skin.padEnd(8)} rms ${r.rms.toFixed(3)}  peak ${r.peak.toFixed(2)}  ` +
+    `${String(r.events).padStart(4)} notes in ${SECS}s   ${top}`);
+}
+await pg.evaluate(`window.SW.setSkin(0)`);
+const names4 = Object.keys(bands);
+const lowest = n => Math.min(...Object.keys(bands[n].notes).map(Number));
+check('every skin brings a band', names4.every(n => bands[n].rms > 0.015 && bands[n].events > 30),
+  `quietest rms ${Math.min(...names4.map(n => bands[n].rms)).toFixed(3)}, fewest notes ${Math.min(...names4.map(n => bands[n].events))}`);
+check('and none of them clips', names4.every(n => bands[n].peak < 0.98),
+  `loudest peak ${Math.max(...names4.map(n => bands[n].peak)).toFixed(2)}`);
+/* Neon is transposed down a fourth, which the pitches show directly. It is
+   also slower, but that cannot be read off a note count - a slower piece with
+   a doubled lead and a bigger pad fires MORE oscillators in eight seconds, not
+   fewer - so the tempo is read from the kit and the sound is judged on what it
+   can actually be judged on: neon is the lowest and the thickest of the four. */
+const bpmK = await pg.evaluate(`Object.fromEntries(Object.entries(window.SW.VOICES).map(([k,v])=>[k,v.bpmK]))`);
+check('neon plays it a fourth lower', lowest('neon') < lowest('classic') * 0.88,
+  `lowest note ${lowest('neon').toFixed(0)}Hz against ${lowest('classic').toFixed(0)}Hz`);
+check('and slower, and thicker than the rest',
+  bpmK.neon < 1 && bpmK.vector > 1
+  && bands.neon.events === Math.max(...names4.map(n => bands[n].events)),
+  `neon at x${bpmK.neon} tempo with ${bands.neon.events} notes, vector at x${bpmK.vector} with ${bands.vector.events}`);
+/* vector drops the pad and shortens everything, pixel adds an octave answer */
+check('vector is spare and pixel is busy', bands.vector.events < bands.pixel.events,
+  `vector ${bands.vector.events} notes, pixel ${bands.pixel.events} in the same eight seconds`);
+/* and no two of them render the same eight seconds */
+const twins = [];
+for (let i = 0; i < names4.length; i++) for (let j = i + 1; j < names4.length; j++) {
+  const a = bands[names4[i]], b = bands[names4[j]];
+  if (Math.abs(a.events - b.events) < 4 && Math.abs(a.rms - b.rms) < 0.004) twins.push(names4[i] + ' = ' + names4[j]);
+}
+check('no two skins sound the same', twins.length === 0,
+  twins.length ? twins.join(', ') : names4.map(n => n + ' ' + bands[n].events + '/' + bands[n].rms.toFixed(3)).join('   '));
+
 check('a tap wakes the music on a phone', asleep && !wrote
   && a0 && a0.state === 'running' && a1.timer && a1.next > a0.next && a1.next > a1.now,
   asleep ? `${asleep.state} with the finger down, scheduler ${how}; `
