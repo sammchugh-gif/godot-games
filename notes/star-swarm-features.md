@@ -409,3 +409,81 @@ That combination comes from asking for `apple-mobile-web-app-status-bar-style:
 black-translucent`, so the page asks for the default status bar instead. The
 web view then matches the viewport it reports, and the 62 points the HUD was
 holding clear of the notch come back as usable screen.
+
+## Sectors 5 and 6 on easy
+
+Easy runs were reaching the last two sectors and dying there. The play bot
+says what is doing the killing: on a four-run sample it put down every boss up
+to sector 5 in between ten and fifty seconds, then took 461 damage in sector 6
+against a 185 hull. Late runs end on the swarm, not on a boss that will not
+fall.
+
+So from sector 5 on, and on easy only, the swarm and its bosses hit 15% softer
+(`LATE.dmg`) and carry 10% less health (`LATE.hp`) - the larger cut on the side
+that is actually doing the killing, the smaller one to shorten the fights.
+Medium and hard are untouched. `swarmcheck` holds the clock and the build still
+while it spawns one of each at sector 4 and again at sector 6, and checks both
+halves land and that medium sees none of it.
+
+## Two skins
+
+The same game, drawn two ways, chosen from a switch in the top-right corner of
+the hangar and remembered between runs.
+
+**CLASSIC** is the painted art: gradients, lit hulls, a nebula behind
+everything. **VECTOR** is the 1980 arcade cabinet: nothing filled, every shape
+an outline with a phosphor halo, a true black void, and scanlines over the
+whole screen.
+
+The rule the skin obeys is that it touches drawing and nothing else. There is
+no balance, timing or hit box anywhere in it - `skincheck` renders the same
+pinned scene in both skins and checks the boss comes out with the same health,
+the same damage and the same radius either way, while the picture itself
+changes past recognition (around nine tenths of the vector frame is black
+against a twentieth of the classic one).
+
+How it is built: `VEC()` answers which skin is on, and the sprite builders
+(`enemySprite`, `bossSprite`, `shipSprite`, the rocks, the hole and the gate)
+hand over to a vector twin at their first line. Everything drawn live rather
+than baked - gems, bullets, pickups, drones, exhaust, eyes, health bars - takes
+a branch at the point of drawing. Sprites are cached per skin, so switching
+throws the cache away and rebuilds through `artReset()`.
+
+Two things in the skin cost frames, and both ride with `FX`, so a device that
+is already dropping frames loses them rather than stuttering: the scanline
+pattern over the screen and the wireframe landmark turning in the distance.
+
+The menus go with it. A wireframe game behind painted buttons looks like two
+games, so in vector the logo is cut as hollow letters with a phosphor halo and
+a wireframe ring through them, and every box on every screen - mode and
+difficulty rows, the ship card, upgrade cards, the shop, the buttons, LAUNCH
+itself - becomes a black hole in space with a glowing outline round it, drawn
+by `vbox()`.
+
+One thing that fell out of this: buttons that exist only as hit boxes laid over
+something already drawn (a difficulty segment, an upgrade card, the whole
+credits screen) used to be given a transparent fill and a transparent stroke,
+which drew nothing by luck rather than by intent. They now say `ghost: true`
+and `drawButtons` skips them, which is what stopped the vector skin painting
+black over its own labels.
+
+Adding a third skin means another entry in `SKINS` and another set of twins;
+nothing else in the game needs to know.
+
+## Drones
+
+A drone was a nine-pixel triangle, and four to six of them round the ship read
+as litter rather than a squadron. Each one is now a little ship in its own
+right: a tapered hull lit from the top, two outrigger pods on struts with a
+muzzle on each, a dark socket with a hot lens in it, and a nozzle with the
+engine burning behind it. It rocks as it flies, and the pods flash for an
+eighth of a second after it shoots, which is the only way to tell at a glance
+which of them is actually firing.
+
+`droneSprite(evo)` bakes one per rank per skin - the evolved Drone Swarm is the
+paler, hotter one - so six on screen cost six `drawImage` calls. The vector skin
+gets its own: the same silhouette as an outline with a phosphor halo, a ring
+for the lens and a V of flame behind.
+
+The one engine-side change is cosmetic: a drone now carries `fire`, a timer set
+when it shoots so the flash has something to read.

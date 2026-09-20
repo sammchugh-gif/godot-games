@@ -264,6 +264,38 @@ const dif = await pg.evaluate(`window.SW.DIFFS.map(d => Object.keys(d).filter(
 check('difficulty changes enemies, not pacing', dif.every(d => d === 'hp+rate+dmg+elite'),
   `every level scales ${dif[0]} and nothing else`);
 
+/* ------------------------------------------- and the late sectors on easy
+   The boys were arriving at sectors 5 and 6 with a finished build and still
+   losing to the boss, so on easy only those sectors take an eighth off the
+   health the swarm and its bosses carry and an eighth off what they hit for.
+   Spawn one of each at sector 4 and again at sector 6 with the clock and the
+   build held still, and the pair should differ by exactly that eighth - and
+   not differ at all on medium. */
+const LATEC = await pg.evaluate(`(() => {
+  const S = window.SW, out = {};
+  const sample = (dif, sector) => {
+    S.start(); const G = S.G;
+    G.dif = S.DIFFS.find(d => d.id === dif); G.sector = sector; G.t = 240; G.secT = 200;
+    G.en.length = 0;
+    const g = S.spawnEnemy('scout', 100, 100), b = S.spawnEnemy('mother', 200, 200);
+    return { hp: g.hp, dmg: g.dmg, bhp: b.hp, ease: S.lateEase() };
+  };
+  out.easy4 = sample('easy', 4); out.easy6 = sample('easy', 6);
+  out.easy5 = sample('easy', 5);
+  out.med4 = sample('medium', 4); out.med6 = sample('medium', 6);
+  out.LATE = S.LATE;
+  return out;
+})()`);
+const r = (a, b) => +(a / b).toFixed(3);
+const eHp = r(LATEC.easy6.hp, LATEC.easy4.hp), eDmg = r(LATEC.easy6.dmg, LATEC.easy4.dmg),
+      eBoss = r(LATEC.easy6.bhp, LATEC.easy4.bhp), mHp = r(LATEC.med6.hp, LATEC.med4.hp);
+check('sectors 5 and 6 give easy a break', LATEC.easy4.ease === false && LATEC.easy5.ease === true
+  && LATEC.easy6.ease === true && eHp === LATEC.LATE.hp && eBoss === LATEC.LATE.hp && eDmg === LATEC.LATE.dmg,
+  `easy sector 6 against sector 4: swarm health x${eHp}, boss health x${eBoss}, damage x${eDmg}`);
+check('and medium and hard keep their teeth', mHp === 1 && LATEC.med6.dmg === LATEC.med4.dmg
+  && LATEC.med6.bhp === LATEC.med4.bhp,
+  `medium sector 6 against sector 4: swarm health x${mHp}, unchanged`);
+
 /* ----------------------------------------------------- the swarm parts
    Whatever is on the field when a boss arrives turns and leaves, so the
    duel starts on an open field rather than behind a hundred scouts -

@@ -95,7 +95,11 @@ body {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Not black-translucent: on a Home Screen app iOS then hands the page a
+     viewport a status bar shorter than the screen while still reporting the
+     full safe-area insets, so the canvas stops short and a band of bare page
+     shows at the bottom. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   html, body { margin:0; padding:0; height:100%; background:#0b0d12; overflow:hidden; }
   body { position:fixed; inset:0; width:100%; height:100%; }
