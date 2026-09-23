@@ -26,7 +26,9 @@
    that says whether a six-year-old will ever see the table's modes.
 
    Games. Whole games by the robot, rules and all: how long, what score, and
-   how often each mission gets done. */
+   how often each mission gets done. A game that has not ended after fifteen
+   minutes fails the table: a ball is going round a loop - a scoop that keeps
+   catching what it throws out, say - and a child would be stuck watching it. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -125,7 +127,7 @@ function shots(key, opened) {
 
 function games(key, n) {
   const rng = lcg(11), mis = [0, 0, 0, 0, 0];
-  let secs = 0, score = 0;
+  let secs = 0, score = 0, endless = 0;
   for (let g = 0; g < n; g++) {
     const T = TABLES[key](), G = P.newGame(T, {}), bot = makeBot(T, rng);
     let t = 0;
@@ -133,10 +135,10 @@ function games(key, n) {
       if (G.S.balls.some(x => x.m === 'plunger' && !x.auto)) P.plunge(G, 0.35 + rng() * 0.6);
       P.gameStep(G, bot(G.S, P.STEP)); t += P.STEP;
     }
-    secs += t; score += G.score;
+    secs += t; score += G.score; if (!G.over) endless++;
     Object.keys(G.missionsDone).forEach(i => mis[i]++);
   }
-  return { secs: secs / n, score: score / n, mis, missions: P.RULES[key].missions.map(m => m.text) };
+  return { secs: secs / n, score: score / n, mis, endless, missions: P.RULES[key].missions.map(m => m.text) };
 }
 
 const only = process.argv[2] && TABLES[process.argv[2]] ? process.argv[2] : null;
@@ -145,7 +147,7 @@ let bad = 0;
 for (const key of Object.keys(TABLES)) {
   if (only && key !== only) continue;
   const t0 = Date.now(), tr = traps(key, N), sh = shots(key), gm = games(key, 12);
-  const ok = !tr.stuck.length && !tr.escaped.length && !sh.missing.length;
+  const ok = !tr.stuck.length && !tr.escaped.length && !sh.missing.length && !gm.endless;
   if (!ok) bad++;
   console.log(`\n${key.padEnd(5)} ${ok ? 'ok  ' : 'FAIL'}  ${N} balls, ${tr.life.toFixed(1)}s a ball` +
     (tr.stuck.length ? `  STUCK at ${tr.stuck.map(p => p.join(',')).join(' ')}` : '') +
@@ -154,7 +156,7 @@ for (const key of Object.keys(TABLES)) {
     .map(([id, v]) => `${id} ${v.L}/${v.R}`).join('  ') + (sh.missing.length ? '  NEVER: ' + sh.missing.join(', ') : ''));
   const gated = Object.keys(sh.open).filter(id => !sh.res[id] && !/^(drops|target):/.test(id));
   if (gated.length) console.log('  with the drop targets down: ' + gated.map(id => `${id} ${sh.open[id].L}/${sh.open[id].R}`).join('  '));
-  console.log(`  robot games: ${gm.secs.toFixed(0)}s, ${P.fmt(gm.score)} points; missions done in 12 games: ` +
+  console.log(`  robot games: ${gm.secs.toFixed(0)}s, ${P.fmt(gm.score)} points${gm.endless ? `, ${gm.endless} NEVER ENDED` : ''}; missions done in 12 games: ` +
     gm.missions.map((m, i) => `"${m}" ${gm.mis[i]}`).join(', '));
 }
 console.log(bad ? `\n${bad} table(s) failed` : '\nevery table is sound');
