@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.23-5";
+const BUILD="2026.09.23-6";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -701,7 +701,7 @@ function vignette(){const e=Math.min(W,H)*0.12,c="rgba(0,0,0,0.2)",o="rgba(0,0,0
 // head, one big eye, a muzzle that sticks out in front, and an outline so it
 // reads against any background. The poses are hang, fly and stand (and
 // cheer, for the menus); the mouth opens when it is going fast.
-const MS=1.4,HAND=28*MS;
+const MS=1.4,HAND=28*MS,STANDLIFT=28.1*MS-MR-1;
 function drawMonkey(x,y,rot,c,hat,opt){opt=opt||{};const C=CHARS.find(k=>k.id===c)||CHARS[0],sc=(opt.scale||1)*MS;
  cx.save();cx.translate(x,y);cx.rotate(rot);cx.scale(sc*(opt.flip?-1:1),sc);if(opt.alpha!=null)cx.globalAlpha=opt.alpha;
  const T=opt.T||0,pose=opt.pose||(opt.hang?"hang":"stand"),ink=shade(C.fur,-0.6),furD=shade(C.fur,-0.22),furL=shade(C.fur,0.25),palm=shade(C.face,-0.12);
@@ -1066,7 +1066,11 @@ function drawScene(L,s,o){o=o||{};const w=L.world;
   // it looks at the ring a hold would take
   let look=null;if(o.target!=null&&o.target>=0){const p=anchorAt(L.anchors[o.target],s.t);let lx=p.x-s.x,ly=p.y-s.y;const c=Math.cos(-rot),sn=Math.sin(-rot);
    let ax=lx*c-ly*sn,ay=lx*sn+ly*c;if(s.face<0)ax=-ax;const m=Math.hypot(ax,ay)||1;look={x:ax/m,y:ay/m}}
-  cx.save();cx.translate(s.x,s.y);
+  // Standing, the drawing is lifted so its feet rest on the ground. The
+  // physics sees a circle of radius MR sitting on the ledge; the drawing is
+  // bigger than that, and drawn from the same centre its feet sank into the
+  // soil.
+  cx.save();cx.translate(s.x,s.y-(pose==="stand"?STANDLIFT:0));
   if(pose==="fly"&&sp>400){const a=Math.atan2(s.vy,s.vx),k=Math.min(0.13,(sp-400)/4000);cx.rotate(a);cx.scale(1+k,1-k);cx.rotate(-a)}
   drawMonkey(0,0,rot,o.char||"monkey",o.hat||"nohat",{pose,T,flip:s.face<0,open:sp>720,look});cx.restore();
   if(s.shield){cx.strokeStyle="rgba(165,216,255,0.9)";cx.fillStyle="rgba(165,216,255,0.18)";cx.lineWidth=3;cx.beginPath();cx.arc(s.x,s.y-4,30+Math.sin(T*5)*2,0,TAU);cx.fill();cx.stroke()}}
