@@ -119,28 +119,6 @@
   }
   details.about[open] > summary::before { transform: rotate(225deg) translate(-.05rem, -.05rem); }
   details.about > summary:hover { color: #cdd8ea; }
-  /* the maths card is the whole picture: tapping it opens the three parks */
-  details.group > summary.shot::before { display: none; }
-  details.group > summary { padding: 0; display: block; }
-  .name em {
-    display: block; font-style: normal;
-    font-size: .8rem; font-weight: 600; letter-spacing: .02em;
-    color: #ffd166; margin-bottom: .1rem;
-  }
-  .pick {
-    display: flex; flex-direction: column; gap: .1rem;
-    padding: .7rem .9rem;
-    margin-bottom: .55rem;
-    border: 1px solid #2a3446;
-    border-radius: 11px;
-    background: #10141d;
-    text-decoration: none; color: #dbe4f2;
-    transition: border-color .15s, background .15s;
-  }
-  .pick:last-child { margin-bottom: 0; }
-  .pick:hover, .pick:active { border-color: #ffd166; background: #161c28; }
-  .pick b { font-size: .98rem; }
-  .pick span { color: #93a2bb; font-size: .86rem; }
   .tip {
     margin-top: 2.5rem; padding-top: 1.25rem;
     border-top: 1px solid #1e2530;
@@ -159,22 +137,6 @@
   </header>
 
   <div class="grid">
-    <article class="game">
-      <details class="about group">
-        <summary class="shot" style="background-image:url('shots/sophias-bones-park.jpg')">
-          <span class="play">3 PARKS</span>
-          <div class="name"><em>Tap to pick a park</em>Bones Park Maths</div>
-        </summary>
-        <div class="desc">
-          <p>The same park three times over, each pitched at where one of them is now.
-          Every right answer earns a bone, and bones buy hats, coats and park things for
-          the dog, or animals and toys for the house.</p>
-          <a class="pick" href="sophias-bones-park/"><b>Sophia&rsquo;s park</b><span>times tables to twelve, the division facts that go with them, and multiples of ten.</span></a>
-          <a class="pick" href="rorys-bones-park/"><b>Rory&rsquo;s park</b><span>number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at tables and sharing.</span></a>
-          <a class="pick" href="dylans-bones-park/"><b>Dylan&rsquo;s park</b><span>tens and ones, counting on in tens, ten more and ten less, and his first sums.</span></a>
-        </div>
-      </details>
-    </article>
     <article class="game">
       <a class="shot" href="star-swarm/" style="background-image:url('shots/star-swarm.jpg')">
         <span class="play">PLAY</span>
@@ -353,6 +315,36 @@
       <details class="about">
         <summary>What is it?</summary>
         <div class="desc">A real Mega Drive emulator in the browser, with eight free homebrew games on the shelf: platformers, a trap-filled tower puzzle, an egg-catching chicken and a four-player star race. Add cartridges you own to play them on this device. On-screen pad on the iPad.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="sophias-bones-park/" style="background-image:url('shots/sophias-bones-park.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Sophia&rsquo;s Bones Park</div>
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Maths in a park, pitched at where Sophia is now: times tables to twelve, the division facts that go with them, and multiples of ten. Tables are split into easy ones, middle ones, tricky ones and the big ones, with an All Tables round that mixes the lot. Every right answer earns a bone, and bones buy hats, coats and park things for the dog, or animals and toys for the house.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="rorys-bones-park/" style="background-image:url('shots/rorys-bones-park.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Rory&rsquo;s Bones Park</div>
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">The same park, pitched at Rory: number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at times tables and sharing. Seven kinds of practice, a Park Walk that mixes them, and bones to spend on the dog and the house.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="dylans-bones-park/" style="background-image:url('shots/dylans-bones-park.jpg')">
+        <span class="play">PLAY</span>
+        <div class="name">Dylan&rsquo;s Bones Park</div>
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">The same park, pitched at Dylan: tens and ones, counting on in tens, ten more and ten less, and his first sums. Six kinds of practice and a Park Walk that mixes them, with a bone for every right answer to spend in the shop.</div>
       </details>
     </article>
   </div>
