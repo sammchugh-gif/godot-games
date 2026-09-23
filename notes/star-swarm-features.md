@@ -609,3 +609,33 @@ One thing that is easy to get wrong and was: a slower tempo does not mean
 fewer note events. Neon is slower and yet fires more oscillators in the same
 eight seconds, because it doubles its lead and carries a bigger pad. The
 tempo is read from the kit; the sound is judged on what the sound can show.
+
+## What a skin costs per frame
+
+A skin must not make the game slower. It nearly did: VECTOR and NEON drew every
+gem, bullet, pair of enemy eyes and health bar with a live `shadowBlur`, which
+is a gaussian blur per draw call - hundreds of them a frame in a busy sector.
+On a like-for-like busy frame they cost 1.6 and 1.5 times classic. On an iPad
+that is enough to push frames past the time-step clamp, at which point the
+fight itself runs slow and the ship feels sluggish - which is exactly how it was
+reported: "slower, even with the Viper". The ship's speed never changed; it is
+221 units a second in every version.
+
+Now:
+
+- gems and bullets are baked once per tier or kind with their glow in them, and
+  drawn as one `drawImage` each (`vecGemSprite`, `vecBulletSprite`);
+- everything else drawn live - eyes, health bars, barrels, exhaust, drone
+  flashes, kraken arms, the gate, the neon grid, the landmark - glows by being
+  stroked twice, wide and faint then thin and bright (`gstroke`), with no blur;
+- the neon grid is one path per colour rather than forty separate lines;
+- the scanlines are drawn once per screen size and laid over each frame as a
+  single copy, instead of a full-screen pattern fill.
+
+Only four live blurs are left, all one-offs: the pause box, the two arcs of the
+vitals dial, and the title's LAUNCH button.
+
+`skincheck` times every skin on the same busy frame, with classic timed before
+and after (and a warm-up first, since the first busy frame bakes every sprite).
+No skin may cost more than 1.45 times classic. The old code measures 1.64 and
+1.85 and fails; the new code measures about 0.7 to 1.0.

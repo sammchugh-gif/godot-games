@@ -355,6 +355,16 @@ function vline(g,col,lw){const k=GLOWK();g.lineJoin="round";g.lineCap="round";
  g.save();g.globalAlpha=0.3*k;g.lineWidth=lw*2.4;
  g.shadowBlur=Math.min(lw*9*k,GLOWMAX*1.6);g.stroke();g.restore();
  g.shadowBlur=0}
+// The glow for anything drawn live, every frame. shadowBlur is a gaussian
+// blur per draw call, and on a busy late sector VECTOR and NEON were paying it
+// hundreds of times a frame - every gem, every bullet, every enemy's eyes and
+// health bar - which cost half as much again as the whole classic frame and,
+// on an iPad, was enough to push frames past the time-step clamp so that the
+// game itself ran slow. The same path stroked twice, wide and faint then thin
+// and bright, reads as the same glow for a fraction of the cost.
+function gstroke(col,lw){const a=cx.globalAlpha;cx.strokeStyle=col;cx.shadowBlur=0;
+ cx.globalAlpha=a*0.3;cx.lineWidth=lw*3;cx.stroke();
+ cx.globalAlpha=a;cx.lineWidth=lw;cx.stroke()}
 function vpath(g,pts,close){g.beginPath();g.moveTo(pts[0][0],pts[0][1]);
  for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);if(close!==false)g.closePath()}
 function vdraw(g,pts,col,lw,close){vpath(g,pts,close);vline(g,col,lw)}
@@ -483,8 +493,7 @@ function vecGate(gt){const R=gt.r*1.9;cx.save();cx.translate(gt.x,gt.y);
   cx.save();cx.rotate(sp);cx.beginPath();
   for(let k=0;k<=9;k++){const a=k/9*TAU;const d=rr*(k%2?0.93:1);
    k?cx.lineTo(Math.cos(a)*d,Math.sin(a)*d):cx.moveTo(Math.cos(a)*d,Math.sin(a)*d)}
-  cx.closePath();cx.strokeStyle=i<2?"#ffffff":VPAL.gate;cx.lineWidth=2.6-i*0.3;
-  cx.shadowBlur=12;cx.stroke();cx.shadowBlur=0;cx.restore()}
+  cx.closePath();gstroke(i<2?"#ffffff":VPAL.gate,2.6-i*0.3);cx.restore()}
  cx.fillStyle="#000";cx.beginPath();cx.arc(0,0,gt.r*0.6,0,TAU);cx.fill();
  cx.strokeStyle="#ffffff";cx.lineWidth=2.5;cx.beginPath();cx.arc(0,0,gt.r*0.62,0,TAU);cx.stroke();
  cx.restore()}
@@ -509,12 +518,13 @@ function vecStars(){cx.fillStyle=VPAL.ground;cx.fillRect(-W,-H,W*3,H*3);
    const bx=i*gs+h*gs*0.6+ox,by=j*gs+hash(i*3,j*7)*gs*0.6+oy;
    if(Math.abs(bx-G.px)>W/S+r||Math.abs(by-G.py)>H/S+r)continue;
    cx.save();cx.translate(bx,by);cx.rotate(frameT*0.06);cx.globalAlpha=0.3;
-   cx.strokeStyle=tint;cx.shadowColor=tint;cx.shadowBlur=10;cx.lineWidth=2;
-   cx.beginPath();cx.arc(0,0,r,0,TAU);cx.stroke();
+   cx.beginPath();cx.arc(0,0,r,0,TAU);gstroke(tint,2);
+   cx.beginPath();
    for(let k=1;k<4;k++){const rr=r*Math.cos(k*Math.PI/8);
-    cx.lineWidth=1.1;cx.beginPath();cx.ellipse(0,0,r,rr,0,0,TAU);cx.stroke();
-    cx.beginPath();cx.ellipse(0,0,rr,r,0,0,TAU);cx.stroke()}
-   cx.shadowBlur=0;cx.globalAlpha=1;cx.restore()}}
+    cx.moveTo(r,0);cx.ellipse(0,0,r,rr,0,0,TAU);
+    cx.moveTo(rr,0);cx.ellipse(0,0,rr,r,0,0,TAU)}
+   gstroke(tint,1.1);
+   cx.globalAlpha=1;cx.restore()}}
  const layers=[[0.25,90,1.1],[0.5,140,1.5],[0.9,220,2.1]];
  for(const [par,cs,sz] of layers){const ox=G.px*(1-par),oy=G.py*(1-par);
   const x0=Math.floor((G.px*par-W/S)/cs)-1,x1=Math.floor((G.px*par+W/S)/cs)+1;
@@ -530,14 +540,15 @@ function vecStars(){cx.fillStyle=VPAL.ground;cx.fillRect(-W,-H,W*3,H*3);
 // the camera, which is the one thing that says "1984" faster than the colours.
 function neonGrid(){const st=110,par=0.35,ox=-(G.px*par)%st,oy=-(G.py*par)%st;
  const x0=G.px-W/S-st,x1=G.px+W/S+st,y0=G.py-H/S-st,y1=G.py+H/S+st;
- cx.save();cx.lineWidth=1;cx.shadowBlur=6;
- for(let x=Math.floor(x0/st)*st+ox;x<x1;x+=st){
-  cx.strokeStyle="rgba(255,60,190,0.16)";cx.shadowColor="#ff3cbe";
-  cx.beginPath();cx.moveTo(x,y0);cx.lineTo(x,y1);cx.stroke()}
- for(let y=Math.floor(y0/st)*st+oy;y<y1;y+=st){
-  cx.strokeStyle="rgba(90,230,255,0.14)";cx.shadowColor="#5ae6ff";
-  cx.beginPath();cx.moveTo(x0,y);cx.lineTo(x1,y);cx.stroke()}
- cx.restore();cx.shadowBlur=0}
+ // every line in one path per colour, stroked twice: a blur on each of forty
+ // full-screen lines was one of the dearest things in the frame
+ cx.save();cx.beginPath();
+ for(let x=Math.floor(x0/st)*st+ox;x<x1;x+=st){cx.moveTo(x,y0);cx.lineTo(x,y1)}
+ gstroke("rgba(255,60,190,0.2)",1);
+ cx.beginPath();
+ for(let y=Math.floor(y0/st)*st+oy;y<y1;y+=st){cx.moveTo(x0,y);cx.lineTo(x1,y)}
+ gstroke("rgba(90,230,255,0.18)",1);
+ cx.restore()}
 // ------------------------------------------------------------ chunky pixels
 // The first PIXEL drew the world as normal and squeezed the finished frame
 // through a small canvas every frame. It looked chunky in a screenshot and
@@ -618,22 +629,32 @@ function pixStars(){const RL=realm();
    const wx=snap(k*cs+hash(j,k)*cs+ox2),wy=snap(j*cs+hash(k*3,j)*cs+oy2),r=sz*B*0.55;
    cx.fillRect(wx,wy,r,r)}}}
 // ----------------------------------------------------------- the small things
-function vecGem(g){const col=VPAL.gem,s=g.big>=10?12:g.big>=3?9:7;
- cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);
- cx.strokeStyle=g.big>=10?"#ffffff":col;cx.shadowColor=col;cx.shadowBlur=10;cx.lineWidth=2.2;
- cx.beginPath();cx.moveTo(0,s);cx.lineTo(-s*0.8,0);cx.lineTo(0,-s);cx.lineTo(s*0.8,0);
- cx.closePath();cx.stroke();cx.shadowBlur=0;cx.restore()}
-function vecBullet(b){const col={laser:b.evo?"#ff9fff":"#ff5f7a",shot:VPAL.shot,
-  missile:"#ff9a5a",plasma:"#ff7aff"}[b.k]||VPAL.shot;
- cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=9;cx.lineWidth=2.4;cx.lineCap="round";
- if(b.k==="laser"){cx.beginPath();cx.moveTo(-15,0);cx.lineTo(15,0);cx.stroke()}
- else if(b.k==="shot"){cx.beginPath();cx.ellipse(0,0,9,4.5,0,0,TAU);cx.stroke()}
- else if(b.k==="missile"){cx.beginPath();cx.moveTo(16,0);cx.lineTo(-10,-5);cx.lineTo(-10,5);
-  cx.closePath();cx.stroke()}
- else if(b.k==="plasma"){cx.beginPath();cx.arc(0,0,b.r,0,TAU);cx.stroke();
-  cx.beginPath();cx.arc(0,0,b.r*0.45,0,TAU);cx.stroke()}
- cx.shadowBlur=0}
-function vecPickup(p){const S2=(col,lw)=>{cx.strokeStyle=col;cx.shadowColor=col;cx.shadowBlur=10;
+// Gems are the most numerous thing on screen, so each tier is baked once with
+// its glow in it and every gem after that is a single drawImage.
+const VBAKE=1.5;
+function vecGemSprite(tier){const k="VG"+SK().charAt(0)+tier;let sp=ART.en[k];if(sp)return sp;
+ const s=tier===2?12:tier===1?9:7,P=s+10,R=VBAKE;
+ sp=bake(Math.ceil(P*2*R),Math.ceil(P*2*R),g=>{g.scale(R,R);g.translate(P,P);
+  vdraw(g,[[0,s],[-s*0.8,0],[0,-s],[s*0.8,0]],tier===2?"#ffffff":VPAL.gem,2.2)});
+ sp.P=P;ART.en[k]=sp;return sp}
+function vecGem(g){const sp=vecGemSprite(g.big>=10?2:g.big>=3?1:0),P=sp.P;
+ cx.save();cx.translate(g.x,g.y);cx.rotate(frameT*2.2);cx.drawImage(sp,-P,-P,P*2,P*2);cx.restore()}
+// Bullets likewise: one baked sprite per kind. Plasma is baked at a radius of
+// ten and scaled, since its size changes with the weapon's rank.
+function vecBulletSprite(kind,evo){const k="VB"+SK().charAt(0)+kind+(evo?"E":"");
+ let sp=ART.en[k];if(sp)return sp;
+ const col={laser:evo?"#ff9fff":"#ff5f7a",shot:VPAL.shot,missile:"#ff9a5a",plasma:"#ff7aff"}[kind]||VPAL.shot;
+ const P=26,R=VBAKE;
+ sp=bake(Math.ceil(P*2*R),Math.ceil(P*2*R),g=>{g.scale(R,R);g.translate(P,P);
+  if(kind==="laser")vdraw(g,[[-15,0],[15,0]],col,2.4,false);
+  else if(kind==="shot"){g.beginPath();g.ellipse(0,0,9,4.5,0,0,TAU);vline(g,col,2.4)}
+  else if(kind==="missile")vdraw(g,[[16,0],[-10,-5],[-10,5]],col,2.4);
+  else{vring(g,0,0,10,col,2.4);vring(g,0,0,4.5,col,2.4)}});
+ sp.P=P;ART.en[k]=sp;return sp}
+function vecBullet(b){const sp=vecBulletSprite(b.k,b.evo),P=sp.P;
+ const k=b.k==="plasma"?(b.r||10)/10:1;
+ cx.drawImage(sp,-P*k,-P*k,P*2*k,P*2*k)}
+function vecPickup(p){const S2=(col,lw)=>{cx.strokeStyle=col;cx.shadowBlur=0;
   cx.lineWidth=lw||2.4;cx.lineJoin="round"};
  if(p.k==="repair"){S2(VPAL.repair);cx.strokeRect(-11,-11,22,22);
   cx.beginPath();cx.moveTo(-6,0);cx.lineTo(6,0);cx.moveTo(0,-6);cx.lineTo(0,6);cx.stroke()}
@@ -675,18 +696,18 @@ function uibox(x,y,w,h,r,col,lw,lit){
  rr(x,y,w,h,r);cx.fillStyle=lit?hexA(col,0.2):"rgba(0,0,0,0.42)";cx.fill();
  cx.lineWidth=lw;cx.strokeStyle=col;cx.stroke()}
 // ------------------------------------------------------------------- the tube
-// Scanlines and a soft bloom over everything, as one baked pattern and one
-// baked gradient, so the cost is two fills a frame rather than two hundred.
-let VTUBE=null;
-function vecTube(){if(!VTUBE)VTUBE=bake(4,6,(g,w,h)=>{g.fillStyle="rgba(0,0,0,0.30)";
-  g.fillRect(0,0,w,2);g.fillStyle="rgba(0,0,0,0.13)";g.fillRect(0,2,w,1)});
- return VTUBE}
-let VPAT=null;
+// Scanlines over the fight, drawn once into a canvas the size of the screen and
+// then laid over each frame as a single straight copy. A pattern fill of the
+// whole screen was the dearest single thing VECTOR added to a frame.
+let VTUBE=null,VTUBEKEY="";
+function vecTube(){const w=cv.width,h=cv.height,key=w+"x"+h;
+ if(VTUBE&&VTUBEKEY===key)return VTUBE;
+ VTUBE=bake(w,h,g=>{const step=Math.max(3,Math.round(3*DPR)),dark=Math.max(1,Math.round(DPR));
+  g.fillStyle="rgba(0,0,0,0.30)";for(let y=0;y<h;y+=step)g.fillRect(0,y,w,dark);
+  g.fillStyle="rgba(0,0,0,0.13)";for(let y=dark;y<h;y+=step)g.fillRect(0,y,w,1)});
+ VTUBEKEY=key;return VTUBE}
 function vecScreen(){if(!FX)return;
- cx.save();cx.setTransform(1,0,0,1,0,0);cx.scale(DPR,DPR);
- if(!VPAT)VPAT=cx.createPattern(vecTube(),"repeat");
- cx.fillStyle=VPAT;cx.fillRect(0,0,W,H);
- cx.restore()}
+ cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(vecTube(),0,0);cx.restore()}
 function buildArt(){
  ART.vigSprite=bake(256,180,(g,w,h)=>{const gr=g.createRadialGradient(w/2,h/2,h*0.36,w/2,h/2,w*0.74);
   gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(1,"rgba(0,0,10,0.6)");g.fillStyle=gr;g.fillRect(0,0,w,h)});
@@ -2163,14 +2184,13 @@ function drawDrone(d,evo){const P=DRONEP,col=evo?"#c0ffe0":"#80ffc0";
  cx.save();cx.translate(d.x,d.y);
  cx.rotate(d.a+Math.PI/2+Math.sin(frameT*5+d.a*3)*0.1);
  const fl=14+Math.random()*5;
- if(LINE()){cx.strokeStyle=VPAL.shot;cx.shadowColor=VPAL.shot;cx.shadowBlur=8;cx.lineWidth=1.4;
-  cx.beginPath();cx.moveTo(-9,-1.8);cx.lineTo(-9-fl*0.45,0);cx.lineTo(-9,1.8);cx.stroke();cx.shadowBlur=0}
+ if(LINE()){cx.beginPath();cx.moveTo(-9,-1.8);cx.lineTo(-9-fl*0.45,0);cx.lineTo(-9,1.8);gstroke(VPAL.shot,1.4)}
  else if(FX){glow(-9-fl*0.22,0,fl*0.7,hexA(col,0.6),hexA(col,0.08));
   glow(0,0,P*1.5,hexA(col,0.16),hexA(col,0.03))}
  cx.drawImage(droneSprite(evo),-P,-P,P*2,P*2);
  if(d.fire>0){const a=Math.min(1,d.fire*7);
-  if(LINE()){cx.strokeStyle="#fff6c0";cx.shadowColor="#fff6c0";cx.shadowBlur=10;cx.lineWidth=1.6;
-   for(const s of [-1,1]){cx.beginPath();cx.arc(4.6,s*6.7,2.4+a*2,0,TAU);cx.stroke()}cx.shadowBlur=0}
+  if(LINE()){cx.beginPath();for(const s of [-1,1]){cx.moveTo(4.6+2.4+a*2,s*6.7);cx.arc(4.6,s*6.7,2.4+a*2,0,TAU)}
+   gstroke("#fff6c0",1.6)}
   else for(const s of [-1,1])glow(5.6,s*6.7,4.5+a*3,"rgba(255,255,230,"+(0.8*a).toFixed(2)+")","rgba(255,230,120,0)")}
  cx.restore()}
 function mysterySprite(){if(ART.mystery)return ART.mystery;const P=SHIPP,R=SHIPRES;
@@ -2191,10 +2211,10 @@ function drawShip(x,y,ang,ship,thrust){const P=SHIPP;
    const fl=(13+th*19+Math.random()*6)*ns;
    // a vector cabinet had no fire, only a flickering V behind the engine
    if(LINE()){const c=Math.random()<0.3?"#fff8d0":VPAL.shot;
-    cx.strokeStyle=c;cx.shadowColor=c;cx.shadowBlur=10;cx.lineWidth=2*ns;cx.lineCap="round";
-    cx.beginPath();cx.moveTo(nx,ny-3.4*ns);cx.lineTo(nx-fl,ny);cx.lineTo(nx,ny+3.4*ns);cx.stroke();
-    cx.lineWidth=1.4*ns;cx.beginPath();cx.moveTo(nx,ny-1.6*ns);cx.lineTo(nx-fl*0.55,ny);
-    cx.lineTo(nx,ny+1.6*ns);cx.stroke();cx.shadowBlur=0;continue}
+    cx.lineCap="round";
+    cx.beginPath();cx.moveTo(nx,ny-3.4*ns);cx.lineTo(nx-fl,ny);cx.lineTo(nx,ny+3.4*ns);gstroke(c,2*ns);
+    cx.beginPath();cx.moveTo(nx,ny-1.6*ns);cx.lineTo(nx-fl*0.55,ny);cx.lineTo(nx,ny+1.6*ns);gstroke(c,1.4*ns);
+    continue}
    if(FX)glow(nx-fl*0.4,ny,fl*1.25,"rgba(255,214,140,0.55)","rgba(255,110,30,0.14)");
    cx.fillStyle="rgba(255,140,40,0.8)";
    cx.beginPath();cx.moveTo(nx,ny-4.2*ns);cx.quadraticCurveTo(nx-fl*0.55,ny-2.2*ns,nx-fl,ny);
@@ -2219,8 +2239,8 @@ function krakenArms(e,r,t){const col=e.flash>0?"#fff":e.col;
   const ex=Math.cos(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil,ey=Math.sin(a+0.6+Math.sin(t*2+i)*0.2)*r*1.95*coil;
   cx.lineCap="round";
   cx.strokeStyle=LINE()?col:dk;cx.lineWidth=LINE()?r*0.05:r*0.2;
-  cx.shadowColor=LINE()?col:"transparent";cx.shadowBlur=LINE()?10:0;
-  cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke();cx.shadowBlur=0;
+  cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);
+  if(LINE())gstroke(col,r*0.05);else cx.stroke();
   if(!LINE()){cx.strokeStyle=col;cx.lineWidth=r*0.13;
    cx.beginPath();cx.moveTo(0,0);cx.quadraticCurveTo(c1x,c1y,ex,ey);cx.stroke()}
   if(FX){cx.fillStyle=e.flash>0?"#fff":"rgba(255,150,240,0.75)";
@@ -2263,27 +2283,24 @@ function drawEnemy(e){const t=frameT,r=e.r,k=r/EREF,P=EREF*1.6;
  else{const face=e.type==="drifter"?t*0.5:Math.atan2(G.py-e.y,G.px-e.x);
   cx.save();cx.rotate(face);cx.drawImage(enemySprite(e.type,e.col,e.flash>0),-P*k,-P*k,P*2*k,P*2*k);
   if(e.type==="turret"){const bc=e.flash>0?"#fff":(LINE()?VPAL.turret:"#806020");
-   if(LINE()){cx.strokeStyle=bc;cx.shadowColor=bc;cx.shadowBlur=8;cx.lineWidth=3;
-    cx.strokeRect(r*0.4,-4,r,8);cx.shadowBlur=0}
+   if(LINE()){cx.beginPath();cx.rect(r*0.4,-4,r,8);gstroke(bc,3)}
    else{cx.fillStyle=bc;cx.fillRect(0,-4,r*1.4,8)}}
   cx.restore()}
  if(!e.boss){const er=Math.max(2.5,r*0.18);
   if(LINE()){// a painted eyeball on a wireframe reads as a sticker, so the
    // vector skin gives the same two eyes as short hot slits instead
-   cx.strokeStyle="#ff5f7a";cx.shadowColor="#ff5f7a";cx.shadowBlur=8;
-   cx.lineWidth=Math.max(1.6,er*0.7);cx.lineCap="round";
+   cx.lineCap="round";
    cx.beginPath();cx.moveTo(r*0.26,-r*0.25);cx.lineTo(r*0.48,-r*0.25);
-   cx.moveTo(r*0.26,r*0.25);cx.lineTo(r*0.48,r*0.25);cx.stroke();cx.shadowBlur=0}
+   cx.moveTo(r*0.26,r*0.25);cx.lineTo(r*0.48,r*0.25);gstroke("#ff5f7a",Math.max(1.6,er*0.7))}
   else{cx.fillStyle="#fff";
    cx.beginPath();cx.arc(r*0.35,-r*0.25,er,0,TAU);cx.arc(r*0.35,r*0.25,er,0,TAU);cx.fill();
    cx.fillStyle="#111";cx.beginPath();cx.arc(r*0.42,-r*0.25,er*0.5,0,TAU);cx.arc(r*0.42,r*0.25,er*0.5,0,TAU);cx.fill()}}
  cx.restore();
  if(e.hp<e.maxhp&&r>=20){const w=r*2,f=Math.max(0,e.hp/e.maxhp);
   if(LINE()){const c=e.boss?"#ff9a5a":"#ff5f7a";
-   cx.strokeStyle=c;cx.shadowColor=c;cx.shadowBlur=8;cx.lineWidth=1.4;
-   cx.strokeRect(e.x-w/2,e.y-r-13,w,6);
+   cx.beginPath();cx.rect(e.x-w/2,e.y-r-13,w,6);gstroke(c,1.4);
    cx.fillStyle=c;cx.fillRect(e.x-w/2+1.5,e.y-r-11.5,Math.max(1,(w-3)*f),3);
-   cx.shadowBlur=0;return}
+   return}
   cx.fillStyle="rgba(20,0,0,0.75)";rr(e.x-w/2,e.y-r-13,w,6,3);cx.fill();
   cx.fillStyle=e.boss?"#ff8040":"#f44";rr(e.x-w/2,e.y-r-13,Math.max(2,w*f),6,3);cx.fill();
   cx.fillStyle="rgba(255,255,255,0.3)";cx.fillRect(e.x-w/2+1,e.y-r-12,Math.max(1,w*f-2),2)}}
@@ -2590,9 +2607,8 @@ function drawWorld(){const sx=(Math.random()-0.5)*shake*14,sy=(Math.random()-0.5
  if(FX)glow(G.px,sy,120,"rgba(120,190,255,0.10)","rgba(80,140,255,0.04)");
  if(ao>0){// exhaust column trailing the arrival
   const len=60+ao*0.6;
-  if(LINE()){cx.strokeStyle=VPAL.shot;cx.shadowColor=VPAL.shot;cx.shadowBlur=12;cx.lineWidth=2;
-   cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px-1.5,sy+14+len);
-   cx.moveTo(G.px+8,sy+14);cx.lineTo(G.px+1.5,sy+14+len);cx.stroke();cx.shadowBlur=0}
+  if(LINE()){cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px-1.5,sy+14+len);
+   cx.moveTo(G.px+8,sy+14);cx.lineTo(G.px+1.5,sy+14+len);gstroke(VPAL.shot,2)}
   else{const g=cx.createLinearGradient(0,sy+14,0,sy+14+len);
   g.addColorStop(0,"rgba(255,230,150,0.5)");g.addColorStop(0.35,"rgba(255,140,40,0.3)");g.addColorStop(1,"rgba(255,80,20,0)");
   cx.fillStyle=g;cx.beginPath();cx.moveTo(G.px-8,sy+14);cx.lineTo(G.px+8,sy+14);cx.lineTo(G.px+2,sy+14+len);cx.lineTo(G.px-2,sy+14+len);cx.closePath();cx.fill()}}
