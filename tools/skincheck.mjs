@@ -340,6 +340,47 @@ check('and the dial is actually drawn in them', dialSame.length === 0
   && names.every(n => dialHues[n].length > 0),
   dialSame.length ? dialSame.join(', ') : 'four corners, four sets of colours');
 
+/* ---------------------------------------------------- and no skin is a slog
+   A skin that costs much more per frame than classic is not a skin, it is a
+   slower game: once a frame on an iPad runs past the time-step clamp, the
+   fight itself runs slow and the ship feels sluggish. VECTOR and NEON once cost
+   half as much again as classic, from a live shadowBlur on every gem, bullet
+   and pair of eyes. So every skin is timed on the same busy frame, with classic
+   timed before AND after to catch the machine drifting, and none may cost more
+   than 1.45 times classic. The software renderer here exaggerates fill cost,
+   so the bound is loose; the old blur-per-object code measured 1.6. */
+const BUSY = `(async () => {
+  const S = window.SW; S.fx = true; S.start(S.SHIPS[0]); const G = S.G;
+  G.arrive = 0; G.inv = 1e9; G.sector = 3; G.secT = 120; G.t = 500;
+  G.en.length = 0; G.gems.length = 0;
+  for (const k of ['laser','missile','drones']) G.weapons[k] = 6;
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 90; i++) S.spawnEnemy(['scout','swarmer','drifter','turret'][i % 4],
+    G.px + (rnd() - .5) * 900, G.py + (rnd() - .5) * 1400);
+  for (let i = 0; i < 120; i++) G.gems.push({ big: 1, v: 1, life: 99,
+    x: G.px + (rnd() - .5) * 800, y: G.py + (rnd() - .5) * 1200 });
+  S.stick = { x: 0.7, y: -0.7, l: 1 };
+  S.halt(); await new Promise(r => setTimeout(r, 200));
+  for (let i = 0; i < 8; i++) S.step(1 / 60);
+  const t0 = performance.now(); for (let i = 0; i < 36; i++) S.step(1 / 60);
+  const ms = (performance.now() - t0) / 36;
+  S.resume(); S.stick = null; return ms;
+})()`;
+const cost = {};
+const timeSkin = async i => { await pg.evaluate(`window.SW.setSkin(${i})`); return pg.evaluate(BUSY); };
+/* a throwaway run first: the first busy frame bakes every sprite and warms the
+   JIT, and timing that against warm skins flatters the skins */
+await timeSkin(0);
+const cA = await timeSkin(0);
+for (let i = 1; i < names.length; i++) cost[names[i]] = await timeSkin(i);
+const cB = await timeSkin(0);
+const base = (cA + cB) / 2;
+const worst = Object.entries(cost).sort((p, q) => q[1] - p[1])[0];
+check('and no skin makes the game a slog', Object.values(cost).every(v => v < base * 1.45),
+  Object.entries(cost).map(([k, v]) => k.toLowerCase() + ' x' + (v / base).toFixed(2)).join('   ')
+  + `   against classic (${(Math.abs(cA - cB) / base * 100).toFixed(0)}% drift)`);
+await pg.evaluate(`window.SW.setSkin(0)`);
+
 /* ------------------------------------------------------- and it is remembered */
 await pg.evaluate(`window.SW.setSkin(1)`);
 await pg.reload({ waitUntil: 'load' });
