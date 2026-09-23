@@ -39,6 +39,8 @@ const GAMES = {
   'marble-mayhem':  { music: true },
   /* like Star Swarm, Vine Swing asks for its sound back once a second */
   'vine-swing':     { start: 'window.VS.start(0,0)', music: true, selfWakes: true },
+  /* and so does Pinball Quest */
+  'pinball-quest':  { start: "window.PB.start('goal')", music: true, selfWakes: true },
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];
