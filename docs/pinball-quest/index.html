@@ -30,10 +30,12 @@ const W_UP=32,W_DOWN=18;
 
 // ================================================================ tables
 const MX=x=>PW-x;
-function newTable(){return{segs:[],circs:[],sens:[],flips:[],paths:[],movers:[],deco:[],inserts:[],labels:[],grid:null,drops:0,spinners:0}}
+function newTable(){return{segs:[],circs:[],sens:[],flips:[],paths:[],movers:[],deco:[],inserts:[],labels:[],discs:[],grid:null,drops:0,spinners:0}}
 function seg(t,ax,ay,bx,by,o){const s=Object.assign({ax,ay,bx,by,r:4,e:0.42,fr:0.03,kind:"wall",kick:0,id:null,look:"rail",h:26},o||{});s.i=t.segs.length;t.segs.push(s);return s}
 function poly(t,pts,o){const out=[];for(let i=0;i+1<pts.length;i++)out.push(seg(t,pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1],o));return out}
 function circ(t,x,y,r,o){const c=Object.assign({x,y,r,e:0.62,fr:0.06,kind:"post",kick:0,id:null,look:"post"},o||{});c.i=t.circs.length;t.circs.push(c);return c}
+/* a turntable set flush in the playfield: the ball rolling over it turns it */
+function disc(t,x,y,r,id){const d={x,y,r,id};t.discs.push(d);return d}
 function sens(t,o){o.i=t.sens.length;t.sens.push(o);return o}
 function arcPts(cx,cy,R,a0,a1,n){const p=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;p.push([cx+Math.cos(a)*R,cy+Math.sin(a)*R])}return p}
 function mirrorPts(p){return p.map(q=>[MX(q[0]),q[1]])}
@@ -141,6 +143,11 @@ function baseTable(t,o){
   ins(t,"save",PW/2,912,"circle",11,"#ff4d4d",{label:"SHOOT AGAIN"});
   ins(t,"kickL",18,818,"circle",7,"#ffd43b");ins(t,"kickR",MX(18),818,"circle",7,"#ffd43b");
   label(t,"KICK",18,800,{size:6,rot:-Math.PI/2});label(t,"KICK",MX(18),800,{size:6,rot:Math.PI/2});
+  /* the turntable in the middle, four star rollovers either side of it,
+     and the save post between the flippers that the stars put up */
+  disc(t,PW/2,700,54,"disc");
+  [[100,676],[120,734],[MX(100),676],[MX(120),734]].forEach((p,i)=>{sens(t,{type:"circle",kind:"roll",x:p[0],y:p[1],r:11,id:"star"+i});ins(t,"star"+i,p[0],p[1],"circle",11,"#ffd43b")});
+  circ(t,PW/2,1016,6,{e:0.5,look:"savepost",on:"post"});
   ["bx2","bx3","bx4","bx5"].forEach((id,i)=>ins(t,id,PW/2-39+i*26,862,"circle",8,"#ff922b",{label:(i+2)+"X",lsize:6}));
 }
 
@@ -210,7 +217,7 @@ function hitSeg(T,S,b,s){
 }
 function hitCirc(T,S,b,c){
   const dx=b.x-c.x,dy=b.y-c.y,d2=dx*dx+dy*dy,m=c.r+BR;
-  if(d2>=m*m||c.off&&S.lit[c.off])return;
+  if(d2>=m*m||c.off&&S.lit[c.off]||c.on&&!S.lit[c.on])return;
   const d=Math.sqrt(d2)||1e-6,nx=dx/d,ny=dy/d,ci=T.segs.length+c.i;
   let kick=0;
   if(c.kind==="bumper"&&S.t-S.cool[ci]>0.06){kick=c.kick;}
@@ -268,6 +275,12 @@ function step(T,S,inp){
   }
   for(let i=0;i<T.spinners;i++){S.spin[i]+=S.spinV[i]*dt;S.spinV[i]*=1-2.2*dt;if(Math.abs(S.spinV[i])<0.6){/* settle hanging down */S.spinV[i]=0;S.spin[i]=Math.round(S.spin[i]/Math.PI)*Math.PI}}
   for(const mv of T.movers)mv.update(S,T);
+  /* a turntable is dragged round by the balls rolling over it, and slows */
+  for(const d of T.discs){const kw="dW:"+d.id,ka="dA:"+d.id;let w=S.mov[kw]||0;
+    for(const b of S.balls){if(b.m!=="table")continue;const rx=b.x-d.x,ry=b.y-d.y,r2=rx*rx+ry*ry;if(r2>d.r*d.r)continue;
+      w+=((rx*b.vy-ry*b.vx)/Math.max(r2,400)-w)*6*dt}
+    w*=1-0.35*dt;const a0=S.mov[ka]||0,a1=a0+w*dt;S.mov[kw]=w;S.mov[ka]=a1;
+    if(Math.floor(a1/TAU)!==Math.floor(a0/TAU))S.ev.push({k:"disc",id:d.id,x:d.x,y:d.y})}
   for(const b of S.balls){
     if(b.m==="gone")continue;
     if(b.m==="held"||b.m==="plunger"||b.m==="lift"){b.hold-=dt;
@@ -373,7 +386,7 @@ function rampTo(t,id,mouthX,mouthY,up,down,o){
 }
 
 function tableGoal(){
-  const t=newTable();t.key="goal";baseTable(t);
+  const t=newTable();t.key="goal";baseTable(t);t.discName="CENTRE CIRCLE!";
   topLanes(t,[196,240,284],124);
   bumper(t,190,222,"b0");bumper(t,290,222,"b1");bumper(t,240,294,"b2");
   /* the goal: a net with a keeper sliding across its mouth */
@@ -414,7 +427,7 @@ function tableGoal(){
 
 /* ---------------------------------------------------------------- Puppy Park */
 function tablePup(){
-  const t=newTable();t.key="pup";baseTable(t);
+  const t=newTable();t.key="pup";baseTable(t);t.discName="ZOOMIES!";
   topLanes(t,[160,204,248],134);
   /* fire-hydrant pop bumpers, up on the right */
   bumper(t,318,200,"b0");bumper(t,394,214,"b1");bumper(t,350,282,"b2");
@@ -451,7 +464,7 @@ function tablePup(){
 
 /* ---------------------------------------------------------------- Block Mine */
 function tableMine(){
-  const t=newTable();t.key="mine";baseTable(t);
+  const t=newTable();t.key="mine";baseTable(t);t.discName="TURNTABLE!";
   topLanes(t,[290,334,378],134);
   /* slime-block bumpers, up on the left */
   bumper(t,146,208,"b0");bumper(t,222,196,"b1");bumper(t,184,276,"b2");
@@ -484,7 +497,7 @@ function tableMine(){
 
 /* ---------------------------------------------------------------- Wizard Academy */
 function tableWiz(){
-  const t=newTable();t.key="wiz";baseTable(t);
+  const t=newTable();t.key="wiz";baseTable(t);t.discName="MAGIC CIRCLE!";
   topLanes(t,[150,194,238],134);
   /* crystal-ball bumpers under the lanes */
   bumper(t,150,222,"b0");bumper(t,232,222,"b1");bumper(t,190,294,"b2");
@@ -572,6 +585,7 @@ function gameStep(G,inp){
   step(G.T,S,G.tilted?{}:inp);
   if(G.saveT>0&&G.phase==="play")G.saveT-=dt;
   if(G.doubleT>0)G.doubleT-=dt;
+  if(G.postT>0)G.postT-=dt;S.lit.post=G.postT>0&&!G.tilted?1:0;
   for(const b of S.balls){
     if(b.m==="plunger"&&b.auto>0){b.auto-=dt;if(b.auto<=0){b.m="table";b.vx=0;b.vy=-3600;S.ev.push({k:"launch",power:0.8,auto:1})}}
     /* ball search: a ball that has stopped somewhere it should not gets a kick */
@@ -599,6 +613,7 @@ function gameEvent(G,e){
     case"scoop":pts=PTS.scoop;break;
     case"path":pts=PTS.path;G.bonus+=5000;break;
     case"hit":pts=PTS.hit;break;
+    case"disc":pts=1000;break;
   }
   if(pts)addScore(G,pts);
   if(k==="roll"||k==="lane"||k==="drop"||k==="target"||k==="scoop"||k==="path"||k==="bumper"){count(G,k+":"+id)}
@@ -625,6 +640,15 @@ function gameEvent(G,e){
     const L=G.st.top||(G.st.top=[0,0,0]);L[+id[3]]=1;
     if(L.every(x=>x)){G.st.top=[0,0,0];if(G.bonusX<5){G.bonusX++;say(G,"BONUS "+G.bonusX+"X","",1.4)}else{addScore(G,100000);say(G,"TOP LANES","100,000",1.2)}fx(G,"sound",{s:"lanes"})}
   }
+  /* the four stars put up the save post between the flippers */
+  if(k==="roll"&&/^star\d$/.test(id)&&!(G.postT>0)){
+    const L=G.st.stars||(G.st.stars=[0,0,0,0]);L[+id[4]]=1;
+    if(L.every(x=>x)){G.st.stars=[0,0,0,0];G.postT=12;count(G,"post");addScore(G,50000);
+      say(G,"SAVE POST UP!","For 12 seconds",1.8,{big:1});fx(G,"sound",{s:"lanes"})}
+    else say(G,"STAR",L.filter(x=>x).length+" / 4 for the save post",0.8)
+  }
+  /* every ten turns of the turntable */
+  if(k==="disc"){const n=count(G,"discTurns");if(n%10===0){const v=addScore(G,20000);say(G,G.T.discName||"SPIN!",fmt(v),1.2);fx(G,"sound",{s:"combo",n:1})}}
   R.on(G,e);
   /* a scoop that keeps catching the same ball throws it well clear */
   if(k==="scoop"){const b=G.S.balls.find(x=>x.id===e.ball),h=G.loopHits||(G.loopHits=[]);h.push(G.t);while(h.length&&G.t-h[0]>8)h.shift();
@@ -645,7 +669,7 @@ function drained(G,e){
   say(G,"BONUS "+fmt(G.bonus)+(G.bonusX>1?" x"+G.bonusX:""),"= "+fmt(b),2.4);
   fx(G,"sound",{s:"drain"});
 }
-function nextBall(G){
+function nextBall(G){G.postT=0;G.st.stars=[0,0,0,0];
   G.bonus=0;G.bonusX=1;G.mb=false;G.kick.L=G.kick.R=!!G.opt.kickback;
   if(G.extra>0){G.extra--;say(G,"SHOOT AGAIN","",2,{big:1});serveBall(G,false);return}
   if(G.ball>=G.balls){G.phase="over";G.over=true;say(G,"GAME OVER",fmt(G.score),4,{big:1});return}
@@ -669,6 +693,7 @@ function lightsNow(G){
   if(G.phase==="plunge"||G.skillOn)L["top"+(G.skill-1)]=3;
   L.kickL=G.kick.L?1:0;L.kickR=G.kick.R?1:0;
   L.save=G.saveT>0?(G.saveT<3?3:1):0;
+  const st=G.st.stars||[0,0,0,0];for(let i=0;i<4;i++)L["star"+i]=st[i]?1:G.postT>0?2:0;
   L.bx2=G.bonusX>=2?1:0;L.bx3=G.bonusX>=3?1:0;L.bx4=G.bonusX>=4?1:0;L.bx5=G.bonusX>=5?1:0;
   G.rules.lights(G,L);
   G.lights=L;return L;
@@ -1158,16 +1183,43 @@ function buildTable(T,theme){
     for(const sx of [-L/2,L/2]){const leg=new THREE.Mesh(cylAt(1.4,1.4,32,sx,0,-30,6),M.steel);g.add(leg)}
     const bar=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.2,L,6),M.steel);bar.rotation.z=Math.PI/2;g.add(bar);
     grp.add(g);H.spinners.push({q,piv})}
+  /* the turntable: a disc cut out of the playfield's own picture, so it
+     is the painting under the ball that turns, in a chrome rim, with studs
+     round its edge to catch the light as it goes */
+  H.discs=[];for(const d of T.discs){const g=new THREE.Group();g.position.set(WX(d.x),WY(d.y),0);
+    const cg=new THREE.CircleGeometry(d.r-2,64),uv=cg.attributes.uv,p=cg.attributes.position;
+    for(let i=0;i<uv.count;i++)uv.setXY(i,(p.getX(i)+WX(d.x)+TW/2)/TW,(p.getY(i)+WY(d.y)+TH/2)/TH);
+    const face=new THREE.Mesh(cg,pfMat);face.position.z=0.3;face.receiveShadow=true;g.add(face);
+    for(let i=0;i<12;i++){const a=i*TAU/12,st=new THREE.Mesh(cylAt(1.8,1.4,0.9,Math.cos(a)*(d.r-7),Math.sin(a)*(d.r-7),0.3,10),M.chrome);g.add(st)}
+    if(theme.disc)theme.disc(g,d,M,mt);
+    const rim=new THREE.Mesh(new THREE.TorusGeometry(d.r,1.8,8,72),M.chrome);rim.position.set(WX(d.x),WY(d.y),0.2);rim.scale.z=0.4;grp.add(rim);
+    grp.add(g);H.discs.push({d,g})}
   /* inserts: coloured plastic set in the wood, lit from below when on */
   for(const q of T.inserts){const g=new THREE.ShapeGeometry(insertShape(q),12);const col=new THREE.Color(q.col);
     /* like a real insert: coloured plastic, brighter where the bulb under it is */
     const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/q.s*0.5+0.5,uv.getY(i)/q.s*0.5+0.5);
     const it=insertTexture();
     const mat=new THREE.MeshStandardMaterial({color:col.clone().multiplyScalar(0.55),map:it,emissive:col,emissiveMap:it,emissiveIntensity:0,roughness:0.15,metalness:0});
-    const m=new THREE.Mesh(g,mat);m.position.set(WX(q.x),WY(q.y),0.35);m.rotation.z=-(q.rot||0);m.receiveShadow=true;grp.add(m);
+    /* one on the turntable turns with it */
+    const on=H.discs.find(D=>Math.hypot(q.x-D.d.x,q.y-D.d.y)<D.d.r-4),par=on?on.g:grp,ox=on?WX(on.d.x):0,oy=on?WY(on.d.y):0;
+    const m=new THREE.Mesh(g,mat);m.position.set(WX(q.x)-ox,WY(q.y)-oy,on?0.6:0.35);m.rotation.z=-(q.rot||0);m.receiveShadow=true;par.add(m);
     const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture(),color:col,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
-    sp.position.set(WX(q.x),WY(q.y),3);sp.scale.set(q.s*5,q.s*5,1);grp.add(sp);
+    sp.position.set(WX(q.x)-ox,WY(q.y)-oy,3);sp.scale.set(q.s*5,q.s*5,1);par.add(sp);
     H.inserts.push({q,mat,sp,v:0})}
+  /* star rollovers: a chrome star button in the middle of each */
+  for(const q of T.sens){if(q.kind!=="roll"||!/^star/.test(q.id))continue;
+    const sg=new THREE.ExtrudeGeometry(insertShape({shape:"star",s:6.5}),{depth:1.6,bevelEnabled:true,bevelThickness:0.6,bevelSize:0.5,bevelSegments:1});
+    const m=new THREE.Mesh(sg,M.chrome);m.position.set(WX(q.x),WY(q.y),0.4);m.castShadow=true;grp.add(m)}
+  /* the save post: it waits under the playfield and comes up between the
+     flippers when the stars are lit */
+  for(const c of T.circs){if(c.look!=="savepost")continue;
+    B.add(M.black,cylAt(c.r+1.5,c.r+1.5,0.4,WX(c.x),WY(c.y),0.1,20));
+    const g=new THREE.Group();g.position.set(WX(c.x),WY(c.y),-32);
+    g.add(new THREE.Mesh(cylAt(c.r-2,c.r-2,26,0,0,0,16),M.chrome));
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(c.r-2.3,2.3,8,20),mt.rubber||M.rubber);ring.position.z=11;g.add(ring);
+    g.add(new THREE.Mesh(cylAt(c.r-1,c.r-1.6,3,0,0,26,16),M.chrome));
+    if(theme.post)theme.post(g,c,M,mt);
+    g.children.forEach(m=>m.castShadow=true);g.visible=false;grp.add(g);H.post={c,g,z:-32}}
   /* ramps and wires */
   for(const p of T.paths)buildPath(grp,B,p,theme,mt,M);
   /* the apron across the bottom */
@@ -1299,6 +1351,9 @@ function syncScene(G,H,dt,view){
   /* standups and slings twitch when hit */
   for(const a of H.anim){const k=Math.max(0,1-(S.t-S.kick[a.s.i])*10);a.m.position.y=k*2.5}
   for(const sl of H.slings){const k=Math.max(0,1-(S.t-S.kick[sl.s.i])*12),f=sl.s.face;sl.m.position.set(f[0]*k*4,-f[1]*k*4,0)}
+  /* the turntable, and the save post rising and sinking */
+  if(H.discs)for(const D of H.discs)D.g.rotation.z=-(S.mov["dA:"+D.d.id]||0);
+  if(H.post){const want=S.lit.post?0:-32;H.post.z+=(want-H.post.z)*Math.min(1,dt*(want>H.post.z?16:8));H.post.g.position.z=H.post.z;H.post.g.visible=H.post.z>-31}
   /* spinners */
   for(const sp of H.spinners)sp.piv.rotation.x=S.spin[sp.q.si];
   /* pop bumpers flash and duck their ring */
@@ -1338,7 +1393,40 @@ function fitCamera(w,h,top,bottom,left,right){
        above goes to the backbox */
     ty+=(y0-by0)*d*0.25}
   place();
+  R3.fit={pos:cam.position.clone(),tgt:new THREE.Vector3(0,ty,0),by0,by1,land:w>h};
+  fitFollow();
 }
+/* The follow camera. Upright, the whole length of the table already fits;
+   what makes the ball small is the width. So it comes in closer (cutting
+   off the sides), slides across with the ball, and when the ball comes
+   down to the flippers it slides back to the middle so both are in view.
+   Where the length does not fit (sideways), it also rides up and down. */
+const FOL={x:0,y:0,z:1,ok:false,lowY:0,highY:0};
+function fitFollow(){const F=R3.fit,cam=R3.cam,z=F.land?1.5:1.35,dir=F.pos.clone().sub(F.tgt).multiplyScalar(1/z),v=new THREE.Vector3();
+  FOL.zoom=z;
+  const ndcAt=(ty,px,py,pz)=>{cam.position.set(0,ty,0).add(dir);cam.lookAt(0,ty,0);cam.updateMatrixWorld();v.set(px,py,pz).project(cam);return v.y};
+  /* the lowest the view may sit: the bottom of the flippers' apron on the
+     bottom edge; the highest: the top of the arch on the top edge */
+  let lo=-900,hi=900;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(ndcAt(m,0,WY(TH+10),20)<F.by0+0.02)hi=m;else lo=m}FOL.lowY=(lo+hi)/2;
+  lo=-900;hi=900;for(let i=0;i<40;i++){const m=(lo+hi)/2;if(ndcAt(m,0,WY(-20),46)>F.by1-0.02)lo=m;else hi=m}FOL.highY=(lo+hi)/2;
+  if(FOL.highY<FOL.lowY)FOL.highY=FOL.lowY=(FOL.highY+FOL.lowY)/2;
+  cam.position.copy(F.pos);cam.lookAt(F.tgt);cam.updateMatrixWorld();FOL.dir=dir;FOL.ok=true}
+function followCamera(dt,balls,on){
+  const F=R3.fit;if(!F||!FOL.ok)return;const cam=R3.cam;
+  let b=null,top=9999;for(const q of balls){if(q.m==="gone")continue;if(!b||q.y>b.y)b=q;top=Math.min(top,q.y)}
+  let tx=F.tgt.x,ty=F.tgt.y,z=1;
+  if(on&&b){z=FOL.zoom;
+    /* multiball: the balls far apart, come out a little */
+    if(balls.length>1)z=1+(z-1)*clamp(1-(b.y-top-250)/500,0.3,1);
+    const low=clamp((b.y-420)/420,0,1),maxX=(TW/2+14)*(1-1/z);
+    tx=clamp(WX(b.x)*0.9,-maxX,maxX)*(1-0.75*low*low);
+    /* part way in (multiball), the view sits part way between the whole
+       table's and the close one's, so the bottom stays on the screen */
+    const up=clamp((620-b.y)/420,0,1),zk=(z-1)/(FOL.zoom-1);ty=F.tgt.y+(lerp(FOL.lowY,FOL.highY,up)-F.tgt.y)*zk}
+  const k=1-Math.exp(-dt*(on?3.2:2));FOL.x+=(tx-FOL.x)*k;FOL.y+=(ty-FOL.y)*k;FOL.z+=(z-FOL.z)*k;
+  if(!on&&Math.abs(FOL.z-1)<0.002){FOL.x=tx;FOL.y=ty;FOL.z=1}
+  const zz=FOL.z,dir=F.pos.clone().sub(F.tgt).multiplyScalar(1/zz),t=new THREE.Vector3(FOL.x,FOL.y,0);
+  cam.position.copy(t).add(dir);cam.lookAt(t);cam.updateMatrixWorld();cam.userData.home=cam.position.clone()}
 // ================================================================ themes
 function texOf(c,rep){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping}return t}
 function capsule(r,len,mat){const g=new THREE.CapsuleGeometry(r,len,6,12);g.rotateX(Math.PI/2);const m=new THREE.Mesh(g,mat);m.castShadow=true;return m}
@@ -1648,6 +1736,7 @@ function paintGoal(g,T){
   grStands(g);
   grVignette(g);
   grSideBoards(g);
+  grDiscEdge(g);
   /* the photograph's own texture, gentler than the default */
   photoPass(g,0,0,TW,TH,0.34,3.2,"soft-light",3);photoPass(g,0,0,TW,TH,0.24,0.9,"soft-light",7);photoPass(g,0,0,TW,TH,0.1,0.25,"overlay",11);
   grK=1;
@@ -2156,6 +2245,140 @@ function grCornerFlags(grp,B,H,M){
   H.movers.grFlags=(S)=>{for(const f of flags){const p=f.g.attributes.position;for(let i=0;i<p.count;i++){const x=f.base[i*3];p.setY(i,f.base[i*3+1]+Math.sin(S.t*7-x*0.45+f.ph)*x*0.12)}p.needsUpdate=true}};
 }
 
+/* ================================================================ the turntable, the save post */
+/* the painted gap round the turntable: a dark slot just outside its chrome
+   rim, the rim's shadow on the grass, and a chalk keyline the groundsman
+   ran round it, concentric with the centre circle */
+function grDiscEdge(g){const x=GR_X0,y=700;g.save();
+  const sh=g.createRadialGradient(x,y,55,x,y,63);sh.addColorStop(0,"rgba(0,8,2,0.5)");sh.addColorStop(1,"rgba(0,8,2,0)");
+  g.fillStyle=sh;g.beginPath();g.arc(x,y,63,0,TAU);g.arc(x,y,55,0,TAU,true);g.fill();
+  g.strokeStyle="#040605";g.lineWidth=3.2;g.beginPath();g.arc(x,y,55.6,0,TAU);g.stroke();
+  g.strokeStyle="rgba(252,253,248,0.78)";g.lineWidth=1;g.beginPath();g.arc(x,y,60,0,TAU);g.stroke();
+  g.restore()}
+/* letters round an arc: top (outward-upright, left to right over the top)
+   or bottom (tops to the middle, left to right under it) */
+function grArcText(g,txt,r,mid,size,col,bottom){g.save();g.font="900 "+size+"px 'Arial Black',Impact,sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillStyle=col;
+  g.lineJoin="round";g.strokeStyle="rgba(0,0,0,0.6)";g.lineWidth=size*0.18;
+  const w=[...txt].map(ch=>g.measureText(ch).width*1.06),tot=w.reduce((a,b)=>a+b,0)/r;let a=bottom?mid+tot/2:mid-tot/2;
+  for(let i=0;i<txt.length;i++){const da=w[i]/r,c=bottom?a-da/2:a+da/2;g.save();g.translate(Math.cos(c)*r,Math.sin(c)*r);g.rotate(bottom?c-Math.PI/2:c+Math.PI/2);
+    g.strokeText(txt[i],0,0);g.fillText(txt[i],0,0);g.restore();a+=bottom?-da:da}
+  g.restore()}
+/* the turntable's printed band: a club-crest ring round the centre circle,
+   red and white segments under the chrome studs, the name over the top
+   and a football either side, so its turning shows */
+function grDiscTex(){if(grMemo.disc)return grMemo.disc;return grMemo.disc=grCan(512,512,(g)=>{
+  const s=512/104;g.translate(256,256);g.scale(s,s);
+  /* the band's inner edge steps out at the bottom, a window for the
+     MULTIBALL label printed under it (both turn together) */
+  const win=a=>{const d=Math.abs(((a-Math.PI/2)%TAU+TAU+Math.PI)%TAU-Math.PI),k=clamp((1.02-d)/0.26,0,1);return k*k*(3-2*k)},rin=a=>30.4+7*win(a);
+  const inner=(dr,P)=>{for(let i=0;i<=144;i++){const a=i/144*TAU,r=rin(a)+dr;i?P.lineTo(Math.cos(a)*r,Math.sin(a)*r):P.moveTo(Math.cos(a)*r,Math.sin(a)*r)}P.closePath();return P};
+  const band=new Path2D();band.arc(0,0,51.6,0,TAU);band.closePath();inner(0,band);
+  const bg=g.createRadialGradient(0,0,30,0,0,52);bg.addColorStop(0,"rgba(16,42,98,0.93)");bg.addColorStop(1,"rgba(8,22,58,0.95)");g.fillStyle=bg;g.fill(band,"evenodd");
+  /* red and white segments, one under each stud */
+  for(let i=0;i<12;i++){const a=i*TAU/12;g.fillStyle=i&1?"#f4f4f0":"#d62828";g.beginPath();g.arc(0,0,50.6,a-TAU/24+0.012,a+TAU/24-0.012);g.arc(0,0,43.6,a+TAU/24-0.012,a-TAU/24+0.012,true);g.closePath();g.fill()}
+  g.strokeStyle="rgba(0,0,0,0.35)";g.lineWidth=0.5;for(const r of [43.6,50.6]){g.beginPath();g.arc(0,0,r,0,TAU);g.stroke()}
+  /* gold keylines */
+  g.strokeStyle="#ffd43b";for(const [r,w] of [[51.2,0.9],[42.7,0.7]]){g.lineWidth=w;g.beginPath();g.arc(0,0,r,0,TAU);g.stroke()}
+  g.lineWidth=0.9;g.stroke(inner(0.6,new Path2D()));
+  grArcText(g,"GOAL RUSH",37,-Math.PI/2,6.4,"#ffd43b");
+  for(const a of [0.08,Math.PI-0.08]){g.save();g.translate(Math.cos(a)*36.6,Math.sin(a)*36.6);g.rotate(a*0.7+0.4);soccerBall(g,0,0,4.6);g.strokeStyle="#111";g.lineWidth=0.35;g.beginPath();g.arc(0,0,4.6,0,TAU);g.stroke();g.restore()}
+  /* little stars between the name and the balls */
+  g.fillStyle="#ffd43b";for(const a of [-0.36,-2.78]){g.save();g.translate(Math.cos(a)*37,Math.sin(a)*37);g.beginPath();
+    for(let j=0;j<10;j++){const b=-Math.PI/2+j/10*TAU,r=j%2?0.8:1.9;g.lineTo(Math.cos(b)*r,Math.sin(b)*r)}g.closePath();g.fill();g.restore()}})}
+function grDisc(g,d,M,mt){
+  const t=texOf(grDiscTex());
+  const m=new THREE.Mesh(new THREE.RingGeometry(30,52,72,1),new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:0.28,metalness:0,
+    polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+  /* the ring's uv is planar over its outer radius, which is the canvas */
+  m.position.z=0.8;m.receiveShadow=true;m.renderOrder=1;g.add(m)}
+/* on top of the save post: a match ball in a chrome tee, turning slowly */
+let grPostBall=null;
+function grPost(g,c,M,mt){const G0=grBallGeo(4.4,2),b=new THREE.Group();b.position.z=29+4.3;
+  b.add(new THREE.Mesh(G0.white,M.white));b.add(new THREE.Mesh(G0.black,M.black));b.rotation.set(0.5,0.3,0.2);g.add(b);grPostBall=b}
+
+/* ================================================================ more dressing */
+/* the materials the new figures share, so each costs one draw call however
+   many figures use it */
+function grFigMats(M){return{skin:grStd("#d9a074",0.55),red:grStd("#d42a2a",0.5),hair:grStd("#2a1a10",0.75),yellow:grStd("#ffd21f",0.35,{emissive:new THREE.Color("#5a4400")}),
+  gold:new THREE.MeshPhysicalMaterial({color:0xffc94d,metalness:1,roughness:0.16,clearcoat:0.4}),white:M.white,black:M.black,chrome:M.chrome}}
+/* put a local-space geometry into the batch at (x,y,z) turned by rot */
+function grPut(B,mat,geo,x,y,z,rot,k){if(k)geo.scale(k,k,k);geo.rotateZ(rot||0);geo.translate(x,y,z);B.add(mat,geo)}
+/* a small player, 29 tall at k=1, facing -y: legs, kit, head, and arms set by pose */
+function grFigure(B,F,x,y,z,rot,o){const add=(m,g)=>grPut(B,m,g,x,y,z,rot,o.k),kit=o.kit,sock=o.sock||kit,shorts=o.shorts||F.white;
+  add(F.black,cylAt(4.6,4.6,1.2,0,0,0,20));const z0=1.2;
+  for(const s of [-1,1]){add(F.black,grEll(1.25,2.4,0.95,s*1.9,-0.8,z0+0.95,0,0,0,10,6));
+    add(sock,grLimb(1.0,[s*1.9,-0.2,z0+1.6],[s*1.95,0,z0+7.2],8));add(F.skin,grLimb(1.15,[s*1.95,0,z0+7.4],[s*1.7,0.1,z0+11.2],8))}
+  add(shorts,grEll(3.7,2.5,2.4,0,0.1,z0+12));
+  add(kit,grEll(3.6,2.3,4.8,0,0,z0+16.6,0,0,0,14,10));
+  add(F.skin,cylAt(0.95,0.95,1.6,0,0,z0+20.6,8));
+  add(F.skin,grEll(2.25,2.2,2.55,0,0,z0+23.8));add(F.hair,grEll(2.4,2.35,1.55,0,0.35,z0+25.1));
+  for(const [s,up] of [[-1,o.armL],[1,o.armR]]){const sh=[s*3.3,0,z0+19.6];
+    const el=up?[s*4.9,-0.4,z0+23.4]:[s*4.4,-0.2,z0+15.8],hd=up?[s*5.6,-0.9,z0+27.4]:[s*4.6,-1.2,z0+12.2];
+    add(kit,grLimb(0.95,sh,el,8));add(F.skin,grLimb(0.8,el,hd,8));add(F.skin,grEll(0.85,0.7,0.95,hd[0],hd[1],hd[2]+0.2*(up?1:-1),0,0,0,8,6))}
+  if(o.card)add(F.yellow,boxAt(2.2,0.35,3,5.9,-1.1,z0+29.4,0))}
+/* the home striker on the left sling, both arms up; the referee on the
+   right one, showing a yellow card */
+function grSlingFigures(B,F){
+  grFigure(B,F,WX(93),WY(828),32.5,0.4,{k:1.3,kit:F.red,shorts:F.white,sock:F.red,armL:1,armR:1});
+  grFigure(B,F,WX(MX(93)),WY(828),32.5,-0.4,{k:1.3,kit:F.black,shorts:F.black,sock:F.black,armL:0,armR:1,card:1})}
+/* the club mascot on the left of the apron: a football for a head, the home
+   kit, one arm waving */
+function grMascot(grp,B,H,F){const x=WX(48),y=WY(946),z=18,rot=0.35,k=1.3;
+  const add=(m,g)=>grPut(B,m,g,x,y,z,rot,k);
+  add(F.black,cylAt(8,8,1.4,0,0,0,24));add(F.gold,cylAt(8.4,8.4,0.5,0,0,1.4,24));const z0=1.9;
+  for(const s of [-1,1]){add(F.black,grEll(2.4,4,1.8,s*3,-1.4,z0+1.8,0,0,0,12,8));add(F.white,grEll(2.45,1.2,0.5,s*3,-4.6,z0+2.4,0,0,0,8,4));
+    add(F.red,grLimb(1.6,[s*3,0,z0+3],[s*3,0,z0+8],8))}
+  add(F.white,grEll(5.6,4,3.4,0,0,z0+10.4,0,0,0,16,10));
+  add(F.red,grEll(6,4.6,6.4,0,0,z0+16,0,0,0,16,12));
+  add(F.white,grEll(2.2,0.6,2.2,0,-4.45,z0+17.2,0,0,0,10,6));
+  /* the head: a real ball, with big eyes and a grin */
+  const G0=grBallGeo(9,2),hz=z0+30;
+  add(F.white,G0.white.clone().rotateX(0.4).translate(0,0,hz));add(F.black,G0.black.clone().rotateX(0.4).translate(0,0,hz));
+  for(const s of [-1,1]){add(F.white,grEll(2.5,1.3,3,s*3,-8.1,hz+2,0,0,0,12,8));add(F.black,grEll(1.1,0.6,1.3,s*3.1,-9.2,hz+1.6,0,0,0,8,6))}
+  {const m=new THREE.TorusGeometry(3.3,0.55,6,14,Math.PI);m.rotateX(Math.PI/2);m.rotateY(Math.PI);m.translate(0,-8.6,hz-2);add(F.red,m)}
+  /* arms: the right one up and waving (it moves), the left on the hip */
+  add(F.red,grLimb(1.5,[-5.4,0,z0+19],[-7.6,-0.6,z0+14],8));add(F.white,grEll(1.8,1.8,1.8,-7.4,-0.8,z0+12.6));
+  const arm=new THREE.Group();arm.position.set(x,y,z);arm.rotation.z=rot;arm.scale.setScalar(k);grp.add(arm);const pv=new THREE.Group();pv.position.set(5.4,0,z0+19);arm.add(pv);
+  const P=grParts();P.add(F.red,grLimb(1.5,[0,0,0],[2.6,-0.6,7.4],8));P.add(F.white,grEll(2,1.8,2,3,-0.8,9.4));P.build(pv);
+  H.movers.grMascot=(S)=>{pv.rotation.y=0.35+Math.sin(S.t*5)*0.35}}
+/* the golden boot on the right of the apron, on a black plinth */
+function grGoldenBoot(B,F){const x=WX(MX(48)),y=WY(946),z=18,rot=-0.5,k=1.35;
+  const add=(m,g)=>grPut(B,m,g,x,y,z,rot,k);
+  add(F.black,cylAt(9,8,9,0,0,0,28));add(F.gold,cylAt(8.2,8.2,0.6,0,0,9,28));add(F.gold,cylAt(9.2,9.2,0.6,0,0,0.6,28));
+  const z0=9.6,U=1.25;
+  const e=(rx,ry,rz,px,py,pz,ax)=>add(F.gold,grEll(rx*U,ry*U,rz*U,px*U,py*U,z0+pz*U,ax||0,0,0,16,10));
+  e(2.5,6.6,0.6,0,0,0.7);/* the sole */
+  e(2.3,4.4,1.7,0,-1.6,1.9);/* the upper over the toes */
+  e(2.35,2.7,2.6,0,2.7,2.9);/* the heel */
+  e(1.2,2,0.7,0,0.3,4.2,-0.5);/* the tongue */
+  add(F.gold,cylAt(2.05*U,2.2*U,1.3*U,0,2.8*U,z0+4.6*U,16));add(F.black,cylAt(1.6*U,1.6*U,0.2*U,0,2.8*U,z0+5.8*U,14));/* the collar, open */
+  for(const [sx,sy] of [[-1.3,-4.2],[1.3,-4.2],[-1.4,-1.6],[1.4,-1.6],[-1.1,4],[1.1,4]])add(F.gold,cylAt(0.55*U,0.4*U,0.7*U,sx*U,sy*U,z0-0.4*U,6));
+  /* laces */
+  for(let i=0;i<4;i++)add(F.white,boxAt(2.4*U,0.3*U,0.3*U,0,(-2.8+i*0.85)*U,z0+(3.2+i*0.3)*U,0));
+  /* the match ball at its foot */
+  const G0=grBallGeo(3,2);add(F.white,G0.white.clone().translate(-6.3,-6.2,3));add(F.black,G0.black.clone().translate(-6.3,-6.2,3))}
+/* flasher domes on the cabinet sides either side, red for home and blue for
+   away: they fire with the big flashers, strobe while the turntable spins
+   and breathe the rest of the time */
+function grFlashers(grp,B,H,F){const ds=[];
+  for(const [x,col,li] of [[-14,"#ff3030",0],[TW+14,"#2f8bff",1]]){const X=WX(x),Y=WY(610);
+    /* on top of the cabinet's side, outside the glass */
+    B.add(F.chrome,cylAt(8,7.4,3.2,X,Y,60,20));B.add(F.black,cylAt(7.2,7.2,1,X,Y,63.2,20));
+    const c=new THREE.Color(col),mat=new THREE.MeshPhysicalMaterial({color:c.clone().multiplyScalar(0.8),roughness:0.12,transparent:true,opacity:0.82,emissive:c,emissiveIntensity:0.2,clearcoat:1});
+    const dg=new THREE.SphereGeometry(7.4,20,10,0,TAU,0,Math.PI/2);dg.rotateX(Math.PI/2);dg.scale(1,1,1.25);dg.translate(X,Y,64);
+    const m=new THREE.Mesh(dg,mat);m.castShadow=true;grp.add(m);
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture(),color:c,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
+    sp.position.set(X,Y,69);sp.scale.set(46,46,1);grp.add(sp);ds.push({mat,sp,li})}
+  let lastGoals=0,burst=0;
+  H.movers.grFlash=(S,dt,G)=>{const goals=G&&G.st&&G.st.goals||0;if(goals>lastGoals)burst=2.2;lastGoals=goals;burst=Math.max(0,burst-dt);
+    const spin=Math.abs(S.mov["dW:disc"]||0),t=S.t;
+    for(const d of ds){const fl=R3.fl[d.li]?Math.min(1,R3.fl[d.li].intensity/60000):0;
+      let v=0.12+0.08*Math.sin(t*2+d.li*Math.PI);
+      if(spin>0.6)v=Math.max(v,Math.min(1,spin/5)*(Math.sin(t*14+d.li*Math.PI)>0?1:0.1));
+      if(burst>0)v=Math.max(v,Math.sin(t*22+d.li*Math.PI)>0?1:0.2);
+      if(G&&G.mb)v=Math.max(v,Math.sin(t*6+d.li*Math.PI)>0?0.85:0.15);
+      v=Math.max(v,fl);d.mat.emissiveIntensity=0.2+v*3.2;d.sp.material.opacity=v*0.85}}}
+
 /* the apron: night-blue, the pitch's lines faint across it, the cards and the name */
 function grApron(theme){const c=mkCanvas(1048,420),g=c.getContext("2d");
   const gr=g.createLinearGradient(0,0,0,420);gr.addColorStop(0,"#1b2a52");gr.addColorStop(1,"#0a1128");g.fillStyle=gr;g.fillRect(0,0,1048,420);
@@ -2177,7 +2400,7 @@ THEMES.goal={
   name:"GOAL RUSH",accent:"#1c7ed6",apron:"#14213d",title:"#ffd43b",bumperGlow:"#fff2b0",ramp:"#9fd8ff",
   cardL:["Knock down the 3 defenders","then shoot past the keeper","2 goals = PENALTY MULTIBALL","Ramps score big - combo them!","Both green targets = kickbacks","4 orbits = EXTRA BALL"],
   cardR:["1. Score a goal","2. Make 5 ramps in a game","3. Start Penalty Multiball","4. Score 3 goals in a game","5. Score 2,000,000"],
-  paint:paintGoal,translite:grTranslite,photo:false,
+  paint:paintGoal,translite:grTranslite,photo:false,disc:grDisc,post:grPost,
   mats(M){
     const cap=new THREE.MeshStandardMaterial({map:texOf(capTexture(grCapArt)),roughness:0.3});
     return{bumperCap:cap,bumperBody:plasticMat("#d3f9d8",0.82),skirt:grStd("#2b8a3e",0.35),
@@ -2195,6 +2418,10 @@ THEMES.goal={
     grStandsCorner(grp,B,H,M);
     grTrophy(grp,B,H,M);
     grCornerFlags(grp,B,H,M);
+    /* more dressing: figures on the slings, the mascot and the golden boot
+       on the apron, flashers on the cabinet walls, the ball on the save post */
+    {const F=grFigMats(M);grSlingFigures(B,F);grMascot(grp,B,H,F);grGoldenBoot(B,F);grFlashers(grp,B,H,F);
+      const pb=grPostBall;H.movers.grPost=(S,dt)=>{if(pb&&pb.parent&&pb.parent.visible)pb.rotation.z+=dt*1.6}}
     const ap=grp.children.find(m=>m.isMesh&&m.material&&m.material.map&&m.material.map.image&&m.material.map.image.width===1048&&m.material.map.image.height===420);
     if(ap){ap.material.map.dispose();ap.material.map=texOf(grApron(THEMES.goal));ap.material.needsUpdate=true}
   }
@@ -2458,11 +2685,15 @@ function pupPlaza(g){
   g.fillStyle="rgba(0,0,0,0.3)";g.beginPath();g.arc(244.5,702.5,62,0,TAU);g.fill();
   g.fillStyle="#8a7f70";g.beginPath();g.arc(243,700,61,0,TAU);g.fill();
   pupRings(g,243,700,6,60,9,17,["#cfc2a6","#bfb293","#d9ceb4","#b8aa8b","#c7b99a"],"#7d725f",53);
-  g.save();g.globalAlpha=0.75;pupPaw(g,243,712,52,0,"#8e5a3c");g.restore();
+  g.save();g.globalAlpha=0.75;pupPaw(g,243,704,29,0,"#8e5a3c");g.restore();
   g.strokeStyle="rgba(255,240,210,0.35)";g.lineWidth=1.2;g.save();g.globalAlpha=0.6;g.translate(243,712);
   g.restore();
   g.strokeStyle="#6f6455";g.lineWidth=3;g.beginPath();g.arc(243,700,59.5,0,TAU);g.stroke();
   pupDots(g,180,640,126,126,800,54,["rgba(0,0,0,0.1)","rgba(255,255,255,0.1)"],0.2,0.6);
+  /* the turntable (r 54 about 243.5,700) is a separate disc: a dark gap round it, lit on its far lip */
+  g.strokeStyle="#15100b";g.lineWidth=2.6;g.beginPath();g.arc(243.5,700,55.2,0,TAU);g.stroke();
+  g.strokeStyle="rgba(255,240,210,0.35)";g.lineWidth=0.6;g.beginPath();g.arc(243.5,700,56.8,Math.PI*1.05,Math.PI*1.95);g.stroke();
+  g.strokeStyle="rgba(0,0,0,0.3)";g.lineWidth=0.8;g.beginPath();g.arc(243.5,700,53.2,0,TAU);g.stroke();
 }
 function pupYard(g){
   /* under and in front of the doghouse: trodden earth, straw, a welcome mat */
@@ -2472,14 +2703,14 @@ function pupYard(g){
   g.fillStyle="#6e4e2a";g.fillRect(129,359,46,36);g.strokeStyle="#3d2a14";g.lineWidth=1.6;g.strokeRect(131.5,361.5,41,31);
   pupDots(g,129,359,46,36,300,73,["rgba(0,0,0,0.18)","rgba(255,220,180,0.1)"],0.2,0.5);
   /* the bench corner */
-  g.save();g.translate(118,700);g.rotate(-0.08);g.fillStyle="rgba(0,0,0,0.3)";g.fillRect(-36,-20,76,44);
-  g.fillStyle="#9e968a";g.fillRect(-38,-22,76,44);
-  const Q=rnd(74);for(let i=0;i<5;i++)for(let j=0;j<3;j++){g.fillStyle=shadeHex("#b5ad9e",(Q()-0.5)*0.18);g.fillRect(-37.5+i*15.2+0.5,-21.5+j*14.6+0.5,14.2,13.6)}
+  g.save();g.translate(159,692);g.rotate(-0.06);g.fillStyle="rgba(0,0,0,0.3)";g.fillRect(-25,-16,54,34);
+  g.fillStyle="#9e968a";g.fillRect(-27,-17,54,34);
+  const Q=rnd(74);for(let i=0;i<4;i++)for(let j=0;j<3;j++){g.fillStyle=shadeHex("#b5ad9e",(Q()-0.5)*0.18);g.fillRect(-26.5+i*13.25+0.5,-16.5+j*11.1+0.5,12.25,10.1)}
+  g.save();g.scale(0.86,0.86);pupBench(g,0,-5,0);g.restore();
   g.restore();
-  pupBench(g,116,690,-0.08);
   /* a lamp post's foot and a litter bin */
   g.fillStyle="rgba(0,0,0,0.35)";g.beginPath();g.arc(88.5,715.5,4.8,0,TAU);g.fill();g.fillStyle="#1f2b24";g.beginPath();g.arc(87,714,4.2,0,TAU);g.fill();g.fillStyle="#3c5245";g.beginPath();g.arc(86.3,713.3,1.8,0,TAU);g.fill();
-  g.fillStyle="rgba(0,0,0,0.35)";g.beginPath();g.arc(150.5,714.5,5.6,0,TAU);g.fill();g.fillStyle="#2f6b3a";g.beginPath();g.arc(149,713,5.4,0,TAU);g.fill();g.fillStyle="#173d20";g.beginPath();g.arc(149,713,3.8,0,TAU);g.fill();
+  g.fillStyle="rgba(0,0,0,0.35)";g.beginPath();g.arc(160.5,737.5,5.6,0,TAU);g.fill();g.fillStyle="#2f6b3a";g.beginPath();g.arc(159,736,5.4,0,TAU);g.fill();g.fillStyle="#173d20";g.beginPath();g.arc(159,736,3.8,0,TAU);g.fill();
   /* the ramp's way in: a little boardwalk */
   g.save();g.fillStyle="rgba(0,0,0,0.3)";g.beginPath();g.moveTo(296,528);g.lineTo(358,528);g.lineTo(350,612);g.lineTo(306,612);g.closePath();g.fill();
   g.beginPath();g.moveTo(294,526);g.lineTo(356,526);g.lineTo(348,610);g.lineTo(304,610);g.closePath();g.clip();
@@ -2495,11 +2726,11 @@ function paintPup(g,T){
   pupPlaza(g);
   pupYard(g);
   pupPond(g,88,466,27,48);
-  pupBed(g,386,690,34,21,0.35,91,["#ff6b6b","#ffd43b","#f783ac","#ffffff"]);
+  pupBed(g,414,722,22,14,1.0,91,["#ff6b6b","#ffd43b","#f783ac","#ffffff"]);
   pupBed(g,166,470,20,30,0.15,92,["#b197fc","#ffffff","#ffd43b","#ff8787"]);
   pupBed(g,300,445,15,11,-0.3,93,["#ff922b","#ffe066"]);
   /* paw-print trails: mud on the grass, darker on the gravel */
-  pupTrail(g,[[104,664],[78,622],[70,568],[90,522]],3.6,"rgba(52,34,18,0.62)",11);
+  pupTrail(g,[[88,650],[74,614],[70,568],[90,522]],3.6,"rgba(52,34,18,0.62)",11);
   pupTrail(g,[[102,414],[118,394],[138,384]],3.4,"rgba(52,34,18,0.62)",10);
   pupTrail(g,[[330,640],[300,600],[292,560]],3.6,"rgba(52,34,18,0.5)",11);
   pupBlanket(g,322,748,42,30,-0.22);
@@ -3011,12 +3242,138 @@ function pupTranslite(g,w,h){g.save();g.scale(w/1024,h/760);
   put(A,A,1);put(rim,A,0.9);g.globalCompositeOperation="lighter";put(pupSoft(rim,6),A,0.5);g.globalCompositeOperation="source-over";
   put(Bc,Bc,1);put(rimB,Bc,0.9);put(cool,Bc,0.3);g.globalCompositeOperation="lighter";put(pupSoft(rimB,6),Bc,0.5);g.restore();
   pupTLLogo(g);pupTLFrame(g);g.restore()}
+/* ================================================================ the turntable, the save post and more toys */
+/* the turntable's rim: a pink frisbee round the paw, with a yellow ZOOMIES
+   wedge and paw prints trotting round it, so it is plain when it turns */
+let pupDiscM=null;
+function pupDiscCan(name){const R=51.6,c=mkCanvas(512,512),g=c.getContext("2d"),k=256/R;g.translate(256,256);g.scale(k,k);
+  const r0=30,r1=51.4,ring=(a,b)=>{g.beginPath();g.arc(0,0,b,0,TAU);g.arc(0,0,a,TAU,0,true);g.closePath()};
+  /* the plastic, darker at its rolled edges */
+  g.fillStyle=pupRG(g,0,0,r0,0,0,r1,[[0,"#a61e4d"],[0.14,"#e64980"],[0.55,"#f06595"],[0.86,"#e64980"],[1,"#8f1446"]]);ring(r0,r1);g.fill();
+  /* the wedge: 70 degrees of yellow with the turntable's name on it */
+  const a0=-Math.PI/2-0.62,a1=-Math.PI/2+0.62;
+  g.fillStyle=pupRG(g,0,0,r0,0,0,r1,[[0,"#e67700"],[0.2,"#ffd43b"],[0.7,"#ffe066"],[1,"#f08c00"]]);
+  g.beginPath();g.arc(0,0,r1-0.6,a0,a1);g.arc(0,0,r0+0.6,a1,a0,true);g.closePath();g.fill();
+  g.strokeStyle="#7a0e2c";g.lineWidth=0.8;g.stroke();
+  g.font="900 6.4px 'Arial Black',Impact,sans-serif";g.textAlign="center";g.textBaseline="middle";
+  const txt=(name||"ZOOMIES!").slice(0,10),rr=40.2,chars=[...txt],w=chars.map(ch=>g.measureText(ch).width+0.25),tot=w.reduce((p,q)=>p+q,0);
+  let a=-Math.PI/2-tot/2/rr;chars.forEach((ch,i)=>{const m=a+w[i]/2/rr;g.save();g.rotate(m);g.translate(rr,0);g.rotate(Math.PI/2);
+    g.lineWidth=1.3;g.lineJoin="round";g.strokeStyle="#7a0e2c";g.strokeText(ch,0,0);g.fillStyle="#fff";g.fillText(ch,0,0);g.restore();a+=w[i]/rr});
+  /* moulded rings and a gloss line */
+  for(const [r,cl,lw] of [[r1-1.6,"rgba(255,255,255,0.65)",0.5],[r0+2,"rgba(90,10,40,0.55)",0.45],[r0+3.2,"rgba(255,255,255,0.35)",0.35]]){g.strokeStyle=cl;g.lineWidth=lw;g.beginPath();g.arc(0,0,r,0,TAU);g.stroke()}
+  g.strokeStyle="rgba(255,255,255,0.5)";g.lineWidth=1.4;g.lineCap="round";g.beginPath();g.arc(0,0,r1-4,Math.PI*0.62,Math.PI*0.95);g.stroke();
+  /* paw prints trotting round it, left, right, left */
+  for(let i=0;i<9;i++){const t=a1+0.34+i*((TAU-(a1-a0))-0.68)/8,rp=i%2?37.3:43;
+    pupPaw(g,Math.cos(t)*rp,Math.sin(t)*rp,3.3,t+Math.PI,"rgba(255,255,255,0.9)")}
+  /* sockets for the chrome studs, which turn with it */
+  g.fillStyle="rgba(60,0,20,0.55)";g.beginPath();for(let i=0;i<12;i++){const t=i*TAU/12,x=Math.cos(t)*47,y=-Math.sin(t)*47;g.moveTo(x+2.5,y);g.arc(x,y,2.5,0,TAU)}g.fill();
+  return c}
+function pupDisc(g,d,M,mt){
+  const t=texOf(pupDiscCan("ZOOMIES!"));
+  const m=new THREE.MeshStandardMaterial({map:t,transparent:true,depthWrite:false,roughness:0.28,metalness:0,emissive:0xffffff,emissiveMap:t,emissiveIntensity:0,
+    polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4});
+  const me=new THREE.Mesh(new THREE.RingGeometry(30,51.6,96,1),m);me.position.z=0.7;me.receiveShadow=true;g.add(me);pupDiscM=m}
+/* a tennis ball: felt with the white seam round it */
+function pupTennisCan(){return pupMemo.tennis||(pupMemo.tennis=pupCan(256,128,(g)=>{g.fillStyle=pupLG(g,0,0,0,128,[[0,"#e8f75a"],[0.5,"#d4ea2c"],[1,"#b7cf1c"]]);g.fillRect(0,0,256,128);
+  pupDots(g,0,0,256,128,1400,63,["rgba(90,110,0,0.25)","rgba(255,255,200,0.3)"],0.4,1.2);
+  g.strokeStyle="#fbfbf0";g.lineWidth=6;g.beginPath();for(let u=0;u<=256;u+=4){const v=64+34*Math.sin(u/256*2*TAU);u?g.lineTo(u,v):g.moveTo(u,v)}g.stroke()}))}
+function pupFelt(){return pupStd("#ffffff",0.95,{map:texOf(pupTennisCan())})}
+/* the save post wears a tennis ball */
+function pupPost(g,c,M,mt){const b=new THREE.Mesh(new THREE.SphereGeometry(4.5,20,14),pupFelt());b.rotation.set(0.5,0.3,0.2);b.position.z=33.4;g.add(b)}
+/* fur for the little ones on the slings */
+function pupTabbyCan(){return pupMemo.tabby||(pupMemo.tabby=pupCan(128,128,(g)=>{g.fillStyle="#ffffff";g.fillRect(0,0,128,128);const R=rnd(64);
+  g.fillStyle="rgba(150,70,10,0.55)";for(let i=0;i<9;i++){const y=6+i*14+R()*4;g.beginPath();g.moveTo(0,y);for(let x=0;x<=128;x+=8)g.lineTo(x,y+Math.sin(x*0.09+i)*2.2);for(let x=128;x>=0;x-=8)g.lineTo(x,y+4+Math.sin(x*0.07+i*2)*1.6);g.closePath();g.fill()}}))}
+/* place a figure's parts: built facing -y, s times life, turned rot and set on (x,y,z) */
+function pupSet(B,parts,x,y,z,rot,s){for(const [m,geo] of parts){geo.scale(s,s,s);geo.rotateZ(rot);geo.translate(WX(x),WY(y),z);B.add(m,geo)}}
+function pupCone(r,h,x,y,z,ay,az){const g=new THREE.ConeGeometry(r,h,8);g.rotateX(Math.PI/2);if(ay)g.rotateY(ay);if(az)g.rotateZ(az);g.translate(x,y,z);return g}
+/* a Jack Russell pup on the left sling, a ginger cat on the right; their tails move */
+function pupSlingPals(grp,B,H,T,M){
+  const ft=texOf(pupFur(),true);ft.repeat.set(1.5,1.5);
+  const white=pupStd("#fbf6ec",0.75,{map:ft}),brown=pupStd("#9a5526",0.72,{map:ft}),
+    dark=new THREE.MeshPhysicalMaterial({color:0x140d0a,roughness:0.15,clearcoat:1,clearcoatRoughness:0.05}),collar=pupStd("#1c7ed6",0.4);
+  const tb=texOf(pupTabbyCan(),true);tb.repeat.set(2,2);const ginger=pupStd("#f0a050",0.7,{map:tb});
+  const z=32.5,S=1.5;
+  /* the pup */
+  {const x=92,y=834,rot=0.42,P=[];
+    P.push([white,pupEll(5.2,5.8,7.2,0,1.2,7.2,0.3)]);P.push([brown,pupEll(3.6,4.2,3.4,1.6,3.8,10.2,0.3)]);
+    for(const s of [-1,1]){P.push([white,pupEll(3.2,4.4,3.4,s*3.6,3,3.4)]);P.push([white,pupLimb(1.35,[s*2.2,-2.2,8],[s*2.4,-3.8,1.4],8)]);
+      P.push([white,pupEll(1.7,2.2,1.2,s*2.4,-4.6,1.1)]);P.push([white,pupEll(1.6,2.6,1.1,s*4.2,-0.8,1)]);
+      P.push([brown,pupEll(2.2,0.9,2.8,s*4.2,-2,18.4,0.25,0,s*0.55)]);P.push([dark,pupEll(0.8,0.6,0.8,s*1.8,-6.2,17.6,0,0,0,8,6)])}
+    P.push([collar,(()=>{const g=new THREE.TorusGeometry(3.4,0.75,6,20);g.rotateX(-0.35);g.translate(0,-1.4,12.4);return g})()]);
+    P.push([white,pupEll(4.5,4.3,4.1,0,-2.4,16.6)]);P.push([white,pupEll(2.4,3,2.1,0,-6,15)]);
+    P.push([brown,pupEll(3,3,3,-2.3,-3.4,17.8)]);P.push([dark,pupEll(1,0.8,0.8,0,-8.9,15.7,0,0,0,8,6)]);
+    pupSet(B,P,x,y,z,rot,S);
+    const o=new THREE.Group();o.position.set(WX(x),WY(y),z);o.rotation.z=rot;o.scale.setScalar(S);grp.add(o);
+    const tail=new THREE.Group();tail.position.set(0,5.8,5);o.add(tail);
+    const tm=new THREE.Mesh(pupTaper([[0,0,0],[0,1.6,3],[0,2.2,6.4]],u=>1.15-u*0.5,8,8),white);tm.castShadow=true;tail.add(tm);
+    H.pupTailA=tail}
+  /* the cat */
+  {const x=395,y=834,rot=-0.42,P=[];
+    P.push([ginger,pupEll(4.6,5.2,8,0,1.4,8,0.18)]);P.push([white,pupEll(3.2,2.2,5.6,0,-2.3,9,0.18)]);
+    for(const s of [-1,1]){P.push([ginger,pupEll(3,4.6,3.6,s*3.3,2.2,3.4)]);P.push([white,pupLimb(1.05,[s*1.7,-2,8],[s*1.8,-2.9,1.2],8)]);
+      P.push([white,pupEll(1.3,1.7,1,s*1.8,-3.5,0.9)]);
+      P.push([ginger,pupCone(1.7,3.8,s*2.6,-1.2,20.6,s*0.35)]);P.push([dark,pupEll(0.95,0.5,0.75,s*1.7,-4.9,18.3,0,0,0,8,6)])}
+    P.push([ginger,pupEll(4.4,4,3.8,0,-1.4,17.6)]);P.push([white,pupEll(2.3,1.8,1.6,0,-4.7,16.6)]);P.push([dark,pupEll(0.6,0.4,0.45,0,-6.3,17.2,0,0,0,8,6)]);
+    P.push([collar,(()=>{const g=new THREE.TorusGeometry(2.9,0.6,6,20);g.rotateX(-0.2);g.translate(0,-0.8,14.4);return g})()]);
+    pupSet(B,P,x,y,z,rot,S);
+    const o=new THREE.Group();o.position.set(WX(x),WY(y),z);o.rotation.z=rot;o.scale.setScalar(S);grp.add(o);
+    const tail=new THREE.Group();tail.position.set(0,5.6,1.4);o.add(tail);
+    const tm=new THREE.Mesh(pupTaper([[0,0,0],[-1.6,3,1],[-2.8,4.4,5],[-2.2,4,10],[-0.6,3,13.4]],u=>1.25-u*0.45,16,8),ginger);tm.castShadow=true;tail.add(tm);
+    H.pupTailB=tail}
+}
+/* flasher domes on the posts at the tops of the inlane guides */
+function pupFlashers(B,M){const out=[];
+  for(const x of [36,MX(36)]){const m=new THREE.MeshStandardMaterial({color:0xe03131,roughness:0.15,transparent:true,opacity:0.88,emissive:new THREE.Color("#ff3b24"),emissiveIntensity:0.2});
+    const X=WX(x),Y=WY(770);B.add(M.chrome,cylAt(4.2,3.6,2.6,X,Y,29,14));B.add(M.chrome,cylAt(6.8,6.8,1.2,X,Y,31.4,20));
+    B.add(m,cylAt(6.2,6.2,2.4,X,Y,32.6,20));
+    {const g=new THREE.SphereGeometry(6.2,20,10,0,TAU,0,Math.PI/2);g.rotateX(Math.PI/2);g.scale(1,1,1.25);g.translate(X,Y,35);B.add(m,g)}
+    B.add(M.chrome,(()=>{const g=new THREE.SphereGeometry(1.3,8,6);g.translate(X,Y,43);return g})());
+    out.push(m)}
+  return out}
+/* on the apron's left corner a BEWARE OF THE DOG sign; on the right a bucket of tennis balls */
+function pupApronToys(B,M,mt,felt){
+  {const x=WX(60),y=WY(944),tilt=-0.55,put=g=>{g.rotateX(tilt);g.translate(x,y,44);return g};
+    B.add(mt.pupPost,cylAt(1.5,1.3,26,x,y+1.5,18,8));
+    B.add(mt.pupPost,put(new THREE.BoxGeometry(42,1.8,21)));
+    const sc=pupCan(256,128,(g)=>{g.fillStyle="#fbf7ec";g.fillRect(0,0,256,128);g.strokeStyle="#c92a2a";g.lineWidth=9;g.strokeRect(8,8,240,112);
+      g.textAlign="center";g.textBaseline="middle";g.fillStyle="#c92a2a";g.font="900 46px 'Arial Black',Impact,sans-serif";g.fillText("BEWARE",128,46);
+      g.fillStyle="#1d1d1d";g.font="900 26px 'Arial Black',Impact,sans-serif";g.fillText("OF THE DOG",128,92);
+      pupPaw(g,26,28,11,-0.3,"#c92a2a");pupPaw(g,230,28,11,0.3,"#c92a2a");
+      g.fillStyle="rgba(120,60,20,0.25)";for(const [px,py] of [[18,112],[240,16]]){g.beginPath();g.arc(px,py,7,0,TAU);g.fill()}});
+    const g=new THREE.PlaneGeometry(40,19.5);g.rotateX(Math.PI/2);g.translate(0,-0.95,0);
+    B.add(new THREE.MeshStandardMaterial({map:texOf(sc),roughness:0.35,metalness:0.1}),put(g))}
+  {const x=WX(428),y=WY(936);
+    const pail=new THREE.CylinderGeometry(10.5,8.4,13,24,1,true);pail.rotateX(Math.PI/2);pail.translate(x,y,18+6.5);B.add(M.steel,pail);
+    B.add(M.steel,cylAt(8.4,8.4,0.6,x,y,18,24));
+    {const g=new THREE.TorusGeometry(10.5,0.7,6,28);g.translate(x,y,31);B.add(M.chrome,g)}
+    {const g=new THREE.TorusGeometry(10.8,0.45,5,20,Math.PI);g.rotateX(Math.PI/2);g.rotateZ(0.5);g.translate(x,y,31);B.add(M.chrome,g)}
+    const R=rnd(66);
+    for(const [dx,dy,dz] of [[-4.2,-3.4,30],[4.4,-2.6,30.4],[0.4,4.6,30.2],[-5,4,29.6],[5.6,4.8,29.4],[0,-0.2,36.6],[-2,-7,28.8]]){
+      const g=new THREE.SphereGeometry(4.6,16,12);g.rotateX(R()*6);g.rotateY(R()*6);g.translate(x+dx,y+dy,dz);B.add(felt,g)}
+    const g=new THREE.SphereGeometry(4.6,16,12);g.rotateZ(1.2);g.rotateX(0.7);g.translate(WX(408),WY(952),22.6);B.add(felt,g)}
+}
+function pupMoreToys(grp,B,H,T,M,mt){
+  pupSlingPals(grp,B,H,T,M);
+  const fl=pupFlashers(B,M),felt=pupFelt();
+  pupApronToys(B,M,mt,felt);
+  const sl=[T.segs.find(s=>s.id==="slingL"),T.segs.find(s=>s.id==="slingR")],fv=[0,0];
+  H.movers.pupMore=(S,dt,G)=>{const t=S.t,big=R3&&R3.fl?R3.fl[0].intensity/150000:0,mb=G&&G.mb;
+    for(let i=0;i<2;i++){const s=sl[i],age=s&&S.kick[s.i]>0?t-S.kick[s.i]:9,k=age>=0&&age<0.25?1-age/0.25:0;
+      fv[i]=Math.max(fv[i]*Math.pow(0.02,dt),k,Math.min(1,big));fl[i].emissiveIntensity=0.2+fv[i]*5+(mb&&Math.sin(t*9+i*Math.PI)>0.3?2.2:0)}
+    /* the pup wags, harder when his sling kicks; the cat's tail swishes and flicks */
+    const kL=sl[0]&&S.kick[sl[0].i]>0?Math.max(0,1-(t-S.kick[sl[0].i])*1.2):0,kR=sl[1]&&S.kick[sl[1].i]>0?Math.max(0,1-(t-S.kick[sl[1].i])*1.5):0;
+    if(H.pupTailA)H.pupTailA.rotation.y=Math.sin(t*(9+kL*10+(mb?6:0)))*(0.35+kL*0.3);
+    if(H.pupTailB){H.pupTailB.rotation.z=Math.sin(t*1.3)*0.35+Math.sin(t*23)*0.18*kR;H.pupTailB.rotation.x=-0.1+kR*0.35}
+    if(pupDiscM){const w=Math.abs(S.mov["dW:disc"]||0);pupDiscM.emissiveIntensity=Math.min(0.45,w*0.05)}};
+}
+
 /* ================================================================ the theme */
 THEMES.pup={
   name:"PUPPY PARK",accent:"#e8590c",apron:"#1e4620",title:"#ffd43b",bumperGlow:"#fff1c4",ramp:"#ffa94d",
   cardL:["Hit the bowl 3 times to FEED the dog","Fed dog lights the DOGHOUSE lock","Lock 2 balls = FETCH MULTIBALL","Knock down all 3 bones for a treat","Walkies ramp scores big - combo it!","Squirrel = bonus points"],
   cardR:["1. Feed the dog","2. Knock down all the bones","3. Start Fetch Multiball","4. Take 6 walkies in a game","5. Score 2,500,000"],
   paint:paintPup,translite:pupTranslite,
+  disc:pupDisc,post:pupPost,
   mats(M){
     const cap=new THREE.MeshStandardMaterial({map:texOf(capTexture(pupCapArt)),roughness:0.3});
     const plank=texOf(pupPlanks("#c98a4b",6,false,21),true);
@@ -3047,6 +3404,7 @@ THEMES.pup={
     pupSquirrel(grp,B,H,T,M);
     pupRampSign(B,mt);
     pupCabinet(grp,B,M);
+    pupMoreToys(grp,B,H,T,M,mt);
     /* a real bone lies on top of each drop target and goes down with it */
     const boneM=pupStd("#f3e7cc",0.45),bones=[];
     for(const d of H.drops){const len=Math.hypot(d.s.bx-d.s.ax,d.s.by-d.s.ay),P=pupParts();
@@ -3267,8 +3625,9 @@ function paintMine(g,T){
   /* ---- the TNT pit: a dark shaft with an iron rim */
   for(let y=-10;y<=10;y++)for(let x=-10;x<=10;x++){const d=Math.hypot(x,y);const X=168+x,Y=207+y;
     if(d<7.6)put(X,Y,[14,10,10],1-0.4*(y+8)/16);else if(d<9.2)put(X,Y,(x+y)<0?[150,156,166]:[70,74,82]);else if(d<10.5)put(X,Y,[30,24,22])}
-  /* ---- a pixel blast behind the multiball star */
-  {const bx=243/2,by=700/2;for(let y=-26;y<=26;y++)for(let x=-26;x<=26;x++){const a=Math.atan2(y,x),d=Math.hypot(x,y*1.1),sp=Math.round((a/TAU+0.5)*14),rr=(sp%2?15:24)+mineHash(sp,0,7)*4;
+  /* ---- a pixel blast behind the multiball star, inside the turntable's
+     clear middle (the iron plate of the turntable covers r 33..52) */
+  {const bx=243/2,by=700/2;for(let y=-15;y<=15;y++)for(let x=-15;x<=15;x++){const a=Math.atan2(y,x),d=Math.hypot(x,y*1.1),sp=Math.round((a/TAU+0.5)*14),rr=(sp%2?8.5:13)+mineHash(sp,0,7)*1.5;
     if(d>rr)continue;const i=((by+y|0)*TX+(bx+x|0))*4,f=d/rr,col=f<0.35?[255,236,140]:f<0.6?[255,178,50]:f<0.85?[236,96,26]:[150,34,20],al=0.8;
     D[i]=D[i]*(1-al)+col[0]*al;D[i+1]=D[i+1]*(1-al)+col[1]*al;D[i+2]=D[i+2]*(1-al)+col[2]*al}}
   cg.putImageData(img,0,0);
@@ -3287,6 +3646,14 @@ function paintMine(g,T){
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const t=W[r][c];if(t.startsWith("dia")||t.startsWith("gold")){const h=mineHash(c,r,44);star(c*32+6+h*20,r*32+6+mineHash(r,c,45)*20,2.6+h*1.6,0.85)}}
   /* the pit's depth */
   const rg=g.createRadialGradient(336,414,2,336,414,15);rg.addColorStop(0,"rgba(0,0,0,0.9)");rg.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=rg;g.beginPath();g.arc(336,414,15,0,TAU);g.fill();
+  /* ---- the turntable's well: a dark gap all round the disc (r 54), then
+     a riveted iron bezel set in the rock, so the disc reads as its own part */
+  {const dx=243.5,dy=700;g.fillStyle="rgba(0,0,0,0.45)";g.beginPath();g.arc(dx,dy,66,0,TAU);g.arc(dx,dy,61,0,TAU,true);g.fill();
+    g.fillStyle="#3a3d44";g.beginPath();g.arc(dx,dy,61,0,TAU);g.arc(dx,dy,56,0,TAU,true);g.fill();
+    g.strokeStyle="#6c717a";g.lineWidth=1.2;g.beginPath();g.arc(dx,dy,60.2,Math.PI*1.05,Math.PI*1.95);g.stroke();
+    g.strokeStyle="#1c1d21";g.beginPath();g.arc(dx,dy,60.2,Math.PI*0.05,Math.PI*0.95);g.stroke();
+    for(let i=0;i<24;i++){const a=(i+0.5)*TAU/24,x=dx+Math.cos(a)*58.6,y=dy+Math.sin(a)*58.6;g.fillStyle="#c9ced6";g.fillRect(x-1,y-1,1.6,1.6);g.fillStyle="#26282d";g.fillRect(x,y,1,1)}
+    g.fillStyle="#060607";g.beginPath();g.arc(dx,dy,56.2,0,TAU);g.arc(dx,dy,50.5,0,TAU,true);g.fill()}
   g.restore();
 }
 
@@ -3308,6 +3675,43 @@ function mineTorch(grp,B,x,y,z,H,light){
   let pl=null;if(light){pl=new THREE.PointLight(0xff9a3c,3500,420,2);pl.position.set(x,y,z+40);grp.add(pl)}
   return{f,halo,pl,seed:Math.random()*10}}
 
+/* the minecart turntable's iron deck, 1 mm a texel: a riveted plate in four
+   quarters, one track straight across it with a buffer stop at one end,
+   and a hazard-striped panel, so its turning always reads. Two canvases:
+   the colour (with alpha: clear inside r 33 and outside r 52) and one with
+   roughness in green and metalness in blue. */
+function mineDiscCanvas(){
+  const N=104,c=mkCanvas(N,N),g=c.getContext("2d"),im=g.createImageData(N,N),D=im.data,q=mkCanvas(N,N),qg=q.getContext("2d"),qm=qg.createImageData(N,N),Q=qm.data,P=MINE_P;
+  const S2=Math.SQRT1_2;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const px=x+0.5-N/2,py=N/2-(y+0.5),r=Math.hypot(px,py),a=Math.atan2(py,px),i=(y*N+x)*4;
+    if(r<32.6||r>52.4){D[i+3]=0;continue}
+    let col=P.iron[1+((0.55*mineHash(x>>2,y>>2,61)+0.45*mineHash(x,y,62))*3|0)].map(v=>v*1.3),rough=0.45,met=0.45;
+    /* the four quarter plates: seams on the diagonals and a ring seam */
+    const s1=px*S2-py*S2,s2=px*S2+py*S2;
+    if(Math.abs(s1)<0.8||Math.abs(s2)<0.8||Math.abs(r-43)<0.6)col=[24,25,29];else if(Math.abs(s1)<1.7||Math.abs(s2)<1.7||Math.abs(r-44)<0.6)col=P.iron[4];
+    if(r>51.2)col=P.iron[0].map(v=>v*0.7);else if(r<33.8)col=P.iron[4].map(v=>v*1.3);
+    /* rivets round the inside */
+    for(let k=0;k<12;k++){const ra=(k+0.5)*TAU/12,rx=Math.cos(ra)*36,ry=Math.sin(ra)*36;if(Math.abs(px-rx)<1.1&&Math.abs(py-ry)<1.1){col=px-rx+py-ry<0?[210,214,222]:[120,124,132];met=1;rough=0.3}}
+    /* the hazard panel */
+    if(a>1.95&&a<2.75&&r>38&&r<50.5){const edge=a<1.99||a>2.71||r<39||r>49.5;col=edge?[20,20,22]:(((px+py+200)%8)<4?[245,197,24]:[27,27,27]);met=0.05;rough=0.55}
+    /* the track: sleepers, then the two rails over them, and a buffer stop */
+    if(Math.abs(py)<13){if(((px+200)%9)<4.2){col=Math.abs(py)>12?P.plank[0]:P.plank[1+((x>>1)&1)];met=0;rough=0.8}}
+    if(Math.abs(py)>=7&&Math.abs(py)<10){col=Math.abs(py)<8?[222,226,232]:Math.abs(py)<9?[168,174,184]:[70,74,82];met=1;rough=0.22}
+    if(px<-44&&px>-50&&Math.abs(py)<11.5){col=(px<-48.8||Math.abs(py)>10.4)?P.log[0]:P.plank[(y>>1)&1?2:3];met=0;rough=0.75;
+      if(Math.abs(py)<3)col=[176,40,30]}
+    D[i]=col[0];D[i+1]=col[1];D[i+2]=col[2];D[i+3]=255;Q[i]=0;Q[i+1]=rough*255;Q[i+2]=met*255;Q[i+3]=255}
+  g.putImageData(im,0,0);qg.putImageData(qm,0,0);return{c,q}}
+/* a lamp block: a dark iron cage over warm glass */
+function mineLampCanvas(glow){const cv=mkCanvas(16,16),g=cv.getContext("2d");
+  for(let y=0;y<16;y++)for(let x=0;x<16;x++){const cage=x===0||y===0||x===15||y===15||x===7||x===8||y===7||y===8,h=mineHash(x,y,91);
+    g.fillStyle=cage?(glow?"#000":(x+y)%5?"#3b2a1c":"#57402a"):glow?(h>0.6?"#fff3c0":"#ffb347"):(h>0.6?"#ffe6a0":h>0.3?"#e8a040":"#b86a24");g.fillRect(x,y,1,1)}
+  return cv}
+/* a pickaxe, blocky: a handle up local +y and an iron head across its top,
+   built flat in the xy plane (thickness in z) and placed by a matrix */
+function minePick(B,handleM,headM,mx,len){const L=len||40,add=(m,geo)=>{geo.applyMatrix4(mx);B.add(m,geo)};
+  add(handleM,boxAt(3.4,L,3.4,0,L/2,0));
+  for(let i=-4;i<=4;i++){const a=Math.abs(i),w=a===4?2.6:3.8;add(headM,boxAt(3.8,w===2.6?3:4.6,w,i*3.6,L-2.5-a*a*0.42,0))}
+  add(headM,boxAt(6,6,4.2,0,L-2.5,0))}
 /* ---------------------------------------------------------------- the translite
    A poster for the backbox: a lava-lit cavern built of blocks, the Rock
    Golem looming over the logo with its fists up, a TNT block going off on
@@ -3455,6 +3859,20 @@ THEMES.mine={
     /* a block on each corner so the courses meet */
     for(const [px,py] of [[s.ax,s.ay],[s.bx,s.by]])for(let k=0;k<3;k++)B.add(mt.blocks[(k+1)%3],boxAt(12.4,12.4,12,WX(px),WY(py),6+12*k,a));
     return true},
+  /* the turntable is a minecart turntable: an iron deck over the painted
+     disc, flat (z 0.4..1.2, the ball rolls over it), with the middle left
+     clear for the multiball star */
+  disc(g,d,M,mt){
+    const {c,q}=mineDiscCanvas(),map=mineTexture(c),rm=mineTexture(q);rm.colorSpace=THREE.NoColorSpace;
+    const mat=new THREE.MeshStandardMaterial({map,roughnessMap:rm,metalnessMap:rm,roughness:1,metalness:1,alphaTest:0.5,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const ring=new THREE.Mesh(new THREE.RingGeometry(32.5,d.r-1.5,64,2),mat);ring.position.z=0.7;ring.receiveShadow=true;g.add(ring)},
+  /* the save post wears a diamond in a gold setting */
+  post(g,c,M,mt){
+    const gold=new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:1,roughness:0.28});
+    const gem=mineGlowMat("dia",4,"#37d3e2",0.7,{roughness:0.2,metalness:0.1});
+    const set=new THREE.Mesh(boxAt(10.6,10.6,1.6,0,0,29.8,Math.PI/4),gold);g.add(set);
+    const b=new THREE.Mesh(boxAt(7.6,7.6,7.6,0,0,34.1,Math.PI/4),gem);g.add(b);
+    const gl=mineGlow(0x37d3e2,22,0.55);gl.position.set(0,0,35);g.add(gl)},
   toys(grp,B,H,T,M,mt){
     const segI=id=>T.segs.find(s=>s.id===id);
     /* ---------- the Rock Golem */
@@ -3576,6 +3994,47 @@ THEMES.mine={
     const lava=new THREE.PointLight(0xff6a1a,2600,260,2);lava.position.set(WX(372),WY(716),26);grp.add(lava);
     H.movers.mineLights=(S,dt)=>{const t=S.t;lava.intensity=2300+500*Math.sin(t*2.3)+260*Math.sin(t*7.1);
       for(const f of flames){const fl=0.85+0.15*Math.sin(t*13+f.seed)+0.08*Math.sin(t*31+f.seed*3);f.halo.material.opacity=0.6*fl;f.halo.scale.setScalar(60+14*fl);f.f.scale.set(1,1,0.9+0.25*fl);if(f.pl)f.pl.intensity=3200*fl}};
+    /* ================= more of the mine, round the edges of the play
+       (everything here sits on a plastic, a wall, the apron or overhead) */
+    const goldM=new THREE.MeshStandardMaterial({color:0xf2c14e,metalness:1,roughness:0.3}),SZ=32.5;
+    const pickAt=(x,y,z,rz,tilt,len)=>{const m=new THREE.Matrix4().makeTranslation(0,-(len||40)/2,0);
+      if(tilt!=null)m.premultiply(new THREE.Matrix4().makeRotationX(Math.PI/2)).premultiply(new THREE.Matrix4().makeRotationY(tilt));
+      m.premultiply(new THREE.Matrix4().makeRotationZ(rz)).premultiply(new THREE.Matrix4().makeTranslation(x,y,z));minePick(B,logM,M.steel,m,len)};
+    /* 1. the left slingshot plastic: a treasure chest and a torch */
+    {const X=WX(95),Y=WY(845),r=0.12,u=[Math.cos(r),Math.sin(r)],at=(a,b)=>[X+u[0]*a-u[1]*b,Y+u[1]*a+u[0]*b];
+      B.add(tieM,boxAt(19,12,9,X,Y,SZ+4.5,r));B.add(logM,boxAt(20,13,5,X,Y,SZ+11.5,r));
+      for(const k of [-6.5,6.5]){const p=at(k,0);B.add(ironM,boxAt(1.6,13.6,14.6,p[0],p[1],SZ+7.3,r))}
+      {const p=at(0,-6.6);B.add(goldM,boxAt(3.2,1.2,4.2,p[0],p[1],SZ+8.6,r))}
+      /* a spill of gold and a gem in front of it */
+      {const p=at(-4,-9);B.add(goldM,boxAt(3,3,2,p[0],p[1],SZ+1,r+0.5))}
+      flames.push(mineTorch(grp,B,WX(82.5),WY(789),SZ,H,false))}
+    /* 2. the right slingshot plastic: a stack of ore with a pickaxe
+       driven in beside it */
+    {const X=WX(397),Y=WY(842);B.add(oreG,boxAt(12,12,12,X,Y+7,SZ+6,0.05));B.add(mt.blocks[6],boxAt(12,12,12,X,Y-5.5,SZ+6,-0.04));
+      B.add(oreD,boxAt(12,12,12,X+0.5,Y+1,SZ+18,0.35));
+      pickAt(WX(388),WY(826),SZ+16,-0.5,0.35,34)}
+    /* 3. crossed pickaxes on the apron corners, above the cards */
+    for(const sd of [-1,1]){const cx=sd<0?WX(40):WX(MX(40)),cy=WY(934),az=18.6;
+      pickAt(cx,cy,az+1.7,sd*0.72,null,46);pickAt(cx,cy,az+5.3,-sd*0.72,null,46);
+      B.add(oreD,boxAt(8,8,8,cx,cy-19,az+4,0.4))}
+    /* 4. lamp blocks on the inlane guides, that flash with the slings and
+       burn while the save post is up */
+    const lampM=new THREE.MeshStandardMaterial({map:mineTexture(mineLampCanvas(false)),emissiveMap:mineTexture(mineLampCanvas(true)),emissive:new THREE.Color("#ff9a30"),emissiveIntensity:0.5,roughness:0.35});
+    const lampGl=[];for(const x of [36,MX(36)]){const X=WX(x),Y=WY(838);B.add(M.black,boxAt(9,9,2,X,Y,25));B.add(lampM,boxAt(10,10,10,X,Y,31));
+      const gl=mineGlow(0xffa040,34,0.4);gl.position.set(X,Y,32);grp.add(gl);lampGl.push(gl)}
+    H.movers.mineLamps=(S,dt,G)=>{let k=0;for(const sl of H.slings){const e=S.kick[sl.s.i]>0?S.t-S.kick[sl.s.i]:9;k=Math.max(k,1-e*3)}
+      const on=S.lit.post?0.7+0.3*Math.sin(S.t*9):0;const v=Math.max(k,on,0);
+      lampM.emissiveIntensity=0.45+v*2.4;lampGl.forEach(g=>{g.material.opacity=0.3+v*0.6;g.scale.setScalar(30+v*26)})};
+    /* 5. timber mine supports over the right orbit: a post on each rail,
+       a beam across, knee braces, and a lantern hanging from one */
+    for(const yy of [352,540]){const Y=WY(yy),xa=WX(MX(48)),xb=WX(PW),mx=(xa+xb)/2,zt=64;
+      B.add(logM,boxAt(6,6,zt-24,xa,Y,24+(zt-24)/2));B.add(logM,boxAt(6,6,zt-24,xb,Y,24+(zt-24)/2));
+      B.add(logM,boxAt(xb-xa+12,8,7,mx,Y,zt+3.5));
+      for(const sd of [-1,1]){const g=new THREE.BoxGeometry(14,4,4);g.rotateY(sd*Math.PI/4);g.translate(sd<0?xa+5:xb-5,Y,zt-5);B.add(logM,g)}
+      if(yy===540){B.add(M.steel,boxAt(1,1,13,mx,Y,zt-6.5));B.add(ironM,boxAt(8,8,1.6,mx,Y,49.8));B.add(ironM,boxAt(8,8,1.6,mx,Y,41));
+        for(const [a,b] of [[-3.3,-3.3],[3.3,-3.3],[-3.3,3.3],[3.3,3.3]])B.add(ironM,boxAt(1.2,1.2,8,mx+a,Y+b,45.4));
+        const fl=mineMesh(new THREE.BoxGeometry(5.4,5.4,7),new THREE.MeshBasicMaterial({color:0xffcf70}),grp,mx,Y,45.4);fl.castShadow=false;
+        const gl=mineGlow(0xffa640,70,0.85);gl.position.set(mx,Y,45);grp.add(gl);flames.push({f:fl,halo:gl,pl:null,seed:4.2})}}
   }
 };
 // ================================================================ theme: Wizard Academy
@@ -3713,6 +4172,17 @@ function wizMagicCircle(g,cx,cy,R0){
   for(let i=0;i<n;i++){const a=(i+0.5)/n*TAU;g.save();g.translate(cx+Math.cos(a)*(R0-11.5),cy+Math.sin(a)*(R0-11.5));g.rotate(a+Math.PI/2);wizRune(g,Rr,6.5,"rgba(255,228,160,0.95)",3);g.restore()}
   g.restore()}
 
+/* the groove the turntable turns in: the painted circle's lines stop at a
+   dark gap just outside its chrome rim, and inside it they are dimmed so
+   the rune wheel laid over the disc reads as its own thing */
+function wizDiscGroove(g,cx,cy,r){g.save();
+  const dg=g.createRadialGradient(cx,cy,r*0.45,cx,cy,r+4);dg.addColorStop(0,"rgba(16,8,44,0.25)");dg.addColorStop(1,"rgba(16,8,44,0.6)");
+  g.fillStyle=dg;g.beginPath();g.arc(cx,cy,r+4,0,TAU);g.fill();
+  g.strokeStyle="rgba(5,2,16,0.96)";g.lineWidth=6.2;g.beginPath();g.arc(cx,cy,r+1.3,0,TAU);g.stroke();
+  g.globalCompositeOperation="lighter";g.shadowColor="#5af0de";g.shadowBlur=3*PXMM;
+  g.strokeStyle="rgba(90,240,222,0.9)";g.lineWidth=0.7;g.beginPath();g.arc(cx,cy,r+5,0,TAU);g.stroke();
+  g.strokeStyle="rgba(255,214,120,0.7)";g.lineWidth=0.4;g.shadowColor="#ffd070";g.beginPath();g.arc(cx,cy,r+6.6,0,TAU);g.stroke();
+  g.restore()}
 /* ---------------------------------------------------------------- the crest */
 function wizShieldPath(g){g.beginPath();g.moveTo(-30,-30);g.quadraticCurveTo(0,-37,30,-30);g.lineTo(30,2);g.bezierCurveTo(30,22,14,32,0,40);g.bezierCurveTo(-14,32,-30,22,-30,2);g.closePath()}
 function wizCrest(g,x,y,s,banner){g.save();g.translate(x,y);g.scale(s,s);
@@ -3844,6 +4314,8 @@ function paintWiz(g,T){
     g.restore()}
   /* the magic circle round the multiball star */
   wizMagicCircle(g,PW/2,700,112);
+  /* the turntable is the circle's inner wheel: it sits in a dark groove */
+  wizDiscGroove(g,PW/2,700,54);
   /* the castle yard inside the gate, lamplit, with a portal sigil at the scoop */
   g.save();g.beginPath();g.moveTo(281,392);g.lineTo(281,321);g.lineTo(302,305);g.lineTo(338,305);g.lineTo(359,321);g.lineTo(359,392);g.closePath();g.clip();
   g.fillStyle="rgba(60,30,20,0.25)";g.fillRect(270,300,100,100);wizGlow(g,320,345,70,"#ffb45a",0.55);
@@ -3862,8 +4334,9 @@ function paintWiz(g,T){
   /* the crest of the school */
   wizCrest(g,318,532,0.82);
   /* potion bottles and a spell book either side of the circle */
-  wizBottleArt(g,78,660,30,"#ff5fa2",0,0.5);wizBottleArt(g,104,642,38,"#4dabf7",1,0.6);wizBottleArt(g,127,672,28,"#9cff57",2,0.4);wizBottleArt(g,96,704,22,"#ffb347",0,0.55);
-  wizOpenBook(g,392,650,62,40,-0.18);
+  /* (kept clear of the star rollovers at 100,676 / 120,734 and their mirrors) */
+  wizBottleArt(g,68,668,26,"#ff5fa2",0,0.5);wizBottleArt(g,96,644,36,"#4dabf7",1,0.6);wizBottleArt(g,124,658,26,"#9cff57",2,0.4);wizBottleArt(g,77,702,18,"#ffb347",0,0.55);
+  wizOpenBook(g,394,622,56,36,-0.18);
   wizLoosePage(g,170,815,20,26,0.35,71);wizLoosePage(g,322,808,18,24,-0.3,72);wizLoosePage(g,440,610,15,20,0.5,73);
   wizBookShelf(g);
   /* a parchment scroll behind the bonus lights, and magic trails swirling up from the slingshots */
@@ -4195,6 +4668,154 @@ function wizBuildSpires(grp,B,H,T,M,W){
   H.movers.wizLamps=(S)=>{const t=S.t;lamps.forEach((l,i)=>{l.material.opacity=0.28+Math.sin(t*11+i*2)*0.03+Math.sin(t*23+i)*0.02})};
 }
 
+/* ---------------------------------------------------------------- the turntable's rune wheel and the save post's crystal */
+/* the wheel: a dark band of runes between the star and the studs, with one
+   bright crescent and a comet's tail behind it so the turning shows. Drawn
+   the way the table is painted (mm, y down the table), centred on the disc */
+function wizDiscTex(R){const S=512,k=S/(2*R),c=mkCanvas(S,S),g=c.getContext("2d");g.translate(S/2,S/2);g.scale(k,k);
+  const ann=(r0,r1)=>{g.beginPath();g.arc(0,0,r1,0,TAU);g.arc(0,0,r0,0,TAU,true)};
+  const bg=g.createRadialGradient(0,0,28,0,0,R);bg.addColorStop(0,"rgba(14,6,44,0)");bg.addColorStop(0.08,"rgba(16,7,50,0.6)");bg.addColorStop(0.85,"rgba(16,7,50,0.66)");bg.addColorStop(1,"rgba(6,2,22,0.9)");
+  g.fillStyle=bg;ann(28,R);g.fill("evenodd");
+  const ring=(r,w,col,blur,dash)=>{g.save();g.strokeStyle=col;g.lineWidth=w;g.shadowColor=col;g.shadowBlur=blur;if(dash)g.setLineDash(dash);g.beginPath();g.arc(0,0,r,0,TAU);g.stroke();g.restore()};
+  ring(31,0.55,"rgba(255,214,120,0.9)",4);ring(33.2,0.3,"rgba(205,165,255,0.8)",3);
+  ring(43.2,0.45,"rgba(90,240,222,0.85)",5,[1.6,1.4]);ring(49.6,0.9,"rgba(255,214,120,0.95)",5);
+  /* the runes, skipping the crescent and the strip the MULTIBALL words sit in */
+  const Rr=rnd(515),n=22;g.save();g.shadowColor="#ffd890";g.shadowBlur=6;
+  for(let i=0;i<n;i++){const a=-Math.PI/2+(i+0.5)/n*TAU,x=Math.cos(a)*37.8,y=Math.sin(a)*37.8;
+    if(Math.hypot(x,y+37.8)<12||Math.abs(y-25.6)<8){Rr();Rr();Rr();Rr();continue}
+    g.save();g.translate(x,y);g.rotate(a+Math.PI/2);wizRune(g,Rr,5.4,"rgba(255,230,165,0.95)");g.restore()}
+  g.restore();
+  /* the comet's tail: from the crescent back round a third of the wheel */
+  g.save();g.lineCap="round";const a0=-Math.PI/2-0.16,span=2.5,N=48;
+  for(let i=0;i<N;i++){const t=i/N,a=a0-t*span,b=a0-(t+1/N)*span-0.01,w=2.6*(1-t)+0.25;
+    g.strokeStyle="rgba("+Math.round(255-t*80)+","+Math.round(220-t*90)+","+Math.round(130+t*125)+","+(0.95*(1-t)).toFixed(3)+")";
+    g.shadowColor="#ffcf6a";g.shadowBlur=8*(1-t);g.lineWidth=w;g.beginPath();g.arc(0,0,40.5-t*3,b,a);g.stroke()}
+  g.restore();
+  /* three small planets round the far side, all different */
+  for(const [a,r,col] of [[0.35,1.7,"#5af0de"],[1.9,1.2,"#ff8ce6"],[2.75,2.1,"#b18cff"]]){const x=Math.cos(a)*46.4,y=Math.sin(a)*46.4;
+    if(Math.abs(y-25.6)<6)continue;wizGlow(g,x,y,r*4,col,0.6);g.fillStyle=col;g.beginPath();g.arc(x,y,r,0,TAU);g.fill()}
+  /* the crescent: the bright one */
+  wizGlow(g,0,-38,17,"#ffd86a",0.95);wizGlow(g,0,-38,8,"#fff4d0",0.8);
+  wizCrescent(g,0,-38,7,"#ffd24a",-0.75);wizTwinkle(g,7.5,-44.5,2.6,"#fff6d0");wizTwinkle(g,-6.5,-31,1.6,"#fff6d0");
+  /* clear the words' strip, softly */
+  g.save();g.globalCompositeOperation="destination-out";g.beginPath();g.arc(0,0,48,0,TAU);g.clip();
+  const cg=g.createLinearGradient(0,17,0,34);cg.addColorStop(0,"rgba(0,0,0,0)");cg.addColorStop(0.3,"rgba(0,0,0,0.85)");cg.addColorStop(0.7,"rgba(0,0,0,0.85)");cg.addColorStop(1,"rgba(0,0,0,0)");
+  g.fillStyle=cg;g.fillRect(-R,17,2*R,17);g.restore();
+  return c}
+let wizDiscFx=null,wizPostGem=null;
+function wizDisc(g,d,M,mt){const R=d.r-2,t=new THREE.CanvasTexture(wizDiscTex(R));t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;
+  const mat=new THREE.MeshStandardMaterial({map:t,emissive:0xffffff,emissiveMap:t,emissiveIntensity:0.55,transparent:true,depthWrite:false,roughness:0.3,metalness:0,
+    polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+  const ring=new THREE.Mesh(new THREE.RingGeometry(28,R,96,1),mat);ring.position.z=0.8;ring.receiveShadow=true;g.add(ring);
+  /* a glow over the crescent (canvas up is up the table: local +y) */
+  const sp=wizSprite(0xffcf6a,0.45,24);sp.position.set(0,38,2);g.add(sp);
+  wizDiscFx={mat,sp}}
+/* the save post's cap: a violet crystal in a little gold cup */
+function wizPost(g,c,M,mt){
+  g.add(new THREE.Mesh(mergeGeos([cylAt(4.2,5.4,1.8,0,0,29,16),
+    ...[0,1,2,3].map(k=>{const a=k/4*TAU+Math.PI/4;return wizRod(0.7,0.35,new THREE.Vector3(Math.cos(a)*4.6,Math.sin(a)*4.6,30.5),new THREE.Vector3(Math.cos(a)*3.1,Math.sin(a)*3.1,34),5)})]),mt.wGold));
+  const gm=new THREE.MeshStandardMaterial({color:0xc6a8ff,emissive:0x8a4cff,emissiveIntensity:0.9,roughness:0.05,metalness:0.1,flatShading:true,transparent:true,opacity:0.92});
+  const og=new THREE.OctahedronGeometry(3.9,0);og.scale(1,1,1.12);const gem=new THREE.Mesh(og,gm);gem.position.z=33.6;g.add(gem);
+  const sp=wizSprite(0xb18cff,0.5,20);sp.position.z=34;g.add(sp);
+  wizPostGem={gem,gm,sp}}
+
+/* ---------------------------------------------------------------- more on the table: the slings, the apron, the cabinet, low candles */
+/* two palette materials: every little leather, felt, paper and wood part in
+   one, every glowing liquid in another, each part picking its colour by uv */
+const WIZ_PAL=["#7a1f2b","#1f5a3a","#1f2f6b","#3b1f8c","#efe3c2","#5a3a22","#151515","#c9a227"];
+const WIZ_LIQ=["#ff5fa2","#4dabf7","#69ff7a","#ffb347","#b18cff","#3fe0d0"];
+function wizPalTex(cols){const c=mkCanvas(cols.length*8,4),g=c.getContext("2d");cols.forEach((col,i)=>{g.fillStyle=col;g.fillRect(i*8,0,8,4)});
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.magFilter=t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;return t}
+function wizTint(geo,i,n){const uv=geo.attributes.uv,u=(i+0.5)/n;for(let k=0;k<uv.count;k++)uv.setXY(k,u,0.5);return geo}
+function wizExtraMats(W){if(W.wPal)return W;const p=wizPalTex(WIZ_PAL),l=wizPalTex(WIZ_LIQ);
+  W.wPal=new THREE.MeshStandardMaterial({map:p,roughness:0.72,metalness:0});
+  W.wLiq=new THREE.MeshStandardMaterial({map:l,emissive:0xffffff,emissiveMap:l,emissiveIntensity:0.75,roughness:0.15});
+  return W}
+function wizBook(B,W,x,y,z,l,w,h,a,col){/* a closed book lying flat: two boards and a spine round a block of pages (l along angle a) */
+  const P=WIZ_PAL.length,nx=-Math.sin(a),ny=Math.cos(a),b=0.7;
+  B.add(W.wPal,wizTint(wizBox(l,w,b,x,y,z,a),col,P));B.add(W.wPal,wizTint(wizBox(l,w,b,x,y,z+h-b,a),col,P));
+  B.add(W.wPal,wizTint(wizBox(l,1,h,x-nx*(w/2-0.5),y-ny*(w/2-0.5),z,a),col,P));
+  B.add(W.wPal,wizTint(wizBox(l-1.2,w-1.6,h-2*b,x+nx*0.2,y+ny*0.2,z+b,a),4,P))}
+function wizBuildSlingToys(grp,B,H,T,M,W){
+  const P=WIZ_PAL.length,Z=32.5;
+  /* left plastic: two spell books with a wizard's hat on them */
+  {const x=WX(92),y=WY(830);
+    wizBook(B,W,x,y,Z,20,14,4,Math.PI/2+0.08,0);wizBook(B,W,x+0.8,y+0.5,Z+4,18,12.5,3.6,Math.PI/2-0.12,2);
+    const z=Z+7.6;B.add(W.wPal,wizTint(cylAt(9.6,9.2,0.9,x,y,z,24),3,P));
+    const v=(dx,dy,dz)=>new THREE.Vector3(x+dx,y+dy,z+dz);
+    B.add(W.wPal,wizTint(wizRod(6.2,4.4,v(0,0,0.5),v(0,0.4,8),16),3,P));
+    B.add(W.wPal,wizTint(wizRod(4.4,2.6,v(0,0.4,8),v(0.6,2.2,14),14),3,P));
+    B.add(W.wPal,wizTint(wizRod(2.6,0.5,v(0.6,2.2,14),v(4.5,5.5,17.5),12),3,P));
+    B.add(W.wGold,cylAt(6.35,6.1,1.6,x,y,z+0.9,20));
+    for(const [dx,dz,r] of [[-1.8,5.2,1.9],[2.2,9.6,1.3]]){const st=new THREE.ExtrudeGeometry(insertShape({shape:"star",s:r}),{depth:0.5,bevelEnabled:false});st.rotateX(Math.PI/2);st.translate(x+dx,y-5.8+dz*0.2,z+dz);B.add(W.wGlowGold,st)}}
+  /* right plastic: a little rack of glowing potions */
+  {const x=WX(MX(92)),y=WY(838),L=WIZ_LIQ.length;
+    B.add(W.wPal,wizTint(wizBox(26,9,1.6,x,y,Z,0,20),5,P));
+    for(const s of [-1,1])B.add(W.wPal,wizTint(wizBox(1.6,9,13,x+s*12.2,y,Z,0,20),5,P));
+    B.add(W.wPal,wizTint(wizBox(26,1.2,1.2,x,y-3.6,Z+8.5,0,20),5,P));
+    B.add(W.wPal,wizTint(wizBox(26,1.6,12,x,y+3.9,Z+1.6,0,20),5,P));
+    const z=Z+1.6;
+    /* a round flask, a tall bottle, a cone flask */
+    {const bx=x-7.5;B.add(W.wGlass,wizSph(3.6,1,1,1,bx,y,z+3.6,14,10));B.add(W.wLiq,wizTint(wizSph(3,1,1,0.85,bx,y,z+3.1,12,8),0,L));B.add(W.wGlass,cylAt(1.1,1.1,5,bx,y,z+6.8,8));B.add(M.wood,cylAt(1.3,1.3,1.8,bx,y,z+11.3,8))}
+    {const bx=x;B.add(W.wGlass,cylAt(2.8,2.8,9.5,bx,y,z,12));B.add(W.wLiq,wizTint(cylAt(2.3,2.3,7,bx,y,z+0.3,10),4,L));B.add(W.wGlass,cylAt(2.8,1.1,2.4,bx,y,z+9.5,12));B.add(W.wGlass,cylAt(1.1,1.1,2.6,bx,y,z+11.9,8));B.add(M.wood,cylAt(1.3,1.3,1.8,bx,y,z+13.8,8))}
+    {const bx=x+7.5;B.add(W.wGlass,cylAt(3.7,1.2,8,bx,y,z,12));B.add(W.wLiq,wizTint(cylAt(3.2,1.9,4.2,bx,y,z+0.3,12),5,L));B.add(W.wGlass,cylAt(1.2,1.2,3,bx,y,z+8,8));B.add(M.wood,cylAt(1.4,1.4,1.8,bx,y,z+10.6,8))}
+}
+}
+/* on the apron's corners: a crystal ball on a claw stand (left), a pile of
+   books with a candle on it (right; its flame is one of the low candles) */
+function wizBuildApronToys(grp,B,H,T,M,W){const P=WIZ_PAL.length,Z=18;
+  {const x=WX(22),y=WY(912);
+    B.add(W.wPal,wizTint(cylAt(8.5,7.6,2.4,x,y,Z,20),5,P));B.add(W.wGold,cylAt(6.6,5.4,1.6,x,y,Z+2.4,20));
+    for(let k=0;k<3;k++){const a=k/3*TAU+0.3,v=(r,z)=>new THREE.Vector3(x+Math.cos(a)*r,y+Math.sin(a)*r,Z+z);
+      B.add(W.wGold,wizRod(1,0.8,v(5.4,4),v(7,8),6));B.add(W.wGold,wizRod(0.8,0.5,v(7,8),v(6,12),6));B.add(W.wGold,wizSph(1.1,1,1,1,v(5.4,4).x,v(5.4,4).y,Z+4,8,6))}
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(8,32,22),W.wOrb);orb.position.set(x,y,Z+12.5);orb.rotation.x=Math.PI/2;orb.castShadow=true;orb.renderOrder=3;grp.add(orb);
+    const sp=wizSprite(0x7ff0ff,0.3,36);sp.position.set(x,y,Z+12.5);grp.add(sp);
+    H.movers.wizApronOrb=(S,dt)=>{orb.rotation.y+=dt*0.5;sp.material.opacity=0.26+Math.sin(S.t*1.3)*0.08}}
+  {const x=WX(466),y=WY(915);
+    wizBook(B,W,x,y,Z,24,17,5,0.12,1);wizBook(B,W,x-0.5,y+0.4,Z+5,21,15,4.5,-0.15,0);wizBook(B,W,x+0.6,y-0.3,Z+9.5,18,13,4,0.3,2);
+    B.add(W.wIron,cylAt(4.4,3.6,1.4,x+1,y,Z+13.5,14));B.add(W.wIron,cylAt(1.2,1.2,1.4,x+1,y,Z+14.9,8))}
+}
+/* two flasher domes on the cabinet's side rails, halfway down: they pulse,
+   and fire with the backbox flashers when something big happens */
+function wizBuildDomes(grp,B,H,T,M,W){const ds=[];
+  for(const [tx,col] of [[-22,0xb18cff],[TW+22,0x3fe0d0]]){const x=WX(tx),y=WY(600),z=60;
+    B.add(W.wIron,cylAt(9.5,9.5,2.2,x,y,z,20));B.add(M.chrome,cylAt(8.4,8,1.8,x,y,z+2.2,20));
+    {const band=new THREE.TorusGeometry(7.4,0.6,6,28);band.translate(x,y,z+7.2);B.add(M.chrome,band);B.add(M.chrome,wizSph(1.3,1,1,1,x,y,z+13.2,10,8))}
+    const mat=new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:0.35,roughness:0.12,transparent:true,opacity:0.88});
+    const dome=new THREE.Mesh(new THREE.SphereGeometry(7.2,24,12,0,TAU,0,Math.PI/2),mat);dome.rotation.x=Math.PI/2;dome.scale.set(1,1.25,1);dome.position.set(x,y,z+4);dome.castShadow=true;grp.add(dome);
+    const sp=wizSprite(col,0.2,46);sp.position.set(x,y,z+9);grp.add(sp);ds.push({mat,sp})}
+  H.movers.wizDomes=(S)=>{const f=Math.min(1,(R3.fl[0].intensity+R3.fl[1].intensity)/150000);
+    ds.forEach((d,i)=>{const p=0.5+0.5*Math.sin(S.t*2.4+i*Math.PI);d.mat.emissiveIntensity=0.3+p*0.35+f*3;d.sp.material.opacity=0.12+p*0.12+f*0.8})}
+}
+/* a few more candles, floating low over the lower table (under the glass,
+   well above the ball), plus the still one on the apron's books: one draw
+   call for the wax, one for the flames, one for all the glows */
+function wizBuildLowCandles(grp,B,H,T,M,W){
+  const list=[[24,640,50,1],[463,640,52,1],[162,612,48,1],[328,598,50,1],[446,768,46,1],[467,915,33,0]];
+  const n=list.length,sc=0.75;
+  const wax=new THREE.MeshStandardMaterial({color:0xf4ead2,emissive:0xffb060,emissiveIntensity:0.22,roughness:0.5});
+  const waxG=mergeGeos([cylAt(3,2.9,15,0,0,0,12),wizSph(1,1,1,2,2.9,0,11.5,8,6),wizSph(0.9,1,1,2.3,-2.2,1.9,12,8,6),wizSph(0.8,1,1,1.6,0.6,-2.9,10,8,6)]);
+  const wm=new THREE.InstancedMesh(waxG,wax,n),fm=new THREE.InstancedMesh(wizSph(1.4,1,1,2.3,0,0,18.3,10,8),new THREE.MeshBasicMaterial({color:0xffe09a}),n);
+  wm.castShadow=true;wm.frustumCulled=fm.frustumCulled=false;grp.add(wm);grp.add(fm);
+  const pg=new THREE.BufferGeometry(),pos=new Float32Array(n*3);pg.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  const pts=new THREE.Points(pg,new THREE.PointsMaterial({map:glowTexture(),color:0xffb050,size:22,sizeAttenuation:true,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending,depthWrite:false}));
+  pts.frustumCulled=false;grp.add(pts);
+  const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),p=new THREE.Vector3(),s=new THREE.Vector3(),o=new THREE.Vector3(0,0,18.5);
+  const put=(t)=>{list.forEach(([tx,ty,z,fl],i)=>{const ph=i*1.91;
+      p.set(WX(tx),WY(ty),z+(fl?Math.sin(t*1.05+ph)*3:0));e.set(fl?Math.sin(t*0.7+ph)*0.06:0,fl?Math.cos(t*0.8+ph)*0.06:0,ph);q.setFromEuler(e);
+      s.setScalar(fl?sc:0.6);m4.compose(p,q,s);wm.setMatrixAt(i,m4);
+      const f=1+Math.sin(t*17+ph*3)*0.08+Math.sin(t*29+ph)*0.05;s.set(s.x,s.y,s.z*f);m4.compose(p,q,s);fm.setMatrixAt(i,m4);
+      const w=o.clone().multiplyScalar(fl?sc:0.6).applyQuaternion(q).add(p);pos[i*3]=w.x;pos[i*3+1]=w.y;pos[i*3+2]=w.z});
+    wm.instanceMatrix.needsUpdate=true;fm.instanceMatrix.needsUpdate=true;pg.attributes.position.needsUpdate=true;
+    pts.material.opacity=0.55+Math.sin(t*13)*0.04};
+  put(0);H.movers.wizLowCandles=(S)=>put(S.t);
+}
+/* the turntable's wheel glows brighter as it spins; the post's crystal turns */
+function wizBuildNewFx(grp,B,H,T,M,W){const D=wizDiscFx,P=wizPostGem;
+  H.movers.wizNewFx=(S,dt)=>{const w=Math.min(1,Math.abs(S.mov["dW:disc"]||0)/6);
+    if(D){D.mat.emissiveIntensity=0.5+w*0.9+Math.sin(S.t*2)*0.06;D.sp.material.opacity=0.35+w*0.5}
+    if(P){P.gem.rotation.z+=dt*1.6;P.gm.emissiveIntensity=0.8+Math.sin(S.t*5)*0.25;P.sp.material.opacity=0.4+Math.sin(S.t*5)*0.12}}}
+
 /* ---------------------------------------------------------------- the apron, redrawn to fit this table's words */
 function wizApronPaint(c,th){const g=c.getContext("2d"),W=c.width,H=c.height;g.save();g.setTransform(1,0,0,1,0,0);
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,"#34267a");gr.addColorStop(1,"#150e38");g.fillStyle=gr;g.fillRect(0,0,W,H);
@@ -4379,7 +5000,7 @@ THEMES.wiz={
   name:"WIZARD ACADEMY",accent:"#6741d9",apron:"#241a5c",title:"#ffd43b",bumperGlow:"#c9a8ff",ramp:"#d0bfff",
   cardL:["Knock down 4 spell books to learn a spell","Cast spells at the CASTLE","Stir the CAULDRON 3 times to brew a potion","Potion lights POTION MULTIBALL","Fly the broom ramp for points","Hit the owl for a surprise"],
   cardR:["1. Learn a spell","2. Brew a potion","3. Start Potion Multiball","4. Cast 3 spells in a game","5. Score 3,000,000"],
-  paint:paintWiz,translite:wizTranslite,
+  paint:paintWiz,translite:wizTranslite,disc:wizDisc,post:wizPost,
   mats(M){
     const cap=new THREE.MeshStandardMaterial({map:texOf(capTexture((g,r)=>{
       const rg=g.createRadialGradient(0,0,0,0,0,r);rg.addColorStop(0,"#c3a4ff");rg.addColorStop(0.55,"#6236d0");rg.addColorStop(1,"#2a1070");g.fillStyle=rg;g.fillRect(-128,-128,256,256);
@@ -4434,6 +5055,12 @@ THEMES.wiz={
     wizBuildCandles(grp,B,H,T,M,mt);
     wizBuildBroom(grp,B,H,T,M,mt);
     wizBuildSpires(grp,B,H,T,M,mt);
+    wizExtraMats(mt);
+    wizBuildSlingToys(grp,B,H,T,M,mt);
+    wizBuildApronToys(grp,B,H,T,M,mt);
+    wizBuildDomes(grp,B,H,T,M,mt);
+    wizBuildLowCandles(grp,B,H,T,M,mt);
+    wizBuildNewFx(grp,B,H,T,M,mt);
     wizFixApron(grp,THEMES.wiz);
   }
 };
@@ -4585,7 +5212,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visua
 resize();
 /* shown small on the title screen, so it is always clear which version a
    phone is running: a Home Screen app can hold on to an old copy for days */
-const BUILD="2026.09.23-3";
+const BUILD="2026.09.23-4";
 
 // ================================================================ saves
 /* everything lives under "pinballquest." - the shelf menu finds a game's saves
@@ -4610,7 +5237,7 @@ for(const p of profiles)if(!SPEEDS[p.speed])p.speed="slow";
 function speedK(){return(SPEEDS[me.speed]||SPEEDS.slow).k}
 function nextSpeed(){me.speed=me.speed==="slow"?"medium":me.speed==="medium"?"fast":"slow";save()}
 function save(){store.set("profiles",profiles);store.set("who",me.id)}
-const settings=Object.assign({music:true,sfx:true,voice:true},store.get("settings",{}));
+const settings=Object.assign({music:true,sfx:true,voice:true,cam:"follow"},store.get("settings",{}));
 function saveSettings(){store.set("settings",settings)}
 function starsOf(p,key){const m=p.missions[key]||[];return m.filter(Boolean).length}
 function totalStars(p){return TABLES.reduce((a,t)=>a+starsOf(p,t.key),0)}
@@ -4826,7 +5453,7 @@ function playUpdate(dt){
 function voiceFor(s){const v={goal:"Goal!",multiball:"Multiball!",jackpot:"Jackpot!",skill:"Skill shot!",extra:"Extra ball!",mission:"Mission complete!",save:"Ball saved!"}[s];if(v)callout(v)}
 function sfxFor(e){switch(e.k){case"flip":sfx("flip");break;case"flipOff":sfx("flipOff");break;case"flipHit":sfx("flipHit",e.v);break;
   case"bumper":sfx("bumper");break;case"sling":sfx("sling");break;case"drop":sfx("drop");break;case"target":case"hit":sfx("target");break;case"roll":sfx("roll");break;
-  case"spinner":sfx("spinner",e.spins);break;case"scoop":sfx("scoop");break;case"eject":sfx("eject");break;case"pathIn":sfx("pathIn");break;case"path":sfx("path");break;
+  case"spinner":sfx("spinner",e.spins);break;case"disc":sfx("spinner",1);break;case"scoop":sfx("scoop");break;case"eject":sfx("eject");break;case"pathIn":sfx("pathIn");break;case"path":sfx("path");break;
   case"pathFail":sfx("pathFail");break;case"launch":sfx("launch",e.power);break;case"thud":sfx("thud",e.v);break;case"clack":sfx("clack",e.v);break}}
 function finishGame(){overAt=0;const g=G,sc=g.score,key=g.key;me.games++;
   const coins=Math.min(60,Math.floor(sc/100000))+(g.opt.daily?15:0);me.coins+=coins;
@@ -5000,14 +5627,15 @@ function drawPlayHUD(){screenXf();const lay=dmdLayout();
     if(G.tut.nudgeAt&&G.t>G.tut.nudgeAt&&G.t<G.tut.nudgeAt+4){cx.globalAlpha=0.85*Math.min(1,(G.tut.nudgeAt+4-G.t)*2);hint("Flick up to nudge the table","",H*0.58)}
     cx.globalAlpha=1}
   if(G.tiltWarn&&G.t-(G.nudges[G.nudges.length-1]||-9)<1.5)txt("CAREFUL!",W/2,H*0.45,30*U,"#ff6b6b","center",900,"rgba(0,0,0,0.7)")}
-function drawPause(){dim(0.65);const pw=Math.min(W-40*U,340*U),bh=58*U,gap=14*U,py=H/2-(4*bh+3*gap)/2;
+function drawPause(){dim(0.65);const pw=Math.min(W-40*U,340*U),bh=54*U,gap=12*U,py=H/2-(5*bh+4*gap)/2;
   txt("Paused",W/2,py-40*U,34*U,"#fff","center",900,"#1a0f3a");
   button(W/2-pw/2,py,pw,bh,"Keep playing",()=>{paused=false},{col:"#69db7c",ink:"#0d3316",icon:"play"});
   button(W/2-pw/2,py+bh+gap,pw,bh,"Start again",()=>{startGame(G.key,{daily:G.opt.daily,use:{}})},{col:"#ffd43b",icon:"restart"});
   /* the speed can be changed mid-game: a child who finds it too fast should
      not have to start again to find out it can be slower */
   button(W/2-pw/2,py+2*(bh+gap),pw,bh,"Ball speed: "+SPEEDS[me.speed].name,()=>{nextSpeed()},{col:me.speed==="slow"?"#a5d8ff":me.speed==="medium"?"#ffd43b":"#ff922b",ink:"#0b2540"});
-  button(W/2-pw/2,py+3*(bh+gap),pw,bh,G.opt.daily?"Home":"Tables",()=>{const d=G.opt.daily;paused=false;G=null;scene=d?"title":"tables";setMusic("menu")},{col:"#dee2e6",icon:"home"})}
+  button(W/2-pw/2,py+3*(bh+gap),pw,bh,settings.cam==="follow"?"Camera: follows the ball":"Camera: whole table",()=>{settings.cam=settings.cam==="follow"?"whole":"follow";saveSettings()},{col:"#b197fc",ink:"#1a0f3a"});
+  button(W/2-pw/2,py+4*(bh+gap),pw,bh,G.opt.daily?"Home":"Tables",()=>{const d=G.opt.daily;paused=false;G=null;scene=d?"title":"tables";setMusic("menu")},{col:"#dee2e6",icon:"home"})}
 function drawResult(){const r=result,k=Math.min(1,(TT-r.at)/0.4);dim(0.6*k);cx.globalAlpha=k;
   const pw=Math.min(W-SAFE.l-SAFE.r-24*U,460*U),ph=Math.min(H-SAFE.t-SAFE.b-24*U,470*U),px=W/2-pw/2,py=H/2-ph/2+(1-k)*50*U,q=ph/470;
   panel(px,py,pw,ph);
@@ -5099,6 +5727,7 @@ function frame(ts){requestAnimationFrame(frame);const now=ts/1000;let dt=last?no
   if(scene==="play"&&G){watchPace(dt);playUpdate(dt)}
   else{if(!musKey)setMusic("menu");if(TB&&!pending)demoUpdate(dt);rollUpdate([])}
   /* the camera shakes a touch for nudges and explosions */
+  followCamera(dt,scene==="play"&&G?G.S.balls:[],scene==="play"&&!!G&&settings.cam==="follow"&&!result);
   if(R3.cam.userData.home){R3.cam.position.copy(R3.cam.userData.home);if(shakeT>0){shakeT=Math.max(0,shakeT-dt);const a=shakeT*16;R3.cam.position.x+=(Math.random()-0.5)*a;R3.cam.position.z+=(Math.random()-0.5)*a}}
   renderFrame(dt);
   cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,hud.width,hud.height);
