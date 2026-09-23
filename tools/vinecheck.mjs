@@ -5,7 +5,11 @@
    here with a robot. The robot searches: from each ring it tries letting go
    after a spread of times, and waiting a spread of times before holding
    again, and keeps the handful of attempts that got furthest. A level passes
-   when the robot reaches the finish without a splash.
+   when the robot reaches the finish without a splash - and when, dropped in
+   the water past each checkpoint, the monkey comes back standing on that
+   ledge and the robot can get from there to the finish too. (A splash once
+   left the monkey alive but never drawn again, which looks exactly like
+   being stuck in the water.)
 
    For each level it also reports how wide the timing windows were on the
    robot's way through - the share of the tried let-go times that still made
@@ -32,7 +36,7 @@ function cut(from, to) {
 }
 const SEC = '// ================================================================ ';
 const src = cut('const TAU=Math.PI*2;', SEC + 'saves') + cut(SEC + 'content', SEC + 'render') +
-  '\n;globalThis.G={WORLDS,levelSpec,dailySpec,dayKey,genLevel,newRun,cloneRun,step,pickTarget,SEEDS,DT,FLOOR};';
+  '\n;globalThis.G={respawn,WORLDS,levelSpec,dailySpec,dayKey,genLevel,newRun,cloneRun,step,pickTarget,SEEDS,DT,FLOOR};';
 const ctx = vm.createContext({ Math, Object, Uint8Array, Float32Array, Date, String, Array, Number, JSON, isFinite });
 vm.runInContext(src, ctx);
 const G = ctx.G;
@@ -55,8 +59,8 @@ function move(L, s0, r, w) {
   }
   s.stall = 1; return s;
 }
-function solve(L, wantGold) {
-  const start = G.newRun(L);
+function solve(L, wantGold, from) {
+  const start = from || G.newRun(L);
   /* the opening catch off the ledge */
   let s = G.cloneRun(start);
   for (let t = 0; t < 1 && s.att < 0; t += G.DT) G.step(L, s, true);
@@ -95,14 +99,25 @@ function check(sp) {
   const b = solve(L, false);
   const g = b ? solve(L, true) : null;
   const win = b ? b.win : [];
+  /* every checkpoint: splash just past it, come back on it, carry on */
+  let respawns = 0; const stuck = [];
+  for (let c = 0; c < L.cps.length; c++) {
+    /* in the water just beyond the ledge (the ledge itself reaches down
+       into the water, so a drop onto it just lands on it) */
+    const cp = L.cps[c], led = L.rects.find(q => cp.x >= q.x && cp.x <= q.x + q.w && q.y === cp.y);
+    const s = G.newRun(L); s.cp = c; s.x = led.x + led.w + 40; s.y = G.FLOOR + 5; s.gr = 0;
+    for (let t = 0; t < 2 && !(s.deaths && s.dead === 0 && s.gr); t += G.DT) G.step(L, s, false);
+    const back = s.deaths === 1 && s.dead === 0 && s.gr === 1 && Math.abs(s.x - L.cps[c].x) < 1;
+    if (back && solve(L, false, s)) respawns++; else stuck.push(c);
+  }
   const minW = win.length ? Math.min(...win) : 0, avgW = win.length ? win.reduce((a, c) => a + c, 0) / win.length : 0;
-  return { id: sp.id, seed: sp.seed, ok: !!b, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
+  return { id: sp.id, seed: sp.seed, ok: !!b && !stuck.length, stuck, cps: L.cps.length, respawns, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
     minW, avgW, rings: L.anchors.length, len: Math.round(L.goalX), ms: Date.now() - t0 };
 }
 function line(r) {
   return `${r.id.padEnd(16)} ${r.ok ? 'ok  ' : 'FAIL'} time ${r.time ? r.time.toFixed(1).padStart(5) : '   --'} par ${String(r.par).padStart(5)}` +
     `  golds ${r.golds}/3  window min ${(r.minW * 100).toFixed(0).padStart(3)}% avg ${(r.avgW * 100).toFixed(0).padStart(3)}%` +
-    `  rings ${r.rings} len ${r.len}  (${r.ms}ms)`;
+    `  rings ${r.rings} len ${r.len}  ledges ${r.respawns}/${r.cps}${r.stuck.length ? ' STUCK AT ' + r.stuck.join(',') : ''}  (${r.ms}ms)`;
 }
 const arg = process.argv[2];
 let bad = 0;
