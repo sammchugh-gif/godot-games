@@ -37,6 +37,8 @@ const GAMES = {
   'dungeon-dash':   { start: "window.DD.start('dylan')", music: true },
   'turbo-karts':    { start: "window.TK.start(0,'dylan');window.TK.go()", music: true },
   'marble-mayhem':  { music: true },
+  /* like Star Swarm, Vine Swing asks for its sound back once a second */
+  'vine-swing':     { start: 'window.VS.start(0,0)', music: true, selfWakes: true },
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];
