@@ -28,6 +28,21 @@ orientation. One file, no engine.
   ring is in reach (the game says so). Standing on a ledge, a hold never grabs a ring behind you.
 - Swing into the side of a ledge and the monkey scrambles up onto it. If it
   is ever hanging too far down the wall for that, it climbs its vine.
+- Every world also has a thing of its own, worked with the same finger:
+  - **Poles** (the Jungle): hold near one to grab it, keep holding to climb,
+    let go to leap off forward. Climb higher to leap higher - but not into
+    a beehive at the top.
+  - **Zip lines** (the Savanna): hold near the rope to take the handle and
+    ride it down; let go (or reach the end) to jump off.
+  - **Blast barrels** (the Temple): fly into one and it holds you. A barrel
+    that swings from side to side fires when you tap - wait until it points
+    at the next one. One that does not swing fires by itself.
+  - **Springy branches** (the Night Rainforest): land on one, hold to bend it
+    (the bar fills), let go to be launched. The longer the hold, the further.
+  - **Water wheels** (Misty Falls): hold to catch a peg, ride it round, and
+    let go near the top to be flung forward.
+  - The Volcano has all of them. Each level leans on one thing - the thing
+    it brings in, or one of the world's others - so no two feel the same.
 - Splash into the water (or the swamp, the rapids, the lava), touch a thorn
   bush or a bee, and a bubble scoops the monkey up and floats it back to the
   last flag. The clock keeps running.
@@ -53,11 +68,11 @@ In order of difficulty, as the map shows them:
 
 | World | What is in it |
 | --- | --- |
-| Jungle Canopy | Mushrooms that bounce you, speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
-| Safari Savanna | A low afternoon sun, mesas, acacias and giraffes, termite-mound pillars, a river with a hippo |
-| Temple Ruins | Rings that crumble a moment after you grab them, stone pillars, a swamp |
-| Night Rainforest | Moonlight, fireflies, glowing rings and mushrooms, rain, and glowing crocodile eyes |
-| Misty Falls | Rings that slide back and forth or up and down, rapids, a rainbow |
+| Jungle Canopy | Bamboo poles to climb (from Bamboo Climb), mushrooms that bounce you, speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
+| Safari Savanna | Zip lines, poles, a low afternoon sun, mesas, acacias and giraffes, termite-mound pillars, a river with a hippo |
+| Temple Ruins | Blast barrels (from Blast Barrels), rings that crumble a moment after you grab them, stone pillars, poles, a swamp |
+| Night Rainforest | Springy branches, zip lines, poles, moonlight, fireflies, glowing rings and mushrooms, rain, and glowing crocodile eyes |
+| Misty Falls | Water wheels (from Water Wheels), rings that slide back and forth or up and down, barrels, poles, rapids, a rainbow |
 | Volcano Peak | All of it, over lava, with fireballs |
 
 A world opens with enough stars in the world it follows on from and a banana
@@ -111,7 +126,17 @@ If frames keep arriving late (an older iPad, a phone saving battery), the
 game quietly drops the mist and the shading on the hills and carries on at
 full pace.
 
-    node tools/vinecheck.mjs            all forty levels
+The robot plays the new things with the same two numbers it plays a vine
+with - how long to hold, how long to wait before holding again - so a pole's
+climb, a barrel's aim, a zip line, a branch's bend and a wheel's ride are all
+searched and proved the same way.
+
+When the levels changed to bring the new things in, each player's best
+times and the family ghosts on the levels that changed were cleared, since a
+record set on a different level is one nobody could beat. Stars and bananas
+were kept.
+
+    node tools/vinecheck.mjs            all sixty levels
     node tools/vinecheck.mjs daily 30   the next thirty daily jungles
 
 The version is printed small in the corner of the title screen. On the
