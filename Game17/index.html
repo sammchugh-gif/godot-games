@@ -4585,7 +4585,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visua
 resize();
 /* shown small on the title screen, so it is always clear which version a
    phone is running: a Home Screen app can hold on to an old copy for days */
-const BUILD="2026.09.23-2";
+const BUILD="2026.09.23-3";
 
 // ================================================================ saves
 /* everything lives under "pinballquest." - the shelf menu finds a game's saves
@@ -4785,15 +4785,18 @@ function startGame(key,o){o=o||{};showTable(key);
   const use=o.use||{},opt={balls:o.daily?1:3+(use.extra?1:0),save:use.saver?30:(me.easy&&!o.daily?20:10),kickback:!o.daily&&me.easy,magnet:use.magnet?1:0,daily:!!o.daily};
   for(const k in use)if(use[k]&&me.items[k]>0)me.items[k]--;save();
   G=newGame(tableOf(key),opt);G.key=key;G.log=[];scene="play";paused=false;result=null;overAt=0;acc=0;view.pull=0;
-  setMusic(key);if(me.games<3)G.tut=true}
+  /* the hints are for a player's first game only, and each goes the moment
+     it has been followed */
+  setMusic(key);if(!me.games)G.tut={L:false,R:false}}
 function input(){
   let L=keyL,R=keyR,P=keyP;
   for(const t of touches.values()){if(t.btn)continue;if(t.side<0)L=true;else R=true}
+  if(G.tut&&G.phase==="play"){if(L)G.tut.L=true;if(R)G.tut.R=true}
   /* while a ball waits in the shooter lane, the right side is the plunger */
   const wait=G.S.balls.find(b=>b.m==="plunger"&&!b.auto);
   if(wait){let pulling=P;for(const t of touches.values())if(!t.btn&&t.side>0)pulling=true;
     if(pulling){view.pull=Math.min(1,view.pull+1/60/1.1);R=false}
-    else if(view.pull>0.02){plunge(G,view.pull);view.pull=0}}
+    else if(view.pull>0.02){plunge(G,view.pull);view.pull=0;me.plunges=(me.plunges||0)+1}}
   else if(view.pull>0)view.pull=Math.max(0,view.pull-0.1);
   return{L,R}}
 function layout(){
@@ -4986,12 +4989,15 @@ function drawPlayHUD(){screenXf();const lay=dmdLayout();
     const zone=(a,b,c)=>{cx.fillStyle=c;cx.fillRect(x,y+bh*(1-b),bw,bh*(b-a))};zone(0,0.3,"#495057");zone(0.3,0.72,"#2f9e44");zone(0.72,1,"#e8590c");
     cx.fillStyle="#fff";const py=y+bh*(1-view.pull);cx.fillRect(x-4*U,py-2*U,bw+8*U,4*U);
     const hy=projTable(PW/2,640).y;cx.globalAlpha=0.8+0.2*Math.sin(TT*5);
-    hint(view.pull>0?"LET GO to launch!":"HOLD the right side",view.pull>0?"stop in the green for a skill shot":"to pull back the plunger",hy,view.pull>0?"#8ce99a":null);
+    /* the plunger's words only until a player has launched a few balls; the bar stays */
+    if((me.plunges||0)<4)hint(view.pull>0?"LET GO to launch!":"HOLD the right side",view.pull>0?"stop in the green for a skill shot":"to pull back the plunger",hy,view.pull>0?"#8ce99a":null);
     cx.globalAlpha=1}
-  else if(G.tut&&G.t<30&&G.phase==="play"&&!paused){/* the first games say how the flippers work */
-    const k=Math.max(0,Math.min(1,(30-G.t)/2))*0.85,y=H*0.7;cx.globalAlpha=k;
-    for(const [x,t] of [[W*0.2,"TAP LEFT"],[W*0.8,"TAP RIGHT"]]){cx.fillStyle="rgba(8,10,20,0.6)";rr(x-52*U,y-30*U,104*U,86*U,16*U);cx.fill();icon("hand",x,y,36*U,"#fff");txt(t,x,y+38*U,15*U,"#fff","center",900)}
-    if(G.t>8)hint("Flick up to nudge the table","",y-80*U);
+  else if(G.tut&&G.phase==="play"&&!paused){/* a player's first game says how the flippers work */
+    const y=H*0.7;cx.globalAlpha=0.85;
+    for(const [x,t,done] of [[W*0.2,"TAP LEFT",G.tut.L],[W*0.8,"TAP RIGHT",G.tut.R]]){if(done)continue;cx.fillStyle="rgba(8,10,20,0.6)";rr(x-52*U,y-30*U,104*U,86*U,16*U);cx.fill();icon("hand",x,y,36*U,"#fff");txt(t,x,y+38*U,15*U,"#fff","center",900)}
+    /* and, once, for a few seconds, how to nudge */
+    if(G.tut.L&&G.tut.R&&!G.tut.nudgeAt)G.tut.nudgeAt=G.t+6;
+    if(G.tut.nudgeAt&&G.t>G.tut.nudgeAt&&G.t<G.tut.nudgeAt+4){cx.globalAlpha=0.85*Math.min(1,(G.tut.nudgeAt+4-G.t)*2);hint("Flick up to nudge the table","",H*0.58)}
     cx.globalAlpha=1}
   if(G.tiltWarn&&G.t-(G.nudges[G.nudges.length-1]||-9)<1.5)txt("CAREFUL!",W/2,H*0.45,30*U,"#ff6b6b","center",900,"rgba(0,0,0,0.7)")}
 function drawPause(){dim(0.65);const pw=Math.min(W-40*U,340*U),bh=58*U,gap=14*U,py=H/2-(4*bh+3*gap)/2;
