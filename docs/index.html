@@ -38,23 +38,25 @@
     grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
     gap: 1.25rem;
   }
-  a.game {
+  /* A card is a picture you tap to play and a bar you tap to read about it.
+     The two cannot be one <a>, because a button inside a link is neither. */
+  article.game {
     display: flex;
     flex-direction: column;
     background: #151a24;
     border: 1px solid #232b3a;
     border-radius: 16px;
     overflow: hidden;
-    text-decoration: none;
     color: inherit;
     transition: transform .15s, border-color .15s, box-shadow .15s;
     -webkit-tap-highlight-color: transparent;
   }
-  a.game:hover, a.game:active {
+  article.game:hover, article.game:focus-within {
     border-color: #4a5a7c;
     transform: translateY(-2px);
     box-shadow: 0 12px 30px rgba(0,0,0,.45);
   }
+  a.shot, summary.shot { text-decoration: none; color: inherit; display: block; }
   .shot {
     position: relative;
     aspect-ratio: 16 / 10;
@@ -63,12 +65,21 @@
   .shot::after {
     content: "";
     position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(8,10,16,.85) 0%, rgba(8,10,16,0) 55%);
+    /* deep enough to carry a white title over a bright screenshot - the maths
+       park is nearly all pale green, and the old scrim lost the name in it */
+    background: linear-gradient(to top, rgba(8,10,16,.8) 0%, rgba(8,10,16,.34) 30%, rgba(8,10,16,0) 62%);
   }
+  /* A plate behind the title rather than a deeper scrim over the whole card.
+     Half these screenshots are bright - the maths park is pale green right
+     where the name sits - and white on a shadow alone disappears into them. */
   .shot .name {
-    position: absolute; left: 1rem; right: 1rem; bottom: .8rem;
+    position: absolute; left: .45rem; bottom: .65rem;
+    max-width: calc(100% - 1.4rem);
+    padding: .2rem .6rem .28rem;
+    border-radius: 11px;
+    background: rgba(8,10,16,.62);
     font-size: 1.35rem; font-weight: 700;
-    text-shadow: 0 2px 8px rgba(0,0,0,.7);
+    text-shadow: 0 2px 8px rgba(0,0,0,.9);
     z-index: 1;
   }
   .shot .play {
@@ -78,7 +89,58 @@
     background: #ffd166; color: #1a1408;
     font-size: .85rem; font-weight: 700; letter-spacing: .04em;
   }
-  .desc { padding: .9rem 1.1rem 1.1rem; color: #b3bfd4; font-size: .93rem; }
+  .desc { padding: .2rem 1.1rem 1.1rem; color: #b3bfd4; font-size: .93rem; }
+  .desc p { margin: 0 0 .8rem; }
+  /* the bar under the picture: shut by default, so the shelf is pictures */
+  details.about > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: .7rem 1.1rem;
+    color: #8fa0bd;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  details.about > summary::-webkit-details-marker { display: none; }
+  details.about > summary::marker { content: ""; }
+  /* a chevron that turns, so it is obvious the bar does something */
+  details.about > summary::before {
+    content: "";
+    width: .46rem; height: .46rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translate(-.1rem, -.1rem);
+    transition: transform .18s;
+    flex: none;
+  }
+  details.about[open] > summary::before { transform: rotate(225deg) translate(-.05rem, -.05rem); }
+  details.about > summary:hover { color: #cdd8ea; }
+  /* the maths card is the whole picture: tapping it opens the three parks */
+  details.group > summary.shot::before { display: none; }
+  details.group > summary { padding: 0; display: block; }
+  .name em {
+    display: block; font-style: normal;
+    font-size: .8rem; font-weight: 600; letter-spacing: .02em;
+    color: #ffd166; margin-bottom: .1rem;
+  }
+  .pick {
+    display: flex; flex-direction: column; gap: .1rem;
+    padding: .7rem .9rem;
+    margin-bottom: .55rem;
+    border: 1px solid #2a3446;
+    border-radius: 11px;
+    background: #10141d;
+    text-decoration: none; color: #dbe4f2;
+    transition: border-color .15s, background .15s;
+  }
+  .pick:last-child { margin-bottom: 0; }
+  .pick:hover, .pick:active { border-color: #ffd166; background: #161c28; }
+  .pick b { font-size: .98rem; }
+  .pick span { color: #93a2bb; font-size: .86rem; }
   .tip {
     margin-top: 2.5rem; padding-top: 1.25rem;
     border-top: 1px solid #1e2530;
@@ -97,151 +159,192 @@
   </header>
 
   <div class="grid">
-    <a class="game" href="sophias-bones-park/">
-      <div class="shot" style="background-image:url('shots/sophias-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Sophia&rsquo;s Bones Park</div>
-      </div>
-      <div class="desc">Maths in a park, pitched at where Sophia is now: times tables to twelve, the division facts that go with them, and multiples of ten. Tables are split into easy ones, middle ones, tricky ones and the big ones, with an All Tables round that mixes the lot. Every right answer earns a bone, and bones buy hats, coats and park things for the dog, or animals and toys for the house.</div>
-    </a>
-    <a class="game" href="rorys-bones-park/">
-      <div class="shot" style="background-image:url('shots/rorys-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Rory&rsquo;s Bones Park</div>
-      </div>
-      <div class="desc">The same park, pitched at Rory: number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at times tables and sharing. Seven kinds of practice, a Park Walk that mixes them, and bones to spend on the dog and the house.</div>
-    </a>
-    <a class="game" href="dylans-bones-park/">
-      <div class="shot" style="background-image:url('shots/dylans-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Dylan&rsquo;s Bones Park</div>
-      </div>
-      <div class="desc">The same park, pitched at Dylan: tens and ones, counting on in tens, ten more and ten less, and his first sums. Six kinds of practice and a Park Walk that mixes them, with a bone for every right answer to spend in the shop.</div>
-    </a>
-    <a class="game" href="star-swarm/">
-      <div class="shot" style="background-image:url('shots/star-swarm.jpg')">
+    <article class="game">
+      <details class="about group">
+        <summary class="shot" style="background-image:url('shots/sophias-bones-park.jpg')">
+          <span class="play">3 PARKS</span>
+          <div class="name"><em>Tap to pick a park</em>Bones Park Maths</div>
+        </summary>
+        <div class="desc">
+          <p>The same park three times over, each pitched at where one of them is now.
+          Every right answer earns a bone, and bones buy hats, coats and park things for
+          the dog, or animals and toys for the house.</p>
+          <a class="pick" href="sophias-bones-park/"><b>Sophia&rsquo;s park</b><span>times tables to twelve, the division facts that go with them, and multiples of ten.</span></a>
+          <a class="pick" href="rorys-bones-park/"><b>Rory&rsquo;s park</b><span>number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at tables and sharing.</span></a>
+          <a class="pick" href="dylans-bones-park/"><b>Dylan&rsquo;s park</b><span>tens and ones, counting on in tens, ten more and ten less, and his first sums.</span></a>
+        </div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="star-swarm/" style="background-image:url('shots/star-swarm.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Star Swarm</div>
-      </div>
-      <div class="desc">Slime Storm in space. Fly with one thumb, weapons fire themselves, hide behind asteroids and mine them, ride out three bosses and reach the warp gate. Three ships to unlock.</div>
-    </a>
-    <a class="game" href="turbo-karts/">
-      <div class="shot" style="background-image:url('shots/turbo-karts.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Slime Storm in space. Fly with one thumb, weapons fire themselves, hide behind asteroids and mine them, ride out three bosses and reach the warp gate. Three ships to unlock.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="turbo-karts/" style="background-image:url('shots/turbo-karts.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Turbo Karts</div>
-      </div>
-      <div class="desc">Kart racing, drawn the way the old 16-bit ones were: a picture of the circuit seen from above, laid back into the screen a band at a time until it becomes a road running to the horizon. The kart drives itself forward &mdash; you steer with a thumb, hold DRIFT through the corners to charge a boost, and throw whatever the item box gave you at the kart in front. Eight drivers, three circuits &mdash; a sunset beach, a jungle and a volcano &mdash; three laps of a long circuit, a single race or a three-round grand prix with points.</div>
-    </a>
-    <a class="game" href="dungeon-dash/">
-      <div class="shot" style="background-image:url('shots/dungeon-dash.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Kart racing, drawn the way the old 16-bit ones were: a picture of the circuit seen from above, laid back into the screen a band at a time until it becomes a road running to the horizon. The kart drives itself forward &mdash; you steer with a thumb, hold DRIFT through the corners to charge a boost, and throw whatever the item box gave you at the kart in front. Eight drivers, three circuits &mdash; a sunset beach, a jungle and a volcano &mdash; three laps of a long circuit, a single race or a three-round grand prix with points.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="dungeon-dash/" style="background-image:url('shots/dungeon-dash.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Dungeon Dash</div>
-      </div>
-      <div class="desc">A dungeon crawl for one thumb. Walk with the left of the screen, your weapon aims and fires itself, and the two buttons on the right are a dash straight through danger and a special the dungeon pays you for killing things. Doors stay shut until the room is clear. Three floors &mdash; catacombs, fungal hollow and emberforge &mdash; each one ending in a boss the size of the doorway, with shrines, shops, a locked vault and eighteen relics that stack on the way down. Play as Sophia with a longbow, Rory with boomerang blades, or Dylan with fireballs.</div>
-    </a>
-    <a class="game" href="riddle-rumble/">
-      <div class="shot" style="background-image:url('shots/riddle-rumble.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A dungeon crawl for one thumb. Walk with the left of the screen, your weapon aims and fires itself, and the two buttons on the right are a dash straight through danger and a special the dungeon pays you for killing things. Doors stay shut until the room is clear. Three floors &mdash; catacombs, fungal hollow and emberforge &mdash; each one ending in a boss the size of the doorway, with shrines, shops, a locked vault and eighteen relics that stack on the way down. Play as Sophia with a longbow, Rory with boomerang blades, or Dylan with fireballs.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="riddle-rumble/" style="background-image:url('shots/riddle-rumble.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Riddle Rumble</div>
-      </div>
-      <div class="desc">Wordplay for the boys. Four answers, and a clock that eats the points rather than the turn, so nobody gets cut off mid-think. Two thousand two hundred riddles across a dozen kinds: hidden animals, rhymes, anagrams, sound-alikes, odd ones out, word glue and a few hundred proper head-scratchers. It builds them fresh every time, so nobody learns the answers off by heart. Quick Quiz for twelve and three lives, or Beat the Clock for ninety seconds.</div>
-    </a>
-    <a class="game" href="super-strikers/">
-      <div class="shot" style="background-image:url('shots/super-strikers.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Wordplay for the boys. Four answers, and a clock that eats the points rather than the turn, so nobody gets cut off mid-think. Two thousand two hundred riddles across a dozen kinds: hidden animals, rhymes, anagrams, sound-alikes, odd ones out, word glue and a few hundred proper head-scratchers. It builds them fresh every time, so nobody learns the answers off by heart. Quick Quiz for twelve and three lives, or Beat the Clock for ninety seconds.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="super-strikers/" style="background-image:url('shots/super-strikers.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Super Strikers</div>
-      </div>
-      <div class="desc">Six-a-side arcade football from straight above, built the way the old 16-bit ones were. The ball is never glued to your feet: you knock it ahead and run onto it, and a tackle is getting your body there first. One thumb steers, one button passes and shoots, and holding a direction after you hit it bends the ball through the air. Eight teams, a quick match, a three-round cup with penalty shoot-outs, and two players on one iPad.</div>
-    </a>
-    <a class="game" href="marble-mayhem/">
-      <div class="shot" style="background-image:url('shots/marble-mayhem.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Six-a-side arcade football from straight above, built the way the old 16-bit ones were. The ball is never glued to your feet: you knock it ahead and run onto it, and a tackle is getting your body there first. One thumb steers, one button passes and shoots, and holding a direction after you hit it bends the ball through the air. Eight teams, a quick match, a three-round cup with penalty shoot-outs, and two players on one iPad.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="marble-mayhem/" style="background-image:url('shots/marble-mayhem.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Marble Mayhem</div>
-      </div>
-      <div class="desc">A marble run builder. Drag planks, curves, trampolines, bumpers, fans, spinners, cannons and portals onto the board, turn them, press GO and watch the marble roll. Sixty-four puzzles in four worlds, each with a goal cup and bonus stars and a hint that shows one piece at a time when you are stuck, plus six custom sandboxes with a hopper and an end cup you place, marble rain and a longest-run clock for your own contraptions.</div>
-    </a>
-    <a class="game" href="agent-rory/">
-      <div class="shot" style="background-image:url('shots/agent-rory.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A marble run builder. Drag planks, curves, trampolines, bumpers, fans, spinners, cannons and portals onto the board, turn them, press GO and watch the marble roll. Sixty-four puzzles in four worlds, each with a goal cup and bonus stars and a hint that shows one piece at a time when you are stuck, plus six custom sandboxes with a hopper and an end cup you place, marble rain and a longest-run clock for your own contraptions.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="agent-rory/" style="background-image:url('shots/agent-rory.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Agent Rory: Operation Eclipse</div>
-      </div>
-      <div class="desc">A first-person spy adventure in three acts across twenty-one countries, from London and Venice through Istanbul, Marrakech, Reykjavik and Singapore to Machu Picchu and the Antarctic ice. Ninety missions, every one a mini-game that wins intel: lie detectors, safe dials, codebreakers, lasers, sonar, fingerprints, Morse code, the shell game, a grapple gun, thin ice, picross and six chases by boat, rocket backpack, tuk-tuk, jeep, bicycle and snowmobile, getting harder as you go. Every character speaks with the iPad's own voices.</div>
-    </a>
-    <a class="game" href="slime-storm/">
-      <div class="shot" style="background-image:url('shots/slime-storm.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A first-person spy adventure in three acts across twenty-one countries, from London and Venice through Istanbul, Marrakech, Reykjavik and Singapore to Machu Picchu and the Antarctic ice. Ninety missions, every one a mini-game that wins intel: lie detectors, safe dials, codebreakers, lasers, sonar, fingerprints, Morse code, the shell game, a grapple gun, thin ice, picross and six chases by boat, rocket backpack, tuk-tuk, jeep, bicycle and snowmobile, getting harder as you go. Every character speaks with the iPad's own voices.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="slime-storm/" style="background-image:url('shots/slime-storm.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Slime Storm</div>
-      </div>
-      <div class="desc">A one-thumb survivor. Walk, your weapons fire themselves, grab gems, pick upgrade cards, survive ten minutes and three bosses. Play as Dylan, Rory or Sophia.</div>
-    </a>
-    <a class="game" href="tank-tussle/">
-      <div class="shot" style="background-image:url('shots/tank-tussle.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A one-thumb survivor. Walk, your weapons fire themselves, grab gems, pick upgrade cards, survive ten minutes and three bosses. Play as Dylan, Rory or Sophia.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="tank-tussle/" style="background-image:url('shots/tank-tussle.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Tank Tussle</div>
-      </div>
-      <div class="desc">Two players on one iPad, held between you. Drive with a thumb, tap to fire, bounce shells off steel, smash bricks, grab power-ups. First to five hits. A robot plays if you are on your own.</div>
-    </a>
-    <a class="game" href="dylans-odyssey/">
-      <div class="shot" style="background-image:url('shots/dylans-odyssey.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Two players on one iPad, held between you. Drive with a thumb, tap to fire, bounce shells off steel, smash bricks, grab power-ups. First to five hits. A robot plays if you are on your own.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="dylans-odyssey/" style="background-image:url('shots/dylans-odyssey.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Dylan's Odyssey</div>
-      </div>
-      <div class="desc">A 3D hat-throwing adventure across seven kingdoms: Dino Ridge, Skyline City, Sunburn Sands, Frostbite Peaks, Volcano Bay, Cloud Islands and Ghost Manor. Capture a T-Rex, a taxi, a stone lion, a bird and a fireball, hunt Power Moons and beat the raptor bosses.</div>
-    </a>
-    <a class="game" href="sonic-spin/">
-      <div class="shot" style="background-image:url('shots/sonic-spin.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A 3D hat-throwing adventure across seven kingdoms: Dino Ridge, Skyline City, Sunburn Sands, Frostbite Peaks, Volcano Bay, Cloud Islands and Ghost Manor. Capture a T-Rex, a taxi, a stone lion, a bird and a fireball, hunt Power Moons and beat the raptor bosses.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="sonic-spin/" style="background-image:url('shots/sonic-spin.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Sonic Spin</div>
-      </div>
-      <div class="desc">A 3D Sonic act built on speed: loop, corkscrew, rails over the bay, homing chains, a torch-lit ruin, a wall run and a waterfall jump to the beach sprint. Keyboard, gamepad or touch.</div>
-    </a>
-
-    <a class="game" href="paws-of-fury/">
-      <div class="shot" style="background-image:url('shots/paws-of-fury.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A 3D Sonic act built on speed: loop, corkscrew, rails over the bay, homing chains, a torch-lit ruin, a wall run and a waterfall jump to the beach sprint. Keyboard, gamepad or touch.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="paws-of-fury/" style="background-image:url('shots/paws-of-fury.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Paws of Fury 64</div>
-      </div>
-      <div class="desc">A 3D dog platformer. Ten open worlds, all of them wrong. Three dogs, triple jumps, ground pounds, and seven bones to sniff out in every world.</div>
-    </a>
-
-    <a class="game" href="lizard-rocket/">
-      <div class="shot" style="background-image:url('shots/lizard-rocket.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A 3D dog platformer. Ten open worlds, all of them wrong. Three dogs, triple jumps, ground pounds, and seven bones to sniff out in every world.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="lizard-rocket/" style="background-image:url('shots/lizard-rocket.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Lizard Rocket</div>
-      </div>
-      <div class="desc">Swipe arrows onto the floor to steer the lizards into the rocket, past the snakes and around the holes. Twelve puzzles and a 90-second Stampede.</div>
-    </a>
-
-    <a class="game" href="velocity-zero/">
-      <div class="shot" style="background-image:url('shots/velocity-zero.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Swipe arrows onto the floor to steer the lizards into the rocket, past the snakes and around the holes. Twelve puzzles and a 90-second Stampede.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="velocity-zero/" style="background-image:url('shots/velocity-zero.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Velocity Zero</div>
-      </div>
-      <div class="desc">Anti-gravity racing. Eight ships, three circuits, boost pads, rockets, missiles, mines and shields. Hold the iPad sideways.</div>
-    </a>
-
-    <a class="game" href="blockfort/">
-      <div class="shot" style="background-image:url('shots/blockfort.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Anti-gravity racing. Eight ships, three circuits, boost pads, rockets, missiles, mines and shields. Hold the iPad sideways.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="blockfort/" style="background-image:url('shots/blockfort.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Blockfort: Boss Siege</div>
-      </div>
-      <div class="desc">Build a fort against the clock, then survive the golem that comes to tear it down. Ten rounds.</div>
-    </a>
-
-    <a class="game" href="star-digger/">
-      <div class="shot" style="background-image:url('shots/star-digger.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Build a fort against the clock, then survive the golem that comes to tear it down. Ten rounds.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="star-digger/" style="background-image:url('shots/star-digger.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Star Digger: Deep Boss</div>
-      </div>
-      <div class="desc">Dig down, collect every star, break the seal. Your stars are your lives against the boss below.</div>
-    </a>
-    <a class="game" href="genesis/">
-      <div class="shot" style="background-image:url('shots/genesis.jpg')">
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">Dig down, collect every star, break the seal. Your stars are your lives against the boss below.</div>
+      </details>
+    </article>
+    <article class="game">
+      <a class="shot" href="genesis/" style="background-image:url('shots/genesis.jpg')">
         <span class="play">PLAY</span>
         <div class="name">Sega Genesis Arcade</div>
-      </div>
-      <div class="desc">A real Mega Drive emulator in the browser, with eight free homebrew games on the shelf: platformers, a trap-filled tower puzzle, an egg-catching chicken and a four-player star race. Add cartridges you own to play them on this device. On-screen pad on the iPad.</div>
-    </a>
+      </a>
+      <details class="about">
+        <summary>What is it?</summary>
+        <div class="desc">A real Mega Drive emulator in the browser, with eight free homebrew games on the shelf: platformers, a trap-filled tower puzzle, an egg-catching chicken and a four-player star race. Add cartridges you own to play them on this device. On-screen pad on the iPad.</div>
+      </details>
+    </article>
   </div>
 
   <p class="tip">
