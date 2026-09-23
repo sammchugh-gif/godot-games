@@ -25,7 +25,14 @@ The score display at the top is a dot-matrix panel like an arcade machine's.
 Every few seconds its bottom line says what to shoot next.
 
 Easy mode (on the table's card, on by default) lights both kickbacks at the
-start of every ball and gives a 20-second ball save.
+start of every ball, gives a 20-second ball save and makes the ramps a little
+kinder to climb.
+
+**Ball speed** (on the table's card, and in the pause menu mid-game) is Slow,
+Medium or Fast; everyone starts on Slow. It runs the whole game's clock
+slower rather than changing the physics, so every shot goes exactly where it
+did - the ball just takes longer getting there. Fast is the table as built,
+steeper than a real machine; Slow is about two thirds of that.
 
 ## The tables
 

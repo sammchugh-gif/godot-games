@@ -4585,7 +4585,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visua
 resize();
 /* shown small on the title screen, so it is always clear which version a
    phone is running: a Home Screen app can hold on to an old copy for days */
-const BUILD="2026.09.23-1";
+const BUILD="2026.09.23-2";
 
 // ================================================================ saves
 /* everything lives under "pinballquest." - the shelf menu finds a game's saves
@@ -4597,10 +4597,18 @@ const PCOLS=["#ff6b6b","#4dabf7","#51cf66","#fcc419","#cc5de8","#ff922b"];
 /* a family shares one device: each player keeps their own coins, stars and
    balls, and every table's high scores are compared across all of them */
 function newProfile(name,i){return{id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e4),name,col:PCOLS[i%PCOLS.length],
-  coins:0,missions:{},best:{},owned:{chrome:1},ball:"chrome",items:{saver:1,magnet:1,extra:0},easy:true,daily:{},streak:0,lastDaily:"",games:0}}
+  coins:0,missions:{},best:{},owned:{chrome:1},ball:"chrome",items:{saver:1,magnet:1,extra:0},easy:true,speed:"slow",daily:{},streak:0,lastDaily:"",games:0}}
 let profiles=store.get("profiles",null);
 if(!Array.isArray(profiles)||!profiles.length){profiles=["Sophia","Rory","Dylan"].map(newProfile);store.set("profiles",profiles)}
 let me=profiles.find(p=>p.id===store.get("who",""))||profiles[0];
+/* How fast the game clock runs. The table is steeper than a real one so it
+   feels lively, which on a phone screen is too quick for a young player;
+   running the whole world slower keeps every shot exactly where it was -
+   the ball takes the same paths, it just takes longer over them. */
+const SPEEDS={slow:{k:0.66,name:"Slow"},medium:{k:0.8,name:"Medium"},fast:{k:1,name:"Fast"}};
+for(const p of profiles)if(!SPEEDS[p.speed])p.speed="slow";
+function speedK(){return(SPEEDS[me.speed]||SPEEDS.slow).k}
+function nextSpeed(){me.speed=me.speed==="slow"?"medium":me.speed==="medium"?"fast":"slow";save()}
 function save(){store.set("profiles",profiles);store.set("who",me.id)}
 const settings=Object.assign({music:true,sfx:true,voice:true},store.get("settings",{}));
 function saveSettings(){store.set("settings",settings)}
@@ -4746,7 +4754,7 @@ function disposeTable(tb){const shared=new Set(Object.values(R3.cache.mats||{}))
   if(tb.env)tb.env.dispose()}
 function demoUpdate(dt){
   if(!demo||demo.over||demo.t>240){demo=newGame(tableOf(curKey),{balls:3,kickback:true});demoBot=makeBot(demo.T,mulberry32((TT*1000)|0))}
-  demoAcc=Math.min(demoAcc+dt,0.1);
+  demoAcc=Math.min(demoAcc+dt*0.8,0.1);
   while(demoAcc>=STEP){if(demo.S.balls.some(b=>b.m==="plunger"&&!b.auto))plunge(demo,0.8);gameStep(demo,demoBot(demo.S,STEP));demoAcc-=STEP}
   demo.fx.length=0;lightsNow(demo);syncScene(demo,TB.H,dt,{pull:0})}
 /* Building a table takes a moment on a phone (the playfield is painted,
@@ -4803,7 +4811,7 @@ function sizeWatch(){resize();
   if(layoutDirty&&R3)layout()}
 setInterval(sizeWatch,200);
 function playUpdate(dt){
-  if(!paused&&!result){const inp=input();acc+=dt;let n=0;while(acc>=STEP&&n<160){gameStep(G,inp);acc-=STEP;n++}if(n>=160)acc=0}
+  if(!paused&&!result){const inp=input();acc+=dt*speedK();let n=0;while(acc>=STEP&&n<160){gameStep(G,inp);acc-=STEP;n++}if(n>=160)acc=0}
   for(const f of G.fx){if(f.k==="flash")flash(f.col,f.long);else if(f.k==="sound"){sfx(f.s,f.n);voiceFor(f.s)}
     else if(f.k==="shake")shakeT=Math.max(shakeT,0.25*f.amt);else if(f.k==="nudge"){sfx("nudge");shakeT=Math.max(shakeT,0.12)}else if(f.k==="tilt")sfx("tilt")}
   G.fx.length=0;
@@ -4912,12 +4920,14 @@ function drawCard(){if(!card){scene="title";return}dim(0.62);const key=card.key,
   fam.slice(0,3).forEach((f,i)=>{cx.fillStyle=f.p.col;cx.beginPath();cx.arc(px+pw*0.2,y,10*k,0,TAU);cx.fill();txt(String(i+1),px+pw*0.2,y+1,13*k,"#fff");
     fitTxt(f.p.name,px+pw*0.2+20*k,y+1,17*k,pw*0.34,f.p===me?"#ffd43b":"#fff","left",800);txt(fmt(f.s),px+pw*0.84,y+1,17*k,"#fff","right",800);y+=27*k});
   /* power-ups to take in, and easy mode */
-  const iy=py+ph-178*k,isz=Math.min(96*U,(pw-60*U)/3);
+  const iy=py+ph-192*k,isz=Math.min(96*U,(pw-60*U)/3);
   txt("Take along",W/2,iy-8*k,14*k,"#adb5bd","center",800);
   ITEMS.forEach((it,i)=>{const x=W/2+(i-1)*(isz+10*U)-isz/2,y2=iy+4*k,h=isz*0.56,n=me.items[it.id]||0,on=!!card.use[it.id],ok=!(card.daily&&it.id==="extra");
     button(x,y2,isz,h,"",n&&ok?()=>{card.use[it.id]=!on}:()=>toastSay(ok?"Buy "+it.name+" in the shop":"Not in the daily challenge"),{col:on?"#b2f2bb":n&&ok?"#e9ecef":"#868e96",ring:on?"#2b8a3e":null});
     icon(it.id,x+isz*0.32,y2+h/2,h*0.52,n&&ok?"#1c7ed6":"#555");txt("x"+n,x+isz*0.7,y2+h/2+1,h*0.3,"#222","center",800)});
-  if(!card.daily){const ey=iy+isz*0.56+14*k,ew=Math.min(pw-40*U,260*U);button(W/2-ew/2,ey,ew,34*k,me.easy?"Easy mode: ON":"Easy mode: OFF",()=>{me.easy=!me.easy;save()},{col:me.easy?"#8ce99a":"#adb5bd",ink:"#113a1a",fs:15*k})}
+  {const ey=iy+isz*0.56+14*k,ew=Math.min((pw-50*U)/2,200*U);
+    if(!card.daily)button(W/2-ew-5*U,ey,ew,34*k,me.easy?"Easy mode: ON":"Easy mode: OFF",()=>{me.easy=!me.easy;save()},{col:me.easy?"#8ce99a":"#adb5bd",ink:"#113a1a",fs:15*k});
+    button(card.daily?W/2-ew/2:W/2+5*U,ey,ew,34*k,"Ball speed: "+SPEEDS[me.speed].name,()=>{nextSpeed()},{col:me.speed==="slow"?"#a5d8ff":me.speed==="medium"?"#ffd43b":"#ff922b",ink:"#0b2540",fs:15*k})}
   const gw=Math.min(pw-40*U,300*U),gh=Math.min(58*U,ph*0.1);
   button(W/2-gw/2,py+ph-gh-14*k,gw,gh,"GO!",()=>{startGame(key,{daily:card.daily,use:Object.assign({},card.use)})},{col:"#69db7c",ink:"#0d3316",fs:gh*0.5})}
 /* the shop: balls to roll, and power-ups */
@@ -4984,11 +4994,14 @@ function drawPlayHUD(){screenXf();const lay=dmdLayout();
     if(G.t>8)hint("Flick up to nudge the table","",y-80*U);
     cx.globalAlpha=1}
   if(G.tiltWarn&&G.t-(G.nudges[G.nudges.length-1]||-9)<1.5)txt("CAREFUL!",W/2,H*0.45,30*U,"#ff6b6b","center",900,"rgba(0,0,0,0.7)")}
-function drawPause(){dim(0.65);const pw=Math.min(W-40*U,340*U),bh=58*U,gap=14*U,py=H/2-(3*bh+2*gap)/2;
+function drawPause(){dim(0.65);const pw=Math.min(W-40*U,340*U),bh=58*U,gap=14*U,py=H/2-(4*bh+3*gap)/2;
   txt("Paused",W/2,py-40*U,34*U,"#fff","center",900,"#1a0f3a");
   button(W/2-pw/2,py,pw,bh,"Keep playing",()=>{paused=false},{col:"#69db7c",ink:"#0d3316",icon:"play"});
   button(W/2-pw/2,py+bh+gap,pw,bh,"Start again",()=>{startGame(G.key,{daily:G.opt.daily,use:{}})},{col:"#ffd43b",icon:"restart"});
-  button(W/2-pw/2,py+2*(bh+gap),pw,bh,G.opt.daily?"Home":"Tables",()=>{const d=G.opt.daily;paused=false;G=null;scene=d?"title":"tables";setMusic("menu")},{col:"#dee2e6",icon:"home"})}
+  /* the speed can be changed mid-game: a child who finds it too fast should
+     not have to start again to find out it can be slower */
+  button(W/2-pw/2,py+2*(bh+gap),pw,bh,"Ball speed: "+SPEEDS[me.speed].name,()=>{nextSpeed()},{col:me.speed==="slow"?"#a5d8ff":me.speed==="medium"?"#ffd43b":"#ff922b",ink:"#0b2540"});
+  button(W/2-pw/2,py+3*(bh+gap),pw,bh,G.opt.daily?"Home":"Tables",()=>{const d=G.opt.daily;paused=false;G=null;scene=d?"title":"tables";setMusic("menu")},{col:"#dee2e6",icon:"home"})}
 function drawResult(){const r=result,k=Math.min(1,(TT-r.at)/0.4);dim(0.6*k);cx.globalAlpha=k;
   const pw=Math.min(W-SAFE.l-SAFE.r-24*U,460*U),ph=Math.min(H-SAFE.t-SAFE.b-24*U,470*U),px=W/2-pw/2,py=H/2-ph/2+(1-k)*50*U,q=ph/470;
   panel(px,py,pw,ph);
