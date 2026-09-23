@@ -71,13 +71,21 @@ The table is built in 3D with three.js, to a real machine's measurements in
 millimetres: a lacquered playfield painted with the table's artwork, chrome
 posts with rubber rings, pop bumpers that flash and duck, clear plastic ramps
 on posts, wire returns, drop targets that sink, a plunger, the apron with its
-rules cards, and a wooden cabinet with a lockdown bar. One overhead lamp
-throws real shadows, the inserts light from underneath, and the chrome ball
-reflects the table itself: once a table is built, a camera at its middle
-photographs it all round, and that picture is the ball's mirror.
+rules cards, a wooden cabinet with a lockdown bar, and a backbox whose
+backlit translite is each table's poster.
 
-If frames keep arriving late, the game drops the shadows, then some
-sharpness, and carries on at full pace.
+It is lit and reflected by a photograph of a real room (a Poly Haven HDRI),
+so the chrome, the glass over the table and the lacquer reflect real light.
+Lamps along both sides warm the playfield as a real cabinet's do, one
+overhead light throws real shadows, and lit inserts, bumpers and floodlights
+bloom. The wood, steel and rubber carry surface detail (normal maps), every
+playfield gets a photographic grain, and the chrome ball reflects the table
+itself: once a table is built, a camera at its middle photographs it all
+round, and that picture is the ball's mirror. The picture goes through a
+lens: a vignette, a touch of grain, and a slight softening at the far end.
+
+If frames keep arriving late, the game drops the shadows and the glow, then
+some sharpness, and carries on at full pace.
 
 ## How it is checked
 
@@ -102,5 +110,11 @@ a quarter of its own size between steps and cannot pass through a wall.
 The version is printed small in the corner of the title screen, and on the
 title screen the game asks the website whether there is a newer one.
 
-`docs/pinball-quest/` is the published copy; this folder mirrors it. three.js
-(MIT licence) is vendored as `three.module.min.js` and `three.core.min.js`.
+`docs/pinball-quest/` is the published copy; this folder mirrors it.
+
+Vendored, with their licences:
+- `three.bundle.min.js`: three.js r180 with its EXR loader, room
+  environment and post-processing passes, bundled into one file (MIT).
+- `tex/lobby.exr`: the St Fagans interior HDRI from Poly Haven (CC0), as
+  resized in the `@pmndrs/assets` package (CC0).
+- `tex/n00*.webp`: normal maps from `@pmndrs/assets` (CC0).
