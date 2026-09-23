@@ -18,8 +18,12 @@ orientation. One file, no engine.
 - **Hold again** in the air to catch the next ring. A catch keeps your speed.
 - Standing on a ledge with nothing in reach, a hold is a hop forward.
 - Splash into the water (or the swamp, the rapids, the lava), touch a thorn
-  bush or a bee, and you are back at the last flag. The clock keeps running.
+  bush or a bee, and a bubble scoops the monkey up and floats it back to the
+  last flag. The clock keeps running.
 - Flips in the air are worth two bananas each at the next catch.
+- Catch three rings or more in a row without touching a ledge or the water
+  and every catch in the combo is a bonus banana. A good let-go (up and
+  forward, with speed) gets a NICE! or an AWESOME!
 - Keyboard: Space or Up to hold, R to restart, Escape to go back.
 
 ## Stars
@@ -79,5 +83,10 @@ full pace.
 
     node tools/vinecheck.mjs            all forty levels
     node tools/vinecheck.mjs daily 30   the next thirty daily jungles
+
+The version is printed small in the corner of the title screen. On the
+title screen the game asks the website whether there is a newer one, and
+if there is, offers a button to update - a Home Screen app can otherwise
+hold on to an old copy for days.
 
 `docs/vine-swing/index.html` is the published copy; this folder mirrors it.

@@ -108,7 +108,15 @@ function check(sp) {
     const s = G.newRun(L); s.cp = c; s.x = led.x + led.w + 40; s.y = G.FLOOR + 5; s.gr = 0;
     for (let t = 0; t < 2 && !(s.deaths && s.dead === 0 && s.gr); t += G.DT) G.step(L, s, false);
     const back = s.deaths === 1 && s.dead === 0 && s.gr === 1 && Math.abs(s.x - L.cps[c].x) < 1;
-    if (back && solve(L, false, s)) respawns++; else stuck.push(c);
+    /* a player can stand on the ledge as long as they like before holding -
+       which matters where the rings ahead slide - so the robot may too */
+    let out = false;
+    for (const wait of [0, 0.4, 0.8, 1.2, 1.6, 2.0]) {
+      if (!back) break;
+      const w0 = G.cloneRun(s); for (let t = 0; t < wait; t += G.DT) G.step(L, w0, false);
+      if (solve(L, false, w0)) { out = true; break; }
+    }
+    if (out) respawns++; else stuck.push(c);
   }
   const minW = win.length ? Math.min(...win) : 0, avgW = win.length ? win.reduce((a, c) => a + c, 0) / win.length : 0;
   return { id: sp.id, seed: sp.seed, ok: !!b && !stuck.length, stuck, cps: L.cps.length, respawns, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
