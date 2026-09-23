@@ -1,152 +1,106 @@
-# Family Hub: plan and the decisions that come first
+# Family Hub: plan, decisions taken, and what is still open
 
-A private, shared app for two adults (and, if you choose, three kids)
-covering to-dos, meal planning, kids' activities, shopping, and general
-household tasks. Password protected, invite only.
-
-This is unrelated to the games in this repo. The branch is just where the
-plan lives. Nothing is built until the questions in section 2 are answered;
-each carries a default, so "go with the defaults" is a complete answer.
+A private, shared app for two adults covering to-dos, meal planning, kids'
+activities, shopping, and household tasks. Password protected, invite only.
+Unrelated to the games in this repo; the branch is just where the plan lives.
 
 Confidence tags: [Certain] hard evidence, [Likely] strong inference,
 [Guessing] filling a gap.
 
 ---
 
-## 1. Assessment
+## 1. Decisions taken (23 Sep 2026)
 
-**The product risk is adoption, not engineering.** [Likely] A family
-organiser succeeds or fails on whether the second adult opens it every day.
-It has to sit on her phone's home screen, load in a second, and take two
-taps to add an item. Every phase below is ordered around that.
+| Area | Decision |
+|---|---|
+| Wife's phone | iPhone |
+| Kids | Names only, no logins |
+| Offline | Nice to have, not required |
+| Shopping | One list, shop tag, categories for aisle order, ticked items sink, usual-items picker |
+| Meals | Week grid, dinners only, free text plus optional link, this week and next, copy last week |
+| Tasks | Assignee, due date, repeating, tags |
+| Activities | Two-way sync with Google Calendar, from day one |
+| Notifications | Morning email digest |
+| Cadence | Weekly, shopping list first |
+| Invite test | Not yet run |
 
-**Private and password protected is the easy part if it lives in Claude.**
-[Certain] A Claude artifact is private by default; only the owner and the
-people the owner invites from the Share menu can open the link, and every
-reader and writer is a signed-in Claude account. That is sign-in, invites
-and access control for free, with no auth code to write and no third-party
-database account to create.
+## 2. Assessment of those decisions
 
-**Two things decide whether the Claude route works, and one of them can
-only be settled by trying.**
+**Two-way calendar sync from day one contradicts weekly-shopping-first, and
+I disagree with it.** Instead I would do read-only calendar in week 3 and
+write-back in week 4 or 5. The risk in two-way from day one is that the
+hardest, most brittle integration lands before you have a habit of opening
+the app at all, and the first thing your wife sees is a calendar bug.
+"Day one" and "shopping first" cannot both be true; I will treat two-way as
+firm for version 1, not for week 1.
 
-1. [Likely] Your wife's separate Claude account must be invitable as an
-   editor by email. The runtime's own documentation says an editor
-   invited by email holds the `admin` level and can write shared data,
-   while a visitor from outside the owner's organisation arriving by
-   plain link or a lower-level invite can only read. Whether your
-   account's Share menu offers that email-editor invite is the thing to
-   test. The test page exists: see section 3.
-2. [Certain] The artifact store is online only. There is no offline
-   queue. A shopping list with no signal in the supermarket shows the
-   last state it loaded and cannot take new ticks until signal returns.
-   If that matters to you, the answer is the fallback route below.
+**Neither of you has the Google Calendar connector in Claude yet.**
+[Certain] This session's connector list shows Gmail connected, Google Drive
+installed but not connected, and no Google Calendar at all. That matters
+for the route choice below.
 
-**Fallback if the Claude route fails either test.** A standalone web app
-with Supabase (Postgres, email sign-in, row-level security, realtime) on
-its free tier, hosted anywhere static. [Likely] Free-tier limits are at
-supabase.com/pricing and should be checked before committing. It costs
-more to build (sign-in, invites, hosting) and you must create the account
-yourself, but it can work offline and can become an App Store app later.
+## 3. The two routes, against your choices
 
-**What you give up on the Claude route, stated plainly.**
+### Route A: inside Claude (artifact with shared database)
 
-- No offline use.
-- No push notifications; the page can only act while open.
-- It opens inside Claude, not as its own app icon, though Safari can pin
-  the link to the home screen. [Guessing] Sign-in state on a pinned link
-  behaves like any claude.ai page; I have not tested it on iOS.
-- It lives on Anthropic's platform and its current limits. [Certain] The
-  store allows 5,000 documents per artifact, which for a family is years
-  of items if ticked items are cleared.
+- [Certain] Privacy, sign-in and invites come free. The artifact is
+  private; only invited Claude accounts can open it.
+- [Likely] Google Calendar two-way is possible: a page can call the
+  viewer's own Claude connectors with the viewer's credentials. Both of
+  you would add the Google Calendar connector to your Claude accounts.
+  The page reads events when opened and writes an event when you create
+  an activity. [Guessing] I have not yet seen the connector's tool names
+  and shapes; I can only confirm once one of you has it connected.
+- [Likely] Morning digest is possible without a server: a scheduled
+  Claude Routine reads the artifact's database and sends the email
+  through the Gmail connector, which is already connected.
+- [Certain] No offline. You said that is acceptable.
+- Open question: the invite test (section 4).
 
----
+### Route B: standalone web app (Supabase plus Google OAuth)
 
-## 2. Decisions to make before code
+- Everything is under your control and works offline.
+- [Certain] Google Calendar access needs a Google Cloud project with an
+  OAuth consent screen. While that screen's publishing status is
+  "Testing", Google's OAuth documentation states refresh tokens expire
+  after 7 days, so you would both re-authorise weekly unless the app is
+  published, which for a sensitive scope like Calendar means Google's
+  verification process. This is the single biggest practical cost of
+  Route B for a two-person app.
+- Morning digest needs a scheduler and an email sender, both extra
+  services.
+- You create the Supabase project and the Google Cloud project yourself.
 
-### 2.1 Who uses it and on what
+**Recommendation.** [Likely] Route A, on the condition that the invite
+test passes and the Google Calendar connector proves usable from a page.
+Route B's weekly re-authorisation is a worse daily experience than
+anything Route A lacks.
 
-1. **Devices.** Is your wife on iPhone or Android, and which browser
-   does she use? *Default:* both on iPhone.
-2. **Kids' access.** Do Dylan, Rory, and Sophia get their own login, or
-   only appear as names on tasks and activities? [Certain] On the
-   Claude route a login means a Claude account, so the practical answer
-   for young children is names only. *Default:* names only.
-3. **Anyone else.** Grandparents, a childminder? Each extra viewer
-   changes the permission model. *Default:* two adults, no roles.
+## 4. What has to happen before code
 
-### 2.2 Route
+1. **Invite test.** Open https://claude.ai/artifact/TEoE9Viz5LYtMtqtnUCqPp,
+   add an item, then from the Share menu invite your wife by her Claude
+   email with edit access. She opens it on her iPhone, signed into her
+   own Claude, and adds an item. Pass: it appears on your phone within a
+   few seconds. Fail: she can only read, or cannot open it.
+2. **Connect Google Calendar to Claude.** In claude.ai settings, add the
+   Google Calendar connector on your account. I then read its tool
+   shapes and confirm the calendar plan or say plainly that it cannot be
+   done from a page.
+3. Both pass: Route A. Either fails: Route B, and we accept the weekly
+   re-authorisation or drop two-way to read-only via a calendar feed.
 
-4. **Claude-hosted or standalone.** Decided by the invite test in
-   section 3 and by whether offline matters to you. *Default:*
-   Claude-hosted if the test passes; otherwise Supabase.
+## 5. Phases
 
-### 2.3 Scope of each area
-
-5. **To-dos and household tasks.** Assignee, due date, recurrence, tags?
-   *Default:* flat list, optional assignee, optional due date, weekly
-   recurrence, tags. No subtasks, no projects.
-6. **Shopping.** One list or per shop? *Default:* one list with a shop
-   tag, categories for sort order, ticked items sink and clear on demand,
-   a "usual items" picker.
-7. **Meal planning.** A week grid of free-text dinners, or recipes with
-   ingredients that feed the shopping list? The second is roughly three
-   times the work. *Default:* week grid first.
-8. **Kids' activities.** Standalone weekly view per child, or two-way sync
-   with Google or Apple calendar? Two-way sync is the biggest scope
-   multiplier on the list. *Default:* standalone, per child, with
-   who-is-driving and what-to-pack fields. No calendar sync in v1.
-9. **Notifications.** *Default:* none in v1. On the Claude route there
-   is no push at all; a morning digest would need the standalone route.
-
-### 2.4 Working model
-
-10. **Weekly show-and-steer, or specify up front?** *Default:* weekly.
-    Shopping first, because it is the fastest test of whether the two of
-    you actually use a shared thing.
-
----
-
-## 3. The invite test
-
-A one-page shared shopping list is published as a private Claude artifact.
-It declares the shared database and shows who added each item.
-
-1. Open it from your account and add an item.
-2. From the page's Share menu, invite your wife by her Claude email with
-   edit access, not view.
-3. She opens it on her phone, signed into her own Claude, and adds an
-   item.
-4. If her item appears on your phone within a couple of seconds, the
-   Claude route works. If she sees the list but the page reports she
-   cannot add to it, or she cannot open it at all, the Claude route is
-   out and we build standalone.
-
----
-
-## 4. Phases (Claude route)
-
-Each phase is one artifact, or one tab of one artifact, that both phones
-can use. A later phase starts only after the earlier one has been used for
-real for a few days.
-
-| Phase | Deliverable | Test of success |
+| Week | Deliverable | Test of success |
 |---|---|---|
-| 0 | Invite test passes on both phones | Your wife adds an item unaided |
-| 1 | Shopping list: add, tick, clear, usual items, shop tag | One real shop each |
-| 2 | Tasks: add, assign, due, recur, done | One week of bins and admin |
-| 3 | Meals: this week and next, copy last week | Two weeks planned in it |
-| 4 | Activities: per child, weekly, driver, pack list | One full week run from it |
-| 5 | One combined page with tabs, home-screen install guide | Daily use without prompting |
+| 0 | Invite test and connector check | Your wife adds an item unaided |
+| 1 | Shopping list: add, tick, clear, shop tag, categories, usual items | One real shop each |
+| 2 | Tasks: assign, due, repeat, tags, overdue on top | One week of bins and admin |
+| 3 | Meals grid, this week and next, copy last week; activities standalone per child | Two weeks planned |
+| 4 | Google Calendar read: real events beside activities | Both see the same week |
+| 5 | Google Calendar write-back; morning digest Routine via Gmail | An activity created in the app appears in Calendar; a digest arrives |
+| 6 | One combined page with tabs, home-screen install on both iPhones | Daily use without prompting |
 
 Later, if wanted: recipes feeding the shopping list, a kid-facing chores
-board, export to a file.
-
----
-
-## 5. What I need from you
-
-1. The result of the invite test in section 3.
-2. Answers to section 2, or "defaults".
-3. Whether offline in the supermarket is a must-have. That single answer
-   can override the test result.
+board for the iPad, export to a file.
