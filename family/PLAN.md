@@ -50,13 +50,14 @@ confirmed and their shapes read; phases 4 and 5 are buildable.
   viewer's own Claude connectors with the viewer's credentials. Both of
   you would add the Google Calendar connector to your Claude accounts.
   The page reads events when opened and writes an event when you create
-  an activity. [Guessing] I have not yet seen the connector's tool names
-  and shapes; I can only confirm once one of you has it connected.
+  an activity. [Certain] The connector is connected and its event tools
+  are confirmed (section 2). [Likely] Calling them from a page works the
+  same way; proven in week 4.
 - [Likely] Morning digest is possible without a server: a scheduled
   Claude Routine reads the artifact's database and sends the email
   through the Gmail connector, which is already connected.
 - [Certain] No offline. You said that is acceptable.
-- Open question: the invite test (section 4).
+- Open question: the invite proven end to end (section 4).
 
 ### Route B: standalone web app (Supabase plus Google OAuth)
 
