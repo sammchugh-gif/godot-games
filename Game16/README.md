@@ -16,8 +16,15 @@ orientation. One file, no engine.
   dotted line shows which one before you touch.
 - **Let go** to fly. Let go on the way up and forward for distance.
 - **Hold again** in the air to catch the next ring. A catch keeps your speed.
-- Standing on a ledge with nothing in reach, a tap is a hop forward (the
-  game says so). Standing on a ledge, a hold never grabs a ring behind you.
+- **Slide your finger up** while holding to climb the vine, **down** to go
+  lower. A shorter vine swings faster, so climbing on the way down the
+  swing is how to go really fast. (Keyboard: Up and Down.) A vine is never
+  let out so far that its swing reaches the water, and a catch close to a
+  ring still gives a comfortable length of vine.
+- Holding again too soon after letting go does not re-take the ring you
+  just left: the hold waits for the ring ahead.
+- Standing on a ledge with nothing in reach, holding hops forward until a
+  ring is in reach (the game says so). Standing on a ledge, a hold never grabs a ring behind you.
 - Swing into the side of a ledge and the monkey scrambles up onto it. If it
   is ever hanging too far down the wall for that, it climbs its vine.
 - Splash into the water (or the swamp, the rapids, the lava), touch a thorn
@@ -27,7 +34,7 @@ orientation. One file, no engine.
 - Catch three rings or more in a row without touching a ledge or the water
   and every catch in the combo is a bonus banana. A good let-go (up and
   forward, with speed) gets a NICE! or an AWESOME!
-- Keyboard: Space or Up to hold, R to restart, Escape to go back.
+- Keyboard: Space to hold, Up and Down to climb, R to restart, Escape to go back.
 
 ## Stars
 

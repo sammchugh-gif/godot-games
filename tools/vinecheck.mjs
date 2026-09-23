@@ -46,10 +46,12 @@ const WS = [0, 0.12, 0.3];
 const BEAM = 7;
 
 /* hold for r, let go for w, then hold until the next catch */
-function move(L, s0, r, w) {
+/* hold for r (climbing c units of vine over the first fifth of a second),
+   let go for w, then hold until the next catch */
+function move(L, s0, r, w, c) {
   const s = G.cloneRun(s0), d0 = s.deaths, g0 = s.grabs;
-  let t = 0;
-  for (; t < r; t += G.DT) { G.step(L, s, true); if (s.fin || s.deaths > d0) return s; }
+  let t = 0, k = 0;
+  for (; t < r; t += G.DT, k++) { G.step(L, s, true, c && k < 24 ? c / 24 : 0); if (s.fin || s.deaths > d0) return s; }
   for (t = 0; t < w; t += G.DT) { G.step(L, s, false); if (s.fin || s.deaths > d0) return s; }
   const gg = s.grabs;
   for (t = 0; t < 3.2; t += G.DT) {
@@ -70,12 +72,15 @@ function solve(L, wantGold, from, hanging) {
     for (const n of beam) {
       let ok = 0;
       const mine = [];
-      for (const r of RS) for (const w of WS) {
-        const c = move(L, n.s, r, w);
+      /* climbing is a player's skill, used here only to reach gold
+         bananas; the timing window counts plain holds only, since that is
+         what a six-year-old who never finds the climb has */
+      for (const cl of wantGold ? [0, -90] : [0]) for (const r of RS) for (const w of WS) {
+        const c = move(L, n.s, r, w, cl);
         if (c.deaths > n.s.deaths || c.stall) continue;
-        if (c.fin) { const f = { s: c, win: n.win }; if (!best || score(f) > score(best)) best = f; ok++; continue; }
+        if (c.fin) { const f = { s: c, win: n.win }; if (!best || score(f) > score(best)) best = f; if (!cl) ok++; continue; }
         if (c.x <= n.s.x + 20) continue;
-        ok++; mine.push(c);
+        if (!cl) ok++; mine.push(c);
       }
       const frac = ok / (RS.length * WS.length);
       for (const c of mine) kids.push({ s: c, win: n.win.concat(frac) });
