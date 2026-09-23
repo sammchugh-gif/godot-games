@@ -3,8 +3,9 @@
 A one-finger jungle swinger for the iPhone's and iPad's browser. Hold anywhere
 and the monkey grabs the vine ring that is glowing; let go and it flies.
 Holding on pumps the swing, letting go at the right moment is the whole game.
-Forty levels in four worlds, three stars a level, a new jungle every day, and
-every level remembers the family's best run as a ghost to race.
+Sixty levels in six worlds, every one with a name, three stars a level, a new
+jungle every day, and every level remembers the family's best run as a ghost
+to race.
 
 Play it at <https://sammchugh-gif.github.io/godot-games/vine-swing/>. On the
 iPhone or iPad, open the link in Safari, then Share → Add to Home Screen. Any
@@ -48,15 +49,31 @@ Each level has three, and they can be earned on different runs:
 
 ## Worlds
 
-| World | New in it |
+In order of difficulty, as the map shows them:
+
+| World | What is in it |
 | --- | --- |
-| Jungle Canopy | Mushrooms that bounce you, speed hoops, thorns, bees |
-| Temple Ruins | Rings that crumble a moment after you grab them, stone pillars |
-| Misty Falls | Rings that slide back and forth or up and down |
+| Jungle Canopy | Mushrooms that bounce you, speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
+| Safari Savanna | A low afternoon sun, mesas, acacias and giraffes, termite-mound pillars, a river with a hippo |
+| Temple Ruins | Rings that crumble a moment after you grab them, stone pillars, a swamp |
+| Night Rainforest | Moonlight, fireflies, glowing rings and mushrooms, rain, and glowing crocodile eyes |
+| Misty Falls | Rings that slide back and forth or up and down, rapids, a rainbow |
 | Volcano Peak | All of it, over lava, with fireballs |
 
-A world opens with enough stars in the one before it and a banana price, paid
-in the shop.
+A world opens with enough stars in the world it follows on from and a banana
+price, paid in the shop. Safari follows the Jungle, the Temple follows the
+Jungle, the Night Rainforest follows the Safari, the Falls follow the Temple
+and the Volcano follows the Falls.
+
+## The monkey
+
+Drawn side-on with one ink outline round head, snout, tuft and body, tapered
+arms and legs, gripping hands, feet with toes, and a tail that trails the way
+it is moving. Its face acts: happy, a grin when it is going fast or on a
+combo, scared when it is falling at the water, focused when it climbs, dizzy
+after thorns. Its eye looks at the ring a hold would take. Each character has
+its own touches - the lemur's orange eyes, the fluffy snow monkey and red
+panda, the golden monkey's blue face, the space monkey's helmet.
 
 ## The family
 
