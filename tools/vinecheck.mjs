@@ -165,7 +165,7 @@ if (arg === 'daily') {
   }
 } else if (arg === 'seeds') {
   const out = {}, only = process.argv[3] ? process.argv[3].split(',') : null;
-  for (let w = 0; w < 4; w++) for (let i = 0; i < 10; i++) {
+  for (let w = 0; w < G.WORLDS.length; w++) for (let i = 0; i < 10; i++) {
     let sp = G.levelSpec(w, i), r;
     if (only && !only.includes(sp.id)) continue;
     for (let k = 0; k < 40; k++) {
@@ -179,13 +179,13 @@ if (arg === 'daily') {
   }
   console.log('const SEEDS=' + JSON.stringify(out) + ';');
 } else {
-  for (let w = 0; w < 4; w++) for (let i = 0; i < 10; i++) {
+  for (let w = 0; w < G.WORLDS.length; w++) for (let i = 0; i < 10; i++) {
     const sp = G.levelSpec(w, i);
     if (arg && arg !== sp.id) continue;
     const r = check(sp); console.log(line(r)); if (!r.ok) bad++;
   }
 }
 /* how wide the narrowest window may be, world by world */
-function MINW(w) { return [0.14, 0.1, 0.08, 0.06][w]; }
+function MINW(w) { return [0.14, 0.1, 0.08, 0.06, 0.12, 0.09][w]; }
 console.log(bad ? `\n${bad} levels cannot be finished` : '\nevery level can be finished');
 process.exit(bad ? 1 : 0);
