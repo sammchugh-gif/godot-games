@@ -66,6 +66,9 @@ window.addEventListener("pageshow",reflow);document.addEventListener("visibility
 if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
 resize();
 
+// Shown small on the title screen, so it is always clear which version a
+// phone is running. A Home Screen app can hold on to an old copy for days.
+const BUILD="2026.09.23-3";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -101,7 +104,8 @@ function ghostKey(id){return"ghost."+id}
 // World units: the water is at y=560, ledges stand at 430, vine rings hang
 // between about 120 and 300. The camera fits roughly 1150x720 of this to the
 // screen, whichever way up the screen is.
-const FLOOR=560,PLAT=430,MR=16,GRAV=1500,REACH=320,REACH_BIG=440,LMIN=60,VMAX=1500,DT=1/120;
+// DEADT: how long a splash lasts - the ride back to the flag in a bubble
+const DEADT=1.3,FLOOR=560,PLAT=430,MR=16,GRAV=1500,REACH=320,REACH_BIG=440,LMIN=60,VMAX=1500,DT=1/120;
 const WORLDS=[
  {name:"Jungle Canopy",sky:["#62c2ec","#c8efff"],far:"#6dbb8a",mid:"#3e8f5c",near:"#1f5e3a",floor:"#2b93bd",floorTop:"#7fd6f0",
   ring:"#c98a3c",ledge:"#8a5a2e",ledgeTop:"#5fbf4a",acc:"#ffd43b",price:0,need:0,hazard:"water"},
@@ -261,7 +265,7 @@ function pickTarget(L,s){const A=L.anchors,R=s.reach;let lo=0,hi=A.length;
  return best}
 function flipsLand(s){const n=Math.floor(s.air/TAU+0.15);if(n>0){s.flips+=n;emit(s,"flip",n)}s.air=0}
 function die(s,k){if(s.shield){s.shield=0;emit(s,"shield");if(k==="floor"){s.vy=-1150;s.y=FLOOR-MR*0.5-2}return false}
- s.dead=0.9;s.att=-1;s.deaths++;s.air=0;emit(s,"die",k,s.x,s.y);return true}
+ s.dead=DEADT;s.att=-1;s.deaths++;s.air=0;emit(s,"die",k,s.x,s.y);return true}
 function respawn(L,s){const c=L.cps[s.cp];s.dead=0;s.x=c.x;s.y=c.y-MR;s.vx=s.vy=0;s.gr=1;s.att=-1;s.spin=0;s.rot=0;s.air=0;s.br.fill(0);s.cr.fill(0);emit(s,"respawn")}
 function step(L,s,hold){
  if(s.fin)return;
@@ -338,10 +342,11 @@ const cam={x:0,y:300,z:1};
 // bottom third, so upright it shows a little less ahead in return for a
 // monkey you can see.
 function camZoom(){let z=Math.sqrt(W*H/(1150*720));z=Math.min(z,W/560,H/470);if(H>W)z=Math.max(z,W/480);return clamp(z,0.3,2.4)}
-function camTo(tx,ty,k){const z=cam.z=camZoom(),hh=H/2/z;
+let zoomMul=1;const shk={x:0,y:0};
+function camTo(tx,ty,k){const z=cam.z=camZoom()*zoomMul,hh=H/2/z;
  ty=Math.min(ty,FLOOR+150-hh);ty=Math.max(ty,-600+hh);
  cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.y=Math.min(cam.y,FLOOR+150-hh)}
-function worldXf(){cx.setTransform(DPR*cam.z,0,0,DPR*cam.z,DPR*(W/2-cam.x*cam.z),DPR*(H/2-cam.y*cam.z))}
+function worldXf(){cx.setTransform(DPR*cam.z,0,0,DPR*cam.z,DPR*(W/2-cam.x*cam.z+shk.x),DPR*(H/2-cam.y*cam.z+shk.y))}
 function screenXf(){cx.setTransform(DPR,0,0,DPR,0,0)}
 const wx2s=x=>(x-cam.x)*cam.z+W/2,wy2s=y=>(y-cam.y)*cam.z+H/2;
 
@@ -409,12 +414,16 @@ const SKY=[["#3fa7e0","#8fd3f4","#dff5ff"],["#e98a4a","#f7b877","#ffe9c4"],["#5f
 // and painted again only when the screen or the world changes.
 let skyC=null,skyKey="";
 function skyCanvas(w){const key=w+":"+W+"x"+H+"@"+DPR;if(skyC&&skyKey===key)return skyC;skyKey=key;
+ // Safari counts canvas memory and frees it late: give the old one back first
+ if(skyC){skyC.width=skyC.height=0}
  skyC=bake(Math.round(W*DPR),Math.round(H*DPR),g=>{g.scale(DPR,DPR);const sk=SKY[w];
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,sk[0]);gr.addColorStop(0.55,sk[1]);gr.addColorStop(1,sk[2]);g.fillStyle=gr;g.fillRect(0,0,W,H);
   const sx=W*0.78,sy=H*0.17,sr=Math.max(22,30*U);
   if(w===3){const r=g.createRadialGradient(W*0.7,H*0.95,10,W*0.7,H*0.95,H*1.1);r.addColorStop(0,"rgba(255,150,70,0.6)");r.addColorStop(1,"rgba(255,80,40,0)");g.fillStyle=r;g.fillRect(0,0,W,H)}
   else{const h=g.createRadialGradient(sx,sy,sr*0.4,sx,sy,sr*5);h.addColorStop(0,"rgba(255,250,215,0.9)");h.addColorStop(0.25,"rgba(255,245,200,0.35)");h.addColorStop(1,"rgba(255,245,200,0)");
    g.fillStyle=h;g.fillRect(0,0,W,H);g.fillStyle="#fffbe6";g.beginPath();g.arc(sx,sy,sr,0,TAU);g.fill()}
+  if(w===2){const rx=W*0.28,ry=H*0.9,rr0=Math.min(W,H)*0.7;g.lineWidth=Math.max(4,rr0*0.03);
+   ["#ff6b6b","#ffa94d","#ffe066","#69db7c","#4dabf7","#9775fa"].forEach((c,i)=>{g.strokeStyle=c;g.globalAlpha=0.18;g.beginPath();g.arc(rx,ry,rr0-i*g.lineWidth,Math.PI*1.08,Math.PI*1.72);g.stroke()});g.globalAlpha=1}
   if(w===0||w===2){g.globalCompositeOperation="lighter";for(let i=0;i<4;i++){const x0=W*(0.35+i*0.18),a=0.05+0.02*(i%2);
    const r2=g.createLinearGradient(0,0,0,H);r2.addColorStop(0,"rgba(255,250,210,"+a+")");r2.addColorStop(1,"rgba(255,250,210,0)");g.fillStyle=r2;
    g.beginPath();g.moveTo(x0,0);g.lineTo(x0+50*U,0);g.lineTo(x0-W*0.25+90*U,H);g.lineTo(x0-W*0.25,H);g.fill()}g.globalCompositeOperation="source-over"}});
@@ -423,6 +432,7 @@ function drawBack(w,T){const Wd=WORLDS[w];screenXf();
  cx.drawImage(skyCanvas(w),0,0,W,H);
  if(w===3){cx.fillStyle="rgba(255,255,255,0.7)";for(let i=0;i<40;i++){const x=hash1(i*3)*W,y=hash1(i*5)*H*0.45;cx.globalAlpha=0.3+0.5*Math.abs(Math.sin(T*1.5+i));cx.fillRect(x,y,1.6,1.6)}cx.globalAlpha=1}
  else for(let i=0;i<5;i++){const spd=4+i*1.5,u=((i*431-cam.x*cam.z*0.04-T*spd)%(W+400)+W+400)%(W+400)-200,v=H*(0.08+0.07*(i%3)),s=(0.8+(i%3)*0.3)*U;cloud(u,v,s)}
+ drawBirds(w,T);
  layer(w,0.18,Wd.far,0.58,120,0);if(!lowFx)mist(w,0.62);layer(w,0.38,Wd.mid,0.72,80,1);if(!lowFx)mist(w,0.8);layer(w,0.64,Wd.near,0.86,46,2)}
 // If frames keep arriving late - an older iPad, a phone saving its battery -
 // the mist and the shading on the hills go, and the game keeps its pace.
@@ -695,7 +705,8 @@ function drawMonkey(x,y,rot,c,hat,opt){opt=opt||{};const C=CHARS.find(k=>k.id===
  const blink=((T+(opt.seed||0))%3.4)<0.12;
  if(blink){cx.strokeStyle=ink;cx.lineWidth=1.4;cx.beginPath();cx.moveTo(6.5,-15.5);cx.quadraticCurveTo(9.5,-13.8,12.4,-15.5);cx.stroke()}
  else{cx.fillStyle="#fff";cx.strokeStyle=ink;cx.lineWidth=1;cx.beginPath();cx.ellipse(9.5,-15.6,3.3,3.9,0,0,TAU);cx.fill();cx.stroke();
-  cx.fillStyle="#1b1310";cx.beginPath();cx.arc(10.7,-15.3,2.2,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(11.4,-16.3,0.9,0,TAU);cx.fill()}
+  const lx=opt.look?opt.look.x*1.1:0,ly=opt.look?opt.look.y*1.3:0;
+  cx.fillStyle="#1b1310";cx.beginPath();cx.arc(10.2+lx,-15.3+ly,2.2,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(10.9+lx,-16.3+ly,0.9,0,TAU);cx.fill()}
  cx.strokeStyle=ink;cx.lineWidth=1.3;cx.beginPath();cx.moveTo(6.6,-20.4);cx.quadraticCurveTo(9.5,-21.6,12.4,-20.4);cx.stroke();
  // near arm, over everything
  if(pose==="hang"){dot(-2.5,-27.5,3.2,palm);dot(1,-28.5,3.4,palm)}
@@ -719,6 +730,68 @@ function drawHat(h){if(h==="nohat")return;cx.save();cx.translate(3,-23);cx.rotat
   cx.beginPath();cx.moveTo(-10,5);cx.lineTo(-11,-7);cx.lineTo(-5,-1);cx.lineTo(0,-11);cx.lineTo(5,-1);cx.lineTo(11,-7);cx.lineTo(10,5);cx.closePath();cx.fill();cx.stroke();
   cx.fillStyle="#e03131";cx.beginPath();cx.arc(0,1,2.2,0,TAU);cx.fill();cx.fillStyle="#4dabf7";cx.beginPath();cx.arc(-6,2,1.6,0,TAU);cx.arc(6,2,1.6,0,TAU);cx.fill()}
  cx.restore()}
+
+// ---------------------------------------------------------------- life
+// The jungle is not empty: butterflies, dragonflies, falling leaves, dust
+// in the ruins, embers over the lava, fish that jump, and a crocodile that
+// watches the water and snaps at a splash. All of it is only for show.
+let critters=[],critW=-1;
+const CRIT=[{fly:3,leaf:7,fish:2,croc:1},{fly:3,dust:10,fish:1,croc:1},{fly:2,leaf:3,fish:3},{ember:16}];
+function spawnCritter(k,x0,x1,y0){const R=Math.random,x=lerp(x0,x1,R());
+ if(k==="fly")return{k,x,y:lerp(160,400,R()),hx:x,hy:lerp(160,400,R()),ph:R()*TAU,col:["#ff922b","#74c0fc","#f783ac","#ffd43b","#b197fc"][Math.floor(R()*5)]};
+ if(k==="leaf")return{k,x,y:y0-20-R()*200,vx:(R()-0.5)*30,vy:25+R()*25,ph:R()*TAU,r:R()*TAU,col:R()<0.5?"#6fbf4a":"#c9a23a"};
+ if(k==="dust")return{k,x,y:lerp(y0,FLOOR,R()),ph:R()*TAU};
+ if(k==="ember")return{k,x,y:FLOOR+10,vy:-(50+R()*90),ph:R()*TAU,life:2+R()*3};
+ if(k==="fish")return{k,x,y:FLOOR+30,wait:1+R()*5,vx:0,vy:0,col:R()<0.5?"#ff8a3d":"#4dabf7",dir:R()<0.5?1:-1};
+ if(k==="croc")return{k,x,y:FLOOR,dir:R()<0.5?1:-1,snap:0,ph:R()*TAU}}
+function critterSplash(x,kind){if(kind!=="floor")return;for(const c of critters)if(c.k==="croc"&&Math.abs(c.x-x)<260&&c.snap<=0){c.snap=1;pop(c.x,FLOOR-70,"CHOMP!","#b2f2bb",1.2);sfx("chomp")}}
+function stepCritters(w,dt,s){if(critW!==w){critters=[];critW=w}
+ const x0=cam.x-W/2/cam.z,x1=cam.x+W/2/cam.z,y0=cam.y-H/2/cam.z;
+ critters=critters.filter(c=>c.x>x0-500&&c.x<x1+500&&!c.gone);
+ const want=CRIT[w];
+ for(const k in want){let n=0;for(const c of critters)if(c.k===k)n++;while(n<want[k]){const fresh=critters.length===0;critters.push(spawnCritter(k,fresh?x0:x1,fresh?x1:x1+400,y0));n++}}
+ for(const c of critters){
+  if(c.k==="fly"){c.ph+=dt;c.hx+=Math.sin(c.ph*0.3)*20*dt;c.x+=((c.hx+Math.sin(c.ph*0.9)*60)-c.x)*dt*1.5;c.y+=((c.hy+Math.sin(c.ph*1.3)*40)-c.y)*dt*1.5;
+   if(s&&Math.hypot(s.x-c.x,s.y-c.y)<90){c.hy-=120*dt;c.hx+=(c.x-s.x)*dt}}
+  else if(c.k==="leaf"){c.ph+=dt;c.x+=(c.vx+Math.sin(c.ph*1.7)*40)*dt;c.y+=c.vy*dt;c.r+=Math.sin(c.ph*1.7)*dt*2;if(c.y>FLOOR)c.gone=1}
+  else if(c.k==="dust"){c.ph+=dt;c.x+=Math.sin(c.ph*0.4)*6*dt+4*dt;c.y+=Math.cos(c.ph*0.5)*5*dt}
+  else if(c.k==="ember"){c.ph+=dt;c.y+=c.vy*dt;c.x+=Math.sin(c.ph*3)*20*dt;c.life-=dt;if(c.life<0||c.y<y0-40)c.gone=1}
+  else if(c.k==="fish"){if(c.wait>0){c.wait-=dt;if(c.wait<=0){c.vx=c.dir*(90+Math.random()*60);c.vy=-(430+Math.random()*160);c.y=FLOOR+4;puff(c.x,FLOOR,6,"splash","#d0ebff",120,0.5)}}
+   else{c.vy+=900*dt;c.x+=c.vx*dt;c.y+=c.vy*dt;if(c.vy>0&&c.y>FLOOR+4){puff(c.x,FLOOR,6,"splash","#d0ebff",120,0.5);c.wait=2+Math.random()*6;c.y=FLOOR+30}}}
+  else if(c.k==="croc"){c.ph+=dt;c.x+=c.dir*14*dt;if(Math.sin(c.ph*0.15)>0.98)c.dir=-c.dir;if(c.snap>0)c.snap-=dt*0.9}}}
+function drawCritters(w,T,layer){
+ for(const c of critters){
+  if(layer==="mid"){
+   if(c.k==="fly"){const f=Math.abs(Math.sin(T*18+c.ph));cx.save();cx.translate(c.x,c.y);
+    if(w===1){cx.fillStyle="rgba(210,240,255,0.7)";cx.beginPath();cx.ellipse(-2,-3,9,2.5*f+0.5,-0.3,0,TAU);cx.ellipse(-2,3,9,2.5*f+0.5,0.3,0,TAU);cx.fill();cx.fillStyle="#1c7ed6";cx.fillRect(-4,-1.5,16,3)}
+    else{cx.fillStyle=c.col;cx.beginPath();cx.ellipse(-4,-2,6,8*f+1,-0.5,0,TAU);cx.ellipse(4,-2,6,8*f+1,0.5,0,TAU);cx.fill();cx.fillStyle="rgba(0,0,0,0.25)";cx.beginPath();cx.ellipse(-3,4,3.5,4*f+0.5,-0.3,0,TAU);cx.ellipse(3,4,3.5,4*f+0.5,0.3,0,TAU);cx.fill();
+     cx.fillStyle="#2b2b2b";cx.fillRect(-1,-6,2,11)}cx.restore()}
+   else if(c.k==="leaf")leaf(c.x,c.y,16,c.r,c.col);
+   else if(c.k==="dust"){cx.fillStyle="rgba(255,240,200,"+(0.35+0.25*Math.sin(T*2+c.ph))+")";cx.beginPath();cx.arc(c.x,c.y,1.8,0,TAU);cx.fill()}
+   else if(c.k==="ember"){const a=Math.max(0,Math.min(1,c.life))*(0.6+0.4*Math.sin(T*12+c.ph));cx.fillStyle="rgba(255,"+Math.round(150+80*Math.sin(c.ph))+",60,"+a+")";cx.beginPath();cx.arc(c.x,c.y,2.2,0,TAU);cx.fill()}}
+  else if(layer==="water"&&c.k==="fish"&&c.wait<=0){const a=Math.atan2(c.vy,c.vx);cx.save();cx.translate(c.x,c.y);cx.rotate(a);
+   cx.fillStyle=c.col;cx.beginPath();cx.ellipse(0,0,13,6,0,0,TAU);cx.fill();cx.beginPath();cx.moveTo(-10,0);cx.lineTo(-20,-7);cx.lineTo(-20,7);cx.fill();
+   cx.fillStyle="#fff";cx.beginPath();cx.arc(7,-1.5,2.2,0,TAU);cx.fill();cx.fillStyle="#000";cx.beginPath();cx.arc(7.6,-1.5,1.1,0,TAU);cx.fill();cx.restore()}
+  else if(layer==="front"&&c.k==="croc"){const bob=Math.sin(T*2+c.ph)*2,open=c.snap>0?Math.sin(Math.min(1,(1-c.snap)*3)*Math.PI)*18:0;cx.save();cx.translate(c.x,FLOOR+2+bob);cx.scale(c.dir,1);
+   const g=w===1?"#5a7a2a":"#3f8a3a",d=w===1?"#3e5a1a":"#2b6a2b";
+   if(open>1){cx.fillStyle="#e8687a";cx.beginPath();cx.moveTo(8,-4);cx.lineTo(56,-6-open);cx.lineTo(56,4);cx.closePath();cx.fill();
+    cx.fillStyle=g;cx.beginPath();cx.moveTo(6,-6);cx.quadraticCurveTo(34,-10-open*1.2,58,-8-open);cx.lineTo(58,-2-open);cx.quadraticCurveTo(30,-4-open*0.6,6,-2);cx.fill();
+    cx.fillStyle="#fff";for(let k=0;k<4;k++){cx.beginPath();cx.moveTo(20+k*9,-3-open*(0.3+k*0.18));cx.lineTo(24+k*9,2-open*(0.3+k*0.18));cx.lineTo(28+k*9,-3-open*(0.3+k*0.18));cx.fill()}}
+   cx.fillStyle=g;cx.beginPath();cx.ellipse(28,-3,30,6,0,Math.PI,0);cx.fill();
+   cx.fillStyle=d;for(let k=0;k<4;k++){cx.beginPath();cx.ellipse(-24-k*16,-1,6,3.5,0,Math.PI,0);cx.fill()}
+   for(const ex of[2,14]){cx.fillStyle=g;cx.beginPath();cx.arc(ex,-7,6.5,Math.PI,0);cx.fill();cx.fillStyle="#fff8d0";cx.beginPath();cx.arc(ex,-8,4,0,TAU);cx.fill();
+    cx.fillStyle="#1b1b1b";cx.beginPath();cx.ellipse(ex+1,-8,1.4,3,0,0,TAU);cx.fill()}
+   cx.fillStyle=d;cx.beginPath();cx.arc(52,-7,2,0,TAU);cx.arc(46,-7,2,0,TAU);cx.fill();cx.restore()}}}
+// birds cross the sky behind the hills; they need no memory of their own
+function drawBirds(w,T){if(w===3)return;cx.strokeStyle=w===1?"rgba(90,50,30,0.55)":"rgba(40,60,70,0.55)";cx.lineWidth=Math.max(1.5,2*U);cx.lineCap="round";
+ for(let i=0;i<4;i++){const sp=22+i*9,span=W+300,x=((T*sp+i*397-cam.x*cam.z*0.05)%span+span)%span-150,y=H*(0.1+0.05*i)+Math.sin(T*0.6+i*2)*12*U,f=Math.sin(T*7+i*1.7),s=(7+i%2*3)*U;
+  cx.beginPath();cx.moveTo(x-s,y-f*s*0.6);cx.quadraticCurveTo(x-s*0.4,y-s*0.2,x,y);cx.quadraticCurveTo(x+s*0.4,y-s*0.2,x+s,y-f*s*0.6);cx.stroke()}}
+
+// ---------------------------------------------------------------- confetti
+const conf=[];
+function confetti(n){const cols=["#ff6b6b","#ffd43b","#51cf66","#4dabf7","#cc5de8","#ff922b"];for(let i=0;i<n;i++)conf.push({x:Math.random()*W,y:-20-Math.random()*H*0.4,vx:(Math.random()-0.5)*80,vy:80+Math.random()*120,r:Math.random()*TAU,vr:(Math.random()-0.5)*10,c:cols[i%6],w:(5+Math.random()*5)*U,h:(3+Math.random()*3)*U})}
+function drawConfetti(dt){screenXf();for(let i=conf.length-1;i>=0;i--){const p=conf[i];p.vy+=60*dt;p.x+=(p.vx+Math.sin(p.r*2)*40)*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;if(p.y>H+30){conf.splice(i,1);continue}
+ cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.fillRect(-p.w/2,-p.h/2*Math.abs(Math.cos(p.r*1.3)),p.w,p.h*Math.abs(Math.cos(p.r*1.3))+0.5);cx.restore()}}
 
 // ---------------------------------------------------------------- bits
 const parts=[];
@@ -757,10 +830,11 @@ function drawPops(dt){for(let i=pops.length-1;i>=0;i--){const p=pops[i];p.age+=d
 // one of those wakes the context, and a context the phone interrupted (a
 // call, the screen locking) is asked to come back on every way into the page
 // and once a second from the frame loop.
-let AC=null,master=null,musBus=null,sfxBus=null;
+let AC=null,master=null,musBus=null,sfxBus=null,padBus=null;
 function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();
  master=AC.createGain();master.gain.value=0.7;master.connect(AC.destination);
  musBus=AC.createGain();musBus.gain.value=settings.music?0.28:0;musBus.connect(master);
+ padBus=AC.createBiquadFilter();padBus.type="lowpass";padBus.frequency.value=1100;padBus.Q.value=0.5;padBus.connect(musBus);
  sfxBus=AC.createGain();sfxBus.gain.value=settings.sfx?1:0;sfxBus.connect(master);
  AC.onstatechange=()=>{if(AC.state==="running")musNext=AC.currentTime+0.05}}catch(e){}}
 function audioWake(){audioInit();if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
@@ -800,27 +874,36 @@ const SFX={
  star(i){tone(880*Math.pow(1.26,i),880*Math.pow(1.26,i),0.3,"triangle",0.2);tone(1760*Math.pow(1.26,i),1760*Math.pow(1.26,i),0.2,"sine",0.06,0.02)},
  buy(){[1047,1319,1568].forEach((f,i)=>tone(f,f,0.1,"square",0.08,i*0.05))},
  no(){tone(220,180,0.18,"square",0.1)},
- tap(){tone(700,900,0.05,"triangle",0.1)}};
+ tap(){tone(700,900,0.05,"triangle",0.1)},
+ combo(n){const f=520*Math.pow(2,Math.min(n,12)/12);tone(f,f*1.5,0.12,"square",0.07);tone(f*2,f*2,0.08,"triangle",0.05,0.06)},
+ wow(){[1047,1319,1568,2093].forEach((f,i)=>tone(f,f,0.09,"triangle",0.08,i*0.045));noise(0.25,0.05,0.1,5000)},
+ pop(){tone(300,1200,0.08,"sine",0.25);noise(0.06,0.18,0.02,3000);tone(1500,900,0.12,"triangle",0.06,0.05)},
+ chomp(){tone(160,90,0.12,"square",0.18);tone(140,70,0.12,"square",0.16,0.13);noise(0.08,0.15,0.13,0)}};
 function sfx(k,a){if(AC&&settings.sfx)try{SFX[k](a)}catch(e){}}
-// The music: a marimba over a bass and a shaker, eight bars in a pentatonic
-// scale that each world picks for itself, written a quarter of a second
-// ahead of the clock.
+// The music: a little band per world. A kick and a clap, a shaker on the
+// off-beats, a bass that walks the chords, a soft pad holding each chord for
+// its bar, and a marimba tune built from two phrases - one said twice, then
+// an answer, then the first again - so it has a shape a child can hum.
+// Everything is written a quarter of a second ahead of the clock.
 const MUS=[{root:57,minor:0,bpm:108},{root:55,minor:0,bpm:100},{root:60,minor:0,bpm:112},{root:52,minor:1,bpm:118}];
+const CHORDS=[[[0,4,7],[9,12,16],[5,9,12],[7,11,14]],[[0,3,7],[8,12,15],[3,7,10],[10,14,17]]];
 let musNext=0,musStep=0,musWorld=-1,musPat=null;
-function setMusic(w){if(w===musWorld)return;musWorld=w;const R=mulberry(77+w*13),pat=[];
- for(let i=0;i<64;i++)pat.push(R()<(i%2?0.35:0.7)?Math.floor(R()*7):-1);musPat=pat;musStep=0}
+function setMusic(w){if(w===musWorld)return;musWorld=w;const R=mulberry(77+w*13),phrase=()=>{const p=[];for(let i=0;i<16;i++)p.push(R()<(i%2?0.3:0.72)?Math.floor(R()*7):-1);p[0]=Math.floor(R()*3);return p};
+ const A=phrase(),B=phrase(),A2=A.slice(0,12).concat([4,2,-1,0]);musPat=A.concat(A,B,A2);musStep=0}
 const mtof=m=>440*Math.pow(2,(m-69)/12);
 // for tools/wakecheck.mjs: is the sound running, and is the music being written
 window.__audio=()=>AC?{state:AC.state,now:AC.currentTime,next:musNext,timer:musWorld>=0&&settings.music}:null;
 window.__audioCtx=()=>AC;
 function musicTick(){if(!AC||AC.state!=="running"||musWorld<0||!settings.music)return;const M=MUS[musWorld],sp=60/M.bpm/2;
  if(musNext<AC.currentTime-0.5)musNext=AC.currentTime+0.05;
- while(musNext<AC.currentTime+0.25){const i=musStep%64,bar=Math.floor(i/8)%4,t=musNext;
-  const sc=M.minor?[0,3,5,7,10,12,15]:[0,2,4,7,9,12,14],prog=M.minor?[0,-4,-7,-2]:[0,-3,5,-5],r=M.root+prog[bar];
-  if(i%4===0)tone(mtof(r-12),mtof(r-12),0.35,"triangle",0.22,0,musBus,t);
-  if(i%8===4)tone(mtof(r-5),mtof(r-5),0.25,"triangle",0.14,0,musBus,t);
-  const n=musPat[i];if(n>=0){const f=mtof(r+12+sc[n]);tone(f,f,0.28,"sine",0.14,0,musBus,t);tone(f*4,f*4,0.05,"sine",0.03,0,musBus,t)}
-  if(i%2===1)noise(0.04,0.05,0,6000,musBus,t);
+ while(musNext<AC.currentTime+0.25){const i=musStep%64,bar=Math.floor(i/8)%4,b8=i%8,t=musNext;
+  const sc=M.minor?[0,3,5,7,10,12,15]:[0,2,4,7,9,12,14],ch=CHORDS[M.minor][bar],r=M.root;
+  if(b8===0||b8===4)tone(150,42,0.2,"sine",0.32,0,musBus,t);
+  if(b8===2||b8===6)noise(0.11,0.11,0,1500,musBus,t);
+  noise(0.03,b8%2?0.05:0.025,0,7000,musBus,t);
+  if(b8===0||b8===3||b8===4||b8===7){const n=b8===7?ch[2]:ch[0];tone(mtof(r-12+n),mtof(r-12+n),0.28,"triangle",0.2,0,musBus,t)}
+  if(b8===0)for(const n of ch)tone(mtof(r+n),mtof(r+n),sp*7.5,"triangle",0.05,0,padBus,t);
+  const n=musPat[i];if(n>=0){const f=mtof(r+12+sc[n]);tone(f,f,0.26,"sine",0.13,0,musBus,t);tone(f*4,f*4,0.04,"sine",0.025,0,musBus,t);tone(f*2,f*2,0.12,"triangle",0.03,0,musBus,t)}
   musStep++;musNext+=sp}}
 
 // ================================================================ game
@@ -833,14 +916,18 @@ function unlocked(w,i){if(!me.worlds[w])return false;if(i===0)return true;return
 function familyTimes(id){const out=[];for(const p of profiles){const t=id.startsWith("daily-")?(p.daily[id.slice(6)]||null):p.best[id];if(t!=null)out.push({p,t})}
  return out.sort((a,b)=>a.t-b.t)}
 function loadGhost(id){const g=store.get(ghostKey(id),null);return g&&g.pts&&g.pts.length>4?g:null}
-function startLevel(sp,use){lv=genLevel(sp);items=use||{};run=newRun(lv,items);started=false;acc=0;steps=0;rec=[];ghost=loadGhost(sp.id);
+// Things that are only for show - none of it goes near the physics, so the
+// levels tools/vinecheck.mjs proved are still the levels being played.
+let fx=null;
+function freshFx(){return{shake:0,combo:0,best:0,comboBn:0,air:false,dieX:0,dieY:0,dieKind:"",zoom:1,praise:0}}
+function startLevel(sp,use){fx=freshFx();lv=genLevel(sp);items=use||{};run=newRun(lv,items);started=false;acc=0;steps=0;rec=[];ghost=loadGhost(sp.id);
  parts.length=0;pops.length=0;ribbon=[];doneInfo=null;camSnap=true;scene="play";setMusic(lv.world)}
 function restart(){startLevel(lv.spec,{})}
 function nextSpec(){const s=lv.spec;if(s.daily||s.idx>=9)return null;const n=levelSpec(s.world,s.idx+1);return unlocked(s.world,s.idx+1)?n:null}
 function finishRun(){const s=lv.spec,t=Math.round(run.t*10)/10,id=s.id,daily=!!s.daily;
  const fam=familyTimes(id),famBest=fam.length?fam[0]:null,myOld=daily?me.daily[s.daily]:me.best[id];
  let stars=1|(run.ng>=lv.golds.length?2:0)|(t<=lv.par?4:0);const oldStars=me.stars[id]||0;
- let earn=run.nb+run.ng*5+run.flips*2,bonus=0;
+ let earn=run.nb+run.ng*5+run.flips*2+fx.comboBn,bonus=0;
  if(daily){if(me.daily[s.daily]==null){bonus=40;const y=dayKey(new Date(Date.now()-864e5));me.streak=me.lastDaily===y?me.streak+1:1;me.lastDaily=s.daily;bonus+=Math.min(me.streak,7)*5}
   if(myOld==null||t<myOld)me.daily[s.daily]=t}
  else{me.stars[id]=oldStars|stars;if(myOld==null||t<myOld)me.best[id]=t;
@@ -850,22 +937,30 @@ function finishRun(){const s=lv.spec,t=Math.round(run.t*10)/10,id=s.id,daily=!!s
  const famRec=!famBest||t<famBest.t;
  if(famRec){try{store.set(ghostKey(id),{who:me.id,name:me.name,col:me.col,char:me.char,hat:me.hat,t,pts:rec})}catch(e){}}
  save();
- doneInfo={t,stars,oldStars,earn,bonus,pb:myOld==null||t<myOld,famRec,beat:famRec&&famBest&&famBest.p.id!==me.id?famBest:null,daily,par:lv.par,ng:run.ng,flips:run.flips,deaths:run.deaths};
+ doneInfo={t,stars,oldStars,earn,bonus,pb:myOld==null||t<myOld,famRec,beat:famRec&&famBest&&famBest.p.id!==me.id?famBest:null,daily,par:lv.par,ng:run.ng,flips:run.flips,deaths:run.deaths,combo:fx.best,comboBn:fx.comboBn};
+ if(stars===7)confetti(90);else confetti(35);
  doneAt=T;sfx("finish")}
 function handleEvents(){for(const e of run.ev){const s=run;switch(e.k){
- case"grab":sfx("grab");break;
- case"let":sfx("let");break;
+ case"grab":{sfx("grab");
+  // a combo is catches in a row without touching a ledge or the water
+  fx.combo=fx.air?fx.combo+1:1;fx.air=true;fx.best=Math.max(fx.best,fx.combo);
+  if(fx.combo>=3){fx.comboBn++;sfx("combo",fx.combo);pop(s.x+24,s.y-56,"+1","#ffe066",0.9)}break}
+ case"let":{sfx("let");
+  // a let-go on the way up and forward, with speed, gets a cheer
+  const sp=Math.hypot(s.vx,s.vy),up=Math.atan2(-s.vy,s.vx);
+  if(s.vx>0&&up>0.3&&up<1.2&&sp>620&&T-fx.praise>0.6){fx.praise=T;pop(s.x,s.y-50,sp>950?"AWESOME!":"NICE!",sp>950?"#ffa8f0":"#b2f2bb",sp>950?1.25:1.05);if(sp>950)sfx("wow")}break}
  case"banana":{const b=lv.bananas[e.a];sfx("banana");puff(b.x,b.y,5,"spark","#ffe066",90,0.4);break}
- case"gold":{const g=lv.golds[e.a];sfx("gold");puff(g.x,g.y,16,"spark","#ffc81a",200,0.7);pop(g.x,g.y-30,"GOLD!","#ffd43b",1.3);break}
- case"boing":sfx("boing");shroomSq[e.a+","+e.b]=1;break;
- case"ring":sfx("ring");puff(s.x,s.y,14,"spark","#fff3a0",260,0.5);pop(s.x,s.y-40,"ZOOM!","#fff3a0");break;
- case"die":if(e.a==="floor"){sfx(lv.world===3?"lava":"splash");puff(e.b,FLOOR,26,"splash",lv.world===3?"#ffb35a":"#bfe9ff",260,0.9);pop(e.b,FLOOR-60,lv.world===3?"OUCH!":"SPLASH!","#fff",1.3)}
+ case"gold":{const g=lv.golds[e.a];sfx("gold");fx.shake=Math.max(fx.shake,4);puff(g.x,g.y,16,"spark","#ffc81a",200,0.7);pop(g.x,g.y-30,"GOLD!","#ffd43b",1.3);break}
+ case"boing":sfx("boing");shroomSq[e.a+","+e.b]=1;fx.shake=Math.max(fx.shake,7);break;
+ case"ring":sfx("ring");fx.shake=Math.max(fx.shake,5);puff(s.x,s.y,14,"spark","#fff3a0",260,0.5);pop(s.x,s.y-40,"ZOOM!","#fff3a0");break;
+ case"die":fx.dieX=e.b;fx.dieY=e.c;fx.dieKind=e.a;fx.combo=0;fx.air=false;fx.shake=Math.max(fx.shake,9);critterSplash(e.b,e.a);if(e.a==="floor"){sfx(lv.world===3?"lava":"splash");puff(e.b,FLOOR,26,"splash",lv.world===3?"#ffb35a":"#bfe9ff",260,0.9);pop(e.b,FLOOR-60,lv.world===3?"OUCH!":"SPLASH!","#fff",1.3)}
   else{sfx("ouch");puff(e.b,e.c,18,"spark","#ff8a8a",220,0.6);pop(e.b,e.c-40,"OUCH!","#ffb3b3",1.2)}break;
  case"crumble":{const a=lv.anchors[e.a];sfx("crumble");puff(a.x,a.y,14,"chunk","#8a6a4a",160,0.9);break}
  case"flip":sfx("flip",e.a);pop(s.x,s.y-44,e.a===1?"FLIP!":e.a===2?"DOUBLE FLIP!":e.a===3?"TRIPLE FLIP!":"MEGA FLIP x"+e.a,"#9ff0ff",1+Math.min(e.a,4)*0.12);break;
  case"cp":{const c=lv.cps[e.a];sfx("cp");pop(c.x,c.y-130,"CHECKPOINT","#b2f2bb");break}
  case"hop":sfx("hop");break;
- case"land":sfx("land");break;
+ case"land":sfx("land");fx.combo=0;fx.air=false;break;
+ case"respawn":{const c=lv.cps[s.cp];sfx("pop");puff(c.x,c.y-30,18,"bubble","#d0ebff",220,0.8);pop(c.x,c.y-90,"BACK TO THE FLAG!","#d0ebff",1.05);break}
  case"shield":sfx("shield");puff(s.x,s.y,20,"bubble","#a5d8ff",200,0.8);pop(s.x,s.y-40,"SAVED!","#a5d8ff",1.2);break;
  case"finish":finishRun();break}}
  run.ev.length=0}
@@ -901,21 +996,51 @@ function drawScene(L,s,o){o=o||{};const w=L.world;
  for(let i=0;i<L.golds.length;i++){const g=L.golds[i];if(!s.gd[i]&&vis(g.x))drawBanana(g.x,g.y,1.5,true,T)}
  for(const t of L.thorns)if(vis(t.x))drawThorn(w,t,T);
  for(const b of L.bees)if(vis(b.x))drawBee(w,b,s.t,T);
+ drawCritters(w,T,"mid");
  if(o.ghost)drawGhost(L,s,o.ghost);
  if(o.trail==="rainbow")drawRibbon(ribbon);
  drawParts();
  if(!(s.dead>0)){
-  if(s.att>=0){const p=anchorAt(L.anchors[s.att],s.t),dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy)||1,hx=s.x-dx/d*HAND,hy=s.y-dy/d*HAND;
-   vineLine(p.x,p.y+12,(p.x+hx)/2,(p.y+hy)/2,hx,hy,w===3?"#4a2e22":"#2d6e33",w===3?"#7a4a2a":"#5fb04f");
+  if(s.att>=0){const p=anchorAt(L.anchors[s.att],s.t),dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy)||1,hx=s.x-dx/d*HAND,hy=s.y-dy/d*HAND,sag=Math.max(0,s.L-d)*0.6;
+   vineLine(p.x,p.y+12,(p.x+hx)/2,(p.y+hy)/2+sag,hx,hy,w===3?"#4a2e22":"#2d6e33",w===3?"#7a4a2a":"#5fb04f");
    if(w!==3)for(let k=1;k<3;k++){const t=k/3;leaf(lerp(p.x,hx,t),lerp(p.y,hy,t),18,Math.atan2(hy-p.y,hx-p.x)+(k%2?0.9:-0.9),"#4caf50")}}
   // it faces the way it is going, and does not flick round at every wobble
   if(s.vx>70)s.face=1;else if(s.vx<-70)s.face=-1;
-  const pose=s.att>=0?"hang":s.gr?"stand":"fly";
-  drawMonkey(s.x,s.y,s.gr&&s.att<0?0:s.rot,o.char||"monkey",o.hat||"nohat",{pose,T,flip:s.face<0,open:Math.hypot(s.vx,s.vy)>720});
+  const pose=s.att>=0?"hang":s.gr?"stand":"fly",sp=Math.hypot(s.vx,s.vy),rot=s.gr&&s.att<0?0:s.rot;
+  // speed streaks behind it when it is really going
+  if(sp>850){const k=Math.min(1,(sp-850)/500),ux=s.vx/sp,uy=s.vy/sp;cx.strokeStyle="rgba(255,255,255,"+(0.35*k)+")";cx.lineWidth=2;cx.lineCap="round";
+   for(let j=0;j<5;j++){const o2=(j-2)*9+Math.sin(T*40+j)*3,ln=40+60*k+((j*37)%20),bx=s.x-ux*26-uy*o2,by=s.y-uy*26+ux*o2;cx.beginPath();cx.moveTo(bx,by);cx.lineTo(bx-ux*ln,by-uy*ln);cx.stroke()}}
+  // it looks at the ring a hold would take
+  let look=null;if(o.target!=null&&o.target>=0){const p=anchorAt(L.anchors[o.target],s.t);let lx=p.x-s.x,ly=p.y-s.y;const c=Math.cos(-rot),sn=Math.sin(-rot);
+   let ax=lx*c-ly*sn,ay=lx*sn+ly*c;if(s.face<0)ax=-ax;const m=Math.hypot(ax,ay)||1;look={x:ax/m,y:ay/m}}
+  cx.save();cx.translate(s.x,s.y);
+  if(pose==="fly"&&sp>400){const a=Math.atan2(s.vy,s.vx),k=Math.min(0.13,(sp-400)/4000);cx.rotate(a);cx.scale(1+k,1-k);cx.rotate(-a)}
+  drawMonkey(0,0,rot,o.char||"monkey",o.hat||"nohat",{pose,T,flip:s.face<0,open:sp>720,look});cx.restore();
   if(s.shield){cx.strokeStyle="rgba(165,216,255,0.9)";cx.fillStyle="rgba(165,216,255,0.18)";cx.lineWidth=3;cx.beginPath();cx.arc(s.x,s.y-4,30+Math.sin(T*5)*2,0,TAU);cx.fill();cx.stroke()}}
+ if(s.dead>0&&o.rescue)drawRescue(L,s,o);
+ drawCritters(w,T,"water");
  drawFloor(w,T);
+ drawCritters(w,T,"front");
  drawFore(w,T);worldXf();
  drawPops(o.dt||0)}
+// A splash is not a mystery: the monkey is scooped up in a bubble where it
+// went in and floats back to the flag it will start from, with the camera
+// following, and the bubble pops on the ledge.
+function rescuePos(L,s){const k=1-s.dead/DEADT,c=L.cps[s.cp],x0=fx.dieX,y0=fx.dieKind==="floor"?FLOOR-18:fx.dieY,x1=c.x,y1=c.y-MR-6;
+ const t=ease((k-0.22)/0.78),mx=(x0+x1)/2,my=Math.min(y0,y1)-160-Math.min(260,Math.abs(x1-x0)*0.25);
+ if(k<0.22)return{x:x0,y:y0+(fx.dieKind==="floor"?12*(1-k/0.22):0),k,t:0};
+ return{x:(1-t)*(1-t)*x0+2*t*(1-t)*mx+t*t*x1,y:(1-t)*(1-t)*y0+2*t*(1-t)*my+t*t*y1,k,t}}
+function drawRescue(L,s,o){const r=rescuePos(L,s);if(r.k<0.18&&fx.dieKind==="floor")return;
+ const grow=ease(Math.min(1,(r.k-0.12)/0.15)),R=34*grow,wob=Math.sin(T*9)*2;
+ if(fx.dieKind!=="floor"&&r.k<0.25){drawMonkey(r.x,r.y,Math.sin(T*20)*0.3,o.char,o.hat,{pose:"fly",T,flip:s.face<0});
+  for(let j=0;j<3;j++){const a=T*6+j*TAU/3;icon("star",r.x+Math.cos(a)*22,r.y-34+Math.sin(a)*6,10,"#ffe066")}return}
+ cx.save();cx.translate(r.x,r.y);
+ drawMonkey(0,4,Math.sin(T*3)*0.15,o.char,o.hat,{pose:"cheer",T,scale:0.85,flip:L.cps[s.cp].x<fx.dieX});
+ const g=cx.createRadialGradient(-R*0.35,-R*0.4,R*0.1,0,0,R);g.addColorStop(0,"rgba(255,255,255,0.35)");g.addColorStop(0.7,"rgba(190,230,255,0.18)");g.addColorStop(1,"rgba(160,210,255,0.45)");
+ cx.fillStyle=g;cx.strokeStyle="rgba(230,248,255,0.95)";cx.lineWidth=2.5;cx.beginPath();cx.ellipse(0,0,R+wob,R-wob,0,0,TAU);cx.fill();cx.stroke();
+ cx.fillStyle="rgba(255,255,255,0.85)";cx.beginPath();cx.ellipse(-R*0.42,-R*0.45,R*0.22,R*0.12,-0.7,0,TAU);cx.fill();
+ cx.restore();
+ if(Math.random()<0.3)parts.push({x:r.x+(Math.random()-0.5)*20,y:r.y+R,vx:(Math.random()-0.5)*30,vy:40,t:0,life:0.6,kind:"bubble",col:"#d0ebff",r:0,s:0.4+Math.random()*0.4})}
 function drawGhost(L,s,g){const f=Math.min(steps/8,g.pts.length/3-1),i=Math.floor(f),k=f-i,P=g.pts,j=Math.min(i+1,P.length/3-1);
  if(i<0)return;const x=lerp(P[i*3],P[j*3],k),y=lerp(P[i*3+1],P[j*3+1],k),a=P[i*3+2];let rot=0;
  cx.globalAlpha=0.38;
@@ -988,7 +1113,7 @@ function autoHold(L,s){if(s.att>=0){const a=anchorAt(L.anchors[s.att],s.t);retur
 let demoAcc=0;
 function demoUpdate(dt){if(!demo||demo.run.fin||demo.run.deaths>2){const L=genLevel(levelSpec(demo?(demo.n+1)%4:0,4));demo={L,run:newRun(L),n:demo?(demo.n+1)%4:0};camSnap=true}
  demoAcc=Math.min(demoAcc+dt,0.25);while(demoAcc>=DT){step(demo.L,demo.run,autoHold(demo.L,demo.run));demoAcc-=DT}
- const s=demo.run;camTo(s.x+W/cam.z*0.12,lerp(s.y,330,0.5),camSnap?1:Math.min(1,dt*3));camSnap=false;
+ const s=demo.run;zoomMul=1;shk.x=shk.y=0;stepCritters(demo.L.world,dt,s);camTo(s.x+W/cam.z*0.12,lerp(s.y,330,0.5),camSnap?1:Math.min(1,dt*3));camSnap=false;
  const C=CHARS.find(c=>c.id===me.char);drawScene(demo.L,s,{char:me.char,hat:me.hat,col:me.col,dt})}
 
 function drawTitle(){dim(0.15);
@@ -1017,9 +1142,18 @@ function drawTitle(){dim(0.15);
  const s=46*U;
  button(sideR()-s,botY()-s,s,s,"",()=>{settings.music=!settings.music;saveSettings();busOn()},{icon:"music",col:"#e9ecef",ink:settings.music?"#2b2b2b":"#999"});
  button(sideR()-s*2.3,botY()-s,s,s,"",()=>{settings.sfx=!settings.sfx;saveSettings();busOn()},{icon:"sfx",col:"#e9ecef",ink:settings.sfx?"#2b2b2b":"#999"});
+ txt("v"+BUILD,sideL(),botY()-10*U,11*U,"rgba(255,255,255,0.75)","left",700,"rgba(0,0,0,0.35)");
+ checkUpdate();
+ if(newBuild){const uw=Math.min(W*0.8,340*U),uh=46*U;button(W/2-uw/2,topY()+56*U,uw,uh,"New version! Tap to update",()=>{try{location.replace(location.pathname+"?v="+encodeURIComponent(newBuild))}catch(e){}},{col:"#ff922b",ink:"#fff",fs:uh*0.38})}
  if(!settings.music)icon("music",sideR()-s/2,botY()-s/2,s*0.5,"#999",false);
  if(!settings.sfx)icon("sfx",sideR()-s*1.8,botY()-s/2,s*0.5,"#999",false)}
 
+// On the title screen - never mid-level - ask the website which version it
+// has. A Home Screen app can keep running an old copy for days; this lets a
+// child (or a parent) pick up a fix with one tap instead of guessing.
+let newBuild=null,checkedAt=-1e9;
+function checkUpdate(){if(T-checkedAt<300||!window.fetch)return;checkedAt=T;
+ try{fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const BUILD="([^"]+)"/.exec(t||"");if(m&&m[1]!==BUILD)newBuild=m[1]}).catch(()=>{})}catch(e){}}
 function drawWho(){dim(0.55);txt("Who's playing?",W/2,topY()+30*U,34*U,"#fff","center",900,"#1a3a1a");
  const n=profiles.length+(profiles.length<6?1:0),top=topY()+64*U,bottom=botY()-70*U;
  const cells=grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,0.85);
@@ -1163,6 +1297,7 @@ function drawDone(){const d=doneInfo,k=ease((T-doneAt-0.6)/0.4);if(k<=0)return;d
   if(show&&got){if(!d["s"+i]){d["s"+i]=1;sfx("star",i)}const pk=1+0.3*Math.max(0,1-(age-i*0.35)*4);icon(r[0],x,y,38*q*pk,r[2],true)}else icon(r[0],x,y,34*q,"#d6cfc2")});
  const lines=[];if(d.famRec&&d.beat)lines.push(["New family record! You beat "+d.beat.p.name+"!","#c92a2a"]);else if(d.famRec)lines.push(["New family record!","#c92a2a"]);else if(d.pb)lines.push(["Your best time yet!","#1c7ed6"]);
  if(d.flips)lines.push([d.flips+" flip"+(d.flips>1?"s":"")+" (+"+d.flips*2+" bananas)","#1098ad"]);
+ if(d.combo>=3)lines.push(["Best combo x"+d.combo+" (+"+d.comboBn+" bananas)","#e8590c"]);
  lines.forEach((l,i)=>fitTxt(l[0],W/2,py+(232+i*26)*q,17*q,pw-30*U,l[1],"center",800));
  const got=Math.min(d.earn+d.bonus,Math.floor(Math.max(0,age)*60));icon("banana",W/2-40*q,py+296*q,30*q);txt("+"+got,W/2-18*q,py+297*q,26*q,"#5a3a00","left",900);
  const bh=Math.min(56*U,ph*0.13),by=py+ph-bh-18*q,nx=nextSpec(),n=nx?3:2,bw=(pw-40*U-(n-1)*10*U)/n;let x=px+20*U;
@@ -1171,14 +1306,18 @@ function drawDone(){const d=doneInfo,k=ease((T-doneAt-0.6)/0.4);if(k<=0)return;d
  if(nx)button(x,by,bw,bh,"Next",()=>{card={spec:nx,use:{}};scene="card"},{col:"#69db7c",ink:"#113a1a"});
  cx.globalAlpha=1}
 function playFrame(dt){playUpdate(dt);const s=run;
- const look=clamp(s.vx*0.28,-160,320);
- camTo(s.x+look+W/cam.z*0.1,lerp(s.y,330,0.45),camSnap?1:Math.min(1,dt*4.5));camSnap=false;
+ const sp0=Math.hypot(s.vx,s.vy);fx.zoom+=((1-0.16*clamp((sp0-600)/800,0,1))-fx.zoom)*Math.min(1,dt*1.5);zoomMul=fx.zoom;
+ fx.shake=Math.max(0,fx.shake-dt*30);shk.x=(Math.random()-0.5)*fx.shake;shk.y=(Math.random()-0.5)*fx.shake;
+ let fxX=s.x,fxY=s.y,look=clamp(s.vx*0.28,-160,320);if(s.dead>0){const r=rescuePos(lv,s);fxX=r.x;fxY=r.y;look=0}
+ camTo(fxX+look+W/cam.z*0.1,lerp(fxY,330,0.45),camSnap?1:Math.min(1,dt*(s.dead>0?3:4.5)));camSnap=false;
+ stepCritters(lv.world,dt,s);
  // the trail
  const sp=Math.hypot(s.vx,s.vy);if(started&&!(s.dead>0)&&sp>320){if(me.trail==="rainbow"){ribbon.push({x:s.x,y:s.y});if(ribbon.length>26)ribbon.shift()}else if(Math.random()<sp/900)trailPuff(me.trail,s.x-s.vx*0.02,s.y-s.vy*0.02)}
  else if(ribbon.length)ribbon.shift();
  const tgt=s.att<0&&!(s.dead>0)&&!s.fin?pickTarget(lv,s):-1;
- drawScene(lv,s,{char:me.char,hat:me.hat,trail:me.trail,col:me.col,ghost,target:tgt,dt});
- if(doneInfo){screenXf();drawDone()}else drawHUD()}
+ drawScene(lv,s,{char:me.char,hat:me.hat,trail:me.trail,col:me.col,ghost,target:tgt,dt,rescue:true});
+ if(!doneInfo&&fx.combo>=2){screenXf();const a=Math.min(1,0.4+fx.combo*0.1);txt("COMBO x"+fx.combo,W/2,topY()+(ghost?92:78)*U,(18+Math.min(fx.combo,10))*U,"#ffe066","center",900,"rgba(0,0,0,"+(0.5*a)+")")}
+ if(doneInfo){screenXf();drawDone();drawConfetti(dt)}else drawHUD()}
 
 // ================================================================ input
 function rectPos(x0,y0){const r=cv.getBoundingClientRect();return{x:r.width?(x0-r.left)*(W/r.width):x0,y:r.height?(y0-r.top)*(H/r.height):y0}}
