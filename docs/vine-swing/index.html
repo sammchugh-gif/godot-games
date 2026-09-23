@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.23-4";
+const BUILD="2026.09.23-5";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -143,7 +143,7 @@ const FEAT_AT=[
 const D0=[0,.2,.34,.5],DSTEP=[.042,.04,.04,.05];
 // Seeds that tools/vinecheck.mjs has proved finishable; a level without one
 // in here falls back to its default.
-const SEEDS={"1-1":54782730,"1-2":105738,"1-3":210467,"1-4":315196,"1-5":539993013,"1-6":524654,"1-7":91046210,"1-8":1076582011,"1-9":1225807579,"1-10":146642174,"2-1":25815904,"2-2":1865447672,"2-3":1280393477,"2-4":323115,"2-5":427844,"2-6":1847664480,"2-7":698433795,"2-8":1532267494,"2-9":846760,"2-10":945430429,"3-1":1090745578,"3-2":178465702,"3-3":1375552156,"3-4":1357246232,"3-5":2137569523,"3-6":320285579,"3-7":1512230926,"3-8":918533485,"3-9":963895393,"3-10":1214426992,"4-1":1788387920,"4-2":1678974560,"4-3":147811060,"4-4":338953,"4-5":2089621010,"4-6":702543628,"4-7":936352365,"4-8":75872511,"4-9":1762683648,"4-10":455915682};
+const SEEDS={"1-1":54782730,"1-2":809111715,"1-3":210467,"1-4":1907153369,"1-5":539993013,"1-6":524654,"1-7":91046210,"1-8":1076582011,"1-9":1225807579,"1-10":687010752,"2-1":1796381347,"2-2":1865447672,"2-3":345705110,"2-4":2110270634,"2-5":1325104912,"2-6":1847664480,"2-7":698433795,"2-8":1532267494,"2-9":1134744618,"2-10":945430429,"3-1":1090745578,"3-2":178465702,"3-3":1609609360,"3-4":1357246232,"3-5":2137569523,"3-6":229327742,"3-7":1512230926,"3-8":1193153032,"3-9":813819612,"3-10":1744218684,"4-1":1788387920,"4-2":1678974560,"4-3":147811060,"4-4":1920370652,"4-5":2089621010,"4-6":685560389,"4-7":576692517,"4-8":75872511,"4-9":1762683648,"4-10":93696831};
 function levelSpec(w,i){const feats={},at=FEAT_AT[w];
  for(const k in at)if(i>=at[k])feats[k]=at[k]===i&&(w>0||i>0)?3:1;
  const d=D0[w]+DSTEP[w]*i;
@@ -173,7 +173,7 @@ function genLevel(sp){
  function arc(px,py,nx,ny){for(const t of[.3,.5,.7]){const x0=px+130,y0=py+150,x2=nx-130,y2=ny+150,xc=(px+nx)/2,yc=Math.min(py,ny)-30;
    B((1-t)*(1-t)*x0+2*t*(1-t)*xc+t*t*x2,(1-t)*(1-t)*y0+2*t*(1-t)*yc+t*t*y2)}}
  function under(x,y){if(y+215<FLOOR-60)for(const a of[-.45,0,.45])B(x+215*Math.sin(a),y+215*Math.cos(a))}
- function next(dx,y,type,o){const nx=ax+dx;arc(ax,ay,nx,y);gold.push({x:(ax+nx)/2,y:Math.min(ay,y)-75});const a=A(nx,y,type,o);ax=nx;ay=y;return a}
+ function next(dx,y,type,o){const nx=ax+dx;arc(ax,ay,nx,y);gold.push({x:(ax+nx)/2,y:Math.min(ay,y)-45});const a=A(nx,y,type,o);ax=nx;ay=y;return a}
  under(ax,ay);
  const kinds=[["run",3]];
  for(const k in f)kinds.push([k,f[k]]);
@@ -249,7 +249,7 @@ function beeAt(b,t){AP.x=b.x+b.ax*Math.sin(t*b.s*0.5+b.p);AP.y=b.y+b.ay*Math.sin
 function newRun(L,o){o=o||{};return{x:0,y:PLAT-MR,vx:0,vy:0,att:-1,L:0,Lt:0,t:0,gr:1,rot:0,spin:0,air:0,cp:0,dead:0,fin:0,
  bn:new Uint8Array(L.bananas.length),gd:new Uint8Array(L.golds.length),br:new Uint8Array(L.anchors.length),cr:new Float32Array(L.anchors.length),
  rg:new Float32Array(L.rings.length),nb:0,ng:0,flips:0,deaths:0,grabs:0,shield:o.shield?1:0,magnet:o.magnet?1:0,reach:o.reach?REACH_BIG:REACH,
- held:0,nog:0,ev:null}}
+ held:0,nog:0,hopT:0,ev:null}}
 function cloneRun(s){const c=Object.assign({},s);c.bn=s.bn.slice();c.gd=s.gd.slice();c.br=s.br.slice();c.cr=s.cr.slice();c.rg=s.rg.slice();c.ev=null;return c}
 function emit(s,k,a,b,c){if(s.ev)s.ev.push({k,a,b,c})}
 // Which ring a hold would take: the furthest one forward within reach, as long
@@ -261,39 +261,61 @@ function pickTarget(L,s){const A=L.anchors,R=s.reach;let lo=0,hi=A.length;
  let best=-1,bs=-1e9;
  for(let i=lo;i<A.length;i++){const a=A[i];if(a.x>s.x+R+120)break;if(s.br[i])continue;
   const p=anchorAt(a,s.t),dx=p.x-s.x,dy=p.y-s.y;if(dx*dx+dy*dy>R*R||dy>40)continue;
-  // standing on a ledge, a hold never takes a ring behind: it would drag the
-  // monkey back off the ledge into the water
-  if(s.gr&&dx<-30)continue;
+  // A ring behind is only ever a rescue for a monkey that is falling. Standing
+  // on a ledge it would drag the monkey back off into the water; on the way
+  // up after letting go, a finger that holds again too soon would just
+  // re-take the ring it left and undo the swing. Then the hold waits for the
+  // ring ahead to come into reach instead.
+  if(dx<-30&&(s.gr||s.vy<150))continue;
   const sc=(dx>-30?dx:dx-2000)-0.3*dy;if(sc>bs){bs=sc;best=i}}
  return best}
 function flipsLand(s){const n=Math.floor(s.air/TAU+0.15);if(n>0){s.flips+=n;emit(s,"flip",n)}s.air=0}
 function die(s,k){if(s.shield){s.shield=0;emit(s,"shield");if(k==="floor"){s.vy=-1150;s.y=FLOOR-MR*0.5-2}return false}
  s.dead=DEADT;s.att=-1;s.deaths++;s.air=0;emit(s,"die",k,s.x,s.y);return true}
 function respawn(L,s){const c=L.cps[s.cp];s.dead=0;s.x=c.x;s.y=c.y-MR;s.vx=s.vy=0;s.gr=1;s.att=-1;s.spin=0;s.rot=0;s.air=0;s.br.fill(0);s.cr.fill(0);emit(s,"respawn")}
-function step(L,s,hold){
+// the lowest a hanging monkey may swing: its feet well clear of the water
+const safeLen=ay=>FLOOR-64-ay,GRABMIN=100;
+function step(L,s,hold,pull){
  if(s.fin)return;
  s.t+=DT;
  if(s.dead>0){s.dead-=DT;if(s.dead<=0)respawn(L,s);return}
- const fresh=hold&&!s.held;s.held=hold;if(!hold)s.nog=0;
+ const fresh=hold&&!s.held;s.held=hold;if(!hold||s.nog<DT)s.nog=0;else s.nog-=DT;
  if(!hold){if(s.att>=0){const a=anchorAt(L.anchors[s.att],s.t);
    s.spin=((s.x-a.x)*s.vy-(s.y-a.y)*s.vx)/(s.L*s.L);s.att=-1;emit(s,"let")}}
  else if(s.att<0){const i=s.nog?-1:pickTarget(L,s);
   if(i>=0){const a=anchorAt(L.anchors[i],s.t),dx=s.x-a.x,dy=s.y-a.y,d=Math.hypot(dx,dy)||1;
-   s.att=i;s.L=s.Lt=clamp(d,LMIN,s.reach);s.grabs++;
+   // a catch close to the ring still gives a comfortable length of vine,
+   // slack until the monkey drops onto it: a very short vine whirls the
+   // monkey round the ring faster than anyone can aim a let-go
+   s.att=i;s.L=s.Lt=clamp(Math.max(d,s.gr?d:GRABMIN),LMIN,s.reach);s.grabs++;
    if(s.gr){// from a standing start the vine reels in and lifts the monkey clear of the ledge
     s.Lt=clamp(d*0.66,LMIN,s.reach);s.gr=0}
    else{// a grab in flight keeps the speed and turns it along the swing, so a
     // good catch never costs momentum
     const nx=dx/d,ny=dy/d,tx=-ny,ty=nx,vt=s.vx*tx+s.vy*ty,sp=Math.hypot(s.vx,s.vy),g=Math.sign(vt)||1;
     if(d>=s.L-1){s.vx=tx*g*sp*0.97;s.vy=ty*g*sp*0.97}}
+   // a vine caught from far away is taken in until its swing clears the
+   // water: a catch should never be what drops you in
+   const cap=safeLen(a.y);if(s.Lt>cap)s.Lt=Math.max(LMIN,cap);
    flipsLand(s);emit(s,"grab",i)}
-  // nothing in reach and standing still: hop forward, so no ledge can trap you
-  else if(s.gr&&fresh){s.vx=260;s.vy=-640;s.gr=0;emit(s,"hop")}}
+  // nothing in reach and standing: hop forward, and keep hopping while the
+  // finger stays down - holding means go - until a ring comes into reach.
+  // (Not straight after scrambling up a ledge with the finger still down.)
+  else if(s.gr&&!s.nog&&(fresh||s.hopT<=0)){s.vx=260;s.vy=-640;s.gr=0;s.hopT=0.35;emit(s,"hop")}}
+ if(s.hopT>0)s.hopT-=DT;
  s.vy+=GRAV*DT;
  if(s.att>=0){const a=L.anchors[s.att],p=anchorAt(a,s.t),dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d;
   // holding on pumps the swing a little each way, like legs on a playground swing
   const tx=-ny,ty=nx,vt=s.vx*tx+s.vy*ty,sp=Math.hypot(s.vx,s.vy);
-  if(sp<950&&Math.abs(vt)>20){const g=Math.sign(vt)*420*DT;s.vx+=tx*g;s.vy+=ty*g}
+  // (less so on a short vine, which would otherwise wind up into a whirl)
+  if(sp<Math.min(950,450+2.2*s.L)&&Math.abs(vt)>20){const g=Math.sign(vt)*420*DT;s.vx+=tx*g;s.vy+=ty*g}
+  // sliding a finger up the screen climbs the vine, down lowers it. Climbing
+  // keeps the swing's turning moment, so a shorter vine swings faster - the
+  // skater pulling in their arms - and that is a skill worth learning
+  if(pull){const L0=s.L,nl=clamp(s.L+pull,LMIN,Math.min(s.reach+40,safeLen(p.y)));
+   if(nl<L0&&d>=L0-2){const k=L0/nl-1;let bx=s.vx+tx*vt*k,by=s.vy+ty*vt*k;const b=Math.hypot(bx,by);if(b>VMAX){bx*=VMAX/b;by*=VMAX/b}s.vx=bx;s.vy=by}
+   s.L=nl;s.Lt=Math.min(s.Lt,nl);if(pull>0)s.Lt=nl}
+  const cap=safeLen(p.y);if(s.Lt>cap)s.Lt=Math.max(LMIN,cap);
   if(s.L>s.Lt)s.L=Math.max(s.Lt,s.L-900*DT);
   if(a.type===1){s.cr[s.att]+=DT;if(s.cr[s.att]>0.85){s.br[s.att]=1;emit(s,"crumble",s.att);
    s.spin=(dx*s.vy-dy*s.vx)/(s.L*s.L);s.att=-1}}}
@@ -318,7 +340,9 @@ function step(L,s,hold){
    // a ledge is somewhere safe to be, so its whole wall above the water can
    // be scrambled up; a pillar is an obstacle, so only its top edge
    if(s.y-q.y<(q.pillar?76:112)){s.y=q.y-MR;s.x=nx<0?q.x+MR:q.x+q.w-MR;s.vy=0;s.vx=-nx*Math.max(Math.abs(s.vx)*0.4,140);
-    if(s.att>=0){s.att=-1;s.nog=1}s.gr=1;s.spin=0;emit(s,"mantle");continue}
+    // a moment's pause before the next grab or hop, so a finger still down
+    // does not fling the monkey straight back off the ledge it just reached
+    if(s.att>=0)s.att=-1;s.nog=0.3;s.gr=1;s.spin=0;emit(s,"mantle");continue}
    // climb: take in enough vine that the bottom of the swing clears the top
    if(s.att>=0){const ap=anchorAt(L.anchors[s.att],s.t);s.Lt=Math.max(LMIN,Math.min(s.Lt,q.y-MR-10-ap.y));if(s.Lt<s.L)emit(s,"climb")}}
   if(vn<0){const e=q.pillar?0.45:0.1;s.vx-=(1+e)*vn*nx;s.vy-=(1+e)*vn*ny}
@@ -708,11 +732,16 @@ function drawMonkey(x,y,rot,c,hat,opt){opt=opt||{};const C=CHARS.find(k=>k.id===
  if(pose==="hang")limb(2,-3,-8,-15,1,-27,5,C.fur);
  // head
  dot(-5,-16,5.6,C.fur);cx.fillStyle=palm;cx.beginPath();cx.arc(-5,-16,3,0,TAU);cx.fill();
+ // One outline round the head and the muzzle together: the ink shape is
+ // laid down a little larger first and everything else is painted inside
+ // it, so the face never spills past the edge of the head.
+ cx.fillStyle=ink;cx.beginPath();cx.arc(3,-13,13.1,0,TAU);cx.fill();cx.beginPath();cx.ellipse(13.2,-7.8,7.5,6.3,0.15,0,TAU);cx.fill();
  const hg=cx.createRadialGradient(0,-18,2,3,-13,13);hg.addColorStop(0,furL);hg.addColorStop(0.6,C.fur);hg.addColorStop(1,furD);
- cx.fillStyle=hg;cx.strokeStyle=ink;cx.lineWidth=1.6;cx.beginPath();cx.arc(3,-13,11.5,0,TAU);cx.fill();cx.stroke();
+ cx.fillStyle=hg;cx.beginPath();cx.arc(3,-13,11.5,0,TAU);cx.fill();
+ cx.save();cx.beginPath();cx.arc(3,-13,11.5,0,TAU);cx.clip();
  if(C.mask){cx.fillStyle=C.mask;cx.beginPath();cx.ellipse(9.5,-15,5,4.5,0.2,0,TAU);cx.fill()}
- cx.fillStyle=C.face;cx.beginPath();cx.ellipse(8.5,-12.5,7.2,8.2,0.1,0,TAU);cx.fill();
- cx.beginPath();cx.ellipse(13,-8,6,4.8,0.15,0,TAU);cx.fill();cx.strokeStyle=ink;cx.lineWidth=1.2;cx.beginPath();cx.ellipse(13,-8,6,4.8,0.15,-1.2,1.9);cx.stroke();
+ cx.fillStyle=C.face;cx.beginPath();cx.ellipse(9.5,-12.5,6.6,7.6,0.1,0,TAU);cx.fill();cx.restore();
+ cx.fillStyle=C.face;cx.beginPath();cx.ellipse(13.2,-7.8,6,4.8,0.15,0,TAU);cx.fill();
  cx.fillStyle=ink;cx.beginPath();cx.arc(17.6,-9.8,0.95,0,TAU);cx.fill();
  if(opt.open){cx.fillStyle="#5a1a1a";cx.beginPath();cx.ellipse(13.5,-5.6,3,2.4,0.1,0,TAU);cx.fill();cx.fillStyle="#ff8aa0";cx.beginPath();cx.ellipse(13.8,-4.6,1.8,1,0,0,TAU);cx.fill()}
  else{cx.strokeStyle=ink;cx.lineWidth=1.2;cx.beginPath();cx.moveTo(10,-6.2);cx.quadraticCurveTo(13,-3.8,16.2,-6.4);cx.stroke()}
@@ -725,7 +754,7 @@ function drawMonkey(x,y,rot,c,hat,opt){opt=opt||{};const C=CHARS.find(k=>k.id===
  cx.strokeStyle=ink;cx.lineWidth=1.3;cx.beginPath();cx.moveTo(6.6,-20.4);cx.quadraticCurveTo(9.5,-21.6,12.4,-20.4);cx.stroke();
  // near arm, over everything
  if(pose==="hang"){dot(-2.5,-27.5,3.2,palm);dot(1,-28.5,3.4,palm)}
- else if(pose==="fly"){limb(4,-1,13,5,21,1,5,C.fur);dot(21.5,0.5,3.2,palm)}
+ else if(pose==="fly"){limb(4,1,12,9,20,7,5,C.fur);dot(20.5,6.5,3.2,palm)}
  else{limb(4,-3,10,3,8,11,5,C.fur);dot(8,12,3,palm)}
  if(C.helmet){cx.fillStyle="rgba(180,220,255,0.22)";cx.strokeStyle="rgba(220,240,255,0.95)";cx.lineWidth=1.8;cx.beginPath();cx.arc(4,-13,16.5,0,TAU);cx.fill();cx.stroke();
   cx.fillStyle="rgba(255,255,255,0.7)";cx.beginPath();cx.ellipse(-2,-22,5,2.2,-0.6,0,TAU);cx.fill();cx.fillStyle="#b8c4d0";cx.fillRect(-7,0,22,3.5)}
@@ -893,6 +922,7 @@ const SFX={
  combo(n){const f=520*Math.pow(2,Math.min(n,12)/12);tone(f,f*1.5,0.12,"square",0.07);tone(f*2,f*2,0.08,"triangle",0.05,0.06)},
  wow(){[1047,1319,1568,2093].forEach((f,i)=>tone(f,f,0.09,"triangle",0.08,i*0.045));noise(0.25,0.05,0.1,5000)},
  pop(){tone(300,1200,0.08,"sine",0.25);noise(0.06,0.18,0.02,3000);tone(1500,900,0.12,"triangle",0.06,0.05)},
+ tick(){tone(1400,1100,0.03,"triangle",0.05)},
  climb(){[392,494,587,784].forEach((f,i)=>tone(f,f,0.07,"triangle",0.1,i*0.04))},
  chomp(){tone(160,90,0.12,"square",0.18);tone(140,70,0.12,"square",0.16,0.13);noise(0.08,0.15,0.13,0)}};
 function sfx(k,a){if(AC&&settings.sfx)try{SFX[k](a)}catch(e){}}
@@ -925,7 +955,9 @@ function musicTick(){if(!AC||AC.state!=="running"||musWorld<0||!settings.music)r
 // ================================================================ game
 let scene="title",T=0,lv=null,run=null,started=false,acc=0,steps=0,rec=[],ghost=null,doneInfo=null,doneAt=0,items={},
  selWorld=0,card=null,shopTab=0,shopSel=null,toast=null,ribbon=[],demo=null,camSnap=true;
-const holds=new Set();let keyHold=false,mouseHold=false;
+const holds=new Set();let keyHold=false,mouseHold=false,pull=0,keyPull=0,climbTick=0;
+// where each holding finger was last seen, so a slide up or down can climb
+const fingerY={};
 const holding=()=>holds.size>0||keyHold||mouseHold;
 function totalStars(p,w){let n=0;for(const k in p.stars)if(w==null||k.startsWith((w+1)+"-")){const b=p.stars[k];n+=(b&1)+(b>>1&1)+(b>>2&1)}return n}
 function unlocked(w,i){if(!me.worlds[w])return false;if(i===0)return true;return !!((me.stars[(w+1)+"-"+i]||0)&1)}
@@ -994,7 +1026,10 @@ function playUpdate(dt){if(!started){if(holding()){started=true;
   for(const k in items)if(items[k]&&me.items[k]>0)me.items[k]--;save()}else return}
  if(run.fin){acc=Math.min(acc+dt,0.25);while(acc>=DT){coast(lv,run);acc-=DT}return}
  acc=Math.min(acc+dt,0.25);run.ev=run.ev||[];
- while(acc>=DT){step(lv,run,holding());steps++;if(steps%8===0)rec.push(Math.round(run.x),Math.round(run.y),run.att);handleEvents();acc-=DT;if(run.fin)break}}
+ while(acc>=DT){
+  // a slide of the finger becomes vine, a little each step so it is smooth
+  let d=0;if(run.att>=0){pull+=keyPull*5;d=clamp(pull,-8,8);pull-=d}else pull=0;
+  step(lv,run,holding(),d);if(d<0&&(climbTick+=-d)>45){climbTick=0;sfx("tick")}steps++;if(steps%8===0)rec.push(Math.round(run.x),Math.round(run.y),run.att);handleEvents();acc-=DT;if(run.fin)break}}
 
 // ================================================================ scene
 function drawScene(L,s,o){o=o||{};const w=L.world;
@@ -1306,11 +1341,13 @@ function drawHUD(){screenXf();const s=run,t0=topY();
  const hy=Math.max(t0+110*U,H*0.3);
  if(!started){const a=0.6+0.4*Math.sin(T*5);cx.globalAlpha=a;icon("hand",W/2,hy,46*U,"#fff");
   txt(lv.spec.tut===1?"HOLD to grab the vine":"HOLD ANYWHERE TO GO",W/2,hy+46*U,24*U,"#fff","center",900,"rgba(0,0,0,0.5)");cx.globalAlpha=1}
+ else if(lv.spec.tut===2&&s.att>=0&&s.grabs<5){const a=0.65+0.35*Math.sin(T*4);cx.globalAlpha=a;
+  txt("Slide up to climb the vine \u2191",W/2,hy+18*U,21*U,"#fff","center",900,"rgba(0,0,0,0.5)");txt("and down to go lower \u2193",W/2,hy+46*U,19*U,"#fff","center",800,"rgba(0,0,0,0.5)");cx.globalAlpha=1}
  else if(lv.spec.tut===1&&s.att>=0&&s.grabs<3){txt("...LET GO to fly!",W/2,hy+30*U,24*U,"#fff","center",900,"rgba(0,0,0,0.5)")}
  else if(lv.spec.tut===1&&s.deaths&&s.att<0&&s.grabs<4){txt("Hold again when a ring glows",W/2,hy+30*U,22*U,"#fff","center",900,"rgba(0,0,0,0.5)")}
  // standing on a ledge with no ring in reach, say what a tap does
  else if(s.gr&&s.att<0&&!(s.dead>0)&&!s.fin&&pickTarget(lv,s)<0){const a=0.6+0.4*Math.sin(T*5);cx.globalAlpha=a;
-  txt("TAP to hop forward \u2192",W/2,hy+30*U,22*U,"#fff","center",900,"rgba(0,0,0,0.5)");cx.globalAlpha=1}}
+  txt("HOLD to hop forward \u2192",W/2,hy+30*U,22*U,"#fff","center",900,"rgba(0,0,0,0.5)");cx.globalAlpha=1}}
 function drawDone(){const d=doneInfo,k=ease((T-doneAt-0.6)/0.4);if(k<=0)return;dim(0.55*k);
  const pw=Math.min(W-SAFE.l-SAFE.r-24*U,480*U),ph=Math.min(H-SAFE.t-SAFE.b-24*U,470*U),px=W/2-pw/2,py=H/2-ph/2+(1-k)*60*U,q=ph/470;
  cx.globalAlpha=k;panel(px,py,pw,ph);
@@ -1349,7 +1386,11 @@ function rectPos(x0,y0){const r=cv.getBoundingClientRect();return{x:r.width?(x0-
 function hitBtn(p){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return b}return null}
 function onMenu(t){try{return!!(t&&t.closest&&t.closest("[id^=shelf-menu]"))}catch(e){return false}}
 function press(p,id){const b=hitBtn(p);if(b){sfx("tap");b.fn();return"button"}
- if(scene==="play"&&!run.fin){holds.add(id);return"hold"}return""}
+ if(scene==="play"&&!run.fin){holds.add(id);fingerY[id]=p.y;return"hold"}return""}
+// A finger slid up the screen climbs the vine, down lowers it - in step with
+// the finger, about as far as it moved on the screen.
+function slide(id,y){if(!holds.has(id)||fingerY[id]==null)return;const dy=y-fingerY[id];fingerY[id]=y;
+ if(scene==="play"&&run&&run.att>=0)pull+=dy/cam.z*1.25}
 let lastTouchAt=0,evN=0;
 const ghostMouse=()=>performance.now()-lastTouchAt<900;
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioWake();
@@ -1357,19 +1398,22 @@ window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;aud
 // a finger the browser no longer lists is let go, whatever happened to its
 // touchend: a system swipe can eat one, and a vine that never lets go is a
 // monkey that never flies
+window.addEventListener("touchmove",e=>{for(const t of e.changedTouches)slide(t.identifier,rectPos(t.clientX,t.clientY).y)},{passive:true});
+window.addEventListener("mousemove",e=>{if(mouseHold){if(fingerY.m==null)fingerY.m=rectPos(e.clientX,e.clientY).y;const was=holds.has("m");holds.add("m");slide("m",rectPos(e.clientX,e.clientY).y);if(!was)holds.delete("m")}});
 function tend(e){lastTouchAt=performance.now();evN++;audioWake();for(const t of e.changedTouches)holds.delete(t.identifier);
  const live=new Set();for(const t of e.touches)live.add(t.identifier);for(const id of[...holds])if(typeof id==="number"&&!live.has(id))holds.delete(id)}
 window.addEventListener("touchend",tend);window.addEventListener("touchcancel",tend);
-cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();if(press(rectPos(e.clientX,e.clientY),"m")==="hold"){holds.delete("m");mouseHold=true}});
-function mouseUp(){mouseHold=false;holds.delete("m")}
+cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();const q=rectPos(e.clientX,e.clientY);if(press(q,"m")==="hold"){holds.delete("m");mouseHold=true;fingerY.m=q.y}});
+function mouseUp(){mouseHold=false;holds.delete("m");fingerY.m=null}
 window.addEventListener("mouseup",mouseUp);window.addEventListener("pointerup",e=>{if(e.pointerType==="mouse")mouseUp()});
 window.addEventListener("keydown",e=>{audioWake();const k=e.key;
- if(k===" "||k==="ArrowUp"||k==="Enter"||k==="w"){if(scene==="play"&&!run.fin)keyHold=true;else if(scene==="play"&&doneInfo){const n=nextSpec();n?(card={spec:n,use:{}},scene="card"):restart()}
+ if(k==="ArrowUp"||k==="ArrowDown"){keyPull=k==="ArrowUp"?-1:1;e.preventDefault();return}
+ if(k===" "||k==="Enter"||k==="w"){if(scene==="play"&&!run.fin)keyHold=true;else if(scene==="play"&&doneInfo){const n=nextSpec();n?(card={spec:n,use:{}},scene="card"):restart()}
   else if(scene==="card")startLevel(card.spec,Object.assign({},card.use));e.preventDefault()}
  else if(k==="r"&&scene==="play")restart();
  else if(k==="Escape"){scene=scene==="play"?(lv.spec.daily?"title":"map"):scene==="card"?(card.daily?"title":"map"):"title"}});
-window.addEventListener("keyup",e=>{const k=e.key;if(k===" "||k==="ArrowUp"||k==="Enter"||k==="w")keyHold=false});
-window.addEventListener("blur",()=>{holds.clear();keyHold=false;mouseHold=false});
+window.addEventListener("keyup",e=>{const k=e.key;if(k===" "||k==="Enter"||k==="w")keyHold=false;if(k==="ArrowUp"||k==="ArrowDown")keyPull=0});
+window.addEventListener("blur",()=>{holds.clear();keyHold=false;mouseHold=false;keyPull=0});
 document.addEventListener("visibilitychange",()=>{if(document.hidden){holds.clear();keyHold=false;mouseHold=false}});
 window.__shelfInput=()=>"holds:"+holds.size+(keyHold?"+key":"")+(mouseHold?"+mouse":"")+" events:"+evN+" scene:"+scene;
 
