@@ -74,17 +74,25 @@ const afterShut = await pg.evaluate(`[...document.querySelectorAll('.desc')].fil
 check('a tap on the bar opens that one and no other', afterOne === 1 && afterShut === 0,
   `one open after a tap, ${afterShut} after tapping it again`);
 
-/* ------------------------------------------------- the maths games come last
-   Three of the twenty are maths practice rather than a game to play for its
-   own sake, so they sit at the end of the shelf where somebody looking for
-   something to play does not have to scroll past them first. */
-const hrefs = await pg.evaluate(
-  `[...document.querySelectorAll('article.game > a.shot')].map(a => a.getAttribute('href'))`);
-const tailThree = hrefs.slice(-3);
-check('the three maths games are last on the shelf',
-  tailThree.every(h => /bones-park/.test(h))
-  && hrefs.filter(h => /bones-park/.test(h)).length === 3,
-  tailThree.join(' '));
+/* -------------------------------------------- the three parks share one card
+   They are the same game three times over, so they share a card that opens
+   onto the three of them - and it is the third card on the shelf. */
+const VISP = `d => d.checkVisibility({ contentVisibilityAuto: true,
+  opacityProperty: true, visibilityProperty: true })`;
+const parks = await pg.evaluate(`[...document.querySelectorAll('.pick')].map(a => a.getAttribute('href'))`);
+const topLevelParks = await pg.evaluate(
+  `[...document.querySelectorAll('article.game > a.shot')].map(a => a.getAttribute('href'))
+     .filter(h => /bones-park/.test(h)).length`);
+const place = await pg.evaluate(
+  `[...document.querySelectorAll('article.game')].findIndex(c => c.querySelector('details.group')) + 1`);
+check('the three parks are behind one card', parks.length === 3 && topLevelParks === 0,
+  parks.join(' '));
+check('and it is third on the shelf', place === 3, `card ${place}`);
+await pg.locator('details.group > summary').tap();
+await sleep(250);
+const picksVisible = await pg.evaluate(`[...document.querySelectorAll('.pick')].filter(${VISP}).length`);
+check('and the card opens onto all three', picksVisible === 3,
+  `${picksVisible} parks offered once it is open`);
 
 /* ------------------------------------------------------ every link goes somewhere */
 const links = await pg.evaluate(

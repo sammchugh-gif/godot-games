@@ -119,6 +119,41 @@
   }
   details.about[open] > summary::before { transform: rotate(225deg) translate(-.05rem, -.05rem); }
   details.about > summary:hover { color: #cdd8ea; }
+  /* the maths card is the whole picture: tapping it opens the three parks */
+  /* The whole card is the summary here, so it must not take the bar's muted
+     colour - that greyed the title out - and it carries its own bar. */
+  details.group > summary { padding: 0; display: block; color: #e8ecf4; }
+  details.group > summary::before { display: none; }
+  details.group .bar {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .7rem 1.1rem;
+    color: #8fa0bd; font-size: .85rem; font-weight: 600; letter-spacing: .02em;
+  }
+  details.group .bar::before {
+    content: "";
+    width: .46rem; height: .46rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translate(-.1rem, -.1rem);
+    transition: transform .18s;
+    flex: none;
+  }
+  details.group[open] .bar::before { transform: rotate(225deg) translate(-.05rem, -.05rem); }
+  details.group > summary:hover .bar { color: #cdd8ea; }
+  .pick {
+    display: flex; flex-direction: column; gap: .1rem;
+    padding: .7rem .9rem;
+    margin-bottom: .55rem;
+    border: 1px solid #2a3446;
+    border-radius: 11px;
+    background: #10141d;
+    text-decoration: none; color: #dbe4f2;
+    transition: border-color .15s, background .15s;
+  }
+  .pick:last-child { margin-bottom: 0; }
+  .pick:hover, .pick:active { border-color: #ffd166; background: #161c28; }
+  .pick b { font-size: .98rem; }
+  .pick span { color: #93a2bb; font-size: .86rem; }
   .tip {
     margin-top: 2.5rem; padding-top: 1.25rem;
     border-top: 1px solid #1e2530;
@@ -155,6 +190,25 @@
       <details class="about">
         <summary>What is it?</summary>
         <div class="desc">One finger, one monkey, a lot of jungle. Hold anywhere to grab the glowing vine ring, let go to fly, and catch the next one. Forty levels over four worlds &mdash; jungle, temple ruins, misty falls and a volcano &mdash; with bouncy mushrooms, speed hoops, crumbling rings and bees. Three stars a level, a new Daily Jungle every day, a profile for everyone in the family, and the family&rsquo;s best run on every level to race as a ghost. Bananas buy new monkeys, hats and trails.</div>
+      </details>
+    </article>
+    <article class="game">
+      <details class="about group">
+        <summary>
+          <div class="shot" style="background-image:url('shots/sophias-bones-park.jpg')">
+            <span class="play">3 PARKS</span>
+            <div class="name">Bones Park Maths</div>
+          </div>
+          <span class="bar">Pick a park</span>
+        </summary>
+        <div class="desc">
+          <p>The same park three times over, each pitched at where one of them is now.
+          Every right answer earns a bone, and bones buy hats, coats and park things for
+          the dog, or animals and toys for the house.</p>
+          <a class="pick" href="sophias-bones-park/"><b>Sophia&rsquo;s park</b><span>times tables to twelve, the division facts that go with them, and multiples of ten.</span></a>
+          <a class="pick" href="rorys-bones-park/"><b>Rory&rsquo;s park</b><span>number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at tables and sharing.</span></a>
+          <a class="pick" href="dylans-bones-park/"><b>Dylan&rsquo;s park</b><span>tens and ones, counting on in tens, ten more and ten less, and his first sums.</span></a>
+        </div>
       </details>
     </article>
     <article class="game">
@@ -315,36 +369,6 @@
       <details class="about">
         <summary>What is it?</summary>
         <div class="desc">A real Mega Drive emulator in the browser, with eight free homebrew games on the shelf: platformers, a trap-filled tower puzzle, an egg-catching chicken and a four-player star race. Add cartridges you own to play them on this device. On-screen pad on the iPad.</div>
-      </details>
-    </article>
-    <article class="game">
-      <a class="shot" href="sophias-bones-park/" style="background-image:url('shots/sophias-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Sophia&rsquo;s Bones Park</div>
-      </a>
-      <details class="about">
-        <summary>What is it?</summary>
-        <div class="desc">Maths in a park, pitched at where Sophia is now: times tables to twelve, the division facts that go with them, and multiples of ten. Tables are split into easy ones, middle ones, tricky ones and the big ones, with an All Tables round that mixes the lot. Every right answer earns a bone, and bones buy hats, coats and park things for the dog, or animals and toys for the house.</div>
-      </details>
-    </article>
-    <article class="game">
-      <a class="shot" href="rorys-bones-park/" style="background-image:url('shots/rorys-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Rory&rsquo;s Bones Park</div>
-      </a>
-      <details class="about">
-        <summary>What is it?</summary>
-        <div class="desc">The same park, pitched at Rory: number facts to twenty, adding within a hundred, hundreds tens and ones, telling the time, and a first look at times tables and sharing. Seven kinds of practice, a Park Walk that mixes them, and bones to spend on the dog and the house.</div>
-      </details>
-    </article>
-    <article class="game">
-      <a class="shot" href="dylans-bones-park/" style="background-image:url('shots/dylans-bones-park.jpg')">
-        <span class="play">PLAY</span>
-        <div class="name">Dylan&rsquo;s Bones Park</div>
-      </a>
-      <details class="about">
-        <summary>What is it?</summary>
-        <div class="desc">The same park, pitched at Dylan: tens and ones, counting on in tens, ten more and ten less, and his first sums. Six kinds of practice and a Park Walk that mixes them, with a bone for every right answer to spend in the shop.</div>
       </details>
     </article>
   </div>
