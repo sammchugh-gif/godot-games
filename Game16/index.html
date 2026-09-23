@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.23-7";
+const BUILD="2026.09.23-8";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -107,17 +107,17 @@ function ghostKey(id){return"ghost."+id}
 // DEADT: how long a splash lasts - the ride back to the flag in a bubble
 const DEADT=1.3,FLOOR=560,PLAT=430,MR=16,GRAV=1500,REACH=320,REACH_BIG=440,LMIN=60,VMAX=1500,DT=1/120;
 const WORLDS=[
- {name:"Jungle Canopy",sky:["#62c2ec","#c8efff"],far:"#6dbb8a",mid:"#3e8f5c",near:"#1f5e3a",floor:"#2b93bd",floorTop:"#7fd6f0",
+ {name:"Jungle Canopy",short:"Jungle",sky:["#62c2ec","#c8efff"],far:"#6dbb8a",mid:"#3e8f5c",near:"#1f5e3a",floor:"#2b93bd",floorTop:"#7fd6f0",
   ring:"#c98a3c",ledge:"#8a5a2e",ledgeTop:"#5fbf4a",acc:"#ffd43b",price:0,need:0,hazard:"water"},
- {name:"Temple Ruins",sky:["#f0a868","#ffe6bf"],far:"#c89464",mid:"#a2764c",near:"#6d4e33",floor:"#5b7a2f",floorTop:"#9dbb4f",
+ {name:"Temple Ruins",short:"Temple",sky:["#f0a868","#ffe6bf"],far:"#c89464",mid:"#a2764c",near:"#6d4e33",floor:"#5b7a2f",floorTop:"#9dbb4f",
   ring:"#d4b06a",ledge:"#b59a78",ledgeTop:"#d9c6a2",acc:"#ffe066",price:250,need:12,hazard:"swamp"},
- {name:"Misty Falls",sky:["#7fa6de","#e6f2ff"],far:"#9cb8d8",mid:"#5f86b0",near:"#34597d",floor:"#3f8fd6",floorTop:"#c9ecff",
+ {name:"Misty Falls",short:"Falls",sky:["#7fa6de","#e6f2ff"],far:"#9cb8d8",mid:"#5f86b0",near:"#34597d",floor:"#3f8fd6",floorTop:"#c9ecff",
   ring:"#e0e8f0",ledge:"#6a7f93",ledgeTop:"#7ccf8a",acc:"#9ff0ff",price:500,need:14,hazard:"rapids"},
- {name:"Volcano Peak",sky:["#2a1030","#ff7a45"],far:"#5a2a3a",mid:"#3b1b27",near:"#24101a",floor:"#ff5a1f",floorTop:"#ffd35a",
+ {name:"Volcano Peak",short:"Volcano",sky:["#2a1030","#ff7a45"],far:"#5a2a3a",mid:"#3b1b27",near:"#24101a",floor:"#ff5a1f",floorTop:"#ffd35a",
   ring:"#ffb35a",ledge:"#4a3a3a",ledgeTop:"#7a5a4a",acc:"#ffb35a",price:800,need:16,hazard:"lava",after:2},
- {name:"Safari Savanna",sky:["#f5a25d","#fff1cf"],far:"#dca872",mid:"#7d6a2c",near:"#9a7a2e",floor:"#5f8a76",floorTop:"#c8e3c0",
+ {name:"Safari Savanna",short:"Safari",sky:["#f5a25d","#fff1cf"],far:"#dca872",mid:"#7d6a2c",near:"#9a7a2e",floor:"#5f8a76",floorTop:"#c8e3c0",
   ring:"#a0522d",ledge:"#b8653a",ledgeTop:"#d9b85a",acc:"#ffcf5a",price:150,need:10,hazard:"river",after:0},
- {name:"Night Rainforest",sky:["#0b1330","#34507a"],far:"#1d3550",mid:"#16293f",near:"#0e1c2c",floor:"#1d4a6a",floorTop:"#6fd0ff",
+ {name:"Night Rainforest",short:"Night",sky:["#0b1330","#34507a"],far:"#1d3550",mid:"#16293f",near:"#0e1c2c",floor:"#1d4a6a",floorTop:"#6fd0ff",
   ring:"#7fe0c8",ledge:"#3c3a4c",ledgeTop:"#3f8f6a",acc:"#9ff0ff",price:350,need:12,hazard:"water",after:4}];
 WORLDS[1].after=0;WORLDS[2].after=1;
 // The map shows the worlds from easiest to hardest; the new ones sit
@@ -1291,6 +1291,7 @@ function demoUpdate(dt){if(!demo||demo.run.fin||demo.run.deaths>2){const n=demo?
 
 function drawTitle(){dim(0.15);
  const ly=Math.max(topY()+50*U,H*0.2),sz=Math.min(W*0.15,92*U);
+ const bw=Math.min(W*0.72,330*U),bh=Math.min(64*U,H*0.12),gap=bh*0.3,n=3,top=Math.max(ly+sz*1.1,H*0.5-(n*bh+(n-1)*gap)/2+20*U);
  cx.save();cx.translate(W/2,ly);cx.rotate(-0.04);
  font(Math.round(sz),900);cx.textAlign="center";cx.textBaseline="middle";cx.lineJoin="round";
  cx.fillStyle="rgba(0,0,0,0.3)";cx.fillText("Vine Swing",sz*0.04,sz*0.1);
@@ -1302,14 +1303,15 @@ function drawTitle(){dim(0.15);
  cx.strokeStyle="#5fb04f";cx.lineWidth=3*U;cx.setLineDash([9*U,7*U]);cx.stroke();cx.setLineDash([]);
  for(let k=0;k<9;k++){const t=(k+0.5)/9;leaf(vx(t),vy(t),30*U,k%2?0.6:Math.PI-0.6,k%3?"#4caf50":"#3a9a44")}
  cx.drawImage(bananaSpr(true),sz*2.25,-sz*0.95,sz*0.9,sz*0.68);
- {const hx=vx(0.93),hy=vy(0.93),a=Math.sin(T*1.6)*0.32,len=sz*0.55,mx=hx+Math.sin(a)*len,my=hy+Math.cos(a)*len,k=sz/68;
+ const heroK=Math.min(sz/68,(top-8-ly-sz*1.25)/(57*MS)),heroX=vx(0.93)+W/2;
+ // only where it hangs beside the buttons rather than over them does it get to be full size
+ if(heroK>0.35||heroX>W/2+bw/2+20*U){const hx=vx(0.93),hy=vy(0.93),a=Math.sin(T*1.6)*0.32,len=sz*0.55,mx=hx+Math.sin(a)*len,my=hy+Math.cos(a)*len,k=heroX>W/2+bw/2+20*U?sz/68:heroK;
   cx.strokeStyle="#2d6e33";cx.lineWidth=4*U;cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(mx,my);cx.stroke();
   drawMonkey(mx-Math.sin(a)*HAND*k,my+Math.cos(a)*HAND*k,-a,me.char,me.hat,{pose:"hang",T,scale:k,mood:"grin",tail:Math.sin(T*1.6+1)*0.6})}
  cx.restore();
  // who is playing
  const cw=Math.min(W*0.5,230*U),ch=44*U;
  button(sideR()-cw,topY(),cw,ch,"Playing: "+me.name,()=>{scene="who"},{col:me.col,ink:"#fff",fs:ch*0.4});
- const bw=Math.min(W*0.72,330*U),bh=Math.min(64*U,H*0.12),gap=bh*0.3,n=3,top=Math.max(ly+sz*1.1,H*0.5-(n*bh+(n-1)*gap)/2+20*U);
  button(W/2-bw/2,top,bw,bh,"PLAY",()=>{selWorld=TAB_ORDER.filter(w=>me.worlds[w]).pop()||0;scene="map"},{col:"#69db7c",ink:"#113a1a",fs:bh*0.46});
  const dk=dayKey(),done=me.daily[dk]!=null;
  button(W/2-bw/2,top+bh+gap,bw,bh,done?"DAILY JUNGLE  "+fmtT(me.daily[dk]):"DAILY JUNGLE",()=>{card={daily:true,spec:dailySpec(dk),use:{}};scene="card"},{col:"#ffa94d",ink:"#4a2000",fs:bh*0.38});
@@ -1335,7 +1337,7 @@ function updateBanner(y){if(!newBuild)return;const uw=Math.min(W*0.8,340*U),uh=4
 // coming back to the game after a while is a good moment to ask again
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&T-checkedAt>60)checkedAt=-1e9});
 function drawWho(){dim(0.55);txt("Who's playing?",W/2,topY()+30*U,34*U,"#fff","center",900,"#1a3a1a");
- const n=profiles.length+(profiles.length<6?1:0),top=topY()+64*U,bottom=botY()-70*U;
+ const n=profiles.length+(profiles.length<6?1:0),top=topY()+64*U,backTop=botY()-50*U,hintY=backTop-20*U,bottom=hintY-18*U;
  const cells=grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,0.85);
  cells.forEach((c,i)=>{const p=profiles[i];
   if(!p){panel(c.x,c.y,c.w,c.h,"rgba(255,255,255,0.18)");txt("+",c.x+c.w/2,c.y+c.h*0.42,c.h*0.35,"#fff");fitTxt("Add player",c.x+c.w/2,c.y+c.h*0.78,c.h*0.1,c.w*0.9,"#fff");
@@ -1346,7 +1348,8 @@ function drawWho(){dim(0.55);txt("Who's playing?",W/2,topY()+30*U,34*U,"#fff","c
   const st=totalStars(p);icon("star",c.x+c.w*0.3,c.y+c.h*0.87,c.h*0.1,"#f59f00");txt(String(st),c.x+c.w*0.37,c.y+c.h*0.87,c.h*0.09,"#5a3a00","left");
   icon("banana",c.x+c.w*0.62,c.y+c.h*0.87,c.h*0.1);txt(String(p.bananas),c.x+c.w*0.69,c.y+c.h*0.87,c.h*0.09,"#5a3a00","left");
   btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{if(me===p){const nm=ask("Change "+p.name+"'s name?",p.name);if(nm){p.name=nm;save()}}else{me=p;save()}}})});
- txt("Tap your name again to change it",W/2,botY()-70*U+18*U,14*U,"rgba(255,255,255,0.8)");
+ // the hint has its own row, clear of the Back button beneath it
+ fitTxt("Tap your name again to change it",W/2,hintY,14*U,W-2*sideL(),"rgba(255,255,255,0.85)","center",800,"rgba(0,0,0,0.35)");
  backBtn(()=>{scene="title"})}
 // window.prompt works in Safari and on a Home Screen app; if a browser has
 // switched it off, nothing happens rather than something breaking
@@ -1355,7 +1358,7 @@ function ask(q,d){try{holds.clear();const v=window.prompt(q,d);return v?String(v
 function drawMap(){dim(0.5);checkUpdate();
  const tabs=grid(6,sideL()+46*U,topY(),sideR()-sideL()-46*U-(W>H?170*U:0),W>H?52*U:96*U,6*U,2.4);
  TAB_ORDER.forEach((w,ti)=>{const Wd=WORLDS[w],c=tabs[ti],open=me.worlds[w],sel=w===selWorld;
-  button(c.x,c.y,c.w,c.h,Wd.name,()=>{selWorld=w},{col:sel?Wd.sky[0]:shade(Wd.sky[0],-0.35),ink:sel?"#1a1a1a":"#e9ecef",ring:sel?"#fff":null,fs:c.h*0.34,icon:open?null:"lock"})});
+  button(c.x,c.y,c.w,c.h,c.w<150*U?Wd.short:Wd.name,()=>{selWorld=w},{col:sel?Wd.sky[0]:shade(Wd.sky[0],-0.35),ink:sel?"#1a1a1a":"#e9ecef",ring:sel?"#fff":null,fs:c.h*0.34,icon:open?null:"lock"})});
  if(W>H)bananaChip(sideR(),topY()+7*U,true);else bananaChip(sideR(),botY()-44*U,true);
  const top=tabs[5].y+tabs[5].h+14*U,bottom=botY()-64*U,Wd=WORLDS[selWorld];
  if(!me.worlds[selWorld]){const pw=Math.min(W-sideL()*2,440*U),ph=Math.min(bottom-top,230*U),px=W/2-pw/2,py=(top+bottom)/2-ph/2;panel(px,py,pw,ph);
