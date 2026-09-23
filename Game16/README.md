@@ -69,7 +69,13 @@ The level builder and the physics are pure (no clock, no screen, no
 `Math.random`), so `tools/vinecheck.mjs` lifts them out of the page and plays
 every level with a searching robot. It proves each one can be finished and
 all three gold bananas reached, measures how wide the let-go timing windows
-are, and picked the seeds in the game's `SEEDS` table.
+are, and picked the seeds in the game's `SEEDS` table. It also drops the
+monkey in the water past every checkpoint and checks it comes back standing
+on that ledge, and that the robot can get from there to the finish.
+
+If frames keep arriving late (an older iPad, a phone saving battery), the
+game quietly drops the mist and the shading on the hills and carries on at
+full pace.
 
     node tools/vinecheck.mjs            all forty levels
     node tools/vinecheck.mjs daily 30   the next thirty daily jungles
