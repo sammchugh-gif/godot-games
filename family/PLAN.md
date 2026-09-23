@@ -22,7 +22,7 @@ Confidence tags: [Certain] hard evidence, [Likely] strong inference,
 | Activities | Two-way sync with Google Calendar, from day one |
 | Notifications | Morning email digest |
 | Cadence | Weekly, shopping list first |
-| Invite test | Reported good; no second-account writes seen in the store yet (see 4) |
+| Invite test | FAILED: invited by email with Can edit, she saw "page not found" (see 4) |
 
 ## 2. Assessment of those decisions
 
@@ -36,8 +36,7 @@ firm for version 1, not for week 1.
 
 **Google Calendar is now connected and works.** [Certain] The connector
 lists four calendars, including a shared "Family" calendar and
-"#teammchugh". The page will target "Family" for activities unless you say
-otherwise. The connector's create, list and update event tools are
+"#teammchugh". Activities will target "#teammchugh", your choice on 23 Sep. The connector's create, list and update event tools are
 confirmed and their shapes read; phases 4 and 5 are buildable.
 
 ## 3. The two routes, against your choices
@@ -80,7 +79,15 @@ anything Route A lacks.
 
 ## 4. Status
 
-- Route: inside Claude, confirmed.
+- Route: inside Claude, NOT yet confirmed. The email invite with Can
+  edit produced "page not found" on her account. [Likely] cause: the
+  runtime's own notes say a page declaring the shared database is
+  "organization-internal", and on a personal plan your organisation is
+  only you. A plain page with no database is published as a control to
+  isolate that: if she can open the plain page but not the list, the
+  database capability is the blocker and the Claude route is out for a
+  second account. If she cannot open either, the invite itself is the
+  problem (wrong email, or opened while signed into a different account).
 - Week 1 shipped (23 Sep 2026): the shopping list is live at the link
   below. Add, tick, edit (quantity, shop, aisle), Usuals, clear ticked,
   filter by shop. Aisle is guessed from the item name and can be changed.
