@@ -21,6 +21,12 @@ held upright; sideways works too, with the score display beside the table.
 - Keyboard: Z or Left for the left flipper, / or Right for the right, Space
   or Down for the plunger, Up to nudge, P or Escape to pause.
 
+The camera follows the ball: it sits closer than the whole table, slides
+across with the ball and back to the middle when the ball comes down to the
+flippers, so both are always in view. Held sideways, where the table does not
+fit whole, it also rides up and down. **Camera: whole table** in the pause
+menu turns this off and shows the whole table all the time.
+
 The score display at the top is a dot-matrix panel like an arcade machine's.
 Every few seconds its bottom line says what to shoot next.
 
@@ -45,7 +51,11 @@ steeper than a real machine; Slow is about two thirds of that.
 
 Every table also has three top lanes (light all three to raise the bonus
 multiplier), kickbacks in both outlanes, combos for ramps and orbits made one
-after the other, and a ball save at the start of each ball.
+after the other, and a ball save at the start of each ball. In the middle of
+every table is a **turntable** that the ball spins as it rolls across it
+(every ten turns scores a bonus), and either side of it are four **star
+rollovers**: roll over all four and a **save post** comes up between the
+flippers for 12 seconds, so a ball down the middle bounces back into play.
 
 Block Mine and Wizard Academy are the game's own designs in a blocky mining
 style and a magic-school style; neither uses anyone else's names, characters
