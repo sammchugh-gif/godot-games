@@ -22,7 +22,7 @@ Confidence tags: [Certain] hard evidence, [Likely] strong inference,
 | Activities | Two-way sync with Google Calendar, from day one |
 | Notifications | Morning email digest |
 | Cadence | Weekly, shopping list first |
-| Invite test | Not yet run |
+| Invite test | Reported good; no second-account writes seen in the store yet (see 4) |
 
 ## 2. Assessment of those decisions
 
@@ -34,10 +34,11 @@ the app at all, and the first thing your wife sees is a calendar bug.
 "Day one" and "shopping first" cannot both be true; I will treat two-way as
 firm for version 1, not for week 1.
 
-**Neither of you has the Google Calendar connector in Claude yet.**
-[Certain] This session's connector list shows Gmail connected, Google Drive
-installed but not connected, and no Google Calendar at all. That matters
-for the route choice below.
+**Google Calendar is now connected and works.** [Certain] The connector
+lists four calendars, including a shared "Family" calendar and
+"#teammchugh". The page will target "Family" for activities unless you say
+otherwise. The connector's create, list and update event tools are
+confirmed and their shapes read; phases 4 and 5 are buildable.
 
 ## 3. The two routes, against your choices
 
@@ -76,7 +77,18 @@ test passes and the Google Calendar connector proves usable from a page.
 Route B's weekly re-authorisation is a worse daily experience than
 anything Route A lacks.
 
-## 4. What has to happen before code
+## 4. Status
+
+- Route: inside Claude, confirmed.
+- Week 1 shipped (23 Sep 2026): the shopping list is live at the link
+  below. Add, tick, edit (quantity, shop, aisle), Usuals, clear ticked,
+  filter by shop. Aisle is guessed from the item name and can be changed.
+- [Certain] As of the week 1 publish the store held no items written by
+  either account and the platform reported the page readable by the owner
+  only. So the invite has not yet been proven end to end. Run step 1 below
+  if it has not been done.
+
+## 4a. The original pre-code checks
 
 1. **Invite test.** Open https://claude.ai/artifact/TEoE9Viz5LYtMtqtnUCqPp,
    add an item, then from the Share menu invite your wife by her Claude
