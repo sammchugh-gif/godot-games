@@ -59,11 +59,11 @@ function move(L, s0, r, w) {
   }
   s.stall = 1; return s;
 }
-function solve(L, wantGold, from) {
+function solve(L, wantGold, from, hanging) {
   const start = from || G.newRun(L);
   /* the opening catch off the ledge */
   let s = G.cloneRun(start);
-  for (let t = 0; t < 1 && s.att < 0; t += G.DT) G.step(L, s, true);
+  if (!hanging) for (let t = 0; t < 1 && s.att < 0; t += G.DT) G.step(L, s, true);
   let beam = [{ s, win: [] }], best = null;
   for (let depth = 0; depth < 160 && beam.length; depth++) {
     const kids = [];
@@ -118,14 +118,37 @@ function check(sp) {
     }
     if (out) respawns++; else stuck.push(c);
   }
+  /* the long-vine trap: hanging from the ring just before a ledge on the
+     longest vine a grab can give, the swing bottoms out below the top of the
+     ledge beside it. A child can get there by grabbing from far away; the
+     robot, left to itself, never does. From there it must still be able to
+     get to the finish without a splash. */
+  const traps = [];
+  for (let c = 1; c < L.cps.length; c++) {
+    const cp = L.cps[c], led = L.rects.find(q => cp.x >= q.x && cp.x <= q.x + q.w && q.y === cp.y);
+    let ai = -1; for (let i = 0; i < L.anchors.length; i++) if (L.anchors[i].x < led.x) ai = i;
+    /* a crumbling ring is meant to drop you: that is not a trap */
+    if (ai < 0 || L.anchors[ai].type === 1) continue;
+    /* as long a vine as keeps the swing out of the water: a longer one just
+       means a splash and a ride back to the flag, which is not a trap */
+    const a = L.anchors[ai], s = G.newRun(L), len = Math.min(300, G.FLOOR - 36 - a.y), th = -0.5;
+    s.x = a.x + Math.sin(th) * len; s.y = a.y + Math.cos(th) * len; s.gr = 0;
+    s.att = ai; s.L = s.Lt = Math.hypot(s.x - a.x, s.y - a.y); s.held = true;
+    /* thorns or a bee under the ring are there to punish a long vine: a
+       prick and a ride back to the flag is the game, not a trap */
+    const probe = G.cloneRun(s); probe.ev = []; let hurt = false;
+    for (let t = 0; t < 2 && !hurt; t += G.DT) { G.step(L, probe, true); hurt = probe.ev.some(e => e.k === 'die' && e.a !== 'floor'); probe.ev.length = 0; }
+    if (hurt) continue;
+    if (!solve(L, false, s, true)) traps.push(c);
+  }
   const minW = win.length ? Math.min(...win) : 0, avgW = win.length ? win.reduce((a, c) => a + c, 0) / win.length : 0;
-  return { id: sp.id, seed: sp.seed, ok: !!b && !stuck.length, stuck, cps: L.cps.length, respawns, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
+  return { id: sp.id, seed: sp.seed, ok: !!b && !stuck.length && !traps.length, stuck, traps, cps: L.cps.length, respawns, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
     minW, avgW, rings: L.anchors.length, len: Math.round(L.goalX), ms: Date.now() - t0 };
 }
 function line(r) {
   return `${r.id.padEnd(16)} ${r.ok ? 'ok  ' : 'FAIL'} time ${r.time ? r.time.toFixed(1).padStart(5) : '   --'} par ${String(r.par).padStart(5)}` +
     `  golds ${r.golds}/3  window min ${(r.minW * 100).toFixed(0).padStart(3)}% avg ${(r.avgW * 100).toFixed(0).padStart(3)}%` +
-    `  rings ${r.rings} len ${r.len}  ledges ${r.respawns}/${r.cps}${r.stuck.length ? ' STUCK AT ' + r.stuck.join(',') : ''}  (${r.ms}ms)`;
+    `  rings ${r.rings} len ${r.len}  ledges ${r.respawns}/${r.cps}${r.stuck.length ? ' STUCK AT ' + r.stuck.join(',') : ''}${r.traps.length ? ' TRAPPED BY THE WALL AT ' + r.traps.join(',') : ''}  (${r.ms}ms)`;
 }
 const arg = process.argv[2];
 let bad = 0;

@@ -16,7 +16,10 @@ orientation. One file, no engine.
   dotted line shows which one before you touch.
 - **Let go** to fly. Let go on the way up and forward for distance.
 - **Hold again** in the air to catch the next ring. A catch keeps your speed.
-- Standing on a ledge with nothing in reach, a hold is a hop forward.
+- Standing on a ledge with nothing in reach, a tap is a hop forward (the
+  game says so). Standing on a ledge, a hold never grabs a ring behind you.
+- Swing into the side of a ledge and the monkey scrambles up onto it. If it
+  is ever hanging too far down the wall for that, it climbs its vine.
 - Splash into the water (or the swamp, the rapids, the lava), touch a thorn
   bush or a bee, and a bubble scoops the monkey up and floats it back to the
   last flag. The clock keeps running.
@@ -75,7 +78,10 @@ every level with a searching robot. It proves each one can be finished and
 all three gold bananas reached, measures how wide the let-go timing windows
 are, and picked the seeds in the game's `SEEDS` table. It also drops the
 monkey in the water past every checkpoint and checks it comes back standing
-on that ledge, and that the robot can get from there to the finish.
+on that ledge, and that the robot can get from there to the finish. And it
+hangs the monkey on the longest dry vine from the ring before each ledge,
+beside the ledge's wall, and checks the robot can still get to the finish
+without a splash: that is where a child was once stuck.
 
 If frames keep arriving late (an older iPad, a phone saving battery), the
 game quietly drops the mist and the shading on the hills and carries on at
