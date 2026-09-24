@@ -639,3 +639,25 @@ vitals dial, and the title's LAUNCH button.
 and after (and a warm-up first, since the first busy frame bakes every sprite).
 No skin may cost more than 1.45 times classic. The old code measures 1.64 and
 1.85 and fails; the new code measures about 0.7 to 1.0.
+
+## Quicker off the line
+
+Every ship was slow for the first few minutes of a run: a Viper started at 236
+and only felt quick once it had a few ranks of Turbo Engine. The base speed is
+now a fifth higher (`SPEED_BASE`, 210 to 252) and each rank of Turbo Engine
+gives 7% instead of 12% (`ENGINE_RANK`), so a fresh ship is 20% faster and a
+fully tuned one - five ranks - finishes within about 1% of where it always did.
+
+What the play bot says, eight runs each, current speeds against these:
+
+| | wins | mean sector | damage in sectors 1-2 |
+| --- | --- | --- | --- |
+| easy, before | 3 / 8 | 4.5 | 81 |
+| easy, after | 3 / 8 | 4.5 | 58 |
+| medium, before | 0 / 8 | 2.6 | 157 |
+| medium, after | 1 / 8 | 3.8 | 91 |
+
+On easy the outcome of a run does not move - runs end in the late game, where
+top speed is unchanged - but the opening is a quarter less punishing. Medium
+gets easier: runs last about a sector longer, because the opening was where
+medium runs were ending.

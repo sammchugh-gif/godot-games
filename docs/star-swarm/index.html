@@ -1248,7 +1248,7 @@ function evolve(k){if(!WEAPONS[k].evo||G.evo[k])return false;G.evo[k]=true;G.evo
  announce(WEAPONS[k].name.toUpperCase()+" EVOLVED  ·  "+WEAPONS[k].evo.name.toUpperCase()+"!");SFX.evolve();flash=0.8;shake=1;
  for(let i=0;i<40;i++)G.parts.push({k:"dot",x:G.px,y:G.py,vx:rnd(-260,260),vy:rnd(-260,260),life:rnd(0.5,1.1),col:WEAPONS[k].evo.col,r:rnd(3,8)});return true}
 const PASSIVES={
- engine:{name:"Turbo Engine",icon:"»",col:"#80ff80",desc:"+12% speed.",max:5},
+ engine:{name:"Turbo Engine",icon:"»",col:"#80ff80",desc:"+7% speed.",max:5},
  hull:{name:"Thick Hull",icon:"▣",col:"#c0c0c0",desc:"+25 max hull and repair 25.",max:5},
  shield:{name:"Shield Cells",icon:"◯",col:"#40d0ff",desc:"+20 max shield, shields recharge faster.",max:5},
  power:{name:"Power Core",icon:"✊",col:"#ffa040",desc:"+15% damage.",max:5},
@@ -1354,7 +1354,14 @@ function newRun(ship){const mode=modeOf(),daily=mode==="daily"?dailyInfo():null;
 function seeded(fn,a){if(!G||!G.rng)return fn(a);const R=Math.random;Math.random=G.rng;try{return fn(a)}finally{Math.random=R}}
 function seedRocks(ox,oy){ox=ox||0;oy=oy||0;
  for(let i=0;i<70;i++){const a=Math.random()*TAU,d=rnd(180,1500);G.rocks.push({x:ox+Math.cos(a)*d,y:oy+Math.sin(a)*d,r:rnd(22,52),hp:3,rot:Math.random()*TAU,seed:Math.random()*100});}}
-function moveSpeed(){return 210*shipSpeed(G.ship)*(1+0.12*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
+// Every ship was slow off the line: a Viper started at 236 and only felt quick
+// once it had a few ranks of engine in it, so the opening minutes of every run
+// were the sluggish ones. The base goes up a fifth and each rank of Turbo
+// Engine gives 7% instead of 12%, so a fresh ship is 20% faster and a fully
+// tuned one finishes within a couple of percent of where it always did - the
+// late game, where the balance lives, barely moves.
+const SPEED_BASE=252,ENGINE_RANK=0.07;
+function moveSpeed(){return SPEED_BASE*shipSpeed(G.ship)*(1+ENGINE_RANK*(G.passives.engine||0))*(mod().speed||1)*(1+0.03*perkLv("engine"))}
 function dmgMul(){return (1+0.15*(G.passives.power||0))*(mod().dmg||1)*(1+0.04*perkLv("power"))*shipDmg(G.ship)}function rateMul(){return 1/(1+0.12*(G.passives.haste||0))}function xpMul(){return (1+0.2*(G.passives.scanner||0))*(mod().xp||1)*(1+0.08*perkLv("gems"))*(G.ship.ab==="gravity"?1.15:1)}// gems pull from 70px bare and 245 at full Tractor Beam; it was 100 and 325, and they came too easily
 function magnetR(){return (70+35*(G.passives.tractor||0))*(mod().magnet||1)*(G.ship.ab==="gravity"?2:1)}function armor(){return G.passives.armor||0}
 // The swarm keeps pace with the build, not just the clock. Measured, the old
