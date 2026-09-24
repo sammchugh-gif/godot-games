@@ -41,6 +41,8 @@ const GAMES = {
   'vine-swing':     { start: 'window.VS.start(0,0)', music: true, selfWakes: true },
   /* and so does Pinball Quest */
   'pinball-quest':  { start: "window.PB.start('goal')", music: true, selfWakes: true },
+  /* Mahjong Club has no music, but asks for its sound back once a second too */
+  'mahjong-club':   { selfWakes: true },
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];

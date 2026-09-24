@@ -1,0 +1,1042 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Mahjong Club</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#0f3b2c;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
+</style><script>window.__shelfPaused=function(){try{return scene!=="table"}catch(e){return true}};</script><script src="../menu.js" defer></script>
+<script src="../fresh.js" defer></script>
+<script src="peerjs.min.js"></script>
+</head><body><canvas id="c"></canvas>
+<script>
+"use strict";
+// ================================================================ tiles
+// American mah jongg: 152 tiles. Three suits of 1-9, four of each (bams,
+// craks, dots); four of each wind; four of each dragon (green goes with bams,
+// red with craks, white - "soap" - with dots, and soap is also the zero in a
+// year); eight flowers; eight jokers. A tile's code:
+//   0-26  suited, suit*9 + number-1      27-30 winds N E W S
+//   31-33 dragons green, red, soap       34 flower       35 joker
+const SUIT_NAME=["Bam","Crak","Dot"],T_N=27,T_SOAP=33,T_F=34,T_J=35,NCODE=36;
+const tSuit=t=>t<27?(t/9|0):-1,tNum=t=>t<27?t%9+1:0,dragonOf=s=>31+s;
+const AVAIL=t=>t===T_F||t===T_J?8:4;
+function tName(t){if(t<27)return tNum(t)+" "+SUIT_NAME[tSuit(t)];if(t<31)return["North","East","West","South"][t-27]+" wind";
+ if(t<34)return["Green","Red","White"][t-31]+" dragon";return t===T_F?"Flower":"Joker"}
+function tShort(t){if(t<27)return tNum(t)+"BCD"[tSuit(t)];if(t<31)return"NEWS"[t-27];if(t<34)return["GD","RD","0"][t-31];return t===T_F?"F":"J"}
+// tile id (0-151) -> code
+const TILE=(()=>{const a=[];for(let t=0;t<34;t++)for(let k=0;k<4;k++)a.push(t);for(let k=0;k<8;k++)a.push(T_F);for(let k=0;k<8;k++)a.push(T_J);return a})();
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+// ================================================================ card
+// The game's own card, in the American style: the same kinds of hands as
+// the League's card (year, 2468, like numbers, quints, runs, odds, winds and
+// dragons, 369, singles and pairs), but its own hands - the League's card is
+// theirs, and new every year.
+// A hand is written the way a card prints it:
+//   1-9 a number; 0 the white dragon (soap), a zero in a year
+//   i j k l m a number counted from a base: i, i+1, i+2... (runs, like numbers)
+//   N E W S winds, F flower, D the dragon that goes with the group's suit
+//   a trailing a, b or c is the group's suit: the same letter the same suit,
+//   different letters different suits
+// A token of one tile repeated is a group (FF a pair, 222a a pung, 2222a a
+// kong, 22222a a quint); a token of different tiles (2026a, 13579a) is that
+// many single tiles. Jokers can stand in for a tile in a group of three or
+// more, never in a pair or a single. c:1 marks a concealed hand (no
+// exposures; only the last tile may be called).
+const CARD_STD=[
+ ["2026",[["FF 2026a 2222b 6666c",25],["222a 0000 222b 6666c",25],["FFFF 2026a NN 2026b",30,1],["NNN 2026a SSS 2026a",30]]],
+ ["2468",[["222a 4444a 666a 8888a",25],["FF 2222a 4444b 6666c",25],["22a 444a 66b 888b DDDDc",25],["2222a 44a 66a 8888a FF",25],["FFFF 2222a 88a 4444b",25],["2468a DDDa 2468b DDDb",30,1]]],
+ ["Like Numbers",[["FF iiiia iiiib iiiic",25],["iiiia DDDa iiiib DDDb",25],["FFF iiia iiiib iiiic",25]]],
+ ["Quints",[["FF iiiiia jja kkkkka",40],["iiiiia DDDDc iiiiib",45],["NNNNN EEEE SSSSS",45]]],
+ ["Consecutive Run",[["iia jjja kkkka llla mma",25],["iiiia jjjja kkkkb llb",25],["FF iiiia jjjja kkkka",25],["iiia jjja kkkkb DDDDb",25],["iiiia jjjjb kkkkc FF",25]]],
+ ["13579",[["11a 333a 5555a 777a 99a",25],["FF 5555a 7777a 9999a",25],["1111a 333a 5555a DDDa",25],["FFF 13579a 333b 555c",35,1]]],
+ ["Winds - Dragons",[["NNNN EEE WWW SSSS",25],["FF NNN EEEE WWW SS",25],["NN EEE WWW SS DDDDa",25],["DDDa DDDb DDDDc FFFF",30],["NNNN SSSS DDa DDb DDc",30,1],["EEEE WWWW iia iib iic",30,1]]],
+ ["369",[["3333a 666a 999a FFFF",25],["FF 3333a 6666b 9999c",25],["3333a 66a 9999a DDDDb",25],["FFFF 369a 369b 3333c",30]]],
+ ["Singles and Pairs",[["NN EE WW SS iia jjb kkc",50,1],["FF 22a 44a 66a 88a DDb DDc",50,1],["iia jja kka lla mma NN SS",50,1],["336699a 336699b FF",50,1]]]];
+// Easy: hold eight, go out with nine
+const CARD_EASY=[
+ ["2026",[["2026a DDDb FF",30]]],
+ ["2468",[["222a 444a 666a",25],["FF 2222a 888a",25],["22a 44a 666a 88a",30,1]]],
+ ["Like Numbers",[["iiia iiib iiic",25],["FFF iiiia DDa",25]]],
+ ["Quints",[["iiiiia jjjja",35]]],
+ ["Consecutive Run",[["iiia jjja kkka",25],["iiia jjjb kkkc",25],["FF iiiia jjja",25]]],
+ ["13579",[["111a 333a 555a",25],["FF 5555a 999a",25]]],
+ ["Winds - Dragons",[["NNN SSS FFF",25],["EEE WWW DDDa",25],["DDDa DDDb DDDc",30]]],
+ ["369",[["333a 666a 999a",25],["FF 3333a 999b",25]]],
+ ["Singles and Pairs",[["NN EE WW SS F",40,1],["iia jja kka lla F",40,1]]]];
+// Short (hold twelve, go out with thirteen): the standard card with its first
+// pair made a single, or where there is no pair its first kong a pung (then
+// a quint a kong, a pung a pair)
+function shorten(src){const toks=src.split(" ");let i=toks.findIndex(t=>{const b=t.replace(/[abc]$/,"");return b.length===2&&b[0]===b[1]});
+ if(i<0)i=toks.findIndex(t=>{const b=t.replace(/[abc]$/,"");return b.length===4&&[...b].every(c=>c===b[0])});
+ for(const n of[5,3])if(i<0)i=toks.findIndex(t=>{const b=t.replace(/[abc]$/,"");return b.length===n&&[...b].every(c=>c===b[0])});
+ const t=toks[i],sv=/[abc]$/.test(t)?t.slice(-1):"",b=sv?t.slice(0,-1):t;toks[i]=b.slice(1)+sv;return toks.join(" ")}
+const CARD_SHORT=CARD_STD.map(([title,hs])=>[title,hs.map(h=>[shorten(h[0])].concat(h.slice(1)))]);
+const MODES={easy:{name:"Easy",size:9,pass:2,second:false,card:CARD_EASY},
+ short:{name:"Short",size:13,pass:3,second:true,card:CARD_SHORT},
+ standard:{name:"Standard",size:14,pass:3,second:true,card:CARD_STD}};
+
+function parseHand(src){const groups=[];
+ for(const tok of src.split(/\s+/)){const m=/[abc]$/.exec(tok),sv=m?m[0]:null,body=m?tok.slice(0,-1):tok,ch=[...body];
+  if(ch.every(c=>c===ch[0]))groups.push({c:ch[0],k:ch.length,s:sv});else for(const c of ch)groups.push({c,k:1,s:sv})}
+ return groups}
+// every concrete way a hand can be made: each suit letter a suit, each
+// counted number a base that keeps the run on the tiles
+function expand(hand){const g=parseHand(hand.src),vars=[...new Set(g.filter(x=>x.s).map(x=>x.s))].sort();
+ const off=c=>"ijklm".indexOf(c),maxOff=Math.max(-1,...g.map(x=>off(x.c))),bases=maxOff>=0?Array.from({length:9-maxOff},(_,i)=>i+1):[0];
+ const perms=[];(function p(pre){if(pre.length===vars.length){perms.push(pre.slice());return}for(let s=0;s<3;s++)if(!pre.includes(s)){pre.push(s);p(pre);pre.pop()}})([]);
+ const out=[],seen=new Set();
+ for(const base of bases)for(const pm of perms){const suit=sv=>pm[vars.indexOf(sv)];let ok=true;
+  const groups=g.map(x=>{let t;const c=x.c;
+   if(c>="1"&&c<="9")t=suit(x.s)*9+(+c)-1;else if(c==="0")t=T_SOAP;else if(off(c)>=0){const n=base+off(c);t=suit(x.s)*9+n-1}
+   else if(c==="F")t=T_F;else if("NEWS".includes(c))t=T_N+"NEWS".indexOf(c);else if(c==="D")t=dragonOf(suit(x.s));else ok=false;
+   return{t,k:x.k}});
+  if(!ok)continue;
+  const need=new Map();for(const q of groups){const e=need.get(q.t)||{n:0,j:0};if(q.k>=3)e.j+=q.k;else e.n+=q.k;need.set(q.t,e)}
+  // it has to be makeable: no more naturals than there are, jokers only in groups
+  let jok=0;for(const [t,e] of need){if(e.n>AVAIL(t)){ok=false;break}jok+=Math.max(0,e.n+e.j-AVAIL(t))}
+  if(!ok||jok>8)continue;
+  const sig=groups.map(q=>q.t+"x"+q.k).sort().join(",");if(seen.has(sig))continue;seen.add(sig);
+  out.push({hand,groups,need:[...need].map(([t,e])=>({t,n:e.n,j:e.j})),gk:groups.map(q=>q.t*8+q.k)})}
+ return out}
+function buildCard(mode){const M=MODES[mode],hands=[],vars=[];let id=0;
+ for(const [title,hs] of M.card)for(const h of hs){const hand={id:id++,section:title,src:h[0],value:h[1],concealed:!!h[2],pairs:title==="Singles and Pairs"};
+  hand.size=parseHand(hand.src).reduce((a,q)=>a+q.k,0);hand.variants=expand(hand);hands.push(hand);for(const v of hand.variants)vars.push(v)}
+ return{mode,size:M.size,hands,vars}}
+const CARDS={};for(const m in MODES)CARDS[m]=buildCard(m);
+
+// ================================================================ reading a hand
+// counts of each tile code among a set of tile ids
+function countsOf(ids){const h=new Int8Array(NCODE);for(const i of ids)h[TILE[i]]++;return h}
+// How many more tiles a player needs for this concrete hand, given the tiles
+// in their hand (h, jokers among them) and what they have exposed - or
+// Infinity if their exposures rule it out.
+function missing(v,h,exps){
+ if(exps.length){if(v.hand.concealed)return Infinity;
+  const left=v.gk.slice();for(const e of exps){const i=left.indexOf(e.t*8+e.k);if(i<0)return Infinity;left.splice(i,1)}
+  // the groups not yet exposed
+  const need=new Map();for(const key of left){const t=key>>3,k=key&7,e=need.get(t)||{n:0,j:0};if(k>=3)e.j+=k;else e.n+=k;need.set(t,e)}
+  let nd=0,dj=0;for(const [t,e] of need){const ht=h[t];nd+=Math.max(0,e.n-ht);dj+=Math.max(0,e.j-Math.max(0,ht-e.n))}
+  return nd+Math.max(0,dj-h[T_J])}
+ let nd=0,dj=0;for(const e of v.need){const ht=h[e.t];nd+=Math.max(0,e.n-ht);dj+=Math.max(0,e.j-Math.max(0,ht-e.n))}
+ return nd+Math.max(0,dj-h[T_J])}
+function heldCount(h){let n=0;for(let t=0;t<NCODE;t++)n+=h[t];return n}
+function expCount(exps){let n=0;for(const e of exps)n+=e.k;return n}
+// Is it mahjong? The best-paying hand on the card this makes, or null.
+function winningHand(card,h,exps){if(heldCount(h)+expCount(exps)!==card.size)return null;let best=null;
+ for(const v of card.vars)if(missing(v,h,exps)===0&&(!best||v.hand.value>best.hand.value))best=v;return best}
+// the closest hands on the card: for each hand its fewest missing tiles
+function closest(card,h,exps){const out=[];
+ for(const hand of card.hands){let m=Infinity,bv=null;for(const v of hand.variants){const d=missing(v,h,exps);if(d<m){m=d;bv=v}}out.push({hand,m,v:bv})}
+ return out.sort((a,b)=>a.m-b.m||b.hand.value-a.hand.value)}
+function bestMissing(card,h,exps){let m=Infinity;for(const v of card.vars){const d=missing(v,h,exps);if(d<m)m=d}return m}
+
+// ================================================================ the game
+// Play goes to the right. Seats are numbered in turn order, so a seat's
+// right is the next seat, across two on, left three on.
+const PASS_DIR={right:1,across:2,left:3};
+function newGame(o){
+ const M=MODES[o.mode],card=CARDS[o.mode],R=mulberry32(o.seed>>>0),ids=Array.from({length:152},(_,i)=>i);
+ for(let i=ids.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}
+ const G={mode:o.mode,card,size:M.size,seed:o.seed>>>0,rng:R,dealer:o.dealer||0,wall:ids,pool:[],
+  seats:[0,1,2,3].map(i=>({name:(o.names||[])[i]||"Player "+(i+1),bot:!!(o.bots||[])[i],hand:[],exp:[],disc:[]})),
+  phase:"charleston",turn:o.dealer||0,last:null,claims:null,picks:[null,null,null,null],votes:null,
+  plan:[["right",M.pass],["across",M.pass],["left",M.pass]],step:0,second:M.second,log:[],result:null,drawn:null,calledFrom:-1,t:0};
+ for(let r=0;r<M.size-1;r++)for(let k=0;k<4;k++)G.seats[(G.dealer+k)%4].hand.push(G.wall.pop());
+ G.seats[G.dealer].hand.push(G.wall.pop());
+ logG(G,"deal");return G}
+// (a log entry's own k and t come last, so nothing in o can overwrite them)
+function logG(G,k,o){G.log.push(Object.assign({},o||{},{k,t:G.t++}))}
+const heldOf=s=>countsOf(s.hand);
+// what a seat has to do now, if anything
+function waitingOn(G){const w=[];
+ if(G.phase==="charleston"||G.phase==="courtesy"){for(let i=0;i<4;i++)if(!G.picks[i])w.push(i)}
+ else if(G.phase==="vote"){for(let i=0;i<4;i++)if(G.votes[i]==null)w.push(i)}
+ else if(G.phase==="turn")w.push(G.turn);
+ else if(G.phase==="claims"){for(let i=0;i<4;i++)if(G.claims[i]===undefined)w.push(i)}
+ return w}
+function passCount(G){return G.phase==="courtesy"?3:G.plan[G.step][1]}
+// ---------------------------------------------------------------- the Charleston
+function pick(G,seat,tiles){
+ if(G.phase!=="charleston"&&G.phase!=="courtesy")return"not now";const s=G.seats[seat];
+ const n=G.phase==="courtesy"?tiles.length:passCount(G);
+ if(tiles.length!==n||G.phase==="courtesy"&&n>3)return"pass "+n+" tiles";
+ if(new Set(tiles).size!==tiles.length||tiles.some(i=>!s.hand.includes(i)))return"not your tiles";
+ if(tiles.some(i=>TILE[i]===T_J))return"jokers are never passed";
+ G.picks[seat]=tiles.slice();
+ if(G.picks.every(p=>p))(G.phase==="courtesy"?doCourtesy:doPass)(G);
+ return null}
+function doPass(G){const [dir]=G.plan[G.step],d=PASS_DIR[dir];
+ for(let i=0;i<4;i++){const s=G.seats[i];s.hand=s.hand.filter(x=>!G.picks[i].includes(x))}
+ for(let i=0;i<4;i++)G.seats[(i+d)%4].hand.push(...G.picks[i]);
+ logG(G,"passed",{dir,n:G.picks[0].length});G.picks=[null,null,null,null];G.step++;
+ if(G.step<G.plan.length)return;
+ // after the first Charleston, everyone may stop the second; after the second, the courtesy pass
+ if(G.second&&G.plan.length===3){G.phase="vote";G.votes=[null,null,null,null];return}
+ if(G.second){G.phase="courtesy";return}
+ startPlay(G)}
+function vote(G,seat,more){if(G.phase!=="vote")return"not now";G.votes[seat]=!!more;
+ if(G.votes.every(v=>v!=null)){const go=G.votes.every(v=>v);logG(G,"vote",{go});
+  if(go){G.plan.push(["left",3],["across",3],["right",3]);G.phase="charleston"}else G.phase="courtesy"}
+ return null}
+function doCourtesy(G){
+ // across from each other, the smaller offer is what both give
+ for(const [a,b] of [[0,2],[1,3]]){const n=Math.min(G.picks[a].length,G.picks[b].length),ga=G.picks[a].slice(0,n),gb=G.picks[b].slice(0,n),A=G.seats[a],B=G.seats[b];
+  A.hand=A.hand.filter(x=>!ga.includes(x)).concat(gb);B.hand=B.hand.filter(x=>!gb.includes(x)).concat(ga);logG(G,"courtesy",{a,b,n})}
+ G.picks=[null,null,null,null];startPlay(G)}
+function startPlay(G){G.phase="turn";G.turn=G.dealer;G.drawn=null;G.calledFrom=-1;logG(G,"play")}
+// ---------------------------------------------------------------- turns
+function drawWall(G){if(!G.wall.length){G.phase="end";G.result={wall:true};logG(G,"wall");return}
+ const id=G.wall.pop();G.seats[G.turn].hand.push(id);G.drawn=id;G.calledFrom=-1;G.phase="turn";logG(G,"draw",{seat:G.turn})}
+function discard(G,seat,id){if(G.phase!=="turn"||G.turn!==seat)return"not your turn";const s=G.seats[seat];
+ if(!s.hand.includes(id))return"not your tile";
+ s.hand.splice(s.hand.indexOf(id),1);G.last={id,from:seat};G.drawn=null;G.calledFrom=-1;logG(G,"discard",{seat,id});
+ G.phase="claims";G.claims=[undefined,undefined,undefined,undefined];G.claims[seat]=null;
+ // nobody is asked who could not use it anyway
+ for(let i=0;i<4;i++)if(i!==seat&&!canClaim(G,i).any)G.claims[i]=null;
+ settle(G);return null}
+// what a seat could do with the last discard
+function canClaim(G,seat){const s=G.seats[seat],t=TILE[G.last.id],h=heldOf(s),out={mahjong:false,expose:[],any:false};
+ if(t===T_J)return out;
+ h[t]++;if(winningHand(G.card,h,s.exp))out.mahjong=true;h[t]--;
+ // an exposure has to fit some hand on the card with what is already exposed
+ const have=h[t]+h[T_J];
+ for(let k=3;k<=5;k++){if(have<k-1)continue;const e=s.exp.concat([{t,k}]);
+  if(G.card.vars.some(v=>!v.hand.concealed&&missing(v,h,e)<Infinity))out.expose.push(k)}
+ out.any=out.mahjong||out.expose.length>0;return out}
+// claim: null (pass), {mahjong:true}, or {k:3|4|5|6}
+function claim(G,seat,c){if(G.phase!=="claims"||G.claims[seat]!==undefined)return"not now";
+ if(c){const ok=canClaim(G,seat);if(c.mahjong&&!ok.mahjong||c.k&&!ok.expose.includes(c.k))return"that does not fit the card"}
+ G.claims[seat]=c||null;settle(G);return null}
+function settle(G){if(G.claims.some(c=>c===undefined))return;const from=G.last.from;
+ const order=[1,2,3].map(d=>(from+d)%4);
+ const mj=order.find(i=>G.claims[i]&&G.claims[i].mahjong);
+ if(mj!=null){const s=G.seats[mj];s.hand.push(G.last.id);G.turn=mj;win(G,mj,from);return}
+ const ex=order.find(i=>G.claims[i]&&G.claims[i].k);
+ if(ex!=null){const s=G.seats[ex],t=TILE[G.last.id],k=G.claims[ex].k,use=[G.last.id];
+  // naturals first, jokers to make up the rest
+  for(const id of s.hand)if(use.length<k&&TILE[id]===t)use.push(id);
+  for(const id of s.hand)if(use.length<k&&TILE[id]===T_J)use.push(id);
+  s.hand=s.hand.filter(x=>!use.includes(x));s.exp.push({t,k,ids:use});
+  logG(G,"call",{seat:ex,from,tile:t,n:k});G.turn=ex;G.phase="turn";G.calledFrom=from;G.drawn=null;G.claims=null;return}
+ G.pool.push(G.last);G.seats[from].disc.push(G.last.id);G.claims=null;G.turn=(from+1)%4;drawWall(G)}
+// Trade a natural tile for a joker in anyone's exposure that stands for it
+function swapJoker(G,seat,owner,ei,id){if(G.phase!=="turn"||G.turn!==seat)return"not your turn";
+ const s=G.seats[seat],e=G.seats[owner].exp[ei];if(!e||!s.hand.includes(id)||TILE[id]!==e.t)return"that tile does not go there";
+ const j=e.ids.findIndex(x=>TILE[x]===T_J);if(j<0)return"no joker there";
+ const jid=e.ids[j];e.ids[j]=id;s.hand.splice(s.hand.indexOf(id),1,jid);logG(G,"swap",{seat,owner,tile:e.t});return null}
+function declare(G,seat){if(G.phase!=="turn"||G.turn!==seat)return"not your turn";
+ if(!winningHand(G.card,heldOf(G.seats[seat]),G.seats[seat].exp))return"that is not mahjong yet";win(G,seat,G.calledFrom);return null}
+// Paying out: the hand's value from each player; double from whoever threw
+// the winning tile, double from everyone if it came off the wall, and double
+// again with no jokers (not on singles and pairs, which cannot have any)
+function win(G,seat,from){const s=G.seats[seat],v=winningHand(G.card,heldOf(s),s.exp);
+ const jokers=s.hand.concat(...s.exp.map(e=>e.ids)).filter(i=>TILE[i]===T_J).length,jl=!jokers&&!v.hand.pairs;
+ const base=v.hand.value*(jl?2:1),pay=[0,0,0,0];
+ for(let i=0;i<4;i++)if(i!==seat){pay[i]=-(from<0||from===i?2:1)*base;pay[seat]-=pay[i]}
+ G.phase="end";G.result={winner:seat,from,hand:v.hand,variant:v,jokerless:jl,self:from<0,pay};logG(G,"mahjong",{seat,from})}
+
+// ================================================================ the bots
+// A bot keeps the few hands on the card it is closest to in mind, and plays
+// toward them: it passes and throws what none of them want, calls a discard
+// when an exposure brings it closer to one of them it can still go for, and
+// never passes or throws a joker.
+function botScore(G,h,exps){const card=G.card;let best=Infinity;const top=[];
+ for(const v of card.vars){const d=missing(v,h,exps);if(d<best)best=d;if(d<Infinity)top.push([d-v.hand.value/200,v])}
+ top.sort((a,b)=>a[0]-b[0]);return{best,top:top.slice(0,12).map(x=>x[1])}}
+// how much a tile matters to the hands the bot is going for
+function useOf(t,top,h){let u=0;for(let i=0;i<top.length;i++){const v=top[i];for(const e of v.need)if(e.t===t){u+=(e.n+e.j>=h[t]?1:0.3)/(1+i*0.25)}}return u}
+function botThrowOrder(G,seat,cands){const s=G.seats[seat],h=heldOf(s),{top}=botScore(G,h,s.exp);const R=G.rng;
+ const seen=new Map();for(const id of cands){const t=TILE[id];if(t===T_J||seen.has(t))continue;
+  h[t]--;const m=bestMissing(G.card,h,s.exp);h[t]++;seen.set(t,{id,m,u:useOf(t,top,h),r:R()})}
+ return[...seen.values()].sort((a,b)=>a.m-b.m||a.u-b.u||a.r-b.r)}
+function botPick(G,seat){const s=G.seats[seat];
+ if(G.phase==="courtesy"){// offer as many as it has no use for, up to three
+  const order=botThrowOrder(G,seat,s.hand).filter(o=>o.u<0.2);return order.slice(0,3).map(o=>o.id)}
+ const n=passCount(G),out=[],hand=s.hand.slice(),keep=s.hand;
+ for(let k=0;k<n;k++){s.hand=hand.filter(x=>!out.includes(x));const o=botThrowOrder(G,seat,s.hand)[0];if(o)out.push(o.id);else break}
+ s.hand=keep;
+ // with only jokers left to give (never happens with a real hand) give any
+ for(const id of keep)if(out.length<n&&!out.includes(id)&&TILE[id]!==T_J)out.push(id);
+ return out}
+function botVote(G,seat){const s=G.seats[seat];return botScore(G,heldOf(s),s.exp).best>2}
+function botClaim(G,seat){const c=canClaim(G,seat);if(c.mahjong)return{mahjong:true};if(!c.expose.length)return null;
+ const s=G.seats[seat],h=heldOf(s),t=TILE[G.last.id],now=botScore(G,h,s.exp).best;
+ let best=null;
+ for(const k of c.expose){const h2=h.slice();h2[t]++;let need=k;const nat=Math.min(h2[t],need);h2[t]-=nat;need-=nat;h2[T_J]-=need;
+  const m=bestMissing(G.card,h2,s.exp.concat([{t,k}]));if(m<now&&(!best||m<best.m))best={k,m}}
+ return best?{k:best.k}:null}
+// its turn: mahjong if it can, a joker from an exposure if that does not
+// cost it, then the tile it needs least
+function botTurn(G,seat){const s=G.seats[seat];
+ if(winningHand(G.card,heldOf(s),s.exp))return declare(G,seat);
+ for(let o=0;o<4;o++)for(let ei=0;ei<G.seats[o].exp.length;ei++){const e=G.seats[o].exp[ei];
+  if(!e.ids.some(x=>TILE[x]===T_J))continue;const id=s.hand.find(x=>TILE[x]===e.t);if(id==null)continue;
+  const h=heldOf(s),before=bestMissing(G.card,h,s.exp);h[e.t]--;h[T_J]++;
+  if(bestMissing(G.card,h,s.exp)<=before){swapJoker(G,seat,o,ei,id);if(winningHand(G.card,heldOf(s),s.exp))return declare(G,seat)}}
+ const o=botThrowOrder(G,seat,s.hand)[0];
+ return discard(G,seat,o?o.id:s.hand.find(x=>TILE[x]!==T_J)??s.hand[0])}
+// one step for whichever bot the game is waiting on
+function botStep(G){const w=waitingOn(G);for(const i of w){if(!G.seats[i].bot)continue;
+  if(G.phase==="charleston"||G.phase==="courtesy")return pick(G,i,botPick(G,i))||true;
+  if(G.phase==="vote")return vote(G,i,botVote(G,i))||true;
+  if(G.phase==="turn")return botTurn(G,i)||true;
+  if(G.phase==="claims")return claim(G,i,botClaim(G,i))||true}
+ return false}
+// ================================================================ tile art
+// Procedural Canvas 2D tile sprites in four skins. tileFace/tileBack/tileSide
+// return cached canvases sized w*dpr x h*dpr, to be drawn at w x h CSS px.
+const SKINS=[
+ {id:"classic",name:"Classic",felt:["#1d6b48","#0c3a27"],accent:"#e8c46a",ink:"#f7f0da"},
+ {id:"bold",name:"Bold",felt:["#2f74e0","#173e8f"],accent:"#ffd23f",ink:"#ffffff"},
+ {id:"candy",name:"Candy",felt:["#f9cfe3","#cdbdf5"],accent:"#ff5fa2",ink:"#5b2a78"},
+ {id:"night",name:"Night",felt:["#1b1638","#06050e"],accent:"#39e8ff",ink:"#e4e9ff"},
+];
+const TILE_ART=(()=>{
+ const CJK='"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Source Han Sans SC","WenQuanYi Zen Hei","Microsoft YaHei",serif';
+ const ROUND='ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Varela Round",Nunito,"Trebuchet MS",sans-serif';
+ const JOK=["#e8202a","#ff8a00","#12a150","#1d5fe5","#9333ea"];
+ const ST={
+  classic:{rad:.13,face:["#fffdf5","#f0e6ca"],mid:"#f4ecd4",side:["#1f8a5e","#0a4430"],edge:"#a89868",hi:"rgba(255,255,255,.85)",
+   suit:["#177a37","#c41e2c","#1b4cab"],wind:"#1c2a4a",flower:"#c2306a",joker:"#d0187a",
+   font:'bold # Georgia,"Times New Roman",serif',big:'900 # Georgia,"Times New Roman",serif',
+   back:["#23946a","#0f5c40"],motif:"#f0d27a",jok:JOK},
+  bold:{rad:.11,face:["#ffffff","#eef2f7"],side:["#2a3f86","#16245a"],edge:"#1d2b5e",hi:null,
+   suit:["#0a9a3a","#ec1c2d","#1a5ae6"],wind:"#6d28d9",flower:"#e0198a",joker:"#ff6a00",
+   font:'900 # "Arial Black","Arial Bold",Arial,sans-serif',big:'900 # "Arial Black","Arial Bold",Arial,sans-serif',
+   back:["#2f7bf5","#1b55cf"],motif:"#ffffff",jok:JOK},
+  candy:{rad:.24,face:["#fffafd","#ffe6f2"],side:["#f4a3cc","#d37aae"],edge:"#eeb0d0",hi:"rgba(255,255,255,.9)",
+   suit:["#25a860","#ee4169","#3a7ff2"],wind:"#8f4fd6",flower:"#ff4f9a",joker:"#ff7a1a",
+   font:"800 # "+ROUND,big:"800 # "+ROUND,back:["#ff9cc9","#f27bb3"],motif:"#ffffff",
+   jok:["#ff4f6d","#ff9a2e","#2fbf71","#3a86ff","#a259ff"]},
+  night:{rad:.15,face:["#262d4d","#121629"],side:["#0b0e1f","#020308"],edge:"#4b5aa8",hi:"rgba(140,170,255,.22)",
+   suit:["#3dff8f","#ff4f79","#46c0ff"],wind:"#ffe14d",flower:"#ff6ee7",joker:"#ffb020",neon:1,
+   font:'700 # "Avenir Next",Futura,"Trebuchet MS",system-ui,sans-serif',big:'700 # "Avenir Next",Futura,"Trebuchet MS",system-ui,sans-serif',
+   back:["#2a1d52","#150e2e"],motif:"#39e8ff",jok:["#ff4f79","#ffb020","#3dff8f","#46c0ff","#c77dff"]},
+ };
+ const cache=new Map();let D=1,S=ST.classic,cjkOK=null;
+ // ---- helpers
+ function mk(w,h,dpr){const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*dpr));c.height=Math.max(1,Math.round(h*dpr));
+  const g=c.getContext("2d");g.scale(c.width/w,c.height/h);return[c,g]}
+ function rr(g,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+ function lin(g,x0,y0,x1,y1,st){const q=g.createLinearGradient(x0,y0,x1,y1);st.forEach((c,i)=>q.addColorStop(i/(st.length-1),c));return q}
+ function mix(hex,t){// t>0 towards white, t<0 towards black
+  const n=parseInt(hex.slice(1),16),a=[n>>16,n>>8&255,n&255].map(v=>Math.round(t>0?v+(255-v)*t:v*(1+t)));return"rgb("+a+")"}
+ function glow(g,col,k){if(S.neon){g.shadowColor=col;g.shadowBlur=k*D}}
+ function noGlow(g){g.shadowBlur=0;g.shadowColor="transparent"}
+ function circ(g,x,y,r,col){g.beginPath();g.arc(x,y,Math.max(r,.1),0,7);g.fillStyle=col;g.fill()}
+ function ell(g,x,y,rx,ry,a,col){g.beginPath();g.ellipse(x,y,rx,ry,a,0,7);g.fillStyle=col;g.fill()}
+ function fnt(tpl,px){return tpl.replace("#",px.toFixed(2)+"px")}
+ function box(g,t){const m=g.measureText(t);return{m,w:m.actualBoundingBoxLeft+m.actualBoundingBoxRight,a:m.actualBoundingBoxAscent,d:m.actualBoundingBoxDescent}}
+ // text centred on (cx,cy) by its ink box, shrunk to fit maxW x maxH
+ function txt(g,t,cx,cy,tpl,size,maxW,maxH,fill,stroke,lw){g.font=fnt(tpl,size);let b=box(g,t);
+  const k=Math.min(1,maxW/(b.w||1),maxH/((b.a+b.d)||1));if(k<1){size*=k;g.font=fnt(tpl,size);b=box(g,t)}
+  g.textAlign="left";g.textBaseline="alphabetic";const x=cx-b.w/2+b.m.actualBoundingBoxLeft,y=cy+(b.a-b.d)/2;
+  if(stroke){g.lineJoin="round";g.lineWidth=lw*size;g.strokeStyle=stroke;g.strokeText(t,x,y)}g.fillStyle=fill;g.fillText(t,x,y);return size}
+ function hasCJK(){if(cjkOK===null){try{if(typeof window!=="undefined"&&window.TILES_NO_CJK)return cjkOK=false;
+   const c=document.createElement("canvas");c.width=c.height=28;const g=c.getContext("2d",{willReadFrequently:true});
+   const px=t=>{g.clearRect(0,0,28,28);g.font="24px "+CJK;g.fillStyle="#000";g.fillText(t,2,24);return Array.from(g.getImageData(0,0,28,28).data).join()};
+   const a=px("萬");cjkOK=a!==px("中")&&a!==px("￿")}catch(e){cjkOK=true}}return cjkOK}
+ // ---- tile body: face at top-left, thickness showing at bottom/right
+ function body(g,w,h,f0,f1){const dx=Math.max(1,w*.055),dy=Math.max(1.6,w*.1),fw=w-dx,fh=h-dy,r=w*S.rad;
+  rr(g,dx,dy,fw,fh,r);g.fillStyle=lin(g,0,dy,0,h,S.side);g.fill();
+  if(S.mid){rr(g,dx*.45,dy*.42,fw,fh,r);g.fillStyle=S.mid;g.fill();g.lineWidth=Math.max(.4,w*.012);g.strokeStyle="rgba(0,0,0,.18)";g.stroke()}
+  rr(g,0,0,fw,fh,r);g.fillStyle=lin(g,0,0,fw*.3,fh,[f0,f1]);g.fill();
+  g.lineWidth=Math.max(.5,w*.022);g.strokeStyle=S.edge;g.stroke();
+  if(S.hi){const i=Math.max(.8,w*.035);rr(g,i,i,fw-2*i,fh-2*i,r*.75);g.lineWidth=Math.max(.5,w*.018);g.strokeStyle=S.hi;g.stroke()}
+  return{x:0,y:0,w:fw,h:fh,r}}
+ // ---- glyph pieces
+ function dot(g,x,y,r,col){
+  if(S.neon){glow(g,col,r*.9);g.beginPath();g.arc(x,y,r*.8,0,7);g.lineWidth=r*.3;g.strokeStyle=col;g.stroke();circ(g,x,y,r*.24,col);noGlow(g);return}
+  if(S===ST.candy){const q=g.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);q.addColorStop(0,mix(col,.55));q.addColorStop(1,col);
+   circ(g,x,y,r,q);g.beginPath();g.arc(x,y,r*.62,.3,2.2);g.lineWidth=r*.16;g.strokeStyle="rgba(255,255,255,.55)";g.lineCap="round";g.stroke();
+   ell(g,x-r*.36,y-r*.38,r*.26,r*.15,-.7,"rgba(255,255,255,.85)");return}
+  circ(g,x,y,r,col);circ(g,x,y,r*.7,"#fffaf0");circ(g,x,y,r*.5,col);circ(g,x,y,r*.17,"#fffaf0")}
+ function bigDot(g,G){const x=G.x+G.w/2,y=G.y+G.h/2,r=Math.min(G.w,G.h)*.46,[gr,rd,bl]=S.suit;
+  if(S.neon){[[.9,bl,.14],[.62,gr,.1],[.36,rd,.12]].forEach(([k,c,lw])=>{glow(g,c,r*.4);g.beginPath();g.arc(x,y,r*k,0,7);g.lineWidth=r*lw;g.strokeStyle=c;g.stroke()});circ(g,x,y,r*.13,bl);noGlow(g);return}
+  if(S===ST.candy){dot(g,x,y,r,bl);for(let i=0;i<8;i++){const a=i*Math.PI/4;circ(g,x+Math.cos(a)*r*.62,y+Math.sin(a)*r*.62,r*.09,"rgba(255,255,255,.8)")}return}
+  circ(g,x,y,r,bl);circ(g,x,y,r*.88,"#fffaf0");circ(g,x,y,r*.8,gr);circ(g,x,y,r*.66,"#fffaf0");
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;ell(g,x+Math.cos(a)*r*.46,y+Math.sin(a)*r*.46,r*.13,r*.07,a,rd)}
+  circ(g,x,y,r*.24,bl);circ(g,x,y,r*.1,"#fffaf0")}
+ function stick(g,x,y,L,W,a,col){g.save();g.translate(x,y);g.rotate(a);
+  if(S.neon){glow(g,col,W*.9);rr(g,-W/2,-L/2,W,L,W/2);g.lineWidth=W*.24;g.strokeStyle=col;g.stroke();
+   g.beginPath();for(const k of[-1,1]){g.moveTo(-W/2,k*L/6);g.lineTo(W/2,k*L/6)}g.stroke();noGlow(g);g.restore();return}
+  rr(g,-W/2,-L/2,W,L,S===ST.candy?W/2:W*.38);g.fillStyle=lin(g,-W/2,0,W/2,0,[mix(col,.45),col,mix(col,-.35)]);g.fill();
+  g.lineWidth=Math.max(.35,W*.16);g.strokeStyle=S===ST.candy?"rgba(255,255,255,.9)":"#fffaf0";g.beginPath();
+  for(const k of[-1,1]){g.moveTo(-W/2,k*L/6);g.lineTo(W/2,k*L/6)}g.stroke();
+  if(S===ST.classic){g.lineWidth=Math.max(.3,W*.1);g.strokeStyle=mix(col,-.45);g.beginPath();g.moveTo(0,-L/2+W*.4);g.lineTo(0,-L/6-W*.2);g.moveTo(0,L/6+W*.2);g.lineTo(0,L/2-W*.4);g.stroke()}
+  else{g.lineWidth=W*.14;g.strokeStyle="rgba(255,255,255,.55)";g.lineCap="round";g.beginPath();g.moveTo(-W*.18,-L/2+W*.5);g.lineTo(-W*.18,-L/6-W*.3);g.stroke()}
+  g.restore()}
+ function bird(g,G){const s=Math.min(G.w,G.h)*1.05,cx=G.x+G.w/2,cy=G.y+G.h/2,[gr,rd,bl]=S.suit;glow(g,gr,s*.08);
+  [[-.45,rd],[0,gr],[.45,bl]].forEach(([d,c])=>ell(g,cx-s*.2+Math.cos(2.4+d)*s*.2,cy+s*.12+Math.sin(2.4+d)*s*.2,s*.2,s*.06,2.4+d,c));
+  g.lineWidth=s*.035;g.strokeStyle=S.neon?rd:mix(rd,-.2);g.lineCap="round";g.beginPath();
+  for(const k of[-.05,.06]){g.moveTo(cx+k*s,cy+s*.16);g.lineTo(cx+k*s-.02*s,cy+s*.34)}g.stroke();
+  ell(g,cx,cy+s*.04,s*.24,s*.17,-.45,gr);ell(g,cx-s*.03,cy+s*.06,s*.15,s*.08,-.2,S.neon?mix(bl,.2):bl);
+  circ(g,cx+s*.2,cy-s*.18,s*.11,gr);
+  g.beginPath();g.moveTo(cx+s*.29,cy-s*.22);g.lineTo(cx+s*.43,cy-s*.17);g.lineTo(cx+s*.29,cy-s*.12);g.closePath();g.fillStyle="#f2a900";g.fill();
+  g.beginPath();g.moveTo(cx+s*.12,cy-s*.26);g.lineTo(cx+s*.1,cy-s*.4);g.lineTo(cx+s*.2,cy-s*.29);g.lineTo(cx+s*.24,cy-s*.42);g.lineTo(cx+s*.27,cy-s*.28);g.closePath();g.fillStyle=rd;g.fill();
+  noGlow(g);circ(g,cx+s*.22,cy-s*.2,s*.035,"#fff");circ(g,cx+s*.23,cy-s*.2,s*.018,"#111")}
+ function cmark(g,x,y,r,col){glow(g,col,r*.5);g.beginPath();g.arc(x,y,r,Math.PI*.3,Math.PI*1.7);g.lineWidth=r*.46;g.lineCap="round";g.strokeStyle=col;g.stroke();noGlow(g)}
+ function frame(g,G,col){const fw=Math.min(G.w*.9,G.h*.72),fh=Math.min(G.h*.94,fw*1.3),x=G.x+(G.w-fw)/2,y=G.y+(G.h-fh)/2,lw=fw*.1,r=S===ST.classic?fw*.04:fw*.2;
+  glow(g,col,lw*1.5);rr(g,x+lw/2,y+lw/2,fw-lw,fh-lw,r);g.lineWidth=lw;g.strokeStyle=col;g.stroke();
+  const i=lw*1.9;rr(g,x+i,y+i,fw-2*i,fh-2*i,r*.6);g.lineWidth=lw*.35;g.stroke();noGlow(g);return{x,y,w:fw,h:fh}}
+ function dragon(g,x,y,s,col){// a friendly dragon face in the unit box centred at x,y
+  const P=(a,b)=>[x+a*s,y+(b+.06)*s],dk=mix(col,-.35);glow(g,col,s*.12);
+  for(const k of[-1,1]){g.beginPath();g.moveTo(...P(k*.1,-.22));g.quadraticCurveTo(...P(k*.3,-.3),...P(k*.38,-.52));g.quadraticCurveTo(...P(k*.32,-.24),...P(k*.24,-.12));g.closePath();g.fillStyle=dk;g.fill();
+   g.beginPath();g.moveTo(...P(k*.28,-.12));g.lineTo(...P(k*.52,-.16));g.lineTo(...P(k*.4,-.02));g.lineTo(...P(k*.5,.06));g.lineTo(...P(k*.3,.1));g.closePath();g.fill()}
+  ell(g,...P(0,-.03),s*.33,s*.27,0,col);ell(g,...P(0,.19),s*.25,s*.16,0,S.neon?mix(col,-.2):mix(col,.4));
+  g.lineCap="round";g.lineWidth=s*.035;g.strokeStyle=dk;g.beginPath();
+  for(const k of[-1,1]){g.moveTo(...P(k*.2,.22));g.quadraticCurveTo(...P(k*.38,.2),...P(k*.5,.34))}g.stroke();noGlow(g);
+  for(const k of[-1,1]){circ(g,...P(k*.14,-.08),s*.095,"#fff");circ(g,...P(k*.13,-.07),s*.05,"#111");circ(g,...P(k*.11,-.1),s*.018,"#fff");circ(g,...P(k*.08,.17),s*.03,dk)}
+  g.beginPath();g.arc(...P(0,.2),s*.1,.4,Math.PI-.4);g.lineWidth=s*.03;g.strokeStyle=dk;g.stroke()}
+ function flower(g,G){const s=Math.min(G.w,G.h),cx=G.x+G.w/2,fy=G.y+G.h*.38,c=S.flower,lf=S.suit[0];
+  glow(g,lf,s*.06);g.lineCap="round";g.lineWidth=s*.06;g.strokeStyle=lf;g.beginPath();g.moveTo(cx,fy);g.quadraticCurveTo(cx+s*.05,fy+s*.3,cx,G.y+G.h*.98);g.stroke();
+  ell(g,cx-s*.15,fy+s*.38,s*.14,s*.06,-.5,lf);ell(g,cx+s*.15,fy+s*.28,s*.14,s*.06,.5,lf);glow(g,c,s*.1);
+  for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;ell(g,cx+Math.cos(a)*s*.18,fy+Math.sin(a)*s*.18,s*.16,s*.11,a,S.neon?c:mix(c,i%2?.15:0))}
+  if(!S.neon)for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5;ell(g,cx+Math.cos(a)*s*.2,fy+Math.sin(a)*s*.2,s*.07,s*.04,a,"rgba(255,255,255,.45)")}
+  circ(g,cx,fy,s*.1,"#ffc21a");noGlow(g);circ(g,cx-s*.03,fy-s*.03,s*.035,"rgba(255,255,255,.7)")}
+ function joker(g,G){const cx=G.x+G.w/2,R=Math.min(G.w*.47,G.h*.5),cy=G.y+R*1.04,bands=["#e8202a","#ff8a00","#ffd400","#12a150","#1d5fe5","#9333ea"],bw=R*.11;
+  if(S===ST.candy)bands.splice(0,6,"#ff6b8a","#ffab4a","#ffe066","#5fd68f","#6aa8ff","#b88cff");
+  if(S.neon)bands.splice(0,6,"#ff4f79","#ffb020","#fff04d","#3dff8f","#46c0ff","#c77dff");
+  bands.forEach((c,i)=>{glow(g,c,bw);g.beginPath();g.arc(cx,cy,R-bw*(i+.5),Math.PI,0);g.lineWidth=bw*1.02;g.strokeStyle=c;g.stroke()});noGlow(g);
+  const cl=S.neon?"rgba(255,255,255,.9)":"#ffffff";circ(g,cx-R*.52,cy-R*.02,R*.2,cl);circ(g,cx-R*.32,cy-R*.1,R*.2,cl);circ(g,cx+R*.4,cy-R*.02,R*.2,cl);circ(g,cx+R*.58,cy-R*.1,R*.16,cl);
+  // JOKER in coloured letters, fitted to the width
+  const t="JOKER",th=G.y+G.h-cy,tpl=S.big;let sz=Math.min(th*.95,G.w*.4);g.font=fnt(tpl,sz);let tw=g.measureText(t).width;
+  if(tw>G.w*.98){sz*=G.w*.98/tw;g.font=fnt(tpl,sz);tw=g.measureText(t).width}
+  let x=cx-tw/2;const y=G.y+G.h-Math.max(0,(th-sz*.72)/2);g.textAlign="left";g.textBaseline="alphabetic";g.lineJoin="round";
+  for(let i=0;i<5;i++){const c=S.jok[i],ch=t[i];if(S.neon){glow(g,c,sz*.35)}else{g.lineWidth=sz*.22;g.strokeStyle="#fff";g.strokeText(ch,x,y)}
+   g.fillStyle=c;g.fillText(ch,x,y);x+=g.measureText(ch).width}noGlow(g)}
+ function arrow(g,F,k){const s=F.w*.09,x=F.x+F.w*.82,y=F.y+F.w*.18,a=[-Math.PI/2,0,Math.PI,Math.PI/2][k];g.save();g.translate(x,y);g.rotate(a);
+  g.beginPath();g.moveTo(s,0);g.lineTo(-s*.7,-s*.8);g.lineTo(-s*.35,0);g.lineTo(-s*.7,s*.8);g.closePath();glow(g,S.wind,s);g.fillStyle=S.wind;g.globalAlpha=.8;g.fill();g.restore();noGlow(g)}
+ // ---- layouts: dots [x,y,colour] and bams [x,y,angle,red]
+ const DOTS=[null,[[.5,.2,"g"],[.5,.8,"b"]],[[.2,.17,"b"],[.5,.5,"r"],[.8,.83,"g"]],[[.26,.24,"b"],[.74,.24,"g"],[.26,.76,"g"],[.74,.76,"b"]],
+  [[.22,.2,"b"],[.78,.2,"g"],[.5,.5,"r"],[.22,.8,"g"],[.78,.8,"b"]],[[.28,.15,"g"],[.72,.15,"g"],[.28,.52,"r"],[.72,.52,"r"],[.28,.85,"r"],[.72,.85,"r"]],
+  [[.18,.11,"g"],[.5,.24,"g"],[.82,.37,"g"],[.28,.63,"r"],[.72,.63,"r"],[.28,.89,"r"],[.72,.89,"r"]],
+  [.11,.37,.63,.89].flatMap(y=>[[.28,y,"b"],[.72,y,"b"]]),[.16,.5,.84].flatMap((y,i)=>[.18,.5,.82].map(x=>[x,y,"brg"[i]]))];
+ const DOTR=[.46,.2,.18,.21,.18,.155,.13,.125,.15],CI={g:0,r:1,b:2};
+ const col3=[.18,.5,.82],row2=[.25,.75],row3=[.16,.5,.84];
+ const BAMS=[null,[.44,1,[[.5,.25],[.5,.75]]],[.44,2,[[.5,.25],[.3,.75],[.7,.75]]],[.44,2,[[.3,.25],[.7,.25],[.3,.75],[.7,.75]]],
+  [.44,3,[[.18,.25],[.82,.25],[.5,.5,0,1],[.18,.75],[.82,.75]]],[.44,3,row2.flatMap(y=>col3.map(x=>[x,y]))],
+  [.3,3,[[.5,.16,0,1],...[.5,.84].flatMap(y=>col3.map(x=>[x,y]))]],
+  [.44,4,[[.1,.24,0],[.37,.24,-.3],[.63,.24,.3],[.9,.24,0],[.1,.76,0],[.37,.76,.3],[.63,.76,-.3],[.9,.76,0]]],
+  [.3,3,row3.flatMap(y=>col3.map((x,i)=>[x,y,0,i===1]))]];
+ // ---- the face
+ function drawFace(g,code,w,h){const F=body(g,w,h,...S.face),pad=F.w*.08,cl=S===ST.classic&&hasCJK(),[GR,RD,BL]=S.suit;
+  let idx,ic;if(code<27){idx=String(code%9+1);ic=S.suit[code/9|0]}else if(code<31){idx="NEWS"[code-27];ic=S.wind}
+  else if(code<34){idx="GR0"[code-31];ic=S.suit[code-31]}else if(code===34){idx="F";ic=S.flower}else{idx="J";ic=S.joker}
+  // corner index
+  const isz=F.w*(w<34?.44:.34);g.font=fnt(S.font,isz);const b=box(g,idx);g.textAlign="left";g.textBaseline="alphabetic";
+  const ix=F.x+pad*.9,iy=F.y+pad*.75+b.a;glow(g,ic,isz*.3);g.fillStyle=ic;g.fillText(idx,ix+b.m.actualBoundingBoxLeft,iy);noGlow(g);
+  const gy=iy+b.d+F.h*.03,G={x:F.x+pad,y:gy,w:F.w-2*pad,h:F.y+F.h-pad*.9-gy};
+  if(code<27){const s=code/9|0,n=code%9+1,col=S.suit[s];
+   if(S===ST.bold||s===1){// big numeral + suit mark
+    if(cl){txt(g,"一二三四五六七八九"[n-1],G.x+G.w/2,G.y+G.h*.2,"#px "+CJK,G.h*.4,G.w*.8,G.h*.34,S.wind);
+     txt(g,"萬",G.x+G.w/2,G.y+G.h*.7,"#px "+CJK,G.h*.6,G.w,G.h*.56,RD);return}
+    const nh=G.h*.62;glow(g,col,nh*.25);txt(g,String(n),G.x+G.w/2,G.y+nh/2,S.big,nh*1.3,G.w,nh*.92,col);noGlow(g);
+    const iy2=G.y+G.h*.83,r=G.h*.15;
+    if(s===0)for(const k of[-1,0,1])stick(g,G.x+G.w/2+k*r*1.15,iy2,r*2,r*.85,0,col);
+    else if(s===1)cmark(g,G.x+G.w/2,iy2,r*.85,col);else dot(g,G.x+G.w/2,iy2,r*1.05,col);return}
+   if(s===2){if(n===1)return bigDot(g,G);const u=Math.min(G.w,G.h*.92),ox=G.x+(G.w-u)/2;const r=DOTR[n-1]*u;
+    for(const[x,y,c]of DOTS[n-1])dot(g,ox+x*u,G.y+y*G.h,r,S.suit[CI[c]]);return}
+   if(n===1)return bird(g,G);const[L,nc,pts]=BAMS[n-1],len=L*G.h*.92,W=Math.min(len*.36,G.w/nc*.62);
+   for(const[x,y,a=0,red]of pts)stick(g,G.x+x*G.w,G.y+y*G.h,len,W,a,red&&S!==ST.night?RD:red?BL:GR);return}
+  if(code<31){const k=code-27;arrow(g,F,k);
+   if(cl)return txt(g,"北東西南"[k],G.x+G.w/2,G.y+G.h/2,"#px "+CJK,G.h,G.w*.95,G.h*.78,S.wind);
+   glow(g,S.wind,G.h*.2);txt(g,"NEWS"[k],G.x+G.w/2,G.y+G.h*.48,S.big,G.h,G.w*.98,G.h*.72,S.wind);noGlow(g);return}
+  if(code<34){const k=code-31,col=S.suit[k];
+   if(cl&&k<2)return txt(g,"發中"[k],G.x+G.w/2,G.y+G.h/2,"#px "+CJK,G.h,G.w*.95,G.h*.78,col);
+   if(k<2)return dragon(g,G.x+G.w/2,G.y+G.h*.47,Math.min(G.w*1.02,G.h*.95),col);
+   const R=frame(g,G,col);if(cl)return;glow(g,col,R.h*.2);txt(g,"0",R.x+R.w/2,R.y+R.h/2,S.big,R.h*.6,R.w*.5,R.h*.5,col);noGlow(g);return}
+  if(code===34)return flower(g,G);
+  const i=F.w*.035;glow(g,S.joker,F.w*.1);rr(g,i,i,F.w-2*i,F.h-2*i,F.r*.8);g.lineWidth=F.w*.035;g.strokeStyle=S.joker;g.stroke();noGlow(g);joker(g,G)}
+ function drawBack(g,_,w,h){const F=body(g,w,h,...S.back),m=S.motif,i=F.w*.13,cx=F.w/2,cy=F.h/2;
+  if(S===ST.candy){g.save();rr(g,0,0,F.w,F.h,F.r);g.clip();const s=F.w/4;g.fillStyle="rgba(255,255,255,.5)";
+   for(let y=0,j=0;y<F.h+s;y+=s*.8,j++)for(let x=j%2?s/2:0;x<F.w+s;x+=s){g.beginPath();g.arc(x,y,s*.18,0,7);g.fill()}g.restore()}
+  glow(g,m,F.w*.1);rr(g,i,i,F.w-2*i,F.h-2*i,F.r*.6);g.lineWidth=F.w*(S===ST.bold?.06:.035);g.strokeStyle=m;g.stroke();
+  const s=F.w*.2;g.beginPath();g.moveTo(cx,cy-s*1.3);g.lineTo(cx+s,cy);g.lineTo(cx,cy+s*1.3);g.lineTo(cx-s,cy);g.closePath();
+  if(S===ST.bold||S===ST.candy){g.fillStyle=m;g.fill()}else{g.lineWidth=F.w*.04;g.stroke();circ(g,cx,cy,s*.3,m)}noGlow(g)}
+ function drawSide(g,_,w,h){const r=Math.min(w,h)*S.rad;rr(g,0,0,w,h,r);g.fillStyle=lin(g,0,0,w,0,S.back.concat(S.side[1]));g.fill();
+  g.save();rr(g,0,0,w,h,r);g.clip();g.fillStyle=lin(g,0,0,0,h*.2,S.face);g.fillRect(0,0,w,h*.2);g.fillStyle="rgba(0,0,0,.25)";g.fillRect(0,h*.2,w,Math.max(.5,h*.015));g.restore();
+  rr(g,0,0,w,h,r);g.lineWidth=Math.max(.5,w*.03);g.strokeStyle=S.edge;g.stroke()}
+ function get(kind,code,skin,w,h,dpr,fn){dpr=dpr||1;const key=kind+code+"|"+skin+"|"+w+"|"+h+"|"+dpr;let c=cache.get(key);if(c)return c;
+  S=ST[skin]||ST.classic;D=dpr;let g;[c,g]=mk(w,h,dpr);g.save();fn(g,code,w,h);g.restore();if(cache.size>1500)cache.clear();cache.set(key,c);return c}
+ return{face:(code,skin,w,h,dpr)=>get("f",code,skin,w,h,dpr,drawFace),back:(skin,w,h,dpr)=>get("b","",skin,w,h,dpr,drawBack),
+  side:(skin,w,h,dpr)=>get("s","",skin,w,h,dpr,drawSide)}})();
+function tileFace(code,skinId,w,h,dpr){return TILE_ART.face(code,skinId,w,h,dpr)}
+function tileBack(skinId,w,h,dpr){return TILE_ART.back(skinId,w,h,dpr)}
+function tileSide(skinId,w,h,dpr){return TILE_ART.side(skinId,w,h,dpr)}
+// ================================================================ table
+// Whoever starts a game keeps it: the engine runs on their device, bots fill
+// the empty seats, and every player - the host too - plays from a view of it
+// that shows what that seat is allowed to see. A player on another device
+// gets their view over the network and sends back what they do.
+function viewFor(G,seat,extra){
+ const s=G.seats[seat],ended=G.phase==="end";
+ const v={mode:G.mode,size:G.size,phase:G.phase,turn:G.turn,dealer:G.dealer,me:seat,t:G.t,
+  names:G.seats.map(x=>x.name),bots:G.seats.map(x=>x.bot),counts:G.seats.map(x=>x.hand.length),
+  exp:G.seats.map(x=>x.exp.map(e=>({t:e.t,k:e.k,ids:e.ids.slice()}))),hand:s.hand.slice(),
+  pool:G.pool.map(p=>[p.id,p.from]),last:G.last?[G.last.id,G.last.from]:null,wall:G.wall.length,
+  drawn:G.turn===seat?G.drawn:null,calledFrom:G.calledFrom,
+  picks:G.picks?G.picks.map(p=>!!p):null,myPick:G.picks&&G.picks[seat]?1:0,votes:G.votes?G.votes.map(x=>x==null?-1:x?1:0):null,
+  dir:G.phase==="charleston"?G.plan[G.step][0]:G.phase==="courtesy"?"across":null,passN:G.phase==="charleston"?G.plan[G.step][1]:G.phase==="courtesy"?3:0,
+  step:G.step,plan:G.plan.length,second:G.plan.length>3,
+  claim:G.phase==="claims"&&G.claims[seat]===undefined?canClaim(G,seat):null,claimsLeft:G.phase==="claims"?G.claims.map(c=>c===undefined):null,
+  log:G.log.slice(-12),result:null};
+ if(ended){const r=G.result;v.result={wall:!!r.wall,winner:r.winner,from:r.from,self:r.self,jokerless:r.jokerless,pay:r.pay,
+   hand:r.hand?{src:r.hand.src,value:r.hand.value,section:r.hand.section,concealed:r.hand.concealed}:null,
+   groups:r.variant?r.variant.groups.map(g=>({t:g.t,k:g.k})):null,
+   hands:G.seats.map(x=>x.hand.slice())}}
+ return Object.assign(v,extra||{})}
+
+const HOST={G:null,me:0,seats:[],scores:[0,0,0,0],claimAt:[0,0,0,0],botAt:0,sentT:-1,round:0,mode:"easy",views:null,ended:-1};
+// seats: {kind:"me"|"bot"|"remote", name, col, cid, conn, live}
+const BOT_NAMES=["Mei","Leo","Pip","Bo","Kit","Ren"];
+function hostNewGame(){const H=HOST;const names=H.seats.map(s=>s.name),bots=H.seats.map(s=>s.kind==="bot"||s.kind==="remote"&&!s.live);
+ H.G=newGame({mode:H.mode,seed:(Date.now()^Math.floor(Math.random()*1e9))>>>0,dealer:H.round%4,names,bots});
+ H.claimAt=[0,0,0,0];H.botAt=now()+0.6;H.sentT=-1;H.ended=-1;H.views=null;hostSend()}
+function now(){return performance.now()/1000}
+function claimSecs(){return settings.claim}
+// one tick of the game on the host: bots, a human who has let a claim run
+// out, and the views sent out when anything has changed
+function hostTick(){const H=HOST,G=H.G;if(!G)return;const t=now();
+ if(G.phase==="claims"){for(let i=0;i<4;i++){if(G.claims[i]!==undefined||G.seats[i].bot){H.claimAt[i]=0;continue}
+   if(!H.claimAt[i])H.claimAt[i]=t+claimSecs();else if(t>H.claimAt[i]){H.claimAt[i]=0;claim(G,i,null)}}}
+ else H.claimAt=[0,0,0,0];
+ const w=waitingOn(G);
+ if(G.phase!=="end"&&w.some(i=>G.seats[i].bot)&&t>=H.botAt){botStep(G);
+  const sp=settings.speed,d={charleston:0.35,vote:0.3,courtesy:0.3,turn:0.95,claims:0.45}[G.phase]||0.6;H.botAt=t+d*(sp===0?1.6:sp===2?0.5:1)}
+ if(G.t!==H.sentT)hostSend()}
+// the running scores take a finished game's payments once, before anyone is told
+function hostScore(){const H=HOST,G=H.G;if(G&&G.phase==="end"&&H.ended!==G.t){H.ended=G.t;if(G.result.pay)for(let i=0;i<4;i++)H.scores[i]+=G.result.pay[i]}}
+function hostView(i){const H=HOST,G=H.G,left=H.claimAt[i]?Math.max(0,H.claimAt[i]-now()):0;
+ return viewFor(G,i,{scores:H.scores.slice(),claimLeft:left,claimTotal:claimSecs(),round:H.round,host:H.seats[H.me].name,code:NET.code||""})}
+function hostSend(){const H=HOST,G=H.G;hostScore();H.sentT=G.t;H.views=null;
+ for(let i=0;i<4;i++){const s=H.seats[i];if(s.kind==="remote"&&s.live&&s.conn)netSend(s.conn,{view:hostView(i)})}}
+function hostAct(seat,a){const G=HOST.G;if(!G)return"no game";let err=null;
+ switch(a.a){case"pick":err=pick(G,seat,a.tiles||[]);break;case"vote":err=vote(G,seat,a.more);break;case"discard":err=discard(G,seat,a.id);break;
+  case"claim":err=claim(G,seat,a.c||null);break;case"swap":err=swapJoker(G,seat,a.owner,a.ei,a.id);break;case"declare":err=declare(G,seat);break;
+  case"next":if(seat===HOST.me&&G.phase==="end"){HOST.round++;hostNewGame()}break;default:err="?"}
+ if(G.t!==HOST.sentT)hostSend();return err}
+// the view the player on this device is looking at
+let VIEW=null,ROLE=null;// ROLE: "host" (including a game with bots) or "client"
+function myView(){if(ROLE==="host"&&HOST.G){if(!HOST.views||HOST.views.t!==HOST.G.t||HOST.G.phase==="claims")HOST.views=hostView(HOST.me);return HOST.views}return VIEW}
+function act(a){if(ROLE==="client"){netSend(NET.conn,{act:a});return null}const e=hostAct(HOST.me,a);if(e)say(e);return e}
+// ================================================================ network
+// Playing on separate devices: the host's device opens a room with a four
+// digit code through PeerJS's free connection broker, and the others join
+// with the code; after that the devices talk directly (WebRTC). The host
+// sends each player their view and applies what they do. A player who drops
+// out is played by a bot until they come back with the same code.
+// ?peer=host:port uses another broker (tools/mahjongcheck.mjs runs its own).
+const NET={peer:null,conn:null,code:"",status:"",err:"",lobby:null,myCid:""};
+const PEER_PREFIX="mahjongclub-sophiarorydylan-";
+function peerOpts(){const q=new URLSearchParams(location.search).get("peer");
+ if(q){const [h,p]=q.split(":");return{host:h,port:+p||9000,path:"/",secure:false,debug:0}}return{debug:0}}
+function netSend(c,m){try{if(c&&c.open)c.send(JSON.stringify(m))}catch(e){}}
+function netClose(){try{if(NET.conn)NET.conn.close()}catch(e){}try{if(NET.peer)NET.peer.destroy()}catch(e){}NET.peer=null;NET.conn=null;NET.code="";NET.status="";NET.err=""}
+function cid(){let c=store.get("cid","");if(!c){c=Math.random().toString(36).slice(2,10);store.set("cid",c)}return c}
+// ---------------------------------------------------------------- host
+function netHost(tries){tries=tries||0;if(!window.Peer){NET.err="Online play could not load";return}
+ const code=String(1000+Math.floor(Math.random()*9000));NET.code=code;NET.status="opening";NET.err="";
+ const p=new Peer(PEER_PREFIX+code,peerOpts());NET.peer=p;
+ p.on("open",()=>{NET.status="open"});
+ p.on("error",e=>{if(e&&e.type==="unavailable-id"&&tries<5){try{p.destroy()}catch(x){}netHost(tries+1);return}
+  NET.status="error";NET.err=e&&e.type==="network"?"No internet connection":e&&e.type==="browser-incompatible"?"This browser cannot play online":"Could not open a room ("+(e&&e.type||"error")+")"});
+ p.on("disconnected",()=>{try{p.reconnect()}catch(e){}});
+ p.on("connection",conn=>{conn.on("data",d=>{let m=null;try{m=typeof d==="string"?JSON.parse(d):d}catch(e){}if(m)hostOnData(conn,m)});
+  conn.on("close",()=>hostOnClose(conn));conn.on("error",()=>hostOnClose(conn))})}
+// A device that just goes away (the lid shut, out of range) does not always
+// say goodbye, so guests say hello every two seconds and a guest not heard
+// from for eight is taken to have gone: a bot plays for them.
+setInterval(()=>{if(ROLE==="client"&&NET.conn&&NET.status==="joined")netSend(NET.conn,{ping:1});
+ if(ROLE==="host")for(const s of HOST.seats)if(s.kind==="remote"&&s.live&&s.conn&&now()-(s.seen||0)>8)hostOnClose(s.conn)},2000);
+function hostOnData(conn,m){const H=HOST;{const s=H.seats.find(x=>x.conn===conn);if(s)s.seen=now()}if(m.ping)return;
+ if(m.hello){const h=m.hello;let i=H.seats.findIndex(s=>s.kind==="remote"&&s.cid===h.cid);
+  // a new player takes an empty seat - one a bot is keeping warm
+  if(i<0)i=H.seats.findIndex((s,k)=>k!==H.me&&s.kind==="bot");
+  if(i<0){netSend(conn,{full:1});return}
+  const s=H.seats[i];Object.assign(s,{kind:"remote",name:String(h.name||"Player").slice(0,12),col:h.col||"#4dabf7",cid:h.cid,conn,live:true,seen:now()});
+  if(H.G){H.G.seats[i].bot=false;H.G.seats[i].name=s.name;logG(H.G,"joined",{seat:i})}
+  netSend(conn,{welcome:{seat:i}});lobbySend();if(H.G)hostSend();sfx("join");say(s.name+" joined");return}
+ if(m.act){const i=H.seats.findIndex(s=>s.conn===conn);if(i<0)return;const e=hostAct(i,m.act);if(e)netSend(conn,{err:e})}}
+function hostOnClose(conn){const H=HOST,i=H.seats.findIndex(s=>s.conn===conn);if(i<0)return;const s=H.seats[i];if(!s.live)return;try{conn.close()}catch(e){}
+ s.live=false;s.conn=null;if(H.G){H.G.seats[i].bot=true;logG(H.G,"left",{seat:i})}
+ // in the lobby a seat someone left is a bot's again
+ if(!H.G)Object.assign(s,{kind:"bot",name:BOT_NAMES[i],cid:""});
+ lobbySend();say(s.name+" dropped out - a bot is playing for them")}
+function lobbyState(){const H=HOST;return{code:NET.code,mode:H.mode,seats:H.seats.map(s=>({name:s.name,kind:s.kind,live:s.live!==false,col:s.col})),started:!!H.G}}
+function lobbySend(){const L=lobbyState();for(const s of HOST.seats)if(s.kind==="remote"&&s.live)netSend(s.conn,{lobby:L})}
+// ---------------------------------------------------------------- joining
+function netJoin(code){if(!window.Peer){NET.err="Online play could not load";return}
+ netClose();ROLE="client";NET.code=code;NET.status="joining";NET.err="";NET.lobby=null;VIEW=null;
+ const p=new Peer(undefined,peerOpts());NET.peer=p;
+ p.on("open",()=>{const c=p.connect(PEER_PREFIX+code,{reliable:true});NET.conn=c;
+  c.on("open",()=>{NET.status="joined";netSend(c,{hello:{name:me.name,col:me.col,cid:cid()}})});
+  c.on("data",d=>{let m=null;try{m=typeof d==="string"?JSON.parse(d):d}catch(e){}if(m)clientOnData(m)});
+  c.on("close",()=>{if(NET.status!=="left"){NET.status="lost";NET.err="Lost the connection to the host"}})});
+ p.on("error",e=>{NET.status="error";NET.err=e&&e.type==="peer-unavailable"?"No game with that code":e&&e.type==="network"?"No internet connection":"Could not join ("+(e&&e.type||"error")+")"})}
+function clientOnData(m){
+ if(m.welcome){NET.seat=m.welcome.seat;scene="lobby"}
+ if(m.full){NET.status="error";NET.err="That game is full"}
+ if(m.lobby){NET.lobby=m.lobby}
+ if(m.view){const was=VIEW;VIEW=m.view;ROLE="client";if(scene!=="table"&&scene!=="card")openTable();onNewView(was,VIEW)}
+ if(m.err)say(m.err)}
+// ================================================================ screen
+document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+let W=0,H=0,DPR=1,U=1;
+const safeProbe=document.createElement("div");
+safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"+
+ "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+const SAFE={t:0,r:0,b:0,l:0};
+function ownsTheScreen(){return navigator.standalone!==false}
+function readSafe(){const st=getComputedStyle(safeProbe);SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
+ SAFE.b=ownsTheScreen()?(parseFloat(st.paddingBottom)||0):0;SAFE.l=parseFloat(st.paddingLeft)||0}
+// sized from the visual viewport and re-checked several times a second: iOS
+// does not reliably say when the screen under a page has grown
+function screenSize(){const vv=window.visualViewport,de=document.documentElement;
+ let w=Math.round(vv&&vv.width?vv.width:innerWidth),h=Math.round(vv&&vv.height?vv.height:innerHeight);
+ if(ownsTheScreen()){w=Math.max(w,Math.round(de.clientWidth)||0);h=Math.max(h,Math.round(de.clientHeight)||0)}
+ return{w:Math.max(1,w),h:Math.max(1,h),d:Math.min(window.devicePixelRatio||1,3)}}
+function resize(){readSafe();const z=screenSize();DPR=z.d;W=z.w;H=z.h;cv.style.width=W+"px";cv.style.height=H+"px";
+ cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);U=Math.max(0.72,Math.min(1.5,Math.min(W/430,H/600)))}
+function sizeWatch(){const z=screenSize();if(z.w!==W||z.h!==H||z.d!==DPR||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))resize()}
+function reflow(){resize();setTimeout(resize,60);setTimeout(resize,250)}
+window.addEventListener("resize",reflow);window.addEventListener("orientationchange",()=>setTimeout(reflow,150));
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+resize();setInterval(sizeWatch,200);
+const BUILD="2026.09.24-1";
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),TAU=Math.PI*2;
+
+// ================================================================ saves
+// everything under "mahjongclub." - the shelf menu finds a game's saves by
+// the prefix taken from its folder name
+const store={get(k,d){try{const v=localStorage.getItem("mahjongclub."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem("mahjongclub."+k,JSON.stringify(v))}catch(e){}}};
+const PCOLS=["#ff6b6b","#4dabf7","#51cf66","#fcc419","#cc5de8","#ff922b"];
+function newProfile(name,i){return{id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e4),name,col:PCOLS[i%PCOLS.length],games:0,wins:0,points:0,best:0}}
+let profiles=store.get("profiles",null);
+if(!Array.isArray(profiles)||!profiles.length){profiles=["Sophia","Rory","Dylan"].map(newProfile);store.set("profiles",profiles)}
+let me=profiles.find(p=>p.id===store.get("who",""))||profiles[0];
+function save(){store.set("profiles",profiles);store.set("who",me.id)}
+const settings=Object.assign({sfx:true,skin:"classic",hints:true,speed:1,claim:10,mode:"easy"},store.get("settings",{}));
+function saveSettings(){store.set("settings",settings)}
+
+// ================================================================ sound
+let AC=null,sfxBus=null;
+function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();sfxBus=AC.createGain();sfxBus.gain.value=settings.sfx?0.8:0;sfxBus.connect(AC.destination)}catch(e){}}
+function audioWake(){audioInit();if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+function audioNudge(){if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+window.addEventListener("pageshow",audioNudge);window.addEventListener("focus",audioNudge);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)audioNudge()});
+function tone(f0,f1,dur,type,vol,delay){if(!AC)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
+ o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);
+ g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+dur+0.03)}
+let noiseBuf=null;
+function noise(dur,vol,delay,f){if(!AC)return;if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+ const t=AC.currentTime+(delay||0),s=AC.createBufferSource(),fl=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;fl.type="bandpass";fl.frequency.value=f||2400;fl.Q.value=1.2;
+ g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);s.connect(fl);fl.connect(g);g.connect(sfxBus);s.start(t,Math.random()*0.5);s.stop(t+dur+0.02)}
+// tiles are bone and plastic: a clack is a short bright knock
+const SFX={tap(){tone(700,900,0.05,"triangle",0.08)},clack(){noise(0.06,0.5,0,3200);tone(1900,1500,0.04,"square",0.05)},
+ pick(){noise(0.04,0.25,0,4200)},whoosh(){noise(0.3,0.25,0,900);noise(0.3,0.12,0.05,1600)},
+ call(){tone(660,660,0.12,"triangle",0.14);tone(990,990,0.18,"triangle",0.12,0.1)},turn(){tone(880,880,0.1,"sine",0.12);tone(1320,1320,0.14,"sine",0.08,0.08)},
+ joker(){[1047,1319,1568,2093].forEach((f,i)=>tone(f,f,0.1,"triangle",0.08,i*0.05))},
+ mahjong(){[523,659,784,1047].forEach((f,i)=>tone(f,f,0.18,"square",0.09,i*0.11));[523,659,784].forEach(f=>tone(f*2,f*2,0.9,"triangle",0.08,0.46));noise(0.4,0.08,0.4,6000)},
+ lose(){tone(440,330,0.3,"triangle",0.1);tone(330,220,0.4,"triangle",0.1,0.25)},wall(){tone(300,200,0.5,"sine",0.12)},
+ join(){tone(784,1175,0.2,"triangle",0.1)},no(){tone(220,180,0.18,"square",0.08)}};
+function sfx(k){if(AC&&settings.sfx)try{SFX[k]()}catch(e){}}
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime}:null;window.__audioCtx=()=>AC;
+
+// ================================================================ drawing kit
+const FONT='ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif';
+function font(px,w){cx.font=(w||800)+" "+Math.round(px)+"px "+FONT}
+function rr(x,y,w,h,r){cx.beginPath();r=Math.min(r,w/2,h/2);cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function txt(t,x,y,px,col,al,wt){font(px,wt);cx.textAlign=al||"center";cx.textBaseline="middle";cx.fillStyle=col||"#fff";cx.fillText(t,x,y)}
+function fitTxt(t,x,y,px,maxW,col,al,wt){font(px,wt);const w=cx.measureText(t).width;if(w>maxW)px*=maxW/w;txt(t,x,y,px,col,al,wt)}
+let btns=[];
+function button(x,y,w,h,label,fn,o){o=o||{};const col=o.off?"#8a948c":o.col||"#ffd43b",r=o.r!=null?o.r:h*0.3;
+ cx.fillStyle="rgba(0,0,0,0.3)";rr(x,y+3,w,h,r);cx.fill();cx.fillStyle=col;rr(x,y,w,h,r);cx.fill();
+ if(o.ring){cx.strokeStyle=o.ring;cx.lineWidth=3;rr(x+1.5,y+1.5,w-3,h-3,r);cx.stroke()}
+ cx.fillStyle="rgba(255,255,255,0.22)";rr(x+3,y+2,w-6,h*0.42,r*0.8);cx.fill();
+ if(label)fitTxt(label,x+w/2,y+h/2+1,o.fs||h*0.4,w-12,o.ink||"#3a2600","center",900);
+ if(!o.off&&fn)btns.push({x,y,w,h,fn})}
+function panel(x,y,w,h,col){cx.fillStyle="rgba(0,0,0,0.3)";rr(x,y+5,w,h,16*U);cx.fill();cx.fillStyle=col||"#fbf6ea";rr(x,y,w,h,16*U);cx.fill()}
+function dim(a){cx.setTransform(DPR,0,0,DPR,0,0);cx.fillStyle="rgba(8,20,14,"+a+")";cx.fillRect(0,0,W,H)}
+let toast=null;function say(t){toast={t,at:T}}
+function drawToast(){if(!toast||T-toast.at>2.4)return;const a=Math.min(1,(2.4-(T-toast.at))*3);cx.globalAlpha=a;font(17*U,800);
+ const w=Math.min(W-30,cx.measureText(toast.t).width+36*U),h=40*U,y=H*0.2;cx.fillStyle="rgba(20,20,20,0.85)";rr(W/2-w/2,y,w,h,h/2);cx.fill();
+ fitTxt(toast.t,W/2,y+h/2+1,17*U,w-24,"#fff");cx.globalAlpha=1}
+const topY=()=>SAFE.t+8*U,sideL=()=>SAFE.l+10*U,sideR=()=>W-SAFE.r-10*U,botY=()=>H-SAFE.b-8*U;
+function skin(){return SKINS.find(s=>s.id===settings.skin)||SKINS[0]}
+function felt(){const s=skin(),g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,s.felt[0]);g.addColorStop(1,s.felt[1]);cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ // a soft light over the middle of the table
+ const r=cx.createRadialGradient(W/2,H*0.45,10,W/2,H*0.45,Math.max(W,H)*0.7);r.addColorStop(0,"rgba(255,255,255,0.10)");r.addColorStop(1,"rgba(0,0,0,0.25)");cx.fillStyle=r;cx.fillRect(0,0,W,H)}
+function tile(code,x,y,w,o){o=o||{};const h=w*1.34,img=o.back?tileBack(settings.skin,Math.round(w),Math.round(h),DPR):tileFace(code,settings.skin,Math.round(w),Math.round(h),DPR);
+ cx.save();if(o.alpha!=null)cx.globalAlpha=o.alpha;cx.drawImage(img,x,y,w,h);
+ if(o.glow){cx.strokeStyle=o.glow;cx.lineWidth=Math.max(2,w*0.07);rr(x-1,y-1,w+2,h+2,w*0.14);cx.stroke()}
+ if(o.dot){cx.fillStyle=o.dot;cx.beginPath();cx.arc(x+w/2,y+h+w*0.16,Math.max(2.5,w*0.08),0,TAU);cx.fill()}
+ cx.restore();return h}
+
+// ================================================================ the card screen
+const SUITCOL={a:"#2b8a3e",b:"#c92a2a",c:"#1c7ed6"};
+// how the card prints a hand: counted numbers shown from 1, with a note
+// (a zero is the white dragon, printed blue whatever its neighbours' suit)
+function handTokens(src){const out=[];for(const tok of src.split(" ")){const sv=/[abc]$/.test(tok)?tok.slice(-1):"",b=sv?tok.slice(0,-1):tok,t=b.replace(/[ijklm]/g,c=>String("ijklm".indexOf(c)+1));
+  const col=sv?SUITCOL[sv]:"#343a40";if(t.includes("0")&&!/^0+$/.test(t)){let run="",rc=null;for(const ch of t){const c=ch==="0"?"#1c7ed6":col;if(c!==rc&&run){out.push({t:run,col:rc,join:1});run=""}rc=c;run+=ch}out.push({t:run,col:rc})}
+  else out.push({t,col:/^0+$/.test(t)?"#1c7ed6":col})}return out}
+function handNote(h){const s=h.src;if(!/[ijklm]/.test(s))return"";const suits=new Set((s.match(/[ijklm]+([abc])/g)||[]).map(x=>x.slice(-1)));
+ return/[jklm]/.test(s)?"any numbers in a row":"any like numbers"}
+let cardScroll=0,cardPin=null,cardFrom="title",cardDrag=null,cardMax=0,cardMode="easy";
+function openCard(from,mode){cardFrom=from;cardMode=mode||settings.mode;cardScroll=0;scene="card"}
+function drawCard(){const v=cardFrom==="table"?myView():null,mode=v?v.mode:cardMode,C=CARDS[mode];
+ dim(0.72);const pw=Math.min(W-SAFE.l-SAFE.r-16*U,560*U),px=W/2-pw/2,py=topY()+2*U,ph=botY()-py;
+ panel(px,py,pw,ph,"#fffaf0");
+ txt("The Card",W/2,py+26*U,24*U,"#3a2600","center",900);
+ fitTxt(MODES[mode].name+": "+(C.size-1)+" in your hand, mahjong with "+C.size,W/2,py+50*U,14*U,pw-100*U,"#8a6a3a","center",700);
+ button(px+pw-50*U,py+10*U,40*U,40*U,"X",()=>{scene=cardFrom==="table"?"table":"title"},{col:"#e9ecef",ink:"#555",fs:18*U});
+ if(!v){// the other modes' cards, from the title screen
+  const bw=Math.min(100*U,(pw-40*U)/3);["easy","short","standard"].forEach((m,i)=>button(W/2+(i-1)*(bw+8*U)-bw/2,py+64*U,bw,32*U,MODES[m].name,()=>{cardMode=m;cardScroll=0},{col:m===mode?"#ffd43b":"#e9ecef",fs:14*U}))}
+ const legendY=py+(v?70:106)*U;
+ fitTxt("Same colour = same suit; different colours = different suits.",W/2,legendY,12.5*U,pw-24*U,"#6a5a3a","center",700);
+ fitTxt("D = dragon of that colour's suit. 0 = white dragon. X may call, C stays hidden.",W/2,legendY+16*U,12.5*U,pw-24*U,"#6a5a3a","center",700);
+ // what the player has, for the "away" count beside every hand
+ let cl=null;if(v){cl=new Map();for(const r of closest(C,countsOf(v.hand),v.exp[v.me]))cl.set(r.hand.id,r.m)}
+ const top=legendY+30*U,bot=py+ph-10*U;cx.save();cx.beginPath();cx.rect(px,top,pw,bot-top);cx.clip();
+ let y=top+8*U-cardScroll;const lh=34*U;
+ for(const [title] of MODES[mode].card){txt(title.toUpperCase(),px+18*U,y+10*U,13*U,"#b35c00","left",900);y+=26*U;
+  for(const h of C.hands.filter(q=>q.section===title)){
+   const pinned=cardPin===h.id,m=cl?cl.get(h.id):null;
+   if(pinned){cx.fillStyle="rgba(255,212,59,0.35)";rr(px+8*U,y-2*U,pw-16*U,lh-2*U,8*U);cx.fill()}
+   if(y>top-lh&&y<bot){
+    btns.push({x:px,y:y-2*U,w:pw,h:lh-2*U,fn:()=>{if(cardDrag&&cardDrag.moved)return;if(pinned&&!pinAuto){pinAuto=true;cardPin=null;if(v)updatePin(v)}else{cardPin=h.id;pinAuto=false}sfx("tap")}});
+    let x=px+18*U;const toks=handTokens(h.src),fs=Math.min(19*U,(pw-150*U)/Math.max(10,h.src.length*0.62));font(fs,900);cx.textBaseline="middle";cx.textAlign="left";
+    for(const tk of toks){cx.fillStyle=tk.col;cx.fillText(tk.t,x,y+lh/2-3*U);x+=cx.measureText(tk.join?tk.t:tk.t+" ").width}
+    const note=handNote(h);if(note)txt(note,px+18*U,y+lh-6*U,9.5*U,"#9a8a6a","left",700);
+    txt(h.value+(h.concealed?" C":" X"),px+pw-(cl?74:22)*U,y+lh/2-3*U,15*U,"#5a3a00","right",900);
+    if(cl&&m!=null&&isFinite(m)){const c=m===0?"#2b8a3e":m<=2?"#e67700":m<=4?"#8a6a3a":"#b8a888";cx.fillStyle=c;rr(px+pw-64*U,y+4*U,50*U,lh-12*U,8*U);cx.fill();
+     txt(m===0?"MAHJ!":m+" away",px+pw-39*U,y+lh/2-3*U,11*U,"#fff","center",900)}
+    else if(cl){txt("-",px+pw-39*U,y+lh/2-3*U,12*U,"#c8b89a","center",800)}}
+   y+=lh}
+  y+=6*U}
+ cx.restore();cardMax=Math.max(0,y+cardScroll-bot+20*U);cardScroll=clamp(cardScroll,0,cardMax);
+ if(v&&settings.hints)fitTxt("Tap a hand to aim for it: its tiles get a dot on your rack.",W/2,bot-2*U,11*U,pw-20*U,"#8a6a3a","center",700)}
+
+// ================================================================ profiles & menus
+let scene="who",T=0;
+function drawWho(){felt();txt("Mahjong Club",W/2,topY()+40*U,40*U,"#fff","center",900);txt("Who's playing?",W/2,topY()+84*U,20*U,"rgba(255,255,255,0.85)");
+ const n=profiles.length+(profiles.length<6?1:0),cw=Math.min(150*U,(W-40*U)/Math.min(n,3)-10*U),ch=cw*0.8,cols=Math.min(n,3);
+ profiles.forEach((p,i)=>{const r=i/cols|0,c=i%cols,x=W/2-(cols*(cw+10*U)-10*U)/2+c*(cw+10*U),y=topY()+120*U+r*(ch+12*U);
+  button(x,y,cw,ch,"",()=>{me=p;save();scene="title"},{col:"#fffaf0",ring:p===me?p.col:null});
+  cx.fillStyle=p.col;cx.beginPath();cx.arc(x+cw/2,y+ch*0.38,ch*0.2,0,TAU);cx.fill();txt(p.name[0],x+cw/2,y+ch*0.39,ch*0.2,"#fff","center",900);
+  fitTxt(p.name,x+cw/2,y+ch*0.78,ch*0.16,cw-10,"#3a2600","center",900)});
+ if(profiles.length<6){const i=profiles.length,r=i/cols|0,c=i%cols,x=W/2-(cols*(cw+10*U)-10*U)/2+c*(cw+10*U),y=topY()+120*U+r*(ch+12*U);
+  button(x,y,cw,ch,"+ Add",()=>{const nm=ask("Name?","");if(nm){const p=newProfile(nm,profiles.length);profiles.push(p);me=p;save()}},{col:"#e9ecef",ink:"#555"})}}
+function ask(q,d){try{const v=window.prompt(q,d);return v?String(v).trim().slice(0,12):""}catch(e){return""}}
+function drawTitle(){felt();
+ // a few tiles fanned under the name
+ const fan=[T_J,4,13,22,31,32,33,T_F],tw=Math.min(52*U,W/12);fan.forEach((c,i)=>{const a=(i-3.5)*0.09,x=W/2+(i-3.5)*tw*0.92;cx.save();cx.translate(x,topY()+60*U+Math.abs(i-3.5)*4*U);cx.rotate(a);tile(c,-tw/2,-tw*0.67,tw);cx.restore()});
+ txt("Mahjong Club",W/2,topY()+130*U,40*U,"#fff","center",900);fitTxt("American rules - "+me.name+" is playing",W/2,topY()+160*U,15*U,W-40,"rgba(255,255,255,0.8)","center",700);
+ const bw=Math.min(300*U,W-60*U),bh=50*U,x0=W/2-bw/2;let y=topY()+188*U;const gap=Math.max(8*U,Math.min(14*U,(botY()-y-6*bh-40*U)/6));
+ button(x0,y,bw,bh,"Play with bots",()=>{scene="setup"},{col:"#69db7c",ink:"#113a1a"});y+=bh+gap;
+ button(x0,y,bw,bh,"Host a game",()=>{startHosting()},{col:"#74c0fc",ink:"#0b2a4a"});y+=bh+gap;
+ button(x0,y,bw,bh,"Join a game",()=>{joinCode="";NET.err="";scene="join"},{col:"#b197fc",ink:"#1f0b4a"});y+=bh+gap;
+ button(x0,y,bw/2-5*U,bh,"The card",()=>openCard("title",settings.mode),{col:"#ffe066"});
+ button(x0+bw/2+5*U,y,bw/2-5*U,bh,"How to play",()=>{helpPage=0;scene="help"},{col:"#ffe066"});y+=bh+gap;
+ button(x0,y,bw/2-5*U,bh,"Tiles: "+skin().name,()=>{const i=SKINS.findIndex(s=>s.id===settings.skin);settings.skin=SKINS[(i+1)%SKINS.length].id;saveSettings()},{col:"#ffc9c9"});
+ button(x0+bw/2+5*U,y,bw/2-5*U,bh,"Settings",()=>{scene="settings"},{col:"#e9ecef"});y+=bh+gap;
+ button(x0,y,bw,bh*0.8,"Change player",()=>{scene="who"},{col:"#e9ecef",fs:15*U});
+ fitTxt(me.name+": "+me.games+" games, "+me.wins+" won, "+me.points+" points",W/2,botY()-22*U,13*U,W-40,"rgba(255,255,255,0.75)","center",700);
+ txt("v"+BUILD,sideL(),botY()-4*U,10*U,"rgba(255,255,255,0.6)","left",700)}
+const MODE_TXT={easy:"Hold 8 tiles, mahjong with 9. Short hands, fast games - the place to start.",
+ short:"Hold 12, mahjong with 13. The real card's hands, one tile shorter.",standard:"Hold 13, mahjong with 14. American mah jongg as it is played."};
+function modeButtons(y,pick){const bw=Math.min(340*U,W-40*U),bh=74*U,x0=W/2-bw/2;
+ for(const m of["easy","short","standard"]){const on=m===settings.mode;button(x0,y,bw,bh,"",()=>{settings.mode=m;saveSettings();if(pick)pick(m)},{col:on?"#ffd43b":"#fffaf0",ring:on?"#e67700":null});
+  txt(MODES[m].name,x0+16*U,y+24*U,22*U,"#3a2600","left",900);fitTxt(MODE_TXT[m],x0+16*U,y+52*U,12.5*U,bw-30*U,"#6a5a3a","left",700);y+=bh+10*U}
+ return y}
+function drawSetup(){felt();txt("Play with bots",W/2,topY()+30*U,28*U,"#fff","center",900);
+ txt("Three bots join you at the table.",W/2,topY()+60*U,14*U,"rgba(255,255,255,0.8)","center",700);
+ const y=modeButtons(topY()+84*U);const bw=Math.min(300*U,W-60*U);
+ button(W/2-bw/2,y+8*U,bw,54*U,"Deal!",()=>startSolo(),{col:"#69db7c",ink:"#113a1a",fs:22*U});
+ button(sideL(),botY()-46*U,100*U,44*U,"Back",()=>{scene="title"},{col:"#e9ecef"})}
+function drawSettings(){felt();txt("Settings",W/2,topY()+30*U,28*U,"#fff","center",900);const bw=Math.min(320*U,W-40*U),x0=W/2-bw/2;let y=topY()+64*U;const bh=48*U;
+ button(x0,y,bw,bh,"Sound: "+(settings.sfx?"on":"off"),()=>{settings.sfx=!settings.sfx;saveSettings();if(sfxBus)sfxBus.gain.value=settings.sfx?0.8:0},{col:"#fffaf0"});y+=bh+10*U;
+ button(x0,y,bw,bh,"Hints: "+(settings.hints?"on":"off"),()=>{settings.hints=!settings.hints;saveSettings()},{col:"#fffaf0"});y+=bh+10*U;
+ button(x0,y,bw,bh,"Bots: "+["take their time","normal","quick"][settings.speed],()=>{settings.speed=(settings.speed+1)%3;saveSettings()},{col:"#fffaf0"});y+=bh+10*U;
+ button(x0,y,bw,bh,"Time to call a tile: "+settings.claim+"s",()=>{settings.claim=settings.claim>=20?6:settings.claim+4;saveSettings()},{col:"#fffaf0"});y+=bh+10*U;
+ button(x0,y,bw,bh,"Tiles: "+skin().name,()=>{const i=SKINS.findIndex(s=>s.id===settings.skin);settings.skin=SKINS[(i+1)%SKINS.length].id;saveSettings()},{col:"#fffaf0"});y+=bh+14*U;
+ const tw=Math.min(46*U,bw/7);[1,13,22,27,32,T_F,T_J].forEach((c,i)=>tile(c,W/2+(i-3)*(tw+4*U)-tw/2,y,tw));
+ button(sideL(),botY()-46*U,100*U,44*U,"Back",()=>{scene="title"},{col:"#e9ecef"})}
+let helpPage=0;
+const HELP=[["The tiles","Bams (green), craks (red) and dots (blue), 1 to 9, four of each. Winds N E W S. Dragons: green goes with bams, red with craks, white (the soap) with dots - and soap is also a zero. Flowers. And eight jokers, which can stand in for any tile in a group of three or more - never in a pair or a single."],
+ ["The card","You win by making exactly one hand from the card. Colours on the card mean suits: the same colour, the same suit. A hand marked X may use tiles you call; C must stay hidden until you go mahjong. Tap Card at the table - it shows how many tiles away you are from every hand."],
+ ["The Charleston","Before play, everyone passes tiles they don't want: right, across, left. Then, if nobody stops it, a second Charleston: left, across, right. Last, you can swap up to three tiles with the player across. Jokers are never passed. In Easy, one round of two tiles."],
+ ["Playing","East (the dealer) starts by throwing a tile. Then each player takes a tile from the wall and throws one. If someone throws a tile you need for a group of three or more, you can call it: you show that group and then throw. Any tile can be called to finish mahjong."],
+ ["Jokers and paying","On your turn, if someone has a joker in a shown group and you have the real tile, swap it for the joker. Mahjong pays the hand's value from everyone: double from whoever threw your winning tile, double from all if you drew it yourself, and double again with no jokers."]];
+function drawHelp(){felt();const pw=Math.min(W-30*U,520*U),px=W/2-pw/2,py=topY()+10*U,ph=botY()-py-60*U;panel(px,py,pw,ph);
+ const [h,b]=HELP[helpPage];txt(h,W/2,py+34*U,26*U,"#3a2600","center",900);wrap(b,px+22*U,py+74*U,pw-44*U,18*U,26*U,"#4a3a20");
+ txt((helpPage+1)+" / "+HELP.length,W/2,py+ph-20*U,14*U,"#8a6a3a");
+ button(sideL(),botY()-46*U,100*U,44*U,"Back",()=>{scene="title"},{col:"#e9ecef"});
+ if(helpPage<HELP.length-1)button(sideR()-110*U,botY()-46*U,110*U,44*U,"Next",()=>{helpPage++},{col:"#ffd43b"});
+ if(helpPage>0)button(W/2-55*U,botY()-46*U,110*U,44*U,"Before",()=>{helpPage--},{col:"#ffe066"})}
+function wrap(t,x,y,maxW,px,lh,col){font(px,700);cx.textAlign="left";cx.textBaseline="top";cx.fillStyle=col;let line="";
+ for(const w of t.split(" ")){const tr=line?line+" "+w:w;if(cx.measureText(tr).width>maxW&&line){cx.fillText(line,x,y);y+=lh;line=w}else line=tr}if(line){cx.fillText(line,x,y);y+=lh}return y}
+// ---------------------------------------------------------------- online
+let joinCode="";
+function startHosting(){netClose();ROLE="host";const H=HOST;H.G=null;H.me=0;H.round=0;H.scores=[0,0,0,0];H.mode=settings.mode;
+ H.seats=[{kind:"me",name:me.name,col:me.col,live:true},...[1,2,3].map(i=>({kind:"bot",name:BOT_NAMES[i],live:true}))];netHost();scene="lobby"}
+function drawJoin(){felt();txt("Join a game",W/2,topY()+30*U,28*U,"#fff","center",900);
+ txt("Ask the host for the room code",W/2,topY()+58*U,14*U,"rgba(255,255,255,0.8)","center",700);
+ const bw=Math.min(76*U,(W-60*U)/3),bh=bw*0.7;let y=topY()+80*U;
+ for(let i=0;i<4;i++){const x=W/2+(i-2)*(bw*0.8+8*U)+4*U;cx.fillStyle="#fffaf0";rr(x,y,bw*0.8,bh,10*U);cx.fill();txt(joinCode[i]||"",x+bw*0.4,y+bh/2+2,bh*0.6,"#3a2600","center",900)}
+ y+=bh+16*U;const keys=["1","2","3","4","5","6","7","8","9","<","0","OK"];
+ keys.forEach((k,i)=>{const r=i/3|0,c=i%3,x=W/2+(c-1.5)*(bw+8*U)+4*U,yy=y+r*(bh+8*U);
+  button(x,yy,bw,bh,k,()=>{if(k==="<")joinCode=joinCode.slice(0,-1);else if(k==="OK"){if(joinCode.length===4)netJoin(joinCode)}else if(joinCode.length<4)joinCode+=k},
+   {col:k==="OK"?(joinCode.length===4?"#69db7c":"#8a948c"):"#fffaf0",fs:bh*0.45})});
+ const sy=y+4*(bh+8*U)+10*U;
+ if(NET.status==="joining")txt("Joining...",W/2,sy,16*U,"#fff");if(NET.err)fitTxt(NET.err,W/2,sy+22*U,15*U,W-40,"#ffc9c9","center",800);
+ button(sideL(),botY()-46*U,100*U,44*U,"Back",()=>{netClose();scene="title"},{col:"#e9ecef"})}
+function drawLobby(){felt();const host=ROLE==="host",L=host?lobbyState():NET.lobby;
+ txt(host?"Your game":"Joined!",W/2,topY()+28*U,26*U,"#fff","center",900);
+ if(host){const st=NET.status==="open"?"":NET.status==="opening"?"Opening the room...":"";
+  if(NET.err)fitTxt(NET.err,W/2,topY()+56*U,14*U,W-30,"#ffc9c9","center",800);else if(st)txt(st,W/2,topY()+56*U,14*U,"rgba(255,255,255,0.8)")}
+ if(L){txt("Room code",W/2,topY()+86*U,14*U,"rgba(255,255,255,0.8)","center",800);txt(L.code||"....",W/2,topY()+122*U,52*U,"#ffd43b","center",900);
+  if(host)fitTxt("Others: Join a game, then type this code. Empty seats are bots.",W/2,topY()+156*U,13*U,W-30,"rgba(255,255,255,0.8)","center",700);
+  const sw=Math.min(340*U,W-40*U);L.seats.forEach((s,i)=>{const y=topY()+176*U+i*44*U;cx.fillStyle="rgba(255,255,255,0.12)";rr(W/2-sw/2,y,sw,38*U,10*U);cx.fill();
+   cx.fillStyle=s.col||"#adb5bd";cx.beginPath();cx.arc(W/2-sw/2+22*U,y+19*U,11*U,0,TAU);cx.fill();
+   fitTxt(s.name+(s.kind==="bot"?" (bot)":s.kind==="me"?" (host)":s.live?"":" (away)"),W/2-sw/2+42*U,y+20*U,16*U,sw-60*U,"#fff","left",800)});
+  let y=topY()+176*U+4*44*U+10*U;
+  if(host){fitTxt(MODES[HOST.mode].name+": "+MODE_TXT[HOST.mode],W/2,y,12.5*U,W-30,"rgba(255,255,255,0.85)","center",700);y+=18*U;
+   const bw=Math.min(100*U,(W-40*U)/3);["easy","short","standard"].forEach((m,i)=>button(W/2+(i-1)*(bw+8*U)-bw/2,y,bw,36*U,MODES[m].name,()=>{HOST.mode=m;settings.mode=m;saveSettings();lobbySend()},{col:m===HOST.mode?"#ffd43b":"#e9ecef",fs:15*U}));
+   y+=50*U;button(W/2-120*U,y,240*U,54*U,"Deal!",()=>{ROLE="host";hostNewGame();openTable()},{col:"#69db7c",ink:"#113a1a",fs:22*U})}
+  else txt("Waiting for "+(L.seats[0]?L.seats[0].name:"the host")+" to deal - "+MODES[L.mode].name,W/2,y+10*U,15*U,"#fff","center",800)}
+ else txt(NET.err||"Connecting...",W/2,H/2,16*U,"#fff");
+ button(sideL(),botY()-46*U,100*U,44*U,"Leave",()=>{NET.status="left";netClose();ROLE=null;HOST.G=null;scene="title"},{col:"#e9ecef"})}
+function startSolo(){netClose();ROLE="host";const H=HOST;H.me=0;H.round=0;H.scores=[0,0,0,0];H.mode=settings.mode;
+ H.seats=[{kind:"me",name:me.name,col:me.col,live:true},...[1,2,3].map(i=>({kind:"bot",name:BOT_NAMES[i],live:true}))];hostNewGame();openTable()}
+
+// ================================================================ the table
+let order=[],sel=new Set(),lastT=-1,lastPhase="",dropT=0,gotResult=-1,pinAuto=true,hintT=0,swapHint=null;
+function openTable(){scene="table";order=[];sel.clear();lastT=-1;gotResult=-1;cardPin=null;pinAuto=true}
+// keep the rack in the player's own order: gone tiles leave, new ones go on the end
+function syncOrder(v){const have=new Set(v.hand);order=order.filter(i=>have.has(i));for(const i of v.hand)if(!order.includes(i))order.push(i);
+ for(const i of[...sel])if(!have.has(i))sel.delete(i)}
+function sortRack(){order.sort((a,b)=>{const ta=TILE[a],tb=TILE[b],k=t=>t===T_J?-1:t;return k(ta)-k(tb)||a-b})}
+// sounds and the like for whatever happened since the last view
+function onNewView(was,v){if(!v)return;const seen=was?was.t:-1;
+ for(const e of v.log){if(e.t<=seen)continue;
+  if(e.k==="discard"){sfx("clack");dropT=T}else if(e.k==="call"){sfx("call");if(e.seat===v.me)say("You called it")}else if(e.k==="passed")sfx("whoosh");
+  else if(e.k==="mahjong")sfx(e.seat===v.me?"mahjong":"lose");else if(e.k==="swap")sfx("joker");else if(e.k==="wall")sfx("wall");
+  else if(e.k==="draw"&&e.seat===v.me)sfx("pick");else if(e.k==="joined"||e.k==="left")sfx("join")}
+ if(v.phase==="turn"&&v.turn===v.me&&(!was||was.turn!==v.me||was.phase!=="turn"))sfx("turn");
+ if(v.phase==="end"&&gotResult!==v.t){gotResult=v.t;recordResult(v)}}
+function recordResult(v){const r=v.result;if(!r)return;me.games++;if(!r.wall&&r.winner===v.me){me.wins++;me.best=Math.max(me.best,r.hand?r.hand.value:0)}
+ if(r.pay)me.points+=r.pay[v.me];save()}
+const rel=(v,s)=>(s-v.me+4)%4;// 0 me, 1 right, 2 across, 3 left
+const tname=id=>tName(TILE[id]);
+function phaseLine(v){const nm=i=>i===v.me?"You":v.names[i];
+ if(v.phase==="charleston")return v.myPick?"Waiting for the others to pass":"Charleston: pass "+v.passN+" tiles "+v.dir.toUpperCase()+(v.dir==="right"?" >":v.dir==="left"?" <":" ^");
+ if(v.phase==="vote")return"A second Charleston?";if(v.phase==="courtesy")return v.myPick?"Waiting for the courtesy pass":"Courtesy pass: give up to 3 tiles across";
+ if(v.phase==="turn")return v.turn===v.me?(v.calledFrom>=0?"You called it - now throw a tile":"Your turn: throw a tile"):nm(v.turn)+(v.bots[v.turn]?" is thinking":"'s turn");
+ if(v.phase==="claims")return v.claim?"You can call that tile!":"Anyone want it?";if(v.phase==="end")return v.result.wall?"Wall game - nobody won":nm(v.result.winner)+" went mahjong!";return""}
+function drawTable(dt){const v=myView();felt();if(!v){txt(NET.err||"Waiting for the host...",W/2,H/2,18*U,"#fff");button(sideL(),botY()-46*U,100*U,44*U,"Leave",leaveTable,{col:"#e9ecef"});return}
+ if(v.t!==lastT){syncOrder(v);if(lastT<0||v.phase!==lastPhase&&v.phase==="turn"&&lastPhase==="courtesy"||v.phase==="charleston"&&lastT<0)sortRack();
+  if(ROLE==="host")onNewView(HOST._was,v),HOST._was=v;lastT=v.t;lastPhase=v.phase;updatePin(v)}
+ const port=H>W,sk=skin();
+ // ---- top bar
+ const tb=topY();button(sideL(),tb,86*U,36*U,"Card",()=>openCard("table"),{col:"#ffe066",fs:16*U});
+ fitTxt(phaseLine(v),W/2,tb+18*U,16*U,W-240*U,sk.ink,"center",900);
+ txt("Wall "+v.wall,sideR(),tb+10*U,12*U,sk.ink,"right",800);txt(MODES[v.mode].name+(v.code?" - room "+v.code:""),sideR(),tb+27*U,11*U,sk.ink,"right",700);
+ // ---- my rack
+ const n=order.length,drawnSep=v.drawn!=null&&order.includes(v.drawn),aw=W-SAFE.l-SAFE.r-20*U;
+ let rows=1,tw=Math.min(62*U,aw/(n+(drawnSep?0.4:0)));if(port&&tw<40*U){rows=2;tw=Math.min(62*U,aw/Math.ceil((n+0.4)/2))}
+ const th=tw*1.34,rackY=botY()-rows*th-(rows-1)*8*U-4*U;const perRow=Math.ceil(n/rows);
+ rack=[];order.forEach((id,i)=>{const r=Math.floor(i/perRow),c=i-r*perRow,rowN=Math.min(perRow,n-r*perRow);
+  const x0=W/2-(rowN*tw+(drawnSep&&r===rows-1?0.4*tw:0))/2;let x=x0+c*tw+(drawnSep&&id===v.drawn&&r===rows-1?0.4*tw:0);
+  const lift=sel.has(id)?-tw*0.28:0;rack.push({id,x,y:rackY+r*(th+8*U)+lift,w:tw,h:th})});
+ if(drag){const i=rack.findIndex(q=>q.id===drag.id);if(i>=0)rack[i].x=drag.x-tw/2,rack[i].y-=tw*0.2}
+ const need=pinNeeds(v);
+ for(const q of rack){const c=TILE[q.id];tile(c,q.x,q.y,q.w*0.97,{glow:sel.has(q.id)?"#ffd43b":q.id===v.drawn&&v.turn===v.me?"#74c0fc":null,dot:need&&need.has(c)?"#51cf66":null,alpha:need&&!need.has(c)&&c!==T_J?0.78:1})}
+ // ---- my exposures, above the rack
+ const ew=Math.min(34*U,tw*0.62),eY=rackY-ew*1.34-10*U-(rows===2?0:0);
+ drawExposures(v,v.me,W/2,eY,ew,"center");
+ // ---- the other three
+ for(let r=1;r<4;r++)drawSeat(v,(v.me+r)%4,r,port,rackY);
+ // ---- the pool
+ drawPool(v,port,eY);
+ // ---- the hand the player is going for, just above their buttons
+ if(settings.hints&&cardPin!=null&&v.phase!=="end"&&!(v.phase==="claims"&&v.claim))drawGoal(v,eY-44*U-8*U-(v.exp[v.me].length?0:-(tw*0.2)));
+ // ---- what the player can do
+ drawActions(v,rackY,eY,tw);
+ if(v.phase==="end")drawResult(v);
+ txt(v.scores?"":"",0,0,1)}
+let rack=[];
+function drawExposures(v,seat,x,y,w,al,vertical){const ex=v.exp[seat];if(!ex.length)return 0;let total=0;for(const e of ex)total+=e.k*w+w*0.4;total-=w*0.4;
+ let cx0=al==="center"?x-total/2:al==="right"?x-total:x;
+ for(let ei=0;ei<ex.length;ei++){const e=ex[ei];for(const id of e.ids){tile(TILE[id],cx0,y,w*0.97,{glow:swapHint&&swapHint.owner===seat&&swapHint.ei===ei&&TILE[id]===T_J?"#ffd43b":null});cx0+=w}cx0+=w*0.4}
+ return total}
+function drawSeat(v,s,r,port,rackY){const sk=skin(),w=Math.min(150*U,W*0.3),h=46*U;let x,y;
+ if(r===2){x=W/2-w/2;y=topY()+44*U}else if(port){x=r===1?sideR()-w:sideL();y=topY()+98*U}else{x=r===1?sideR()-w:sideL();y=H*0.34}
+ const turn=v.turn===s&&(v.phase==="turn"),col=v.names[s]?PCOLS[s%6]:"#aaa";
+ cx.fillStyle=turn?"rgba(255,212,59,0.95)":"rgba(0,0,0,0.35)";rr(x,y,w,h,12*U);cx.fill();
+ cx.fillStyle=col;cx.beginPath();cx.arc(x+22*U,y+h/2,14*U,0,TAU);cx.fill();txt(v.bots[s]?"B":v.names[s][0],x+22*U,y+h/2+1,14*U,"#fff","center",900);
+ fitTxt(v.names[s],x+42*U,y+15*U,15*U,w-70*U,turn?"#3a2600":"#fff","left",900);
+ txt(v.counts[s]+" tiles",x+42*U,y+33*U,11*U,turn?"#5a3a00":"rgba(255,255,255,0.8)","left",700);
+ if(s===v.dealer){cx.fillStyle="#e03131";cx.beginPath();cx.arc(x+w-14*U,y+14*U,10*U,0,TAU);cx.fill();txt("E",x+w-14*U,y+15*U,11*U,"#fff","center",900)}
+ if(v.picks&&v.picks[s]){txt("OK",x+w-14*U,y+34*U,11*U,"#8ce99a","center",900)}
+ if(v.claimsLeft&&v.claimsLeft[s]&&s!==v.me){txt("...",x+w-14*U,y+34*U,14*U,"#ffe066","center",900)}
+ // their exposures under the name
+ const ew=Math.min(24*U,(w-4*U)/Math.max(1,Math.min(9,v.exp[s].reduce((a,e)=>a+e.k+0.4,0))));
+ if(v.exp[s].length){let ex=x,ey=y+h+4*U;for(let ei=0;ei<v.exp[s].length;ei++){const e=v.exp[s][ei];if(ex+e.k*ew>x+w+2){ex=x;ey+=ew*1.34+3*U}
+   for(const id of e.ids){tile(TILE[id],ex,ey,ew*0.97,{glow:swapHint&&swapHint.owner===s&&swapHint.ei===ei&&TILE[id]===T_J?"#ffd43b":null});ex+=ew}ex+=ew*0.4}
+  seatBox[r]={x,y,w,h,bot:ey+ew*1.34}}else seatBox[r]={x,y,w,h,bot:y+h}}
+const seatBox=[];
+function drawPool(v,port,eY){
+ // in the Charleston the middle of the table says where the tiles are going
+ if((v.phase==="charleston"||v.phase==="courtesy")&&!v.myPick){const d={right:1,across:2,left:3}[v.dir],to=(v.me+d)%4,cy=H*0.42,sk=skin();
+  fitTxt((v.phase==="courtesy"?"Up to 3 tiles":v.passN+" tiles")+" to "+v.names[to],W/2,cy-34*U,22*U,W-40*U,sk.ink,"center",900);
+  cx.save();cx.translate(W/2,cy+14*U);cx.rotate(d===1?0:d===2?-Math.PI/2:Math.PI);cx.fillStyle=sk.accent;cx.globalAlpha=0.9+0.1*Math.sin(T*4);
+  const a=26*U;cx.beginPath();cx.moveTo(-a*1.4,-a*0.35);cx.lineTo(a*0.2,-a*0.35);cx.lineTo(a*0.2,-a*0.8);cx.lineTo(a*1.4,0);cx.lineTo(a*0.2,a*0.8);cx.lineTo(a*0.2,a*0.35);cx.lineTo(-a*1.4,a*0.35);cx.closePath();cx.fill();cx.restore();
+  if(v.phase==="charleston")fitTxt("Pass "+(v.step%3+1)+" of 3"+(v.second?" - second Charleston":""),W/2,cy+56*U,13*U,W-40*U,sk.ink,"center",700);return}const top=port?Math.max(seatBox[1].bot,seatBox[2].bot,seatBox[3].bot)+10*U:Math.max(seatBox[2].bot+8*U,topY()+100*U),bot=eY-12*U,left=port?sideL():sideL()+W*0.3+4*U,right=port?sideR():sideR()-W*0.3-4*U;
+ const areaW=right-left,areaH=bot-top;if(areaH<40)return;
+ // the latest discard, big, with who threw it
+ const L=v.last&&(v.phase==="claims"||v.phase==="turn"&&v.calledFrom<0)?v.last:null,bw=Math.min(58*U,areaH*0.36);let y0=top;
+ if(v.last&&v.phase==="claims"){const k=ease((T-dropT)/0.25),x=W/2-bw/2,y=top+(1-k)*-20*U;tile(TILE[v.last[0]],x,y,bw,{glow:"#ffd43b"});
+  fitTxt((v.last[1]===v.me?"You":v.names[v.last[1]])+" threw "+tname(v.last[0]),W/2,y+bw*1.34+12*U,13*U,areaW,skin().ink,"center",800);y0=top+bw*1.34+24*U}
+ const pool=v.pool,m=pool.length;if(!m)return;const h2=bot-y0;
+ let pw=34*U;for(;pw>12;pw-=1){const cols=Math.floor(areaW/pw),rowsN=Math.ceil(m/cols);if(rowsN*pw*1.34<=h2)break}
+ // the pile sits in the middle of the space it has
+ const cols=Math.floor(areaW/pw),rowsN=Math.ceil(m/cols),x0=W/2-Math.min(cols,m)*pw/2,yy=v.phase==="claims"?y0:y0+Math.max(0,(h2-rowsN*pw*1.34)/2);
+ pool.forEach(([id,from],i)=>{const r=i/cols|0,c=i%cols;tile(TILE[id],x0+c*pw,yy+r*pw*1.34,pw*0.95,{alpha:i===m-1&&v.phase!=="claims"?1:0.92})})}
+// ---- the player's buttons for the phase they are in
+function drawActions(v,rackY,eY,tw){const bh=44*U,y=eY-bh-8*U-(v.exp[v.me].length?0:-(tw*0.2)),ym=Math.min(y,rackY-bh-8*U);swapHint=null;
+ const row=(items)=>{const gap=8*U,tot=items.reduce((a,b)=>a+b.w,0)+gap*(items.length-1);let x=W/2-tot/2;for(const b of items){button(x,ym,b.w,bh,b.label,b.fn,b.o);x+=b.w+gap}};
+ const help={w:52*U,label:"?",fn:()=>suggest(v),o:{col:"#d0bfff",fs:20*U}},sort={w:62*U,label:"Sort",fn:()=>{sortRack();sfx("tap")},o:{col:"#e9ecef",fs:15*U}};
+ if(v.phase==="charleston"||v.phase==="courtesy"){if(v.myPick)return;const cour=v.phase==="courtesy",ok=cour?sel.size<=3:sel.size===v.passN;
+  row([help,sort,{w:150*U,label:cour?(sel.size?"Give "+sel.size:"Give none"):"Pass "+sel.size+"/"+v.passN,fn:()=>{if(ok&&!act({a:"pick",tiles:[...sel]})){sel.clear();sfx("whoosh")}},o:{col:ok?"#69db7c":"#8a948c",ink:"#113a1a"}}]);return}
+ if(v.phase==="vote"){if(v.votes&&v.votes[v.me]>=0)return;row([{w:130*U,label:"Yes, again",fn:()=>act({a:"vote",more:true}),o:{col:"#69db7c"}},{w:110*U,label:"Stop",fn:()=>act({a:"vote",more:false}),o:{col:"#ffc9c9"}}]);return}
+ if(v.phase==="claims"&&v.claim){drawClaim(v,ym,bh);return}
+ if(v.phase==="turn"&&v.turn===v.me){const items=[help,sort];
+  const h=countsOf(v.hand),win=winningHand(CARDS[v.mode],h,v.exp[v.me]);
+  if(win)items.push({w:130*U,label:"Mahjong!",fn:()=>act({a:"declare"}),o:{col:"#ff8787",ink:"#fff",ring:"#fff"}});
+  // a joker in anyone's exposure the player holds the real tile for
+  for(let s=0;s<4&&!swapHint;s++)v.exp[s].forEach((e,ei)=>{if(swapHint||!e.ids.some(x=>TILE[x]===T_J))return;const id=v.hand.find(x=>TILE[x]===e.t);if(id!=null)swapHint={owner:s,ei,id}});
+  if(swapHint){const sh=swapHint;items.push({w:120*U,label:"Get joker",fn:()=>{if(!act({a:"swap",owner:sh.owner,ei:sh.ei,id:sh.id}))sfx("joker")},o:{col:"#ffd43b"}})}
+  const one=sel.size===1?[...sel][0]:null;items.push({w:110*U,label:"Throw",fn:()=>{if(one!=null){act({a:"discard",id:one});sel.clear()}},o:{col:one!=null?"#74c0fc":"#8a948c",ink:"#0b2a4a"}});
+  row(items);return}
+ if(v.phase!=="end")row([sort])}
+function drawClaim(v,y,bh){const c=v.claim,t=TILE[v.last[0]],items=[];const pw=Math.min(W-20*U,420*U),px=W/2-pw/2,ph=bh+54*U,py=y-54*U;
+ panel(px,py,pw,ph,"rgba(255,250,240,0.97)");fitTxt("Call "+tName(t)+"?",W/2,py+20*U,17*U,pw-90*U,"#3a2600","center",900);
+ // the time left to decide
+ if(v.claimTotal&&v.claimLeft!=null){const k=clamp(ROLE==="host"?(HOST.claimAt[v.me]-now())/v.claimTotal:v.claimLeft/v.claimTotal,0,1);cx.fillStyle="#e9ecef";rr(px+14*U,py+36*U,pw-28*U,6*U,3*U);cx.fill();cx.fillStyle="#ffa94d";rr(px+14*U,py+36*U,(pw-28*U)*k,6*U,3*U);cx.fill()}
+ if(c.mahjong)items.push({label:"Mahjong!",fn:()=>act({a:"claim",c:{mahjong:true}}),o:{col:"#ff8787",ink:"#fff"}});
+ for(const k of c.expose)items.push({label:["","","","Pung (3)","Kong (4)","Quint (5)"][k],fn:()=>act({a:"claim",c:{k}}),o:{col:"#69db7c",ink:"#113a1a"}});
+ items.push({label:"Pass",fn:()=>act({a:"claim",c:null}),o:{col:"#e9ecef"}});
+ const gap=8*U,bw=(pw-28*U-gap*(items.length-1))/items.length;items.forEach((b,i)=>button(px+14*U+i*(bw+gap),py+48*U,bw,bh,b.label,b.fn,Object.assign({fs:Math.min(16*U,bw/6)},b.o)))}
+function drawResult(v){const r=v.result,pw=Math.min(W-20*U,520*U),ph=Math.min(H-40*U,360*U),px=W/2-pw/2,py=H/2-ph/2;dim(0.35);panel(px,py,pw,ph);
+ const nm=i=>i===v.me?"You":v.names[i];
+ if(r.wall)txt("Wall game",W/2,py+34*U,26*U,"#3a2600","center",900);
+ else{txt(nm(r.winner)+(r.winner===v.me?" win!":" won"),W/2,py+30*U,26*U,r.winner===v.me?"#2b8a3e":"#3a2600","center",900);
+  fitTxt(r.hand.section+": "+handTokens(r.hand.src).map(x=>x.t+(x.join?"":" ")).join("").trim()+"  ("+r.hand.value+")",W/2,py+58*U,14*U,pw-30*U,"#6a5a3a","center",800);
+  fitTxt((r.self?"Drawn from the wall - everyone pays double":"On "+nm(r.from)+"'s tile - "+nm(r.from)+" pays double")+(r.jokerless?". No jokers: double again!":""),W/2,py+78*U,12.5*U,pw-30*U,"#8a6a3a","center",700);
+  // the winning tiles
+  const ids=r.hands[r.winner].concat(...v.exp[r.winner].map(e=>e.ids)),lay=groupLay(ids,r.groups),tw=Math.min(34*U,(pw-30*U)/(ids.length+lay.gaps*0.35));
+  let x=W/2-(ids.length+lay.gaps*0.35)*tw/2;for(const g of lay.out){if(g==="|"){x+=tw*0.35;continue}tile(TILE[g],x,py+92*U,tw*0.96);x+=tw}}
+ const y0=py+(r.wall?78:176)*U;
+ if(r.pay||v.scores)for(let i=0;i<4;i++){const y=y0+i*28*U;fitTxt(nm(i),px+30*U,y,15*U,pw*0.4,"#3a2600","left",800);
+  if(r.pay)txt((r.pay[i]>0?"+":"")+r.pay[i],px+pw*0.62,y,15*U,r.pay[i]>0?"#2b8a3e":r.pay[i]<0?"#c92a2a":"#888","right",900);
+  if(v.scores)txt(String(v.scores[i]),px+pw-30*U,y,15*U,"#3a2600","right",900)}
+ txt("this game",px+pw*0.62,y0-22*U,11*U,"#9a8a6a","right",700);txt("total",px+pw-30*U,y0-22*U,11*U,"#9a8a6a","right",700);
+ const by=py+ph-58*U;
+ if(ROLE==="host"){button(W/2+6*U,by,150*U,46*U,"Next game",()=>act({a:"next"}),{col:"#69db7c",ink:"#113a1a"});button(W/2-156*U,by,150*U,46*U,"Leave",leaveTable,{col:"#e9ecef"})}
+ else{txt("The host deals the next game",W/2,by-10*U,13*U,"#6a5a3a");button(W/2-75*U,by+4*U,150*U,42*U,"Leave",leaveTable,{col:"#e9ecef"})}}
+// the winning tiles laid out group by group, as on the card
+function groupLay(ids,groups){const left=ids.slice(),out=[];let gaps=0;
+ let prev=0;if(groups)for(const g of groups){if(out.length&&!(g.k===1&&prev===1)){out.push("|");gaps++}prev=g.k;for(let k=0;k<g.k;k++){let i=left.findIndex(x=>TILE[x]===g.t);if(i<0&&g.k>=3)i=left.findIndex(x=>TILE[x]===T_J);if(i<0)continue;out.push(left.splice(i,1)[0])}}
+ for(const id of left)out.push(id);return{out,gaps}}
+function leaveTable(){NET.status="left";netClose();ROLE=null;HOST.G=null;VIEW=null;scene="title"}
+// the hand being aimed for, as the card prints it, and how far off it is
+function drawGoal(v,by){const C=CARDS[v.mode],h=C.hands[cardPin];if(!h)return;let m=Infinity;const cnt=countsOf(v.hand);for(const va of h.variants)m=Math.min(m,missing(va,cnt,v.exp[v.me]));
+ const toks=handTokens(h.src),w=Math.min(W-24*U,380*U),x=W/2-w/2,y=by-40*U,hh=34*U;cx.fillStyle="rgba(255,250,240,0.92)";rr(x,y,w,hh,10*U);cx.fill();
+ btns.push({x,y,w,h:hh,fn:()=>openCard("table")});
+ txt(pinAuto?"Closest:":"Aiming for:",x+10*U,y+hh/2,11*U,"#8a6a3a","left",800);
+ let tx=x+(pinAuto?62:78)*U;const fs=Math.min(17*U,(w-150*U)/Math.max(8,h.src.length*0.6));font(fs,900);cx.textAlign="left";cx.textBaseline="middle";
+ for(const tk of toks){cx.fillStyle=tk.col;cx.fillText(tk.t,tx,y+hh/2+1);tx+=cx.measureText(tk.join?tk.t:tk.t+" ").width}
+ const c=m===0?"#2b8a3e":m<=2?"#e67700":"#8a6a3a";cx.fillStyle=c;rr(x+w-64*U,y+5*U,56*U,hh-10*U,7*U);cx.fill();txt(m===0?"MAHJ!":isFinite(m)?m+" away":"-",x+w-36*U,y+hh/2,11*U,"#fff","center",900)}
+// ---- hints: the hand the player is going for, and a suggestion
+function updatePin(v){if(!settings.hints)return;if(pinAuto||cardPin==null){const best=closest(CARDS[v.mode],countsOf(v.hand),v.exp[v.me]).find(r=>isFinite(r.m));cardPin=best?best.hand.id:null;pinAuto=true}}
+function pinNeeds(v){if(!settings.hints||cardPin==null)return null;const C=CARDS[v.mode],hand=C.hands[cardPin];if(!hand)return null;
+ const h=countsOf(v.hand);let best=null,bm=Infinity;for(const va of hand.variants){const m=missing(va,h,v.exp[v.me]);if(m<bm){bm=m;best=va}}
+ if(!best)return null;const s=new Set();for(const e of best.need)s.add(e.t);return s}
+function suggest(v){const C=CARDS[v.mode],G={card:C,rng:Math.random,seats:[]};G.seats[v.me]={hand:v.hand,exp:v.exp[v.me]};
+ sel.clear();const pass=v.phase==="charleston"||v.phase==="courtesy";
+ const ord=botThrowOrder(G,v.me,v.hand);const n=pass?(v.phase==="courtesy"?Math.min(3,ord.filter(o=>o.u<0.2).length):v.passN):1;
+ for(const o of ord.slice(0,n))sel.add(o.id);say(pass?"These look least useful":"Maybe throw this one");sfx("tap")}
+// ================================================================ input
+function rectPos(x0,y0){const r=cv.getBoundingClientRect();return{x:r.width?(x0-r.left)*(W/r.width):x0,y:r.height?(y0-r.top)*(H/r.height):y0}}
+function hitBtn(p){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return b}return null}
+function onMenu(t){try{return!!(t&&t.closest&&t.closest("[id^=shelf-menu]"))}catch(e){return false}}
+let drag=null,press0=null,evN=0;
+function down(p){evN++;
+ if(scene==="card"){cardDrag={y:p.y,s:cardScroll,moved:false,p};return}
+ const b=hitBtn(p);if(b){sfx("tap");b.fn();return}
+ if(scene==="table"){const q=rack.slice().reverse().find(q=>p.x>=q.x&&p.x<=q.x+q.w&&p.y>=q.y&&p.y<=q.y+q.h);if(q)press0={id:q.id,x:p.x,y:p.y}}}
+function move(p){if(cardDrag){if(Math.abs(p.y-cardDrag.y)>6)cardDrag.moved=true;if(cardDrag.moved)cardScroll=clamp(cardDrag.s-(p.y-cardDrag.y),0,cardMax);return}
+ if(press0&&!drag&&Math.abs(p.x-press0.x)>12)drag={id:press0.id,x:p.x,y:p.y};if(drag){drag.x=p.x;drag.y=p.y}}
+function up(p){if(cardDrag){const d=cardDrag;cardDrag=null;if(!d.moved){const b=hitBtn(d.p);if(b)b.fn()}return}
+ if(drag){// drop it where the finger is, among the rack's tiles
+  const others=rack.filter(q=>q.id!==drag.id);let best=0,bd=1e9;others.forEach((q,i)=>{const d=Math.hypot(q.x+q.w/2-p.x,(q.y+q.h/2-p.y)*2);if(d<bd){bd=d;best=i+(p.x>q.x+q.w/2?1:0)}});
+  order=order.filter(i=>i!==drag.id);const ids=others.map(q=>q.id);const at=best<ids.length?order.indexOf(ids[best]):order.length;order.splice(at<0?order.length:at,0,drag.id);drag=null;press0=null;sfx("pick");return}
+ if(press0){tapTile(press0.id);press0=null}}
+function tapTile(id){const v=myView();if(!v)return;const t=TILE[id];
+ if(v.phase==="charleston"||v.phase==="courtesy"){if(v.myPick)return;if(t===T_J){say("Jokers are never passed");sfx("no");return}
+  if(sel.has(id))sel.delete(id);else{const mx=v.phase==="courtesy"?3:v.passN;if(sel.size>=mx){say("That's "+mx+" - tap one to put it back");sfx("no");return}sel.add(id)}sfx("tap");return}
+ // on your turn a second tap on the lifted tile throws it
+ if(v.phase==="turn"&&v.turn===v.me){if(sel.has(id)&&sel.size===1){act({a:"discard",id});sel.clear();return}sel.clear();sel.add(id);sfx("tap");return}
+ if(sel.has(id))sel.delete(id);else{sel.clear();sel.add(id)}sfx("tap")}
+let lastTouchAt=0;const ghostMouse=()=>performance.now()-lastTouchAt<900;
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();audioWake();for(const t of e.changedTouches){if(onMenu(t.target))continue;down(rectPos(t.clientX,t.clientY))}},{passive:false});
+window.addEventListener("touchmove",e=>{for(const t of e.changedTouches)move(rectPos(t.clientX,t.clientY))},{passive:true});
+function tend(e){lastTouchAt=performance.now();audioWake();for(const t of e.changedTouches){if(onMenu(t.target))continue;up(rectPos(t.clientX,t.clientY))}}
+window.addEventListener("touchend",tend);window.addEventListener("touchcancel",e=>{press0=null;drag=null;cardDrag=null});
+let mouseDown=false;
+cv.addEventListener("mousedown",e=>{if(ghostMouse())return;audioWake();mouseDown=true;down(rectPos(e.clientX,e.clientY))});
+window.addEventListener("mousemove",e=>{if(mouseDown&&!ghostMouse())move(rectPos(e.clientX,e.clientY))});
+window.addEventListener("mouseup",e=>{if(!mouseDown||ghostMouse())return;mouseDown=false;up(rectPos(e.clientX,e.clientY))});
+cv.addEventListener("wheel",e=>{if(scene==="card")cardScroll=clamp(cardScroll+e.deltaY,0,cardMax)},{passive:true});
+window.addEventListener("keydown",e=>{audioWake();if(e.key==="Escape"&&scene==="card")scene=cardFrom==="table"?"table":"title"});
+window.__shelfInput=()=>"events:"+evN+" scene:"+scene;
+
+// ================================================================ loop
+let last=0,nudgeT=0;
+function frame(ts){requestAnimationFrame(frame);const nowS=ts/1000;let dt=last?nowS-last:1/60;last=nowS;dt=clamp(dt,0,0.1);T+=dt;
+ if(T-nudgeT>1){nudgeT=T;audioNudge()}
+ btns=[];cx.setTransform(DPR,0,0,DPR,0,0);
+ if(ROLE==="host"&&HOST.G)try{hostTick()}catch(e){console.error(e)}
+ if(AUTO&&(scene==="table"||scene==="card"))try{autoplay()}catch(e){console.error(e)}
+ if(scene==="table")drawTable(dt);
+ else if(scene==="card"){if(cardFrom==="table")drawTable(dt),btns=[];else felt();drawCard()}
+ else if(scene==="who")drawWho();else if(scene==="title")drawTitle();else if(scene==="setup")drawSetup();else if(scene==="settings")drawSettings();
+ else if(scene==="help")drawHelp();else if(scene==="join")drawJoin();else if(scene==="lobby")drawLobby();
+ drawToast()}
+requestAnimationFrame(frame);
+if(profiles.length&&store.get("who",""))scene="title";
+// for the checks in tools/
+// a player that plays itself, from its own view, for the checks (and a
+// demonstration): what a bot would pass, throw and call
+let autoT=0;
+function autoplay(){const v=myView();if(!v||T-autoT<0.3)return;autoT=T;const C=CARDS[v.mode],G={card:C,rng:Math.random,seats:[]};G.seats[v.me]={hand:v.hand,exp:v.exp[v.me]};
+ if((v.phase==="charleston"||v.phase==="courtesy")&&!v.myPick){const o=botThrowOrder(G,v.me,v.hand);act({a:"pick",tiles:v.phase==="courtesy"?[]:o.slice(0,v.passN).map(x=>x.id)})}
+ else if(v.phase==="vote"&&v.votes[v.me]<0)act({a:"vote",more:false});
+ else if(v.phase==="claims"&&v.claim)act({a:"claim",c:v.claim.mahjong?{mahjong:true}:null});
+ else if(v.phase==="turn"&&v.turn===v.me){if(winningHand(C,countsOf(v.hand),v.exp[v.me]))act({a:"declare"});else{const o=botThrowOrder(G,v.me,v.hand)[0];act({a:"discard",id:o?o.id:v.hand[0]})}}}
+let AUTO=false;
+window.MJ={deal(){ROLE="host";hostNewGame();openTable()},set auto(on){AUTO=on},get scene(){return scene},set scene(s){scene=s},get view(){return myView()},get HOST(){return HOST},get NET(){return NET},act,startSolo,startHosting,netJoin,
+ settings,CARDS,TILE,botStep:()=>HOST.G&&botStep(HOST.G),tap:(id)=>tapTile(id)};
+</script></body></html>
