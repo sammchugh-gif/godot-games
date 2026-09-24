@@ -68,10 +68,10 @@ In order of difficulty, as the map shows them:
 
 | World | What is in it |
 | --- | --- |
-| Jungle Canopy | Bamboo poles to climb (from Bamboo Climb), mushrooms that bounce you, speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
+| Jungle Canopy | Bamboo poles to climb (from Bamboo Climb), speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
 | Safari Savanna | Zip lines, poles, a low afternoon sun, mesas, acacias and giraffes, termite-mound pillars, a river with a hippo |
 | Temple Ruins | Blast barrels (from Blast Barrels), rings that crumble a moment after you grab them, stone pillars, poles, a swamp |
-| Night Rainforest | Springy branches, zip lines, poles, moonlight, fireflies, glowing rings and mushrooms, rain, and glowing crocodile eyes |
+| Night Rainforest | Springy branches, zip lines, poles, moonlight, fireflies, glowing rings, rain, and glowing crocodile eyes |
 | Misty Falls | Water wheels (from Water Wheels), rings that slide back and forth or up and down, barrels, poles, rapids, a rainbow |
 | Volcano Peak | All of it, over lava, with fireballs |
 
@@ -130,6 +130,11 @@ The robot plays the new things with the same two numbers it plays a vine
 with - how long to hold, how long to wait before holding again - so a pole's
 climb, a barrel's aim, a zip line, a branch's bend and a wheel's ride are all
 searched and proved the same way.
+
+The bouncy mushrooms are gone: they looked like they should do something,
+and mostly did not (the ring after one was nearly always in reach anyway,
+and a landing off the middle of a cap threw the monkey sideways into the
+water).
 
 When the levels changed to bring the new things in, each player's best
 times and the family ghosts on the levels that changed were cleared, since a

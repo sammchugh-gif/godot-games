@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.24-1";
+const BUILD="2026.09.24-2";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -103,10 +103,14 @@ function ghostKey(id){return"ghost."+id}
 // branches and water wheels. A best time or a ghost set on a level that has
 // since changed would be a record nobody could beat, so those are cleared,
 // once. Stars and bananas are kept.
-const SAME_LEVELS=["1-1","1-2"];
-if(!store.get("levels2",0)){for(const p of profiles)for(const id in p.best)if(!SAME_LEVELS.includes(id))delete p.best[id];
- for(let w=0;w<6;w++)for(let i=0;i<10;i++){const id=(w+1)+"-"+(i+1);if(!SAME_LEVELS.includes(id))try{localStorage.removeItem("vineswing."+ghostKey(id))}catch(e){}}
- save();store.set("levels2",1)}
+// Then the mushrooms went, which changed some of the levels again. Each
+// step keeps the records of the levels it left alone.
+function clearChanged(flag,same){if(store.get(flag,0))return;
+ for(const p of profiles)for(const id in p.best)if(!same.includes(id))delete p.best[id];
+ for(let w=0;w<6;w++)for(let i=0;i<10;i++){const id=(w+1)+"-"+(i+1);if(!same.includes(id))try{localStorage.removeItem("vineswing."+ghostKey(id))}catch(e){}}
+ save();store.set(flag,1)}
+clearChanged("levels2",["1-1","1-2"]);
+clearChanged("levels3",["1-1","1-2","1-4","1-5","1-6","2-3","2-4","2-5","3-1","3-3","3-8","4-2","4-4","5-1","5-2","5-3","5-4","5-5","6-1","6-2","6-4","6-5","6-7"]);
 
 // ================================================================ content
 // World units: the water is at y=560, ledges stand at 430, vine rings hang
@@ -131,14 +135,14 @@ WORLDS[1].after=0;WORLDS[2].after=1;
 // The map shows the worlds from easiest to hardest; the new ones sit
 // between the old ones rather than after the volcano.
 const TAB_ORDER=[0,4,1,5,2,3];
-// Every level has a name, so "the mushroom one" is something a child can say.
+// Every level has a name, so "the barrel one" is something a child can say.
 const LEVEL_NAMES=[
- ["First Swing","Banana Trail","Bouncy Mushrooms","Bamboo Climb","Hoop Highway","Thorny Dip","Long Jumps","Buzzy Bees","Prickle Pass","Canopy King"],
+ ["First Swing","Banana Trail","Bamboo Climb","Treetop Dash","Hoop Highway","Thorny Dip","Long Jumps","Buzzy Bees","Prickle Pass","Canopy King"],
  ["Crumbly Rings","Pillar Hop","Blast Barrels","Thorn Pit","Bee Temple","Sunken Steps","Spiky Arch","Rubble Run","Golden Idol","Temple Top"],
  ["Sliding Rings","Water Wheels","Bee Mist","Wobbly Ropes","Rapids Rush","Thorn Falls","Rainbow Leap","Slippery Run","Cloud Swing","The Big Drop"],
  ["Hot Start","Fireball Alley","Lava Hop","Ember Run","Ash Clouds","Crumbly Crater","Magma Leap","Smoky Swing","Molten Mayhem","Volcano Crown"],
  ["Zip Across","Termite Towers","Hippo River","Zebra Dash","Buzzing Acacias","Giraffe Run","Dusty Hoops","Thorn Tree Trail","Sliding Sunset","King of the Plains"],
- ["Springy Branches","Moonlit Rings","Night Bees","Glow Mushrooms","Owl Hollow","Crumbly Roots","Shadow Swing","Starry Hoops","Midnight Maze","Dawn Chorus"]];
+ ["Springy Branches","Moonlit Rings","Night Bees","Thorn Thicket","Owl Hollow","Crumbly Roots","Shadow Swing","Starry Hoops","Midnight Maze","Dawn Chorus"]];
 // Cosmetic only. Nothing in the shop makes a level easier except the
 // power-ups, which are used up.
 const CHARS=[
@@ -164,22 +168,27 @@ const ITEMS=[{id:"magnet",name:"Banana Magnet",price:20,say:"Pulls in bananas"},
 // temple, springy branches at night, water wheels at the falls - and the
 // volcano has all of them. The later worlds keep the earlier worlds' things.
 const FEAT_AT=[
- {shroom:2,ring:4,lowthorn:5,bee:7,highthorn:8,pole:3},
- {crumble:0,pillar:1,shroom:0,ring:0,lowthorn:3,bee:4,highthorn:6,barrel:2,pole:5},
- {move:0,shroom:0,ring:0,pillar:0,lowthorn:1,crumble:3,bee:2,highthorn:5,wheel:1,barrel:4,pole:7},
- {move:0,shroom:0,ring:0,pillar:0,lowthorn:0,crumble:0,bee:0,highthorn:2,pole:0,barrel:0,zip:1,spring:2,wheel:3},
- {pillar:1,ring:0,shroom:0,lowthorn:2,bee:4,highthorn:6,move:7,zip:0,pole:3},
- {move:0,bee:0,shroom:0,lowthorn:1,crumble:2,highthorn:3,ring:4,pillar:5,spring:0,zip:4,pole:6}];
+ {ring:4,lowthorn:5,bee:7,highthorn:8,pole:2},
+ {crumble:0,pillar:1,ring:0,lowthorn:3,bee:4,highthorn:6,barrel:2,pole:5},
+ {move:0,ring:0,pillar:0,lowthorn:1,crumble:3,bee:2,highthorn:5,wheel:1,barrel:4,pole:7},
+ {move:0,ring:0,pillar:0,lowthorn:0,crumble:0,bee:0,highthorn:2,pole:0,barrel:0,zip:1,spring:2,wheel:3},
+ {pillar:1,ring:0,lowthorn:2,bee:4,highthorn:6,move:7,zip:0,pole:3},
+ {move:0,bee:0,lowthorn:1,crumble:2,highthorn:3,ring:4,pillar:5,spring:0,zip:4,pole:6}];
 const NEWK={pole:1,barrel:1,zip:1,spring:1,wheel:1};
+const NAME_LEAN=[[/Hoop/,"ring"],[/Bee/,"bee"],[/Crumbl/,"crumble"],[/Sliding|Wobbly/,"move"],[/Pillar|Tower/,"pillar"],
+ [/Thorn|Prickl|Spiky/,"thorn"],[/Barrel/,"barrel"],[/Climb|Bamboo/,"pole"],[/Zip/,"zip"],[/Spring/,"spring"],[/Wheel/,"wheel"]];
 const LEAN_NAME={pole:"Climbing poles",barrel:"Blast barrels",zip:"Zip lines",spring:"Springy branches",wheel:"Water wheels"};
 const D0=[0,.2,.34,.5,.12,.3],DSTEP=[.042,.04,.04,.05,.04,.04];
 // Seeds that tools/vinecheck.mjs has proved finishable; a level without one
 // in here falls back to its default.
-const SEEDS={"1-1":54782730,"1-2":809111715,"1-3":210467,"1-4":1907153369,"1-5":14302617,"1-6":524654,"1-7":91046210,"1-8":546515636,"1-9":1334160978,"1-10":687010752,"2-1":1796381347,"2-2":1865447672,"2-3":1583427631,"2-4":2110270634,"2-5":1325104912,"2-6":1468770534,"2-7":330021430,"2-8":452432911,"2-9":1202140203,"2-10":945430429,"3-1":1090745578,"3-2":1703182393,"3-3":673782214,"3-4":201762207,"3-5":2137569523,"3-6":229327742,"3-7":662610983,"3-8":1326078790,"3-9":1103193178,"3-10":405304718,"4-1":1839267884,"4-2":362985819,"4-3":537973632,"4-4":2080119948,"4-5":788874131,"4-6":685560389,"4-7":1012591607,"4-8":75872511,"4-9":50503226,"4-10":239168630,"5-1":1577737646,"5-2":137414,"5-3":119719895,"5-4":1711472794,"5-5":206944689,"5-6":220502030,"5-7":1046947090,"5-8":1781148612,"5-9":541205243,"5-10":1194311547,"6-1":40604,"6-2":572918313,"6-3":637701319,"6-4":354791,"6-5":778196435,"6-6":848443993,"6-7":79982344,"6-8":988939109,"6-9":1212776511,"6-10":1653156753};
+const SEEDS={"1-1":54782730,"1-2":809111715,"1-3":1126830078,"1-4":1907153369,"1-5":14302617,"1-6":524654,"1-7":1140061159,"1-8":52695715,"1-9":1334160978,"1-10":1142209216,"2-1":1796381347,"2-2":1865447672,"2-3":1583427631,"2-4":2110270634,"2-5":1325104912,"2-6":999173227,"2-7":1453167897,"2-8":452432911,"2-9":1354113437,"2-10":1874529810,"3-1":1090745578,"3-2":1703182393,"3-3":673782214,"3-4":201762207,"3-5":1371735810,"3-6":229327742,"3-7":387720881,"3-8":1326078790,"3-9":1103193178,"3-10":405304718,"4-1":2031094301,"4-2":362985819,"4-3":2065603724,"4-4":2080119948,"4-5":563148908,"4-6":2110020807,"4-7":1912784705,"4-8":75872511,"4-9":2140341872,"4-10":1495296593,"5-1":1577737646,"5-2":137414,"5-3":119719895,"5-4":1711472794,"5-5":206944689,"5-6":924535609,"5-7":1046947090,"5-8":336525504,"5-9":541205243,"5-10":1894092265,"6-1":40604,"6-2":572918313,"6-3":449773362,"6-4":354791,"6-5":778196435,"6-6":579354177,"6-7":79982344,"6-8":1057198180,"6-9":1530745272,"6-10":1184785201};
 function levelSpec(w,i){const feats={},at=FEAT_AT[w];
  for(const k in at)if(i>=at[k])feats[k]=at[k]===i&&(w>0||i>0)?(NEWK[k]?4:3):NEWK[k]?2:1;
  // so that no two levels feel the same, each one leans on one thing: the
  // thing it brings in, or else one of the things it has
+ // A level called "Night Bees" leans on bees, "Hoop Highway" on
+ // hoops: the name is a promise.
+ const nm=LEVEL_NAMES[w][i];for(const [re,k] of NAME_LEAN)if(re.test(nm)){const q=k==="thorn"?(feats.highthorn?"highthorn":"lowthorn"):k;if(feats[q])feats[q]=Math.max(feats[q],3.5);break}
  const nk=[];for(const k in feats)for(let n=NEWK[k]?2:1;n--;)nk.push(k);
  if(nk.length&&!nk.some(k=>feats[k]>2))feats[nk[(i*7+w*3)%nk.length]]=3;
  const d=D0[w]+DSTEP[w]*i;
@@ -199,7 +208,7 @@ function dailySpec(key){let h=2166136261;for(const c of key){h^=c.charCodeAt(0);
 function aimAt(dx,up,v){const g=GRAV,k=v*v*v*v-g*(g*dx*dx+2*up*v*v);if(k<0)return-Math.PI/4;return-Math.atan((v*v-Math.sqrt(k))/(g*dx))}
 function genLevel(sp){
  const R=mulberry(sp.seed),r=()=>R(),d=sp.d,f=sp.feats;
- const L={id:sp.id,spec:sp,world:sp.world,d,anchors:[],bananas:[],golds:[],thorns:[],bees:[],shrooms:[],rings:[],rects:[],cps:[],signs:[],goalX:0,par:0};
+ const L={id:sp.id,spec:sp,world:sp.world,d,anchors:[],bananas:[],golds:[],thorns:[],bees:[],rings:[],rects:[],cps:[],signs:[],goalX:0,par:0};
  L.rects.push({x:-300,y:PLAT,w:420,h:FLOOR-PLAT+80});
  L.cps.push({x:0,y:PLAT});
  let ax=250,ay=230;
@@ -238,10 +247,6 @@ function genLevel(sp){
   // that leans on one of the new things has it every other stretch
   if(count===0)kind="run";else if(star&&last!==star&&count%2===1)kind=star;count++;
   if(kind==="run"){const n=2+Math.floor(r()*(sp.tut===1?3:2));for(let j=0;j<n;j++){next(spc(),nh(ay));under(ax,ay);gold.push({x:ax,y:ay+280>FLOOR-70?FLOOR-70:ay+280})}}
-  else if(kind==="shroom"){const gx=ax+spc()*0.9,ny=clamp(ay-20,140,250);
-   L.shrooms.push({x:gx,y:476,r:42});for(const yy of[390,320,250])B(gx,yy);gold.push({x:gx,y:130});
-   const a=A(gx+lerp(255,300,d),ny);ax=a.x;ay=ny;under(ax,ay);
-   if(sp.tut===3)L.signs.push({x:gx-120,y:300,t:"BOUNCE!",icon:4})}
   else if(kind==="ring"){const dx=spc()*1.4,ny=nh(ay),mx=ax+dx/2,my=Math.min(ay,ny)+120;
    L.rings.push({x:mx,y:my,r:50});B(mx-60,my+10);B(mx+60,my-10);next(dx,ny);under(ax,ay)}
   else if(kind==="lowthorn"){const ny=clamp(Math.min(ay,nh(ay))-20,125,200);const a=next(spc(),ny);
@@ -305,9 +310,9 @@ function genLevel(sp){
  L.rects.push({x:gx,y:PLAT,w:700,h:FLOOR-PLAT+80});L.goalX=gx;L.endX=gx+700;
  // no banana inside a thorn bush, a pillar or the water
  L.bananas=L.bananas.filter(b=>b.y<FLOOR-45&&!L.thorns.some(t=>Math.hypot(b.x-t.x,b.y-t.y)<t.r+34)&&
-  !L.rects.some(q=>b.x>q.x-20&&b.x<q.x+q.w+20&&b.y>q.y-20)&&!L.shrooms.some(s=>Math.hypot(b.x-s.x,b.y-s.y)<s.r+30));
+  !L.rects.some(q=>b.x>q.x-20&&b.x<q.x+q.w+20&&b.y>q.y-20));
  // three gold bananas, one in each third of the level, each a little out of
- // the way: over a ring, deep in a dip, or on top of a mushroom's bounce
+ // the way: over a ring, or deep in a dip
  const ok=g=>g.y<FLOOR-55&&g.x<gx-60&&!L.thorns.some(t=>Math.hypot(g.x-t.x,g.y-t.y)<t.r+50)&&
   !L.rects.some(q=>g.x>q.x-30&&g.x<q.x+q.w+30&&g.y>q.y-40)&&!L.anchors.some(a=>Math.hypot(g.x-a.x,g.y-a.y)<60);
  const pool=gold.filter(ok);
@@ -497,10 +502,6 @@ function step(L,s,hold,pull){
   if(vn<0){const e=q.pillar?0.45:0.1;s.vx-=(1+e)*vn*nx;s.vy-=(1+e)*vn*ny}
   if(ny<-0.6){s.gr=1;if(s.att<0){s.vx*=0.93;s.spin*=0.8;s.rot*=0.85}}}
  if(s.gr&&!wasGr){flipsLand(s);if(s.att<0)emit(s,"land")}
- for(const m of L.shrooms){const dx=s.x-m.x,dy=s.y-m.y,d=Math.hypot(dx,dy);if(d>=m.r+MR||d<1e-4)continue;
-  const nx=dx/d,ny=dy/d;s.x=m.x+nx*(m.r+MR);s.y=m.y+ny*(m.r+MR);const vn=s.vx*nx+s.vy*ny;
-  if(vn<0){s.vx-=2*vn*nx;s.vy-=2*vn*ny}
-  if(ny<-0.25){const out=s.vx*nx+s.vy*ny;if(out<980){s.vx+=nx*(980-out);s.vy+=ny*(980-out)}s.spin=s.vx/90;emit(s,"boing",m.x,m.y)}}
  // barrels and springy branches take a monkey that flies into them
  if(s.att<0)catchAuto(L,s);
  }}
@@ -891,17 +892,6 @@ function drawBee(w,b,t,T){const p=beeAt(b,t),vy=Math.cos(t*b.s+b.p);cx.save();cx
  cx.fillStyle="#1e1a14";cx.beginPath();cx.arc(-b.r*0.95,-2,b.r*0.5,0,TAU);cx.fill();cx.fillStyle="#fff";cx.beginPath();cx.arc(-b.r*1.05,-4,2.6,0,TAU);cx.fill();
  cx.fillStyle="#000";cx.beginPath();cx.arc(-b.r*1.12,-4,1.3,0,TAU);cx.fill();
  cx.fillStyle="#1e1a14";cx.beginPath();cx.moveTo(b.r-1,-3);cx.lineTo(b.r+8,1);cx.lineTo(b.r-1,4);cx.fill();cx.restore()}
-function drawShroom(m,sq){cx.save();cx.translate(m.x,m.y);
- const sg=cx.createLinearGradient(-12,0,12,0);sg.addColorStop(0,"#d9cbb0");sg.addColorStop(0.4,"#fbf3e2");sg.addColorStop(1,"#c9b996");cx.fillStyle=sg;
- cx.beginPath();cx.moveTo(-11,4);cx.quadraticCurveTo(-15,(FLOOR-m.y)/2,-13,FLOOR-m.y+20);cx.lineTo(13,FLOOR-m.y+20);cx.quadraticCurveTo(15,(FLOOR-m.y)/2,11,4);cx.fill();
- cx.fillStyle="rgba(0,0,0,0.12)";cx.beginPath();cx.ellipse(0,20,14,4,0,0,TAU);cx.fill();
- cx.scale(1+sq*0.25,1-sq*0.25);
- cx.fillStyle="#8a2a24";cx.beginPath();cx.ellipse(0,6,m.r+4,8,0,0,TAU);cx.fill();
- const cg=cx.createRadialGradient(-12,-20,4,0,0,m.r+10);cg.addColorStop(0,"#ff8a7a");cg.addColorStop(0.55,"#e8413a");cg.addColorStop(1,"#a8201a");
- cx.fillStyle=cg;cx.beginPath();cx.moveTo(-m.r-7,6);cx.bezierCurveTo(-m.r-6,-m.r*0.9,m.r+6,-m.r*0.9,m.r+7,6);cx.quadraticCurveTo(0,12,-m.r-7,6);cx.fill();
- cx.strokeStyle="#7a1a14";cx.lineWidth=2;cx.stroke();
- for(const [dx,dy,r] of[[-22,-6,7],[3,-24,8.5],[24,-6,6],[-8,-14,4.5],[14,-16,3.5]]){cx.fillStyle="rgba(0,0,0,0.15)";cx.beginPath();cx.arc(dx+1,dy+1.5,r,0,TAU);cx.fill();cx.fillStyle="#fffaf0";cx.beginPath();cx.arc(dx,dy,r,0,TAU);cx.fill()}
- cx.fillStyle="rgba(255,255,255,0.45)";cx.beginPath();cx.ellipse(-16,-18,9,4,-0.6,0,TAU);cx.fill();cx.restore()}
 function drawRing(g,T,used){cx.save();cx.translate(g.x,g.y);const pu=used>0?1+used*0.4:1+Math.sin(T*6)*0.05;cx.scale(pu,pu);
  const gl=cx.createRadialGradient(0,0,g.r*0.6,0,0,g.r+18);gl.addColorStop(0,"rgba(255,220,80,0)");gl.addColorStop(0.7,"rgba(255,220,80,0.35)");gl.addColorStop(1,"rgba(255,220,80,0)");cx.fillStyle=gl;cx.beginPath();cx.arc(0,0,g.r+18,0,TAU);cx.fill();
  cx.strokeStyle="#b87800";cx.lineWidth=11;cx.beginPath();cx.arc(0,0,g.r,0,TAU);cx.stroke();
@@ -1313,7 +1303,6 @@ function handleEvents(){for(const e of run.ev){const s=run;switch(e.k){
   if(s.vx>0&&up>0.3&&up<1.2&&sp>620&&T-fx.praise>0.6){fx.praise=T;pop(s.x,s.y-50,sp>950?"AWESOME!":"NICE!",sp>950?"#ffa8f0":"#b2f2bb",sp>950?1.25:1.05);if(sp>950)sfx("wow")}break}
  case"banana":{const b=lv.bananas[e.a];sfx("banana");puff(b.x,b.y,5,"spark","#ffe066",90,0.4);break}
  case"gold":{const g=lv.golds[e.a];sfx("gold");fx.shake=Math.max(fx.shake,4);puff(g.x,g.y,16,"spark","#ffc81a",200,0.7);pop(g.x,g.y-30,"GOLD!","#ffd43b",1.3);break}
- case"boing":sfx("boing");shroomSq[e.a+","+e.b]=1;fx.shake=Math.max(fx.shake,7);break;
  case"ring":sfx("ring");fx.shake=Math.max(fx.shake,5);puff(s.x,s.y,14,"spark","#fff3a0",260,0.5);pop(s.x,s.y-40,"ZOOM!","#fff3a0");break;
  case"die":fx.dieX=e.b;fx.dieY=e.c;fx.dieKind=e.a;fx.combo=0;fx.air=false;fx.shake=Math.max(fx.shake,9);critterSplash(e.b,e.a);if(e.a==="floor"){sfx(lv.world===3?"lava":"splash");puff(e.b,FLOOR,26,"splash",lv.world===3?"#ffb35a":"#bfe9ff",260,0.9);pop(e.b,FLOOR-60,lv.world===3?"OUCH!":"SPLASH!","#fff",1.3)}
   else{sfx("ouch");puff(e.b,e.c,18,"spark","#ff8a8a",220,0.6);pop(e.b,e.c-40,"OUCH!","#ffb3b3",1.2)}break;
@@ -1335,7 +1324,6 @@ function handleEvents(){for(const e of run.ev){const s=run;switch(e.k){
  case"shield":sfx("shield");puff(s.x,s.y,20,"bubble","#a5d8ff",200,0.8);pop(s.x,s.y-40,"SAVED!","#a5d8ff",1.2);break;
  case"finish":finishRun();break}}
  run.ev.length=0}
-const shroomSq={};
 // past the finish the run is over and the clock has stopped, but the monkey
 // still flies on and lands on the finish ledge rather than freezing in the air
 function coast(L,s){s.att=-1;s.vy+=GRAV*DT;s.x+=s.vx*DT;s.y+=s.vy*DT;
@@ -1361,7 +1349,6 @@ function drawScene(L,s,o){o=o||{};const w=L.world;
  for(let i=1;i<L.cps.length;i++){const c=L.cps[i];if(vis(c.x))drawFlag(c.x+60,c.y,o.col||"#51cf66",s.cp>=i,T)}
  if(vis(L.goalX)||vis(L.goalX+500))drawGoal(L,T);
  for(let i=0;i<L.rings.length;i++){const g=L.rings[i];if(vis(g.x))drawRing(g,T,s.rg[i])}
- for(const m of L.shrooms)if(vis(m.x)){const k=m.x+","+m.y,q=shroomSq[k]||0;drawShroom(m,Math.sin(q*9)*q);if(q)shroomSq[k]=Math.max(0,q-0.02)}
  const tgt=o.target!=null?o.target:-1;
  for(let i=0;i<L.anchors.length;i++){const a=L.anchors[i];if(vis(a.x))drawAnchor(w,a,i,s,T,i===tgt)}
  if(tgt>=0&&s.att<0&&!(s.dead>0)){const ta=L.anchors[tgt],p=(ta.type>=3&&grabPt(ta,s))||anchorAt(ta,s.t);cx.strokeStyle="rgba(255,255,200,0.55)";cx.lineWidth=3;cx.setLineDash([6,9]);
