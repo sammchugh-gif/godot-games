@@ -1329,7 +1329,8 @@ function claimSecs(){return settings.claim}
 // out, and the views sent out when anything has changed
 function hostTick(){const H=HOST,G=H.G;if(!G)return;const t=now();
  if(G.phase==="claims"){for(let i=0;i<4;i++){if(G.claims[i]!==undefined||G.seats[i].bot){H.claimAt[i]=0;continue}
-   if(!H.claimAt[i])H.claimAt[i]=t+claimSecs();else if(t>H.claimAt[i]){H.claimAt[i]=0;claim(G,i,null)}}}
+   // (a pass can settle the discard, and then there are no claims left to look at)
+   if(!H.claimAt[i])H.claimAt[i]=t+claimSecs();else if(t>H.claimAt[i]){H.claimAt[i]=0;claim(G,i,null);if(G.phase!=="claims")break}}}
  else H.claimAt=[0,0,0,0];
  const w=waitingOn(G);
  if(G.phase!=="end"&&w.some(i=>G.seats[i].bot)&&t>=H.botAt){botStep(G);
@@ -1438,7 +1439,7 @@ window.addEventListener("resize",reflow);window.addEventListener("orientationcha
 window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
 if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
 resize();setInterval(sizeWatch,200);
-const BUILD="2026.09.24-2";
+const BUILD="2026.09.24-4";
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),TAU=Math.PI*2;
 
 // ================================================================ saves
@@ -1537,7 +1538,10 @@ function handNote(h){const s=h.src;if(!/[ijklm]/.test(s))return"";const suits=ne
 let cardScroll=0,cardPin=null,cardFrom="title",cardDrag=null,cardMax=0,cardMode="easy";
 function openCard(from,mode){cardFrom=from;cardMode=mode||settings.mode;cardScroll=0;scene="card"}
 function drawCard(){const v=cardFrom==="table"?myView():null,mode=v?v.mode:cardMode,C=CARDS[mode];
- dim(0.72);const pw=Math.min(W-SAFE.l-SAFE.r-16*U,560*U),px=W/2-pw/2,py=topY()+2*U,ph=botY()-py;
+ dim(0.72);
+ // at the table, the player's own tiles sit in a tray under the card
+ const dock=v?handDock(v):null;
+ const pw=Math.min(W-SAFE.l-SAFE.r-16*U,560*U),px=W/2-pw/2,py=topY()+2*U,ph=botY()-py-(dock?dock.h+8*U:0);
  panel(px,py,pw,ph,"#fffaf0");
  txt("The Card",W/2,py+26*U,24*U,"#3a2600","center",900);
  fitTxt(MODES[mode].name+": "+(C.size-1)+" in your hand, mahjong with "+C.size,W/2,py+50*U,14*U,pw-100*U,"#8a6a3a","center",700);
@@ -1549,7 +1553,7 @@ function drawCard(){const v=cardFrom==="table"?myView():null,mode=v?v.mode:cardM
  fitTxt("D = dragon of that colour's suit. 0 = white dragon. X may call, C stays hidden.",W/2,legendY+16*U,12.5*U,pw-24*U,"#6a5a3a","center",700);
  // what the player has, for the "away" count beside every hand
  let cl=null;if(v){cl=new Map();for(const r of closest(C,countsOf(v.hand),v.exp[v.me]))cl.set(r.hand.id,r.m)}
- const top=legendY+30*U,bot=py+ph-10*U;cx.save();cx.beginPath();cx.rect(px,top,pw,bot-top);cx.clip();
+ const hintH=v&&settings.hints?18*U:0,top=legendY+30*U,bot=py+ph-10*U-hintH;cx.save();cx.beginPath();cx.rect(px,top,pw,bot-top);cx.clip();
  let y=top+8*U-cardScroll;const lh=34*U;
  for(const [title] of MODES[mode].card){txt(title.toUpperCase(),px+18*U,y+10*U,13*U,"#b35c00","left",900);y+=26*U;
   for(const h of C.hands.filter(q=>q.section===title)){
@@ -1567,7 +1571,32 @@ function drawCard(){const v=cardFrom==="table"?myView():null,mode=v?v.mode:cardM
    y+=lh}
   y+=6*U}
  cx.restore();cardMax=Math.max(0,y+cardScroll-bot+20*U);cardScroll=clamp(cardScroll,0,cardMax);
- if(v&&settings.hints)fitTxt("Tap a hand to aim for it: its tiles get a dot on your rack.",W/2,bot-2*U,11*U,pw-20*U,"#8a6a3a","center",700)}
+ if(v&&settings.hints)fitTxt("Tap a hand to aim for it: the tiles it needs get a green dot below.",W/2,bot+hintH/2+1*U,11*U,pw-20*U,"#8a6a3a","center",700);
+ if(dock)drawDock(v,dock)}
+// The tray with the player's hand in it, under the card: their tiles in rack
+// order, then what they have shown, marked against the hand they aim for.
+function handDock(v){const ids=order.filter(i=>v.hand.includes(i)).concat(v.hand.filter(i=>!order.includes(i))),ex=v.exp[v.me];
+ const n=ids.length+ex.reduce((a,e)=>a+e.k,0)+(ex.length?0.6:0),aw=W-SAFE.l-SAFE.r-32*U;
+ let rows=1,tw=Math.min(48*U,aw/n);if(tw<36*U&&H>W){rows=2;tw=Math.min(48*U,aw/Math.ceil(n/2+0.3))}
+ return{ids,ex,rows,tw,h:rows*tw*1.34+(rows-1)*8*U+46*U}}
+function drawDock(v,d){const x0=SAFE.l+8*U,w=W-SAFE.l-SAFE.r-16*U,y0=botY()-d.h;
+ // a lacquered wooden tray with a gold edge, so it cannot be taken for part of the card
+ const g=cx.createLinearGradient(0,y0,0,y0+d.h);g.addColorStop(0,"#4a3220");g.addColorStop(1,"#2a1a0e");
+ cx.fillStyle="rgba(0,0,0,0.4)";rr(x0,y0+4*U,w,d.h,14*U);cx.fill();cx.fillStyle=g;rr(x0,y0,w,d.h,14*U);cx.fill();
+ cx.strokeStyle="#e8c46a";cx.lineWidth=2.5;rr(x0+1.5,y0+1.5,w-3,d.h-3,13*U);cx.stroke();
+ txt("YOUR HAND",x0+16*U,y0+17*U,13*U,"#ffd76a","left",900);font(13*U,900);const lw=cx.measureText("YOUR HAND").width;
+ const C=CARDS[v.mode],need=pinNeeds(v);
+ if(cardPin!=null&&C.hands[cardPin]){const h=C.hands[cardPin];let m=Infinity;const cnt=countsOf(v.hand);for(const va of h.variants)m=Math.min(m,missing(va,cnt,v.exp[v.me]));
+  // (beside the label, never over it: the short form when the tray is narrow)
+  const room=w-lw-46*U,long=m===0?"Mahjong with the hand you picked!":isFinite(m)?m+" away from the hand you picked - dots show its tiles":"Your shown tiles don't fit the hand you picked",
+   short=m===0?"Mahjong!":isFinite(m)?m+" away - dots show its tiles":"Shown tiles don't fit";
+  font(11.5*U,700);fitTxt(cx.measureText(long).width<=room?long:short,x0+w-14*U,y0+17*U,11.5*U,room,"#f1e3c0","right",700)}
+ // the tiles, row by row, then the shown groups after a gap
+ const items=d.ids.map(id=>({id})),gap=d.ex.length?[{gap:1}]:[];for(const e of d.ex)for(const id of e.ids)gap.push({id,shown:1});const all=items.concat(gap);
+ const per=Math.ceil(all.length/d.rows);let i=0;
+ for(let r=0;r<d.rows;r++){const row=all.slice(r*per,(r+1)*per),rw=row.reduce((a,q)=>a+(q.gap?0.6:1),0)*d.tw;let x=W/2-rw/2;const y=y0+32*U+r*(d.tw*1.34+8*U);
+  for(const q of row){if(q.gap){cx.strokeStyle="rgba(232,196,106,0.6)";cx.lineWidth=2;cx.beginPath();cx.moveTo(x+d.tw*0.3,y+4*U);cx.lineTo(x+d.tw*0.3,y+d.tw*1.34-4*U);cx.stroke();x+=d.tw*0.6;continue}
+   const c=TILE[q.id];tileId(q.id,x,y,d.tw*0.96,{dot:need&&need.has(c)?"#51cf66":null,alpha:need&&!need.has(c)&&c!==T_J&&!q.shown?0.72:1});x+=d.tw}}}
 
 // ================================================================ profiles & menus
 let scene="who",T=0;
@@ -1885,7 +1914,7 @@ function autoplay(){const v=myView();if(!v||T-autoT<0.3)return;autoT=T;const C=C
  else if(v.phase==="claims"&&v.claim)act({a:"claim",c:v.claim.mahjong?{mahjong:true}:null});
  else if(v.phase==="turn"&&v.turn===v.me){if(winningHand(C,countsOf(v.hand),v.exp[v.me]))act({a:"declare"});else{const o=botThrowOrder(G,v.me,v.hand)[0];act({a:"discard",id:o?o.id:v.hand[0]})}}}
 let AUTO=false;
-window.MJ={deal(){ROLE="host";hostNewGame();openTable()},set auto(on){AUTO=on},get scene(){return scene},set scene(s){scene=s},get view(){return myView()},get HOST(){return HOST},get NET(){return NET},act,startSolo,startHosting,netJoin,
+window.MJ={openCard(f){openCard(f||"table")},deal(){ROLE="host";hostNewGame();openTable()},set auto(on){AUTO=on},get scene(){return scene},set scene(s){scene=s},get view(){return myView()},get HOST(){return HOST},get NET(){return NET},act,startSolo,startHosting,netJoin,
  settings,CARDS,TILE,botStep:()=>HOST.G&&botStep(HOST.G),tap:(id)=>tapTile(id)};
 </script>
 <script type="module">

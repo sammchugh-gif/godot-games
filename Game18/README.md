@@ -41,7 +41,10 @@ card is theirs and changes every year. Tap **Card** at the table:
 - beside every hand: how many tiles you are away from it with what you hold
   now. Tap a hand to aim for it. The tiles it wants get a green dot on your
   rack, and a strip over your buttons keeps it in view. With hints on, the
-  game aims for your closest hand until you pick one.
+  game aims for your closest hand until you pick one;
+- at the table, the card opens with **Your hand** in a wooden tray beneath
+  it: your tiles in rack order, then any you have shown, with green dots
+  on the tiles the hand you picked needs and how far away it is.
 
 ## Playing
 
