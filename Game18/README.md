@@ -93,14 +93,36 @@ talk directly (WebRTC). On the same wifi this is reliable. Over mobile data
 some networks will not connect two phones directly, and there is no relay
 server behind it, so if joining fails, put everyone on the same wifi.
 
-## Tiles
+## Tiles and tables
 
-Four sets, under **Tiles** or in Settings:
+The tiles are rendered in 3D, as the pinball tables are: each tile is a real
+object - a two-layer resin body (the face layer over a coloured back, the way
+American tiles are made), bevelled, with its glyphs carved into the face (the
+artwork's height map drives the bump) and painted, lit by a studio room and a
+key light. Each tile is rendered once, in the background, and the picture kept,
+so the table costs no more to draw than before. Until a tile has been rendered,
+or on a device without WebGL, a flat drawing stands in.
 
-- **Classic**: ivory tiles with Chinese characters, sticks and coins.
-- **Bold**: big numbers and simple symbols, for learning.
-- **Candy**: pastel and playful.
-- **Night**: dark tiles with glowing neon.
+Every tile has pictures and ornament, not just symbols: shaded bamboo with
+nodes, studded coins, a peacock on the 1 Bam, a dragon behind the red and green
+dragons, an ornate frame for the soap, eight different flowers (plum blossom,
+hibiscus, chrysanthemum, daisy, lotus, rose, tulips, sunflower - one on each
+flower tile, as real sets have), and a crowned, rainbow-bordered joker. Every
+tile keeps its corner index.
+
+Four sets, under **Tiles**:
+
+- **Classic Ivory**: warm ivory over deep emerald, traditional inks.
+- **Butterscotch**: vintage American Bakelite - butterscotch over amber,
+  faded inks.
+- **Pearl**: bright pearl over navy, the biggest numbers - for learning.
+- **Midnight**: black lacquer, carvings filled with gold, silver and jewel
+  colours.
+
+Six tables, under **Table**: Emerald Felt in a walnut rim, Walnut, Marble with
+gold inlay, Red Lacquer with gold fret and clouds, Moon Garden (indigo silk,
+cherry blossom and the moon) and Seaside (weathered painted boards). Words
+drawn on the table take each table's own colours.
 
 ## The family
 
@@ -137,4 +159,9 @@ broker (the page takes `?peer=host:port`):
 
 `docs/mahjong-club/` is the published copy; this folder mirrors it.
 
-Vendored: `peerjs.min.js`, PeerJS 1.5.5 (MIT, © Michelle Bu and Eric Zhang).
+Vendored, with their licences:
+- `peerjs.min.js`: PeerJS 1.5.5 (MIT, © Michelle Bu and Eric Zhang).
+- `three.bundle.min.js`: three.js r180 (MIT), the same bundle as Pinball Quest's.
+- Some of the pictures on the tiles (flowers, the peacock, the crown, the
+  dragons) are Google's Noto Emoji artwork, Apache License 2.0, painted onto
+  the tiles in the game's own styles.
