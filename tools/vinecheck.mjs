@@ -28,7 +28,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const html = fs.readFileSync(path.join(ROOT, 'docs/vine-swing/index.html'), 'utf8');
+const html = fs.readFileSync(process.env.VINE || path.join(ROOT, 'docs/vine-swing/index.html'), 'utf8');
 function cut(from, to) {
   const a = html.indexOf(from), b = html.indexOf(to, a);
   if (a < 0 || b < 0) throw new Error('marker missing: ' + (a < 0 ? from : to));
@@ -134,6 +134,9 @@ function check(sp) {
     let ai = -1; for (let i = 0; i < L.anchors.length; i++) if (L.anchors[i].x < led.x) ai = i;
     /* a crumbling ring is meant to drop you: that is not a trap */
     if (ai < 0 || L.anchors[ai].type === 1) continue;
+    /* poles, barrels, zip lines, springy branches and wheels hold the monkey
+       where they hold it: there is no long vine to hang from */
+    if (L.anchors[ai].type >= 3) continue;
     /* as long a vine as keeps the swing out of the water: a longer one just
        means a splash and a ride back to the flag, which is not a trap */
     const a = L.anchors[ai], s = G.newRun(L), len = Math.min(300, G.FLOOR - 36 - a.y), th = -0.5;
