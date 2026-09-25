@@ -43,6 +43,8 @@ const GAMES = {
   'pinball-quest':  { start: "window.PB.start('goal')", music: true, selfWakes: true },
   /* Mahjong Club has no music, but asks for its sound back once a second too */
   'mahjong-club':   { selfWakes: true },
+  /* the picture book makes its sound on the first touch and wakes on every one after */
+  'nufa-from-shmid': {},
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];
