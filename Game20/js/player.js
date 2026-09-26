@@ -89,7 +89,12 @@ export class Player {
     w.move(dt, gs * hold);
     if (w.justLanded && this.onLand) this.onLand(-w.vel.y);
     // fell off the world: back to the last safe ground
-    if (w.grounded && w.onMover === null) this.lastSafe.copy(w.pos);
+    // remember the last firm ground: only ground that can't move away (never a ferry deck or a cable car)
+    if (w.grounded && w.onMover === null) {
+      const h = this.world.phys.rayHit({ x: w.pos.x, y: w.pos.y + 0.3, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 1.0, w.col);
+      const body = h && h.collider.parent();
+      if (h && (!body || body.isFixed())) this.lastSafe.copy(w.pos);
+    }
     if (w.pos.y < (this.world.floorY ?? -20)) { const s = this.lastSafe; this.teleport(s.x, s.y + 0.5, s.z); if (this.onFall) this.onFall(); }
     // pose the body
     this.obj.position.copy(w.pos);
