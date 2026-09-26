@@ -121,6 +121,8 @@ class Mission {
     const now = deck(this.w.phys.t, pp.x, pp.z);
     // it's here: jump aboard, towards a spot well inside the deck
     if (w.grounded && now.out < 1.0 && now.top - pp.y > -0.8 && now.top - pp.y < 1.6) { this.steer(now.x + m.vel.x * 0.25, now.z + m.vel.z * 0.25, true); return; }
+    // stopped (or nearly) level with the ground a few steps away: walk on
+    if (w.grounded && now.out < 3 && Math.abs(now.top - pp.y) < 0.6 && m.vel.length() < 1.2) { this.steer(now.x, now.z); return; }
     if (!w.grounded) { this.steer(now.x + m.vel.x * 0.2, now.z + m.vel.z * 0.2); inp.jumpHeld = w.vel.y > 0; return; }
     if (!this.board) { this.steer(tx, tz); return; }
     // otherwise go to the waiting spot and wait there
