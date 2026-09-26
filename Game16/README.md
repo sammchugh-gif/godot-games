@@ -36,6 +36,8 @@ orientation. One file, no engine.
   - **Poles** (the Jungle): hold near one to grab it, keep holding to climb,
     let go to leap off forward. Climb higher to leap higher - but not into
     a beehive at the top.
+    A pole has a plain round cap: the tuft of pointed leaves it used to have
+    looked like spikes, and the kids steered clear of it.
   - **Zip lines** (the Savanna): hold near the rope to take the handle and
     ride it down; let go (or reach the end) to jump off.
   - **Blast barrels** (the Temple): fly into one and it holds you. A barrel

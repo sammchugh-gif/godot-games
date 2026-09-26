@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.26-1";
+const BUILD="2026.09.26-2";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -812,8 +812,12 @@ function drawSpecial(w,a,i,s,T,tgt){const t=s?s.t:T,on=s&&s.att===i;
   else{const col=w===3?"#3a2a24":w===5?"#2f3a44":w===1?"#8a7250":"#5a4a3a",g=cx.createLinearGradient(a.x-11,0,a.x+11,0);g.addColorStop(0,shade(col,-0.3));g.addColorStop(0.45,shade(col,0.25));g.addColorStop(1,shade(col,-0.35));
    cx.fillStyle=g;rrW(a.x-11,a.y,22,h,8);cx.fill();cx.strokeStyle=shade(col,-0.45);cx.lineWidth=1.5;for(let y=a.y+30;y<FLOOR;y+=34){cx.beginPath();cx.moveTo(a.x-9,y);cx.quadraticCurveTo(a.x,y+6,a.x+9,y);cx.stroke()}
    if(w!==3)for(let y=a.y+60;y<FLOOR-40;y+=90){cx.fillStyle=w===5?"#3f8f6a":"#5f9f3a";cx.beginPath();cx.ellipse(a.x+(y%180?8:-8),y,8,4,0.4,0,TAU);cx.fill()}}
-  // a tuft of leaves on top, bent over with the wind
-  const sw=Math.sin(T*1.3+a.x)*0.12;for(let k=0;k<5;k++)leaf(a.x,a.y+4,34,-Math.PI/2+(k-2)*0.55+sw,w===3?"#6a4a3a":w===5?"#2f8f6a":"#5fae3a");
+  // a round cap on top. (It used to be a tuft of pointed leaves, which the
+  // kids took for spikes that would hurt, and so kept away from the poles.)
+  const capC=w===0||w===4?"#a4c050":w===3?"#4a3a30":w===5?"#3a4652":w===1?"#9a8260":"#6a5a4a";
+  cx.fillStyle=capC;cx.beginPath();cx.ellipse(a.x,a.y+2,13,10,0,Math.PI,TAU);cx.closePath();cx.fill();
+  cx.strokeStyle=shade(capC,-0.35);cx.lineWidth=1.5;cx.stroke();
+  cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.ellipse(a.x-4,a.y-3,4,2.5,-0.3,0,TAU);cx.fill();
   // dashes up the side say "climb me" the first few times
   if(tgt&&!on){cx.strokeStyle="rgba(255,255,200,0.8)";cx.lineWidth=3;for(let k=0;k<3;k++){const yy=a.y+120+((T*80+k*40)%120);cx.beginPath();cx.moveTo(a.x-24,yy+8);cx.lineTo(a.x-18,yy);cx.lineTo(a.x-12,yy+8);cx.stroke()}}}
  else if(a.type===4){// a blast barrel, pointing the way it will fire
