@@ -397,19 +397,20 @@ class Stack extends Mission {
   actionLabel() { return this.carry ? "DROP" : "GRAB"; }
   hud() { return { ...super.hud(), text: `Blocks on the pad  ${this.onPad}/${this.need}`, progress: this.onPad / this.need }; }
   target() { return this.carry ? this.pad : (this.blocks.find(b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) > this.padR) || {}).mesh?.position || this.pad; }
+  // autopilot: walk (round hedges and walls, on the planned route) to a block, grab it, carry it
+  // to the pad and drop it
   solve() {
-    const p = this.p;
+    const pts = [this.pad, ...this.blocks.map(b => b.mesh.position)];
     if (this.carry) {
       const k = this.blocks.indexOf(this.carry) % 3, off = [[0, 0], [0.9, 0.3], [-0.8, -0.4]][k];
-      const d = this.steer(this.pad.x + off[0], this.pad.z + off[1]);
+      const d = this.walkTo(this.pad.x + off[0], this.pad.y + 0.5, this.pad.z + off[1], 0.4, pts);
       if (d < 0.6) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
       return;
     }
     const b = this.blocks.find(b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) > this.padR - 0.2);
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
-    const d = this.steer(b.mesh.position.x, b.mesh.position.z);
+    const q = b.mesh.position, d = this.walkTo(q.x, q.y, q.z, 1.4, pts);
     if (d < 1.8) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
-    void p;
   }
 }
 
