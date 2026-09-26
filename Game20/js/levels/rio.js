@@ -97,12 +97,13 @@ export function buildRio(w) {
   const loopPath = []; for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; loopPath.push([Math.cos(a) * 50, 34 + Math.sin(a) * 21]); }
   w.missionData = {
     rio1: { area: [0, 32, 16], bots: [[-10, 0.2, 30], [10, 0.2, 34], [0, 0.2, 40], [-16, 0.2, 38], [16, 0.2, 26], [4, 0.2, 24]] },
-    rio2: { cells: [{ obj: cars[0].g, off: [0, 1.0, 0] }, { obj: cars[1].g, off: [0, 1.0, 0] }, [st0.x - 6.5, 9.2, st0.z - 2.7], [st1.x, st1.y - 0.4, st1.z], [st1.x, st1.y - 0.4, st1.z + 6], [st0.x - 6.5, 4.7, st0.z + 6], [st0.x, 9.2, st0.z - 5]] },
+    rio2: { cells: [{ obj: cars[0].g, off: [0, 1.0, 0] }, { obj: cars[1].g, off: [0, 1.0, 0] }, [st0.x - 6.5, 9.2, st0.z - 2.7], [st1.x, st1.y - 0.4, st1.z], [st1.x - 5, st1.y - 0.2, st1.z], [st0.x - 6.5, 4.7, st0.z + 6], [st0.x, 9.2, st0.z - 5]] },
     rio3: { path: loopPath, y: 0.4, car: "kart", quarry: "kart", lead: 24 },
     rio4: { center: [arena.x, 0.2, arena.z], radius: 18, height: 6.5 },
   };
-  // the landing at the top of the mountain station and the middle hill, so the cable car has somewhere to go
-  w.box(8, 0.6, 8, M("stone", { args: [87, [220, 214, 200]] }), st1.x, st1.y - 1.9, st1.z + 6);
+  // the landing at the mountain station, beside where the cable car stops (not over its line,
+  // where the car would pass underneath and knock a rider off)
+  w.box(6, 0.6, 6, M("stone", { args: [87, [220, 214, 200]] }), st1.x - 4.6, st1.y - 1.7, st1.z);
   return { spawn: [0, 0.2, 10], yaw: Math.PI, bolt: [2, 0.2, 9], contact: [-3, 0.2, 8, 2.4] };
 }
 void TEX;

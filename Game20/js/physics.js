@@ -166,7 +166,7 @@ export class Walker {
     this.vel.y = Math.max(this.vel.y, -30);
     const want = { x: this.vel.x * dt, y: this.vel.y * dt, z: this.vel.z * dt };
     // ride along with a moving platform under our feet
-    if (this.onMover) { want.x += this.onMover.vel.x * dt; want.y += Math.min(0, this.onMover.vel.y * dt); want.z += this.onMover.vel.z * dt; }
+    if (this.onMover) { want.x += this.onMover.vel.x * dt; want.y += this.onMover.vel.y * dt; want.z += this.onMover.vel.z * dt; }
     this.cc.computeColliderMovement(this.col, want);
     let m = this.cc.computedMovement();
     const wasGrounded = this.grounded;
@@ -188,6 +188,7 @@ export class Walker {
     this.pos.set(n.x, n.y - this.half - this.radius, n.z);
     this.justLanded = !wasGrounded && this.grounded;
     // which mover (if any) are we standing on
+    const was = this.onMover;
     this.onMover = null;
     if (this.grounded) {
       for (let i = 0; i < this.cc.numComputedCollisions(); i++) {
@@ -196,6 +197,13 @@ export class Walker {
         const b = c.collider.parent();
         if (b && b.isKinematic()) { const mv = this.phys.movers.find(q => q.body === b); if (mv) this.onMover = mv; }
       }
+    }
+    // a platform lurching upwards can break contact for a frame: still over its deck and just
+    // above it (and not jumping) counts as still standing on it, so it keeps carrying Rory
+    if (!this.onMover && was && this.vel.y <= 0.5) {
+      const t = was.body.translation(), r = was.body.rotation(), ry = 2 * Math.atan2(r.y, r.w);
+      const dx = this.pos.x - t.x, dz = this.pos.z - t.z, c = Math.cos(ry), sn = Math.sin(ry), up = this.pos.y - (t.y + was.hy);
+      if (Math.abs(dx * c - dz * sn) < was.hx && Math.abs(dx * sn + dz * c) < was.hz && up > -0.2 && up < 0.4) { this.onMover = was; this.grounded = true; }
     }
     return m;
   }
