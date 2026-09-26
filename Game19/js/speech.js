@@ -19,12 +19,12 @@ export function lineKey(text, spec) {
   return h.toString(36).padStart(7, "0");
 }
 
-// a few milliseconds of silence, played inside the first tap so iOS lets the
+// a moment of silence (at the recordings' own 24 kHz), played inside the first tap so iOS lets the
 // audio element play later from code
 function silence() {
   const b = new Uint8Array(46), d = new DataView(b.buffer), s = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
   s(0, "RIFF"); d.setUint32(4, 38, true); s(8, "WAVEfmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
-  d.setUint32(24, 8000, true); d.setUint32(28, 16000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); s(36, "data"); d.setUint32(40, 2, true);
+  d.setUint32(24, 24000, true); d.setUint32(28, 48000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); s(36, "data"); d.setUint32(40, 2, true);
   let bin = ""; for (const x of b) bin += String.fromCharCode(x);
   return "data:audio/wav;base64," + btoa(bin);
 }

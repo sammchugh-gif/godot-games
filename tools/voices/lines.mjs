@@ -69,6 +69,16 @@ for (const c of countries) {
 const bug = main.match(/`That is every bug in \$\{c\.city\}\. Nicely spotted\.` : "([^"]+)", CHARS\.(\w+)\.voice/);
 if (bug) { add(bug[2], bug[1], "main.js"); for (const c of countries) if (c.city) add(bug[2], `That is every bug in ${c.city}. Nicely spotted.`, "main.js"); }
 
+// Zero Gravity: BOLT's nudges, the contacts pointing at the next beacon, and in the HQ, Frost
+// reading out each file
+const nudges = main.match(/const NUDGES = \[([^\]]+)\]/);
+if (nudges) for (const m of nudges[1].matchAll(new RegExp(str, "g"))) add("bolt", unq(m[1]), "main.js");
+if (main.includes("is glowing. Look for the tall beam of light!")) for (const p of story.PLACES || []) if (p.contact) {
+  for (const m of p.missions || []) add(p.contact, `The beacon for ${m.title} is glowing. Look for the tall beam of light!`, "main.js");
+  add(p.contact, "That's everything here. Great work, Agent Rory!", "main.js");
+}
+for (const f of files) if (f.endsWith("room.js")) for (const m of fs.readFileSync(f, "utf8").matchAll(new RegExp(`frost:\\s*${str}`, "g"))) add("frost", unq(m[1]), "room.js");
+
 const all = [...lines.values()];
 fs.writeFileSync(out, JSON.stringify(all, null, 1));
 const by = {}; for (const l of all) by[l.who] = (by[l.who] || 0) + 1;

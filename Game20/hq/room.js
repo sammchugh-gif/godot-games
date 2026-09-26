@@ -491,6 +491,7 @@ function nearest() {
 }
 function tick(dt) {
   G.t += dt;
+  Audio.duck(Speech.speaking);
   const w = G.world, R = G.room;
   if (G.state === "room") {
     G.input.poll();
