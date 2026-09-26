@@ -203,10 +203,36 @@ class Cells extends Mission {
     if (this.w.jetpack) { this.steer(c.position.x, c.position.z); inp.jumpHeld = up > -0.2; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
     // cells riding on something that moves: wait for it and hop on
     if (c.userData.follow) { this.rideTo(c.position.x, c.position.y, c.position.z, c.userData.follow.obj, this.cells.map(c => c.position)); return; }
+    // up in a low-gravity bubble: bounce off its pad and float to it
+    if (this.zoneFly(c)) return;
     // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
     if (this.data.climb && this.climb(c)) return;
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
+  }
+  // A cell high up in a low-gravity bubble (the Taj Mahal's minarets) is reached the way a
+  // child would: walk onto the bubble's pad, get thrown up, rise straight up until level with
+  // the cell (with an air jump or two if the throw falls short), then drift across to it.
+  // Returns false when the cell isn't in a bubble with a pad.
+  zoneFly(c) {
+    const cp = c.position, pp = this.p.pos, w = this.p.walker, inp = this.g.input;
+    const Z = (this.w.zones || []).find(z => Math.hypot(cp.x - z.x, cp.y - z.y, cp.z - z.z) < z.r);
+    if (!Z) return false;
+    const P = (this.w.pads || []).filter(p => Math.hypot(p.x - Z.x, p.z - Z.z) < Z.r).sort((a, b) => Math.hypot(a.x - cp.x, a.z - cp.z) - Math.hypot(b.x - cp.x, b.z - cp.z))[0];
+    if (!P || cp.y < P.y + 3) return false;
+    const eye = pp.y + 0.7, dh = Math.hypot(cp.x - pp.x, cp.z - pp.z), inZone = Math.hypot(pp.x - Z.x, eye - Z.y, pp.z - Z.z) < Z.r;
+    if (w.grounded) {
+      // on a balcony in the bubble: jump for it
+      if (inZone && pp.y > P.y + 2) { this.steer(cp.x, cp.z, eye < cp.y); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return true; }
+      this.walkTo(P.x, P.y + 0.7, P.z, 0.3, this.cells.map(c => c.position));
+      return true;
+    }
+    if (eye < cp.y - 0.6) {
+      inp.forced = { mx: 0, my: 0 };
+      inp.jumpHeld = w.vel.y > 0;
+      if (w.vel.y < 0.5 && inZone) { inp.jumpPressed = true; inp.jumpHeld = true; }
+    } else { this.steer(cp.x, cp.z); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; }
+    return true;
   }
   // The walking map has one floor per spot, so a tower of floors and switchback stairs is
   // invisible to it. The level lists the climb instead (a line of points, bottom to top: foot of
