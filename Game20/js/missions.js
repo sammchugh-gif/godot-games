@@ -87,21 +87,32 @@ class Mission {
     if (!m) { this.steer(tx, tz); return; }
     if (w.onMover === m) { this.steer(tx, tz, ty - (pp.y + 0.7) > 1.0 && w.grounded); if (!w.grounded) inp.jumpHeld = w.vel.y > 0; return; }
     if (w.onMover) { this.disembark(tx, ty, tz, 0.8, m); return; }
-    const r = Math.min(m.hx, m.hz);
+    // the deck as a rectangle at time t: how far (x, z) is from it, and the nearest point well inside it
+    const deck = (t, x, z) => {
+      const [cx, cy, cz, ry = 0] = m.fn(t), c = Math.cos(ry), sn = Math.sin(ry), dx = x - cx, dz = z - cz;
+      const lx = dx * c - dz * sn, lz = dx * sn + dz * c;
+      const out = Math.hypot(Math.max(0, Math.abs(lx) - m.hx), Math.max(0, Math.abs(lz) - m.hz));
+      const ix = Math.max(-(m.hx - 0.8), Math.min(m.hx - 0.8, lx)), iz = Math.max(-(m.hz - 0.8), Math.min(m.hz - 0.8, lz));
+      return { out, top: cy + m.hy, x: cx + ix * c + iz * sn, z: cz - ix * sn + iz * c };
+    };
     if (!this.board || this.board.m !== m) {
-      let best = null;
+      // the ground the deck passes closest to over the next minute and a half
+      let best = null; const R = Math.max(m.hx, m.hz) + 1.5;
       for (let dt = 0; dt < 90; dt += 0.5) {
-        const [x, y, z] = m.fn(this.w.phys.t + dt), k = nav.nearestOk(x, y + m.hy, z, r + 1.5, 1.2);
-        if (k < 0) continue;
-        const [nx, nz] = nav.xz(k), d = Math.hypot(nx - x, nz - z);
-        if (!best || d < best.d) best = { d, x: nx, y: nav.h[k], z: nz, m };
+        const t = this.w.phys.t + dt, [cx, cy, cz] = m.fn(t);
+        const ci = Math.round((cx - nav.x0) / nav.S), cj = Math.round((cz - nav.z0) / nav.S), r = Math.ceil(R / nav.S);
+        for (let jj = Math.max(0, cj - r); jj <= Math.min(nav.nz - 1, cj + r); jj++) for (let ii = Math.max(0, ci - r); ii <= Math.min(nav.nx - 1, ci + r); ii++) {
+          const k = ii + jj * nav.nx; if (!nav.ok[k] || Math.abs(nav.h[k] - (cy + m.hy)) > 1.2) continue;
+          const [nx, nz] = nav.xz(k), d = deck(t, nx, nz).out;
+          if (d < 1.0 && (!best || d < best.d)) best = { d, x: nx, y: nav.h[k], z: nz, m };
+        }
       }
       this.board = best;
     }
-    const c = m.mesh.position, top = c.y + m.hy, dc = Math.hypot(c.x - pp.x, c.z - pp.z);
-    // it's here: jump aboard, aiming a little ahead of it
-    if (w.grounded && dc < r + 1.2 && top - pp.y > -0.8 && top - pp.y < 1.6) { this.steer(c.x + m.vel.x * 0.3, c.z + m.vel.z * 0.3, true); return; }
-    if (!w.grounded) { this.steer(c.x + m.vel.x * 0.2, c.z + m.vel.z * 0.2); inp.jumpHeld = w.vel.y > 0; return; }
+    const now = deck(this.w.phys.t, pp.x, pp.z);
+    // it's here: jump aboard, towards a spot well inside the deck
+    if (w.grounded && now.out < 1.0 && now.top - pp.y > -0.8 && now.top - pp.y < 1.6) { this.steer(now.x + m.vel.x * 0.25, now.z + m.vel.z * 0.25, true); return; }
+    if (!w.grounded) { this.steer(now.x + m.vel.x * 0.2, now.z + m.vel.z * 0.2); inp.jumpHeld = w.vel.y > 0; return; }
     if (!this.board) { this.steer(tx, tz); return; }
     // otherwise go to the waiting spot and wait there
     this.walkTo(this.board.x, this.board.y + 0.7, this.board.z, 0.4, pts);
@@ -119,6 +130,14 @@ class Mission {
       this.leadCache.set(`${k}|${tx.toFixed(0)},${tz.toFixed(0)}`, ok);
     }
     if (k >= 0 && ok) { const [x, z] = nav.xz(k); this.steer(x, z, true); return; }
+    // meanwhile stand at the edge of the deck nearest to where we're going
+    const m = this.p.walker.onMover;
+    if (m && m.fn) {
+      const [cx, , cz, ry = 0] = m.fn(this.w.phys.t), c = Math.cos(ry), sn = Math.sin(ry), dx = tx - cx, dz = tz - cz;
+      const ix = Math.max(-(m.hx - 0.5), Math.min(m.hx - 0.5, dx * c - dz * sn)), iz = Math.max(-(m.hz - 0.5), Math.min(m.hz - 0.5, dx * sn + dz * c));
+      const ex = cx + ix * c + iz * sn, ez = cz - ix * sn + iz * c;
+      if (Math.hypot(ex - pp.x, ez - pp.z) > 0.4) { this.steer(ex, ez); return; }
+    }
     this.g.input.forced = { mx: 0, my: 0 };
   }
   // autopilot helpers: steer toward a point (camera-relative stick)
