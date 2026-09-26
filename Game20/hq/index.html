@@ -23,8 +23,8 @@
   .granted { font-weight: 900; font-size: clamp(34px, 7vw, 70px); letter-spacing: .1em; color: #7bed9f; text-shadow: 0 0 30px rgba(123, 237, 159, .7); text-align: center; animation: pop2 .3s; }
   .granted small { display: block; font-size: 16px; letter-spacing: .3em; color: #cfe0ff; margin-top: 8px; }
   [data-layer="flash"] { background: rgba(4, 8, 20, .85); }
-  .hqphoto { width: min(620px, 92vw); padding: 14px; background: #6a4a24; border: 3px solid #3a2410; text-align: center; }
-  .hqphoto img { display: block; width: 100%; height: auto; border: 6px solid #f4efe2; box-sizing: border-box; }
+  .hqphoto { width: fit-content; max-width: min(620px, 92vw); padding: 14px; background: #6a4a24; border: 3px solid #3a2410; text-align: center; margin-bottom: 22vh; }
+  .hqphoto img { display: block; max-width: 100%; max-height: 46vh; width: auto; height: auto; margin: 0 auto; border: 6px solid #f4efe2; box-sizing: border-box; }
   .hqphoto .plaque { display: inline-block; margin: 12px 0 8px; padding: 6px 18px; background: #c8a04a; color: #3a2410; font-weight: 900; letter-spacing: .2em; border-radius: 4px; }
   .hqphoto .row { justify-content: center; }
 </style>

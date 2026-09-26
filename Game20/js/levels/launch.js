@@ -27,11 +27,20 @@ function gantry(w, x, z) {
   for (let i = 1; i <= levels; i++) {
     const y = i * step;
     w.box(7, 0.3, 7, grate, x, y, z);
-    w.box(2, 0.3, 2, grate, x + 2.5, y, z + 4.4);
     for (const [sx, sz, rw, rd] of [[0, -3.4, 7, 0.1], [-3.4, 0, 0.1, 7]]) w.box(rw, 1, rd, red, x + sx, y + 0.65, z + sz, { collide: true });
   }
-  // the lift on the open side
-  w.platform(2.6, 0.3, 2.6, M(0xf0c020, { rough: 0.4 }), x + 5, 0.4, z + 5.4, t => [x + 5, 0.4 + (Math.sin(t * 0.35 - Math.PI / 2) + 1) / 2 * (levels * step - 0.3), z + 5.4]);
+  // the stairs up the east side: two lanes, each flight the length of the tower, so Rory
+  // goes up one lane, steps across and comes back up the other
+  const tread = M(0x8a9098, { rough: 0.5, metal: 0.5 }), laneA = x + 4.25, laneB = x + 5.75;
+  let y0 = 3; // the top of the pad
+  for (let i = 1; i <= levels; i++) {
+    const y1 = i * step + 0.15, n = Math.ceil((y1 - y0) / 0.34), north = i % 2 === 1;
+    w.steps(n, 1.5, (y1 - y0) / n, 7 / n, tread, north ? laneA : laneB, y0, north ? z + 3.5 : z - 3.5, north ? Math.PI : 0);
+    y0 = y1;
+  }
+  w.box(1.5, 0.3, 2, grate, laneA, levels * step, z + 2.5); // a step across at the very top
+  // the lift up the open south face, from the pad to the top
+  w.platform(2.6, 0.3, 2.6, M(0xf0c020, { rough: 0.4 }), x, 2.85, z + 4.9, t => [x, 2.85 + (Math.sin(t * 0.35 - Math.PI / 2) + 1) / 2 * (levels * step - 2.85), z + 4.9]);
   // an arm across to the rocket at the top
   w.box(9, 0.4, 2.4, grate, x - 7, levels * step, z);
   return { top: levels * step, step };
@@ -62,7 +71,7 @@ export function buildLaunch(w) {
   const lv = y => y + 0.2;
   w.missionData = {
     lb1: { title: "LAUNCH SEQUENCE" },
-    lb2: { cells: [[10, lv(6) + 1.1, -30], [10, lv(12) + 1.1, -30], [8, lv(18) + 1.1, -28], [12, lv(24) + 1.1, -32], [10, lv(30) + 1.1, -30], [10, lv(36) + 1.1, -30], [4, lv(36) + 1.1, -30], [15, 20, -24.6]] },
+    lb2: { cells: [[10, lv(6) + 1.1, -30], [10, lv(12) + 1.1, -30], [8, lv(18) + 1.1, -28], [12, lv(24) + 1.1, -32], [10, lv(30) + 1.1, -30], [10, lv(36) + 1.1, -30], [4, lv(36) + 1.1, -30], [15.75, 22.3, -30]] },
     lb3: { rings: [[0, 8, -12, 2.4], [-12, 14, -24, 2.4, 1.2], [-12, 22, -40, 2.4, 2.4], [2, 30, -44, 2.4, 3.2], [8, 39.5, -32, 2.4, 4.4], [-2, 42, -18, 2.4, 5.4], [-14, 48, -30, 2.4, 6.4], [-4, 58, -38, 2.6, 7.2]], ceiling: 70 },
     lb4: { path: loop, y: 0.3, car: "buggy", quarry: "kart", lead: 30 },
   };

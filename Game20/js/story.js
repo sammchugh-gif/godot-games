@@ -208,7 +208,7 @@ export const PLACES = [
         intro: [["hale", "Somebody has scrambled the launch computer. I think we know who."], ["pip", "It wants the launch sequence played back. Watch the lights, then repeat."]],
         outro: [["hale", "Launch computer is happy. Next, the gantry. Zero's Floaters left things up there."]] },
       { id: "lb2", kind: "cells", lv: 3, title: "Gantry Climb", at: [18, -18], n: 8, time: 200,
-        intro: [["hale", "The red tower beside the rocket is the gantry. The yellow lift goes all the way up."], ["pip", "There are cells on every level. Hop off the lift at each one, then back on."]],
+        intro: [["hale", "The red tower beside the rocket is the gantry. Stairs zig-zag up the side, and the yellow lift goes all the way up."], ["pip", "There are cells on every level, and one on the stairs. Climb, or ride the lift and hop off."]],
         outro: [["hale", "Gantry's clear. Now let's check the rocket for any more surprises."]] },
       { id: "lb3", kind: "drone", lv: 3, title: "Rocket Check", at: [0, 14], time: 170,
         intro: [["hale", "BOLT, can you fly up round the rocket and scan it on the way?"], ["bolt", "Rocket feet, meet rocket. Rocket, meet rocket feet."]],

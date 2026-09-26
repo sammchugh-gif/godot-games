@@ -584,8 +584,8 @@ The Pump is in orbit and its battery is on the Moon.
 
 **Mission 42: Gantry Climb** (Gravity Cells, level 3)
 
-> **Commander Hale:** The red tower beside the rocket is the gantry. The yellow lift goes all the way up.
-> **Pip:** There are cells on every level. Hop off the lift at each one, then back on.
+> **Commander Hale:** The red tower beside the rocket is the gantry. Stairs zig-zag up the side, and the yellow lift goes all the way up.
+> **Pip:** There are cells on every level, and one on the stairs. Climb, or ride the lift and hop off.
 
 *After:*
 
