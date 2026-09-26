@@ -11,5 +11,5 @@ cp index.html "$DEST/"
 [ -f icon.png ] && cp icon.png "$DEST/"
 HQ=../docs/agent-rory-hq
 mkdir -p "$HQ"
-cp hq/index.html hq/room.js hq/list.html hq/icon.png "$HQ/"
+cp hq/index.html hq/room.js hq/list.html hq/icon.png hq/agents.jpg "$HQ/"
 echo "published to $DEST and $HQ"

@@ -172,12 +172,18 @@ function buildPosters(w, RW, RD) {
     g.fillStyle = "#fff"; g.fillRect(W / 2 - 50, 60, 100, 60); g.fillRect(W / 2 - 16, 40, 32, 20); g.beginPath(); g.arc(W / 2, 90, 16, 0, 7); g.fillStyle = "#c8283a"; g.fill();
     ["KEEP", "CALM", "AND", "CARRY A", "GADGET"].forEach((l, i) => T(g, l, W / 2, 200 + i * 92, `900 ${i === 2 ? 44 : 72}px system-ui`, "#ffffff"));
   });
-  posterMesh(w, EX, 3, 7.2, -Math.PI / 2, 2.2, 3, (g, W, H) => {
+  posterMesh(w, 2.45, 2.3, SZ, Math.PI, 0.8, 1.09, (g, W, H) => {
     g.fillStyle = "#1a7a3a"; g.fillRect(0, 0, W, H); g.fillStyle = "#fff"; g.fillRect(30, 30, W - 60, H - 60); g.fillStyle = "#1a7a3a"; g.fillRect(44, 44, W - 88, H - 88);
     T(g, "IN CASE", W / 2, 140, "900 64px system-ui", "#fff"); T(g, "OF FIRE", W / 2, 220, "900 64px system-ui", "#fff");
     T(g, "USE", W / 2, 360, "900 60px system-ui", "#ffd166"); T(g, "JETPACK", W / 2, 440, "900 76px system-ui", "#ffd166");
     g.fillStyle = "#fff"; g.beginPath(); g.moveTo(W / 2 - 40, 560); g.lineTo(W / 2 + 40, 560); g.lineTo(W / 2, 510); g.fill();
   });
+  // the team photo: a real one, in a wooden frame with a brass plaque
+  const photo = new THREE.Group(); photo.position.set(EX, 3.1, 7.3); photo.rotation.y = -Math.PI / 2; w.scene.add(photo);
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.74, 0.1), M("wood", { args: [315, [120, 76, 40]] })); frame.position.z = 0.02; photo.add(frame);
+  const tex = new THREE.TextureLoader().load("agents.jpg"); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.43), new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.6 })); pic.position.z = 0.08; pic.userData.dynamic = true; photo.add(pic);
+  const plaque = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.3), new THREE.MeshStandardMaterial({ map: TEX.sign("OUR AGENTS", { bg: "#6a4a14", fg: "#ffe8a0", border: "#ffe8a0" }), emissive: 0xffd88a, emissiveIntensity: 0.3 })); plaque.position.set(0, -1.62, 0.06); plaque.userData.dynamic = true; photo.add(plaque);
   return { zero, agent };
 }
 // the two posters that need 3D faces, drawn once the portrait renderer exists
@@ -300,9 +306,9 @@ function buildRoom(w) {
   const bz = -RD / 2 + 0.28;
   w.box(BW + 0.6, BH + 0.6, 0.2, M("wood", { args: [313, [90, 56, 30]] }), 0, 3.2, bz - 0.05, { collide: false });
   const board = boardTexture();
-  const bm = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshStandardMaterial({ map: board.tex, emissiveMap: board.tex, emissive: 0xffffff, emissiveIntensity: 0.42, roughness: 0.9 }));
+  const bm = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshStandardMaterial({ map: board.tex, emissiveMap: board.tex, emissive: 0xffffff, emissiveIntensity: 0.14, roughness: 0.95 }));
   bm.position.set(0, 3.2, bz + 0.07); bm.userData.dynamic = true; w.scene.add(bm);
-  const lamp = new THREE.SpotLight(0xfff0d8, 30, 14, 0.9, 0.5, 1.4); lamp.position.set(0, 5.9, bz + 3.2); lamp.target.position.set(0, 3.2, bz); w.scene.add(lamp); w.scene.add(lamp.target);
+  const lamp = new THREE.SpotLight(0xfff0d8, 5, 14, 0.9, 0.6, 1.4); lamp.position.set(0, 5.9, bz + 3.2); lamp.target.position.set(0, 3.2, bz); w.scene.add(lamp); w.scene.add(lamp.target);
   const screens = FILES.map((f, i) => {
     const x = (CARD_U[i] - 0.5) * BW, z = bz + 3;
     const pad = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.35, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(f.accent).multiplyScalar(2.5), transparent: true })); pad.rotation.x = -Math.PI / 2; pad.position.set(x, 0.03, z); pad.userData.dynamic = true; w.scene.add(pad);
@@ -346,6 +352,7 @@ function things() {
     { id: "button", x: -9.4, z: 5.9, r: 1.5, label: "PRESS", prompt: "the big red button", act: pressButton, off: busy },
     { id: "chair", x: R.chair.seat.x, z: R.chair.seat.z, r: 1.3, label: "SPIN", prompt: "have a spin on the chair", act: spinChair, off: busy },
     { id: "cat", x: 10.6, z: -5.9, r: 1.5, label: "PAT", prompt: "pat Agent Whiskers", act: patCat },
+    { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
   ].filter(t => !t.off);
 }
@@ -398,6 +405,11 @@ function patCat() {
   G.fx.burst(10.6, 0.8, -6.6, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
   if (n === 1) G.dialogue.show([["pip", "That's Agent Whiskers. She's been at POLARIS longer than any of us."], ["bolt", "She outranks me."]], null);
   else if (Math.random() < 0.4) { c.meow = 0.8; setTimeout(() => Audio.play("meow"), 300); if (Math.random() < 0.5) G.dialogue.show([pick([["bolt", "The cat says: meow. I have translated it. It means: more patting."], ["frost", "Agent Whiskers has never lost a file. Or found one."], ["pip", "She sat on the self-destruct button once. Luckily it's also the kettle."]])], null); }
+}
+function lookAtPhoto() {
+  const n = count("roryhq.photo");
+  G.dialogue.show(n === 1 ? [["frost", "Our agents. The finest POLARIS has ever had."], ["pip", "Look at those smiles. That's the face of a team that's just saved the world."], ["bolt", "I am not in this photo. I was charging."]]
+    : [pick([["frost", "The best team I've ever had. Don't tell the others."], ["bolt", "I have zoomed in. Everyone is smiling. Mission status: happy."], ["pip", "One day I'll build a camera that floats. For group photos."]])], null);
 }
 const CALLS = [
   [["rory", "Hello, POLARIS, Agent Rory speaking."], ["zero", "Agent Rory! It is I, Professor Zero! Is your fridge running?"], ["rory", "Er... yes?"], ["zero", "Then you'd better go and catch it! Mwa ha ha ha!"], ["bolt", "He has been practising that joke for a week."]],

@@ -53,13 +53,14 @@ check(z < 0, `Rory walks up the room (z ${z.toFixed(1)})`);
 await ev(() => { __hq.input.forced = null; });
 // the things to do in the room
 const thingIds = await ev(() => __hq.debug.things().map(t => t.id));
-check(["tea", "button", "chair", "cat", "phone"].every(id => thingIds.includes(id)), `five things to do (${thingIds.join(",")})`);
+check(["tea", "button", "chair", "cat", "photo", "phone"].every(id => thingIds.includes(id)), `six things to do (${thingIds.join(",")})`);
 const use = async id => { await ev(() => __hq.debug.skip()); await ev(id => __hq.debug.goToThing(id), id); await waitT(0.5); const near = await ev(() => __hq.debug.near()); check(near === id, `standing at the ${id} (near: ${near})`); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3); };
 await use("tea"); await waitT(1.8); check(await ev(() => !!__hq.cup), "a cup of tea in Rory's hand"); await page.screenshot({ path: `${out}/tea.png` });
 await use("tea"); check(await ev(() => +localStorage.getItem("roryhq.biscuit") === 1), "then a biscuit");
 await use("button"); check(await ev(() => __hq.alarm > 0), "the big red button sets the alarm off"); await waitT(0.6); await page.screenshot({ path: `${out}/alarm.png` }); await waitT(3.5);
 await use("chair"); check(await ev(() => !!__hq.spin), "spinning on the chair"); await waitT(1.2); await page.screenshot({ path: `${out}/spin.png` }); await waitT(3); check(await ev(() => !__hq.spin && !__hq.player.frozen), "off the chair again");
 await use("cat"); check(await ev(() => __hq.room.cat.purr > 0), "Agent Whiskers purrs"); await page.screenshot({ path: `${out}/cat.png` });
+await use("photo"); check(await ev(() => __hq.dialogue.active), "looking at the team photo"); await page.screenshot({ path: `${out}/photo.png` });
 await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.ring()); await waitT(0.5); check(await ev(() => __hq.ringing > 0), "the banana phone rings");
 await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing === 0), "and Rory answers it"); await page.screenshot({ path: `${out}/phone.png` }); await ev(() => __hq.debug.skip());
 // the play button goes to the game
