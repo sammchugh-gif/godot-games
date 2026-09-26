@@ -634,11 +634,16 @@ class Chase extends Mission {
     this.car.drive(dt, throttle, inp.mx, boost);
     this.autoBoost = false;
     // the quarry keeps its distance: slower when far ahead, faster when caught up
-    const gap = this.s - this.carS();
-    const base = 10 + this.lv * 1.6, cv = Math.max(0, this.car.speed);
-    // the Floater always stays catchable: it drives a little slower than Rory
-    // does while he's far behind, and only runs flat out once he's close
-    let v = gap > 40 ? Math.min(base, Math.max(4, cv * 0.6)) : gap > 14 ? Math.min(base, Math.max(5, cv * 0.82)) : gap > 7 ? Math.min(base, Math.max(5, cv * 0.9)) : Math.min(base, Math.max(6, cv * 0.95));
+    const cs = this.carS();
+    // how fast Rory is actually getting along the route (not his speedometer: a wide line round
+    // the corners covers more ground than the route does)
+    if (this.lastCs !== undefined && dt > 0) this.csv = (this.csv ?? 0) + (Math.max(0, (cs - this.lastCs) / dt) - (this.csv ?? 0)) * Math.min(1, dt * 1.5);
+    this.lastCs = cs;
+    const gap = this.s - cs, base = 10 + this.lv * 1.6, rv = this.csv ?? 0;
+    // the Floater always stays catchable: it drives a little slower along the route than Rory
+    // does, by more the further behind he is, however slowly he drives
+    const r = gap > 40 ? 0.6 : gap > 14 ? 0.8 : gap > 7 ? 0.88 : 0.95;
+    let v = Math.min(base, Math.max(3, rv * r));
     if (this.boostT > 0) { this.boostT -= dt; v += 7; }
     this.qv += (v - this.qv) * Math.min(1, dt * 2);
     this.s += this.qv * dt;
@@ -654,7 +659,7 @@ class Chase extends Mission {
     }
     if (this.car.boost > 0 && Math.random() < 0.8) { const f = this.car.forward(); this.g.fx.trail(this.car.pos.x - f.x * 1.6, this.car.pos.y + 0.2, this.car.pos.z - f.z * 1.6, 0x7fe3ff, 0.35); }
   }
-  debugState() { const f = x => Math.round(x * 10) / 10; return { gap: f(this.s - (this.cs || 0)), qv: f(this.qv), tags: this.tags, cs: f(this.cs || 0) }; }
+  debugState() { const f = x => Math.round(x * 10) / 10; return { gap: f(this.s - (this.cs || 0)), qv: f(this.qv), rv: f(this.csv || 0), tags: this.tags, cs: f(this.cs || 0) }; }
   bubble() {
     this.qv = 0; this.boostT = 0;
     const b = this.add(makeBubble(1.8)); b.position.copy(this.q.position).setY(this.q.position.y + 0.9);
