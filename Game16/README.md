@@ -3,7 +3,7 @@
 A one-finger jungle swinger for the iPhone's and iPad's browser. Hold anywhere
 and the monkey grabs the vine ring that is glowing; let go and it flies.
 Holding on pumps the swing, letting go at the right moment is the whole game.
-Sixty levels in six worlds, every one with a name, three stars a level, a new
+Seventy levels in seven worlds, every one with a name, three stars a level, a new
 jungle every day, and every level remembers the family's best run as a ghost
 to race.
 
@@ -22,6 +22,10 @@ orientation. One file, no engine.
   swing is how to go really fast. (Keyboard: Up and Down.) A vine is never
   let out so far that its swing reaches the water, and a catch close to a
   ring still gives a comfortable length of vine.
+- After a fast catch close to a ring, the swing is gently eased back to one
+  that goes up about level with the ring, so the monkey no longer whirls
+  round over the top on a slack vine. A catch from further out keeps all its
+  speed, and climbing the vine for speed is left alone.
 - Holding again too soon after letting go does not re-take the ring you
   just left: the hold waits for the ring ahead.
 - Standing on a ledge with nothing in reach, holding hops forward until a
@@ -30,8 +34,9 @@ orientation. One file, no engine.
   is ever hanging too far down the wall for that, it climbs its vine.
 - Every world also has a thing of its own, worked with the same finger:
   - **Poles** (the Jungle): hold near one to grab it, keep holding to climb,
-    let go to leap off forward. Climb higher to leap higher - but not into
-    a beehive at the top.
+    let go to leap off forward. Climb higher to leap higher. (Some poles
+    used to have a beehive on top to let go before; the kids did not like
+    them, so they are gone. The flying bees are still about.)
   - **Zip lines** (the Savanna): hold near the rope to take the handle and
     ride it down; let go (or reach the end) to jump off.
   - **Blast barrels** (the Temple): fly into one and it holds you. A barrel
@@ -68,6 +73,7 @@ In order of difficulty, as the map shows them:
 
 | World | What is in it |
 | --- | --- |
+| Banana Grove | The easy one: rings closer together and nearly level, flags close together, nothing that hurts. Speed hoops from Hoop-de-Loop, a pole to climb in Coconut Climb. Its levels are 0-1 to 0-10 |
 | Jungle Canopy | Bamboo poles to climb (from Bamboo Climb), speed hoops, thorns, bees; butterflies, jumping fish and a crocodile |
 | Safari Savanna | Zip lines, poles, a low afternoon sun, mesas, acacias and giraffes, termite-mound pillars, a river with a hippo |
 | Temple Ruins | Blast barrels (from Blast Barrels), rings that crumble a moment after you grab them, stone pillars, poles, a swamp |
@@ -75,8 +81,9 @@ In order of difficulty, as the map shows them:
 | Misty Falls | Water wheels (from Water Wheels), rings that slide back and forth or up and down, barrels, poles, rapids, a rainbow |
 | Volcano Peak | All of it, over lava, with fireballs |
 
-A world opens with enough stars in the world it follows on from and a banana
-price, paid in the shop. Safari follows the Jungle, the Temple follows the
+The Banana Grove and the Jungle are open from the start. Every other world
+opens with enough stars in the world it follows on from and a banana price,
+paid in the shop. Safari follows the Jungle, the Temple follows the
 Jungle, the Night Rainforest follows the Safari, the Falls follow the Temple
 and the Volcano follows the Falls.
 
@@ -126,6 +133,11 @@ If frames keep arriving late (an older iPad, a phone saving battery), the
 game quietly drops the mist and the shading on the hills and carries on at
 full pace.
 
+The robot keeps only the handful of attempts that got furthest, so now and
+then it throws away the one way on and gives up where a player would not.
+Before it calls a level stuck, or a gold banana out of reach, it looks again
+keeping twice as many: any way through it finds proves the level can be done.
+
 The robot plays the new things with the same two numbers it plays a vine
 with - how long to hold, how long to wait before holding again - so a pole's
 climb, a barrel's aim, a zip line, a branch's bend and a wheel's ride are all
@@ -141,8 +153,16 @@ times and the family ghosts on the levels that changed were cleared, since a
 record set on a different level is one nobody could beat. Stars and bananas
 were kept.
 
-    node tools/vinecheck.mjs            all sixty levels
+    node tools/vinecheck.mjs            all seventy levels
     node tools/vinecheck.mjs daily 30   the next thirty daily jungles
+    node tools/vinecheck.mjs swing      a catch close to a ring stays in hand
+
+The last one flies on from every ring in the Grove, the Jungle and the
+Savanna after a spread of let-go times, and wherever the next catch lands
+close to a ring, holds on and watches: the swing must not go up over the
+ring or turn the monkey right round it. Before the fix, two catches in three
+went up over the top and more than one in four went right round; now it
+is about one in twenty, and none.
 
 The version is printed small in the corner of the title screen. On the
 title screen the game asks the website whether there is a newer one, and
