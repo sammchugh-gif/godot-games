@@ -41,6 +41,8 @@ for (const id of ids) {
   const hud = await ev(() => document.querySelector(".objective span")?.textContent);
   console.log(`${won ? "ok" : "FAIL"}: ${id} ${st} in ${(t1 - t0).toFixed(1)}s game time  [${hud}]  ${JSON.stringify(await ev(() => __g.debug.stats()))}`);
   if (!won) { fail++; await page.screenshot({ path: `${out}/${id}_fail.png` }); }
+  // anything the autopilot could not reach by playing, and had to teleport to
+  for (const t of await ev(() => { const t = __g.teleports || []; __g.teleports = []; return t; })) console.log("TELEPORT:", t);
   await ev(() => { __g.autoSolve = false; __g.input.forced = null; });
 }
 console.log("errors:", errors.length, "fails:", fail);

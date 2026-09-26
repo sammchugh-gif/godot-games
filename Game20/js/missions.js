@@ -76,14 +76,34 @@ class Cells extends Mission {
   }
   hud() { return { ...super.hud(), text: `Collect the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0]; return c ? c.position : null; }
-  // autopilot: walk to the nearest cell; cells up high are fetched by teleport, as a player would via pads
+  // autopilot: play it as a child would: walk, jump, and ride the pads for high cells. Only when a
+  // cell has not been reached for 25 s does it teleport there, and it notes the cell so the test
+  // can report it (a cell nobody can reach is a bug in the level).
   solve() {
-    const c = this.cells.find(c => c.visible);
+    const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
-    // moving cells are over the water: hop straight on, as a jump from the wharf would
-    if (c.userData.follow) { this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); return; }
-    const d = this.steer(c.position.x, c.position.z);
-    if (d < 1.2 || c.position.y - this.p.pos.y > 1.6) { this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); }
+    const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.pad = null; }
+    if (this.t - this.aimT > 25) {
+      (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
+      this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
+    }
+    const up = c.position.y - (pp.y + 0.7), dh = Math.hypot(c.position.x - pp.x, c.position.z - pp.z);
+    inp.jumpHeld = false;
+    // in space: jet up or drift down to the cell's height while flying at it
+    if (this.w.jetpack) { this.steer(c.position.x, c.position.z); inp.jumpHeld = up > -0.2; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
+    // in the air: steer at the cell, holding JUMP to float
+    if (!w.grounded) { this.steer(c.position.x, c.position.z); inp.jumpHeld = true; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
+    // too high to jump to from here: use the pad that throws Rory highest near the cell
+    if (up > 2.6) {
+      if (!this.pad) {
+        const pads = this.w.pads.filter(p => p.y + p.power * p.power / 31 > c.position.y);
+        this.pad = pads.sort((a, b) => Math.hypot(a.x - c.position.x, a.z - c.position.z) - Math.hypot(b.x - c.position.x, b.z - c.position.z))[0] || null;
+      }
+      if (this.pad) { this.steer(this.pad.x, this.pad.z); return; }
+    }
+    // on the level: walk up and jump for it
+    this.steer(c.position.x, c.position.z, up > 1.0 && dh < 2.2);
   }
 }
 
@@ -155,12 +175,14 @@ class Roundup extends Mission {
   actionLabel() { return "ZAP"; }
   hud() { return { ...super.hud(), text: `Bubble the Floaters  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
   target() { const b = this.bots.find(b => b.state === "walk"); return b ? b.r.pos : null; }
+  // autopilot: run after the nearest Floater and zap it; teleports (and notes it) only if one can't be caught in 25 s
   solve() {
-    const b = this.bots.find(b => b.state === "walk");
+    const pp = this.p.pos, b = this.bots.filter(b => b.state === "walk").sort((a, c) => a.r.pos.distanceTo(pp) - c.r.pos.distanceTo(pp))[0];
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
-    const d = this.steer(b.r.pos.x, b.r.pos.z);
-    if (d < 3.5) { this.p.yaw = Math.atan2(b.r.pos.x - this.p.pos.x, b.r.pos.z - this.p.pos.z); this.g.input.actionPressed = true; }
-    if (d > 6) this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2);
+    if (b !== this.aim) { this.aim = b; this.aimT = this.t; }
+    if (this.t - this.aimT > 25) { (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} floater ${this.bots.indexOf(b)}`); this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2); this.aimT = this.t; return; }
+    const d = this.steer(b.r.pos.x, b.r.pos.z, b.r.pos.y - pp.y > 1.2 && b.r.pos.distanceTo(pp) < 4);
+    if (d < 3.5) { this.p.yaw = Math.atan2(b.r.pos.x - pp.x, b.r.pos.z - pp.z); this.g.input.actionPressed = true; }
   }
 }
 
@@ -293,11 +315,13 @@ class Tractor extends Mission {
   hud() { return { ...super.hud(), text: `Pin them down  ${this.pinned}/${this.need}`, progress: this.pinned / this.need }; }
   target() { const f = this.items.filter(i => i.state === "float").sort((a, b) => b.h - a.h)[0]; return f ? f.o.position : null; }
   solve() {
-    const f = this.items.filter(i => i.state === "float").sort((a, b) => b.h - a.h)[0];
+    // the most urgent thing Rory can still get to before it floats out of reach (a smart player's choice)
+    const pp = this.p.pos, rate = it => (0.55 + this.lv * 0.18) * (1 + it.h * 0.08);
+    const live = this.items.filter(i => i.state === "float"), can = live.filter(it => Math.hypot(it.o.position.x - pp.x, it.o.position.z - pp.z) / 6.5 < (9 - it.h) / rate(it));
+    const f = (can.length ? can : live).sort((a, b) => b.h - a.h)[0];
     if (!f) { this.g.input.forced = { mx: 0, my: 0 }; return; }
     const d = this.steer(f.o.position.x, f.o.position.z + 1.5);
     if (d < 2.5 && this.near === f) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
-    else if (d > 10) this.p.teleport(f.o.position.x + 1.5, f.y0, f.o.position.z + 1.5);
   }
 }
 
