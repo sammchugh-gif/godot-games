@@ -223,6 +223,15 @@ export class World {
     const m = this.mesh(new THREE.SphereGeometry(r, 24, 16), mat, x, y, z);
     return { mesh: m, ...this.phys.dynamicBall(m, r, o) };
   }
+  // a stream of bubbles rising from the sea floor, h metres tall: swimming into it fills up the air
+  vent(x, y, z, h = 20) {
+    const v = { x, y, z, r: 1.3, h };
+    (this.airVents || (this.airVents = [])).push(v);
+    const rock = M(0x4a4640, { rough: 0.95, flat: true });
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; this.mesh(new THREE.DodecahedronGeometry(0.35 + (i % 2) * 0.15, 0), rock, x + Math.cos(a) * 0.6, y + 0.1, z + Math.sin(a) * 0.6); }
+    this.updaters.push(dt => { if (this.fx && Math.random() < dt * 40) this.fx.bubble(x + (Math.random() - 0.5) * 0.7, y + 0.3, z + (Math.random() - 0.5) * 0.7, this.sea ? this.sea.level : y + h); });
+    return v;
+  }
   trigger(x, y, z, r, fn, once = true) { const t = { x, y, z, r, fn, once, done: false }; this.triggers.push(t); return t; }
   // ------------------------------------------------------------ decoration
   tree(x, z, h = 6, o = {}) {

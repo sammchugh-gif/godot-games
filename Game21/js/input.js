@@ -7,6 +7,7 @@ export class Input {
     this.mx = 0; this.my = 0;           // move stick, -1..1 (my up = forward)
     this.lookX = 0; this.lookY = 0;     // camera drag since last read, pixels
     this.jumpHeld = false; this.jumpPressed = false; this.actionPressed = false; this.boostHeld = false;
+    this.diveHeld = false; this.diveTouch = false;   // swimming down (C, Q or Ctrl; DIVE on touch)
     this.enabled = true;
     this.stick = null;                  // {id, x0, y0, x, y}
     this.look = null;                   // {id, x, y}
@@ -65,6 +66,7 @@ export class Input {
     if (l > 1) { x /= l; y /= l; }
     this.mx = x; this.my = y;
     this.boostHeld = k.has("ShiftLeft") || k.has("ShiftRight") || this.boostTouch;
+    this.diveHeld = k.has("KeyC") || k.has("KeyQ") || k.has("ControlLeft") || this.diveTouch || !!(this.forced && this.forced.dive);
     if (this.forced) { this.mx = this.forced.mx; this.my = this.forced.my; }
   }
   takeLook() { const r = [this.lookX, this.lookY]; this.lookX = 0; this.lookY = 0; return r; }

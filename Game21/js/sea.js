@@ -125,8 +125,9 @@ void main() {
     float s = clamp(-V.y, 0.0, 1.0);
     float win = smoothstep(0.62, 0.74, s);
     vec3 up = mix(uSkyMid, uSkyTop, 0.4) * 1.4 + uSunCol * pow(max(dot(-V * vec3(1.0, -1.0, 1.0), uSunDir), 0.0), 30.0) * 1.5;
-    float rip = 0.85 + 0.3 * (r.x + r.y);
-    col = mix(uUnder * 1.25, up * rip, win);
+    float rip = 0.92 + 0.08 * clamp(r.x + r.y, -1.5, 1.5);
+    win = smoothstep(0.6, 0.76, s + 0.02 * clamp(r.x, -1.5, 1.5));
+    col = mix(uUnder * 1.3, up * rip, win);
   }
   gl_FragColor = vec4(col, alpha);
   #include <tonemapping_fragment>
@@ -147,7 +148,7 @@ export class Sea {
     this.waves = (o.list || CALM).map(([x, z, a, l, s]) => { const d = Math.hypot(x, z); return [x / d, z / d, a * scale, l, s]; });
     const n = this.waves.length;
     this.under = C(o.under ?? 0x0d5a78); this.deepUnder = C(o.deepUnder ?? 0x020a14);
-    this.absorb = o.absorb || [0.1, 0.04, 0.028];
+    this.absorb = o.absorb || [0.17, 0.05, 0.03];
     const sky = world.sky || { top: "#2d6fd0", mid: "#8fc0ec", sunColor: "#fff4dc", sunI: 2 };
     const size = o.size ?? 700, seg = Math.min(220, Math.round(size / 3));
     const box = this.box = o.box || [0, 0, 160, 160];
@@ -170,7 +171,7 @@ export class Sea {
     this.grid = size / seg;
     // light shafts and drifting specks, seen only from under the water
     this.rays = this.makeRays(); this.specks = this.makeSpecks();
-    SEA.uSea.value.set(1, this.level, 0, o.caustics ?? 1);
+    SEA.uSea.value.set(1, this.level, 0, o.caustics ?? 6);
     SEA.uSeaAbs.value.set(...this.absorb);
     SEA.uSeaSun.value.copy(C(sky.sunColor)).multiplyScalar((sky.sunI || 2) * 0.5);
     // under water the fog closes in: the same kind of fog as above the water, so no shader has to
@@ -209,15 +210,15 @@ export class Sea {
   makeRays() {
     const g = new THREE.Group(), cv = document.createElement("canvas"); cv.width = 32; cv.height = 128;
     const x = cv.getContext("2d"), gr = x.createLinearGradient(0, 0, 0, 128);
-    gr.addColorStop(0, "rgba(255,255,255,0.5)"); gr.addColorStop(0.35, "rgba(255,255,255,0.18)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+    gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(0.06, "rgba(255,255,255,0.45)"); gr.addColorStop(0.4, "rgba(255,255,255,0.14)"); gr.addColorStop(1, "rgba(255,255,255,0)");
     x.fillStyle = gr; x.fillRect(0, 0, 32, 128);
     const h = x.createLinearGradient(0, 0, 32, 0); h.addColorStop(0, "rgba(0,0,0,1)"); h.addColorStop(0.5, "rgba(0,0,0,0)"); h.addColorStop(1, "rgba(0,0,0,1)");
     x.globalCompositeOperation = "destination-out"; x.fillStyle = h; x.fillRect(0, 0, 32, 128);
     const tex = new THREE.CanvasTexture(cv);
-    const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0.55, 0.85, 1).multiplyScalar(0.45), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0.55, 0.85, 1).multiplyScalar(0.28), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide });
     this.rayMat = mat;
-    for (let i = 0; i < 14; i++) {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5 + Math.random() * 1.1, 30), mat);
+    for (let i = 0; i < 22; i++) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.8 + Math.random() * 2.4, 30), mat);
       m.geometry.translate(0, -15, 0);
       m.userData = { ox: (Math.random() - 0.5) * 36, oz: (Math.random() - 0.5) * 36, ph: Math.random() * 6, tilt: 0.25 + Math.random() * 0.1 };
       g.add(m);

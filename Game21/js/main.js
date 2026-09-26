@@ -101,6 +101,7 @@ function loadPlace(id) {
   if (info.gravity !== undefined) phys.setGravity(-20 * info.gravity);
   G.player.onJump = () => sound("jump");
   G.player.onPad = () => sound("pad");
+  G.player.onOutOfAir = () => { toast("Out of air! Back to dry land for a breath.", 3); sound("fail"); };
   G.player.onLand = v => { if (v > 7) { sound("land"); G.fx.puff(G.player.pos.x, G.player.pos.y + 0.05, G.player.pos.z); } };
   const bolt = G.bolt = new Robot("bolt", 1.0);
   bolt.root.position.set(...(info.bolt || [x + 1.5, y, z]));
@@ -473,6 +474,7 @@ function tick(dt) {
   if (G.mission && G.mission.post) G.mission.post(dt);
   if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
   G.fx.update(dt);
+  swimUI();
   drawTouch();
   draw();
 }
@@ -501,6 +503,8 @@ function buildTouch() {
   };
   hold(jump, () => { G.input.jumpPressed = true; G.input.jumpHeld = true; }, () => { G.input.jumpHeld = false; });
   hold(act, () => { G.input.actionPressed = true; });
+  const dive = G.diveBtn = mk("dive hidden", "DIVE", 22, 132);
+  hold(dive, () => { G.input.diveTouch = true; }, () => { G.input.diveTouch = false; });
   const st = G.stickEl = document.createElement("div"); st.className = "stick"; st.innerHTML = "<i></i>"; st.style.display = "none"; ui.appendChild(st);
   // tapping the dialogue anywhere on the 3D view moves it on
   G.engine.canvas.addEventListener("pointerdown", () => { if (G.dialogue.active) G.dialogue.tap(); });
@@ -510,7 +514,15 @@ function buildTouch() {
   document.addEventListener("visibilitychange", () => { if (document.hidden && (G.state === "explore" || G.state === "mission")) pause(); });
   addEventListener("keydown", e => { if (G.dialogue.active && (e.code === "Space" || e.code === "Enter")) { G.dialogue.tap(); G.input.clear(); } if (e.code === "Escape" || e.code === "KeyP") pause(); });
 }
-function setTouch(on) { G.touchOn = on; const show = on && G.input.touchUI; G.jumpBtn.style.display = show ? "grid" : "none"; if (!show) G.actBtn.classList.add("hidden"); }
+function setTouch(on) { G.touchOn = on; const show = on && G.input.touchUI; G.jumpBtn.style.display = show ? "grid" : "none"; if (!show) { G.actBtn.classList.add("hidden"); G.diveBtn.classList.add("hidden"); } }
+// in the water JUMP swims up and DIVE swims down; the air meter shows under the water
+function swimUI() {
+  const p = G.player, swim = p.swimming && (G.state === "explore" || G.state === "mission");
+  if (G.touchOn && G.input.touchUI) G.diveBtn.classList.toggle("hidden", !swim);
+  const label = G.world.jetpack ? "JET" : swim && p.headUnder ? "UP" : "JUMP";
+  if (G.jumpBtn.textContent !== label) G.jumpBtn.textContent = label;
+  G.hud.air((swim && p.headUnder) || p.air < p.airMax - 0.05 ? p.air / p.airMax : null);
+}
 function showAction(label) {
   if (!G.touchOn) return;
   if (!label) { G.actBtn.classList.add("hidden"); return; }

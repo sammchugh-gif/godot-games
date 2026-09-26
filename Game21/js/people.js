@@ -158,17 +158,21 @@ export function animatePerson(rig, s) {
     } else if (s.vy > 0) { legA = 0.6; kneeL = 1.1; kneeR = 0.3; armA = -0.4; armZ = 0.5; elbow = -0.9; lean = 0.05; bob = 0; }
     else { legA = 0.25; kneeL = 0.5; kneeR = 0.4; armA = 0; armZ = 0.9; elbow = -0.4; lean = 0; bob = 0; }
   }
-  if (s.sit) { set(rig.legL, -1.45, 0, 0); set(rig.legR, -1.45, 0, 0); set(rig.kneeL, 1.4); set(rig.kneeR, 1.4); legA = null; }
-  if (legA !== null) {
-    set(rig.legL, legA, 0, 0); set(rig.legR, -legA, 0, 0);
-    set(rig.kneeL, kneeL); set(rig.kneeR, kneeR);
+  if (s.swim) swimPose(rig, s, sp, set);
+  else {
+    if (s.sit) { set(rig.legL, -1.45, 0, 0); set(rig.legR, -1.45, 0, 0); set(rig.kneeL, 1.4); set(rig.kneeR, 1.4); legA = null; }
+    if (legA !== null) {
+      set(rig.legL, legA, 0, 0); set(rig.legR, -legA, 0, 0);
+      set(rig.kneeL, kneeL); set(rig.kneeR, kneeR);
+    }
+    set(rig.armL, -armA, 0, -armZ); set(rig.armR, armA, 0, armZ);
+    set(rig.elbowL, elbow); set(rig.elbowR, elbow);
+    // idle breathing
+    const breathe = Math.sin(performance.now() / 700 + rig.phase * 0.01) * 0.012 * (1 - walk);
+    rig.hips.position.y = rig.S.leg + bob + breathe * 0.5 - (s.sit ? rig.S.leg * 0.5 : 0);
+    set(rig.spine, lean + breathe);
+    if (s.lookYaw === undefined) set(rig.neck, 0, 0, 0);
   }
-  set(rig.armL, -armA, 0, -armZ); set(rig.armR, armA, 0, armZ);
-  set(rig.elbowL, elbow); set(rig.elbowR, elbow);
-  // idle breathing
-  const breathe = Math.sin(performance.now() / 700 + rig.phase * 0.01) * 0.012 * (1 - walk);
-  rig.hips.position.y = rig.S.leg + bob + breathe * 0.5 - (s.sit ? rig.S.leg * 0.5 : 0);
-  set(rig.spine, lean + breathe);
   // waving: right arm up and swinging
   if (s.wave) { rig.armR.rotation.z = 2.6 + Math.sin(performance.now() / 120) * 0.3; rig.armR.rotation.x = 0; rig.elbowR.rotation.x = -0.4; }
   if (s.point) { rig.armR.rotation.x = -1.5; rig.armR.rotation.z = 0.1; rig.elbowR.rotation.x = 0; }
@@ -182,6 +186,23 @@ export function animatePerson(rig, s) {
   for (const e of rig.eyes) e.scale.y = closed ? 0.08 : 1;
   // head: look direction
   if (s.lookYaw !== undefined) set(rig.neck, s.lookPitch || 0, s.lookYaw, 0);
+}
+
+// swimming: lying along the water with a flutter kick and breaststroke arms, head up to see
+// ahead; when he's hardly moving he treads water upright, arms sculling and legs cycling
+function swimPose(rig, s, sp, set) {
+  const mv = Math.min(1, sp / 2.5), q = rig.phase * 0.5, vy = s.vy || 0;
+  const flat = (1.3 + (vy < -1 ? 0.3 : vy > 1 ? -0.3 : 0)) * mv;
+  set(rig.spine, flat);
+  set(rig.neck, -flat * 0.75, 0, 0);
+  const kick = Math.sin(rig.phase * 1.1) * 0.35, tread = Math.sin(q) * 0.5 * (1 - mv);
+  set(rig.legL, flat + kick * mv + tread, 0, 0); set(rig.legR, flat - kick * mv - tread, 0, 0);
+  set(rig.kneeL, 0.25 * mv + (0.6 + Math.sin(q) * 0.4) * (1 - mv)); set(rig.kneeR, 0.25 * mv + (0.6 - Math.sin(q) * 0.4) * (1 - mv));
+  const sw = Math.cos(q), out = Math.max(0, Math.sin(q));
+  const ax = mv * (-1.9 - 1.1 * sw) + (1 - mv) * (-0.4 + Math.sin(q) * 0.35), az = mv * (0.15 + out) + (1 - mv) * (1.1 + Math.sin(q * 2) * 0.15);
+  set(rig.armL, ax, 0, -az); set(rig.armR, ax, 0, az);
+  set(rig.elbowL, -0.3 - out * 0.5 * mv); set(rig.elbowR, -0.3 - out * 0.5 * mv);
+  rig.hips.position.y = rig.S.leg;
 }
 
 // a space suit for the orbit and the Moon: a bubble helmet and a jetpack

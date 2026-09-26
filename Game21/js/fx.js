@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { TEX } from "./tex.js";
 
 const MAX = 1500;
+const BUBBLE = new THREE.Color(0.75, 0.92, 1).multiplyScalar(1.3);
 export class FX {
   constructor(scene) {
     this.scene = scene;
@@ -15,7 +16,7 @@ export class FX {
     const mat = new THREE.ShaderMaterial({
       uniforms: { map: { value: TEX.glow() }, scale: { value: 400 } },
       vertexShader: `attribute float size; attribute vec3 color; varying vec3 vC; uniform float scale;
-        void main(){ vC = color; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = size * scale / -mv.z; gl_Position = projectionMatrix * mv; }`,
+        void main(){ vC = color; vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = min(size * scale / -mv.z, 48.0); gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform sampler2D map; varying vec3 vC; void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(vC * t.a, t.a); }`,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     });
@@ -31,6 +32,10 @@ export class FX {
       this.p.push({ x, y, z, vx: r * Math.cos(a) * sp, vy: u * sp + (o.up ?? 1.5), vz: r * Math.sin(a) * sp, life: (o.life ?? 0.7) * (0.6 + Math.random() * 0.6), age: 0, size: (o.size ?? 0.35) * (0.6 + Math.random() * 0.7), c, g: o.gravity ?? -6, drag: o.drag ?? 1.5 });
     }
   }
+  // a bubble that wobbles up and pops at the surface (ceil)
+  bubble(x, y, z, ceil = Infinity, n = 1) {
+    for (let i = 0; i < n && this.p.length < MAX; i++) this.p.push({ x: x + (Math.random() - 0.5) * 0.12, y, z: z + (Math.random() - 0.5) * 0.12, vx: (Math.random() - 0.5) * 0.3, vy: 0.5 + Math.random() * 0.5, vz: (Math.random() - 0.5) * 0.3, life: 3, age: 0, size: 0.07 + Math.random() * 0.1, c: BUBBLE, g: 1.2, drag: 1.4, ceil, wob: Math.random() * 6 });
+  }
   puff(x, y, z, color = 0xc8c0b0, n = 10) { this.burst(x, y, z, color, n, { bright: 0.5, speed: 1.6, up: 0.6, life: 0.6, size: 0.5, gravity: 0.5, drag: 3 }); }
   trail(x, y, z, color, size = 0.25) { if (this.p.length < MAX) this.p.push({ x, y, z, vx: 0, vy: 0.2, vz: 0, life: 0.35, age: 0, size, c: new THREE.Color(color).multiplyScalar(2.5), g: 0, drag: 0 }); }
   ring(x, y, z, color = 0x7fe3ff, r = 2) {
@@ -45,6 +50,7 @@ export class FX {
       if (q.age >= q.life) { this.p.splice(i, 1); continue; }
       q.vy += q.g * dt; const d = Math.exp(-q.drag * dt); q.vx *= d; q.vy *= d; q.vz *= d;
       q.x += q.vx * dt; q.y += q.vy * dt; q.z += q.vz * dt;
+      if (q.ceil !== undefined) { if (q.y > q.ceil) { this.p.splice(i, 1); continue; } q.x += Math.sin(q.age * 9 + q.wob) * 0.004; }
     }
     for (const q of this.p) {
       const k = 1 - q.age / q.life;

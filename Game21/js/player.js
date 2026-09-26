@@ -26,11 +26,14 @@ export class Player {
     this.coyote = 0; this.buffer = 0; this.jumps = 0;
     this.speed = 0;
     this.maxSpeed = 5.6;
+    this.swimSpeed = 3.4;
     this.frozen = false;
     this.camPos = new THREE.Vector3(); this.camLook = new THREE.Vector3();
     this.lastSafe = new THREE.Vector3(x, y, z);
     this.gravityScale = 1;
     this.spawn = new THREE.Vector3(x, y, z);
+    this.swimming = false; this.headUnder = false;
+    this.airMax = world.airMax ?? 40; this.air = this.airMax;
   }
   get pos() { return this.walker.pos; }
   suit(on) { spaceSuit(this.rig, on); this.suited = on; }
@@ -49,8 +52,8 @@ export class Player {
       mz = input.my * fz + input.mx * fx;
     }
     const mag = Math.min(1, Math.hypot(mx, mz));
-    const target = this.maxSpeed * (input.boostHeld ? 1.35 : 1) * mag;
-    const accel = w.grounded ? 30 : 12;
+    const target = (this.swimming ? this.swimSpeed : this.maxSpeed) * (input.boostHeld ? 1.35 : 1) * mag;
+    const accel = this.swimming ? 8 : w.grounded ? 30 : 12;
     // horizontal velocity eases toward the stick
     const tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
     const k = Math.min(1, accel * dt / Math.max(1, this.maxSpeed));
@@ -61,39 +64,51 @@ export class Player {
       let d = want - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
       this.yaw += d * Math.min(1, dt * 12);
     }
-    // gravity: low-gravity bubbles
-    let gs = 1, floating = false;
-    for (const z of this.world.zones) {
-      const d = Math.hypot(w.pos.x - z.x, w.pos.y + 0.7 - z.y, w.pos.z - z.z);
-      if (d < z.r) { gs = Math.min(gs, z.g); floating = true; }
-    }
-    this.gravityScale = gs;
-    // spacewalks: hold JUMP to fire the jetpack, let go to drift slowly down
-    if (this.world.jetpack) {
-      gs *= 0.12; floating = true;
-      if (input.jumpHeld && !this.frozen) { w.vel.y = Math.min(5, w.vel.y + 16 * dt); w.grounded = false; this.jetting = true; if (this.onJet) this.onJet(dt); } else this.jetting = false;
-    }
-    // jumping, with a little grace before and after the ledge
-    if (w.grounded) { this.coyote = 0.12; this.jumps = 0; } else this.coyote -= dt;
-    if (input.takeJump() && !this.frozen) this.buffer = 0.14; else this.buffer -= dt;
-    let jumped = false;
-    if (this.buffer > 0 && !this.world.jetpack && (this.coyote > 0 || (floating && this.jumps < 3))) {
-      w.vel.y = floating ? 5.5 : 8.6; this.buffer = 0; this.coyote = 0; this.jumps++; jumped = true; w.grounded = false;
-      if (this.onJump) this.onJump();
-    }
-    // a little extra float while the button is held on the way up
-    const hold = input.jumpHeld && w.vel.y > 0 ? 0.62 : 1;
-    // bounce pads
-    for (const p of this.world.pads) {
-      if (Math.hypot(w.pos.x - p.x, w.pos.z - p.z) < p.r && Math.abs(w.pos.y - p.y) < 0.35 && w.vel.y <= 0.5) {
-        w.vel.y = p.power; w.grounded = false; p.t = 0.4; jumped = true; if (this.onPad) this.onPad(p);
+    // in the sea: chest-deep water floats Rory (see swim())
+    const sea = this.world.sea;
+    if (sea) {
+      const L = sea.height(w.pos.x, w.pos.z), depth = L - w.pos.y;
+      this.surfaceY = L;
+      this.swimming = this.swimming ? depth > 0.85 : depth > 1.05 && !(w.grounded && depth < 1.2);
+      this.headUnder = L > w.pos.y + (this.swimming ? 1.25 : 1.2);
+    } else { this.swimming = false; this.headUnder = false; }
+    let floating = false, jumped = false;
+    if (this.swimming) { this.swim(dt, input, mag); w.move(dt, 0); }
+    else {
+      // gravity: low-gravity bubbles
+      let gs = 1;
+      for (const z of this.world.zones) {
+        const d = Math.hypot(w.pos.x - z.x, w.pos.y + 0.7 - z.y, w.pos.z - z.z);
+        if (d < z.r) { gs = Math.min(gs, z.g); floating = true; }
       }
+      this.gravityScale = gs;
+      // spacewalks: hold JUMP to fire the jetpack, let go to drift slowly down
+      if (this.world.jetpack) {
+        gs *= 0.12; floating = true;
+        if (input.jumpHeld && !this.frozen) { w.vel.y = Math.min(5, w.vel.y + 16 * dt); w.grounded = false; this.jetting = true; if (this.onJet) this.onJet(dt); } else this.jetting = false;
+      }
+      // jumping, with a little grace before and after the ledge
+      if (w.grounded) { this.coyote = 0.12; this.jumps = 0; } else this.coyote -= dt;
+      if (input.takeJump() && !this.frozen) this.buffer = 0.14; else this.buffer -= dt;
+      if (this.buffer > 0 && !this.world.jetpack && (this.coyote > 0 || (floating && this.jumps < 3))) {
+        w.vel.y = floating ? 5.5 : 8.6; this.buffer = 0; this.coyote = 0; this.jumps++; jumped = true; w.grounded = false;
+        if (this.onJump) this.onJump();
+      }
+      // a little extra float while the button is held on the way up
+      const hold = input.jumpHeld && w.vel.y > 0 ? 0.62 : 1;
+      // bounce pads
+      for (const p of this.world.pads) {
+        if (Math.hypot(w.pos.x - p.x, w.pos.z - p.z) < p.r && Math.abs(w.pos.y - p.y) < 0.35 && w.vel.y <= 0.5) {
+          w.vel.y = p.power; w.grounded = false; p.t = 0.4; jumped = true; if (this.onPad) this.onPad(p);
+        }
+      }
+      w.move(dt, gs * hold);
     }
-    w.move(dt, gs * hold);
     if (w.justLanded && this.onLand) this.onLand(-w.vel.y);
     // fell off the world: back to the last safe ground
     // remember the last firm ground: only ground that can't move away (never a ferry deck or a cable car)
-    if (w.grounded && w.onMover === null) {
+    this.breathe(dt);
+    if (w.grounded && w.onMover === null && !this.headUnder && !this.swimming) {
       const h = this.world.phys.rayHit({ x: w.pos.x, y: w.pos.y + 0.3, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 1.0, w.col);
       const body = h && h.collider.parent();
       if (h && (!body || body.isFixed())) this.lastSafe.copy(w.pos);
@@ -104,13 +119,43 @@ export class Player {
     this.obj.rotation.y = this.yaw;
     this.speed = Math.hypot(w.vel.x, w.vel.z);
     if (this.rig.suit) for (const f of this.rig.suit.flames) { f.visible = !!this.jetting; if (this.jetting) f.scale.y = 0.8 + Math.random() * 0.6; }
-    animatePerson(this.rig, { dt, speed: this.speed, grounded: w.grounded, vy: w.vel.y, float: floating && !w.grounded, talk: this.talking, wave: this.waving });
+    animatePerson(this.rig, { dt, speed: this.speed, grounded: w.grounded, vy: w.vel.y, float: floating && !w.grounded && !this.swimming, talk: this.talking, wave: this.waving, swim: this.swimming });
+    // swimming along he lies flat in the water with his head up at the surface
+    this.swimLift = THREE.MathUtils.lerp(this.swimLift || 0, this.swimming ? 0.25 + Math.min(1, this.speed / 3) * 0.2 : 0, Math.min(1, dt * 5));
+    this.obj.position.y += this.swimLift;
     // blob shadow on whatever is below
     const below = this.world.phys.ray({ x: w.pos.x, y: w.pos.y + 0.5, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 30, w.col);
     if (below !== null) { this.blob.visible = true; this.blob.position.set(w.pos.x, w.pos.y + 0.5 - below + 0.02, w.pos.z); const h = below - 0.5; this.blob.material.opacity = 0.3 * Math.max(0, 1 - h / 8); this.blob.scale.setScalar(1 + h * 0.05); }
     else this.blob.visible = false;
     this.updateCamera(dt, camera, mag);
     return jumped;
+  }
+  // swimming: JUMP swims up (and at the surface, hops out onto a ledge), DIVE swims down, and
+  // otherwise he floats at the surface or hangs where he is under it
+  swim(dt, input, mag) {
+    const w = this.walker, L = this.surfaceY, atTop = L - w.pos.y < 1.25;
+    const jump = input.takeJump() && !this.frozen;
+    this.buffer = 0; this.coyote = 0;
+    let vy;
+    if (atTop && jump && !input.diveHeld) { w.vel.y = 7.2; this.swimming = false; if (this.onJump) this.onJump(); return; }
+    if (input.diveHeld && !this.frozen) vy = -3;
+    else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
+    else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
+    w.vel.y += (vy - w.vel.y) * Math.min(1, dt * 4);
+    w.grounded = false;
+    void mag;
+  }
+  // the air meter: it runs down with his head under water and fills up at the surface or in a
+  // stream of bubbles; running out takes him back to the last dry ground
+  breathe(dt) {
+    const w = this.walker, p = w.pos;
+    let bubbles = false;
+    for (const b of this.world.airVents || []) if (Math.hypot(p.x - b.x, p.z - b.z) < b.r && p.y > b.y - 1 && p.y < b.y + b.h) bubbles = true;
+    if (!this.headUnder || bubbles) this.air = Math.min(this.airMax, this.air + dt * (bubbles ? 12 : 25));
+    else this.air -= dt;
+    if (this.air <= 0) { this.air = this.airMax; const s = this.lastSafe; this.teleport(s.x, s.y + 0.3, s.z); if (this.onOutOfAir) this.onOutOfAir(); }
+    // a trail of bubbles from his helmet
+    if (this.headUnder && this.world.fx && Math.random() < dt * 4) this.world.fx.bubble(p.x, p.y + 1.25 + (this.swimLift || 0), p.z, this.surfaceY, 2);
   }
   updateCamera(dt, camera, moving) {
     const p = this.walker.pos;
