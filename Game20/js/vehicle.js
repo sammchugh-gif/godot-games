@@ -85,7 +85,8 @@ export class Car {
     for (let i = 0; i < 4; i++) {
       const w = this.wheels[i];
       vc.setWheelSteering(i, w.front ? this.steer : 0);
-      vc.setWheelEngineForce(i, w.front ? 0 : force);
+      // four-wheel drive (the moon buggy) has the grip to climb out of craters
+      vc.setWheelEngineForce(i, this.L.awd ? force * 0.6 : w.front ? 0 : force);
       vc.setWheelBrake(i, brake + (throttle === 0 ? 4 : 0));
     }
     vc.updateVehicle(dt);
