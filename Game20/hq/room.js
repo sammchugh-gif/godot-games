@@ -445,6 +445,7 @@ async function boot() {
   G.bolt = new Robot("bolt", 1.0); G.bolt.root.position.set(x + 1.6, 0, z + 0.5); w.scene.add(G.bolt.root);
   G.people = {};
   for (const who of ["frost", "pip"]) { const at = room[who]; const rig = makePerson(CHARS[who].look); rig.root.position.set(at[0], at[1], at[2]); rig.root.rotation.y = at[3]; w.scene.add(rig.root); phys.fixedCyl(at[0], 0.8, at[2], 0.35, 0.8); G.people[who] = rig; }
+  Speech.dir = "../agent-rory-zero-gravity/voice/"; // HQ's lines are recorded with Zero Gravity's
   Speech.init(); Speech.enabled = localStorage.getItem("rory20.voice") !== "false";
   G.portraits = new Portraits(engine.renderer, CHARS);
   paintFaces(room.posters);

@@ -1,0 +1,98 @@
+{
+ "_default": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "rory": {
+  "voice": "bf_lily:0.7,bm_fable:0.3",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.15
+ },
+ "frost": {
+  "voice": "bm_george",
+  "lang": "en-gb",
+  "speed": 0.85,
+  "pitch": 0.94
+ },
+ "pip": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 1.08
+ },
+ "bolt": {
+  "voice": "am_puck",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.18
+ },
+ "zero": {
+  "voice": "bm_fable:0.6,bm_george:0.4",
+  "lang": "en-gb",
+  "speed": 0.85,
+  "pitch": 0.92
+ },
+ "floater": {
+  "voice": "am_onyx",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.85
+ },
+ "yuki": {
+  "voice": "jf_alpha:0.5,af_bella:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "amira": {
+  "voice": "hf_alpha",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "jack": {
+  "voice": "bm_lewis:0.5,am_puck:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "lucas": {
+  "voice": "pm_alex",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.08
+ },
+ "marcus": {
+  "voice": "am_michael",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "wanjiru": {
+  "voice": "af_kore",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "mei": {
+  "voice": "zf_xiaoxiao:0.5,af_nicole:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "arjun": {
+  "voice": "hm_psi",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "hale": {
+  "voice": "af_heart",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.96
+ }
+}

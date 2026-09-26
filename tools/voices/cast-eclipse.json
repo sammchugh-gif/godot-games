@@ -1,0 +1,194 @@
+{
+ "_default": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "rory": {
+  "voice": "bf_lily:0.7,bm_fable:0.3",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.15
+ },
+ "watch": {
+  "voice": "bf_alice",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "hale": {
+  "voice": "bf_isabella",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 0.94
+ },
+ "vi": {
+  "voice": "bf_emma:0.6,bf_isabella:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "eclipse": {
+  "voice": "ff_siwis",
+  "lang": "en-us",
+  "speed": 0.85,
+  "pitch": 0.92
+ },
+ "kolya": {
+  "voice": "am_onyx:0.6,bm_george:0.4",
+  "lang": "en-us",
+  "speed": 0.85,
+  "pitch": 0.9
+ },
+ "dave": {
+  "voice": "bm_daniel",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "lorenzo": {
+  "voice": "im_nicola",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "nadia": {
+  "voice": "hf_beta",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "yuki": {
+  "voice": "jf_alpha:0.4,af_bella:0.6",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "sal": {
+  "voice": "am_michael",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.96
+ },
+ "tiago": {
+  "voice": "pm_alex",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "natasha": {
+  "voice": "af_nova:0.5,bf_isabella:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "nigel": {
+  "voice": "bm_lewis",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "chairman": {
+  "voice": "bm_george:0.5,am_fenrir:0.5",
+  "lang": "en-us",
+  "speed": 0.82,
+  "pitch": 0.88
+ },
+ "colette": {
+  "voice": "ff_siwis:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "jeanluc": {
+  "voice": "im_nicola:0.5,pm_santa:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "amani": {
+  "voice": "am_fenrir",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 0.98
+ },
+ "priya": {
+  "voice": "hf_alpha",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "mei": {
+  "voice": "zf_xiaoxiao:0.5,af_nicole:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "matilda": {
+  "voice": "af_aoede",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "diego": {
+  "voice": "em_alex",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "klaus": {
+  "voice": "bm_daniel:0.5,am_onyx:0.5",
+  "lang": "en-us",
+  "speed": 0.88,
+  "pitch": 0.95
+ },
+ "curator": {
+  "voice": "bm_george",
+  "lang": "en-gb",
+  "speed": 0.82,
+  "pitch": 0.9
+ },
+ "emre": {
+  "voice": "am_eric",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "yasmin": {
+  "voice": "ff_siwis:0.5,hf_beta:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "sigrun": {
+  "voice": "bf_isabella",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "weilin": {
+  "voice": "zf_xiaoyi:0.5,af_sarah:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "mateo": {
+  "voice": "em_alex:0.5,am_echo:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.97
+ },
+ "femke": {
+  "voice": "af_river:0.5,bf_emma:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "okafor": {
+  "voice": "am_echo",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 0.95
+ }
+}

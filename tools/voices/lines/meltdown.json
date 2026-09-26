@@ -1,0 +1,5462 @@
+[
+ {
+  "key": "019rebw",
+  "who": "frost",
+  "text": "Agent Rory. Welcome aboard the Narwhal. Sit down. Have some cocoa.",
+  "from": "story"
+ },
+ {
+  "key": "1lww1hk",
+  "who": "frost",
+  "text": "Greenland's glaciers are melting from underneath. In winter. Somebody is drilling for heat.",
+  "from": "story"
+ },
+ {
+  "key": "1nmsfle",
+  "who": "frost",
+  "text": "The drill had a flame on it. Kaldera Heating. 'Keeping the world toasty since 1896'.",
+  "from": "story"
+ },
+ {
+  "key": "0toz33j",
+  "who": "frost",
+  "text": "It belongs to Baron Magnus Kaldera. He lives inside a volcano. Of course he does.",
+  "from": "story"
+ },
+ {
+  "key": "0efoikj",
+  "who": "pip",
+  "text": "The drill parts came from a shipyard in Norway. That's where we start.",
+  "from": "story"
+ },
+ {
+  "key": "0ua66ai",
+  "who": "frost",
+  "text": "Find out what the Baron is up to, Agent. And Rory... be careful.",
+  "from": "story"
+ },
+ {
+  "key": "0i7dijy",
+  "who": "cinder",
+  "text": "I'm so sorry. I only wanted to build a nice big heater!",
+  "from": "story"
+ },
+ {
+  "key": "019inow",
+  "who": "cinder",
+  "text": "The Baron calls them Inferno Engines. Six of them. They drill down and pour volcano heat under the ice.",
+  "from": "story"
+ },
+ {
+  "key": "0jjjw49",
+  "who": "frost",
+  "text": "Under Antarctica?",
+  "from": "story"
+ },
+ {
+  "key": "0732pqg",
+  "who": "cinder",
+  "text": "Yes. Fire all six, and the ice melts in a week. The seas rise sixty metres.",
+  "from": "story"
+ },
+ {
+  "key": "03l3lll",
+  "who": "cinder",
+  "text": "Unless the world pays him one trillion dollars to switch them off.",
+  "from": "story"
+ },
+ {
+  "key": "1i7lwzm",
+  "who": "frost",
+  "text": "Then we stop them being built. Well done, Agent Rory. Act One is yours.",
+  "from": "story"
+ },
+ {
+  "key": "13hwytc",
+  "who": "frost",
+  "text": "Agent Rory. The Baron is building his engines in pieces, all over the world.",
+  "from": "story"
+ },
+ {
+  "key": "0ij3aal",
+  "who": "frost",
+  "text": "Money in Dubai. Guidance in the Atacama Desert. Magma cores from a volcano in Java.",
+  "from": "story"
+ },
+ {
+  "key": "05kkxhe",
+  "who": "frost",
+  "text": "Control chips in Seoul. A test on a glacier in the Himalaya. And ships in Cape Town.",
+  "from": "story"
+ },
+ {
+  "key": "0tnsq6o",
+  "who": "pip",
+  "text": "Break enough pieces and the engines won't work. Or at least, not very well.",
+  "from": "story"
+ },
+ {
+  "key": "1y6oi92",
+  "who": "frost",
+  "text": "The Narwhal is at your service. Go.",
+  "from": "story"
+ },
+ {
+  "key": "0a5c5xx",
+  "who": "frost",
+  "text": "The engine ships have left Cape Town. They're heading south.",
+  "from": "story"
+ },
+ {
+  "key": "19ar5q2",
+  "who": "zara",
+  "text": "To Antarctica. Six engines, and the Baron with them.",
+  "from": "story"
+ },
+ {
+  "key": "1dyvio6",
+  "who": "frost",
+  "text": "We'll slow him down with every piece you broke, Rory. But it won't be enough.",
+  "from": "story"
+ },
+ {
+  "key": "0q6or3u",
+  "who": "frost",
+  "text": "The Narwhal sails south tonight. Act Two is yours, Agent.",
+  "from": "story"
+ },
+ {
+  "key": "0we0vxo",
+  "who": "frost",
+  "text": "Agent Rory. This is it. The engines are in Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "18y0ekb",
+  "who": "frost",
+  "text": "The Baron's last supplies come from New Zealand and Argentina. Stop them, then go south.",
+  "from": "story"
+ },
+ {
+  "key": "1f0a98v",
+  "who": "zara",
+  "text": "I'll meet you on the ice. Bring a warm hat.",
+  "from": "story"
+ },
+ {
+  "key": "0hpgtt9",
+  "who": "pip",
+  "text": "And I'm bringing the mini-sub! In person! I'm very excited.",
+  "from": "story"
+ },
+ {
+  "key": "17ycv72",
+  "who": "frost",
+  "text": "Save the ice, Agent. And the penguins.",
+  "from": "story"
+ },
+ {
+  "key": "15nrdpe",
+  "who": "frost",
+  "text": "The engines are off. The ice is freezing again.",
+  "from": "story"
+ },
+ {
+  "key": "02w6k3n",
+  "who": "zara",
+  "text": "And the Baron is sitting in a snowdrift, being told off by a penguin.",
+  "from": "story"
+ },
+ {
+  "key": "0spx3s9",
+  "who": "bruno",
+  "text": "I am staying here. Dr Ellie says I can be a penguin keeper.",
+  "from": "story"
+ },
+ {
+  "key": "1ghjmia",
+  "who": "pip",
+  "text": "I made you something, Rory. A gadget. It's a cup of cocoa. It's just cocoa.",
+  "from": "story"
+ },
+ {
+  "key": "1dqe7wp",
+  "who": "frost",
+  "text": "Agent Rory. For saving the ice at the bottom of the world, POLARIS awards you the Order of the Narwhal.",
+  "from": "story"
+ },
+ {
+  "key": "1umfcf5",
+  "who": "frost",
+  "text": "Well done, Agent. Mission complete.",
+  "from": "story"
+ },
+ {
+  "key": "0ckepib",
+  "who": "nuka",
+  "text": "The rig is out past the floes. The ice keeps breaking into pieces and drifting.",
+  "from": "story"
+ },
+ {
+  "key": "08n5ujh",
+  "who": "pip",
+  "text": "Hop from floe to floe. Tap or swipe to jump, and ride them, but don't ride off the edge!",
+  "from": "story"
+ },
+ {
+  "key": "1f90fzh",
+  "who": "rory",
+  "text": "Made it across. And the water under the floes is warm!",
+  "from": "story"
+ },
+ {
+  "key": "1plwla7",
+  "who": "pip",
+  "text": "This research hut froze solid overnight. The floor is pure ice.",
+  "from": "story"
+ },
+ {
+  "key": "0blcnie",
+  "who": "pip",
+  "text": "You'll slide until something stops you. Use the rocks to steer and slide out through the gap.",
+  "from": "story"
+ },
+ {
+  "key": "03a23am",
+  "who": "rory",
+  "text": "Found the scientist's notebook. The last page just says: THE HEAT IS COMING FROM BELOW.",
+  "from": "story"
+ },
+ {
+  "key": "11pxczt",
+  "who": "pip",
+  "text": "I've built a drone the size of a sandwich. Let's fly it into that rig through the air vents.",
+  "from": "story"
+ },
+ {
+  "key": "10wv7c9",
+  "who": "pip",
+  "text": "Hold the screen to fly up, let go to drop. Squeeze through the gaps!",
+  "from": "story"
+ },
+ {
+  "key": "1fidmye",
+  "who": "pip",
+  "text": "Look at the camera. A giant drill, glowing orange, boring straight down through the ice.",
+  "from": "story"
+ },
+ {
+  "key": "1p845xy",
+  "who": "rory",
+  "text": "And there's a logo on it. A flame in a circle.",
+  "from": "story"
+ },
+ {
+  "key": "0bvzcjl",
+  "who": "nuka",
+  "text": "I saw the man who drove the rig's snowcat away. I'll tell you what I remember.",
+  "from": "story"
+ },
+ {
+  "key": "0i0tyrm",
+  "who": "pip",
+  "text": "Build his face from Nuka's clues, then show it to Nuka.",
+  "from": "story"
+ },
+ {
+  "key": "1ytzey3",
+  "who": "nuka",
+  "text": "That's him! Big as a bear. And he had a penguin sticking out of his coat.",
+  "from": "story"
+ },
+ {
+  "key": "0l1aixs",
+  "who": "pip",
+  "text": "Uh oh. The drill's going deeper. The whole fjord is starting to crack!",
+  "from": "story"
+ },
+ {
+  "key": "0787bu7",
+  "who": "nuka",
+  "text": "Take the POLARIS snowmobile. Go, go, go!",
+  "from": "story"
+ },
+ {
+  "key": "0xsxsur",
+  "who": "pip",
+  "text": "Drag to steer. BOOST when the crack gets close!",
+  "from": "story"
+ },
+ {
+  "key": "18hnef3",
+  "who": "rory",
+  "text": "Phew! Made it off the ice just in time.",
+  "from": "story"
+ },
+ {
+  "key": "0a0adpj",
+  "who": "pip",
+  "text": "Admiral Frost is sending the Narwhal to pick you up. You'll want to see this, Rory.",
+  "from": "story"
+ },
+ {
+  "key": "0wims03",
+  "who": "lars",
+  "text": "The shipyard's quay is covered in security cameras. They turn and turn.",
+  "from": "story"
+ },
+ {
+  "key": "0l9b6mq",
+  "who": "pip",
+  "text": "Flick paint pellets at them. The pellets take time to fly, so aim ahead of the camera!",
+  "from": "story"
+ },
+ {
+  "key": "0pzx1aa",
+  "who": "rory",
+  "text": "All painted. They can't see a thing.",
+  "from": "story"
+ },
+ {
+  "key": "1t2vn3f",
+  "who": "pip",
+  "text": "The gatehouse panel controls the lights. Every switch flips itself and its neighbours.",
+  "from": "story"
+ },
+ {
+  "key": "1pnemqk",
+  "who": "pip",
+  "text": "Turn every light off and the gatehouse goes dark. Then we slip in.",
+  "from": "story"
+ },
+ {
+  "key": "0enf3fe",
+  "who": "lars",
+  "text": "Lights out! Olaf, stop squawking, you'll give us away!",
+  "from": "story"
+ },
+ {
+  "key": "0ogoq0l",
+  "who": "lars",
+  "text": "The big crane is loading crates onto the tender. Some have the flame on them.",
+  "from": "story"
+ },
+ {
+  "key": "06l5lbv",
+  "who": "pip",
+  "text": "Drop the claw on the flame crates only. Leave our POLARIS supplies alone.",
+  "from": "story"
+ },
+ {
+  "key": "0kpuzsd",
+  "who": "rory",
+  "text": "Got them. They're full of drill parts. Still warm!",
+  "from": "story"
+ },
+ {
+  "key": "0ep3pvv",
+  "who": "pip",
+  "text": "Your spy car is stuck in the lorry yard. The lorries are blocking the gate.",
+  "from": "story"
+ },
+ {
+  "key": "0fg5kxd",
+  "who": "pip",
+  "text": "Slide the lorries and cars along their lanes. Get the orange car out!",
+  "from": "story"
+ },
+ {
+  "key": "08gnntc",
+  "who": "rory",
+  "text": "I'm out! And every lorry here is heading for the tender.",
+  "from": "story"
+ },
+ {
+  "key": "1n47z9w",
+  "who": "lars",
+  "text": "The tender's casting off! She's heading down the fjord!",
+  "from": "story"
+ },
+ {
+  "key": "0wj3sya",
+  "who": "pip",
+  "text": "Catch it in Lars's speedboat. BOOST to catch up, then TAG it with a tracking dart!",
+  "from": "story"
+ },
+ {
+  "key": "1f6pxn5",
+  "who": "pip",
+  "text": "Tagged! And look what fell out of the wheelhouse: an invitation with gold letters.",
+  "from": "story"
+ },
+ {
+  "key": "1e988zh",
+  "who": "luca",
+  "text": "The Baron is on the casino floor, talking to his guests. We need to get close.",
+  "from": "story"
+ },
+ {
+  "key": "10v3yq6",
+  "who": "pip",
+  "text": "Hold to sneak forward. When the guard turns round, let go and freeze like a waiter!",
+  "from": "story"
+ },
+ {
+  "key": "0xwc8u9",
+  "who": "rory",
+  "text": "I heard him. He said: 'Soon the whole world will pay me to switch it off.'",
+  "from": "story"
+ },
+ {
+  "key": "1fx7x3e",
+  "who": "luca",
+  "text": "One of the Baron's henchmen is on the terrace in disguise. He has the Baron's plans.",
+  "from": "story"
+ },
+ {
+  "key": "1n1kez0",
+  "who": "pip",
+  "text": "Read the clues and tap the henchman. Don't tap the tourists!",
+  "from": "story"
+ },
+ {
+  "key": "1umjiex",
+  "who": "rory",
+  "text": "Got him. And his briefcase has two words on it: PROJECT MELTDOWN.",
+  "from": "story"
+ },
+ {
+  "key": "09onhca",
+  "who": "pip",
+  "text": "The Baron's yacht has a computer in the office. We need to power it up without anyone noticing.",
+  "from": "story"
+ },
+ {
+  "key": "09dj9sl",
+  "who": "pip",
+  "text": "Join each pair of sockets with a cable. Cables can't cross, and every square must be filled.",
+  "from": "story"
+ },
+ {
+  "key": "1ddvy4a",
+  "who": "pip",
+  "text": "It's on! A map of the world with six red dots... and one of them is at the South Pole.",
+  "from": "story"
+ },
+ {
+  "key": "0j31s27",
+  "who": "luca",
+  "text": "Uh oh. The henchmen know you're here. They're on the ballroom balconies!",
+  "from": "story"
+ },
+ {
+  "key": "11epaif",
+  "who": "pip",
+  "text": "Tag the henchmen in red with paint before they raise the alarm. Not the guests!",
+  "from": "story"
+ },
+ {
+  "key": "0bcvkm0",
+  "who": "rory",
+  "text": "That's all of them. Now where's Scorch?",
+  "from": "story"
+ },
+ {
+  "key": "1rn9wtd",
+  "who": "luca",
+  "text": "Scorch is in the pit lane! She's taking the Baron's race car round the circuit!",
+  "from": "story"
+ },
+ {
+  "key": "0dmcd08",
+  "who": "pip",
+  "text": "Catch her in the POLARIS car. Close the gap, then TAG!",
+  "from": "story"
+ },
+ {
+  "key": "12js9zg",
+  "who": "rory",
+  "text": "Tagged! But she got away. She dropped this: a train ticket to Barcelona.",
+  "from": "story"
+ },
+ {
+  "key": "07gc51u",
+  "who": "ines",
+  "text": "Scorch's van is stuck in the narrow streets. So is our car!",
+  "from": "story"
+ },
+ {
+  "key": "16stoe5",
+  "who": "pip",
+  "text": "Slide the cars out of the way and get the spy car through.",
+  "from": "story"
+ },
+ {
+  "key": "01zeh6c",
+  "who": "rory",
+  "text": "Through! The van went into the park.",
+  "from": "story"
+ },
+ {
+  "key": "05ce483",
+  "who": "pip",
+  "text": "The park has cameras hidden in the mosaics. Kaldera's cameras.",
+  "from": "story"
+ },
+ {
+  "key": "1nxu5pj",
+  "who": "pip",
+  "text": "Paint them. Aim where they're going to be, not where they are!",
+  "from": "story"
+ },
+ {
+  "key": "0zaymu8",
+  "who": "ines",
+  "text": "Now nobody can see us. This way!",
+  "from": "story"
+ },
+ {
+  "key": "0264pax",
+  "who": "ines",
+  "text": "Scorch ran into the market hall. The fish floor is solid ice!",
+  "from": "story"
+ },
+ {
+  "key": "057q98p",
+  "who": "pip",
+  "text": "You'll slide until something stops you. Use the crates. Slide out through the gap!",
+  "from": "story"
+ },
+ {
+  "key": "1cvue2b",
+  "who": "rory",
+  "text": "Out! And she dropped something: the blueprint tube is empty. She's got them on her.",
+  "from": "story"
+ },
+ {
+  "key": "1ma5hx0",
+  "who": "ines",
+  "text": "She's on the rooftops! I can't follow her up there.",
+  "from": "story"
+ },
+ {
+  "key": "009fh17",
+  "who": "pip",
+  "text": "My drone can. Fly it between the chimneys. Hold to go up, let go to drop.",
+  "from": "story"
+ },
+ {
+  "key": "0orf5ba",
+  "who": "pip",
+  "text": "Got her on camera. She's heading down to her motorbike!",
+  "from": "story"
+ },
+ {
+  "key": "0h0s1zs",
+  "who": "ines",
+  "text": "Take my motorbike! Catch her!",
+  "from": "story"
+ },
+ {
+  "key": "0i7x23e",
+  "who": "pip",
+  "text": "Get close and TAG her. If she drops the blueprints, grab them!",
+  "from": "story"
+ },
+ {
+  "key": "1f1ui21",
+  "who": "rory",
+  "text": "Tagged! She dropped half the blueprints. INFERNO ENGINE... Test drill: Santorini.",
+  "from": "story"
+ },
+ {
+  "key": "130jb2e",
+  "who": "nikos",
+  "text": "My papa saw the man who borrowed his boat. Can you draw him?",
+  "from": "story"
+ },
+ {
+  "key": "1wg5frl",
+  "who": "pip",
+  "text": "Build the face from Papa's clues, then show him.",
+  "from": "story"
+ },
+ {
+  "key": "0d1gy7k",
+  "who": "nikos",
+  "text": "That's him! Papa says he kept saying sorry to the boat.",
+  "from": "story"
+ },
+ {
+  "key": "05ow40s",
+  "who": "pip",
+  "text": "The barge's crane is pulling samples out of the volcano. We need one.",
+  "from": "story"
+ },
+ {
+  "key": "0yrb9r0",
+  "who": "pip",
+  "text": "Drop the claw on the crates with the flame. The belt moves, so drop it early!",
+  "from": "story"
+ },
+ {
+  "key": "0d4uaqe",
+  "who": "rory",
+  "text": "Got one. It's a rock. And it's glowing.",
+  "from": "story"
+ },
+ {
+  "key": "1ae25qa",
+  "who": "pip",
+  "text": "The drill's control hut is on the cliff. Every switch flips its neighbours.",
+  "from": "story"
+ },
+ {
+  "key": "01omyn5",
+  "who": "pip",
+  "text": "Switch off all the heaters and the drill stops.",
+  "from": "story"
+ },
+ {
+  "key": "104ziac",
+  "who": "rory",
+  "text": "Switched off! But I think we were too late. Listen...",
+  "from": "story"
+ },
+ {
+  "key": "04he3r5",
+  "who": "nikos",
+  "text": "The nervous man is running away down the white steps! He's in a disguise!",
+  "from": "story"
+ },
+ {
+  "key": "04o4e1j",
+  "who": "pip",
+  "text": "Read the clues. Find him in the crowd.",
+  "from": "story"
+ },
+ {
+  "key": "1q706bw",
+  "who": "rory",
+  "text": "Found him! Oh no, he's jumped on a donkey. It's surprisingly fast.",
+  "from": "story"
+ },
+ {
+  "key": "13rtypp",
+  "who": "pip",
+  "text": "The drill's blown! A giant wave is coming across the lagoon!",
+  "from": "story"
+ },
+ {
+  "key": "166se0u",
+  "who": "nikos",
+  "text": "Take my jet ski! Outrun it!",
+  "from": "story"
+ },
+ {
+  "key": "1i2qaf3",
+  "who": "rory",
+  "text": "Whoa! That was the biggest wave I've ever seen.",
+  "from": "story"
+ },
+ {
+  "key": "0z0wleq",
+  "who": "pip",
+  "text": "Dr Cinder got away on the ferry. He's booked on a train in Canada.",
+  "from": "story"
+ },
+ {
+  "key": "0v6wao9",
+  "who": "mac",
+  "text": "Dr Cinder is hiding in the dining car. There's a guard watching the door.",
+  "from": "story"
+ },
+ {
+  "key": "1u55w3x",
+  "who": "pip",
+  "text": "Move while the guard looks away. Freeze when he turns. You're just a waiter with pancakes.",
+  "from": "story"
+ },
+ {
+  "key": "1iilqlm",
+  "who": "rory",
+  "text": "Found his seat. He left a napkin covered in sums. Six of something. Times one trillion.",
+  "from": "story"
+ },
+ {
+  "key": "11n906w",
+  "who": "pip",
+  "text": "The baggage car radio is broken. Fix it and we can call POLARIS.",
+  "from": "story"
+ },
+ {
+  "key": "007cxlr",
+  "who": "pip",
+  "text": "Join each pair of sockets. No crossing, and fill every square!",
+  "from": "story"
+ },
+ {
+  "key": "1xou5uo",
+  "who": "frost",
+  "text": "Frost here. Good work, Agent. The Narwhal is racing north to meet the train.",
+  "from": "story"
+ },
+ {
+  "key": "1vcnsny",
+  "who": "mac",
+  "text": "Henchmen! They're popping out of the sleeper carriage windows!",
+  "from": "story"
+ },
+ {
+  "key": "1nfdnrb",
+  "who": "pip",
+  "text": "Tag the ones in red. Not the passengers in pyjamas!",
+  "from": "story"
+ },
+ {
+  "key": "1ts7dui",
+  "who": "rory",
+  "text": "That's the last one. Dr Cinder's cabin is empty, though.",
+  "from": "story"
+ },
+ {
+  "key": "0xqwd0b",
+  "who": "mac",
+  "text": "Cinder's floating down the river on a log! Follow him!",
+  "from": "story"
+ },
+ {
+  "key": "1oywz4n",
+  "who": "pip",
+  "text": "Hop across the logs. Don't fall in, it's freezing!",
+  "from": "story"
+ },
+ {
+  "key": "1gd5oyz",
+  "who": "rory",
+  "text": "Caught up with him on the bank. He's out of breath. And he's saying sorry again.",
+  "from": "story"
+ },
+ {
+  "key": "0vjwetu",
+  "who": "mac",
+  "text": "There's Scorch, skiing off down the mountain!",
+  "from": "story"
+ },
+ {
+  "key": "1pgri46",
+  "who": "pip",
+  "text": "On your skis, Rory! Catch her and TAG her!",
+  "from": "story"
+ },
+ {
+  "key": "0qqh58n",
+  "who": "rory",
+  "text": "Tagged her! She's stuck in a snowdrift. Just her helmet showing.",
+  "from": "story"
+ },
+ {
+  "key": "1cfxwva",
+  "who": "pip",
+  "text": "Dr Cinder wants to talk. And he says it's worse than we think.",
+  "from": "story"
+ },
+ {
+  "key": "0gzn8fv",
+  "who": "omar",
+  "text": "The Baron's meeting is on the helipad. We'll drop in from above.",
+  "from": "story"
+ },
+ {
+  "key": "16ie7ub",
+  "who": "pip",
+  "text": "Steer your parachute onto the pad. Watch the wind!",
+  "from": "story"
+ },
+ {
+  "key": "11jxfwx",
+  "who": "rory",
+  "text": "Landed! He was talking about a desert. And a telescope.",
+  "from": "story"
+ },
+ {
+  "key": "0w1mjnc",
+  "who": "omar",
+  "text": "The Baron's bank office is on the fortieth floor. My window-cleaning cable goes right past it.",
+  "from": "story"
+ },
+ {
+  "key": "0rs1g66",
+  "who": "pip",
+  "text": "Keep your balance. Push against the wind!",
+  "from": "story"
+ },
+ {
+  "key": "1si4ikj",
+  "who": "rory",
+  "text": "I can see inside. Stacks of gold. And a sign: 'For the guidance systems'.",
+  "from": "story"
+ },
+ {
+  "key": "1aep0ev",
+  "who": "pip",
+  "text": "The vault lock is made of switches and gates. AND needs both on. OR needs one. NOT flips it.",
+  "from": "story"
+ },
+ {
+  "key": "1cv9965",
+  "who": "pip",
+  "text": "Set the switches so the lamp lights.",
+  "from": "story"
+ },
+ {
+  "key": "114jo3g",
+  "who": "rory",
+  "text": "Open! Account books. Every payment goes to... Atacama, Chile.",
+  "from": "story"
+ },
+ {
+  "key": "1jrcffx",
+  "who": "omar",
+  "text": "We need to smuggle the account books out through the souk.",
+  "from": "story"
+ },
+ {
+  "key": "0wif06v",
+  "who": "pip",
+  "text": "Fit every gadget into the case. Tap one to turn it.",
+  "from": "story"
+ },
+ {
+  "key": "099trea",
+  "who": "omar",
+  "text": "Packed! Nobody will look twice at a boy with a suitcase.",
+  "from": "story"
+ },
+ {
+  "key": "0neskxb",
+  "who": "omar",
+  "text": "The courier's driving the gold out on the desert highway!",
+  "from": "story"
+ },
+ {
+  "key": "0l4k3t0",
+  "who": "pip",
+  "text": "Catch him in the supercar. BOOST, then TAG!",
+  "from": "story"
+ },
+ {
+  "key": "0aqv9tj",
+  "who": "rory",
+  "text": "Tagged! The gold's going back to the bank.",
+  "from": "story"
+ },
+ {
+  "key": "0xc14m0",
+  "who": "pip",
+  "text": "But the parts are already made. Next stop: the Atacama Desert.",
+  "from": "story"
+ },
+ {
+  "key": "1c2qx5c",
+  "who": "valentina",
+  "text": "The Baron's ore carts are carrying the guidance parts out of the mine.",
+  "from": "story"
+ },
+ {
+  "key": "16tfzrp",
+  "who": "pip",
+  "text": "Tap the junctions to send each train to the platform of its colour.",
+  "from": "story"
+ },
+ {
+  "key": "1cwtxau",
+  "who": "rory",
+  "text": "Every cart's in the wrong place. That'll slow them down!",
+  "from": "story"
+ },
+ {
+  "key": "1t7liyl",
+  "who": "valentina",
+  "text": "My telescope's gearbox has been sabotaged. It can't turn.",
+  "from": "story"
+ },
+ {
+  "key": "1dr9kns",
+  "who": "pip",
+  "text": "Add gears so the motor turns the telescope the right way. Three in a triangle will jam!",
+  "from": "story"
+ },
+ {
+  "key": "0k6tre3",
+  "who": "valentina",
+  "text": "It's turning! And look. That orange satellite is the Baron's.",
+  "from": "story"
+ },
+ {
+  "key": "1tsdjl5",
+  "who": "valentina",
+  "text": "The cold lab's coolant is all mixed up. The guidance chips need exactly the right amount.",
+  "from": "story"
+ },
+ {
+  "key": "0ldthni",
+  "who": "pip",
+  "text": "Pour between the tanks to measure it exactly.",
+  "from": "story"
+ },
+ {
+  "key": "1rzfr1c",
+  "who": "rory",
+  "text": "Cooled. The chips say: 'Target: Antarctica'.",
+  "from": "story"
+ },
+ {
+  "key": "1gyju10",
+  "who": "valentina",
+  "text": "The Baron's helicopter is coming to collect the chips. Land first and we'll swap them!",
+  "from": "story"
+ },
+ {
+  "key": "1vk6159",
+  "who": "pip",
+  "text": "Hold LIFT to go up. Land gently on the pad.",
+  "from": "story"
+ },
+ {
+  "key": "08tcryx",
+  "who": "rory",
+  "text": "Swapped! His chips will now steer his engines to... a very nice beach.",
+  "from": "story"
+ },
+ {
+  "key": "1qen33t",
+  "who": "valentina",
+  "text": "His trucks are coming over the dunes!",
+  "from": "story"
+ },
+ {
+  "key": "0xz8piz",
+  "who": "pip",
+  "text": "Escape in the buggy! Don't let them catch you!",
+  "from": "story"
+ },
+ {
+  "key": "0951j2r",
+  "who": "rory",
+  "text": "Lost them in the dunes.",
+  "from": "story"
+ },
+ {
+  "key": "0e4ucqn",
+  "who": "pip",
+  "text": "The trucks were heading for a ship. Its next stop is Java. Mount Bromo.",
+  "from": "story"
+ },
+ {
+  "key": "1pil5i4",
+  "who": "budi",
+  "text": "The geothermal plant's pipes have been twisted round to feed the Baron's machines.",
+  "from": "story"
+ },
+ {
+  "key": "0i4ohob",
+  "who": "pip",
+  "text": "Turn the pipes so the coolant runs from the tank to the engine.",
+  "from": "story"
+ },
+ {
+  "key": "17ze94z",
+  "who": "rory",
+  "text": "The plant's back to normal. And the Baron's machines are getting cold.",
+  "from": "story"
+ },
+ {
+  "key": "19v72tq",
+  "who": "budi",
+  "text": "The crater warehouse is full of the Baron's crates. They're on the wrong squares.",
+  "from": "story"
+ },
+ {
+  "key": "1ok5yf8",
+  "who": "pip",
+  "text": "Push every crate onto a marked square. You can push, but you can't pull!",
+  "from": "story"
+ },
+ {
+  "key": "1pgcg8x",
+  "who": "rory",
+  "text": "All in place. And behind the crates: a magma core, glowing.",
+  "from": "story"
+ },
+ {
+  "key": "1w8235g",
+  "who": "pip",
+  "text": "The magma core is overheating. If it blows, the whole crater goes with it!",
+  "from": "story"
+ },
+ {
+  "key": "1sqju3v",
+  "who": "pip",
+  "text": "Tap a valve to cool its gauge. Keep every needle out of the red!",
+  "from": "story"
+ },
+ {
+  "key": "146qsce",
+  "who": "budi",
+  "text": "Phew. You saved the mountain, Agent Rory.",
+  "from": "story"
+ },
+ {
+  "key": "11c4t64",
+  "who": "budi",
+  "text": "The Baron's henchmen are at the festival. Dance and they won't notice you!",
+  "from": "story"
+ },
+ {
+  "key": "0p1vm93",
+  "who": "pip",
+  "text": "Tap the pads in time as the arrows reach the line.",
+  "from": "story"
+ },
+ {
+  "key": "0db0s2l",
+  "who": "rory",
+  "text": "They were talking while they danced. The cores are going to Seoul.",
+  "from": "story"
+ },
+ {
+  "key": "0vm2xly",
+  "who": "budi",
+  "text": "Scorch is flying off with a magma core!",
+  "from": "story"
+ },
+ {
+  "key": "1ev8w7z",
+  "who": "pip",
+  "text": "Put on the wingsuit and catch her. Fly through the rings for a boost!",
+  "from": "story"
+ },
+ {
+  "key": "0t059z3",
+  "who": "rory",
+  "text": "Tagged! She dropped the core into the sea. Sizzle.",
+  "from": "story"
+ },
+ {
+  "key": "0f9oorf",
+  "who": "pip",
+  "text": "Next stop Seoul. Pack your dancing shoes.",
+  "from": "story"
+ },
+ {
+  "key": "0bdiq84",
+  "who": "minjun",
+  "text": "The Baron's deal happens during the concert. Dance and nobody will notice you!",
+  "from": "story"
+ },
+ {
+  "key": "001rqvl",
+  "who": "pip",
+  "text": "Tap the pads in time. Fill the BLEND IN meter!",
+  "from": "story"
+ },
+ {
+  "key": "0hk0jfx",
+  "who": "rory",
+  "text": "Great dancing. And the Baron's courier has the chips in a guitar case.",
+  "from": "story"
+ },
+ {
+  "key": "00rxtm4",
+  "who": "minjun",
+  "text": "The chip factory door has a lock made of logic gates.",
+  "from": "story"
+ },
+ {
+  "key": "1030zb1",
+  "who": "pip",
+  "text": "Set the switches so the lamps light.",
+  "from": "story"
+ },
+ {
+  "key": "0zdrgsz",
+  "who": "minjun",
+  "text": "We're in! I told you I love gates.",
+  "from": "story"
+ },
+ {
+  "key": "1cuwzqa",
+  "who": "minjun",
+  "text": "In the clean room, we'll swap the Baron's chips for our fakes.",
+  "from": "story"
+ },
+ {
+  "key": "1qeg1fg",
+  "who": "pip",
+  "text": "Pack every piece into the case. Tap to turn them.",
+  "from": "story"
+ },
+ {
+  "key": "0hfz1b1",
+  "who": "rory",
+  "text": "Swapped. His engines will now play K-pop instead of drilling.",
+  "from": "story"
+ },
+ {
+  "key": "1g3508o",
+  "who": "minjun",
+  "text": "The courier's meeting Scorch at the bottom of the TV tower. Skydive down!",
+  "from": "story"
+ },
+ {
+  "key": "1j52cyb",
+  "who": "pip",
+  "text": "Steer onto the pad. Watch the wind round the tower!",
+  "from": "story"
+ },
+ {
+  "key": "0vlhpgh",
+  "who": "rory",
+  "text": "Landed! The courier's getting on a motorbike.",
+  "from": "story"
+ },
+ {
+  "key": "1nrds41",
+  "who": "minjun",
+  "text": "Take my bike! Follow the neon!",
+  "from": "story"
+ },
+ {
+  "key": "03jb5kd",
+  "who": "pip",
+  "text": "Catch the courier. BOOST and TAG!",
+  "from": "story"
+ },
+ {
+  "key": "1l5oeoq",
+  "who": "rory",
+  "text": "Tagged! The guitar case is ours.",
+  "from": "story"
+ },
+ {
+  "key": "0qfcasc",
+  "who": "pip",
+  "text": "But the engines are almost done. The last test is on a glacier in Nepal.",
+  "from": "story"
+ },
+ {
+  "key": "0olnz50",
+  "who": "tenzing",
+  "text": "The only way to the test site is over the rope bridge.",
+  "from": "story"
+ },
+ {
+  "key": "0aw1yfi",
+  "who": "rory",
+  "text": "Across! I can hear the engine humming from here.",
+  "from": "story"
+ },
+ {
+  "key": "0ybxpbg",
+  "who": "tenzing",
+  "text": "Pip's helicopter is bringing climbing gear. The pad is tiny!",
+  "from": "story"
+ },
+ {
+  "key": "1o2z4yf",
+  "who": "pip",
+  "text": "Hold LIFT and steer gently onto the pad.",
+  "from": "story"
+ },
+ {
+  "key": "1bdaz79",
+  "who": "pip",
+  "text": "Landed! Not bad for a ten-year-old pilot.",
+  "from": "story"
+ },
+ {
+  "key": "0okkzr2",
+  "who": "tenzing",
+  "text": "The Baron's boxes are hidden in the monastery storeroom.",
+  "from": "story"
+ },
+ {
+  "key": "0q4kgpa",
+  "who": "pip",
+  "text": "Push them onto the marked squares so the monks can have their room back.",
+  "from": "story"
+ },
+ {
+  "key": "1kzrzsd",
+  "who": "rory",
+  "text": "Tidy! And the boxes are full of maps of Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "1u8mlw8",
+  "who": "tenzing",
+  "text": "The test engine is overheating. The glacier will melt!",
+  "from": "story"
+ },
+ {
+  "key": "1rc84m0",
+  "who": "pip",
+  "text": "Vent the gauges before they go red!",
+  "from": "story"
+ },
+ {
+  "key": "13vky3u",
+  "who": "tenzing",
+  "text": "It's cooling. The ice has stopped weeping.",
+  "from": "story"
+ },
+ {
+  "key": "0swgtk0",
+  "who": "tenzing",
+  "text": "The engine's shaken the snow loose. Avalanche!",
+  "from": "story"
+ },
+ {
+  "key": "1hll878",
+  "who": "pip",
+  "text": "Snowboard down the mountain! Don't let it catch you!",
+  "from": "story"
+ },
+ {
+  "key": "19llc42",
+  "who": "rory",
+  "text": "Outran an avalanche. Can I do that again?",
+  "from": "story"
+ },
+ {
+  "key": "04hxr9u",
+  "who": "pip",
+  "text": "No! The engines are being loaded onto ships in Cape Town. Go!",
+  "from": "story"
+ },
+ {
+  "key": "19griyp",
+  "who": "thandi",
+  "text": "The engine wagons are in the harbour sidings, waiting for the ship.",
+  "from": "story"
+ },
+ {
+  "key": "173ua11",
+  "who": "pip",
+  "text": "Switch the points so every train goes to the platform of its colour.",
+  "from": "story"
+ },
+ {
+  "key": "1qjprqs",
+  "who": "rory",
+  "text": "Mixed up! Half the Baron's wagons are going to the fish market.",
+  "from": "story"
+ },
+ {
+  "key": "15kjb34",
+  "who": "pip",
+  "text": "The engine ship's coolant pipes are wrong. If we fix them, the engines can't heat up on the voyage.",
+  "from": "story"
+ },
+ {
+  "key": "0212er7",
+  "who": "pip",
+  "text": "Turn the pipes to join the tank to the engine.",
+  "from": "story"
+ },
+ {
+  "key": "1re2wzg",
+  "who": "rory",
+  "text": "Fixed. The engines will arrive cold and cross.",
+  "from": "story"
+ },
+ {
+  "key": "0uhzpuo",
+  "who": "thandi",
+  "text": "The Baron is watching from the cable car. Its gearbox is jammed!",
+  "from": "story"
+ },
+ {
+  "key": "1amiqf4",
+  "who": "pip",
+  "text": "Place the gears so the cable car turns the right way.",
+  "from": "story"
+ },
+ {
+  "key": "0ebc0nf",
+  "who": "rory",
+  "text": "Moving! From up here I can see the big man. He's feeding Captain Wobble.",
+  "from": "story"
+ },
+ {
+  "key": "0o2jequ",
+  "who": "thandi",
+  "text": "The ship's fuel tanks need exactly the right mix, or the Baron will notice.",
+  "from": "story"
+ },
+ {
+  "key": "0bassa5",
+  "who": "pip",
+  "text": "Measure it exactly!",
+  "from": "story"
+ },
+ {
+  "key": "1miwhep",
+  "who": "rory",
+  "text": "Perfect. The ship will run out of fuel just before Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "134x57d",
+  "who": "thandi",
+  "text": "The ship's leaving! Take the speedboat!",
+  "from": "story"
+ },
+ {
+  "key": "0hu44e5",
+  "who": "pip",
+  "text": "Catch it and TAG it with a tracker!",
+  "from": "story"
+ },
+ {
+  "key": "0a4njv9",
+  "who": "rory",
+  "text": "Tagged. We can follow it anywhere.",
+  "from": "story"
+ },
+ {
+  "key": "1hhga0d",
+  "who": "pip",
+  "text": "And it's going exactly where we thought. Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "1gbjbp1",
+  "who": "aroha",
+  "text": "The Baron has rewired our geothermal station to feed his ships.",
+  "from": "story"
+ },
+ {
+  "key": "0w5oz74",
+  "who": "pip",
+  "text": "Turn the pipes to send the heat back to the village.",
+  "from": "story"
+ },
+ {
+  "key": "1ftfuat",
+  "who": "aroha",
+  "text": "Our pools are warm again. Thank you!",
+  "from": "story"
+ },
+ {
+  "key": "0c049bf",
+  "who": "aroha",
+  "text": "His machines are on the far side of the boiling pools.",
+  "from": "story"
+ },
+ {
+  "key": "1gspdwh",
+  "who": "pip",
+  "text": "Hop across on the stepping rafts. Don't fall in, it's boiling!",
+  "from": "story"
+ },
+ {
+  "key": "0lzvjfl",
+  "who": "rory",
+  "text": "Across! His machines are packing up. He's leaving.",
+  "from": "story"
+ },
+ {
+  "key": "03sc6dt",
+  "who": "aroha",
+  "text": "Scorch is hiding in the village in disguise!",
+  "from": "story"
+ },
+ {
+  "key": "0941xfj",
+  "who": "pip",
+  "text": "Read the clues. Find her!",
+  "from": "story"
+ },
+ {
+  "key": "0hvtaa2",
+  "who": "rory",
+  "text": "Found her! Oh no, she's heading for the river.",
+  "from": "story"
+ },
+ {
+  "key": "16n3a9w",
+  "who": "aroha",
+  "text": "We'll follow her from the air. Land by the river!",
+  "from": "story"
+ },
+ {
+  "key": "0lqlylc",
+  "who": "pip",
+  "text": "Hold LIFT and land gently on the pad.",
+  "from": "story"
+ },
+ {
+  "key": "1wou6uv",
+  "who": "rory",
+  "text": "Down! There she is, in a jet boat.",
+  "from": "story"
+ },
+ {
+  "key": "1r7nhod",
+  "who": "aroha",
+  "text": "Take the jet boat through the canyon!",
+  "from": "story"
+ },
+ {
+  "key": "04y716i",
+  "who": "pip",
+  "text": "Catch her! BOOST and TAG!",
+  "from": "story"
+ },
+ {
+  "key": "0dfihon",
+  "who": "rory",
+  "text": "Tagged! She's heading south. Everyone's heading south.",
+  "from": "story"
+ },
+ {
+  "key": "0aaxegh",
+  "who": "lucia",
+  "text": "The Baron's boxes are on the End of the World Train.",
+  "from": "story"
+ },
+ {
+  "key": "0d15tfw",
+  "who": "pip",
+  "text": "Switch the points. Send every train to its own colour.",
+  "from": "story"
+ },
+ {
+  "key": "0zeopj6",
+  "who": "rory",
+  "text": "Sent! The boxes are going to the museum.",
+  "from": "story"
+ },
+ {
+  "key": "1avx5c7",
+  "who": "lucia",
+  "text": "Our icebreaker's jeep is stuck in the container port.",
+  "from": "story"
+ },
+ {
+  "key": "1gf4f7b",
+  "who": "pip",
+  "text": "Slide the lorries out of the way!",
+  "from": "story"
+ },
+ {
+  "key": "1nvntf2",
+  "who": "rory",
+  "text": "Free! And look, those lorries are Kaldera's.",
+  "from": "story"
+ },
+ {
+  "key": "1i7idyg",
+  "who": "lucia",
+  "text": "The Baron's henchmen are trying to take over the icebreaker!",
+  "from": "story"
+ },
+ {
+  "key": "0e8hb58",
+  "who": "pip",
+  "text": "Tag the henchmen. Not the crew!",
+  "from": "story"
+ },
+ {
+  "key": "1ff95rz",
+  "who": "lucia",
+  "text": "The icebreaker's ours. It'll carry you south.",
+  "from": "story"
+ },
+ {
+  "key": "0r55riv",
+  "who": "lucia",
+  "text": "You'll need polar kit for Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "05ziz4k",
+  "who": "pip",
+  "text": "Pack everything into the case. Tap to turn.",
+  "from": "story"
+ },
+ {
+  "key": "0vxdrsi",
+  "who": "rory",
+  "text": "Packed. Snow goggles, cocoa, and a spare penguin costume. Just in case.",
+  "from": "story"
+ },
+ {
+  "key": "0j2v9eq",
+  "who": "lucia",
+  "text": "The convoy's racing us to the port!",
+  "from": "story"
+ },
+ {
+  "key": "09uz8ry",
+  "who": "pip",
+  "text": "Get there first in the jeep! Don't let them catch you!",
+  "from": "story"
+ },
+ {
+  "key": "1y8axbg",
+  "who": "rory",
+  "text": "Made it! The icebreaker's waiting.",
+  "from": "story"
+ },
+ {
+  "key": "1hpiof0",
+  "who": "ellie",
+  "text": "The big man is hiding in the penguin colony. Let's sneak up on him.",
+  "from": "story"
+ },
+ {
+  "key": "0qrf991",
+  "who": "pip",
+  "text": "Put on the penguin costume. Move when he looks away, freeze when he turns!",
+  "from": "story"
+ },
+ {
+  "key": "1vpl1m9",
+  "who": "rory",
+  "text": "Got close. He's talking to the penguins. He's telling them he's sorry.",
+  "from": "story"
+ },
+ {
+  "key": "0c0awkb",
+  "who": "ellie",
+  "text": "Someone used our station radio last night. I saw them from the window.",
+  "from": "story"
+ },
+ {
+  "key": "00n3eoi",
+  "who": "pip",
+  "text": "Build the face from Ellie's clues.",
+  "from": "story"
+ },
+ {
+  "key": "18fvegz",
+  "who": "rory",
+  "text": "That's Scorch! She radioed the Baron: 'The engines start in two days'.",
+  "from": "story"
+ },
+ {
+  "key": "1setevs",
+  "who": "ellie",
+  "text": "Bruno has run off across the crevasse!",
+  "from": "story"
+ },
+ {
+  "key": "1w0wzxi",
+  "who": "pip",
+  "text": "Cross on the ladder. Keep your balance!",
+  "from": "story"
+ },
+ {
+  "key": "1s6njcd",
+  "who": "rory",
+  "text": "Across. He's waiting for me. He's holding a penguin.",
+  "from": "story"
+ },
+ {
+  "key": "1f8u1po",
+  "who": "ellie",
+  "text": "The station generator's overheating. If it goes, the station freezes.",
+  "from": "story"
+ },
+ {
+  "key": "1fevusn",
+  "who": "pip",
+  "text": "Keep the gauges out of the red!",
+  "from": "story"
+ },
+ {
+  "key": "04l3qer",
+  "who": "ellie",
+  "text": "Saved! My penguins thank you.",
+  "from": "story"
+ },
+ {
+  "key": "1wy913h",
+  "who": "ellie",
+  "text": "Scorch is escaping to the ice shelf!",
+  "from": "story"
+ },
+ {
+  "key": "0zk6uwz",
+  "who": "pip",
+  "text": "Catch her on the snowmobile!",
+  "from": "story"
+ },
+ {
+  "key": "01ggd1i",
+  "who": "rory",
+  "text": "Tagged! She's stuck in a snowbank. Again.",
+  "from": "story"
+ },
+ {
+  "key": "1f122ik",
+  "who": "bruno",
+  "text": "Small spy. I will tell you everything. The engines are on the Ross Ice Shelf.",
+  "from": "story"
+ },
+ {
+  "key": "0jn5hix",
+  "who": "zara",
+  "text": "Inferno Engine One. Its gearbox is right there.",
+  "from": "story"
+ },
+ {
+  "key": "0dndskd",
+  "who": "pip",
+  "text": "Add gears so the brake turns the right way. That jams the drill!",
+  "from": "story"
+ },
+ {
+  "key": "1slehvd",
+  "who": "rory",
+  "text": "Engine One is jammed. Five to go.",
+  "from": "story"
+ },
+ {
+  "key": "16tdcc0",
+  "who": "zara",
+  "text": "The relay mast links all six engines.",
+  "from": "story"
+ },
+ {
+  "key": "1iqc2sx",
+  "who": "pip",
+  "text": "Rewire it. Join each pair, fill every square.",
+  "from": "story"
+ },
+ {
+  "key": "1yvw4dj",
+  "who": "rory",
+  "text": "The engines can't talk to each other any more.",
+  "from": "story"
+ },
+ {
+  "key": "1y5kqxb",
+  "who": "zara",
+  "text": "The sentry drones are watching the depot.",
+  "from": "story"
+ },
+ {
+  "key": "0ojd6fi",
+  "who": "pip",
+  "text": "Paint them! Aim ahead!",
+  "from": "story"
+ },
+ {
+  "key": "0gg63it",
+  "who": "rory",
+  "text": "Blind drones. Clear to the depot.",
+  "from": "story"
+ },
+ {
+  "key": "1aow1oq",
+  "who": "zara",
+  "text": "The fuel drums need moving so the engines run dry.",
+  "from": "story"
+ },
+ {
+  "key": "1gry57b",
+  "who": "pip",
+  "text": "Push them onto the marked squares!",
+  "from": "story"
+ },
+ {
+  "key": "16hmvhm",
+  "who": "rory",
+  "text": "Done. The engines are running out of fuel.",
+  "from": "story"
+ },
+ {
+  "key": "0ptzkya",
+  "who": "zara",
+  "text": "The Baron's switched the engines to full power. The shelf's cracking!",
+  "from": "story"
+ },
+ {
+  "key": "1o87t6x",
+  "who": "pip",
+  "text": "Get to the hovercraft! Escape!",
+  "from": "story"
+ },
+ {
+  "key": "0iv1shd",
+  "who": "rory",
+  "text": "That was close. The engines are dying, but the Baron's gone.",
+  "from": "story"
+ },
+ {
+  "key": "1qgn8st",
+  "who": "zara",
+  "text": "His submarine was seen heading for the ice caves.",
+  "from": "story"
+ },
+ {
+  "key": "1wit20v",
+  "who": "pip",
+  "text": "The ice tunnel goes deep. Let's send the drone first.",
+  "from": "story"
+ },
+ {
+  "key": "0rfmycf",
+  "who": "pip",
+  "text": "Hold to go up, let go to drop. Mind the icicles!",
+  "from": "story"
+ },
+ {
+  "key": "18qltex",
+  "who": "rory",
+  "text": "The tunnel leads to the dock.",
+  "from": "story"
+ },
+ {
+  "key": "0rosdr9",
+  "who": "pip",
+  "text": "The cavern floor is smooth ice. Slide carefully!",
+  "from": "story"
+ },
+ {
+  "key": "0bf8phf",
+  "who": "pip",
+  "text": "Slide out through the gap.",
+  "from": "story"
+ },
+ {
+  "key": "1x4u79e",
+  "who": "rory",
+  "text": "Inside the ice... spare engine parts. Frozen solid.",
+  "from": "story"
+ },
+ {
+  "key": "1455cj4",
+  "who": "pip",
+  "text": "The dock's lock uses logic gates.",
+  "from": "story"
+ },
+ {
+  "key": "06go6fs",
+  "who": "pip",
+  "text": "Light the lamps!",
+  "from": "story"
+ },
+ {
+  "key": "1cbiip6",
+  "who": "rory",
+  "text": "Open. The Baron's submarine is right there.",
+  "from": "story"
+ },
+ {
+  "key": "0da5ctq",
+  "who": "pip",
+  "text": "My mini-sub needs exactly the right amount of ballast water.",
+  "from": "story"
+ },
+ {
+  "key": "08yz7n9",
+  "who": "pip",
+  "text": "Perfect. We can dive.",
+  "from": "story"
+ },
+ {
+  "key": "0wnfx8z",
+  "who": "pip",
+  "text": "The Baron's sub is escaping through the moon pool!",
+  "from": "story"
+ },
+ {
+  "key": "0x6w3ba",
+  "who": "pip",
+  "text": "Catch it! BOOST and TAG!",
+  "from": "story"
+ },
+ {
+  "key": "16zddls",
+  "who": "rory",
+  "text": "Tagged! It's heading for Mount Erebus.",
+  "from": "story"
+ },
+ {
+  "key": "19xjqkt",
+  "who": "bruno",
+  "text": "The way in is from above. Jump into the crater!",
+  "from": "story"
+ },
+ {
+  "key": "0b2j8n7",
+  "who": "pip",
+  "text": "Steer onto the rim. Watch the hot wind!",
+  "from": "story"
+ },
+ {
+  "key": "1ajcmh6",
+  "who": "rory",
+  "text": "Landed on the rim. I can see the lava lake.",
+  "from": "story"
+ },
+ {
+  "key": "0ra4bsg",
+  "who": "bruno",
+  "text": "The Baron's party is in the great hall. Dance!",
+  "from": "story"
+ },
+ {
+  "key": "0qh017h",
+  "who": "pip",
+  "text": "Tap in time. Blend in!",
+  "from": "story"
+ },
+ {
+  "key": "0ziyf3g",
+  "who": "rory",
+  "text": "He's making a speech. 'Tomorrow, the world pays me a trillion dollars!'",
+  "from": "story"
+ },
+ {
+  "key": "1oe9rj6",
+  "who": "bruno",
+  "text": "The master keys hang over the lava pit.",
+  "from": "story"
+ },
+ {
+  "key": "0kmaoia",
+  "who": "pip",
+  "text": "Drop the claw on the flame crate. Carefully!",
+  "from": "story"
+ },
+ {
+  "key": "0bwq8w4",
+  "who": "rory",
+  "text": "Got the keys. And they're only a bit melted.",
+  "from": "story"
+ },
+ {
+  "key": "0243opv",
+  "who": "bruno",
+  "text": "The master control room. Every switch flips its neighbours.",
+  "from": "story"
+ },
+ {
+  "key": "1yydwed",
+  "who": "pip",
+  "text": "Switch off all six engines!",
+  "from": "story"
+ },
+ {
+  "key": "0ofz3bs",
+  "who": "kaldera",
+  "text": "No! My beautiful engines! Who switched them off?",
+  "from": "story"
+ },
+ {
+  "key": "1wk5tqy",
+  "who": "rory",
+  "text": "POLARIS did. Your ice is safe, Baron.",
+  "from": "story"
+ },
+ {
+  "key": "1xn9waq",
+  "who": "kaldera",
+  "text": "You will never catch me! I have a gold bobsled!",
+  "from": "story"
+ },
+ {
+  "key": "0yih49g",
+  "who": "bruno",
+  "text": "Take mine! It is faster. It has penguin stickers.",
+  "from": "story"
+ },
+ {
+  "key": "1ow8vfe",
+  "who": "pip",
+  "text": "Catch the Baron, Rory! One last TAG!",
+  "from": "story"
+ },
+ {
+  "key": "1rzgslq",
+  "who": "kaldera",
+  "text": "Curses! Stuck in a snowdrift. How undignified.",
+  "from": "story"
+ },
+ {
+  "key": "0glhght",
+  "who": "rory",
+  "text": "Baron Kaldera, you're coming with us.",
+  "from": "story"
+ },
+ {
+  "key": "18rql75",
+  "who": "pip",
+  "text": "Agent Rory, can you hear me? It's Pip. Welcome to Greenland, the coldest job you've ever had.",
+  "from": "story"
+ },
+ {
+  "key": "0ezy869",
+  "who": "pip",
+  "text": "Something is melting the glaciers here from underneath. In the middle of winter! That's impossible.",
+  "from": "story"
+ },
+ {
+  "key": "1ppny64",
+  "who": "nuka",
+  "text": "You're the spy? I'm Nuka. My dogs found the problem. Follow me, and mind the thin ice.",
+  "from": "story"
+ },
+ {
+  "key": "1e5q7de",
+  "who": "pip",
+  "text": "That rig had a logo on its side. A flame in a circle: Kaldera Heating.",
+  "from": "story"
+ },
+ {
+  "key": "18zmrx6",
+  "who": "pip",
+  "text": "And the drill was made in a shipyard in Norway. Admiral Frost wants to see you. Now.",
+  "from": "story"
+ },
+ {
+  "key": "1im39sy",
+  "who": "lars",
+  "text": "Ahoy, young spy! Captain Lars. Forty years I've sailed this fjord. And this is my parrot, Olaf.",
+  "from": "story"
+ },
+ {
+  "key": "031od4b",
+  "who": "lars",
+  "text": "That shipyard started building strange things last spring. Orange things. Hot things. Olaf doesn't like it.",
+  "from": "story"
+ },
+ {
+  "key": "0e94r8b",
+  "who": "pip",
+  "text": "Rory, the tender was carrying an invitation. Gold letters. Very fancy.",
+  "from": "story"
+ },
+ {
+  "key": "0fqn743",
+  "who": "pip",
+  "text": "Baron Kaldera's Winter Gala. In Monte Carlo. Tomorrow night. I'll find you a bow tie!",
+  "from": "story"
+ },
+ {
+  "key": "11kmly5",
+  "who": "luca",
+  "text": "Psst! Agent Rory? I'm Luca. I fix racing cars. The Baron's party is at the casino tonight.",
+  "from": "story"
+ },
+ {
+  "key": "1ols679",
+  "who": "luca",
+  "text": "Everyone important is here. And so is Scorch, his stunt rider. She never takes her helmet off.",
+  "from": "story"
+ },
+ {
+  "key": "17oa3h4",
+  "who": "pip",
+  "text": "Scorch dropped a ticket when you tagged her. Barcelona, first train in the morning.",
+  "from": "story"
+ },
+ {
+  "key": "0vru8fx",
+  "who": "pip",
+  "text": "And Rory... I heard the words on the yacht. Project Meltdown. I don't like the sound of that.",
+  "from": "story"
+ },
+ {
+  "key": "1pjxsww",
+  "who": "ines",
+  "text": "Hola! I'm Inés. I know every rooftop in Barcelona. Skateboard's faster than a taxi.",
+  "from": "story"
+ },
+ {
+  "key": "00mx8ma",
+  "who": "ines",
+  "text": "A rider in a flame helmet rode in this morning. She went into the old town with a long tube. Blueprints, I bet.",
+  "from": "story"
+ },
+ {
+  "key": "1z0tfbl",
+  "who": "pip",
+  "text": "We got half the blueprints back. Look at the title: INFERNO ENGINE.",
+  "from": "story"
+ },
+ {
+  "key": "0c3jixa",
+  "who": "pip",
+  "text": "And a note at the bottom: 'Test drill: Santorini'. That's a volcano, Rory.",
+  "from": "story"
+ },
+ {
+  "key": "0giqi70",
+  "who": "nikos",
+  "text": "Yassou! I'm Nikos. My papa is a fisherman. Somebody borrowed his boat last night and brought it back all sooty!",
+  "from": "story"
+ },
+ {
+  "key": "0qsmgkn",
+  "who": "nikos",
+  "text": "And look down there in the volcano's lagoon. A drill barge. It's been bubbling all morning.",
+  "from": "story"
+ },
+ {
+  "key": "1h7tvqd",
+  "who": "pip",
+  "text": "The nervous man is called Dr Cinder. He designed the Inferno Engine.",
+  "from": "story"
+ },
+ {
+  "key": "13bsvfo",
+  "who": "pip",
+  "text": "And he's just bought a ticket on a train through the Canadian Rockies. We're going to Canada!",
+  "from": "story"
+ },
+ {
+  "key": "1sjbejo",
+  "who": "mac",
+  "text": "Welcome to Banff, Agent Rory! I'm Ranger Mac. And this is Gerald. He's a moose.",
+  "from": "story"
+ },
+ {
+  "key": "0dabgid",
+  "who": "mac",
+  "text": "The Rocky Mountain train leaves today. A nervous man got on it with far too many suitcases.",
+  "from": "story"
+ },
+ {
+  "key": "1b2wz9p",
+  "who": "frost",
+  "text": "Rory. Frost here. We have Dr Cinder aboard the Narwhal. He's been talking.",
+  "from": "story"
+ },
+ {
+  "key": "0dhn4ae",
+  "who": "frost",
+  "text": "Come home, Agent. You need to hear this yourself.",
+  "from": "story"
+ },
+ {
+  "key": "1by151z",
+  "who": "omar",
+  "text": "Marhaba, Agent Rory! I'm Omar. I clean the windows on the tallest tower in the world. I see everything.",
+  "from": "story"
+ },
+ {
+  "key": "1dy8lu4",
+  "who": "omar",
+  "text": "Every day a man in an orange tie goes into the bank. Every day he comes out with gold.",
+  "from": "story"
+ },
+ {
+  "key": "1kb490n",
+  "who": "pip",
+  "text": "The Baron's gold is paying for the engines' guidance systems. They're being made in the Atacama Desert, in Chile.",
+  "from": "story"
+ },
+ {
+  "key": "02en31n",
+  "who": "pip",
+  "text": "And Rory, they steer by the stars.",
+  "from": "story"
+ },
+ {
+  "key": "1ow988y",
+  "who": "valentina",
+  "text": "Welcome to the Atacama, the driest desert on Earth. I'm Dr Valentina. I watch the stars.",
+  "from": "story"
+ },
+ {
+  "key": "1cju4fn",
+  "who": "valentina",
+  "text": "Somebody has been borrowing my telescope at night. And my cold lab smells of burnt toast.",
+  "from": "story"
+ },
+ {
+  "key": "0cqb7dz",
+  "who": "pip",
+  "text": "The guidance chips are programmed to steer the engines to the South Pole.",
+  "from": "story"
+ },
+ {
+  "key": "0tey57i",
+  "who": "pip",
+  "text": "But they need magma cores to heat up. Those are coming from a volcano in Indonesia.",
+  "from": "story"
+ },
+ {
+  "key": "0ofkg0i",
+  "who": "budi",
+  "text": "Selamat pagi, Agent Rory! I'm Budi, a volcano guide. Welcome to Mount Bromo at sunrise.",
+  "from": "story"
+ },
+ {
+  "key": "0j5nvlc",
+  "who": "budi",
+  "text": "The Baron has built a warehouse inside the crater. His machines are scooping out the volcano's heat.",
+  "from": "story"
+ },
+ {
+  "key": "1mn6g49",
+  "who": "pip",
+  "text": "The magma cores are going to Seoul, to be joined to control chips.",
+  "from": "story"
+ },
+ {
+  "key": "1pg51s0",
+  "who": "pip",
+  "text": "And Rory, Scorch said something about 'the boss's concert'.",
+  "from": "story"
+ },
+ {
+  "key": "1378yyn",
+  "who": "minjun",
+  "text": "Annyeong! I'm Min-jun. I'm eleven, and I can hack anything. Mostly.",
+  "from": "story"
+ },
+ {
+  "key": "0jechb8",
+  "who": "minjun",
+  "text": "The Baron's chip factory makes control chips. Tonight he's collecting them at a concert. A K-pop concert!",
+  "from": "story"
+ },
+ {
+  "key": "0mdy6be",
+  "who": "pip",
+  "text": "The chips and the cores are being joined into six Inferno Engines.",
+  "from": "story"
+ },
+ {
+  "key": "1a1aah1",
+  "who": "pip",
+  "text": "The last test is on a glacier in the Himalaya. In Nepal.",
+  "from": "story"
+ },
+ {
+  "key": "11vi3qb",
+  "who": "tenzing",
+  "text": "Namaste, Agent Rory. I'm Tenzing. My family have guided climbers here for a hundred years.",
+  "from": "story"
+ },
+ {
+  "key": "0huaqll",
+  "who": "tenzing",
+  "text": "Three weeks ago, a machine started drilling into our glacier. The ice is weeping.",
+  "from": "story"
+ },
+ {
+  "key": "0cy8214",
+  "who": "pip",
+  "text": "The test is finished. The engines are ready, Rory.",
+  "from": "story"
+ },
+ {
+  "key": "0f5avkf",
+  "who": "pip",
+  "text": "Six ships are loading them in Cape Town. Next stop, South Africa.",
+  "from": "story"
+ },
+ {
+  "key": "1q4pp81",
+  "who": "thandi",
+  "text": "Sawubona, Agent Rory! I'm Thandi. I look after the penguins at Boulders Beach.",
+  "from": "story"
+ },
+ {
+  "key": "0bj02vb",
+  "who": "thandi",
+  "text": "Something strange: a huge man keeps coming to feed my penguins sardines. He cries a little when he leaves.",
+  "from": "story"
+ },
+ {
+  "key": "0ku42il",
+  "who": "frost",
+  "text": "Rory, the engine ships are heading south. To Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "1ocikgg",
+  "who": "frost",
+  "text": "Come home. The Narwhal sails south tonight.",
+  "from": "story"
+ },
+ {
+  "key": "0jwfjkd",
+  "who": "aroha",
+  "text": "Kia ora, Agent Rory! I'm Aroha, a geothermal guide. Welcome to Rotorua.",
+  "from": "story"
+ },
+ {
+  "key": "1o8nq6h",
+  "who": "aroha",
+  "text": "The Baron is taking our hot springs' heat for his engines. Our pools are going cold.",
+  "from": "story"
+ },
+ {
+  "key": "07smhhw",
+  "who": "pip",
+  "text": "The Baron's last supply ship leaves from Ushuaia, in Argentina. The last port before the ice.",
+  "from": "story"
+ },
+ {
+  "key": "04inqab",
+  "who": "pip",
+  "text": "After that, Rory, it's Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "1r8m33m",
+  "who": "lucia",
+  "text": "Hola! I'm Lucía, deckhand on the icebreaker. This is Ushuaia, the end of the world.",
+  "from": "story"
+ },
+ {
+  "key": "049x9j7",
+  "who": "lucia",
+  "text": "The Baron's convoy arrived this morning. Tomorrow they sail for Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "1wc0oym",
+  "who": "frost",
+  "text": "Rory, this is it. Antarctica.",
+  "from": "story"
+ },
+ {
+  "key": "094wv9w",
+  "who": "frost",
+  "text": "The Narwhal will surface at the Peninsula. Wrap up warm, Agent.",
+  "from": "story"
+ },
+ {
+  "key": "0zz09q8",
+  "who": "ellie",
+  "text": "Hello, hello! Dr Ellie. I count penguins. It's the best job in the world.",
+  "from": "story"
+ },
+ {
+  "key": "045tjgb",
+  "who": "ellie",
+  "text": "Something's wrong. The ice is getting soft, and there's a very big man hiding in my penguin colony.",
+  "from": "story"
+ },
+ {
+  "key": "0tumglz",
+  "who": "bruno",
+  "text": "Small spy. I am Bruno. I work for the Baron. But the Baron's engines will cook the penguins.",
+  "from": "story"
+ },
+ {
+  "key": "0wqxxjn",
+  "who": "bruno",
+  "text": "I don't want that. I will help you. The engines are on the Ross Ice Shelf.",
+  "from": "story"
+ },
+ {
+  "key": "1m05mtc",
+  "who": "zara",
+  "text": "Rory! Zara, in person. Good to see you out of the phone.",
+  "from": "story"
+ },
+ {
+  "key": "097wm6v",
+  "who": "zara",
+  "text": "That tower's Inferno Engine One. Five more are further out. If they fire, the ice melts in a week.",
+  "from": "story"
+ },
+ {
+  "key": "1p9nyya",
+  "who": "pip",
+  "text": "The engines are jammed, but the Baron has a submarine hidden in the ice caves.",
+  "from": "story"
+ },
+ {
+  "key": "1vkufme",
+  "who": "pip",
+  "text": "I'm coming with you, Rory. In person. I've got a mini-sub!",
+  "from": "story"
+ },
+ {
+  "key": "04f93vl",
+  "who": "pip",
+  "text": "Rory! It's me, Pip! In real life! Look, I brought the mini-sub.",
+  "from": "story"
+ },
+ {
+  "key": "0pz6d1k",
+  "who": "pip",
+  "text": "The Baron's submarine is docked in these caves. And it's full of spare engine parts.",
+  "from": "story"
+ },
+ {
+  "key": "1epd7m8",
+  "who": "pip",
+  "text": "The Baron's sub is heading for Mount Erebus. The real volcano at the bottom of the world.",
+  "from": "story"
+ },
+ {
+  "key": "1chmkc4",
+  "who": "pip",
+  "text": "That's his lair, Rory. That's where it ends.",
+  "from": "story"
+ },
+ {
+  "key": "128322f",
+  "who": "bruno",
+  "text": "Small spy. Welcome to the Baron's lair. I know every room.",
+  "from": "story"
+ },
+ {
+  "key": "1bsv8tz",
+  "who": "bruno",
+  "text": "He is having a party. He thinks he has won. He has not.",
+  "from": "story"
+ },
+ {
+  "key": "1p7lkyr",
+  "who": "pip",
+  "text": "You did it, Rory.",
+  "from": "story"
+ },
+ {
+  "key": "14zfjyc",
+  "who": "nuka",
+  "text": "The ice has been groaning at night. My dogs won't sleep.",
+  "from": "story chat"
+ },
+ {
+  "key": "0zfyfty",
+  "who": "nuka",
+  "text": "Floes don't drift like that in winter. Something is warming the water.",
+  "from": "story chat"
+ },
+ {
+  "key": "1lfnf51",
+  "who": "nuka",
+  "text": "That rig wasn't there last month. Nobody built it. It just appeared.",
+  "from": "story chat"
+ },
+ {
+  "key": "0t9lfgq",
+  "who": "nuka",
+  "text": "The big man drove off on a snowcat. He was humming. To a penguin.",
+  "from": "story chat"
+ },
+ {
+  "key": "09rlxib",
+  "who": "nuka",
+  "text": "Go! Before the whole fjord cracks!",
+  "from": "story chat"
+ },
+ {
+  "key": "0kr54tf",
+  "who": "nuka",
+  "text": "You want the drifting floes. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "14lkc8h",
+  "who": "nuka",
+  "text": "Look for the drifting floes, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0n8f8ce",
+  "who": "nuka",
+  "text": "The drifting floes. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wway4b",
+  "who": "nuka",
+  "text": "You want the frozen research hut. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0bqlkuz",
+  "who": "nuka",
+  "text": "Look for the frozen research hut, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ic16m0",
+  "who": "nuka",
+  "text": "The frozen research hut. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "158resy",
+  "who": "nuka",
+  "text": "You want the drilling rig. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "14huq0a",
+  "who": "nuka",
+  "text": "Look for the drilling rig, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1t2nrgj",
+  "who": "nuka",
+  "text": "The drilling rig. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "04t15n4",
+  "who": "nuka",
+  "text": "You want Nuka's dog sled. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1axp9jq",
+  "who": "nuka",
+  "text": "Look for Nuka's dog sled, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0lzbwy7",
+  "who": "nuka",
+  "text": "Nuka's dog sled. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ted6nm",
+  "who": "nuka",
+  "text": "You want the POLARIS snowmobile. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "197gr7u",
+  "who": "nuka",
+  "text": "Look for the POLARIS snowmobile, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0b3w6yr",
+  "who": "nuka",
+  "text": "The POLARIS snowmobile. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0wf9nrd",
+  "who": "nuka",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0jfao7k",
+  "who": "nuka",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1pbmc4o",
+  "who": "nuka",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1b6v11l",
+  "who": "watch",
+  "text": "Intel won. The sea under the ice is as warm as a bath. Something down there is heating it.",
+  "from": "main.js"
+ },
+ {
+  "key": "179cqlv",
+  "who": "watch",
+  "text": "Intel won. Before she left, the scientist wrote that the heat is coming from deep below the ice.",
+  "from": "main.js"
+ },
+ {
+  "key": "0rfc91o",
+  "who": "watch",
+  "text": "Intel won. A glowing drill is boring down through the ice. It is stamped with a flame logo: Kaldera Heating.",
+  "from": "main.js"
+ },
+ {
+  "key": "1v8j1qk",
+  "who": "watch",
+  "text": "Intel won. The rig's driver is enormous, wears a woolly hat, and carries a penguin in his coat.",
+  "from": "main.js"
+ },
+ {
+  "key": "17gfuo2",
+  "who": "watch",
+  "text": "Intel won. The drill's parts were built in a shipyard in Geiranger, Norway.",
+  "from": "main.js"
+ },
+ {
+  "key": "051wt1l",
+  "who": "lars",
+  "text": "Olaf says hello. Well, Olaf says 'SQUAWK', but it means hello.",
+  "from": "story chat"
+ },
+ {
+  "key": "0wr4j7t",
+  "who": "lars",
+  "text": "Cameras everywhere on that quay. Paint them, I say!",
+  "from": "story chat"
+ },
+ {
+  "key": "0vnb4ht",
+  "who": "lars",
+  "text": "Those crates were too hot to touch. My gloves melted.",
+  "from": "story chat"
+ },
+ {
+  "key": "08xkmyu",
+  "who": "lars",
+  "text": "The lorries are all going the same way. Towards the tender.",
+  "from": "story chat"
+ },
+ {
+  "key": "0ehsp1x",
+  "who": "lars",
+  "text": "The tender's getting away! My speedboat's yours!",
+  "from": "story chat"
+ },
+ {
+  "key": "05y3t9k",
+  "who": "lars",
+  "text": "You want the shipyard quay. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "12nn45i",
+  "who": "lars",
+  "text": "Look for the shipyard quay, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dhm8k1",
+  "who": "lars",
+  "text": "The shipyard quay. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "07qplob",
+  "who": "lars",
+  "text": "You want the gatehouse panel. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0t5zzff",
+  "who": "lars",
+  "text": "Look for the gatehouse panel, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1q9klmq",
+  "who": "lars",
+  "text": "The gatehouse panel. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1izhl7f",
+  "who": "lars",
+  "text": "You want the dockside crane. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1csnib5",
+  "who": "lars",
+  "text": "Look for the dockside crane, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ydsgjk",
+  "who": "lars",
+  "text": "The dockside crane. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wz8i2o",
+  "who": "lars",
+  "text": "You want the lorry yard. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1vcnf4k",
+  "who": "lars",
+  "text": "Look for the lorry yard, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1hne9az",
+  "who": "lars",
+  "text": "The lorry yard. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "06hrhhf",
+  "who": "lars",
+  "text": "You want Lars's speedboat. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1u1mvcx",
+  "who": "lars",
+  "text": "Look for Lars's speedboat, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1boi5ng",
+  "who": "lars",
+  "text": "Lars's speedboat. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n78gho",
+  "who": "lars",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "11llihl",
+  "who": "lars",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1p6rj27",
+  "who": "lars",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n9995h",
+  "who": "watch",
+  "text": "Intel won. Kaldera's cameras are blinded with POLARIS paint. Nobody saw Rory arrive.",
+  "from": "main.js"
+ },
+ {
+  "key": "14cxv1x",
+  "who": "watch",
+  "text": "Intel won. The gatehouse is dark. The shipyard gate is open.",
+  "from": "main.js"
+ },
+ {
+  "key": "0x2sweb",
+  "who": "watch",
+  "text": "Intel won. The crates are full of drill parts, made here and shipped out on the rig's tender.",
+  "from": "main.js"
+ },
+ {
+  "key": "1x48vyz",
+  "who": "watch",
+  "text": "Intel won. Every lorry in the yard is taking Kaldera's parts to the tender.",
+  "from": "main.js"
+ },
+ {
+  "key": "0edhopl",
+  "who": "watch",
+  "text": "Intel won. Baron Kaldera is holding a Winter Gala at the casino in Monte Carlo.",
+  "from": "main.js"
+ },
+ {
+  "key": "0aqj1wc",
+  "who": "luca",
+  "text": "Nice bow tie! You look like a very small waiter.",
+  "from": "story chat"
+ },
+ {
+  "key": "1cqthez",
+  "who": "luca",
+  "text": "The Baron's guards watch the casino floor. Freeze when they turn!",
+  "from": "story chat"
+ },
+ {
+  "key": "0bblb27",
+  "who": "luca",
+  "text": "The Baron's yacht is parked in the harbour. Black and orange. Very loud.",
+  "from": "story chat"
+ },
+ {
+  "key": "0d9n3dh",
+  "who": "luca",
+  "text": "Scorch drives like she's on fire. She probably is.",
+  "from": "story chat"
+ },
+ {
+  "key": "0oyris4",
+  "who": "luca",
+  "text": "Get in the car! The pit lane is open!",
+  "from": "story chat"
+ },
+ {
+  "key": "00lyebm",
+  "who": "luca",
+  "text": "You want the casino floor. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "11q5yfq",
+  "who": "luca",
+  "text": "Look for the casino floor, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1j3leun",
+  "who": "luca",
+  "text": "The casino floor. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1do947i",
+  "who": "luca",
+  "text": "You want the casino terrace. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wcndf2",
+  "who": "luca",
+  "text": "Look for the casino terrace, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1etq5zr",
+  "who": "luca",
+  "text": "The casino terrace. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0vxkpxf",
+  "who": "luca",
+  "text": "You want the Baron's yacht. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0063jgb",
+  "who": "luca",
+  "text": "Look for the Baron's yacht, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "016dwzc",
+  "who": "luca",
+  "text": "The Baron's yacht. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0aisc2f",
+  "who": "luca",
+  "text": "You want the ballroom balconies. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "105cc19",
+  "who": "luca",
+  "text": "Look for the ballroom balconies, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0n7ndii",
+  "who": "luca",
+  "text": "The ballroom balconies. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0alhbpq",
+  "who": "luca",
+  "text": "You want the pit lane. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1qciy66",
+  "who": "luca",
+  "text": "Look for the pit lane, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0hs1ivb",
+  "who": "luca",
+  "text": "The pit lane. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1605w55",
+  "who": "luca",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ga39ds",
+  "who": "luca",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0x1rsag",
+  "who": "luca",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0cj35v3",
+  "who": "watch",
+  "text": "Intel won. The Baron boasted that soon the whole world will pay him to 'switch it off'.",
+  "from": "main.js"
+ },
+ {
+  "key": "0hi8z12",
+  "who": "watch",
+  "text": "Intel won. The Baron's secret plan is called Project Meltdown.",
+  "from": "main.js"
+ },
+ {
+  "key": "0km6k4v",
+  "who": "watch",
+  "text": "Intel won. The Baron's computer shows six red dots on a map. One of them is at the South Pole.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jwp5gg",
+  "who": "watch",
+  "text": "Intel won. The Baron's balcony guards are covered in paint and very embarrassed.",
+  "from": "main.js"
+ },
+ {
+  "key": "1mbflmj",
+  "who": "watch",
+  "text": "Intel won. Scorch, the Baron's stunt rider, is heading to Barcelona.",
+  "from": "main.js"
+ },
+ {
+  "key": "1dcmgcl",
+  "who": "ines",
+  "text": "The old town streets are so narrow, lorries get stuck all the time.",
+  "from": "story chat"
+ },
+ {
+  "key": "1heynwo",
+  "who": "ines",
+  "text": "The park has mosaic dragons. And cameras. Lots of cameras.",
+  "from": "story chat"
+ },
+ {
+  "key": "1ndiws3",
+  "who": "ines",
+  "text": "The fish market floor is covered in ice. Slippy!",
+  "from": "story chat"
+ },
+ {
+  "key": "0b9haps",
+  "who": "ines",
+  "text": "From the rooftops you can see the whole city. And Scorch.",
+  "from": "story chat"
+ },
+ {
+  "key": "0s2560f",
+  "who": "ines",
+  "text": "My motorbike! Take it! Just bring it back!",
+  "from": "story chat"
+ },
+ {
+  "key": "1rud9k3",
+  "who": "ines",
+  "text": "You want the narrow streets. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1avfh4l",
+  "who": "ines",
+  "text": "Look for the narrow streets, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "08g3ozg",
+  "who": "ines",
+  "text": "The narrow streets. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dqpb7w",
+  "who": "ines",
+  "text": "You want the mosaic park. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "180vzkq",
+  "who": "ines",
+  "text": "Look for the mosaic park, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d4b3dx",
+  "who": "ines",
+  "text": "The mosaic park. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "00th2fx",
+  "who": "ines",
+  "text": "You want the market hall. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0rkg0pp",
+  "who": "ines",
+  "text": "Look for the market hall, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ctawcg",
+  "who": "ines",
+  "text": "The market hall. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1rzc6b0",
+  "who": "ines",
+  "text": "You want the rooftops. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jhqybk",
+  "who": "ines",
+  "text": "Look for the rooftops, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1go4d3v",
+  "who": "ines",
+  "text": "The rooftops. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1rrpfw3",
+  "who": "ines",
+  "text": "You want Inés's motorbike. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "14m8hqx",
+  "who": "ines",
+  "text": "Look for Inés's motorbike, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0w7tqgw",
+  "who": "ines",
+  "text": "Inés's motorbike. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0y3l0j2",
+  "who": "ines",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "13x504z",
+  "who": "ines",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0gb9vwl",
+  "who": "ines",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1upt685",
+  "who": "watch",
+  "text": "Intel won. Scorch's van left the old town and drove to the mosaic park.",
+  "from": "main.js"
+ },
+ {
+  "key": "1s0wxt4",
+  "who": "watch",
+  "text": "Intel won. Every camera in the mosaic park has been painted over.",
+  "from": "main.js"
+ },
+ {
+  "key": "0zf92sy",
+  "who": "watch",
+  "text": "Intel won. Scorch is carrying the blueprints herself.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jiig0n",
+  "who": "watch",
+  "text": "Intel won. Pip's drone followed Scorch across the rooftops to her motorbike.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ju2y4j",
+  "who": "watch",
+  "text": "Intel won. The blueprints are for a giant drilling machine called the Inferno Engine. A test is planned in Santorini.",
+  "from": "main.js"
+ },
+ {
+  "key": "1vqi9la",
+  "who": "nikos",
+  "text": "The whole caldera smells like boiled eggs today.",
+  "from": "story chat"
+ },
+ {
+  "key": "1xxdeyk",
+  "who": "nikos",
+  "text": "Papa says the man who took his boat was very nervous. And very sweaty.",
+  "from": "story chat"
+ },
+ {
+  "key": "1g9z4ls",
+  "who": "nikos",
+  "text": "That barge has a crane. It's pulling hot rocks out of the sea!",
+  "from": "story chat"
+ },
+ {
+  "key": "05jr5ht",
+  "who": "nikos",
+  "text": "The steps down to the harbour are very, very long. Five hundred of them!",
+  "from": "story chat"
+ },
+ {
+  "key": "0u2xk9f",
+  "who": "nikos",
+  "text": "The water's boiling! Take my jet ski!",
+  "from": "story chat"
+ },
+ {
+  "key": "0qgjzb8",
+  "who": "nikos",
+  "text": "You want the old harbour. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1pjo7jm",
+  "who": "nikos",
+  "text": "Look for the old harbour, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "14t7r95",
+  "who": "nikos",
+  "text": "The old harbour. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0adyupi",
+  "who": "nikos",
+  "text": "You want the drill barge. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n3mqr4",
+  "who": "nikos",
+  "text": "Look for the drill barge, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "08ybfdv",
+  "who": "nikos",
+  "text": "The drill barge. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "10vv2fp",
+  "who": "nikos",
+  "text": "You want the drill control hut. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "06rlvl1",
+  "who": "nikos",
+  "text": "Look for the drill control hut, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "05pjb4s",
+  "who": "nikos",
+  "text": "The drill control hut. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0usowfg",
+  "who": "nikos",
+  "text": "You want the white steps. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "09oq212",
+  "who": "nikos",
+  "text": "Look for the white steps, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0h9y7al",
+  "who": "nikos",
+  "text": "The white steps. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1s213su",
+  "who": "nikos",
+  "text": "You want Nikos's jet ski. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lsezd4",
+  "who": "nikos",
+  "text": "Look for Nikos's jet ski, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "00hh07n",
+  "who": "nikos",
+  "text": "Nikos's jet ski. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1skjg84",
+  "who": "nikos",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0b686mp",
+  "who": "nikos",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d57exz",
+  "who": "nikos",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0f8xs41",
+  "who": "watch",
+  "text": "Intel won. A bald, nervous man with round glasses borrowed the boat to reach the drill barge.",
+  "from": "main.js"
+ },
+ {
+  "key": "1va4xes",
+  "who": "watch",
+  "text": "Intel won. The drill is pulling up rocks so hot they glow. It's reaching the volcano's heat.",
+  "from": "main.js"
+ },
+ {
+  "key": "19if6o3",
+  "who": "watch",
+  "text": "Intel won. The test drill is stopped, but it has already opened a crack into the volcano.",
+  "from": "main.js"
+ },
+ {
+  "key": "0tpefcy",
+  "who": "watch",
+  "text": "Intel won. The nervous man is Dr Cinder, the engineer who designed the Inferno Engine.",
+  "from": "main.js"
+ },
+ {
+  "key": "0xviuo9",
+  "who": "watch",
+  "text": "Intel won. The test drill made the volcano's lagoon boil. If the Inferno Engine works, it could melt anything.",
+  "from": "main.js"
+ },
+ {
+  "key": "08rxyfe",
+  "who": "mac",
+  "text": "Gerald says hello. He also says he'd like a sandwich.",
+  "from": "story chat"
+ },
+ {
+  "key": "1d1wu94",
+  "who": "mac",
+  "text": "The dining car serves the best pancakes in Canada. Also, henchmen.",
+  "from": "story chat"
+ },
+ {
+  "key": "1fpx645",
+  "who": "mac",
+  "text": "The train's radio is broken. Somebody snipped the wires.",
+  "from": "story chat"
+ },
+ {
+  "key": "0t2em9k",
+  "who": "mac",
+  "text": "The logs on the river go faster than the train on the bends.",
+  "from": "story chat"
+ },
+ {
+  "key": "07du8s7",
+  "who": "mac",
+  "text": "Scorch jumped off the train on skis! The slope's this way!",
+  "from": "story chat"
+ },
+ {
+  "key": "1g1wdct",
+  "who": "mac",
+  "text": "You want the dining car. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1oevokv",
+  "who": "mac",
+  "text": "Look for the dining car, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1big5jy",
+  "who": "mac",
+  "text": "The dining car. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "087tj23",
+  "who": "mac",
+  "text": "You want the baggage-car radio. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1qkd1yj",
+  "who": "mac",
+  "text": "Look for the baggage-car radio, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1st4iii",
+  "who": "mac",
+  "text": "The baggage-car radio. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0rnzr87",
+  "who": "mac",
+  "text": "You want the sleeper carriages. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0wye41r",
+  "who": "mac",
+  "text": "Look for the sleeper carriages, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "17tlcoi",
+  "who": "mac",
+  "text": "The sleeper carriages. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0sz3ro2",
+  "who": "mac",
+  "text": "You want the log river. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "03pk42c",
+  "who": "mac",
+  "text": "Look for the log river, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "051rfpf",
+  "who": "mac",
+  "text": "The log river. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1oa2n9k",
+  "who": "mac",
+  "text": "You want the ski slope. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0l0oqa2",
+  "who": "mac",
+  "text": "Look for the ski slope, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0lan911",
+  "who": "mac",
+  "text": "The ski slope. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uucf4c",
+  "who": "mac",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1253bop",
+  "who": "mac",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0imfkvj",
+  "who": "mac",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0whvzin",
+  "who": "watch",
+  "text": "Intel won. Dr Cinder's napkin sums: six of something, and the number one trillion.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dr9k3g",
+  "who": "watch",
+  "text": "Intel won. The radio works. The Narwhal is coming.",
+  "from": "main.js"
+ },
+ {
+  "key": "100bs3t",
+  "who": "watch",
+  "text": "Intel won. Dr Cinder's cabin is empty. He's left the train.",
+  "from": "main.js"
+ },
+ {
+  "key": "1njpxuy",
+  "who": "watch",
+  "text": "Intel won. Dr Cinder has been caught on the riverbank. Scorch is still loose.",
+  "from": "main.js"
+ },
+ {
+  "key": "0cpy3kp",
+  "who": "watch",
+  "text": "Intel won. Dr Cinder has agreed to tell POLARIS everything about the Inferno Engines.",
+  "from": "main.js"
+ },
+ {
+  "key": "1t4c7pt",
+  "who": "omar",
+  "text": "From the top of the tower you can see the sea. And the Baron's helicopter.",
+  "from": "story chat"
+ },
+ {
+  "key": "0znnsuv",
+  "who": "omar",
+  "text": "The cable is safe. Mostly. Don't look down.",
+  "from": "story chat"
+ },
+ {
+  "key": "1wmje6z",
+  "who": "omar",
+  "text": "The bank vault has a lock made of switches. Very clever. Very annoying.",
+  "from": "story chat"
+ },
+ {
+  "key": "05npu2s",
+  "who": "omar",
+  "text": "The gold souk sells everything. Even gadget cases.",
+  "from": "story chat"
+ },
+ {
+  "key": "164unjz",
+  "who": "omar",
+  "text": "The courier's getting away with the gold! The supercar's yours!",
+  "from": "story chat"
+ },
+ {
+  "key": "0tz0s2i",
+  "who": "omar",
+  "text": "You want the helipad. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1shyppc",
+  "who": "omar",
+  "text": "Look for the helipad, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d7uju1",
+  "who": "omar",
+  "text": "The helipad. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1b2fn8r",
+  "who": "omar",
+  "text": "You want the window-cleaning cable. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uo2quv",
+  "who": "omar",
+  "text": "Look for the window-cleaning cable, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1kfyfwk",
+  "who": "omar",
+  "text": "The window-cleaning cable. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1iumi8r",
+  "who": "omar",
+  "text": "You want the bank vault. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1crarx1",
+  "who": "omar",
+  "text": "Look for the bank vault, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "04ayh3m",
+  "who": "omar",
+  "text": "The bank vault. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "12125m5",
+  "who": "omar",
+  "text": "You want the gold souk. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0917mk9",
+  "who": "omar",
+  "text": "Look for the gold souk, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ie2hba",
+  "who": "omar",
+  "text": "The gold souk. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "009yytp",
+  "who": "omar",
+  "text": "You want the supercar garage. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ndiu0t",
+  "who": "omar",
+  "text": "Look for the supercar garage, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dl2n7u",
+  "who": "omar",
+  "text": "The supercar garage. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "094ftmd",
+  "who": "omar",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1w1n6wc",
+  "who": "omar",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0rfx80c",
+  "who": "omar",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1hd1yxb",
+  "who": "watch",
+  "text": "Intel won. Rory landed on the helipad and heard the Baron talk about a desert and a telescope.",
+  "from": "main.js"
+ },
+ {
+  "key": "0nxeuih",
+  "who": "watch",
+  "text": "Intel won. The Baron's gold is paying for guidance systems to steer the Inferno Engines.",
+  "from": "main.js"
+ },
+ {
+  "key": "0hbye3g",
+  "who": "watch",
+  "text": "Intel won. Every payment from the Baron's vault goes to a laboratory in the Atacama Desert.",
+  "from": "main.js"
+ },
+ {
+  "key": "0g0z7xa",
+  "who": "watch",
+  "text": "Intel won. The account books are hidden in Pip's gadget case.",
+  "from": "main.js"
+ },
+ {
+  "key": "1icmyqc",
+  "who": "watch",
+  "text": "Intel won. The courier is caught, but the guidance systems are already being built in Chile.",
+  "from": "main.js"
+ },
+ {
+  "key": "1y860af",
+  "who": "valentina",
+  "text": "The sky here is so clear you can see a million stars.",
+  "from": "story chat"
+ },
+ {
+  "key": "1in8ppw",
+  "who": "valentina",
+  "text": "The old mine railway still works. The Baron's men use it.",
+  "from": "story chat"
+ },
+ {
+  "key": "0woavwk",
+  "who": "valentina",
+  "text": "My telescope is stuck pointing at a satellite. An orange one.",
+  "from": "story chat"
+ },
+ {
+  "key": "0eraysa",
+  "who": "valentina",
+  "text": "The cold lab should be minus eighty degrees. It isn't.",
+  "from": "story chat"
+ },
+ {
+  "key": "1pmyikn",
+  "who": "valentina",
+  "text": "Trucks! Coming over the dunes! Take the buggy!",
+  "from": "story chat"
+ },
+ {
+  "key": "1lf1boe",
+  "who": "valentina",
+  "text": "You want the old mine railway. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "133zcf6",
+  "who": "valentina",
+  "text": "Look for the old mine railway, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "179w5cf",
+  "who": "valentina",
+  "text": "The old mine railway. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d4hl79",
+  "who": "valentina",
+  "text": "You want the big telescope. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ll6xet",
+  "who": "valentina",
+  "text": "Look for the big telescope, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1plcjue",
+  "who": "valentina",
+  "text": "The big telescope. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jae89s",
+  "who": "valentina",
+  "text": "You want the cold lab. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jemwzo",
+  "who": "valentina",
+  "text": "Look for the cold lab, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ko70qp",
+  "who": "valentina",
+  "text": "The cold lab. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n945kj",
+  "who": "valentina",
+  "text": "You want the desert helipad. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0zvb231",
+  "who": "valentina",
+  "text": "Look for the desert helipad, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ngwnuu",
+  "who": "valentina",
+  "text": "The desert helipad. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "107fm23",
+  "who": "valentina",
+  "text": "You want the dune buggy. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1p0df5p",
+  "who": "valentina",
+  "text": "Look for the dune buggy, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1f05fmu",
+  "who": "valentina",
+  "text": "The dune buggy. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1l6g62n",
+  "who": "valentina",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ww48ta",
+  "who": "valentina",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0h81mf6",
+  "who": "valentina",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1w8sk9o",
+  "who": "watch",
+  "text": "Intel won. The Baron's guidance parts have all gone to the wrong platforms.",
+  "from": "main.js"
+ },
+ {
+  "key": "04jheed",
+  "who": "watch",
+  "text": "Intel won. The Baron has a satellite in the sky to guide his engines.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uzja8g",
+  "who": "watch",
+  "text": "Intel won. The guidance chips are programmed to steer the engines to Antarctica.",
+  "from": "main.js"
+ },
+ {
+  "key": "08ueg0y",
+  "who": "watch",
+  "text": "Intel won. Some of the Baron's guidance chips have been swapped for POLARIS fakes.",
+  "from": "main.js"
+ },
+ {
+  "key": "0sye9x8",
+  "who": "watch",
+  "text": "Intel won. The Baron's trucks were taking parts to a ship bound for Mount Bromo in Indonesia.",
+  "from": "main.js"
+ },
+ {
+  "key": "0yygxkv",
+  "who": "budi",
+  "text": "Bromo is always smoking. But today it's grumpy.",
+  "from": "story chat"
+ },
+ {
+  "key": "1wdr9t2",
+  "who": "budi",
+  "text": "The warehouse is full of crates. Heavy crates.",
+  "from": "story chat"
+ },
+ {
+  "key": "17k41e1",
+  "who": "budi",
+  "text": "The magma core is glowing like a little sun.",
+  "from": "story chat"
+ },
+ {
+  "key": "0hk1t24",
+  "who": "budi",
+  "text": "It's the village festival tonight! Everyone dances.",
+  "from": "story chat"
+ },
+ {
+  "key": "16m9pl9",
+  "who": "budi",
+  "text": "Scorch is flying round the volcano! Here's a wingsuit!",
+  "from": "story chat"
+ },
+ {
+  "key": "14t2kr9",
+  "who": "budi",
+  "text": "You want the geothermal plant. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ve9psn",
+  "who": "budi",
+  "text": "Look for the geothermal plant, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dmdl32",
+  "who": "budi",
+  "text": "The geothermal plant. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "008cjou",
+  "who": "budi",
+  "text": "You want the crater warehouse. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0wloz2a",
+  "who": "budi",
+  "text": "Look for the crater warehouse, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0tt9wmh",
+  "who": "budi",
+  "text": "The crater warehouse. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "02ienly",
+  "who": "budi",
+  "text": "You want the magma core. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1093isy",
+  "who": "budi",
+  "text": "Look for the magma core, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0601vgl",
+  "who": "budi",
+  "text": "The magma core. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0bqk7we",
+  "who": "budi",
+  "text": "You want the village festival. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1rkx2jm",
+  "who": "budi",
+  "text": "Look for the village festival, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1xwf94h",
+  "who": "budi",
+  "text": "The village festival. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0jfwpr2",
+  "who": "budi",
+  "text": "You want the crater ridge. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1brljqu",
+  "who": "budi",
+  "text": "Look for the crater ridge, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1s2bgq5",
+  "who": "budi",
+  "text": "The crater ridge. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "11ai1j6",
+  "who": "budi",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0sglo47",
+  "who": "budi",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0iza4cx",
+  "who": "budi",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "027u0fp",
+  "who": "watch",
+  "text": "Intel won. The geothermal plant is running for the villagers again.",
+  "from": "main.js"
+ },
+ {
+  "key": "1b2ml7n",
+  "who": "watch",
+  "text": "Intel won. The Baron is packing the volcano's heat into glowing magma cores.",
+  "from": "main.js"
+ },
+ {
+  "key": "0yeg6mn",
+  "who": "watch",
+  "text": "Intel won. The overheating magma core is cooled. Mount Bromo is safe.",
+  "from": "main.js"
+ },
+ {
+  "key": "00mhnxm",
+  "who": "watch",
+  "text": "Intel won. The henchmen said the magma cores are going to Seoul.",
+  "from": "main.js"
+ },
+ {
+  "key": "0l6rvst",
+  "who": "watch",
+  "text": "Intel won. Scorch has lost one magma core. The rest are already on their way to Seoul.",
+  "from": "main.js"
+ },
+ {
+  "key": "1c3t2yj",
+  "who": "minjun",
+  "text": "The concert's sold out. We'll have to dance our way in.",
+  "from": "story chat"
+ },
+ {
+  "key": "0v0iqm9",
+  "who": "minjun",
+  "text": "The chip factory's lock is made of gates. I love gates.",
+  "from": "story chat"
+ },
+ {
+  "key": "1xakyci",
+  "who": "minjun",
+  "text": "The clean room is so clean, you have to wear a space suit.",
+  "from": "story chat"
+ },
+ {
+  "key": "0a4au4s",
+  "who": "minjun",
+  "text": "The TV tower has the best view in Seoul.",
+  "from": "story chat"
+ },
+ {
+  "key": "0eyqxtg",
+  "who": "minjun",
+  "text": "The courier's on a motorbike! Take mine!",
+  "from": "story chat"
+ },
+ {
+  "key": "1mx9zyq",
+  "who": "minjun",
+  "text": "You want the concert stage. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ktwwog",
+  "who": "minjun",
+  "text": "Look for the concert stage, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "169odun",
+  "who": "minjun",
+  "text": "The concert stage. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1dqhbtc",
+  "who": "minjun",
+  "text": "You want the chip factory. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d0wzh8",
+  "who": "minjun",
+  "text": "Look for the chip factory, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ty9j47",
+  "who": "minjun",
+  "text": "The chip factory. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0qhx31w",
+  "who": "minjun",
+  "text": "You want the clean room. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0nvzb4g",
+  "who": "minjun",
+  "text": "Look for the clean room, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0m8pngz",
+  "who": "minjun",
+  "text": "The clean room. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1fy5e3d",
+  "who": "minjun",
+  "text": "You want the TV tower. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "18deonb",
+  "who": "minjun",
+  "text": "Look for the TV tower, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0vhgyaa",
+  "who": "minjun",
+  "text": "The TV tower. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "105dmfz",
+  "who": "minjun",
+  "text": "You want Min-jun's motorbike. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0bc5d2b",
+  "who": "minjun",
+  "text": "Look for Min-jun's motorbike, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "02ufpcm",
+  "who": "minjun",
+  "text": "Min-jun's motorbike. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1w1ntl8",
+  "who": "minjun",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0k3ng15",
+  "who": "minjun",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0zcim3z",
+  "who": "minjun",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "175eurh",
+  "who": "watch",
+  "text": "Intel won. The Baron's control chips are hidden in a guitar case.",
+  "from": "main.js"
+ },
+ {
+  "key": "1nysrrm",
+  "who": "watch",
+  "text": "Intel won. Rory is inside the chip factory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0fri16u",
+  "who": "watch",
+  "text": "Intel won. Some of the Baron's control chips are now fakes that play music.",
+  "from": "main.js"
+ },
+ {
+  "key": "1kg3gw3",
+  "who": "watch",
+  "text": "Intel won. The chip courier is escaping on a motorbike.",
+  "from": "main.js"
+ },
+ {
+  "key": "150g3jr",
+  "who": "watch",
+  "text": "Intel won. The courier is caught. The engines' last test is in the Himalaya.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wyxyvd",
+  "who": "tenzing",
+  "text": "Walk slowly up here. The air is thin.",
+  "from": "story chat"
+ },
+ {
+  "key": "1fchrk4",
+  "who": "tenzing",
+  "text": "The rope bridge is old, but it has never dropped anyone. Yet.",
+  "from": "story chat"
+ },
+ {
+  "key": "17vj0gx",
+  "who": "tenzing",
+  "text": "The monks let the Baron store boxes in their storeroom. They didn't know.",
+  "from": "story chat"
+ },
+ {
+  "key": "1cvjc86",
+  "who": "tenzing",
+  "text": "The test engine is melting the glacier. The river below is rising.",
+  "from": "story chat"
+ },
+ {
+  "key": "1dpkxta",
+  "who": "tenzing",
+  "text": "Avalanche! Grab a snowboard! Go!",
+  "from": "story chat"
+ },
+ {
+  "key": "0rc9m8l",
+  "who": "tenzing",
+  "text": "You want the rope bridge. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jsd9qx",
+  "who": "tenzing",
+  "text": "Look for the rope bridge, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1c440hg",
+  "who": "tenzing",
+  "text": "The rope bridge. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "07bn6aq",
+  "who": "tenzing",
+  "text": "You want the high-camp helipad. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lo6280",
+  "who": "tenzing",
+  "text": "Look for the high-camp helipad, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0qp32zn",
+  "who": "tenzing",
+  "text": "The high-camp helipad. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "19ty0g8",
+  "who": "tenzing",
+  "text": "You want the monastery storeroom. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1p8gdre",
+  "who": "tenzing",
+  "text": "Look for the monastery storeroom, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0k1viul",
+  "who": "tenzing",
+  "text": "The monastery storeroom. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1qex17w",
+  "who": "tenzing",
+  "text": "You want the test engine. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1a8qg3m",
+  "who": "tenzing",
+  "text": "Look for the test engine, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0a1r3bh",
+  "who": "tenzing",
+  "text": "The test engine. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1y2uvzc",
+  "who": "tenzing",
+  "text": "You want the summit ridge. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "14mste4",
+  "who": "tenzing",
+  "text": "Look for the summit ridge, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "04wbq53",
+  "who": "tenzing",
+  "text": "The summit ridge. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0utfsic",
+  "who": "tenzing",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "05gnc3l",
+  "who": "tenzing",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0sdzfw7",
+  "who": "tenzing",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "19x5nv0",
+  "who": "watch",
+  "text": "Intel won. Rory has crossed the gorge to the test site.",
+  "from": "main.js"
+ },
+ {
+  "key": "0y87tz4",
+  "who": "watch",
+  "text": "Intel won. Pip's helicopter has landed at high camp with climbing gear.",
+  "from": "main.js"
+ },
+ {
+  "key": "18f87om",
+  "who": "watch",
+  "text": "Intel won. The Baron's boxes are full of maps of Antarctica.",
+  "from": "main.js"
+ },
+ {
+  "key": "0wgehc7",
+  "who": "watch",
+  "text": "Intel won. The Inferno Engine's test is over. The engines work.",
+  "from": "main.js"
+ },
+ {
+  "key": "064ipq9",
+  "who": "watch",
+  "text": "Intel won. The engines are finished and being loaded onto ships in Cape Town.",
+  "from": "main.js"
+ },
+ {
+  "key": "0jckma0",
+  "who": "thandi",
+  "text": "My penguins have names. That one's Captain Wobble.",
+  "from": "story chat"
+ },
+ {
+  "key": "1yufzhz",
+  "who": "thandi",
+  "text": "The big man in the beanie was here again. He brought the good sardines.",
+  "from": "story chat"
+ },
+ {
+  "key": "1hrfyt8",
+  "who": "thandi",
+  "text": "The Baron's ship is enormous. Orange, with a flame on the funnel.",
+  "from": "story chat"
+ },
+ {
+  "key": "1yras0t",
+  "who": "thandi",
+  "text": "Table Mountain's got its tablecloth of cloud today.",
+  "from": "story chat"
+ },
+ {
+  "key": "15xfk2z",
+  "who": "thandi",
+  "text": "You want the harbour sidings. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0653zmf",
+  "who": "thandi",
+  "text": "Look for the harbour sidings, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1isrhlw",
+  "who": "thandi",
+  "text": "The harbour sidings. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "16t395p",
+  "who": "thandi",
+  "text": "You want the engine ship. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "04b3hbx",
+  "who": "thandi",
+  "text": "Look for the engine ship, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0eg54y2",
+  "who": "thandi",
+  "text": "The engine ship. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "18484go",
+  "who": "thandi",
+  "text": "You want the cable-car station. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lx7qca",
+  "who": "thandi",
+  "text": "Look for the cable-car station, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0vfmcoz",
+  "who": "thandi",
+  "text": "The cable-car station. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0e4lc12",
+  "who": "thandi",
+  "text": "You want the fuel tanks. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "052ocje",
+  "who": "thandi",
+  "text": "Look for the fuel tanks, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "17pkb6r",
+  "who": "thandi",
+  "text": "The fuel tanks. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1xtrg05",
+  "who": "thandi",
+  "text": "You want the jetty. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1q1y5g1",
+  "who": "thandi",
+  "text": "Look for the jetty, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "00ektbi",
+  "who": "thandi",
+  "text": "The jetty. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1i7rrb1",
+  "who": "thandi",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0q59qsk",
+  "who": "thandi",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0hg1epg",
+  "who": "thandi",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "09icsi5",
+  "who": "watch",
+  "text": "Intel won. Half the engine wagons have been sent the wrong way.",
+  "from": "main.js"
+ },
+ {
+  "key": "1kzbhqv",
+  "who": "watch",
+  "text": "Intel won. The engines on the ship are now full of coolant.",
+  "from": "main.js"
+ },
+ {
+  "key": "048ov6n",
+  "who": "watch",
+  "text": "Intel won. The Baron's henchman Bruno keeps coming to feed the penguins.",
+  "from": "main.js"
+ },
+ {
+  "key": "14ffpb3",
+  "who": "watch",
+  "text": "Intel won. The engine ship will run out of fuel just before Antarctica.",
+  "from": "main.js"
+ },
+ {
+  "key": "0a4jpqg",
+  "who": "watch",
+  "text": "Intel won. A POLARIS tracker is fixed to the engine ship. It is heading for Antarctica.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lb84gx",
+  "who": "aroha",
+  "text": "Rotorua smells of eggs. You get used to it.",
+  "from": "story chat"
+ },
+ {
+  "key": "16sltpm",
+  "who": "aroha",
+  "text": "The geyser goes off every few minutes. Stand back!",
+  "from": "story chat"
+ },
+ {
+  "key": "1ps60bt",
+  "who": "aroha",
+  "text": "The meeting house has watched over this valley for a hundred years.",
+  "from": "story chat"
+ },
+ {
+  "key": "0nn82vy",
+  "who": "aroha",
+  "text": "The helicopter can take us over the steam.",
+  "from": "story chat"
+ },
+ {
+  "key": "0v9knie",
+  "who": "aroha",
+  "text": "Scorch is in the canyon! The jet boat's ready!",
+  "from": "story chat"
+ },
+ {
+  "key": "1c81z05",
+  "who": "aroha",
+  "text": "You want the geothermal station. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "17vg3zv",
+  "who": "aroha",
+  "text": "Look for the geothermal station, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0q74fug",
+  "who": "aroha",
+  "text": "The geothermal station. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "11xqnrm",
+  "who": "aroha",
+  "text": "You want the boiling pools. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0qanesw",
+  "who": "aroha",
+  "text": "Look for the boiling pools, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1gnjhah",
+  "who": "aroha",
+  "text": "The boiling pools. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "06dessm",
+  "who": "aroha",
+  "text": "You want the hot-springs village. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0t7ire8",
+  "who": "aroha",
+  "text": "Look for the hot-springs village, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wml1u1",
+  "who": "aroha",
+  "text": "The hot-springs village. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1t9v592",
+  "who": "aroha",
+  "text": "You want the helipad. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1saizjw",
+  "who": "aroha",
+  "text": "Look for the helipad, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "007pith",
+  "who": "aroha",
+  "text": "The helipad. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1clp0xg",
+  "who": "aroha",
+  "text": "You want the jet boat. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ar0wxo",
+  "who": "aroha",
+  "text": "Look for the jet boat, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "17si2kl",
+  "who": "aroha",
+  "text": "The jet boat. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0e9rl55",
+  "who": "aroha",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0saxh00",
+  "who": "aroha",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "0gegk6g",
+  "who": "aroha",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0v73o7j",
+  "who": "watch",
+  "text": "Intel won. Rotorua's heat is going back to the village, not the Baron.",
+  "from": "main.js"
+ },
+ {
+  "key": "13aul7n",
+  "who": "watch",
+  "text": "Intel won. The Baron's machines are leaving Rotorua.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wf0ipi",
+  "who": "watch",
+  "text": "Intel won. Scorch was hiding in the hot-springs village.",
+  "from": "main.js"
+ },
+ {
+  "key": "0j2pl1z",
+  "who": "watch",
+  "text": "Intel won. Scorch is escaping by jet boat.",
+  "from": "main.js"
+ },
+ {
+  "key": "0bialzh",
+  "who": "watch",
+  "text": "Intel won. Scorch is on her way to Antarctica to join the Baron.",
+  "from": "main.js"
+ },
+ {
+  "key": "1722lf0",
+  "who": "lucia",
+  "text": "It's always cold here. Even in summer.",
+  "from": "story chat"
+ },
+ {
+  "key": "0kptosg",
+  "who": "lucia",
+  "text": "The End of the World Train has been running for a hundred years.",
+  "from": "story chat"
+ },
+ {
+  "key": "1q900g5",
+  "who": "lucia",
+  "text": "The container port is full of the Baron's boxes.",
+  "from": "story chat"
+ },
+ {
+  "key": "1pi427e",
+  "who": "lucia",
+  "text": "Our icebreaker can break ice as thick as a house.",
+  "from": "story chat"
+ },
+ {
+  "key": "0mlal5k",
+  "who": "lucia",
+  "text": "The convoy's racing to the port! Take the jeep!",
+  "from": "story chat"
+ },
+ {
+  "key": "1205dtd",
+  "who": "lucia",
+  "text": "You want the End of the World Train. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0wkducv",
+  "who": "lucia",
+  "text": "Look for the End of the World Train, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1u01hii",
+  "who": "lucia",
+  "text": "The End of the World Train. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "065sxs6",
+  "who": "lucia",
+  "text": "You want the container port. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1nsq322",
+  "who": "lucia",
+  "text": "Look for the container port, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ia1hfh",
+  "who": "lucia",
+  "text": "The container port. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0k648rc",
+  "who": "lucia",
+  "text": "You want the icebreaker deck. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "12n9ofa",
+  "who": "lucia",
+  "text": "Look for the icebreaker deck, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "03iol71",
+  "who": "lucia",
+  "text": "The icebreaker deck. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1i6k38d",
+  "who": "lucia",
+  "text": "You want the polar kit store. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0us1rrd",
+  "who": "lucia",
+  "text": "Look for the polar kit store, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ji4yog",
+  "who": "lucia",
+  "text": "The polar kit store. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1alvqbc",
+  "who": "lucia",
+  "text": "You want the jeep. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "038rn5k",
+  "who": "lucia",
+  "text": "Look for the jeep, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1th1fmb",
+  "who": "lucia",
+  "text": "The jeep. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1iegmgs",
+  "who": "lucia",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1fi8rh5",
+  "who": "lucia",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1an9ri7",
+  "who": "lucia",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lqfwql",
+  "who": "watch",
+  "text": "Intel won. The Baron's supplies are going to the railway museum.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uczrx6",
+  "who": "watch",
+  "text": "Intel won. Kaldera's lorries are waiting at the port.",
+  "from": "main.js"
+ },
+ {
+  "key": "08stglj",
+  "who": "watch",
+  "text": "Intel won. The icebreaker will take Rory south.",
+  "from": "main.js"
+ },
+ {
+  "key": "00c7yzw",
+  "who": "watch",
+  "text": "Intel won. Rory is packed for Antarctica. Including a penguin costume.",
+  "from": "main.js"
+ },
+ {
+  "key": "1uc1tt3",
+  "who": "watch",
+  "text": "Intel won. Rory beat Kaldera's convoy to the port.",
+  "from": "main.js"
+ },
+ {
+  "key": "0k1gtmo",
+  "who": "ellie",
+  "text": "There are ten thousand penguins here. I've counted. Twice.",
+  "from": "story chat"
+ },
+ {
+  "key": "19lnvs5",
+  "who": "ellie",
+  "text": "The station's been busy. Somebody's been using our radio.",
+  "from": "story chat"
+ },
+ {
+  "key": "1rwq1h3",
+  "who": "ellie",
+  "text": "The crevasse opened last week. It wasn't there before.",
+  "from": "story chat"
+ },
+ {
+  "key": "19fkzab",
+  "who": "ellie",
+  "text": "The generator keeps overheating. Just like everything else.",
+  "from": "story chat"
+ },
+ {
+  "key": "1wdgku1",
+  "who": "ellie",
+  "text": "Scorch is on a snowmobile! Take ours!",
+  "from": "story chat"
+ },
+ {
+  "key": "16lfoet",
+  "who": "ellie",
+  "text": "You want the penguin colony. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jdd4df",
+  "who": "ellie",
+  "text": "Look for the penguin colony, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0fprojw",
+  "who": "ellie",
+  "text": "The penguin colony. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1a9gtvk",
+  "who": "ellie",
+  "text": "You want the research station. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1gq96wg",
+  "who": "ellie",
+  "text": "Look for the research station, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "071nmfh",
+  "who": "ellie",
+  "text": "The research station. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0zrly1t",
+  "who": "ellie",
+  "text": "You want the crevasse. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ci45nz",
+  "who": "ellie",
+  "text": "Look for the crevasse, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1xgdgpk",
+  "who": "ellie",
+  "text": "The crevasse. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ibhdxo",
+  "who": "ellie",
+  "text": "You want the station generator. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "12mjxty",
+  "who": "ellie",
+  "text": "Look for the station generator, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1awlhqj",
+  "who": "ellie",
+  "text": "The station generator. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1qiehfs",
+  "who": "ellie",
+  "text": "You want the snowmobile. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1w6ndf0",
+  "who": "ellie",
+  "text": "Look for the snowmobile, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0exqcxd",
+  "who": "ellie",
+  "text": "The snowmobile. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uvhw3b",
+  "who": "ellie",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1h6l8ue",
+  "who": "ellie",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1uwmjx6",
+  "who": "ellie",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "06124tm",
+  "who": "watch",
+  "text": "Intel won. The Baron's henchman Bruno is hiding with the penguins. He seems very sad.",
+  "from": "main.js"
+ },
+ {
+  "key": "16ce4k3",
+  "who": "watch",
+  "text": "Intel won. The Baron's engines start drilling in two days.",
+  "from": "main.js"
+ },
+ {
+  "key": "1wi2y2z",
+  "who": "watch",
+  "text": "Intel won. Rory followed Bruno across the crevasse.",
+  "from": "main.js"
+ },
+ {
+  "key": "1hy54ny",
+  "who": "watch",
+  "text": "Intel won. The research station is safe.",
+  "from": "main.js"
+ },
+ {
+  "key": "1qnf8x2",
+  "who": "watch",
+  "text": "Intel won. Bruno has left the Baron to help POLARIS save the penguins.",
+  "from": "main.js"
+ },
+ {
+  "key": "0y2b4ki",
+  "who": "zara",
+  "text": "Stay close. You can't see your hand in this blizzard.",
+  "from": "story chat"
+ },
+ {
+  "key": "1rvmayq",
+  "who": "zara",
+  "text": "The relay mast links all six engines together.",
+  "from": "story chat"
+ },
+ {
+  "key": "18lhceu",
+  "who": "zara",
+  "text": "The sentry towers have spotlights. Stay in the dark.",
+  "from": "story chat"
+ },
+ {
+  "key": "1872wz8",
+  "who": "zara",
+  "text": "The fuel depot keeps the engines running.",
+  "from": "story chat"
+ },
+ {
+  "key": "1dscieq",
+  "who": "zara",
+  "text": "The shelf's cracking! Get in the hovercraft!",
+  "from": "story chat"
+ },
+ {
+  "key": "1v2q2x7",
+  "who": "zara",
+  "text": "You want Inferno Engine One. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1u98f9x",
+  "who": "zara",
+  "text": "Look for Inferno Engine One, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0oq9g9e",
+  "who": "zara",
+  "text": "Inferno Engine One. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1s34f3v",
+  "who": "zara",
+  "text": "You want the relay mast. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0uhkxcl",
+  "who": "zara",
+  "text": "Look for the relay mast, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0f8h6du",
+  "who": "zara",
+  "text": "The relay mast. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "19kxb3w",
+  "who": "zara",
+  "text": "You want the sentry towers. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0aqj8ga",
+  "who": "zara",
+  "text": "Look for the sentry towers, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1w2lrf7",
+  "who": "zara",
+  "text": "The sentry towers. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "15y06vv",
+  "who": "zara",
+  "text": "You want the fuel depot. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "05q2ptx",
+  "who": "zara",
+  "text": "Look for the fuel depot, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1tg7k82",
+  "who": "zara",
+  "text": "The fuel depot. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1d61a85",
+  "who": "zara",
+  "text": "You want Zara's hovercraft. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ontsc5",
+  "who": "zara",
+  "text": "Look for Zara's hovercraft, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "02800aa",
+  "who": "zara",
+  "text": "Zara's hovercraft. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0vdh0k5",
+  "who": "zara",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "0v07cp8",
+  "who": "zara",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1mkkyek",
+  "who": "zara",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n9m54c",
+  "who": "watch",
+  "text": "Intel won. Inferno Engine One has been jammed.",
+  "from": "main.js"
+ },
+ {
+  "key": "04mqvyj",
+  "who": "watch",
+  "text": "Intel won. The six engines have lost their link.",
+  "from": "main.js"
+ },
+ {
+  "key": "196ow4d",
+  "who": "watch",
+  "text": "Intel won. The Baron's sentry drones are blinded.",
+  "from": "main.js"
+ },
+ {
+  "key": "17xl8x8",
+  "who": "watch",
+  "text": "Intel won. The Inferno Engines are running out of fuel.",
+  "from": "main.js"
+ },
+ {
+  "key": "0vuiv5x",
+  "who": "watch",
+  "text": "Intel won. The engines are failing. The Baron is escaping by submarine.",
+  "from": "main.js"
+ },
+ {
+  "key": "1t61d9n",
+  "who": "pip",
+  "text": "These caves are beautiful. Blue ice everywhere.",
+  "from": "story chat"
+ },
+ {
+  "key": "1b6qxrw",
+  "who": "pip",
+  "text": "The frozen cavern has something inside the ice.",
+  "from": "story chat"
+ },
+ {
+  "key": "04tmopi",
+  "who": "pip",
+  "text": "The submarine dock has a logic lock. Of course it does.",
+  "from": "story chat"
+ },
+ {
+  "key": "0xfl350",
+  "who": "pip",
+  "text": "My mini-sub needs exactly the right ballast.",
+  "from": "story chat"
+ },
+ {
+  "key": "0em65ib",
+  "who": "pip",
+  "text": "The Baron's sub is diving! Into the moon pool!",
+  "from": "story chat"
+ },
+ {
+  "key": "03stoxy",
+  "who": "pip",
+  "text": "You want the ice tunnel. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0blzdku",
+  "who": "pip",
+  "text": "Look for the ice tunnel, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ajqxxv",
+  "who": "pip",
+  "text": "The ice tunnel. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1aneei6",
+  "who": "pip",
+  "text": "You want the frozen cavern. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0kk2xmw",
+  "who": "pip",
+  "text": "Look for the frozen cavern, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "043y3bp",
+  "who": "pip",
+  "text": "The frozen cavern. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1a9jnhi",
+  "who": "pip",
+  "text": "You want the submarine dock. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "10bolzy",
+  "who": "pip",
+  "text": "Look for the submarine dock, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "11xzw4r",
+  "who": "pip",
+  "text": "The submarine dock. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0a7k5q7",
+  "who": "pip",
+  "text": "You want Pip's mini-sub. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0hp4g0x",
+  "who": "pip",
+  "text": "Look for Pip's mini-sub, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "15qvpi2",
+  "who": "pip",
+  "text": "Pip's mini-sub. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0d88g7c",
+  "who": "pip",
+  "text": "You want the moon pool. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0iax5qy",
+  "who": "pip",
+  "text": "Look for the moon pool, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1s087vr",
+  "who": "pip",
+  "text": "The moon pool. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0g5o9iz",
+  "who": "pip",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1r0aohm",
+  "who": "pip",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "1jpthli",
+  "who": "pip",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1k86xfk",
+  "who": "watch",
+  "text": "Intel won. The ice tunnel leads to the Baron's submarine dock.",
+  "from": "main.js"
+ },
+ {
+  "key": "0j1guy6",
+  "who": "watch",
+  "text": "Intel won. The Baron's spare engine parts are frozen in the cavern ice.",
+  "from": "main.js"
+ },
+ {
+  "key": "10jin5v",
+  "who": "watch",
+  "text": "Intel won. Rory has opened the Baron's submarine dock.",
+  "from": "main.js"
+ },
+ {
+  "key": "03pjxuo",
+  "who": "watch",
+  "text": "Intel won. Pip's mini-sub is ready to dive.",
+  "from": "main.js"
+ },
+ {
+  "key": "121mhkf",
+  "who": "watch",
+  "text": "Intel won. Kaldera's submarine is heading for his lair in Mount Erebus.",
+  "from": "main.js"
+ },
+ {
+  "key": "1l1dah5",
+  "who": "bruno",
+  "text": "The lava lake is very hot. Do not touch.",
+  "from": "story chat"
+ },
+ {
+  "key": "1p39bmp",
+  "who": "bruno",
+  "text": "The great hall has a disco. The Baron loves disco.",
+  "from": "story chat"
+ },
+ {
+  "key": "05gr1x9",
+  "who": "bruno",
+  "text": "The lava-pit crane holds the master keys.",
+  "from": "story chat"
+ },
+ {
+  "key": "0u4e9sr",
+  "who": "bruno",
+  "text": "The master control room switches off all six engines.",
+  "from": "story chat"
+ },
+ {
+  "key": "0s7cair",
+  "who": "bruno",
+  "text": "The Baron is running for the ice chute! Take my bobsled!",
+  "from": "story chat"
+ },
+ {
+  "key": "0mbenun",
+  "who": "bruno",
+  "text": "You want the crater rim. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0xt9akp",
+  "who": "bruno",
+  "text": "Look for the crater rim, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1v1y2j4",
+  "who": "bruno",
+  "text": "The crater rim. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "029j5ba",
+  "who": "bruno",
+  "text": "You want the great hall. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "1nb7k1m",
+  "who": "bruno",
+  "text": "Look for the great hall, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1vqtaxx",
+  "who": "bruno",
+  "text": "The great hall. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1lq8ex4",
+  "who": "bruno",
+  "text": "You want the lava-pit crane. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "03xjt34",
+  "who": "bruno",
+  "text": "Look for the lava-pit crane, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "09272mz",
+  "who": "bruno",
+  "text": "The lava-pit crane. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1fdtc6a",
+  "who": "bruno",
+  "text": "You want the master control room. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0094xr8",
+  "who": "bruno",
+  "text": "Look for the master control room, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "1p9fax7",
+  "who": "bruno",
+  "text": "The master control room. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "1j3xqhm",
+  "who": "bruno",
+  "text": "You want the ice chute. It is the one that glows.",
+  "from": "main.js"
+ },
+ {
+  "key": "0qq88dc",
+  "who": "bruno",
+  "text": "Look for the ice chute, marked with a floating sign.",
+  "from": "main.js"
+ },
+ {
+  "key": "00z7oxr",
+  "who": "bruno",
+  "text": "The ice chute. Follow the glow and you cannot miss it.",
+  "from": "main.js"
+ },
+ {
+  "key": "0qcmw1e",
+  "who": "bruno",
+  "text": "That is everything here. Your plane is waiting, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1n7tzlz",
+  "who": "bruno",
+  "text": "Nothing else for you in this city. Off you go.",
+  "from": "main.js"
+ },
+ {
+  "key": "10mx4kh",
+  "who": "bruno",
+  "text": "We are done here. Safe flight, Agent Rory.",
+  "from": "main.js"
+ },
+ {
+  "key": "1nhomwr",
+  "who": "watch",
+  "text": "Intel won. Rory has dropped into the Baron's volcano.",
+  "from": "main.js"
+ },
+ {
+  "key": "1d1ko55",
+  "who": "watch",
+  "text": "Intel won. The Baron is celebrating too soon.",
+  "from": "main.js"
+ },
+ {
+  "key": "0c0rase",
+  "who": "watch",
+  "text": "Intel won. Rory has the keys to the master control room.",
+  "from": "main.js"
+ },
+ {
+  "key": "11f8d2d",
+  "who": "watch",
+  "text": "Intel won. All six Inferno Engines are off. The ice is freezing again.",
+  "from": "main.js"
+ },
+ {
+  "key": "0a92enp",
+  "who": "watch",
+  "text": "Intel won. Baron Magnus Kaldera has been caught at the bottom of Mount Erebus.",
+  "from": "main.js"
+ },
+ {
+  "key": "1yrr35p",
+  "who": "pip",
+  "text": "One of the Baron's listening bugs. Off it goes.",
+  "from": "main.js"
+ },
+ {
+  "key": "0jh3gl8",
+  "who": "pip",
+  "text": "That is every bug in Ilulissat. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0v6zbby",
+  "who": "pip",
+  "text": "That is every bug in Geiranger. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "1izqxza",
+  "who": "pip",
+  "text": "That is every bug in Monte Carlo. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0dn6s8v",
+  "who": "pip",
+  "text": "That is every bug in Barcelona. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0921ha9",
+  "who": "pip",
+  "text": "That is every bug in Santorini. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "09e89sv",
+  "who": "pip",
+  "text": "That is every bug in Banff. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "036kp6v",
+  "who": "pip",
+  "text": "That is every bug in Dubai. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0080o82",
+  "who": "pip",
+  "text": "That is every bug in Atacama. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0zb450k",
+  "who": "pip",
+  "text": "That is every bug in Mount Bromo. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0gq3r0o",
+  "who": "pip",
+  "text": "That is every bug in Seoul. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ags4su",
+  "who": "pip",
+  "text": "That is every bug in Khumbu. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "1ja17az",
+  "who": "pip",
+  "text": "That is every bug in Cape Town. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "1x5no3i",
+  "who": "pip",
+  "text": "That is every bug in Rotorua. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0w0xoo0",
+  "who": "pip",
+  "text": "That is every bug in Ushuaia. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "124q1ak",
+  "who": "pip",
+  "text": "That is every bug in The Peninsula. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "1saymlf",
+  "who": "pip",
+  "text": "That is every bug in The Ross Ice Shelf. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "11oozgy",
+  "who": "pip",
+  "text": "That is every bug in The Ice Caves. Nicely spotted.",
+  "from": "main.js"
+ },
+ {
+  "key": "0ufdd1r",
+  "who": "pip",
+  "text": "That is every bug in Mount Erebus. Nicely spotted.",
+  "from": "main.js"
+ }
+]
