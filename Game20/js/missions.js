@@ -177,6 +177,10 @@ class Cells extends Mission {
     }
   }
   hud() { return { ...super.hud(), text: `Collect the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
+  debugState() {
+    const f = x => Math.round(x * 10) / 10, pp = this.p.pos, w = this.p.walker, a = this.aim;
+    return { p: [f(pp.x), f(pp.y), f(pp.z)], aim: a ? this.cells.indexOf(a) : null, aimAt: a ? [f(a.position.x), f(a.position.y), f(a.position.z)] : null, onMover: w.onMover ? this.w.phys.movers.indexOf(w.onMover) : -1, grounded: w.grounded, board: this.board ? [f(this.board.x), f(this.board.y), f(this.board.z)] : null, aimFor: a ? f(this.t - this.aimT) : 0, path: this.navPath ? this.navPath.length : null, navI: this.navI };
+  }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0]; return c ? c.position : null; }
   // autopilot: play it as a child would: walk, jump, and ride the pads for high cells. Only when a
   // cell has not been reached for 25 s does it teleport there, and it notes the cell so the test
