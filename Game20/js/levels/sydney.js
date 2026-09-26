@@ -37,7 +37,7 @@ function bridge(w, z) {
   // flags on the top
   for (const x of [-4, 4]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.8), M(0x2a4ab0, { side: THREE.DoubleSide })); f.position.set(x, deck - 6 + rise + 3, z); f.userData.dynamic = true; w.scene.add(f); w.updaters.push((dt, t) => { f.rotation.y = Math.sin(t * 3 + x) * 0.3; }); }
 }
-function ferry(w, path, speed, phase, color = 0x2a8a4a, dwell = 5) {
+function ferry(w, path, speed, phase, color = 0x2a8a4a, dwell = 8) {
   // a green and cream harbour ferry, hovering above the water, that you can ride; it waits
   // alongside its wharf (the first point of its loop) for a few seconds every trip
   const g = new THREE.Group(); w.scene.add(g);
