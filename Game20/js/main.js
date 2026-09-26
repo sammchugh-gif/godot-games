@@ -59,6 +59,8 @@ async function boot() {
   G.hud = new HUD();
   G.travel = new Travel(engine);
   G.save = store.get("save", null) || newSave();
+  // the yellow guide arrow over Rory's head is off unless it's switched on in the pause menu
+  G.showArrow = store.get("arrow", false);
   buildTouch();
   progress(0.9);
   loadPlace(G.save.place);
@@ -374,12 +376,13 @@ function pause() {
   const s = screen("pause", `<div class="title-sub" style="letter-spacing:.4em">PAUSED</div>
     <div class="row"><button class="btn gold" data-a="resume">RESUME</button></div>
     <div class="row"><button class="btn ghost small" data-a="music">MUSIC ${Audio.music ? "ON" : "OFF"}</button><button class="btn ghost small" data-a="voice">VOICES ${Speech.enabled ? "ON" : "OFF"}</button></div>
-    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button></div>
+    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button><button class="btn ghost small" data-a="arrow">ARROW ${G.showArrow ? "ON" : "OFF"}</button></div>
     <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
   onTap(s, "[data-a]", b => {
     const a = b.dataset.a;
     if (a === "music") { Audio.setMusic(!Audio.music); b.textContent = "MUSIC " + (Audio.music ? "ON" : "OFF"); return; }
     if (a === "voice") { Speech.enabled = !Speech.enabled; store.set("voice", Speech.enabled); b.textContent = "VOICES " + (Speech.enabled ? "ON" : "OFF"); return; }
+    if (a === "arrow") { G.showArrow = !G.showArrow; store.set("arrow", G.showArrow); b.textContent = "ARROW " + (G.showArrow ? "ON" : "OFF"); return; }
     if (a === "gfx") { const q = (G.engine.quality + 1) % 3; try { localStorage.setItem("rory20.quality", q); } catch (e) { /* private mode */ } b.textContent = "PICTURE: " + ["SIMPLE", "GOOD", "BEST"][q] + " (restarts)"; setTimeout(() => location.reload(), 700); return; }
     clearLayer("pause");
     if (a === "missions") { missionList(); return; }
@@ -447,7 +450,7 @@ function tick(dt) {
     if (Math.hypot(G.player.pos.x - b.position.x, G.player.pos.z - b.position.z) < 1.6 && Math.abs(G.player.pos.y - b.position.y) < 2) beginMission(cur);
   } else if (G.state === "mission" && G.mission && G.mission.target) target = G.mission.target();
   const a = G.arrow;
-  if (target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
+  if (G.showArrow && target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
     a.visible = true;
     a.position.set(G.player.pos.x, G.player.pos.y + 2.25 + Math.sin(G.t * 4) * 0.06, G.player.pos.z);
     a.rotation.y = Math.atan2(target.x - G.player.pos.x, target.z - G.player.pos.z);
@@ -473,7 +476,7 @@ function tick(dt) {
   G.engine.render();
 }
 // if Rory stands still for a while, BOLT pipes up with a nudge
-const NUDGES = ["Follow the yellow arrow, Rory. It knows the way.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
+const NUDGES = ["Look for the tall beam of light, Rory. That is where we go next.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
 function nudge(dt) {
   if (G.state !== "explore" || G.dialogue.active || !currentMission()) { G.idleT = 0; return; }
   G.idleT = (G.player.speed > 0.4 ? 0 : (G.idleT || 0) + dt);
@@ -481,7 +484,7 @@ function nudge(dt) {
 }
 function chatLines() {
   const who = G.place.contact, cur = currentMission();
-  return [[who, cur ? `The beacon for ${cur.title} is glowing. Follow the yellow arrow!` : "That's everything here. Great work, Agent Rory!"]];
+  return [[who, cur ? `The beacon for ${cur.title} is glowing. Look for the tall beam of light!` : "That's everything here. Great work, Agent Rory!"]];
 }
 
 // ------------------------------------------------------------ touch controls

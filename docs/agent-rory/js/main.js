@@ -346,7 +346,7 @@ function showHint() { if (G.mg && G.mg.hint) { const h = G.mg.hint(); if (h) { G
 let last = performance.now();
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; // never backwards (the first frame after a long boot can be stamped before it) G.t += dt;
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; G.t += dt;
   update(dt); draw(dt);
 }
 function update(dt) {

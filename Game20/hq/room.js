@@ -1,6 +1,6 @@
 // Agent Rory HQ: POLARIS's briefing room. Rory walks round, picks a game off the
 // mission board, and in between can make a cup of tea, press the button he
-// shouldn't, spin on the office chair, pat the office cat and answer the banana
+// shouldn't, spin on the office chair, pat the office dog and answer the banana
 // phone. Built on the Zero Gravity engine, loaded from its folder.
 import * as THREE from "three";
 import { Engine } from "../agent-rory-zero-gravity/js/engine.js";
@@ -243,24 +243,32 @@ function officeChair(w, x, z) {
   w.phys.fixedCyl(x, 0.3, z, 0.3, 0.3);
   return { g, top, seat: new THREE.Vector3(x, 0.46, z) };
 }
-function officeCat(w, x, z) {
+function officeDog(w, x, z) {
   const g = new THREE.Group(); g.position.set(x, 0, z); w.scene.add(g);
-  const fur = M(0xe8943a, { rough: 0.9 }), white = M(0xf4efe6, { rough: 0.9 }), dark = M(0x1a1410), pink = M(0xff9aa8);
+  const fur = M(0xd9a05b, { rough: 0.9 }), cream = M(0xf4e4c8, { rough: 0.9 }), ear = M(0xa8703a, { rough: 0.9 }), dark = M(0x1a1410, { rough: 0.3 }), pink = M(0xff8a9a, { rough: 0.5 });
   const add = (geo, m, px, py, pz, parent = g) => { const me = new THREE.Mesh(geo, m); me.position.set(px, py, pz); me.castShadow = true; parent.add(me); return me; };
-  add(new THREE.CylinderGeometry(0.45, 0.48, 0.12, 24), M(0x8a3ad8, { rough: 0.9 }), 0, 0.06, 0);   // the cushion
-  const body = add(new THREE.SphereGeometry(0.2, 16, 12), fur, 0, 0.26, 0); body.scale.set(1, 0.8, 1.4);
-  add(new THREE.SphereGeometry(0.12, 12, 10), white, 0, 0.22, 0.16).scale.set(1, 0.7, 1);
-  const head = new THREE.Group(); head.position.set(0, 0.4, 0.22); g.add(head);
-  add(new THREE.SphereGeometry(0.12, 16, 12), fur, 0, 0, 0, head);
-  for (const s of [-1, 1]) { const ear = add(new THREE.ConeGeometry(0.045, 0.09, 8), fur, s * 0.07, 0.11, -0.01, head); ear.rotation.z = -s * 0.25; }
-  const eyes = [-1, 1].map(s => add(new THREE.SphereGeometry(0.02, 8, 6), dark, s * 0.045, 0.02, 0.105, head));
-  add(new THREE.SphereGeometry(0.015, 8, 6), pink, 0, -0.02, 0.118, head);
-  const tail = new THREE.Group(); tail.position.set(0, 0.24, -0.26); g.add(tail);
-  for (let i = 0; i < 5; i++) add(new THREE.SphereGeometry(0.04 - i * 0.004, 8, 6), fur, 0, i * 0.04, -i * 0.05, tail);
-  const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.22), new THREE.MeshStandardMaterial({ map: TEX.sign("AGENT WHISKERS", { bg: "#1a0a2a", fg: "#ffd166" }), emissive: 0xffd166, emissiveIntensity: 0.3 }));
-  tag.position.set(0, 0.03, 0.62); tag.rotation.x = -Math.PI / 2 + 0.4; g.add(tag);
-  w.phys.fixedCyl(x, 0.25, z, 0.46, 0.25);
-  return { g, body, head, eyes, tail, purr: 0, meow: 0 };
+  add(new THREE.CylinderGeometry(0.5, 0.52, 0.12, 24), M(0x2a6ad8, { rough: 0.9 }), 0, 0.06, 0);   // the dog bed
+  add(new THREE.TorusGeometry(0.48, 0.07, 10, 28), M(0x2a6ad8, { rough: 0.9 }), 0, 0.14, 0).rotation.x = Math.PI / 2;
+  // sitting up: haunches, a chest, two front legs
+  const body = add(new THREE.SphereGeometry(0.2, 18, 14), fur, 0, 0.3, -0.06); body.scale.set(1, 1.15, 1.1); body.rotation.x = -0.35;
+  for (const s of [-1, 1]) add(new THREE.SphereGeometry(0.11, 12, 10), fur, s * 0.13, 0.2, -0.12).scale.set(0.9, 0.8, 1.3);
+  add(new THREE.SphereGeometry(0.12, 12, 10), cream, 0, 0.36, 0.08).scale.set(1, 1.2, 0.8);
+  for (const s of [-1, 1]) { add(new THREE.CylinderGeometry(0.035, 0.04, 0.26, 8), fur, s * 0.08, 0.26, 0.1); add(new THREE.SphereGeometry(0.045, 8, 6), cream, s * 0.08, 0.14, 0.13).scale.set(1, 0.6, 1.4); }
+  add(new THREE.TorusGeometry(0.1, 0.018, 8, 20), M(0xd82a2a, { rough: 0.5 }), 0, 0.47, 0.02).rotation.x = Math.PI / 2 + 0.3;   // his collar
+  add(new THREE.CylinderGeometry(0.025, 0.025, 0.01, 12), M(0xffd166, { metal: 0.8, rough: 0.3 }), 0, 0.42, 0.11).rotation.x = Math.PI / 2;
+  const head = new THREE.Group(); head.position.set(0, 0.56, 0.04); g.add(head);
+  add(new THREE.SphereGeometry(0.12, 16, 12), fur, 0, 0, 0, head).scale.set(1, 0.95, 1);
+  add(new THREE.SphereGeometry(0.07, 12, 10), cream, 0, -0.035, 0.1, head).scale.set(1, 0.8, 1.2);   // snout
+  add(new THREE.SphereGeometry(0.025, 8, 6), dark, 0, -0.01, 0.18, head);                              // nose
+  const tongue = add(new THREE.BoxGeometry(0.04, 0.01, 0.06), pink, 0, -0.08, 0.14, head); tongue.rotation.x = 0.5; tongue.visible = false;
+  const ears = [-1, 1].map(s => { const e = new THREE.Group(); e.position.set(s * 0.1, 0.05, -0.01); head.add(e); add(new THREE.SphereGeometry(0.05, 10, 8), ear, 0, -0.06, 0, e).scale.set(0.45, 1.3, 0.9); e.rotation.z = s * 0.15; return e; });
+  const eyes = [-1, 1].map(s => add(new THREE.SphereGeometry(0.02, 8, 6), dark, s * 0.05, 0.035, 0.1, head));
+  const tail = new THREE.Group(); tail.position.set(0, 0.2, -0.3); g.add(tail);
+  for (let i = 0; i < 5; i++) add(new THREE.SphereGeometry(0.035 - i * 0.003, 8, 6), fur, 0, 0.02 + i * 0.035, -i * 0.03, tail);
+  const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.22), new THREE.MeshStandardMaterial({ map: TEX.sign("AGENT BISCUIT", { bg: "#0a1a3a", fg: "#ffd166" }), emissive: 0xffd166, emissiveIntensity: 0.3 }));
+  tag.position.set(0, 0.03, 0.66); tag.rotation.x = -Math.PI / 2 + 0.4; g.add(tag);
+  w.phys.fixedCyl(x, 0.3, z, 0.5, 0.3);
+  return { g, body, head, eyes, ears, tail, tongue, wag: 0, woof: 0 };
 }
 function bananaPhone(w, x, y, z) {
   const g = new THREE.Group(); g.position.set(x, y, z); w.scene.add(g);
@@ -329,10 +337,10 @@ function buildRoom(w) {
   const tea = teaTrolley(w, 9.4, 6.6);
   const button = bigRedButton(w, -9.4, 6.6);
   const chair = officeChair(w, -8.6, -2.4);
-  const cat = officeCat(w, 10.6, -6.6);
+  const dog = officeDog(w, 10.6, -6.6);
   const phone = bananaPhone(w, -RW / 2 + 0.9, 1.0, -0.4);
   w.floorY = -10;
-  return { screens, board, posters, lights, tea, button, chair, cat, phone, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
+  return { screens, board, posters, lights, tea, button, chair, dog, phone, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
 }
 function panelTex(lines, color) {
   const c = document.createElement("canvas"); c.width = 512; c.height = 320; const g = c.getContext("2d");
@@ -351,7 +359,7 @@ function things() {
     { id: "tea", x: 9.4, z: 5.6, r: 1.6, label: G.cup ? "BISCUIT" : "TEA", prompt: G.cup ? "have a biscuit" : "make a cup of tea", act: G.cup ? biscuit : makeTea, off: !!G.pouring },
     { id: "button", x: -9.4, z: 5.9, r: 1.5, label: "PRESS", prompt: "the big red button", act: pressButton, off: busy },
     { id: "chair", x: R.chair.seat.x, z: R.chair.seat.z, r: 1.3, label: "SPIN", prompt: "have a spin on the chair", act: spinChair, off: busy },
-    { id: "cat", x: 10.6, z: -5.9, r: 1.5, label: "PAT", prompt: "pat Agent Whiskers", act: patCat },
+    { id: "dog", x: 10.6, z: -5.9, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
     { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
   ].filter(t => !t.off);
@@ -399,12 +407,12 @@ function spinChair() {
   G.spin = { t: 0, dur: 3.2 }; Audio.play("whoosh"); toast("Wheeeeee!", 2);
   count("roryhq.spins");
 }
-function patCat() {
-  const c = G.room.cat, n = count("roryhq.cat");
-  c.purr = 2.5; Audio.play("purr");
-  G.fx.burst(10.6, 0.8, -6.6, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
-  if (n === 1) G.dialogue.show([["pip", "That's Agent Whiskers. She's been at POLARIS longer than any of us."], ["bolt", "She outranks me."]], null);
-  else if (Math.random() < 0.4) { c.meow = 0.8; setTimeout(() => Audio.play("meow"), 300); if (Math.random() < 0.5) G.dialogue.show([pick([["bolt", "The cat says: meow. I have translated it. It means: more patting."], ["frost", "Agent Whiskers has never lost a file. Or found one."], ["pip", "She sat on the self-destruct button once. Luckily it's also the kettle."]])], null); }
+function patDog() {
+  const d = G.room.dog, n = count("roryhq.dog");
+  d.wag = 2.5; Audio.play("pant");
+  G.fx.burst(10.6, 0.9, -6.6, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
+  if (n === 1) G.dialogue.show([["pip", "That's Agent Biscuit. He's been at POLARIS longer than any of us."], ["bolt", "He outranks me."]], null);
+  else if (Math.random() < 0.5) { d.woof = 0.7; setTimeout(() => Audio.play("woof"), 250); if (Math.random() < 0.5) G.dialogue.show([pick([["bolt", "The dog says: woof. I have translated it. It means: more patting."], ["frost", "Agent Biscuit has sniffed out forty-two spies. And one sausage roll."], ["pip", "He sat on the self-destruct button once. Luckily it's also the kettle."]])], null); }
 }
 function lookAtPhoto() {
   const n = count("roryhq.photo");
@@ -543,14 +551,16 @@ function updateRoom(dt) {
     for (const l of R.lights) l.color.setRGB(on ? 1 : 0.81, on ? 0.12 + 0.2 * k : 0.89, on ? 0.12 : 1);
   }
   if (G.boltDance > 0) { G.boltDance -= dt; }
-  // Agent Whiskers breathes, flicks her tail, and purrs with her eyes shut
-  const cat = R.cat;
-  cat.body.scale.y = 0.8 + Math.sin(t * 2.2) * 0.03;
-  cat.tail.rotation.y = Math.sin(t * (cat.purr > 0 ? 6 : 1.3)) * 0.5;
-  const toRory = Math.atan2(p.pos.x - 10.6, p.pos.z + 6.6); cat.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - cat.head.rotation.y) * Math.min(1, dt * 2);
-  cat.eyes.forEach(e => { e.scale.y = cat.purr > 0 ? 0.15 : 1; });
-  if (cat.purr > 0) { cat.purr -= dt; if (Math.random() < dt * 4) Audio.play("purr"); }
-  if (cat.meow > 0) { cat.meow -= dt; cat.head.rotation.x = -0.3; } else cat.head.rotation.x *= 0.9;
+  // Agent Biscuit breathes, watches Rory, and wags and pants when he's patted
+  const dog = R.dog, happy = dog.wag > 0;
+  dog.body.scale.y = 1.15 + Math.sin(t * (happy ? 7 : 2.2)) * (happy ? 0.04 : 0.02);
+  dog.tail.rotation.y = Math.sin(t * (happy ? 16 : 2.5)) * (happy ? 0.8 : 0.3);
+  const toRory = Math.atan2(p.pos.x - 10.6, p.pos.z + 6.6); dog.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - dog.head.rotation.y) * Math.min(1, dt * 2);
+  dog.eyes.forEach(e => { e.scale.y = happy ? 0.35 : 1; });
+  dog.tongue.visible = happy;
+  dog.ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (0.15 + (happy ? Math.sin(t * 9) * 0.12 : 0)); });
+  if (happy) { dog.wag -= dt; if (Math.random() < dt * 1.5) Audio.play("pant"); }
+  if (dog.woof > 0) { dog.woof -= dt; dog.head.rotation.x = -0.3; } else dog.head.rotation.x *= 0.9;
   // the banana phone rings now and then
   if (!G.ringing && G.t > G.phoneAt && !G.dialogue.active && !G.open) { G.ringing = 8; G.ringN = 0; toast("☎ The banana phone is ringing!", 3); }
   if (G.ringing > 0) {
