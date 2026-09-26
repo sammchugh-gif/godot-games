@@ -87,8 +87,16 @@ export class Nav {
   route(fx, fy, fz, tx, ty, tz, reach = 1.0) {
     const { nx, nz, S, h, ok } = this, n = nx * nz;
     let s = this.cellOf(fx, fz); if (s < 0) return null;
-    // start from the square Rory is standing on (or the nearest one at his height)
-    if (!ok[s] || Math.abs(h[s] - fy) > 1) { let best = -1, bd = 3; for (let q = 0; q < n; q++) { if (!ok[q]) continue; const [x, z] = this.xz(q); const d = Math.hypot(x - fx, z - fz) + Math.abs(h[q] - fy) * 2; if (d < bd) { bd = d; best = q; } } if (best >= 0) s = best; }
+    // start from the square Rory is standing on, or else the nearest one at his height (standing at
+    // the foot of a wall, the nearest standable square can be on top of it, out of reach)
+    if (!ok[s] || Math.abs(h[s] - fy) > 1) {
+      let best = -1, bd = 3;
+      for (const tol of [0.5, 1e9]) {
+        for (let q = 0; q < n; q++) { if (!ok[q] || Math.abs(h[q] - fy) > tol) continue; const [x, z] = this.xz(q); const d = Math.hypot(x - fx, z - fz) + Math.abs(h[q] - fy) * 2; if (d < bd) { bd = d; best = q; } }
+        if (best >= 0) break;
+      }
+      if (best >= 0) s = best;
+    }
     const goal = q => { const [x, z] = this.xz(q), up = ty - (h[q] + 0.7); return Math.hypot(x - tx, z - tz) <= reach && up > -1.0 && up < 3.1; };
     const g = new Float32Array(n).fill(Infinity), from = new Int32Array(n).fill(-1), how = new Array(n), shut = new Uint8Array(n);
     const heur = q => { const [x, z] = this.xz(q); return Math.max(0, Math.hypot(x - tx, z - tz) - reach); };

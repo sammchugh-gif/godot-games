@@ -193,7 +193,7 @@ class Cells extends Mission {
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
     if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; }
     // (a cell on a ferry or cable car may mean waiting a whole trip for it to come round)
-    if (this.t - this.aimT > (c.userData.follow ? 75 : this.data.climb ? 45 : 25)) {
+    if (this.t - this.aimT > (c.userData.follow || (this.ride && this.rideCell === c) ? 75 : this.data.climb ? 45 : 25)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
@@ -205,10 +205,47 @@ class Cells extends Mission {
     if (c.userData.follow) { this.rideTo(c.position.x, c.position.y, c.position.z, c.userData.follow.obj, this.cells.map(c => c.position)); return; }
     // up in a low-gravity bubble: bounce off its pad and float to it
     if (this.zoneFly(c)) return;
+    // somewhere only something that moves goes (the top of the cable car): ride it there
+    if (this.rideFor(c)) return;
     // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
     if (this.data.climb && this.climb(c)) return;
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
+  }
+  // A cell no walk leads to may be where a moving platform goes: the cable car carries Rory
+  // through it ("through"), or drops him where he can walk to it ("drop"). Find which, board
+  // it as for a cell riding on a ferry, then stand still, or hop off when the ground leads there.
+  // Returns false when he can walk it.
+  rideFor(c) {
+    const cp = c.position, pp = this.p.pos, w = this.p.walker, inp = this.g.input;
+    const nav = this.ensureNav(this.cells.map(c => c.position));
+    if (this.rideCell !== c) {
+      this.rideCell = c; this.ride = null;
+      if (!nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8)) {
+        const leads = new Map(), goes = k => { if (!leads.has(k)) { const [kx, kz] = nav.xz(k); leads.set(k, !!nav.route(kx, nav.h[k], kz, cp.x, cp.y, cp.z, 0.8)); } return leads.get(k); };
+        for (const m of this.w.phys.movers) {
+          if (!m.fn) continue;
+          for (let dt = 0; dt < 120 && !(this.ride && this.ride.mode === "through"); dt += 0.5) {
+            const [x, y, z] = m.fn(this.w.phys.t + dt), top = y + m.hy;
+            if (Math.hypot(x - cp.x, z - cp.z) < Math.max(m.hx, m.hz) + 0.4 && Math.abs(top + 0.7 - cp.y) < 0.9) this.ride = { m, mode: "through" };
+            else if (!this.ride) { const k = nav.nearestOk(x, top, z, Math.max(m.hx, m.hz) + 1.2, 1.2); if (k >= 0 && goes(k)) this.ride = { m, mode: "drop" }; }
+          }
+        }
+      }
+    }
+    if (!this.ride) return false;
+    const { m, mode } = this.ride;
+    // got off onto ground that leads there: walk
+    if (!w.onMover && w.grounded && Math.abs(pp.y - cp.y) < 4 && (this.walkT = (this.walkT || 0) + 1) % 30 === 1) this.canWalk = !!nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
+    if (!w.onMover && this.canWalk) return false;
+    if (w.onMover === m) {
+      this.canWalk = false;
+      if (mode === "through") { inp.forced = { mx: 0, my: 0 }; inp.jumpHeld = false; }
+      else this.disembark(cp.x, cp.y, cp.z, 0.8);
+      return true;
+    }
+    this.rideTo(cp.x, cp.y, cp.z, m.mesh, this.cells.map(c => c.position));
+    return true;
   }
   // A cell high up in a low-gravity bubble (the Taj Mahal's minarets) is reached the way a
   // child would: walk onto the bubble's pad, get thrown up, rise straight up until level with
@@ -221,17 +258,32 @@ class Cells extends Mission {
     const P = (this.w.pads || []).filter(p => Math.hypot(p.x - Z.x, p.z - Z.z) < Z.r).sort((a, b) => Math.hypot(a.x - cp.x, a.z - cp.z) - Math.hypot(b.x - cp.x, b.z - cp.z))[0];
     if (!P || cp.y < P.y + 3) return false;
     const eye = pp.y + 0.7, dh = Math.hypot(cp.x - pp.x, cp.z - pp.z), inZone = Math.hypot(pp.x - Z.x, eye - Z.y, pp.z - Z.z) < Z.r;
+    // the bubble is centred on a tower (a minaret) with balconies round it: fly from a spot just
+    // outside the balconies on the cell's side, and go round the tower, never through it
+    const R = 3, ra = Math.hypot(pp.x - Z.x, pp.z - Z.z), aR = Math.atan2(pp.z - Z.z, pp.x - Z.x), aC = Math.atan2(cp.z - Z.z, cp.x - Z.x);
+    const da = Math.atan2(Math.sin(aC - aR), Math.cos(aC - aR)), sx = Z.x + Math.cos(aC) * R, sz = Z.z + Math.sin(aC) * R;
+    const toward = (x, z) => { if (ra < R + 1 && Math.abs(da) > 0.5) { const a = aR + Math.sign(da) * 0.7, r = Math.max(R, ra); this.steer(Z.x + Math.cos(a) * r, Z.z + Math.sin(a) * r); } else this.steer(x, z); };
     if (w.grounded) {
-      // on a balcony in the bubble: jump for it
-      if (inZone && pp.y > P.y + 2) { this.steer(cp.x, cp.z, eye < cp.y); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return true; }
-      this.walkTo(P.x, P.y + 0.7, P.z, 0.3, this.cells.map(c => c.position));
+      if (inZone && pp.y > P.y + 2) {
+        // on a balcony: step off on the cell's side and fly from there, or jump for it if it's close
+        if (eye < cp.y - 0.6 || Math.abs(da) > 0.5) toward(sx, sz);
+        else { this.steer(cp.x, cp.z, eye < cp.y); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; }
+        return true;
+      }
+      // walk onto the pad and let it throw him up
+      this.walkTo(P.x, P.y + 0.7, P.z, 0.6, this.cells.map(c => c.position));
       return true;
     }
     if (eye < cp.y - 0.6) {
-      inp.forced = { mx: 0, my: 0 };
+      // rising: hold station outside the balconies, with an air jump when the throw runs out
+      if (Math.hypot(sx - pp.x, sz - pp.z) > 0.4) toward(sx, sz); else inp.forced = { mx: 0, my: 0 };
       inp.jumpHeld = w.vel.y > 0;
       if (w.vel.y < 0.5 && inZone) { inp.jumpPressed = true; inp.jumpHeld = true; }
-    } else { this.steer(cp.x, cp.z); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; }
+    } else {
+      // level with it: drift across
+      toward(cp.x, cp.z);
+      if (dh < 0.3) inp.forced = { mx: 0, my: 0 };
+    }
     return true;
   }
   // The walking map has one floor per spot, so a tower of floors and switchback stairs is
