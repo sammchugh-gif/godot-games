@@ -71,7 +71,7 @@ for (let ci = startCi; ci <= endCi; ci++) {
     await wait(900); await shot(`30_${m.id}_${m.game}`);
     // solve step by step
     let steps = 0;
-    while ((await state()) === "minigame" && steps < 40) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
+    while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
     await page.waitForFunction(() => __spy.state === "intel", null, { timeout: 8000 }).catch(() => {});
     check(await state() === "intel", `${m.id} won after ${steps} solve steps`);
     await waitGame(1.0); await shot(`40_${m.id}_intel`);

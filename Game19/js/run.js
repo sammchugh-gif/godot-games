@@ -97,7 +97,7 @@ export class Run extends MG {
     this.sub = RIDE_NAME[this.ride] || "";
     this.d = 0; this.o = 0; this.oT = 0; this.v = 0; this.air = 0; this.vy = 0; this.lift = 0; this.inv = 0; this.boostT = 0; this.charges = 1; this.refill = 0;
     this.phase = "intro"; this.pt = 0; this.drag = null; this.auto = false; this.hits = 0; this.tagged = false; this.dart = null; this.finishT = 0;
-    this.gap0 = L(this, 55, 70, 85, 100); this.qk = L(this, 0.88, 0.9, 0.92, 0.93);
+    this.gap0 = L(this, 60, 72, 84, 96); this.qk = L(this, 0.88, 0.9, 0.92, 0.93); this.tireT = L(this, 20, 26, 32, 38);
     this.finish = L(this, 900, 1050, 1200, 1350); this.pk = L(this, 0.9, 0.93, 0.95, 0.97); this.pgap0 = L(this, 50, 45, 40, 36);
     this.tmp = {}; this.tmp2 = {};
   }
@@ -642,6 +642,9 @@ export class Run extends MG {
     let qv = this.phase === "done" ? Math.max(0, this.qv * (1 - this.finishT * 0.8)) : running ? this.qv : 0;
     const gap = this.qd - this.d;
     if (gap > this.gap0 + 35) qv *= 0.8; if (gap < 10 && !this.tagged) qv *= 1.06;
+    // for the first part of the chase the quarry keeps just out of reach; then it tires
+    if (running && this.pt < this.tireT && gap < this.tagRange + 14) qv = Math.max(qv, this.v * (gap < this.tagRange + 8 ? 1.08 : 1.0));
+    if (running && !this.tiredSaid && this.pt >= this.tireT) { this.tiredSaid = true; this.fx.float(this.W / 2, this.H * 0.3, `${this.qName} IS SLOWING DOWN!`, PAL.gold, 24, 1.6); SFX.ding(); }
     if (this.d > this.track.len * 0.7) qv *= 0.8;
     if (this.qd > this.track.len - 60) qv = Math.min(qv, this.v * 0.8);
     this.qd += qv * dt; if (this.qd < this.d + 4 && !this.tagged) this.qd = this.d + 4;
