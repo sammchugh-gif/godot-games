@@ -654,6 +654,7 @@ class Chase extends Mission {
     }
     if (this.car.boost > 0 && Math.random() < 0.8) { const f = this.car.forward(); this.g.fx.trail(this.car.pos.x - f.x * 1.6, this.car.pos.y + 0.2, this.car.pos.z - f.z * 1.6, 0x7fe3ff, 0.35); }
   }
+  debugState() { const f = x => Math.round(x * 10) / 10; return { gap: f(this.s - (this.cs || 0)), qv: f(this.qv), tags: this.tags, cs: f(this.cs || 0) }; }
   bubble() {
     this.qv = 0; this.boostT = 0;
     const b = this.add(makeBubble(1.8)); b.position.copy(this.q.position).setY(this.q.position.y + 0.9);
