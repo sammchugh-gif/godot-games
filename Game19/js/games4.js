@@ -23,8 +23,8 @@ const GADGETS = ["drone", "camera", "key", "bolt", "snowflake", "gear", "eye", "
 class Packing extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "vault"; this.icon = "key";
-    this.instr = "Drag the gadgets into the case. Tap one to turn it round. Fill the whole case!";
+    this.theme = where(m) === "bav" ? "meadow" : "vault"; this.icon = "key";
+    this.instr = where(m) === "bav" ? "Drag the cuckoo clocks into the crate. Tap one to turn it round. Fill it up, with room for Rory!" : "Drag the gadgets into the case. Tap one to turn it round. Fill the whole case!";
     [this.cw, this.ch] = L(this, [4, 3], [4, 4], [5, 4], [5, 5]); this.k = L(this, 3, 4, 5, 6);
     this.make(); this.drag = null;
   }
@@ -140,7 +140,7 @@ const LANE_COL = ["#ff4ad8", "#40e0d0", "#ffd23f", "#7bed9f"], LANE_NOTE = [0, 3
 class Dance extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = { kor: "neon", ind: "jungle", ere: "volcano" }[where(m)] || "neon"; this.icon = "star";
+    this.theme = { kor: "neon", ind: "jungle", ere: "volcano", pra: "clock", wst: "night_city", hav: "casino" }[where(m)] || "neon"; this.icon = "star";
     this.instr = "Tap a pad just as its arrow reaches the line. Fill the BLEND IN meter!";
     this.lanes = L(this, 2, 3, 4, 4); this.bpm = L(this, 88, 100, 114, 128); this.win2 = L(this, 0.22, 0.19, 0.16, 0.14);
     this.slipAllow = L(this, 6, 6, 8, 8); this.meter = 0.3; this.notes = []; this.beat = -1; this.songT = -1.5; this.auto = false; this.pose = 0; this.combo = 0;
@@ -299,7 +299,7 @@ class Skydive extends MG {
 class Tightrope extends MG {
   constructor(G, m) {
     super(G, m);
-    this.place = { dub: "towers", nep: "gorge", pen: "crevasse" }[where(m)] || "towers";
+    this.place = { dub: "towers", nep: "gorge", pen: "crevasse", sco: "gorge", gca: "gorge" }[where(m)] || "towers";
     this.theme = this.place === "towers" ? "desert" : "snow"; this.icon = "star"; this.slipAllow = 1;
     this.instr = "Rory walks by himself. Hold left or right to push his pole and keep him upright!";
     this.pos = 0; this.th = rnd(-0.05, 0.05); this.w = 0; this.speed = L(this, 0.07, 0.064, 0.058, 0.054); this.unstable = L(this, 1.3, 1.6, 1.9, 2.2);
@@ -363,7 +363,7 @@ class Tightrope extends MG {
 class Lander extends MG {
   constructor(G, m) {
     super(G, m);
-    this.place = { chi: "desert", nep: "mountain", nzl: "ship" }[where(m)] || "mountain";
+    this.place = { chi: "desert", nep: "mountain", nzl: "ship", nia: "ship" }[where(m)] || "mountain";
     this.theme = this.place === "desert" ? "desert" : this.place === "ship" ? "sea" : "snow"; this.icon = "star"; this.slipAllow = 1;
     this.instr = "Hold LIFT to go up. Hold ◀ ▶ to fly sideways. Land gently on the pad!";
     this.need = L(this, 2, 2, 3, 3); this.got = 0; this.soft = L(this, 150, 130, 115, 100); this.wind = L(this, 0, 20, 35, 50); this.padMove = L(this, 0, 0, 50, 80);

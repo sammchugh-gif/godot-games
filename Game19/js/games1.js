@@ -29,7 +29,7 @@ function arrowGlyph(g, x, y, dx, dy, z, color) {
 class IceSlide extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "ice"; this.icon = "snowflake";
+    this.theme = whereId(m) === "cos" ? "jungle" : "ice"; this.icon = "snowflake"; this.mud = whereId(m) === "cos";
     this.instr = "Swipe, tap or use the arrows. You slide until something stops you. Out through the gap!";
     this.n = L(this, 6, 7, 8, 9);
     this.moves = 0; this.anim = null; this.queue = null; this.gone = false; this.drag = null;
@@ -127,15 +127,15 @@ class IceSlide extends MG {
     const n = this.n, b = this.b = this.fit(n + 2, n + 2, W, H, s, { max: 84, right: 150 }), c = b.cell;
     const X = x => b.x + (x + 1) * c, Y = y => b.y + (y + 1) * c;
     // the ice wall around the rink
-    g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 24 * s; g.fillStyle = "#0e2e4a"; rrect(g, b.x, b.y, b.w, b.h, 16 * s); g.fill(); g.restore();
+    g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 24 * s; g.fillStyle = this.mud ? "#3a2a1a" : "#0e2e4a"; rrect(g, b.x, b.y, b.w, b.h, 16 * s); g.fill(); g.restore();
     for (let i = -1; i <= n; i++) for (const [x, y] of [[i, -1], [i, n], [-1, i], [n, i]]) {
       if (x === this.exit[0] && y === this.exit[1]) continue;
       if ((x === -1 || x === n) && (y === -1 || y === n) && i !== -1 && i !== n) continue;
-      tile(g, X(x) + 2 * s, Y(y) + 2 * s, c - 4 * s, c - 4 * s, s, { color: "#3f7fae", r: 6 });
+      tile(g, X(x) + 2 * s, Y(y) + 2 * s, c - 4 * s, c - 4 * s, s, { color: this.mud ? "#4a6a2a" : "#3f7fae", r: 6 });
     }
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
       const v = this.grid[y][x], gx = X(x), gy = Y(y);
-      const gr = g.createLinearGradient(gx, gy, gx + c, gy + c); gr.addColorStop(0, (x + y) % 2 ? "#cfefff" : "#bfe8ff"); gr.addColorStop(1, (x + y) % 2 ? "#9fd6f4" : "#92cdef");
+      const gr = g.createLinearGradient(gx, gy, gx + c, gy + c); if (this.mud) { gr.addColorStop(0, (x + y) % 2 ? "#8a6a48" : "#7e6040"); gr.addColorStop(1, (x + y) % 2 ? "#6a4a2e" : "#62442a"); } else { gr.addColorStop(0, (x + y) % 2 ? "#cfefff" : "#bfe8ff"); gr.addColorStop(1, (x + y) % 2 ? "#9fd6f4" : "#92cdef"); }
       g.fillStyle = gr; g.fillRect(gx, gy, c + 0.5, c + 0.5);
       g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(gx + c * 0.2, gy + c * 0.75); g.lineTo(gx + c * 0.45, gy + c * 0.5); g.stroke();
       if (v === 2) { g.fillStyle = "#ffffff"; for (const [ox, oy, r] of [[0.3, 0.6, 0.26], [0.62, 0.55, 0.3], [0.48, 0.38, 0.24]]) { g.beginPath(); g.arc(gx + ox * c, gy + oy * c, r * c, 0, TAU); g.fill(); } g.fillStyle = "rgba(160,200,230,.5)"; g.beginPath(); g.ellipse(gx + c * 0.5, gy + c * 0.78, c * 0.36, c * 0.08, 0, 0, TAU); g.fill(); }
@@ -178,8 +178,8 @@ class IceSlide extends MG {
 class Gridlock extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "night_city"; this.icon = "key";
-    this.instr = "Drag the cars and lorries along their lanes. Get the orange spy car out of the gate!";
+    this.theme = { rom: "desert", hol: "desert", hav: "night_city" }[whereId(m)] || "night_city"; this.icon = "key";
+    this.instr = `Drag the cars and lorries along their lanes. Get the orange ${{ rom: "scooter", hol: "prop truck", hav: "convertible" }[whereId(m)] || "spy car"} out of the gate!`;
     this.moves = 0; this.drag = null; this.leaving = 0;
     this.make();
   }
@@ -391,7 +391,7 @@ class Blackout extends MG {
 class PowerLines extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "lab"; this.icon = "bolt";
+    this.theme = { tow: "museum", haw: "sea", nia: "storm" }[whereId(m)] || "lab"; this.icon = "bolt";
     this.instr = "Drag from a socket to its twin. Cables can't cross. Fill every square!";
     this.n = L(this, 5, 6, 7, 8); this.slipAllow = 99;
     this.make(); this.paths = this.pairs.map(() => []); this.drag = null;
@@ -523,7 +523,7 @@ const FEATURES = {
 class Identikit extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "lab"; this.icon = "eye"; this.slipAllow = 1;
+    this.theme = { par: "museum", haw: "sea" }[whereId(m)] || "lab"; this.icon = "eye"; this.slipAllow = 1;
     this.instr = "Read what the witness saw. Change the face with the arrows, then show the witness.";
     this.keys = L(this, ["hair", "hat", "eyes"], ["hair", "hat", "eyes", "coat"], ["hair", "hat", "eyes", "coat", "face"], ["hair", "hat", "eyes", "coat", "face", "scarf"]);
     this.rounds = 2; this.round = 0;
@@ -609,17 +609,34 @@ class Identikit extends MG {
 
 // =============================================================== CRANE CLAW
 // The claw runs along the gantry. Tap to drop it on a crate with the
-// Kaldera flame. Leave the POLARIS supplies alone.
+// Kaldera flame. Leave the POLARIS supplies alone. (Other places, other things
+// to pick out: CLAW_SKIN.)
+const CLAW_SKIN = {
+  def: { theme: "sea", instr: "Tap to drop the claw on a crate with the orange flame.", good: "flame", goodCol: PAL.lava, goodBox: "#5a3a2a", friends: ["penguin", "snowflake", "camera"], friendBox: "#2a5a8a", wrong: "That's a POLARIS crate! Only the flames.", title: "FLAME CRATES", hint: "flame crate", truck: "POLARIS" },
+  sto: { theme: "meadow", instr: "Tap to drop the claw on a real find: the ones with the gold star.", good: "star", goodCol: PAL.gold, goodBox: "#6a5238", friends: ["cross", "cross", "cross"], friendBox: "#5a5a54", wrong: "That's a fake! Only the real finds.", title: "REAL FINDS", hint: "gold star", truck: "MUSEUM" },
+  kan: { theme: "meadow", instr: "Tap to drop the claw on a chicken. Leave the hay bales!", good: "chicken", goodCol: "#fff", goodBox: "#8a5a2a", friends: ["hay", "hay", "hay"], friendBox: "#8a5a2a", wrong: "That's hay! Only the chickens.", title: "CHICKENS", hint: "chicken", truck: "SAFE COOP" },
+  hav: { theme: "sea", instr: "Tap to drop the claw on a cloud-seed crate. Leave the fruit!", good: "cloud", goodCol: "#dfe8f4", goodBox: "#4a5a6a", friends: ["fruit", "fruit", "fruit"], friendBox: "#8a6a2a", wrong: "That's fruit! Only the cloud seeds.", title: "CLOUD SEEDS", hint: "cloud crate", truck: "POLARIS" },
+};
+const whereId = m => (m.id || "").slice(0, 3);
+// the thing on a crate: an icon, or a few made just for the claw
+function clawItem(g, kind, x, y, z, color) {
+  if (kind === "chicken") { g.fillStyle = "#f4f4f0"; g.beginPath(); g.ellipse(x, y + z * 0.08, z * 0.34, z * 0.28, 0, 0, TAU); g.fill(); g.beginPath(); g.arc(x + z * 0.24, y - z * 0.16, z * 0.16, 0, TAU); g.fill(); g.fillStyle = "#e03a3a"; g.beginPath(); g.arc(x + z * 0.24, y - z * 0.32, z * 0.07, 0, TAU); g.fill(); g.fillStyle = "#f0a020"; g.beginPath(); g.moveTo(x + z * 0.38, y - z * 0.18); g.lineTo(x + z * 0.5, y - z * 0.14); g.lineTo(x + z * 0.38, y - z * 0.1); g.fill(); g.fillStyle = "#111"; g.beginPath(); g.arc(x + z * 0.27, y - z * 0.19, z * 0.03, 0, TAU); g.fill(); return; }
+  if (kind === "hay") { g.fillStyle = "#e0c060"; rrect(g, x - z * 0.4, y - z * 0.28, z * 0.8, z * 0.56, z * 0.1); g.fill(); g.strokeStyle = "#a08030"; g.lineWidth = z * 0.04; for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x - z * 0.36, y + i * z * 0.14); g.lineTo(x + z * 0.36, y + i * z * 0.14); g.stroke(); } return; }
+  if (kind === "cloud") { g.fillStyle = color || "#dfe8f4"; for (const [dx, dy, r] of [[-0.18, 0.05, 0.2], [0.02, -0.08, 0.26], [0.22, 0.05, 0.2]]) { g.beginPath(); g.arc(x + dx * z, y + dy * z, r * z, 0, TAU); g.fill(); } return; }
+  if (kind === "fruit") { g.fillStyle = "#ff9a2a"; g.beginPath(); g.arc(x - z * 0.14, y + z * 0.04, z * 0.2, 0, TAU); g.fill(); g.fillStyle = "#f0d020"; g.beginPath(); g.ellipse(x + z * 0.16, y, z * 0.24, z * 0.1, -0.6, 0, TAU); g.fill(); g.fillStyle = "#3a8a3a"; g.fillRect(x - z * 0.15, y - z * 0.22, z * 0.04, z * 0.1); return; }
+  icon(g, kind, x, y, z, color);
+}
 class Claw extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "sea"; this.icon = "gear"; this.slipAllow = 2;
-    this.instr = "Tap to drop the claw on a crate with the orange flame.";
+    this.sk = CLAW_SKIN[whereId(m)] || CLAW_SKIN.def;
+    this.theme = this.sk.theme; this.icon = "gear"; this.slipAllow = 2;
+    this.instr = this.sk.instr;
     this.need = L(this, 3, 4, 4, 5); this.got = 0;
     this.speed = L(this, 0.32, 0.42, 0.5, 0.58); this.tol = L(this, 0.5, 0.42, 0.36, 0.3); this.belt = L(this, 0, 0, 0.04, 0.06); this.sway = L(this, 0, 0, 0.012, 0.025);
     this.u = 0.2; this.dir = 1; this.state = "run"; this.st = 0; this.drop = 0; this.held = null; this.auto = false;
     const n = L(this, 5, 6, 7, 7); this.crates = [];
-    for (let i = 0; i < n; i++) this.crates.push({ u: 0.08 + i * (0.84 / (n - 1)), bad: false, icon: pick(["penguin", "snowflake", "camera"]) });
+    for (let i = 0; i < n; i++) this.crates.push({ u: 0.08 + i * (0.84 / (n - 1)), bad: false, icon: pick(this.sk.friends) });
     this.refill();
   }
   refill() { const live = this.crates.filter(c => !c.gone); const bad = live.filter(c => c.bad).length; if (bad < 2) shuffle(live.filter(c => !c.bad)).slice(0, 2 - bad).forEach(c => { c.bad = true; }); }
@@ -636,7 +653,7 @@ class Claw extends MG {
       if (this.st >= 0.55) {
         const c = this.target(1);
         if (c && c.bad) { this.held = c; c.gone = true; SFX.clunk(); this.state = "lift"; this.st = 0; }
-        else if (c) { this.held = null; this.say("That's a POLARIS crate! Only the flames.", false); this.state = "lift"; this.st = 0; }
+        else if (c) { this.held = null; this.say(this.sk.wrong, false); this.state = "lift"; this.st = 0; }
         else { this.say("Missed! Wait till you're right above one.", false); this.state = "lift"; this.st = 0; }
       }
     } else if (this.state === "lift") {
@@ -647,7 +664,7 @@ class Claw extends MG {
       if (k >= 1) {
         this.got++; SFX.good(); const x = this.gx(1.08); this.pop(x, this.railY + this.ropeMax * 0.9, PAL.lava); this.held = null;
         if (this.got >= this.need) { this.win(); this.state = "idle"; }
-        else { this.crates.push({ u: this.belt ? rnd(0, 1) : this.freeSlot(), bad: false, icon: pick(["penguin", "snowflake", "camera"]) }); this.crates = this.crates.filter(c => !c.gone); this.refill(); this.state = "back"; this.st = 0; }
+        else { this.crates.push({ u: this.belt ? rnd(0, 1) : this.freeSlot(), bad: false, icon: pick(this.sk.friends) }); this.crates = this.crates.filter(c => !c.gone); this.refill(); this.state = "back"; this.st = 0; }
       }
     } else if (this.state === "back") {
       this.st += dt; const k = clamp(this.st / 0.6, 0, 1); this.u = this.lockU = lerp(1.08, 0.5, ease.inOut(k)); if (k >= 1) { this.state = "run"; this.dir = Math.random() < 0.5 ? 1 : -1; }
@@ -655,7 +672,7 @@ class Claw extends MG {
   }
   freeSlot() { const n = this.crates.length; const used = this.crates.filter(c => !c.gone).map(c => c.u); for (let t = 0; t < 40; t++) { const u = rnd(0.08, 0.92); if (used.every(v => Math.abs(v - u) > 0.11)) return u; } return rnd(0.08, 0.92); }
   target(k, ahead) { const w = 0.06; let best = null; for (const c of this.crates) { if (c.gone) continue; const d = Math.abs(this.crateU(c, ahead) - this.clawU); if (d < w * this.tol * 2 * k && (!best || d < best.d)) best = { c, d }; } return best && (k === 1 || best.c.bad) ? best.c : null; }
-  hint() { this.hintT = 5; return "Watch the claw's shadow on the belt. Tap just as it covers a flame crate."; }
+  hint() { this.hintT = 5; return `Watch the claw's shadow on the belt. Tap just as it covers a ${this.sk.hint}.`; }
   solve() { this.auto = true; }
   gx(u) { return this.x0 + u * this.w0; }
   draw(g, W, H, s) {
@@ -674,15 +691,15 @@ class Claw extends MG {
       if (c.gone) continue;
       const cx = this.gx(this.crateU(c)); if (cx < x0 - cw || cx > x0 + w0 + cw) continue;
       const y = beltY - cw;
-      tile(g, cx - cw / 2, y, cw, cw, s, { color: c.bad ? "#5a3a2a" : "#2a5a8a", r: 6 });
+      tile(g, cx - cw / 2, y, cw, cw, s, { color: c.bad ? this.sk.goodBox : this.sk.friendBox, r: 6 });
       g.strokeStyle = "rgba(0,0,0,.3)"; g.lineWidth = 2 * s; g.strokeRect(cx - cw / 2 + 6 * s, y + 6 * s, cw - 12 * s, cw - 16 * s);
-      icon(g, c.bad ? "flame" : c.icon, cx, y + cw * 0.45, cw * 0.5, c.bad ? PAL.lava : "#dff4ff");
+      clawItem(g, c.bad ? this.sk.good : c.icon, cx, y + cw * 0.45, cw * 0.5, c.bad ? this.sk.goodCol : "#dff4ff");
     }
     // the lorry
     const lx = x0 + w0 + 40 * s, ly = beltY - 20 * s;
     g.fillStyle = "#16324f"; rrect(g, lx, ly - 50 * s, 120 * s, 70 * s, 8 * s); g.fill(); g.strokeStyle = PAL.ice; g.lineWidth = 2 * s; g.stroke();
-    text(g, "POLARIS", lx + 60 * s, ly - 14 * s, 14 * s, PAL.ice, "center", 900, MONO);
-    for (let i = 0; i < this.got; i++) { icon(g, "flame", lx + 18 * s + (i % 5) * 21 * s, ly - 40 * s, 16 * s, PAL.lava); }
+    text(g, this.sk.truck, lx + 60 * s, ly - 14 * s, 14 * s, PAL.ice, "center", 900, MONO);
+    for (let i = 0; i < this.got; i++) { clawItem(g, this.sk.good, lx + 18 * s + (i % 5) * 21 * s, ly - 40 * s, 16 * s, this.sk.goodCol); }
     // the claw
     const cu = this.clawU, cx = this.gx(cu), ropeLen = 40 * s + this.drop * ropeMax;
     g.fillStyle = "#3a4250"; rrect(g, cx - 34 * s, railY - 4 * s, 68 * s, 26 * s, 6 * s); g.fill();
@@ -692,12 +709,12 @@ class Claw extends MG {
     if (this.hintT > 0) { g.strokeStyle = PAL.gold; g.lineWidth = 2 * s; g.setLineDash([6 * s, 6 * s]); g.beginPath(); g.moveTo(cx, railY + 20 * s); g.lineTo(cx, beltY); g.stroke(); g.setLineDash([]); }
     g.strokeStyle = "#1a1d24"; g.lineWidth = 3 * s; g.beginPath(); g.moveTo(cx, railY + 20 * s); g.lineTo(cx, railY + ropeLen); g.stroke();
     const cy = railY + ropeLen, open = this.state === "drop" ? 1 - this.drop * 0.3 : this.held ? 0.2 : 1;
-    if (this.held) { tile(g, cx - cw / 2, cy + 8 * s, cw, cw, s, { color: "#5a3a2a", r: 6 }); icon(g, "flame", cx, cy + 8 * s + cw * 0.45, cw * 0.5, PAL.lava); }
+    if (this.held) { tile(g, cx - cw / 2, cy + 8 * s, cw, cw, s, { color: this.sk.goodBox, r: 6 }); clawItem(g, this.sk.good, cx, cy + 8 * s + cw * 0.45, cw * 0.5, this.sk.goodCol); }
     g.fillStyle = "#5a6272"; rrect(g, cx - 16 * s, cy - 6 * s, 32 * s, 16 * s, 5 * s); g.fill();
     g.strokeStyle = "#8a92a2"; g.lineWidth = 5 * s; g.lineCap = "round";
     for (const sx of [-1, 1]) { g.beginPath(); g.moveTo(cx + sx * 12 * s, cy + 8 * s); g.quadraticCurveTo(cx + sx * (20 + 14 * open) * s, cy + 24 * s, cx + sx * (6 + 12 * open) * s, cy + 40 * s); g.stroke(); }
     // score
-    card(g, W - 170 * s, 70 * s, 150 * s, 80 * s, s, { title: "FLAME CRATES" });
+    card(g, W - 170 * s, 70 * s, 150 * s, 80 * s, s, { title: this.sk.title });
     text(g, `${this.got} / ${this.need}`, W - 95 * s, 122 * s, 26 * s, PAL.snow, "center", 900, MONO);
     this.drawMsg(g, W, H, s);
   }

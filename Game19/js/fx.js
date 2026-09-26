@@ -66,6 +66,10 @@ export class FX {
 // An animated full-screen background for a mini-game. Themes: ice, snow, sea,
 // night_city, neon, desert, volcano, lab, vault, jungle, sky, cave, casino.
 const BD = {
+  museum:     ["#3a1420", "#0e0408", "#ffd166"],
+  clock:      ["#241448", "#08040f", "#c9a1ff"],
+  storm:      ["#1e2c3c", "#060a10", "#8ad8ff"],
+  meadow:     ["#24422a", "#0a160c", "#bff0a8"],
   ice:        ["#0d3a5c", "#06182a", "#7fe3ff"],
   snow:       ["#2c5a88", "#10243e", "#ffffff"],
   sea:        ["#0a4a78", "#04162a", "#5ad0ff"],

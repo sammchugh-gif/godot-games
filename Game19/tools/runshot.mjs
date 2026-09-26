@@ -17,6 +17,8 @@ page.on("console", m => { if (m.type() === "error" && !m.text().includes("404"))
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 const ev = (f, a) => page.evaluate(f, a);
 const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 240000 }); };
 const runs = (await ev(() => __spy.debug.COUNTRIES.flatMap((c, ci) => c.missions.map((m, mi) => ({ ci, mi, id: m.id, game: m.game }))).filter(r => r.game === "run"))).filter(r => !only.length || only.some(o => r.id.startsWith(o)));

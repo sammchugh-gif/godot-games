@@ -29,8 +29,8 @@ const CROWD_F = {
 class Crowd extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = where(m) === "mon" ? "casino" : "sky"; this.icon = "eye"; this.slipAllow = 1;
-    this.instr = "Read the clues. Tap the henchman in disguise. Don't tap the tourists!";
+    this.theme = { mon: "casino", rom: "desert", hol: "desert", was: "storm" }[where(m)] || "sky"; this.icon = "eye"; this.slipAllow = 1;
+    this.instr = `Read the clues. Tap ${{ rom: "Tock", hol: "Drizzle", was: "Doctor Tempest" }[where(m)] || "the henchman"} in disguise. Don't tap the ${where(m) === "hol" ? "cowboys" : "tourists"}!`;
     this.rounds = L(this, 2, 2, 3, 3); this.round = 0; this.auto = false;
     this.next();
   }
@@ -126,8 +126,8 @@ class Crowd extends MG {
 class BlendIn extends MG {
   constructor(G, m) {
     super(G, m);
-    this.set = { mon: "casino", can: "train", pen: "penguins" }[where(m)] || "casino";
-    this.theme = this.set === "penguins" ? "snow" : "casino"; this.icon = "eye"; this.slipAllow = 1;
+    this.set = { mon: "casino", can: "train", pen: "penguins", ven: "carnival", sto: "druids", kan: "field" }[where(m)] || "casino";
+    this.theme = { penguins: "snow", carnival: "clock", druids: "meadow", field: "meadow" }[this.set] || "casino"; this.icon = "eye"; this.slipAllow = 1;
     this.instr = "Hold the screen to sneak forward. Let go when the guard turns round!";
     this.pos = 0; this.speed = L(this, 0.1, 0.09, 0.085, 0.08); this.holding = false; this.auto = false;
     this.warnT = L(this, 1.2, 0.85, 0.65, 0.5); this.away = L(this, [2, 3.6], [1.6, 3.2], [1.2, 2.8], [0.9, 2.4]); this.fake = L(this, 0, 0, 0.3, 0.4);
@@ -157,7 +157,13 @@ class BlendIn extends MG {
     this.frame(g, W, H, s);
     const floor = H * 0.8, x0 = 90 * s, x1 = W - 300 * s, gx = W - 170 * s;
     // the room
-    if (this.set === "penguins") {
+    const OUT = { carnival: ["#c8a888", "#a88868"], druids: ["#5a7a3a", "#4a6a30"], field: ["#8a7a4a", "#6a5a34"] }[this.set];
+    if (OUT) {
+      g.fillStyle = OUT[1]; g.fillRect(0, floor, W, H - floor); g.fillStyle = OUT[0]; g.fillRect(0, floor, W, 12 * s);
+      if (this.set === "carnival") { for (let i = 0; i < 6; i++) { const fx = 40 * s + i * (W - 80 * s) / 5; g.fillStyle = ["#e8a078", "#f0d0a0", "#d87060"][i % 3]; g.fillRect(fx - 60 * s, H * 0.22, 120 * s, floor - H * 0.22); g.fillStyle = "#3a2a2a"; for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(fx - 40 * s + k * 50 * s, H * 0.5); g.lineTo(fx - 40 * s + k * 50 * s, H * 0.36); g.arc(fx - 25 * s + k * 50 * s, H * 0.36, 15 * s, Math.PI, 0); g.lineTo(fx - 10 * s + k * 50 * s, H * 0.5); g.fill(); } } g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(0, H * 0.2); g.quadraticCurveTo(W / 2, H * 0.32, W, H * 0.2); g.stroke(); for (let i = 0; i < 14; i++) { const lx = i * W / 13, ly = H * 0.2 + Math.sin(i / 13 * Math.PI) * H * 0.09; g.fillStyle = ["#ffd166", "#ff6ad5", "#7fe3ff"][i % 3]; g.beginPath(); g.arc(lx, ly + 10 * s, 8 * s, 0, TAU); g.fill(); } }
+      else if (this.set === "druids") { g.fillStyle = "#8a8a7e"; for (let i = 0; i < 7; i++) { const fx = 30 * s + i * (W - 60 * s) / 6, h = (120 + (i % 2) * 30) * s; g.fillRect(fx - 26 * s, floor - h, 52 * s, h); if (i % 2 === 0 && i < 6) g.fillRect(fx - 26 * s, floor - h - 24 * s, (W - 60 * s) / 6 + 52 * s, 24 * s); } glow(g, W * 0.5, floor - 60 * s, 180 * s, "rgba(255,200,120,.45)"); }
+      else { for (let i = 0; i < 40; i++) { const fx = (i * 53) % W, h = (90 + (i % 5) * 16) * s; g.strokeStyle = "#8a9a3a"; g.lineWidth = 6 * s; g.beginPath(); g.moveTo(fx, floor); g.lineTo(fx + 4 * s, floor - h); g.stroke(); g.fillStyle = "#e0c060"; g.beginPath(); g.ellipse(fx + 4 * s, floor - h, 6 * s, 14 * s, 0, 0, TAU); g.fill(); } }
+    } else if (this.set === "penguins") {
       g.fillStyle = "#eaf6ff"; g.fillRect(0, floor - 30 * s, W, H - floor + 30 * s);
       for (let i = 0; i < 12; i++) { const px = (i * 131) % (W - 100 * s) + 30 * s, py = floor - 20 * s + (i % 3) * 20 * s; icon(g, "penguin", px, py - 22 * s, 44 * s); }
     } else {
@@ -173,7 +179,8 @@ class BlendIn extends MG {
     const look = this.phase === "look" ? 1 : this.phase === "turning" ? (this.isFake ? 0.35 : 0.5) * Math.min(1, (this.warnT - this.pt) / this.warnT * 2) : this.phase === "back" ? this.pt / 0.35 : 0;
     const facing = look > 0.5 ? -1 : 1;
     if (this.phase === "look") { g.fillStyle = "rgba(255,59,74,.18)"; g.beginPath(); g.moveTo(gx - 10 * s, floor - 200 * s); g.lineTo(0, floor - 320 * s); g.lineTo(0, floor + 20 * s); g.closePath(); g.fill(); }
-    person2D(g, gx, floor, 250 * s, { skin: "#e8c0a0", coat: "#1a1a22", trousers: "#1a1a22", sunglasses: true, hairStyle: "bald", tie: PAL.lava }, { facing, face: look > 0.5 ? "frown" : "smile", arms: "down" });
+    const GUARD = { carnival: { skin: "#f0c8a8", coat: "#2a2a30", trousers: "#1a1a22", hat: "top", hatColor: "#141418", moustache: "#2a1a10" }, druids: { skin: "#f0c8a8", coat: "#f4f4f0", trousers: "#1a1a22", hat: "top", hatColor: "#141418", moustache: "#2a1a10" }, field: { skin: "#8a5a3a", coat: "#2a2a3a", trousers: "#1a1a22", beard: "#141414", hairStyle: "bald" } }[this.set] || { skin: "#e8c0a0", coat: "#1a1a22", trousers: "#1a1a22", sunglasses: true, hairStyle: "bald", tie: PAL.lava };
+    person2D(g, gx, floor, 250 * s, GUARD, { facing, face: look > 0.5 ? "frown" : "smile", arms: "down" });
     if (this.phase === "turning") { text(g, "!", gx + 10 * s, floor - 300 * s + Math.sin(this.t * 20) * 3 * s, 60 * s, PAL.gold, "center", 900); }
     if (this.phase === "look") text(g, "👁", gx - 40 * s, floor - 290 * s, 34 * s, "#fff", "center", 900);
     // the goal and the track
@@ -189,9 +196,10 @@ class BlendIn extends MG {
       g.fillStyle = "#1a1418"; g.beginPath(); g.arc(-4 * s, -110 * s, 2 * s, 0, TAU); g.arc(4 * s, -110 * s, 2 * s, 0, TAU); g.fill();
       g.restore();
     } else {
-      const look2 = Object.assign({}, RORY, { coat: "#15151c", tie: "#1a1a22", scarf: null });
+      const look2 = Object.assign({}, RORY, { carnival: { coat: "#7a3ab0", mask: true, scarf: null }, druids: { coat: "#f4f4f0", scarf: null }, field: { coat: "#8a5a2a", hat: "cowboy", hatColor: "#d8b860", scarf: null } }[this.set] || { coat: "#15151c", tie: "#1a1a22", scarf: null });
       person2D(g, rx, floor, 180 * s, look2, { walk: mv ? this.walk : undefined, arms: mv ? "down" : "up", face: this.caught > 0 ? "shock" : mv ? "sly" : "smile" });
-      if (!mv) { g.fillStyle = "#c0c8d0"; rrect(g, rx - 40 * s, floor - 206 * s, 80 * s, 6 * s, 3 * s); g.fill(); for (const dx of [-24, 0, 24]) { g.fillStyle = "rgba(255,220,120,.8)"; rrect(g, rx + dx * s - 5 * s, floor - 224 * s, 10 * s, 18 * s, 3 * s); g.fill(); } }
+      if (!mv && this.set === "field") { g.fillStyle = "#e0c060"; for (const sx of [-1, 1]) { g.save(); g.translate(rx + sx * 60 * s, floor - 150 * s); g.rotate(sx * 0.3); for (let k = 0; k < 5; k++) g.fillRect(-2 * s + k * 3 * s * sx, -2 * s, 30 * s * sx, 3 * s); g.restore(); } }
+      else if (!mv && (this.set === "casino" || this.set === "train")) { g.fillStyle = "#c0c8d0"; rrect(g, rx - 40 * s, floor - 206 * s, 80 * s, 6 * s, 3 * s); g.fill(); for (const dx of [-24, 0, 24]) { g.fillStyle = "rgba(255,220,120,.8)"; rrect(g, rx + dx * s - 5 * s, floor - 224 * s, 10 * s, 18 * s, 3 * s); g.fill(); } }
     }
     if (this.hintT > 0 && this.phase !== "away") text(g, "LET GO!", rx, floor - 240 * s, 22 * s, PAL.gold, "center", 900);
     this.drawMsg(g, W, H, s);
@@ -204,9 +212,9 @@ class BlendIn extends MG {
 class FloeHop extends MG {
   constructor(G, m) {
     super(G, m);
-    const w = where(m); this.skin = w === "can" ? "logs" : w === "nzl" ? "pools" : "floes";
-    this.theme = this.skin === "logs" ? "jungle" : this.skin === "pools" ? "volcano" : "ice"; this.icon = "snowflake"; this.slipAllow = 2;
-    this.instr = "Tap or swipe to hop. Ride the " + (this.skin === "logs" ? "logs" : this.skin === "pools" ? "rafts" : "floes") + " to the far side!";
+    const w = where(m); this.skin = w === "can" ? "logs" : w === "nzl" ? "pools" : w === "msm" ? "sands" : w === "fla" ? "lilies" : "floes";
+    this.theme = { logs: "jungle", pools: "volcano", sands: "desert", lilies: "jungle" }[this.skin] || "ice"; this.icon = "snowflake"; this.slipAllow = 2;
+    this.instr = "Tap or swipe to hop. Ride the " + ({ logs: "logs", pools: "rafts", sands: "stepping stones", lilies: "lily pads" }[this.skin] || "floes") + " to the far side!";
     this.cols = L(this, 9, 9, 11, 11);
     const nw = L(this, 3, 4, 5, 6), v = L(this, 1.1, 1.4, 1.7, 2.0);
     this.lanes = [{ kind: "bank" }];
@@ -282,10 +290,10 @@ class FloeHop extends MG {
     this.frame(g, W, H, s);
     const rows = this.lanes.length, b = this.b = this.fit(this.cols, rows, W, H, s, { max: 88, top: 70, bottom: 50 }), c = b.cell;
     g.save(); g.beginPath(); rrect(g, b.x, b.y, b.w, b.h, 14 * s); g.clip();
-    const water = this.skin === "pools" ? ["#3aa0a0", "#1a6a70"] : this.skin === "logs" ? ["#2a6a9a", "#14405e"] : ["#12406a", "#0a2440"];
+    const water = { pools: ["#3aa0a0", "#1a6a70"], logs: ["#2a6a9a", "#14405e"], sands: ["#8a7a58", "#5a4a30"], lilies: ["#4a5a38", "#26341c"] }[this.skin] || ["#12406a", "#0a2440"];
     this.lanes.forEach((ln, r) => {
       const y = b.y + b.h - (r + 1) * c;
-      if (ln.kind === "bank") { g.fillStyle = this.skin === "logs" ? "#4a8a3a" : this.skin === "pools" ? "#8a8070" : "#eaf6ff"; g.fillRect(b.x, y, b.w, c); if (ln.goal) { g.fillStyle = "rgba(53,224,138,.25)"; g.fillRect(b.x, y, b.w, c); text(g, "SAFE SIDE", b.x + b.w / 2, y + c / 2, c * 0.3, "rgba(20,60,40,.6)", "center", 900); } }
+      if (ln.kind === "bank") { g.fillStyle = { logs: "#4a8a3a", pools: "#8a8070", sands: "#d8c8a0", lilies: "#6a8a3a" }[this.skin] || "#eaf6ff"; g.fillRect(b.x, y, b.w, c); if (ln.goal) { g.fillStyle = "rgba(53,224,138,.25)"; g.fillRect(b.x, y, b.w, c); text(g, "SAFE SIDE", b.x + b.w / 2, y + c / 2, c * 0.3, "rgba(20,60,40,.6)", "center", 900); } }
       else if (ln.kind === "road") { g.fillStyle = "#cfe4f2"; g.fillRect(b.x, y, b.w, c); g.strokeStyle = "rgba(80,120,160,.4)"; g.setLineDash([12 * s, 10 * s]); g.lineWidth = 3 * s; g.beginPath(); g.moveTo(b.x, y + c / 2); g.lineTo(b.x + b.w, y + c / 2); g.stroke(); g.setLineDash([]); }
       else { const gr = g.createLinearGradient(0, y, 0, y + c); gr.addColorStop(0, water[0]); gr.addColorStop(1, water[1]); g.fillStyle = gr; g.fillRect(b.x, y, b.w, c); g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 2 * s; for (let i = 0; i < 6; i++) { const wx = b.x + ((i * 160 * s + this.t * ln.v * c) % b.w + b.w) % b.w; g.beginPath(); g.moveTo(wx, y + c * 0.5); g.quadraticCurveTo(wx + 10 * s, y + c * 0.4, wx + 20 * s, y + c * 0.5); g.stroke(); } if (this.skin === "pools" && Math.random() < 0.04) this.fx.puff(b.x + Math.random() * b.w, y + c * 0.5, "rgba(255,255,255,.25)", 1, { rise: 30 }); }
       if (!ln.things) return;
@@ -298,7 +306,7 @@ class FloeHop extends MG {
           g.fillStyle = "#c0282a"; g.beginPath(); g.arc(-w * 0.1, -c * 0.28, c * 0.14, 0, TAU); g.fill(); g.restore(); continue;
         }
         const sk = this.sinking(t); g.globalAlpha = 1 - sk * 0.75;
-        const col = this.skin === "logs" ? "#8a5a2a" : this.skin === "pools" ? "#c8bca8" : "#f4fbff";
+        const col = { logs: "#8a5a2a", pools: "#c8bca8", sands: "#9a9488", lilies: "#3a9a3a" }[this.skin] || "#f4fbff";
         g.fillStyle = "rgba(0,0,0,.2)"; rrect(g, x + 4 * s, y + c * 0.2 + 5 * s, w - 8 * s, c * 0.62, c * 0.25); g.fill();
         g.fillStyle = col; rrect(g, x + 4 * s, y + c * 0.16, w - 8 * s, c * 0.62, c * 0.25); g.fill();
         if (this.skin === "logs") { g.strokeStyle = "#5a3a1a"; g.lineWidth = 2 * s; for (let k = 1; k < t.len * 2; k++) { g.beginPath(); g.moveTo(x + k * c / 2, y + c * 0.22); g.lineTo(x + k * c / 2 + 6 * s, y + c * 0.7); g.stroke(); } g.fillStyle = "#c08a50"; g.beginPath(); g.ellipse(x + w - 10 * s, y + c * 0.47, 8 * s, c * 0.28, 0, 0, TAU); g.fill(); }
@@ -326,8 +334,8 @@ class FloeHop extends MG {
 class Drone extends MG {
   constructor(G, m) {
     super(G, m);
-    const w = where(m); this.skin = w === "spa" ? "chimneys" : w === "cav" ? "icicles" : "vents";
-    this.theme = this.skin === "chimneys" ? "sky" : this.skin === "icicles" ? "cave" : "snow"; this.icon = "drone"; this.slipAllow = 2;
+    const w = where(m); this.skin = w === "spa" ? "chimneys" : w === "cav" ? "icicles" : w === "par" ? "girders" : w === "eye" ? "tunnel" : w === "sco" ? "posts" : "vents";
+    this.theme = { chimneys: "sky", icicles: "cave", girders: "night_city", tunnel: "storm", posts: "sea" }[this.skin] || "snow"; this.icon = "drone"; this.slipAllow = 2;
     this.instr = "Hold the screen to fly up. Let go to drop. Through the gaps!";
     this.need = L(this, 6, 8, 10, 12); this.passed = 0; this.speed = L(this, 170, 200, 235, 265); this.gap = L(this, 260, 230, 200, 176); this.moveGap = L(this, 0, 0, 40, 70);
     this.y = 0.5; this.vy = 0; this.holding = false; this.inv = 0; this.auto = false; this.pipes = []; this.spawnX = 0; this.dist = 0;
@@ -381,10 +389,11 @@ class Drone extends MG {
           const gr = g.createLinearGradient(x - pw / 2, 0, x + pw / 2, 0); gr.addColorStop(0, "#9fdcff"); gr.addColorStop(0.5, "#e8f8ff"); gr.addColorStop(1, "#6fb8e8");
           g.fillStyle = gr; g.beginPath(); if (up) { g.moveTo(x - pw / 2, y0); g.lineTo(x + pw / 2, y0); g.lineTo(x + pw * 0.3, y1 - 30 * s); g.lineTo(x, y1); g.lineTo(x - pw * 0.3, y1 - 30 * s); } else { g.moveTo(x - pw / 2, y1); g.lineTo(x + pw / 2, y1); g.lineTo(x + pw * 0.3, y0 + 30 * s); g.lineTo(x, y0); g.lineTo(x - pw * 0.3, y0 + 30 * s); } g.closePath(); g.fill();
         } else {
-          const col = this.skin === "chimneys" ? "#b0583a" : "#5a6272";
+          const col = { chimneys: "#b0583a", girders: "#7a5a36", tunnel: "#4a5058", posts: "#5a4a3a" }[this.skin] || "#5a6272";
           const gr = g.createLinearGradient(x - pw / 2, 0, x + pw / 2, 0); gr.addColorStop(0, shade(col, -0.3)); gr.addColorStop(0.4, shade(col, 0.25)); gr.addColorStop(1, shade(col, -0.35));
           g.fillStyle = gr; g.fillRect(x - pw / 2, y0, pw, y1 - y0);
           g.fillStyle = shade(col, 0.1); rrect(g, x - pw / 2 - 8 * s, up ? y1 - 22 * s : y0, pw + 16 * s, 22 * s, 5 * s); g.fill();
+          if (this.skin === "girders") { g.strokeStyle = "#c8963c"; g.lineWidth = 2 * s; for (let yy = y0; yy < y1 - 20 * s; yy += 24 * s) { g.beginPath(); g.moveTo(x - pw / 2, yy); g.lineTo(x + pw / 2, yy + 24 * s); g.moveTo(x + pw / 2, yy); g.lineTo(x - pw / 2, yy + 24 * s); g.stroke(); } }
           if (this.skin === "chimneys") { g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = 1.5 * s; for (let yy = y0; yy < y1; yy += 16 * s) { g.beginPath(); g.moveTo(x - pw / 2, yy); g.lineTo(x + pw / 2, yy); g.stroke(); } }
           else if (Math.random() < 0.08) this.fx.puff(x, up ? y1 : y0, "rgba(255,160,90,.35)", 1, { rise: up ? -30 : 30 });
         }
@@ -411,12 +420,28 @@ class Drone extends MG {
 // =============================================================== TAG 'EM
 // Henchmen pop up; tag them with paint before they raise the alarm. Not the
 // tourists, and not the penguins.
+// the birds of the other places: clockwork ravens among the real ones at the
+// Tower, hail drones among the seagulls in the Eye of the Storm
+function whackBird(g, kind, x, y, z, t, hit) {
+  g.save(); g.translate(x, y); const flap = Math.sin(t * 12) * 0.3;
+  if (kind === "drone") { icon(g, "drone", 0, 0, z, hit ? "#7fe3ff" : "#c8d0dc"); g.fillStyle = "#bfe8ff"; for (let i = 0; i < 3; i++) { g.beginPath(); g.arc((i - 1) * z * 0.2, z * 0.45 + ((t * 2 + i * 0.3) % 1) * z * 0.3, z * 0.05, 0, TAU); g.fill(); } g.restore(); return; }
+  const body = kind === "clockraven" ? "#b8862a" : kind === "gull" ? "#f4f4f4" : "#14141a", wing = kind === "gull" ? "#9aa4b0" : body;
+  g.fillStyle = body; g.beginPath(); g.ellipse(0, 0, z * 0.32, z * 0.22, 0, 0, TAU); g.fill(); g.beginPath(); g.arc(z * 0.26, -z * 0.16, z * 0.15, 0, TAU); g.fill();
+  g.fillStyle = wing; g.beginPath(); g.ellipse(-z * 0.05, -z * 0.05, z * 0.26, z * 0.1, -0.5 + flap, 0, TAU); g.fill();
+  g.fillStyle = kind === "gull" ? "#f0b020" : "#2a2a30"; g.beginPath(); g.moveTo(z * 0.38, -z * 0.18); g.lineTo(z * 0.55, -z * 0.14); g.lineTo(z * 0.38, -z * 0.1); g.fill();
+  if (kind === "clockraven") { g.save(); g.translate(z * 0.3, -z * 0.18); g.rotate(t * 3); g.fillStyle = "#ffd166"; for (let k = 0; k < 6; k++) { g.rotate(TAU / 6); g.fillRect(-z * 0.015, -z * 0.07, z * 0.03, z * 0.03); } g.beginPath(); g.arc(0, 0, z * 0.045, 0, TAU); g.fill(); g.restore(); g.strokeStyle = "#e0e4e8"; g.lineWidth = z * 0.04; g.beginPath(); g.arc(-z * 0.3, -z * 0.2, z * 0.07, 0, TAU); g.stroke(); }
+  else { g.fillStyle = "#fff"; g.beginPath(); g.arc(z * 0.3, -z * 0.19, z * 0.035, 0, TAU); g.fill(); }
+  g.fillStyle = "#5a4a2a"; g.fillRect(-z * 0.06, z * 0.2, z * 0.03, z * 0.12); g.fillRect(z * 0.04, z * 0.2, z * 0.03, z * 0.12);
+  g.restore();
+}
+const WHACK_BIRDS = { tow: { target: "clockraven", friend: "raven", instr: "Tap the clockwork ravens: they shine gold and tick. Leave the real ravens alone!", wrong: "That's a real raven!", hint: "Clockwork ravens are gold with a gear for an eye. The black ones are real.", wall: "#8a8478", theme: "museum" }, eye: { target: "drone", friend: "gull", instr: "Tap the hail drones. Leave the seagulls alone!", wrong: "That's a seagull!", hint: "Hail drones are grey machines dropping ice. Seagulls are white birds.", wall: "#4a5058", theme: "storm" } };
 class Whack extends MG {
   constructor(G, m) {
     super(G, m);
-    this.skin = { can: "train", arg: "ship" }[where(m)] || "balcony";
-    this.theme = this.skin === "ship" ? "snow" : this.skin === "train" ? "sky" : "casino"; this.icon = "star"; this.slipAllow = 2;
-    this.instr = "Tap the henchmen in red. Leave everyone else alone!";
+    this.birds = WHACK_BIRDS[where(m)] || null;
+    this.skin = this.birds ? (where(m) === "tow" ? "balcony" : "ship") : { can: "train", arg: "ship" }[where(m)] || "balcony";
+    this.theme = this.birds ? this.birds.theme : this.skin === "ship" ? "snow" : this.skin === "train" ? "sky" : "casino"; this.icon = "star"; this.slipAllow = 2;
+    this.instr = this.birds ? this.birds.instr : "Tap the henchmen in red. Leave everyone else alone!";
     const [r, c] = L(this, [2, 3], [3, 3], [3, 4], [3, 4]); this.rows = r; this.cols = c;
     this.need = L(this, 8, 10, 12, 14); this.got = 0; this.up = L(this, 1.7, 1.35, 1.1, 0.9); this.every = L(this, 0.95, 0.8, 0.65, 0.52); this.friendP = L(this, 0.22, 0.26, 0.3, 0.34);
     this.holes = []; for (let i = 0; i < r * c; i++) this.holes.push({ who: null, k: 0, t: 0, hit: 0 });
@@ -441,19 +466,19 @@ class Whack extends MG {
   hy(h) { const i = this.holes.indexOf(h), b = this.b; return b ? b.y + (((i / this.cols) | 0) + 0.8) * b.ch : 0; }
   tap(h) {
     if (h.who === "hench") { h.hit = 0.5; this.got++; SFX.pop(); const x = this.hx(h), y = this.hy(h) - 50 * this.s; this.fx.burst(x, y, [PAL.ice, "#3aa0ff", "#fff"], 22, 280 * this.s, { gravity: 300 * this.s }); this.fx.float(x, y - 30 * this.s, "TAGGED!", PAL.ice, 22); h.splat = Math.random() * TAU; if (this.got >= this.need) this.win(); }
-    else { h.hit = 0.6; this.say(h.who.penguin ? "Not the penguin!" : "That's a tourist!", false); }
+    else { h.hit = 0.6; this.say(this.birds ? this.birds.wrong : h.who.penguin ? "Not the penguin!" : "That's a tourist!", false); }
   }
   down(x, y) {
     if (this.done || !this.b) return;
     for (const h of this.holes) { if (!h.who || h.hit > 0 || h.k < 0.3) continue; const X = this.hx(h), Y = this.hy(h); if (Math.abs(x - X) < this.b.cw * 0.4 && y < Y + 10 * this.s && y > Y - this.b.ch * 0.8) { this.tap(h); return; } }
   }
-  hint() { this.hintT = 5; return "Henchmen wear red with orange helmets. Tourists and penguins are friends."; }
+  hint() { this.hintT = 5; return this.birds ? this.birds.hint : "Henchmen wear red with orange helmets. Tourists and penguins are friends."; }
   solve() { this.auto = true; }
   draw(g, W, H, s) {
     this.frame(g, W, H, s);
     const bw = Math.min(W - 80 * s, this.cols * 230 * s), bh = Math.min(H - 170 * s, this.rows * 200 * s), b = this.b = { x: W / 2 - bw / 2, y: 90 * s + (H - 170 * s - bh) / 2, cw: bw / this.cols, ch: bh / this.rows };
     // the building / carriage / hull
-    const wall = this.skin === "ship" ? "#b02a2a" : this.skin === "train" ? "#2a5a3a" : "#e8d8b8";
+    const wall = this.birds ? this.birds.wall : this.skin === "ship" ? "#b02a2a" : this.skin === "train" ? "#2a5a3a" : "#e8d8b8";
     g.fillStyle = wall; rrect(g, b.x - 20 * s, b.y - 20 * s, bw + 40 * s, bh + 40 * s, 18 * s); g.fill();
     if (this.skin === "ship") { g.fillStyle = "#1a1a22"; g.fillRect(b.x - 20 * s, b.y + bh + 6 * s, bw + 40 * s, 14 * s); }
     this.holes.forEach((h, i) => {
@@ -467,7 +492,8 @@ class Whack extends MG {
       g.fillStyle = "rgba(255,220,150,.15)"; g.fillRect(cx - ww / 2, cy, ww, wh);
       if (h.who) {
         const py = cy + wh + (1 - ease.out(h.k)) * wh * 0.9, ph = wh * 1.05;
-        if (h.who === "hench") person2D(g, cx, py, ph, HENCH, { arms: h.hit > 0 ? "up" : "wave", face: h.hit > 0 ? "shock" : "sly" });
+        if (this.birds) whackBird(g, h.who === "hench" ? this.birds.target : this.birds.friend, cx, py - ph * 0.4, Math.min(ww, ph) * 0.8, this.t + this.holes.indexOf(h), h.hit > 0);
+        else if (h.who === "hench") person2D(g, cx, py, ph, HENCH, { arms: h.hit > 0 ? "up" : "wave", face: h.hit > 0 ? "shock" : "sly" });
         else if (h.who.penguin) icon(g, "penguin", cx, py - ph * 0.35, ph * 0.6);
         else person2D(g, cx, py, ph, h.who, { arms: "wave", face: h.hit > 0 ? "shock" : "smile" });
         if (h.who === "hench" && h.hit > 0) { g.fillStyle = "rgba(58,160,255,.85)"; g.beginPath(); for (let k = 0; k < 12; k++) { const a = h.splat + k * TAU / 12, r = (k % 2 ? 16 : 30) * s; g.lineTo(cx + Math.cos(a) * r, py - ph * 0.6 + Math.sin(a) * r); } g.fill(); }

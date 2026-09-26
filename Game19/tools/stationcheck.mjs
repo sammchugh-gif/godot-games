@@ -13,6 +13,8 @@ page.on("pageerror", e => console.log("pageerror:", String(e).slice(0, 300)));
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 const ev = (fn, arg) => page.evaluate(fn, arg);
 // wait on game time, not wall time: under software rendering a scene's first
 // frames can take seconds, and collision only settles once frames have run
