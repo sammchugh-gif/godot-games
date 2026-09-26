@@ -13,6 +13,8 @@ const errs = []; page.on("pageerror", e => { errs.push(String(e)); console.log("
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 const ev = (f, a) => page.evaluate(f, a);
 let bad = 0;
 const routes = await ev(() => __spy.debug.COUNTRIES.flatMap((c, ci) => c.missions.map((m, mi) => ({ ci, mi, id: m.id, city: c.id, game: m.game }))).filter(r => r.game === "chase"));

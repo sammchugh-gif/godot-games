@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Agent Rory">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Agent Rory HQ</title>
+<script src="../menu.js"></script>
+<script src="../fresh.js" defer></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --ink: #e8f4ff; --dim: #8fa6c4; --line: rgba(127, 220, 255, .22);
+    --ice: #7fdcff; --gold: #ffd166; --lava: #ff7a3a; --ok: #7bed9f; --bg: #050b16;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); }
+  body {
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%; overflow-x: hidden; -webkit-user-select: none; user-select: none;
+  }
+  canvas#bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  main {
+    position: relative; z-index: 1; min-height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: max(1.4rem, env(safe-area-inset-top)) 1rem max(1.6rem, env(safe-area-inset-bottom));
+  }
+  header { text-align: center; margin-bottom: clamp(1rem, 3.2vh, 2.2rem); }
+  .badge {
+    display: inline-flex; align-items: center; gap: .5rem; padding: .3rem .8rem; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(10, 30, 56, .6); color: var(--ice);
+    font-size: .72rem; letter-spacing: .28em; font-weight: 700;
+  }
+  .badge i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); animation: blink 1.6s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  h1 {
+    margin: .7rem 0 .2rem; font-size: clamp(2.2rem, 7.5vw, 4.6rem); line-height: 1; font-weight: 900;
+    letter-spacing: .06em; text-transform: uppercase;
+    background: linear-gradient(180deg, #ffffff 0%, #bfe9ff 55%, #5fb8e8 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 4px 18px rgba(80, 180, 255, .35));
+  }
+  h1 b { color: var(--gold); -webkit-text-fill-color: var(--gold); }
+  .tag { color: var(--dim); font-size: clamp(.9rem, 2.2vw, 1.1rem); letter-spacing: .04em; margin: 0; }
+  .tag .typed { color: var(--ink); }
+  .tag .caret { display: inline-block; width: .55em; height: 1em; vertical-align: -.12em; background: var(--ice); margin-left: 2px; animation: blink 1s steps(1) infinite; }
+
+  .files {
+    width: 100%; max-width: 72rem; display: grid; gap: clamp(.9rem, 2vw, 1.4rem);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 820px) and (orientation: portrait) { .files { grid-template-columns: 1fr; max-width: 30rem; } }
+  @media (max-width: 560px) { .files { grid-template-columns: 1fr; max-width: 30rem; } }
+
+  .file {
+    position: relative; display: flex; flex-direction: column; text-decoration: none; color: inherit;
+    border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, rgba(20, 38, 66, .82), rgba(8, 16, 30, .92));
+    border: 1px solid var(--line); box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .06);
+    transform: translateY(18px); opacity: 0; animation: rise .7s cubic-bezier(.2, .8, .2, 1) forwards;
+    transition: transform .18s, border-color .18s, box-shadow .18s; cursor: pointer;
+  }
+  .file:nth-child(2) { animation-delay: .12s; } .file:nth-child(3) { animation-delay: .24s; }
+  @keyframes rise { to { transform: none; opacity: 1; } }
+  .file:hover, .file:focus-visible { transform: translateY(-4px); border-color: var(--accent, var(--ice)); box-shadow: 0 24px 50px rgba(0, 0, 0, .55), 0 0 0 1px var(--accent, var(--ice)), 0 0 30px color-mix(in srgb, var(--accent, var(--ice)) 35%, transparent); outline: none; }
+  .file:active { transform: scale(.98); }
+  .pic { position: relative; aspect-ratio: 16 / 10; background: #0a1422 center / cover no-repeat; overflow: hidden; }
+  .pic::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(5, 11, 22, 0) 45%, rgba(5, 11, 22, .92) 100%),
+                repeating-linear-gradient(0deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px);
+  }
+  .scan { position: absolute; left: 0; right: 0; height: 30%; top: -30%; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent, var(--ice)) 22%, transparent), transparent);
+    animation: scan 3.6s linear infinite; }
+  .file:nth-child(2) .scan { animation-delay: 1.2s; } .file:nth-child(3) .scan { animation-delay: 2.4s; }
+  @keyframes scan { to { top: 100%; } }
+  .num { position: absolute; top: .7rem; left: .8rem; z-index: 2; font: 700 .7rem/1 ui-monospace, Menlo, monospace; letter-spacing: .18em;
+    padding: .35rem .5rem; border-radius: 6px; background: rgba(0, 0, 0, .55); color: var(--accent, var(--ice)); border: 1px solid color-mix(in srgb, var(--accent, var(--ice)) 45%, transparent); }
+  .stamp { position: absolute; top: .9rem; right: .6rem; z-index: 2; transform: rotate(8deg); padding: .25rem .55rem;
+    border: 3px solid currentColor; border-radius: 6px; font-weight: 900; letter-spacing: .12em; font-size: .78rem; opacity: .92; background: rgba(0, 0, 0, .35); }
+  .stamp.done { color: var(--ok); } .stamp.new { color: var(--gold); } .stamp.secret { color: #ff5a5a; transform: rotate(-9deg); font-size: .95rem; }
+  .body { padding: .85rem 1rem 1rem; display: flex; flex-direction: column; gap: .45rem; flex: 1; }
+  .kicker { font-size: .7rem; letter-spacing: .24em; color: var(--accent, var(--ice)); font-weight: 800; }
+  .title { font-size: clamp(1.25rem, 2.3vw, 1.6rem); font-weight: 900; line-height: 1.05; letter-spacing: .01em; }
+  .blurb { color: var(--dim); font-size: .9rem; line-height: 1.35; flex: 1; }
+  .meter { display: flex; align-items: center; gap: .6rem; font: 700 .75rem/1 ui-monospace, Menlo, monospace; color: var(--dim); }
+  .bar { flex: 1; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent, var(--ice)), #fff); transition: width 1.2s cubic-bezier(.2, .8, .2, 1) .5s; }
+  .stars { color: var(--gold); letter-spacing: .05em; }
+  .go { margin-top: .35rem; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .7rem; border-radius: 12px;
+    font-weight: 900; letter-spacing: .16em; font-size: .9rem; color: #04101e; background: linear-gradient(180deg, #ffffff, var(--accent, var(--ice)));
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent, var(--ice)) 35%, transparent); }
+  .file.locked { cursor: default; }
+  .file.locked .go { background: rgba(255, 255, 255, .08); color: var(--dim); box-shadow: none; }
+  .file.locked .pic { background: radial-gradient(ellipse at 50% 40%, #1b2b48, #070d18 70%); display: grid; place-items: center; }
+  .file.locked .pic svg { width: 30%; opacity: .75; filter: drop-shadow(0 0 16px rgba(255, 90, 90, .45)); position: relative; z-index: 1; }
+  .redact { background: #cfd8e6; color: transparent; border-radius: 3px; padding: 0 .15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  footer { margin-top: clamp(1rem, 3vh, 2rem); color: #5c6f8c; font-size: .75rem; letter-spacing: .14em; text-align: center; }
+
+  #flash { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at center, rgba(8, 24, 44, .85), rgba(2, 6, 12, .96)); transition: opacity .2s; }
+  #flash.on { opacity: 1; pointer-events: auto; }
+  #flash div { text-align: center; font-weight: 900; letter-spacing: .3em; color: var(--ok); font-size: clamp(1.4rem, 5vw, 2.6rem); text-shadow: 0 0 24px rgba(123, 237, 159, .6); }
+  #flash small { display: block; margin-top: .6rem; color: var(--dim); letter-spacing: .2em; font-size: .8rem; font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .file, .scan, .badge i, .caret { animation: none !important; opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<main>
+  <header>
+    <span class="badge"><i></i>SECURE LINK ESTABLISHED</span> <a class="badge" href="./" style="text-decoration:none;margin-left:6px">◀ WALK INTO HQ</a>
+    <h1>Agent Rory <b>HQ</b></h1>
+    <p class="tag"><span class="typed" id="typed"></span><span class="caret"></span></p>
+  </header>
+
+  <section class="files">
+    <a class="file" href="../agent-rory/" data-save="agentrory" data-total="90" style="--accent: #ffd166">
+      <div class="pic" style="background-image:url('../shots/agent-rory.jpg')"><span class="scan"></span><span class="num">FILE 001</span><span class="stamp" hidden></span></div>
+      <div class="body">
+        <div class="kicker">THE FIRST MISSION</div>
+        <div class="title">Operation Eclipse</div>
+        <div class="blurb">UMBRA is stealing the sun. Twenty-one countries from London to the Antarctic ice, ninety missions and six chases.</div>
+        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 90</span><span class="stars"></span></div>
+        <div class="go">PLAY ▶</div>
+      </div>
+    </a>
+    <a class="file" href="../agent-rory-meltdown/" data-save="rorymeltdown" data-keys="save,save2,save3" data-total="90" style="--accent: #7fdcff">
+      <div class="pic" style="background-image:url('../shots/agent-rory-meltdown.jpg')"><span class="scan"></span><span class="num">FILE 002</span><span class="stamp new">NEW</span></div>
+      <div class="body">
+        <div class="kicker">A SPY MOVIE</div>
+        <div class="title">Meltdown</div>
+        <div class="blurb">Baron Kaldera is melting Antarctica from underneath. Eighteen new places, ninety missions and a chase in every one: snowmobiles, jet skis, a wingsuit and a bobsled.</div>
+        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 90</span><span class="stars"></span></div>
+        <div class="go">PLAY ▶</div>
+      </div>
+    </a>
+    <a class="file" href="../agent-rory-zero-gravity/" data-save="rory20" data-total="60" style="--accent: #ff9ae8">
+      <div class="pic" style="background-image:url('../shots/agent-rory-zero-gravity.jpg')"><span class="scan"></span><span class="num">FILE 003</span><span class="stamp new">NEW</span></div>
+      <div class="body">
+        <div class="kicker">MOONSHOT</div>
+        <div class="title">Zero Gravity</div>
+        <div class="blurb">Professor Zero is stealing the world's gravity. Rory and his robot partner BOLT run, jump and fly from Tokyo and the pyramids to a station in orbit and the Moon. Sixty missions.</div>
+        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 60</span><span class="stars"></span></div>
+        <div class="go">PLAY ▶</div>
+      </div>
+    </a>
+  </section>
+  <footer>SOPHIA, RORY AND DYLAN GAMES, INC · FOR AGENTS' EYES ONLY</footer>
+</main>
+<div id="flash"><div>ACCESS GRANTED<small id="flashsub">LOADING MISSION FILE</small></div></div>
+
+<script>
+"use strict";
+// ------------------------------------------------ the agent's progress in each game, read from its save
+document.querySelectorAll(".file[data-save]").forEach(function (el) {
+  var total = +el.dataset.total, sv = null, done = 0, stars = 0, finished = 0, keys = (el.dataset.keys || "save").split(",");
+  keys.forEach(function (key) {
+    var one = null;
+    try { one = JSON.parse(localStorage.getItem(el.dataset.save + "." + key) || "null"); } catch (e) {}
+    if (!one) return;
+    sv = sv || {};
+    done += one.done ? one.done.length : 0;
+    if (one.stars) for (var k in one.stars) stars += +one.stars[k] || 0;
+    if (one.finished) finished++;
+  });
+  if (sv) sv.finished = finished > 0;
+  el.querySelector(".count").textContent = Math.min(done, total) + " / " + total;
+  if (stars) el.querySelector(".stars").textContent = "★ " + stars;
+  requestAnimationFrame(function () { el.querySelector(".bar i").style.width = Math.min(100, done / total * 100) + "%"; });
+  var st = el.querySelector(".stamp");
+  if (sv && sv.finished) { st.hidden = false; st.className = "stamp done"; st.textContent = "COMPLETE"; }
+  else if (done > 0) { st.hidden = false; st.className = "stamp new"; st.textContent = "IN PROGRESS"; st.style.color = "var(--ice)"; }
+  el.querySelector(".go").textContent = done > 0 && !(sv && sv.finished) ? "CONTINUE ▶" : "PLAY ▶";
+});
+
+// ------------------------------------------------ a little sound, made on the spot
+var ac = null;
+function beep(f, d, type, vol, when) {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    var t = ac.currentTime + (when || 0), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || "square"; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(vol || 0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
+  } catch (e) {}
+}
+document.querySelectorAll(".file").forEach(function (el) {
+  el.addEventListener("click", function (e) {
+    if (el.classList.contains("locked")) { e.preventDefault(); beep(140, 0.25, "sawtooth", 0.06); el.animate([{ transform: "translateX(0)" }, { transform: "translateX(-8px)" }, { transform: "translateX(8px)" }, { transform: "translateX(0)" }], { duration: 260 }); return; }
+    e.preventDefault();
+    beep(880, 0.08, "square", 0.05); beep(1320, 0.12, "square", 0.05, 0.09); beep(1760, 0.2, "triangle", 0.05, 0.2);
+    document.getElementById("flashsub").textContent = "LOADING " + el.querySelector(".title").textContent.toUpperCase();
+    document.getElementById("flash").classList.add("on");
+    setTimeout(function () { location.href = el.getAttribute("href"); }, 650);
+  });
+});
+// coming back with the browser's Back button shows the page from its cache: take the curtain down
+window.addEventListener("pageshow", function () { document.getElementById("flash").classList.remove("on"); });
+
+// ------------------------------------------------ the typed line
+(function () {
+  var lines = ["Choose your mission, Agent Rory.", "The world needs you again.", "Pip says: bring snacks."], li = 0, ci = 0, del = false, el = document.getElementById("typed");
+  function tick() {
+    var s = lines[li];
+    if (!del) { ci++; el.textContent = s.slice(0, ci); if (ci >= s.length) { del = true; return setTimeout(tick, 2600); } }
+    else { ci--; el.textContent = s.slice(0, ci); if (ci <= 0) { del = false; li = (li + 1) % lines.length; } }
+    setTimeout(tick, del ? 28 : 55);
+  }
+  setTimeout(tick, 500);
+})();
+
+// ------------------------------------------------ the radar: a world of dots, a sweep and blips on the places Rory has been
+(function () {
+  var cv = document.getElementById("bg"), g = cv.getContext("2d"), W = 0, H = 0, dpr = 1, dots = [], blips = [];
+  // a coarse map of the land, one character per 6 degrees of longitude and latitude
+  var MAP = [
+    "..........................................................",
+    "..........#####.....######..............................",
+    "......############..####.........###########.#######......",
+    "....##############..###.......####################.####...",
+    "......###########............#######################......",
+    ".......#########.............##########################...",
+    "........#######.............#####.###################.....",
+    ".........#####.............########...##########.##.......",
+    "..........###.............###########...#######...........",
+    "...........##..............#########.....###..#...........",
+    "............####............#######.......#...##..........",
+    "............######...........#####.............###........",
+    ".............#####...........####.............######......",
+    "..............###.............##...............####.......",
+    "..............##...............................#..........",
+    "..............#............................................",
+    "......................................................",
+    "....###############################################.......",
+    "..######################################################..",
+  ];
+  function build() {
+    dots = [];
+    var rows = MAP.length, cols = 58, mw = Math.min(W * 0.96, H * 1.9), mh = mw / 2, ox = (W - mw) / 2, oy = (H - mh) / 2;
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var ch = MAP[r][c] || ".";
+      dots.push({ x: ox + (c + 0.5) / cols * mw, y: oy + (r + 0.5) / rows * mh, land: ch === "#", ice: r >= 17 });
+    }
+    // the places of the two operations so far, by longitude and latitude
+    var P = [[-0.1, 51.5], [12.3, 45.4], [2.35, 48.9], [139.7, 35.7], [-74, 40.7], [-43.2, -22.9], [31.2, 30], [-51.1, 69.2], [7.4, 43.7], [55.3, 25.2], [126.9, 37.6], [18.4, -33.9], [176.2, -38.1], [-68.3, -54.8], [167, -77.5], [103.8, 1.35], [-72.5, -13.2]];
+    blips = P.map(function (p) { return { x: ox + (p[0] + 180) / 360 * mw, y: oy + (90 - p[1]) / 180 * mh, t: Math.random() * 6.28 }; });
+  }
+  function size() {
+    dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); build();
+  }
+  addEventListener("resize", size); size();
+  var t0 = performance.now();
+  function frame(now) {
+    var t = (now - t0) / 1000;
+    var bg = g.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, Math.max(W, H) * 0.75);
+    bg.addColorStop(0, "#0c1e38"); bg.addColorStop(1, "#03070f"); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    // the sweep
+    var cx = W / 2, cy = H * 0.5, R = Math.hypot(W, H) * 0.6, a = t * 0.7;
+    g.save(); g.translate(cx, cy); g.rotate(a);
+    var sw = g.createLinearGradient(0, 0, R, 0); sw.addColorStop(0, "rgba(127,220,255,0.10)"); sw.addColorStop(1, "rgba(127,220,255,0)");
+    g.fillStyle = sw; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, R, -0.5, 0); g.closePath(); g.fill(); g.restore();
+    g.strokeStyle = "rgba(127,220,255,0.07)"; g.lineWidth = 1;
+    for (var i = 1; i <= 5; i++) { g.beginPath(); g.arc(cx, cy, i * Math.min(W, H) * 0.16, 0, 6.283); g.stroke(); }
+    g.beginPath(); g.moveTo(0, cy); g.lineTo(W, cy); g.moveTo(cx, 0); g.lineTo(cx, H); g.stroke();
+    // the dots light up as the sweep passes them
+    for (var j = 0; j < dots.length; j++) {
+      var d = dots[j]; if (!d.land) continue;
+      var ang = Math.atan2(d.y - cy, d.x - cx), diff = ((a - ang) % 6.283 + 6.283) % 6.283, lit = Math.max(0, 1 - diff / 2.2);
+      g.fillStyle = d.ice ? "rgba(200,240,255," + (0.18 + lit * 0.5) + ")" : "rgba(127,220,255," + (0.12 + lit * 0.45) + ")";
+      g.fillRect(d.x - 1.6, d.y - 1.6, 3.2, 3.2);
+    }
+    for (var k = 0; k < blips.length; k++) {
+      var b = blips[k], p = (Math.sin(t * 2 + b.t) + 1) / 2;
+      g.fillStyle = "rgba(255,209,102," + (0.35 + p * 0.5) + ")"; g.beginPath(); g.arc(b.x, b.y, 2.4, 0, 6.283); g.fill();
+      g.strokeStyle = "rgba(255,209,102," + (0.35 * (1 - p)) + ")"; g.beginPath(); g.arc(b.x, b.y, 3 + p * 9, 0, 6.283); g.stroke();
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

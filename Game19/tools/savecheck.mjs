@@ -14,6 +14,8 @@ const open = async path => {
   const page = await ctx.newPage();
   await page.goto(`http://localhost:${port}/agent-rory/${path || ""}`);
   await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
   // fresh.js checks the build 1.5s in and may reload once; let that settle
   await page.waitForTimeout(2600);
   await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
@@ -50,7 +52,7 @@ await page.close();
 page = await open("?v=abc123");
 const afterBust = await save(page);
 ck(JSON.stringify(afterBust) === JSON.stringify(before), "progress survives the cache-busting reload fresh.js does");
-await page.evaluate(() => __spy.debug.press("start"));
+await page.evaluate(() => { __spy.debug.press("start"); __spy.debug.press("op:0"); });
 await page.waitForTimeout(600);
 const contin = await page.evaluate(() => __spy.buttons.list.map(x => x.opts.label).filter(Boolean));
 console.log("   menu offers:", contin.join(" | "));
@@ -83,7 +85,7 @@ const mem = await page.evaluate(() => ({ stars: __spy.save.stars, bugs: __spy.sa
 ck(mem.stars && typeof mem.stars === "object", "the new stars map is filled in on load rather than the save being thrown away");
 ck(Array.isArray(mem.bugs), "and the new bugs list");
 ck(mem.done === 9, "with the missions already finished untouched");
-await page.evaluate(() => __spy.debug.press("start"));
+await page.evaluate(() => { __spy.debug.press("start"); __spy.debug.press("op:0"); });
 await page.waitForTimeout(600);
 const lbl = await page.evaluate(() => __spy.buttons.list.map(x => x.opts.label).filter(Boolean));
 ck(lbl.some(l => /CONTINUE/.test(l)), `the older save can be continued (${lbl.find(l => /CONTINUE/.test(l)) || "none"})`);
@@ -121,7 +123,7 @@ page = await open();
 const carried = await page.evaluate(() => ({ finished: __spy.save.finished, country: __spy.save.country, act: __spy.debug.COUNTRIES[__spy.save.country].act, done: __spy.save.done.length, expect: __spy.debug.COUNTRIES.filter(c => c.act <= 2).reduce((n, c) => n + c.missions.length, 0) }));
 ck(carried.finished === false && carried.act === 3, `a finished two-act save is carried into act three (country ${carried.country}, act ${carried.act})`);
 ck(carried.done === carried.expect, `with its ${carried.expect} finished missions kept`);
-await page.evaluate(() => __spy.debug.press("start"));
+await page.evaluate(() => { __spy.debug.press("start"); __spy.debug.press("op:0"); });
 await page.waitForTimeout(600);
 await page.evaluate(() => __spy.debug.press("continue"));
 await page.waitForFunction(() => ["map", "world", "briefing"].includes(__spy.state), null, { timeout: 15000 }).catch(() => {});

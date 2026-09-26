@@ -2,7 +2,7 @@
 import { World } from "./world.js";
 import { Audio, SFX, Music, Ambience } from "./audio.js";
 import { Speech } from "./speech.js";
-import { CHARS, COUNTRIES, ACTS, ALL_MISSIONS, CREDITS, SYMBOLS, countryOf, actWord } from "./story.js";
+import { CHARS, COUNTRIES, ACTS, ALL_MISSIONS, CREDITS, SYMBOLS, OPS, CUR, useOp, countryOf, actWord } from "./story.js";
 import * as UI from "./ui.js";
 import { makeMinigame, loadGames } from "./minigames.js";
 
@@ -23,14 +23,30 @@ const G = {
 window.__spy = G;
 
 function newSave() { return { version: 2, country: 0, done: [], code: null, arrived: {}, briefed: {}, finished: false, stars: {}, bugs: [] }; }
-const TOTAL = ALL_MISSIONS.length;
 const actOf = ci => COUNTRIES[Math.min(ci, COUNTRIES.length - 1)].act;
 const cityDone = ci => COUNTRIES[ci].missions.every(m => G.save.done.includes(m.id));
 // the game is a straight line, so skip any city that is already finished: a
 // save made before the running order changed can have gaps anywhere in it
 const firstUnfinished = () => { const i = COUNTRIES.findIndex((c, k) => !cityDone(k)); return i < 0 ? -1 : i; };
 const isActEnd = ci => ci === COUNTRIES.length - 1 || COUNTRIES[ci + 1].act !== COUNTRIES[ci].act;
-function saveGame() { store.set("save", G.save); }
+function saveGame() { store.set(CUR.op.saveKey, G.save); }
+// each operation has its own save; an old save from before the operations
+// existed is Operation Meltdown's
+function loadSave(op) {
+  const sv = store.get(op.saveKey, null), save = sv && sv.version === 2 ? sv : newSave();
+  if (!save.stars) save.stars = {}; if (!save.bugs) save.bugs = [];
+  return save;
+}
+function useOperation(i) {
+  useOp(i); G.op = CUR.i; G.save = loadSave(CUR.op); G.map.flight = null; Music.setTune(G.op);
+  // an older save may have been made when the cities ran in a different order,
+  // so trust the finished missions rather than the stored position
+  const k = firstUnfinished();
+  if (k < 0) { G.save.finished = true; G.save.country = COUNTRIES.length - 1; }
+  else if (G.save.finished || G.save.country !== k) { G.save.finished = false; G.save.country = k; saveGame(); }
+  store.set("op", G.op);
+}
+const opProgress = op => { const sv = store.get(op.saveKey, null); const done = sv && sv.done ? sv.done.length : 0, total = op.countries.reduce((n, c) => n + c.missions.length, 0); return { done: Math.min(done, total), total, finished: !!(sv && sv.finished), started: !!(sv && (done || Object.keys(sv.briefed || {}).length || Object.keys(sv.arrived || {}).length)) }; };
 
 // ------------------------------------------------------------- layout
 function resize() {
@@ -135,7 +151,8 @@ function pressButton(id, b) {
   switch (id) {
     case "start": startMenu(); break;
     case "continue": beginGame(false); break;
-    case "newgame": if (G.save && G.save.done.length && !G.confirmNew) { G.confirmNew = true; toast("Tap NEW GAME again to wipe your progress", 3); } else beginGame(true); break;
+    case "newgame": if (G.save && G.save.done.length && G.confirmNew !== G.op) { G.confirmNew = G.op; toast(`Tap RESTART again to wipe ${CUR.op.name}`, 3); } else beginGame(true); break;
+    case "backToOps": G.confirmNew = false; setState("menu"); break;
     case "music": G.settings.music = !G.settings.music; Audio.setMusic(G.settings.music); store.set("settings", G.settings); break;
     case "sfx": G.settings.sfx = !G.settings.sfx; Audio.setSfx(G.settings.sfx); store.set("settings", G.settings); break;
     case "voice": G.settings.voice = !G.settings.voice; Speech.enabled = G.settings.voice; if (!G.settings.voice) Speech.stop(); store.set("settings", G.settings); break;
@@ -145,7 +162,7 @@ function pressButton(id, b) {
     case "resume": togglePause(); break;
     case "dossier": G.dossierScroll = 0; G.dossierFrom = G.state; setState("dossier"); break;
     case "closeDossier": setState(G.dossierFrom === "map" ? "map" : "world"); break;
-    case "quit": fadeOut(() => { G.pause = false; Ambience.stop(); Music.setMode("calm"); setState("title"); fadeIn(); }); break;
+    case "quit": fadeOut(() => { G.pause = false; Ambience.stop(); Music.setMode("calm"); setState("menu"); fadeIn(); }); break;
     case "hint": showHint(); break;
     case "mgquit": quitMinigame(); break;
     case "skip": if (G.dialogue.active) { G.dialogue.shown = 1e9; G.dialogue.tap(); } break;
@@ -153,9 +170,10 @@ function pressButton(id, b) {
     case "skipCine": if (G.world.cine && G.world.cine.t > 0.8) G.world.cine.t = G.world.cine.dur; break;
     case "credits": fadeOut(() => { G.credits = { t: 0 }; setState("credits"); fadeIn(); }); break;
     case "nextact": briefingFor(actOf(G.save.country)); break;
-    case "titleFromCredits": fadeOut(() => { setState("title"); Music.setMode("calm"); fadeIn(); }); break;
+    case "titleFromCredits": fadeOut(() => { setState("menu"); Music.setMode("calm"); fadeIn(); }); break;
     default:
-      if (id.startsWith("replay:")) { const m = ALL_MISSIONS.find(q => q.id === id.slice(7)); if (m) startReplay(m); }
+      if (id.startsWith("op:")) { useOperation(+id.slice(3)); G.confirmNew = false; SFX.whoosh ? SFX.whoosh() : SFX.click(); setState("opmenu"); }
+      else if (id.startsWith("replay:")) { const m = ALL_MISSIONS.find(q => q.id === id.slice(7)); if (m) startReplay(m); }
       else if (G.mg && G.state === "minigame") G.mg.button(id, b);
   }
 }
@@ -169,10 +187,11 @@ function beginGame(fresh) {
   if (!G.save.briefed[act]) briefingFor(act); else goMap();
 }
 function coldOpenPending() { return ACTS[0].coldOpen && !G.save.briefed[1] && G.save.country === 0; }
+const TOTAL = () => ALL_MISSIONS.length;
 function briefingFor(act) {
   G.briefAct = act;
   // after the cold open the titles roll before the first briefing
-  if (act === 1 && ACTS[0].coldOpen && G.save.arrived.greenland) { fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("theme"); G.titles = { t: 0, then: () => showBriefing(act) }; SFX.boom(); }); return; }
+  if (act === 1 && ACTS[0].coldOpen && G.save.arrived[COUNTRIES[0].id]) { fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("theme"); G.titles = { t: 0, then: () => showBriefing(act) }; SFX.boom(); }); return; }
   showBriefing(act);
 }
 function showBriefing(act) {
@@ -197,7 +216,7 @@ function enterCountry(i) {
     setState("world"); G.pause = false;
     fadeIn();
     const first = !G.save.arrived[c.id];
-    if (first) G.cineLine = i === 0 && coldOpenPending() ? "SOMEWHERE ON THE ICE, RIGHT NOW" : `CHAPTER ${i + 1}  ·  ${c.chapter.toUpperCase()}`;
+    if (first) G.cineLine = i === 0 && coldOpenPending() ? CUR.op.coldOpenLine : `CHAPTER ${i + 1}  ·  ${c.chapter.toUpperCase()}`;
     G.save.arrived[c.id] = true; saveGame();
     if (first) { G.world.startFlyover(4.2); G.afterCine = () => G.dialogue.show(c.arrive, null); }
   });
@@ -219,8 +238,8 @@ function interact(it) {
     if (!G.save.bugs.includes(it.id)) G.save.bugs.push(it.id);
     G.world.removeBug(it); saveGame(); SFX.unlock();
     const here = bugsIn(c.id), all = G.save.bugs.length;
-    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/${COUNTRIES.length * 3})` : `Kaldera bug disabled.  ${here} of 3 in ${c.city}`, 3);
-    Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : "One of the Baron's listening bugs. Off it goes.", CHARS.pip.voice, null);
+    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/${COUNTRIES.length * 3})` : `${CUR.op.bugName} bug disabled.  ${here} of 3 in ${c.city}`, 3);
+    Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : CUR.op.bugLine, CHARS.pip.voice, null);
     return;
   }
   if (it.kind === "npc") {
@@ -395,12 +414,13 @@ function draw(dt) {
   switch (G.state) {
     case "title": drawTitle(); break;
     case "menu": drawMenu(); break;
-    case "briefing": if (G.titles) drawTitles(); else { UI.drawBriefingRoom(g, W, H, s, G.t, G.briefAct); drawSkip(); } break;
+    case "opmenu": drawOpMenu(); break;
+    case "briefing": if (G.titles) drawTitles(); else { UI.drawBriefingRoom(g, W, H, s, G.t, G.briefAct, CUR.op.id); drawSkip(); } break;
     case "map": drawMap(); break;
     case "world": drawWorldHud(); break;
     case "minigame": if (G.mg) { const o = G.mg.fx ? G.mg.fx.offset() : { x: 0, y: 0 }; g.save(); g.translate(o.x, o.y); G.mg.draw(g, W, H, s); g.restore(); drawMgChrome(); } break;
     case "intel": if (G.stamp) UI.drawStamp(g, W, H, s, G.stamp.k, G.stamp.m.intel.title, G.stamp.m.intel.text, G.stamp.t, G.stamp.stars, G.stamp.record); break;
-    case "dossier": { const rows = []; G.dossierH = UI.drawDossier(g, W, H, s, G.save, G.dossierScroll, G.t, G.save.code, rows); for (const r of rows) G.buttons.add("replay:" + r.id, r.x, r.y, r.w, r.h, { onDown: false, hidden: true }); button("closeDossier", W / 2 - 90 * s, H - 66 * s, 180 * s, 50 * s, "CLOSE", "dark", 18 * s); break; }
+    case "dossier": { const rows = []; G.dossierH = UI.drawDossier(g, W, H, s, G.save, G.dossierScroll, G.t, G.save.code, rows, CUR.op); for (const r of rows) G.buttons.add("replay:" + r.id, r.x, r.y, r.w, r.h, { onDown: false, hidden: true }); button("closeDossier", W / 2 - 90 * s, H - 66 * s, 180 * s, 50 * s, "CLOSE", "dark", 18 * s); break; }
     case "ending": drawEnding(); break;
     case "credits": drawCredits(); break;
   }
@@ -431,11 +451,11 @@ function drawSkip() { if (G.dialogue.active) button("skip", G.W - 96 * G.s, 14 *
 // the opening titles, after the cold open in Greenland
 function drawTitles() {
   const { W, H, s } = G, k = G.titles.t;
-  UI.drawTitleBackdrop(g, W, H, s, G.t);
+  UI.drawTitleBackdrop(g, W, H, s, G.t, CUR.op.id);
   g.fillStyle = `rgba(0,0,0,${clamp(1 - k * 0.6, 0.35, 1)})`; g.fillRect(0, 0, W, H);
   g.fillStyle = "#000"; g.fillRect(0, 0, W, H * 0.11); g.fillRect(0, H * 0.89, W, H * 0.11);
   const a = clamp((k - 0.4) / 0.8, 0, 1), sc = 0.8 + 0.2 * ease(a);
-  g.save(); g.globalAlpha = a; g.translate(W / 2, H * 0.42); g.scale(sc, sc); UI.drawLogo(g, 0, 0, 60 * s, G.t); g.restore();
+  g.save(); g.globalAlpha = a; g.translate(W / 2, H * 0.42); g.scale(sc, sc); UI.drawLogo(g, 0, 0, 60 * s, G.t, CUR.op.id); g.restore();
   if (k > 2.4) { g.globalAlpha = clamp((k - 2.4) / 0.6, 0, 1); text(g, "An idea by Rory", W / 2, H * 0.72, 20 * s, "#c8d0e0", "center", 600); text(g, "STARRING AGENT RORY AS AGENT R", W / 2, H * 0.72 + 32 * s, 15 * s, "#7fe3ff", "center", 800, UI.MONO); g.globalAlpha = 1; }
   button("skipTitles", 0, 0, W, H, "", "ghost", 0, { hidden: true });
 }
@@ -447,31 +467,48 @@ function drawTitle() {
   text(g, "Sophia, Rory and Dylan Games, Inc", W / 2, H - 22 * s, 13 * s, "rgba(255,255,255,.45)", "center", 500);
   button("start", 0, 0, W, H, "", "ghost", 0, { hidden: true });
 }
+// the menu: three films to choose from, each with its own progress
 function drawMenu() {
   const { W, H, s } = G;
   UI.drawTitleBackdrop(g, W, H, s, G.t);
-  UI.drawLogo(g, W / 2, H * 0.12, 40 * s, G.t);
-  const bw = 320 * s, bx = W / 2 - bw / 2; let y = H * 0.36;
-  const has = G.save && (G.save.done.length || G.save.briefed);
-  if (has) { const n = G.save.done.length; button("continue", bx, y, bw, 64 * s, `CONTINUE  (${n}/${TOTAL})`, "primary"); y += 78 * s; }
-  button("newgame", bx, y, bw, 64 * s, "NEW GAME", has ? "dark" : "primary"); y += 92 * s;
-  const tw = 100 * s, gap = 12 * s, tx = W / 2 - (tw * 3 + gap * 2) / 2;
-  button("music", tx, y, tw, 46 * s, "MUSIC " + (G.settings.music ? "ON" : "OFF"), G.settings.music ? "blue" : "grey", 14 * s);
-  button("sfx", tx + tw + gap, y, tw, 46 * s, "SOUND " + (G.settings.sfx ? "ON" : "OFF"), G.settings.sfx ? "blue" : "grey", 14 * s);
-  button("voice", tx + (tw + gap) * 2, y, tw, 46 * s, "VOICES " + (G.settings.voice ? "ON" : "OFF"), G.settings.voice ? "blue" : "grey", 14 * s);
-  if (!Speech.available) text(g, "This browser has no voices; the text boxes carry the story.", W / 2, y + 66 * s, 13 * s, "#94a2bb", "center", 500);
-  text(g, "Eighteen places. Ninety missions. One very hot plan.", W / 2, H - 46 * s, 16 * s, "#c8d0e0", "center", 600);
-  text(g, "Left thumb walks, right thumb looks, green button interacts.", W / 2, H - 24 * s, 13 * s, "rgba(255,255,255,.5)", "center", 500);
+  g.fillStyle = "rgba(2,6,14,.55)"; g.fillRect(0, 0, W, H);
+  UI.drawLogo(g, W / 2, H * 0.1, 30 * s, G.t, "none");
+  text(g, "CHOOSE YOUR OPERATION", W / 2, H * 0.1 + 52 * s, 16 * s, "#7fe3ff", "center", 800, UI.MONO);
+  const n = OPS.length, gap = 18 * s, cw = Math.min(300 * s, (W - 60 * s - gap * (n - 1)) / n), ch = Math.min(cw * 1.3, H * 0.56), x0 = W / 2 - (cw * n + gap * (n - 1)) / 2, y0 = H * 0.24;
+  OPS.forEach((op, i) => {
+    const x = x0 + i * (cw + gap), p = opProgress(op), hover = G.buttons.pressed === "op:" + i;
+    UI.drawOpPoster(g, x, y0 + (hover ? 3 * s : 0), cw, ch, s, G.t, op, p);
+    G.buttons.add("op:" + i, x, y0, cw, ch, { hidden: true, onDown: false });
+  });
+  const y = y0 + ch + 22 * s, tw = 100 * s, tg = 12 * s, tx = W / 2 - (tw * 3 + tg * 2) / 2;
+  button("music", tx, y, tw, 44 * s, "MUSIC " + (G.settings.music ? "ON" : "OFF"), G.settings.music ? "blue" : "grey", 14 * s);
+  button("sfx", tx + tw + tg, y, tw, 44 * s, "SOUND " + (G.settings.sfx ? "ON" : "OFF"), G.settings.sfx ? "blue" : "grey", 14 * s);
+  button("voice", tx + (tw + tg) * 2, y, tw, 44 * s, "VOICES " + (G.settings.voice ? "ON" : "OFF"), G.settings.voice ? "blue" : "grey", 14 * s);
+  if (!Speech.available) text(g, "This browser has no voices; the text boxes carry the story.", W / 2, y + 62 * s, 13 * s, "#94a2bb", "center", 500);
+  else text(g, "Left thumb walks, right thumb looks, green button interacts.", W / 2, H - 20 * s, 13 * s, "rgba(255,255,255,.5)", "center", 500);
+}
+// one operation picked: play on, or start it again
+function drawOpMenu() {
+  const { W, H, s } = G, op = CUR.op;
+  UI.drawTitleBackdrop(g, W, H, s, G.t, op.id);
+  UI.drawLogo(g, W / 2, H * 0.14, 40 * s, G.t, op.id);
+  const bw = 340 * s, bx = W / 2 - bw / 2; let y = H * 0.42;
+  const has = G.save && (G.save.done.length || Object.keys(G.save.briefed).length || Object.keys(G.save.arrived).length);
+  if (has) { button("continue", bx, y, bw, 64 * s, G.save.finished ? "PLAY ON" : `CONTINUE  (${G.save.done.length}/${TOTAL()})`, "primary"); y += 78 * s; }
+  button("newgame", bx, y, bw, has ? 54 * s : 64 * s, has ? "RESTART" : "START", has ? "dark" : "primary", has ? 17 * s : undefined); y += 90 * s;
+  button("backToOps", W / 2 - 110 * s, y, 220 * s, 46 * s, "◀  OPERATIONS", "ghost", 15 * s);
+  textShadow(g, op.blurb, W / 2, H - 50 * s, 17 * s, "#fff", "center", 700);
+  text(g, op.tagline, W / 2, H - 24 * s, 14 * s, "#c8d0e0", "center", 600);
 }
 function drawMap() {
   const { W, H, s } = G;
   const progress = G.save.finished ? COUNTRIES.length : G.save.country;
-  const r = G.map.draw(g, W, H, s, progress, actOf(Math.min(G.save.country, COUNTRIES.length - 1)));
+  const r = G.map.draw(g, W, H, s, progress, actOf(Math.min(G.save.country, COUNTRIES.length - 1)), CUR.op.view);
   const c = COUNTRIES[Math.min(G.save.country, COUNTRIES.length - 1)];
   const py = r.y + r.h + 14 * s, ph = H - py - 12 * s;
   panel(g, r.x, py, r.w, ph, s);
   UI.drawFlag(g, c.flag, r.x + 18 * s, py + ph / 2 - 20 * s, 60 * s, 40 * s);
-  if (G.save.finished) { text(g, `${ACTS[ACTS.length - 1].title.toUpperCase()}: COMPLETE`, r.x + 96 * s, py + ph / 2 - 12 * s, 24 * s, "#2ecc71", "left", 900); text(g, "Antarctica is still frozen, the penguins are safe, and Baron Kaldera is in a very cold cell. Watch the credits, or start again from the menu.", r.x + 96 * s, py + ph / 2 + 16 * s, 15 * s, "#c8d0e0", "left", 500); button("fly", r.x + r.w - 230 * s, py + ph / 2 - 28 * s, 210 * s, 56 * s, "CREDITS", "gold"); }
+  if (G.save.finished) { text(g, `${CUR.op.name.toUpperCase()}: COMPLETE`, r.x + 96 * s, py + ph / 2 - 12 * s, 24 * s, "#2ecc71", "left", 900); UI.paragraph(g, CUR.op.finished, r.x + 96 * s, py + ph / 2 + 10 * s, r.w - 360 * s, 14 * s, "#c8d0e0", 17 * s, "left", 500); button("fly", r.x + r.w - 230 * s, py + ph / 2 - 28 * s, 210 * s, 56 * s, "CREDITS", "gold"); }
   else if (!G.map.flight) {
     const n = missionNumber(c.missions[0]);
     text(g, `CHAPTER ${G.save.country + 1}: ${c.chapter.toUpperCase()}`, r.x + 96 * s, py + ph / 2 - 12 * s, 22 * s, "#ffd166", "left", 900);
@@ -508,7 +545,7 @@ function drawWorldHud() {
     return;
   }
   // spy watch
-  UI.drawSpyWatch(g, 14 * s, 14 * s, 330 * s, 108 * s, s, objective(), G.save.done.length, TOTAL, G.t, { found: bugsIn(c.id), of: 3 });
+  UI.drawSpyWatch(g, 14 * s, 14 * s, 330 * s, 108 * s, s, objective(), G.save.done.length, TOTAL(), G.t, { found: bugsIn(c.id), of: 3 });
   // location chip
   { const label = `${c.city.toUpperCase()}  ·  ${c.country.toUpperCase()}`; g.font = `700 ${14 * s}px ${UI.FONT}`; const tw = g.measureText(label).width + 62 * s; const cx = W / 2 - tw / 2;
     chip(g, cx, 14 * s, tw, 34 * s, "", s); UI.drawFlag(g, c.flag, cx + 10 * s, 20 * s, 30 * s, 21 * s); text(g, label, cx + 50 * s, 32 * s, 14 * s, "#e8ecf4", "left", 700); }
@@ -555,7 +592,7 @@ function drawMgChrome() {
 }
 function drawEnding() {
   const { W, H, s } = G;
-  UI.drawBriefingRoom(g, W, H, s, G.t, G.endingAct);
+  UI.drawBriefingRoom(g, W, H, s, G.t, G.endingAct, CUR.op.id);
   if (G.endingPhase === 1) {
     g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, 0, W, H);
     // the medal
@@ -566,7 +603,7 @@ function drawEnding() {
     g.strokeStyle = "#8a6a10"; g.lineWidth = 4 * s; g.stroke();
     UI.drawSymbol(g, "star", cx, cy, R * 0.55, "#8a6a10");
     const final = G.endingAct >= ACTS.length;
-    textShadow(g, final ? "AGENT RORY" : `ACT ${actWord(G.endingAct)} COMPLETE`, cx, cy + R + 40 * s, 40 * s, "#fff", "center", 900);
+    textShadow(g, final ? CUR.op.name.toUpperCase() : `ACT ${actWord(G.endingAct)} COMPLETE`, cx, cy + R + 40 * s, 40 * s, "#fff", "center", 900);
     textShadow(g, ACTS[G.endingAct - 1].after || "", cx, cy + R + 80 * s, 20 * s, "#ffd166", "center", 700);
     if (final) button("credits", W / 2 - 120 * s, H - 100 * s, 240 * s, 60 * s, "CREDITS", "gold");
     else button("nextact", W / 2 - 140 * s, H - 100 * s, 280 * s, 60 * s, `ACT ${actWord(G.endingAct + 1)}`, "gold");
@@ -574,7 +611,7 @@ function drawEnding() {
 }
 function drawCredits() {
   const { W, H, s } = G;
-  UI.drawTitleBackdrop(g, W, H, s, G.t);
+  UI.drawTitleBackdrop(g, W, H, s, G.t, CUR.op.id);
   g.fillStyle = "rgba(0,0,0,.45)"; g.fillRect(0, 0, W, H);
   const y0 = H - G.credits.t * 40 * s;
   CREDITS.forEach((line, i) => { const y = y0 + i * 40 * s; if (y > -40 && y < H + 40) text(g, line, W / 2, y, i === 0 ? 34 * s : 20 * s, i === 0 ? "#ffd166" : "#fff", "center", i === 0 ? 900 : 500); });
@@ -583,23 +620,20 @@ function drawCredits() {
 }
 
 // ------------------------------------------------------------- boot
+const SCENE_FILES = ["./scenes1.js", "./scenes2.js", "./scenes3.js", "./scenes4.js", "./scenes5.js", "./scenes6.js",
+  "./scenes7.js", "./scenes8.js", "./scenes9.js", "./scenes10.js", "./scenes11.js", "./scenes12.js"];
 async function boot() {
   resize();
   G.world = new World(glCanvas); G.world.resize(G.W, G.H);
   G.dialogue = new UI.Dialogue(G); G.map = new UI.WorldMap(G);
   Speech.init(); Speech.enabled = G.settings.voice;
-  // the eighteen places, three to a file; a file that fails to load leaves its
-  // places on the stand-in scene rather than stopping the game
-  for (const f of ["./scenes1.js", "./scenes2.js", "./scenes3.js", "./scenes4.js", "./scenes5.js", "./scenes6.js"]) {
+  // the places, a few to a file; a file that fails to load leaves its places
+  // on the stand-in scene rather than stopping the game
+  for (const f of SCENE_FILES) {
     try { await import(f); } catch (e) { console.warn(`${f} not loaded:`, e && e.message); }
   }
   await loadGames();
-  const sv = store.get("save", null); G.save = sv && sv.version === 2 ? sv : newSave(); if (!G.save.stars) G.save.stars = {}; if (!G.save.bugs) G.save.bugs = [];
-  // an older save may have been made when the cities ran in a different order,
-  // so trust the finished missions rather than the stored position
-  { const i = firstUnfinished();
-    if (i < 0) { G.save.finished = true; G.save.country = COUNTRIES.length - 1; }
-    else if (G.save.finished || G.save.country !== i) { G.save.finished = false; G.save.country = i; saveGame(); } }
+  useOperation(clamp(+store.get("op", 0) || 0, 0, OPS.length - 1));
   const msg = document.getElementById("bootmsg");
   await G.world.loadTextures(p => { msg.textContent = "loading textures " + Math.round(p * 100) + "%"; });
   document.getElementById("boot").style.display = "none";
@@ -616,5 +650,6 @@ G.debug = {
   skipDialogue() { if (G.dialogue.active) { G.dialogue.lines = []; G.dialogue.i = -1; G.dialogue.next(); } },
   finishFade() { if (G.fadeCb) { const cb = G.fadeCb; G.fadeCb = null; G.fade = 1; cb(); } G.fade = 0; G.fadeTo = 0; },
   press(id) { pressButton(id, G.buttons.list.find(b => b.id === id)); },
-  stampTap, interact, objective, COUNTRIES, ACTS, currentMission,
+  stampTap, interact, objective, COUNTRIES, ACTS, currentMission, OPS,
+  useOp(i) { useOperation(i); },
 };

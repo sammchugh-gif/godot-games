@@ -17,7 +17,7 @@ const vnoise = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x 
 // ---------------------------------------------------------------- the themes
 // surf: snow | water | road | sand | air | under | chute
 // prof: the ground either side of the track: flat half-width, height and width of the banks
-const THEMES = {
+export const THEMES = {
   icefjord:       { sky: "polar_day", surf: "snow", halfW: 8, prof: [14, 2, 30], hills: 1.5, cols: [0xf2f7fc, 0xd2e4f4, 0xffffff], dress: [["iceberg", 1.2, 22, 100]], far: "snowpeaks", obst: ["icechunk", "drift"], ramps: 1, spray: 0xffffff, weather: "snow" },
   fjord:          { sky: "fjord_day", surf: "water", halfW: 9, prof: [42, 85, 26, -4], cols: [0x3a4a50, 0x55606a, 0x3f6a3a], dress: [["pine", 1.4, 64, 100, false], ["waterfall", 0.06, 44, 46]], far: "snowpeaks", obst: ["buoy", "log"], ramps: 0.6, spray: 0xe8f6ff, water: 0x1f5a6e },
   circuit:        { sky: "night_glam", surf: "road", halfW: 8, prof: [60, 0, 10], cols: [0x2a2c30, 0x2a2c30, 0x2a2c30], dress: [["building", 0.8, 14, 40], ["lamp", 0.5, 9.5, 9.6]], kerbs: true, barriers: true, far: "city", obst: ["cone", "tyres"], ramps: 0, spray: 0x9aa0a8 },
@@ -40,21 +40,26 @@ const THEMES = {
 
 // ---------------------------------------------------------------- the riders
 const RORY3 = { skin: 0xf3cfae, hair: 0x6b4423, eyes: 0x3b5f8a, coat: 0x16324f, trousers: 0x1a1f2a, kid: true };
-const RIDERS = {
+export const RIDERS = {
   rory: RORY3,
   scorch: { skin: 0xf0c8a8, coat: 0xb01020, trousers: 0x2a0a0a, hat: "helmet", hatColor: 0xc0202a, shoes: 0x111111 },
   kaldera: { skin: 0xe8c8a8, hair: 0x1a1a1a, coat: 0xe05a10, trousers: 0x3a1a0a, moustache: 0x1a1a1a, monocle: true, stern: true },
   hench: { skin: 0xe8c0a0, coat: 0x2a2a34, trousers: 0x1a1a22, hat: "beanie", hatColor: 0xe05a10, glasses: true },
 };
-const RIDE_SPEED = { snowmobile: 30, speedboat: 31, sportscar: 36, motorbike: 34, jetski: 29, skis: 26, buggy: 30, wingsuit: 36, snowboard: 27, jetboat: 31, jeep: 29, hovercraft: 28, minisub: 20, bobsled: 32 };
-const RIDE_NAME = { snowmobile: "SNOWMOBILE", speedboat: "SPEEDBOAT", sportscar: "SPORTS CAR", motorbike: "MOTORBIKE", jetski: "JET SKI", skis: "SKIS", buggy: "DUNE BUGGY", wingsuit: "WINGSUIT", snowboard: "SNOWBOARD", jetboat: "JET BOAT", jeep: "JEEP", hovercraft: "HOVERCRAFT", minisub: "MINI-SUB", bobsled: "BOBSLED" };
+export const RIDE_SPEED = { snowmobile: 30, speedboat: 31, sportscar: 36, motorbike: 34, jetski: 29, skis: 26, buggy: 30, wingsuit: 36, snowboard: 27, jetboat: 31, jeep: 29, hovercraft: 28, minisub: 20, bobsled: 32 };
+export const RIDE_NAME = { snowmobile: "SNOWMOBILE", speedboat: "SPEEDBOAT", sportscar: "SPORTS CAR", motorbike: "MOTORBIKE", jetski: "JET SKI", skis: "SKIS", buggy: "DUNE BUGGY", wingsuit: "WINGSUIT", snowboard: "SNOWBOARD", jetboat: "JET BOAT", jeep: "JEEP", hovercraft: "HOVERCRAFT", minisub: "MINI-SUB", bobsled: "BOBSLED" };
 // who you are chasing, what they ride and what they are called on the screen
-const QUARRY = {
+export const QUARRY = {
   tender: ["speedboat", "hench", 0x2a2a30, 0xe05a10, "THE TENDER"], scorchcar: ["sportscar", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"], scorchbike: ["motorbike", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"],
   scorchski: ["skis", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"], courier: ["sportscar", "hench", 0x16161c, 0xe05a10, "THE COURIER"], scorchwing: ["wingsuit", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"],
   courierbike: ["motorbike", "hench", 0x16161c, 0xe05a10, "THE COURIER"], ship: ["ship", null, 0x3a1a1a, 0xe05a10, "THE ENGINE SHIP"], scorchboat: ["jetboat", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"],
   scorchsled: ["snowmobile", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"], baronsub: ["baronsub", null, 0xe05a10, 0x1a1a1a, "KALDERA'S SUB"], baronsled: ["bobsled", "kaldera", 0xd4a017, 0xe05a10, "BARON KALDERA"],
 };
+export // how much a ride leans into a turn, and how far back the camera sits
+export const ROLL = { motorbike: 1.6, wingsuit: 1.6, skis: 1.6, snowboard: 1.6, hovercraft: 0.3, minisub: 0.3 };
+export const CAM_BACK = { sportscar: 6.4, jeep: 6.4, hovercraft: 6.4 };
+// quarries too big to be a ride: built by their own function, and tagged from further away
+export const BIG = { ship: (run, a, b) => run.buildShip(a, b), baronsub: (run, a) => run.buildSub(a) };
 const PURSUER_NAME = { crack: "THE CRACK", wave: "THE WAVE", avalanche: "THE AVALANCHE", trucks: "THE TRUCKS", convoy: "THE CONVOY" };
 
 // ---------------------------------------------------------------- the track
@@ -119,8 +124,8 @@ export class Run extends MG {
     this.player = this.buildRide(this.ride, 0x16324f, 0x7fe3ff, "rory"); this.scene.add(this.player);
     if (this.mode === "catch") {
       const q = QUARRY[this.P.quarry] || QUARRY.scorchcar; this.qName = this.P.label ? this.P.label.toUpperCase() : q[4];
-      this.quarry = q[0] === "ship" ? this.buildShip(q[2], q[3]) : q[0] === "baronsub" ? this.buildSub(q[2]) : this.buildRide(q[0], q[2], q[3], q[1]);
-      this.scene.add(this.quarry); this.qd = this.gap0; this.qo = 0; this.qv = this.base * this.qk; this.qBig = q[0] === "ship" || q[0] === "baronsub";
+      this.quarry = BIG[q[0]] ? BIG[q[0]](this, q[2], q[3]) : this.buildRide(q[0], q[2], q[3], q[1]);
+      this.scene.add(this.quarry); this.qd = this.gap0; this.qo = 0; this.qv = this.base * this.qk; this.qBig = !!BIG[q[0]];
       this.tagRange = this.qBig ? 30 : 18;
     } else { this.pName = PURSUER_NAME[this.P.pursuer] || "IT"; this.buildPursuer(this.P.pursuer || "crack"); this.pd = -this.pgap0; }
     this.buildParticles(); this.buildPools();
@@ -194,12 +199,13 @@ export class Run extends MG {
     if (th.surf === "road") {
       // clean asphalt: fine grain and a few darker patches, no markings of its own
       const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = th.warm ? "#4a4440" : "#3a3c44"; g.fillRect(0, 0, 256, 256);
-      for (let i = 0; i < 5000; i++) { const v = Math.random(); g.fillStyle = v < 0.5 ? "rgba(0,0,0,.18)" : "rgba(255,255,255,.07)"; g.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
+      if (th.cobbles) { g.fillStyle = "#2a2a2e"; g.fillRect(0, 0, 256, 256); for (let r = 0; r < 16; r++) for (let k = 0; k < 16; k++) { const v = 70 + Math.random() * 40; g.fillStyle = `rgb(${v + 10},${v + 4},${v})`; g.beginPath(); g.ellipse(k * 16 + (r % 2) * 8 + 8, r * 16 + 8, 7, 6.5, 0, 0, TAU); g.fill(); } }
+      for (let i = 0; i < (th.cobbles ? 1200 : 5000); i++) { const v = Math.random(); g.fillStyle = v < 0.5 ? "rgba(0,0,0,.18)" : "rgba(255,255,255,.07)"; g.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
       for (let i = 0; i < 8; i++) { g.fillStyle = "rgba(0,0,0,.08)"; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 20 + Math.random() * 40, 8 + Math.random() * 20, Math.random() * 3, 0, TAU); g.fill(); }
       const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
       mat = new THREE.MeshStandardMaterial({ map: t, roughness: /night/.test(th.sky) ? 0.55 : 0.9, metalness: /night/.test(th.sky) ? 0.2 : 0 });
     }
-    else if (th.surf === "sand" || th.surf === "gravel") mat = new THREE.MeshStandardMaterial({ map: PT.sand(7), color: th.surf === "gravel" ? 0xb8a888 : 0xe0b080, roughness: 1 });
+    else if (th.surf === "sand" || th.surf === "gravel") mat = new THREE.MeshStandardMaterial({ map: PT.sand(7), color: th.surfColor || (th.surf === "gravel" ? 0xb8a888 : 0xe0b080), roughness: th.wet ? 0.35 : 1, metalness: th.wet ? 0.2 : 0 });
     else {
       // packed snow with the tracks of whoever went before
       const c = document.createElement("canvas"); c.width = 128; c.height = 256; const g = c.getContext("2d");
@@ -209,7 +215,7 @@ export class Run extends MG {
       mat = new THREE.MeshStandardMaterial({ map: t, roughness: 0.75, color: th.surf === "chute" ? 0xcfeaff : 0xffffff });
     }
     this.ribbon(0, this.track.len, -hw - 0.5, hw + 0.5, 0.02, mat, 3, th.surf === "road" ? 10 : 12);
-    if (th.surf === "road") {
+    if (th.surf === "road" && !th.cobbles && !th.noLines) {
       const c = document.createElement("canvas"); c.width = 16; c.height = 64; const g = c.getContext("2d"); g.fillStyle = "#f4f0e0"; g.fillRect(4, 0, 8, 36);
       const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
       this.ribbon(0, this.track.len, -0.18, 0.18, 0.04, new THREE.MeshStandardMaterial({ map: t, transparent: true, roughness: 0.8 }), 3, 7);
@@ -258,8 +264,9 @@ export class Run extends MG {
     const T = this.track, g = new THREE.PlaneGeometry(3000, 3000, 60, 60), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) p.setZ(i, vnoise(p.getX(i) / 140, p.getY(i) / 140) * 18);
     g.computeVertexNormals();
-    const ground = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x3a4a2a, roughness: 1, map: PT.sand(4) })); ground.rotation.x = -Math.PI / 2; ground.position.set(T.X[T.X.length >> 1], -2, T.Z[T.Z.length >> 1]); this.scene.add(ground);
-    for (let i = 0; i < 9; i++) { const d = 150 + i * 280, s = i % 2 ? 1 : -1, p2 = T.pos(d, s * rnd(90, 180), 0, this.tmp); this.volcano(p2.x, p2.z, rnd(70, 110), rnd(90, 140)); }
+    const th = this.th, sea = th.airGround === "sea";
+    const ground = new THREE.Mesh(g, sea ? new THREE.MeshStandardMaterial({ color: th.water || 0x1a3a5a, roughness: 0.3, metalness: 0.5 }) : new THREE.MeshStandardMaterial({ color: th.airGround || 0x3a4a2a, roughness: 1, map: PT.sand(4) })); ground.rotation.x = -Math.PI / 2; ground.position.set(T.X[T.X.length >> 1], sea ? -30 : -2, T.Z[T.Z.length >> 1]); this.scene.add(ground);
+    for (let i = 0; i < 9; i++) { const d = 150 + i * 280, s = i % 2 ? 1 : -1, p2 = T.pos(d, s * rnd(90, 180), 0, this.tmp); if (this.airPeak2 && this.airPeak2(th.airPeaks, p2.x, p2.z, i)) continue; if (!sea) this.volcano(p2.x, p2.z, rnd(70, 110), rnd(90, 140)); }
     for (const dr of this.th.dress) this.dress(...dr);
     this.scene.fog.near = 80; this.scene.fog.far = 520; this.cam.far = 900;
   }
@@ -342,6 +349,7 @@ export class Run extends MG {
       case "waterfall": for (const it of list) { const p = new THREE.Mesh(new THREE.PlaneGeometry(6, 60), new THREE.MeshBasicMaterial({ color: 0xe8f6ff, transparent: true, opacity: 0.7 })); p.position.set(it.x, 30, it.z); p.rotation.y = -it.t + (it.s > 0 ? -Math.PI / 2 : Math.PI / 2); this.scene.add(p); } break;
       case "drill": for (const it of list) this.inferno(it.x, it.y, it.z); break;
       case "lava": for (const it of list) { const p = new THREE.Mesh(new THREE.PlaneGeometry(rnd(4, 8), rnd(20, 50)), new THREE.MeshBasicMaterial({ color: 0xff5a14 })); p.rotation.x = -Math.PI / 2; p.rotation.z = -it.t; p.position.set(it.x, it.y + 0.3, it.z); this.scene.add(p); const l = new THREE.PointLight(0xff5a14, 8, 40, 1.6); l.position.set(it.x, it.y + 3, it.z); this.scene.add(l); } break;
+      default: if (this.dress2) this.dress2(kind, list, { inst, set, M, extra });
     }
   }
   inferno(x, y, z) {
@@ -359,6 +367,7 @@ export class Run extends MG {
       else if (kind === "desert") this.w.mountain(x, z, rnd(80, 120), rnd(20, 45), { y, snow: false, color: 0xb07a4a });
       else if (kind === "mesa") { const m = new THREE.Mesh(new THREE.CylinderGeometry(rnd(70, 90), rnd(100, 130), rnd(60, 90), 9), new THREE.MeshStandardMaterial({ color: 0x5a5a50, roughness: 1 })); m.position.set(x, y + 35, z); this.scene.add(m); }
       else if (kind === "volcanoes") this.volcano(x, z, rnd(60, 100), rnd(60, 110));
+      else if (this.far2 && this.far2(kind, x, y, z, d, s)) { /* built by run2.js */ }
       else if (kind === "city") { const h = rnd(40, 110); const b = new THREE.Mesh(new THREE.BoxGeometry(rnd(20, 40), h, rnd(20, 40)), new THREE.MeshStandardMaterial({ map: PT.windows(6, 14, [30, 32, 44], ["#ffd88a", "#9ad0ff"], 0.5, d | 0), emissive: 0xffffff, emissiveMap: PT.windows(6, 14, [30, 32, 44], ["#ffd88a", "#9ad0ff"], 0.5, d | 0), emissiveIntensity: /night/.test(this.th.sky) ? 0.8 : 0.1 })); b.position.set(x, y + h / 2, z); this.scene.add(b); }
     }
   }
@@ -456,12 +465,15 @@ export class Run extends MG {
         seat = 0.45; seatZ = 0.25; if (rider === "rory") { o.hat = "helmet"; o.hatColor = 0x7fe3ff; } break;
       }
       case "wingsuit": { pose = "fly"; seat = 0; R.scale.setScalar(1.5); if (rider === "rory") { o.goggles = true; o.hat = "helmet"; o.hatColor = 0x7fe3ff; } break; }
+      default: if (this.ride2) { const r = this.ride2(kind, { g, R, box, cyl, wheel, M, bodyM, trimM, dark, glass, lightM, tail, o, rider, body, trim }); if (r) { if (r.seat !== undefined) seat = r.seat; if (r.seatZ !== undefined) seatZ = r.seatZ; if (r.pose) pose = r.pose; if (r.props) props = r.props; } }
     }
     if (rider) {
       const pw = new THREE.Group(); R.add(pw);
       const p = w.person(Object.assign({ coat: body === 0x16324f ? 0x16324f : undefined }, o)); p.rotation.y = Math.PI; pw.add(p);
       const u = p.userData, sc = o.kid ? 0.8 : o.big ? 1.3 : 1;
       if (pose === "sit" || pose === "lean") { u.legL.rotation.x = u.legR.rotation.x = -1.45; u.armL.rotation.x = u.armR.rotation.x = -1.1; pw.position.set(0, seat - 0.86 * sc, seatZ); if (pose === "lean") { pw.rotation.x = -0.35; } }
+      else if (pose === "stand") { pw.position.set(0, seat, seatZ); pw.rotation.x = -0.12; u.armL.rotation.x = u.armR.rotation.x = -0.5; u.armL.rotation.z = 0.5; u.armR.rotation.z = -0.5; }
+      else if (pose === "hang") { pw.position.set(0, seat, seatZ); u.armL.rotation.x = u.armR.rotation.x = -2.9; u.armL.rotation.z = 0.25; u.armR.rotation.z = -0.25; pw.rotation.x = -1.2; }
       else if (pose === "ski" || pose === "board") { pw.position.set(0, 0.06, 0.05); pw.rotation.x = -0.18; u.armL.rotation.x = u.armR.rotation.x = -0.4; u.armL.rotation.z = 0.35; u.armR.rotation.z = -0.35; if (pose === "board") p.rotation.y = Math.PI / 2 + Math.PI; }
       else if (pose === "fly") {
         pw.rotation.x = -Math.PI / 2 + 0.12; pw.position.set(0, 0.2, 0.7); u.armL.rotation.z = 0.9; u.armR.rotation.z = -0.9; u.legL.rotation.z = 0.18; u.legR.rotation.z = -0.18;
@@ -515,6 +527,8 @@ export class Run extends MG {
       const g = new THREE.Group(); this.scene.add(g); this.pObj = g; this.puffs = [];
       const m = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
       for (let i = 0; i < 26; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), m); s.position.set(rnd(-24, 24), rnd(1, 9), rnd(-3, 5)); s.userData.base = rnd(3, 7); s.scale.setScalar(s.userData.base); g.add(s); this.puffs.push(s); }
+    } else if (this.pursuer2 && this.pursuer2(kind)) {
+      // built by run2.js
     } else {
       const g = new THREE.Group(); this.scene.add(g); this.pObj = g;
       for (const x of kind === "convoy" ? [-3, 3, 0] : [-3, 3]) { const v = this.buildRide("jeep", 0x3a1a14, 0xe05a10, "hench"); v.position.set(x, 0, x === 0 ? 8 : 0); v.scale.setScalar(kind === "trucks" ? 1.4 : 1.1); g.add(v); }
@@ -542,6 +556,7 @@ export class Run extends MG {
       case "ash": for (let i = 0; i < 5; i++) add(new THREE.SphereGeometry(1, 8, 6), M(0x4a4440, { roughness: 1, transparent: true, opacity: 0.85 }), rnd(-1.2, 1.2), rnd(-0.6, 0.6), rnd(-1, 1)).scale.setScalar(rnd(0.8, 1.4)); r = 1.8; break;
       case "jelly": { add(new THREE.SphereGeometry(0.8, 12, 8, 0, TAU, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xff7eb6, emissive: 0xff4aa8, emissiveIntensity: 0.8, transparent: true, opacity: 0.7 }), 0, 0.8); for (let i = 0; i < 5; i++) add(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 4), M(0xff9ad0), Math.cos(i) * 0.4, 0.2, Math.sin(i) * 0.4); r = 1.0; break; }
       case "icicle": add(new THREE.ConeGeometry(0.6, 5, 7), M(0xdff6ff, { roughness: 0.15 }), 0, 2.5); r = 0.8; break;
+      default: if (this.obstacle2) { const r2 = this.obstacle2(kind, add, M, g); if (r2) r = r2; }
     }
     g.userData.r = r; return g;
   }
@@ -680,7 +695,7 @@ export class Run extends MG {
     const T = this.track, a = T.at(this.d, this.tmp), p = this.player, lift = this.lift;
     const surf = this.th.surf, bob = surf === "water" ? Math.sin(this.t * 7) * 0.08 : surf === "air" ? Math.sin(this.t * 2) * 0.3 : Math.sin(this.t * 17) * 0.02 * (this.v / 30);
     p.position.set(a.x + a.rx * this.o, a.y + lift + bob + (surf === "under" ? 0.8 : 0), a.z + a.rz * this.o);
-    p.rotation.order = "YXZ"; p.rotation.y = -a.t; p.rotation.x = Math.atan(a.slope) * (lift ? 0.5 : 1) + (this.air ? -this.vy * 0.015 : 0); p.rotation.z = clamp(-this.steerV * 0.05, -0.4, 0.4) * (this.ride === "motorbike" || this.ride === "wingsuit" || this.ride === "skis" || this.ride === "snowboard" ? 1.6 : this.ride === "hovercraft" || this.ride === "minisub" ? 0.3 : 0.6);
+    p.rotation.order = "YXZ"; p.rotation.y = -a.t; p.rotation.x = Math.atan(a.slope) * (lift ? 0.5 : 1) + (this.air ? -this.vy * 0.015 : 0); p.rotation.z = clamp(-this.steerV * 0.05, -0.4, 0.4) * (ROLL[this.ride] || 0.6);
     if (surf === "chute") { p.rotation.z += -clamp(this.o / this.halfW, -1, 1) * 0.5; p.position.y += Math.pow(Math.abs(this.o) / (this.halfW + 1.2), 3) * 2.2; }
     const u = p.userData; if (u.wheels) for (const w2 of u.wheels) w2.rotation.x += this.v * dt / 0.4; if (u.fan) { if (u.fanAxis === "z") u.fan.rotation.z += dt * 30; else u.fan.rotation.z += dt * 30; }
     // spray from behind
@@ -703,15 +718,17 @@ export class Run extends MG {
     else if (this.pObj) {
       const q = T.at(Math.max(0, this.pd), this.tmp2); this.pObj.position.set(q.x, q.y + (this.pKind === "wave" ? 0 : 0), q.z); this.pObj.rotation.y = -q.t;
       if (this.puffs) for (const s of this.puffs) { s.scale.setScalar(s.userData.base * (1 + Math.sin(this.t * 3 + s.position.x) * 0.15)); }
+      if (this.pTick) this.pTick(dt);
       if (this.pKind === "wave" || this.pKind === "avalanche") for (let i = 0; i < 3; i++) { const h = T.pos(this.pd + 3, rnd(-18, 18), this.pKind === "wave" ? 6 : 4, this.tmp2); this.emit(h, rnd(-2, 2), rnd(2, 6), rnd(-2, 2), 0.9); }
     }
     // light, sun and camera
     const pp = p.position; this.w.player.x = pp.x; this.w.player.z = pp.z; this.hl.position.set(pp.x + a.fx * 6, pp.y + 3, pp.z + a.fz * 6);
     if (this.sun) { this.sun.position.set(pp.x + 30, pp.y + 60, pp.z + 20); this.sun.target.position.copy(pp); }
     for (const sm of this.smokes || []) sm.material.rotation += dt * 0.05;
+    if (this.tick2) this.tick2(dt);
     if (this.waterMat && this.waterMat.normalMap) { this.waterMat.normalMap.offset.x += dt * 0.03; this.waterMat.normalMap.offset.y += dt * 0.02; }
     const cam = this.cam, air = surf === "air";
-    let back = air ? 6 : this.ride === "sportscar" || this.ride === "jeep" || this.ride === "hovercraft" ? 6.4 : 5.2, up = air ? 2.0 : this.ride === "minisub" ? 2.0 : 2.3;
+    let back = air ? (CAM_BACK[this.ride] || 6) : CAM_BACK[this.ride] || 5.2, up = air ? 2.0 : this.ride === "minisub" ? 2.0 : 2.3;
     if (this.mode === "escape" && this.phase === "run") { const k = 1 - clamp((this.d - this.pd - 10) / 30, 0, 1); back += k * 7; up += k * 2.5; }
     if (this.phase === "intro") {
       // circle round to the front, then swing in behind as the countdown ends

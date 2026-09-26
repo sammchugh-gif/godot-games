@@ -171,6 +171,32 @@ const SKY_PRESETS = {
   cave:          { zenith: "#021018", mid: "#063048", horizon: "#0a4a6a", ground: "#021018", sunEl: 80, sunAz: 0, sunColor: "#7fd0ff", sunI: 0.8, glow: "#4ab0e0", clouds: 0, fog: "#062436", fogNear: 14, fogFar: 110, hemiSky: "#3a90c0", hemiGround: "#0a1a28", hemiI: 1.0, envI: 1.0 },
   volcano_night: { zenith: "#0a0508", mid: "#2a0a0a", horizon: "#a8360c", ground: "#1a0806", sunEl: 36, sunAz: 160, sunColor: "#ff7a44", sunI: 0.95, glow: "#ff6a20", clouds: 18, cloudTint: "#8a2a14", stars: 220, fog: "#2a0e08", fogNear: 35, fogFar: 230, hemiSky: "#ff8a58", hemiGround: "#240808", hemiI: 0.6, envI: 0.7 },
 };
+// the skies of Operations Midnight and Hurricane, as variations on those above
+{
+  const P = SKY_PRESETS, v = (base, o) => Object.assign({}, P[base], o);
+  Object.assign(P, {
+    paris_night:   v("night_glam", { horizon: "#4a2e5e", mid: "#1c1a44", cityGlow: "#ffc070", clouds: 8 }),
+    sea_morning:   v("day", { zenith: "#4a82c0", mid: "#9cc0e0", horizon: "#f0e6d8", sunEl: 20, sunAz: 70, sunColor: "#fff0d8", clouds: 22, fog: "#dfe6ea", ground: "#b8b098" }),
+    venice_sunset: v("sunset", { horizon: "#ffc890", mid: "#e0707a", clouds: 10, fog: "#f0b898" }),
+    rome_day:      v("bright_day", { horizon: "#f4e8d4", ground: "#c8a878", sunColor: "#fff0d8", fog: "#efe4d0", hemiGround: "#b08a60" }),
+    prague_mist:   v("overcast_cold", { zenith: "#7a8494", mid: "#a8b0bc", horizon: "#e0dcd4", sunI: 1.3, clouds: 30, fog: "#c8ccd0", fogNear: 30, fogFar: 210 }),
+    alpine_summer: v("high_day", { ground: "#6a8a4a", hemiGround: "#5a7a3a", clouds: 14, fog: "#d4e6f4" }),
+    highland_grey: v("overcast_cold", { zenith: "#5a6a78", mid: "#8a9aa6", horizon: "#c4ccc8", ground: "#4a5a42", hemiGround: "#3a4a32", clouds: 50, fog: "#aab4b4", fogNear: 30, fogFar: 220 }),
+    solstice_dawn: v("dawn", { horizon: "#ffd49a", sunEl: 4, sunAz: 50, clouds: 8, fogNear: 50, fogFar: 300 }),
+    london_dusk:   v("sunset", { zenith: "#1c2a50", mid: "#6a6a9a", horizon: "#e8a878", cityGlow: "#ffb060", clouds: 20, cloudTint: "#c8a0b0", fog: "#9a8a9a" }),
+    nye_night:     v("night_glam", { zenith: "#04061a", mid: "#141a44", horizon: "#3a2a60", cityGlow: "#ffd080", stars: 300, clouds: 2 }),
+    tropical_day:  v("bright_day", { zenith: "#0a6ad8", mid: "#4ab0f0", horizon: "#e0f4ff", clouds: 12, fog: "#d8f0fc", hemiGround: "#c8b890" }),
+    la_sunny:      v("desert_day", { horizon: "#f4e6d0", ground: "#b0a080", clouds: 3, fog: "#ecdcc8" }),
+    canyon_day:    v("desert_day", { horizon: "#f4d8b0", ground: "#b86a3a", hemiGround: "#b0603a", fog: "#f0d4b4", clouds: 8 }),
+    storm_plains:  v("overcast_cold", { zenith: "#2a3a44", mid: "#4a5a5a", horizon: "#a8b89a", ground: "#6a7a4a", sunI: 0.9, clouds: 60, cloudTint: "#8a9a9a", fog: "#7a8a80", fogNear: 40, fogFar: 240, hemiGround: "#5a6a3a" }),
+    mist_day:      v("day", { zenith: "#5a8ab8", mid: "#a8c4dc", horizon: "#e8f0f4", clouds: 20, fog: "#dce8ee", fogNear: 30, fogFar: 220 }),
+    swamp_day:     v("day", { zenith: "#3a7ab0", mid: "#9ac0d0", horizon: "#e8ecd0", ground: "#5a6a3a", hemiGround: "#4a5a2a", sunColor: "#fff4d0", clouds: 24, fog: "#d8dcc0", fogNear: 40, fogFar: 240 }),
+    havana_sunset: v("sunset", { horizon: "#ffd080", mid: "#e88a6a", clouds: 8, fog: "#f0c098", cityGlow: "#ffb060" }),
+    rainforest:    v("overcast_cold", { zenith: "#5a7a8a", mid: "#9ab4b0", horizon: "#d4e0d0", ground: "#2a4a2a", hemiGround: "#2a4a1a", sunI: 1.4, clouds: 40, fog: "#b4c8b8", fogNear: 25, fogFar: 180 }),
+    storm_eye:     v("high_day", { zenith: "#2a5aa0", mid: "#8aa4c0", horizon: "#4a5a6a", ground: "#2a3440", clouds: 50, cloudTint: "#9aa4b4", fog: "#5a6a7a", fogNear: 50, fogFar: 260 }),
+    dc_storm:      v("overcast_cold", { zenith: "#1a2430", mid: "#3a4a58", horizon: "#7a8894", ground: "#3a4448", sunI: 0.8, clouds: 70, cloudTint: "#6a7888", fog: "#5a6874", fogNear: 30, fogFar: 200 }),
+  });
+}
 // a painted equirectangular sky: gradient, sun or moon, soft clouds, stars
 function skyTexture(P) {
   const W = 1024, H = 512;
@@ -437,6 +463,11 @@ export class World {
       case "beret": { const m = add(this.geoC("beret" + sc, () => new THREE.SphereGeometry(hr * 1.15, 14, 6)), hatM, 0.03, 0.14, 0); m.scale.set(1, 0.35, 1); break; }
       case "hardhat": add(this.geoC("hard" + sc, () => new THREE.SphereGeometry(hr * 1.1, 14, 8, 0, TAU, 0, Math.PI * 0.5)), this.matC(o.hatColor === undefined ? 0xf0c020 : o.hatColor, { r: 0.4 }), 0, 0.03, 0); add(this.geoC("hardbrim" + sc, () => new THREE.CylinderGeometry(hr * 1.3, hr * 1.3, 0.02, 16)), this.matC(o.hatColor === undefined ? 0xf0c020 : o.hatColor, { r: 0.4 }), 0, 0.03, 0.03); break;
       case "bandana": add(this.geoC("band" + sc, () => new THREE.CylinderGeometry(hr * 1.04, hr * 1.04, 0.07, 14)), hatM, 0, 0.1, 0); break;
+      case "bowler": add(this.geoC("bowlbrim" + sc, () => new THREE.CylinderGeometry(0.27 * sc, 0.27 * sc, 0.02, 18)), hatM, 0, 0.1, 0); add(this.geoC("bowltop" + sc, () => new THREE.SphereGeometry(hr * 1.02, 16, 8, 0, TAU, 0, Math.PI * 0.55)), hatM, 0, 0.08, 0); break;
+      case "boater": { const straw = this.matC(0xe8cf8a, { r: 0.9 }); add(this.geoC("boatbrim" + sc, () => new THREE.CylinderGeometry(0.3 * sc, 0.3 * sc, 0.02, 18)), straw, 0, 0.1, 0); add(this.geoC("boattop" + sc, () => new THREE.CylinderGeometry(0.19 * sc, 0.19 * sc, 0.12, 16)), straw, 0, 0.17, 0); add(this.geoC("boatband" + sc, () => new THREE.CylinderGeometry(0.195 * sc, 0.195 * sc, 0.04, 16)), this.matC(0xc0203a, { r: 0.6 }), 0, 0.13, 0); break; }
+      case "crown": { const gold = this.matC(0xe0b020, { r: 0.25, m: 0.8 }); add(this.geoC("crownband" + sc, () => new THREE.CylinderGeometry(hr * 0.95, hr * 0.95, 0.08, 16, 1, true)), gold, 0, 0.14, 0); for (let i = 0; i < 6; i++) { const a = i * TAU / 6; add(this.geoC("crownpt", () => new THREE.ConeGeometry(0.03, 0.09, 6)), gold, Math.sin(a) * hr * 0.93, 0.22, Math.cos(a) * hr * 0.93); } add(this.geoC("crownvel" + sc, () => new THREE.SphereGeometry(hr * 0.85, 12, 6, 0, TAU, 0, Math.PI * 0.5)), this.matC(0xa01a2a, { r: 0.8 }), 0, 0.15, 0); break; }
+      case "bearskin": { const fur = this.matC(0x141414, { r: 1 }); const b = add(this.geoC("bear" + sc, () => new THREE.CapsuleGeometry(hr * 0.95, hr * 1.6, 4, 12)), fur, 0, 0.28, 0); b.scale.z = 0.9; break; }
+      case "cloud": { const cm = this.matC(0x9aa2b4, { r: 1 }); for (const [x, y, r] of [[-0.1, 0.16, 0.1], [0.02, 0.22, 0.13], [0.13, 0.16, 0.1], [0, 0.13, 0.12]]) add(this.geoC("cloudpuff" + r, () => new THREE.SphereGeometry(r * sc, 10, 8)), cm, x * sc, y, 0); break; }
       case "boater": add(this.geoC("boat", () => new THREE.CylinderGeometry(0.34, 0.34, 0.02, 16)), this.matC(0xe8d8a0), 0, 0.12, 0); add(this.geoC("boattop", () => new THREE.CylinderGeometry(0.2, 0.2, 0.14, 16)), this.matC(0xe8d8a0), 0, 0.19, 0); break;
     }
     if (o.hat && style !== "none" && style !== "bald" && o.hat !== "helmet" && o.hat !== "hood" && o.hat !== "ushanka") hairCap();

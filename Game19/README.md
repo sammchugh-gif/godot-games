@@ -20,7 +20,24 @@ rolls its titles once Greenland is done. Then three acts:
 - **Act Three: Meltdown.** Rotorua, Ushuaia, the Antarctic Peninsula, the Ross
   Ice Shelf, the Ice Caves and Mount Erebus.
 
-Ninety missions: four mini-games and a chase in every place. Play it at
+Ninety missions: four mini-games and a chase in every place.
+
+**Two more operations** sit beside it on the title screen, picked from three
+film posters, each with its own map, save, music and cast:
+
+- **Operation Midnight** (Europe, ten places, fifty missions). Madame Minuit,
+  the most punctual thief in the world, and her twin henchmen Tick and Tock
+  are stealing Europe's clockwork treasures to build a machine that will stop
+  every clock on Earth at midnight. Paris and the Louvre, Mont-Saint-Michel,
+  Venice, Rome, Prague, a Bavarian castle, Loch Ness, Stonehenge, the Tower of
+  London, and Westminster, where the King meets Rory at Buckingham Palace.
+- **Operation Hurricane** (the Americas, ten places, fifty missions). Doctor
+  Tempest makes her own weather from an airship called the Anvil and sends
+  Hurricane Hilda at Washington DC. Hawaii, Hollywood, the Grand Canyon,
+  Kansas, Niagara Falls, the Florida Everglades, Havana, Costa Rica, the eye of
+  the storm itself, and Washington DC, where the President is waiting.
+
+Operation Meltdown keeps the original save, so nobody loses their progress. Play it at
 <https://sammchugh-gif.github.io/godot-games/agent-rory-meltdown/>. On the iPad,
 open the link in Safari, then Share → Add to Home Screen. Landscape. Everyone
 speaks with the iPad's own voices, and everything they say is also on screen.
@@ -70,14 +87,19 @@ No build step: ES modules and a vendored three.js. `sh publish.sh` copies the
 game into `docs/agent-rory-meltdown/`.
 
 - `js/main.js`: the game loop, input, HUD and mission flow.
-- `js/story.js`: every line of the story, the cast, the places and the acts.
-- `js/world.js`, `js/scenekit.js`, `js/scenes1.js` to `js/scenes6.js`: the 3D
-  world, its building blocks and the eighteen places.
-- `js/mgbase.js`, `js/fx.js`, `js/games1.js` to `js/games4.js`: the mini-game
-  base, the shared effects kit and the twenty-four mini-games.
-- `js/run.js`: the chase engine.
+- `js/story.js`: the cast and the operations; `js/op1.js` to `js/op3.js`
+  are the three operations' places, acts and every line (written by a story
+  generator, so edit with care); `js/land.js` is the coastline data for the map.
+- `js/world.js`, `js/scenekit.js`, `js/scenekit2.js`, `js/scenes1.js` to
+  `js/scenes12.js`: the 3D world, its building blocks and the thirty-eight places.
+- `js/mgbase.js`, `js/fx.js`, `js/games1.js` to `js/games6.js`: the mini-game
+  base, the shared effects kit and the thirty-six mini-games (Operations Two and
+  Three add Heist, Mirrors, Clocks, Masks, Chimes, Cipher, Surf, Stunt, Storm
+  Grid, Slider, Spot the Difference and Sandbags).
+- `js/run.js` and `js/run2.js`: the chase engine and the twenty new chases.
 
-Checks, all headless (Playwright with SwiftShader), run from this folder:
+Checks, all headless (Playwright with SwiftShader), run from this folder. Set
+`OP=2` or `OP=3` to check the other operations:
 
 - `node tools/gametest.mjs /tmp/out [kinds]`: every mission's mini-game, won by its solver.
 - `node tools/runtest.mjs /tmp/out [ids]`: every chase, driven and finished, and the city restored.

@@ -91,7 +91,27 @@ const LEAD = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 76, 0, 0, 0, 79, 0
   72, 0, 74, 0, 76, 0, 79, 0, 81, 0, 79, 0, 76, 0, 0, 0, 76, 0, 0, 0, 75, 0, 76, 0, 79, 0, 83, 0, 82, 0, 0, 0];
 const STAB = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
   0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0];
-let musTimer = null, musStep = 0, musNext = 0, musMode = "theme", musLevel = 1;
+// the other operations' themes. Midnight: the Westminster Quarters (Big Ben's
+// chime) over a walking bass, with a woodblock going tick, tock. Hurricane: a
+// driving pulse in A minor with thunder rolling underneath.
+const MID_BASS = [40, 0, 43, 0, 45, 0, 47, 0, 48, 0, 47, 0, 45, 0, 43, 0, 40, 0, 43, 0, 45, 0, 47, 0, 48, 0, 50, 0, 51, 0, 52, 0,
+  45, 0, 48, 0, 50, 0, 52, 0, 53, 0, 52, 0, 50, 0, 48, 0, 47, 0, 45, 0, 43, 0, 42, 0, 40, 0, 0, 0, 35, 0, 38, 0];
+const MID_LEAD = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 68, 0, 0, 0, 66, 0, 0, 0, 64, 0, 0, 0, 59, 0, 0, 0,
+  64, 0, 0, 0, 68, 0, 0, 0, 66, 0, 0, 0, 59, 0, 0, 0, 71, 0, 70, 0, 69, 0, 68, 0, 67, 0, 0, 0, 64, 0, 0, 0];
+const MID_STAB = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0];
+const HUR_BASS = [45, 45, 0, 45, 45, 0, 45, 0, 48, 48, 0, 48, 47, 0, 45, 0, 45, 45, 0, 45, 45, 0, 45, 0, 43, 43, 0, 43, 44, 0, 44, 0,
+  41, 41, 0, 41, 41, 0, 41, 0, 43, 43, 0, 43, 43, 0, 43, 0, 45, 45, 0, 45, 48, 0, 47, 0, 45, 0, 44, 0, 43, 0, 44, 0];
+const HUR_LEAD = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 69, 0, 0, 72, 0, 0, 76, 0, 0, 0, 74, 0, 72, 0, 71, 0,
+  72, 0, 0, 0, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 81, 0, 0, 79, 0, 0, 77, 0, 76, 0, 77, 0, 76, 0, 72, 0];
+const HUR_STAB = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,
+  1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0];
+const TUNES = [
+  { bpm: BPM, bass: BASS, lead: LEAD, stab: STAB, chord: [52, 55, 59], calm: [[40, 47, 52, 55], [45, 52, 57, 60]] },
+  { bpm: 116, bass: MID_BASS, lead: MID_LEAD, stab: MID_STAB, chord: [52, 56, 59], calm: [[40, 47, 52, 56], [45, 52, 57, 61]], tock: true, bell: true },
+  { bpm: 134, bass: HUR_BASS, lead: HUR_LEAD, stab: HUR_STAB, chord: [57, 60, 64], calm: [[45, 52, 57, 60], [41, 48, 53, 57]], thunder: true },
+];
+let musTimer = null, musStep = 0, musNext = 0, musMode = "theme", musLevel = 1, musTune = 0;
 function playNote(m, t, dur, type, vol, dest, vib) {
   const o = AC.createOscillator(), g = AC.createGain();
   o.type = type; o.frequency.value = mf(m);
@@ -102,25 +122,27 @@ function playNote(m, t, dur, type, vol, dest, vib) {
 }
 function musicTick() {
   if (!AC || !Audio.musicOn) return;
-  const spb = 60 / BPM / 2;
+  const T = TUNES[musTune] || TUNES[0], spb = 60 / T.bpm / 2;
   while (musNext < AC.currentTime + 0.3) {
     const i = musStep % STEPS;
-    const swing = (i % 2) ? spb * 0.18 : 0;
+    const swing = (i % 2) ? spb * (T.thunder ? 0.04 : 0.18) : 0;
     const t = musNext + swing;
     if (musMode === "theme" || musMode === "tense") {
-      const b = BASS[i];
-      if (b) { playNote(b, t, spb * 1.5, "sawtooth", 0.16, musGain); playNote(b - 12, t, spb * 1.5, "triangle", 0.22, musGain); }
-      const l = LEAD[i];
-      if (l && musLevel > 0.5) playNote(l, t, spb * 1.8, "square", 0.05, musGain, true);
-      const s = STAB[i];
-      if (s) { [52, 55, 59].forEach(m => playNote(m + (s === 2 ? 1 : 0), t, spb * 0.9, "sawtooth", 0.05, musGain)); }
-      // hats
-      if (i % 2 === 1) noise(0.03, 0.05, t - AC.currentTime, 9000, musGain);
+      const b = T.bass[i];
+      if (b) { playNote(b, t, spb * (T.thunder ? 0.9 : 1.5), "sawtooth", 0.16, musGain); playNote(b - 12, t, spb * 1.5, "triangle", 0.22, musGain); }
+      const l = T.lead[i];
+      if (l && musLevel > 0.5) { if (T.bell) { playNote(l, t, spb * 3.5, "sine", 0.09, musGain); playNote(l + 12, t, spb * 1.2, "sine", 0.025, musGain); } else playNote(l, t, spb * 1.8, "square", 0.05, musGain, true); }
+      const s = T.stab[i];
+      if (s) { T.chord.forEach(m => playNote(m + (s === 2 ? 1 : 0), t, spb * 0.9, "sawtooth", 0.05, musGain)); }
+      // hats, or a woodblock going tick, tock
+      if (T.tock) { if (i % 4 === 0) noise(0.025, 0.12, t - AC.currentTime, 3400, musGain); if (i % 4 === 2) noise(0.025, 0.1, t - AC.currentTime, 2200, musGain); }
+      else if (i % 2 === 1) noise(0.03, 0.05, t - AC.currentTime, 9000, musGain);
       if (i % 8 === 4) noise(0.08, 0.10, t - AC.currentTime, 1500, musGain);
+      if (T.thunder && i % 32 === 0) noise(1.6, 0.16, t - AC.currentTime, 220, musGain);
       if (musMode === "tense" && i % 4 === 0) playNote(76 + (i % 8 ? 0 : 1), t, spb * 0.5, "square", 0.04, musGain);
     } else if (musMode === "calm") {
       // a slow two-chord bed for menus and the map
-      const chord = (Math.floor(i / 32) % 2) ? [45, 52, 57, 60] : [40, 47, 52, 55];
+      const chord = T.calm[Math.floor(i / 32) % 2];
       if (i % 16 === 0) chord.forEach((m, k) => playNote(m, t + k * 0.05, spb * 14, "triangle", 0.09, musGain));
       if (i % 8 === 4) playNote(chord[3] + 12, t, spb * 3, "sine", 0.06, musGain, true);
     }
@@ -136,6 +158,8 @@ export const Music = {
     musTimer = setInterval(musicTick, 90);
   },
   setMode(mode) { if (mode !== musMode) { musMode = mode; musStep = 0; } },
+  // which operation's theme plays
+  setTune(i) { if (i !== musTune) { musTune = i || 0; musStep = 0; } },
   stop() { if (musTimer) { clearInterval(musTimer); musTimer = null; } },
   get mode() { return musMode; },
 };

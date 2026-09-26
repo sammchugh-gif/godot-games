@@ -19,12 +19,15 @@ page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", St
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 await page.waitForTimeout(600);
 const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); console.log("shot", name); };
 await shot("title");
 if (what === "scenes" || what === "all") {
   await page.evaluate(() => { __spy.debug.press("start"); });
   await page.waitForTimeout(500); await shot("menu");
+  await page.evaluate(() => { __spy.debug.press("op:" + (+(window.__OPI || 0))); }); await page.waitForTimeout(500); await shot("opmenu");
   const ids = await page.evaluate(() => __spy.debug.COUNTRIES.map(c => c.id));
   const onlyScene = process.argv[4] || "";
   for (let i = 0; i < ids.length; i++) {

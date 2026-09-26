@@ -18,6 +18,11 @@ Source: <https://github.com/mrdoob/three.js>.
 
 **Godot demo projects** — MIT licence: `smoke.png` (originally Kenney, CC0).
 
+## The map
+
+Coastlines from [Natural Earth](https://www.naturalearthdata.com) (public
+domain), by way of the world-atlas package, simplified in `js/land.js`.
+
 ## Skies
 
 Every sky in Meltdown is painted in code (sun, clouds, stars, aurora and haze)

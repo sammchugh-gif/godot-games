@@ -18,6 +18,8 @@ page.on("console", m => { if (m.type() === "error" && !m.text().includes("404"))
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 const ev = (f, a) => page.evaluate(f, a);
 const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 180000 }); };
 let fail = 0; const ck = (c, m) => { if (!c) { fail++; console.log("FAIL:", m); } else console.log("ok:", m); };

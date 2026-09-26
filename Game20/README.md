@@ -87,8 +87,32 @@ From `Game20/` (each tool serves the folder itself and drives headless
 Chromium with Playwright):
 
 - `node tools/missions.mjs [id,id,...]` starts each mission directly and lets
-  its autopilot finish it (defaults to all sixty).
+  its autopilot finish it (defaults to all sixty). The autopilots play as a
+  child would, with no shortcuts: they plan a route over the level (walking,
+  steps, jumps, gaps, drops and bounce pads, `js/nav.js`), wait for ferries,
+  lifts and cable cars and hop on and off, bounce off pads at cells hanging in
+  mid-air, float through low-gravity bubbles, and follow climbs the walking map
+  can't see (floors stacked over floors, like the launch gantry). A cell still
+  out of reach after 25 s (75 s if it rides on something) is reached by
+  teleporting, and every teleport is printed as `TELEPORT:`: it means a place a
+  child might not get to, and counts as a failure.
+- `node tools/levelcheck.mjs` builds every place and checks nothing that has to
+  be reached is buried in something solid or under the ground.
+- `node tools/hqtest.mjs` walks round the 3D HQ room: every file, every one of
+  the things to do, and PLAY going to the game.
 - `node tools/flow.mjs` plays from the title through every place in order.
-- `node tools/shot.mjs` takes screenshots at full quality.
+- `node tools/views.mjs` and `node tools/shot.mjs` take screenshots at full
+  quality; `node tools/icon.mjs` renders the home-screen icon.
 
 `W`, `H` and `Q` environment variables set the window size and quality.
+
+Things the tests turned up, worth knowing when building levels on this engine:
+
+- Rapier's own autostep won't lift a character that meets a step square-on, so
+  `Walker.stepUp` does the step itself when it gets nowhere.
+- A character standing still on a moving platform reports no collisions, so the
+  platform under Rory is also found with a ray, and he's carried by exactly the
+  platform's movement for the physics step (not its last speed, which over-carries
+  at low frame rates).
+- The walking map has one floor per spot; stairs stacked over stairs need a
+  `climb` list in the level's mission data.

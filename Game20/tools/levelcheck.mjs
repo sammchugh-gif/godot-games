@@ -3,7 +3,9 @@
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 const port = +(process.env.PORT || 8943);
-const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
+const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
+// npx starts the real server as a child: take the whole group down at the end
+const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: 480, height: 320 } });
@@ -11,9 +13,9 @@ let errors = 0;
 page.on("pageerror", e => { errors++; console.log("pageerror:", String(e).slice(0, 600)); });
 page.on("console", m => { if (m.type() === "error") { errors++; console.log("console.error:", m.text().slice(0, 400)); } });
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
-await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory20.quality", "0"); });
+await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory20.quality", "0"); localStorage.setItem("rory20.voice", "false"); });
 await page.goto(`http://localhost:${port}/index.html`);
-await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
+await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 480000 });
 const ids = await page.evaluate(() => __g.debug.PLACES.map(p => p.id));
 let bad = 0;
 for (const id of ids) {
@@ -22,4 +24,4 @@ for (const id of ids) {
   console.log("checked", id, "baked", res.baked);
 }
 console.log("bad:", bad, "errors:", errors);
-await browser.close(); server.kill(); process.exit(bad || errors ? 1 : 0);
+await browser.close(); killServer(); process.exit(bad || errors ? 1 : 0);

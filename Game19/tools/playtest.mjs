@@ -19,6 +19,8 @@ page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", St
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
+// OP=2 or OP=3 checks another operation
+if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
 await page.evaluate(() => { localStorage.clear(); });
 const ev = (fn, arg) => page.evaluate(fn, arg);
 const state = () => ev(() => __spy.state);
@@ -34,6 +36,9 @@ const check = (cond, msg) => { if (!cond) { fail++; console.log("FAIL:", msg); }
 
 await ev(() => __spy.debug.press("start")); await wait(200);
 check(await state() === "menu", "menu");
+// pick the operation (OP=2 or OP=3 for the others)
+await ev(i => __spy.debug.press("op:" + i), +(process.env.OP || 1) - 1); await wait(200);
+check(await state() === "opmenu", "the operation's own menu");
 // Act One opens cold: straight onto the ice in Greenland, no briefing yet
 await ev(() => __spy.debug.press("newgame")); await wait(100); await finishFade(); await waitGame(0.3);
 check(await state() === "world", "the cold open starts in the world");
