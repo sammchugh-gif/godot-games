@@ -654,25 +654,68 @@ class Stealth extends Mission {
     this.g.fx.burst(this.p.pos.x, this.p.pos.y + 1.2, this.p.pos.z, 0xff3a3a, 24);
     this.p.teleport(this.from.x, this.from.y, this.from.z); this.ri = 0;
     this.spot = (this.spot || 0) + 1;
+    if (this.route2) this.route2.stale = true;
   }
   stars() { return this.caught === 0 ? 3 : this.caught < 3 ? 2 : 1; }
   hud() { return { ...super.hud(), text: this.caught ? `Reach the case unseen — spotted ${this.caught}×` : "Sneak to the case. Stay out of the searchlights!", progress: null }; }
   target() { return this.goal; }
-  // autopilot: walk the level's route of hiding places, only when every guard will look away
+  // autopilot: plan a path through space and time that no searchlight ever
+  // touches (breadth-first over grid cells, one layer per fifth of a second),
+  // then follow it. If there's no such path the level can't be done, and the
+  // plan says so.
+  plan() {
+    const cell = 0.8, dt = 0.2, steps = 600, y = this.from.y;
+    const pts = [this.from, this.goal, ...this.guards.flatMap(g => g.segs.map(s => new THREE.Vector3(s.a.x, 0, s.a.y)))];
+    const x0 = Math.min(...pts.map(p => p.x)) - 3, z0 = Math.min(...pts.map(p => p.z)) - 3, x1 = Math.max(...pts.map(p => p.x)) + 3, z1 = Math.max(...pts.map(p => p.z)) + 3;
+    const nx = Math.ceil((x1 - x0) / cell), nz = Math.ceil((z1 - z0) / cell), N = nx * nz;
+    const cx = i => x0 + (i % nx + 0.5) * cell, cz = i => z0 + (Math.floor(i / nx) + 0.5) * cell;
+    const world = this.g.phys.world, me = this.p.walker.col;
+    const blockedAt = (x, z) => { let hit = false; for (const [ox, oz] of [[0, 0], [0.35, 0], [-0.35, 0], [0, 0.35], [0, -0.35]]) world.intersectionsWithPoint({ x: x + ox, y: y + 0.7, z: z + oz }, c => { if (c === me) return true; const b = c.parent(); if (b && !b.isFixed()) return true; hit = true; return false; }); return hit; };
+    // the floor has to be there too
+    const floorAt = (x, z) => { const h = this.g.phys.ray({ x, y: y + 1.5, z }, { x: 0, y: -1, z: 0 }, 3, me); return h !== null && Math.abs(y + 1.5 - h - y) < 0.4; };
+    const free = new Uint8Array(N);
+    for (let i = 0; i < N; i++) free[i] = !blockedAt(cx(i), cz(i)) && floorAt(cx(i), cz(i)) ? 1 : 0;
+    const idx = (x, z) => { const i = Math.floor((x - x0) / cell), j = Math.floor((z - z0) / cell); return i < 0 || j < 0 || i >= nx || j >= nz ? -1 : j * nx + i; };
+    const start = idx(this.p.pos.x, this.p.pos.z), goalR = 1.0;
+    const t0 = this.t;
+    const seen = (i, k) => { const t = t0 + k * dt; for (const g of this.guards) { if (this.sees(g, this.pose(g, t), cx(i), cz(i)) || this.sees(g, this.pose(g, t + dt * 0.5), cx(i), cz(i))) return true; } return false; };
+    let layer = new Int32Array(N).fill(-2); layer[start] = start;
+    const parents = [layer];
+    for (let k = 1; k <= steps; k++) {
+      const prev = parents[k - 1], next = new Int32Array(N).fill(-2);
+      let any = false;
+      for (let i = 0; i < N; i++) {
+        if (prev[i] === -2) continue;
+        const ix = i % nx, iz = Math.floor(i / nx);
+        for (const [dx, dz] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const jx = ix + dx, jz = iz + dz; if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
+          const j = jz * nx + jx; if (next[j] !== -2 || !free[j] || seen(j, k)) continue;
+          next[j] = i; any = true;
+          if (Math.hypot(cx(j) - this.goal.x, cz(j) - this.goal.z) < goalR) {
+            // walk the parents back to the start
+            parents.push(next);
+            const out = [j]; let cur = j;
+            for (let q = k; q > 0; q--) { cur = parents[q][cur]; out.unshift(cur); }
+            return { t0, dt, cells: out.map(c2 => new THREE.Vector3(cx(c2), y, cz(c2))) };
+          }
+        }
+      }
+      parents.push(next);
+      if (!any) break;
+    }
+    return null;
+  }
   solve() {
     const pp = this.p.pos;
-    const next = this.route[this.ri] || this.goal;
+    if (!this.route2 || this.route2.stale) { this.route2 = this.plan(); this.planned = (this.planned || 0) + 1; if (!this.route2) { this.unsolvable = true; this.g.input.forced = { mx: 0, my: 0 }; return; } }
+    const r = this.route2, k = Math.floor((this.t - r.t0) / r.dt);
+    const here = r.cells[Math.min(k, r.cells.length - 1)], next = r.cells[Math.min(k + 1, r.cells.length - 1)];
+    if (Math.hypot(pp.x - here.x, pp.z - here.z) > 1.6 && k > 1) { r.stale = true; return; }
     const d = Math.hypot(next.x - pp.x, next.z - pp.z);
-    if (d < 0.5 && this.ri < this.route.length) { this.ri++; this.g.input.forced = { mx: 0, my: 0 }; return; }
-    // check the leg ahead over the next couple of seconds, and that the next hiding place stays dark while we wait there
-    const secs = d / 5.2 + 0.6;
-    let safe = true;
-    for (let k = 0; k <= 8 && safe; k++) {
-      const f = k / 8, x = pp.x + (next.x - pp.x) * f, z = pp.z + (next.z - pp.z) * f, t = this.t + secs * f;
-      for (const g of this.guards) { if (this.sees(g, this.pose(g, t), x, z) || this.sees(g, this.pose(g, t + 0.4), x, z)) { safe = false; break; } }
-    }
-    if (safe && next !== this.goal) for (let k = 0; k <= 10 && safe; k++) { const t = this.t + secs + k * 0.3; for (const g of this.guards) if (this.sees(g, this.pose(g, t), next.x, next.z)) { safe = false; break; } }
-    if (safe) this.steer(next.x, next.z); else this.g.input.forced = { mx: 0, my: 0 };
+    if (d < 0.15) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+    this.steer(next.x, next.z);
+    // don't run ahead of the plan
+    if (d < 0.5) this.g.input.forced = { mx: 0, my: 0.5 };
   }
 }
 
