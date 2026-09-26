@@ -5,7 +5,9 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 const out = process.env.OUT || "/tmp/g20m"; fs.mkdirSync(out, { recursive: true });
 const port = +(process.env.PORT || 8942);
-const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
+const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
+// npx starts the real server as a child: take the whole group down at the end
+const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: +(process.env.W || 640), height: +(process.env.H || 420) } });
@@ -46,4 +48,4 @@ for (const id of ids) {
   await ev(() => { __g.autoSolve = false; __g.input.forced = null; });
 }
 console.log("errors:", errors.length, "fails:", fail);
-await browser.close(); server.kill(); process.exit(fail || errors.length ? 1 : 0);
+await browser.close(); killServer(); process.exit(fail || errors.length ? 1 : 0);

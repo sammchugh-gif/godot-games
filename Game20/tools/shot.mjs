@@ -4,7 +4,9 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 const out = process.argv[2] || "/tmp/g20"; fs.mkdirSync(out, { recursive: true });
 const port = +(process.env.PORT || 8940);
-const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
+const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
+// npx starts the real server as a child: take the whole group down at the end
+const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: +(process.env.W || 1180), height: +(process.env.H || 820) } });
@@ -32,4 +34,4 @@ console.log(await ev(() => ({ fps: __g.fps.toFixed(1), p: __g.player.pos.toArray
 await ev(() => { __g.player.camYaw = __g.player.yaw + 0.4; __g.player.camPitch = 0.15; __g.player.camDist = 3.2; });
 await waitT(0.6);
 await page.screenshot({ path: `${out}/04_face.png` });
-await browser.close(); server.kill(); process.exit(0);
+await browser.close(); killServer(); process.exit(0);

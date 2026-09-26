@@ -13,7 +13,9 @@ fs.symlinkSync(here, path.join(site, "agent-rory-zero-gravity"));
 fs.symlinkSync(path.join(here, "hq"), path.join(site, "agent-rory-hq"));
 fs.symlinkSync(path.resolve(here, "../docs/shots"), path.join(site, "shots"));
 const port = +(process.env.PORT || 8946);
-const server = spawn("npx", ["http-server", site, "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
+const server = spawn("npx", ["http-server", site, "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
+// npx starts the real server as a child: take the whole group down at the end
+const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: +(process.env.W || 1180), height: +(process.env.H || 820) } });
@@ -49,6 +51,17 @@ await waitT(3.5);
 const z = await ev(() => __hq.player.pos.z);
 check(z < 0, `Rory walks up the room (z ${z.toFixed(1)})`);
 await ev(() => { __hq.input.forced = null; });
+// the things to do in the room
+const thingIds = await ev(() => __hq.debug.things().map(t => t.id));
+check(["tea", "button", "chair", "cat", "phone"].every(id => thingIds.includes(id)), `five things to do (${thingIds.join(",")})`);
+const use = async id => { await ev(() => __hq.debug.skip()); await ev(id => __hq.debug.goToThing(id), id); await waitT(0.5); const near = await ev(() => __hq.debug.near()); check(near === id, `standing at the ${id} (near: ${near})`); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3); };
+await use("tea"); await waitT(1.8); check(await ev(() => !!__hq.cup), "a cup of tea in Rory's hand"); await page.screenshot({ path: `${out}/tea.png` });
+await use("tea"); check(await ev(() => +localStorage.getItem("roryhq.biscuit") === 1), "then a biscuit");
+await use("button"); check(await ev(() => __hq.alarm > 0), "the big red button sets the alarm off"); await waitT(0.6); await page.screenshot({ path: `${out}/alarm.png` }); await waitT(3.5);
+await use("chair"); check(await ev(() => !!__hq.spin), "spinning on the chair"); await waitT(1.2); await page.screenshot({ path: `${out}/spin.png` }); await waitT(3); check(await ev(() => !__hq.spin && !__hq.player.frozen), "off the chair again");
+await use("cat"); check(await ev(() => __hq.room.cat.purr > 0), "Agent Whiskers purrs"); await page.screenshot({ path: `${out}/cat.png` });
+await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.ring()); await waitT(0.5); check(await ev(() => __hq.ringing > 0), "the banana phone rings");
+await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing === 0), "and Rory answers it"); await page.screenshot({ path: `${out}/phone.png` }); await ev(() => __hq.debug.skip());
 // the play button goes to the game
 await ev(() => __hq.debug.goTo("zero")); await waitT(0.3); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3);
 const nav = page.waitForNavigation({ timeout: 15000 }).catch(() => null);
@@ -56,4 +69,4 @@ await ev(() => document.querySelector('[data-layer="file"] [data-a="play"]').dis
 await nav;
 check(page.url().includes("/agent-rory-zero-gravity/"), `PLAY goes to the game (${page.url()})`);
 console.log("errors:", errors.length, "fails:", fail);
-await browser.close(); server.kill(); execSync(`rm -rf ${site}`); process.exit(fail || errors.length ? 1 : 0);
+await browser.close(); killServer(); execSync(`rm -rf ${site}`); process.exit(fail || errors.length ? 1 : 0);

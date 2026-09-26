@@ -75,6 +75,13 @@ export const Audio = {
         case "click": inst.blip.triggerAttackRelease("G5", 0.03, now); break;
         case "whoosh": inst.noise.triggerAttackRelease(0.4, now); break;
         case "beep": inst.blip.triggerAttackRelease("A6", 0.05, now); inst.blip.triggerAttackRelease("E6", 0.05, now + 0.08); break;
+        // HQ: tea, the alarm, the banana phone and the cat
+        case "pour": inst.noise.triggerAttackRelease(1.1, now); break;
+        case "slurp": inst.blip.triggerAttackRelease("C5", 0.12, now); inst.blip.frequency.rampTo("G5", 0.12, now); break;
+        case "alarm": ["A5", "E5", "A5", "E5"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.2, now + i * 0.22)); break;
+        case "ring": for (let i = 0; i < 6; i++) inst.tri.triggerAttackRelease(i % 2 ? "E6" : "G6", 0.05, now + i * 0.07); break;
+        case "purr": for (let i = 0; i < 4; i++) inst.thud.triggerAttackRelease("A1", 0.07, now + i * 0.11); break;
+        case "meow": inst.blip.triggerAttackRelease("B5", 0.35, now); inst.blip.frequency.rampTo("E5", 0.3, now + 0.05); break;
       }
     } catch (e) { /* a busy synth is not worth a crash */ }
   },

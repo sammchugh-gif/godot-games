@@ -4,7 +4,9 @@ import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 const port = 8944;
-const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore" });
+const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
+// npx starts the real server as a child: take the whole group down at the end
+const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
 const page = await browser.newPage({ viewport: { width: 400, height: 300 } });
@@ -24,4 +26,4 @@ const url = await page.evaluate(() => {
 });
 fs.writeFileSync("icon.png", Buffer.from(url.split(",")[1], "base64"));
 console.log("icon.png written");
-await browser.close(); server.kill(); process.exit(0);
+await browser.close(); killServer(); process.exit(0);
