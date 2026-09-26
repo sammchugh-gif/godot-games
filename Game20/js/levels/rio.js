@@ -25,7 +25,7 @@ function cableCar(w, a, b, phase, color) {
   const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.2, 2.6), new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.3 })); body.position.y = -1.1; body.castShadow = true; g.add(body);
   const win = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.9, 2.64), M(0x2a3a4a, { rough: 0.1, metal: 0.6 })); win.position.y = -0.8; g.add(win);
   const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 6), M(0x3a3a3a, { metal: 0.7 })); arm.position.y = 0.8; g.add(arm);
-  const fn = t => { const u = (Math.sin(t * 0.09 + phase) + 1) / 2; return [a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u - 1.6, a.z + (b.z - a.z) * u, 0]; };
+  const fn = t => { const u = (Math.sin(t * 0.13 + phase) + 1) / 2; return [a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u - 1.6, a.z + (b.z - a.z) * u, 0]; };
   const roof = new THREE.Object3D(); w.scene.add(roof);
   w.phys.mover(roof, 1.3, 0.1, 1.3, t => { const [x, y, z] = fn(t); return [x, y + 0.1, z, 0]; });
   w.updaters.push(() => { const [x, y, z] = fn(w.phys.t); g.position.set(x, y, z); });

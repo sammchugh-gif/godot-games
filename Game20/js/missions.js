@@ -133,7 +133,11 @@ class Mission {
   // on a moving platform but heading somewhere else: when ground that leads there (or to the
   // platform wanted next) comes within a hop, jump onto it; until then stand still
   disembark(tx, ty, tz, reach, want = null) {
-    const pp = this.p.pos, nav = this.nav, k = nav.nearestOk(pp.x, pp.y, pp.z, 2.4, 1.2);
+    const pp = this.p.pos, nav = this.nav, w = this.p.walker;
+    // mid-hop: keep going the way we jumped
+    if (!w.grounded && this.hop) { this.steer(this.hop[0], this.hop[1]); this.g.input.jumpHeld = w.vel.y > 0; return; }
+    this.hop = null;
+    const k = nav.nearestOk(pp.x, pp.y, pp.z, 2.4, 1.2);
     const leads = k >= 0 && (this.leadCache || (this.leadCache = new Map())).get(`${k}|${tx.toFixed(0)},${tz.toFixed(0)}`);
     let ok = leads;
     if (k >= 0 && leads === undefined) {
@@ -141,7 +145,13 @@ class Mission {
       ok = want ? true : !!nav.route(x, nav.h[k], z, tx, ty, tz, reach);
       this.leadCache.set(`${k}|${tx.toFixed(0)},${tz.toFixed(0)}`, ok);
     }
-    if (k >= 0 && ok) { const [x, z] = nav.xz(k); this.steer(x, z, true); return; }
+    if (k >= 0 && ok) {
+      // aim a step past the edge, not at it
+      let [x, z] = nav.xz(k); const d = Math.hypot(x - pp.x, z - pp.z) || 1;
+      const k2 = nav.nearestOk(x + (x - pp.x) / d * 1.2, nav.h[k], z + (z - pp.z) / d * 1.2, 0.8, 0.3);
+      if (k2 >= 0) [x, z] = nav.xz(k2);
+      this.steer(x, z, true); this.hop = [x, z]; return;
+    }
     // meanwhile stand at the edge of the deck nearest to where we're going
     const m = this.p.walker.onMover;
     if (m && m.fn) {
@@ -280,6 +290,9 @@ class Cells extends Mission {
     }
     if (!this.ride) return false;
     const { m, mode } = this.ride;
+    // hopping off onto ground that leads there: keep going the way we jumped (not back to the deck)
+    if (w.grounded) this.hop = null;
+    else if (this.hop) { this.steer(this.hop[0], this.hop[1]); inp.jumpHeld = w.vel.y > 0; return true; }
     // got off onto ground that leads there: walk
     if (!w.onMover && w.grounded && (this.walkT = (this.walkT || 0) + 1) % 30 === 1) this.canWalk = this.reachable(pp.x, pp.y, pp.z, c);
     if (!w.onMover && this.canWalk) return false;
