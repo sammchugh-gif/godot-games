@@ -191,7 +191,14 @@ export class Run extends MG {
   buildSurface() {
     const th = this.th, w = this.w, hw = this.halfW;
     let mat;
-    if (th.surf === "road") { mat = w.M({ tex: "asphalt", rx: 2, ry: 1, roughness: 0.9, color: th.warm ? 0x9a8a80 : 0x8a8a90 }); mat.map.repeat.set(2, 1); }
+    if (th.surf === "road") {
+      // clean asphalt: fine grain and a few darker patches, no markings of its own
+      const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d"); g.fillStyle = th.warm ? "#4a4440" : "#3a3c44"; g.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 5000; i++) { const v = Math.random(); g.fillStyle = v < 0.5 ? "rgba(0,0,0,.18)" : "rgba(255,255,255,.07)"; g.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 2, 1 + Math.random() * 2); }
+      for (let i = 0; i < 8; i++) { g.fillStyle = "rgba(0,0,0,.08)"; g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, 20 + Math.random() * 40, 8 + Math.random() * 20, Math.random() * 3, 0, TAU); g.fill(); }
+      const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      mat = new THREE.MeshStandardMaterial({ map: t, roughness: /night/.test(th.sky) ? 0.55 : 0.9, metalness: /night/.test(th.sky) ? 0.2 : 0 });
+    }
     else if (th.surf === "sand" || th.surf === "gravel") mat = new THREE.MeshStandardMaterial({ map: PT.sand(7), color: th.surf === "gravel" ? 0xb8a888 : 0xe0b080, roughness: 1 });
     else {
       // packed snow with the tracks of whoever went before
@@ -322,7 +329,7 @@ export class Run extends MG {
       }
       case "tower": inst(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x9ab8d0, metalness: 0.7, roughness: 0.2 }), it => { const h = rnd(80, 260); set(it.x, it.y + h / 2, it.z, 0, rnd(0, 1), 0, rnd(14, 26), h, rnd(14, 26)); }); break;
       case "dome": inst(new THREE.SphereGeometry(1, 16, 10, 0, TAU, 0, Math.PI / 2), M(0xf4f4f4, { roughness: 0.4, metalness: 0.2 }), it => set(it.x, it.y, it.z, 0, 0, 0, rnd(6, 10))); break;
-      case "cloud": inst(new THREE.SphereGeometry(1, 10, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, transparent: true, opacity: 0.85 }), it => set(it.x, it.y + rnd(-10, 25), it.z, 0, 0, 0, rnd(8, 20), rnd(3, 6), rnd(8, 16))); break;
+      case "cloud": inst(new THREE.IcosahedronGeometry(1, 2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, transparent: true, opacity: 0.72, depthWrite: false }), it => set(it.x, it.y + rnd(-10, 25), it.z, 0, rnd(0, 3), 0, rnd(10, 22), rnd(5, 10), rnd(10, 18))); break;
       case "container": { const cols = [0xc0392b, 0x2a6ab0, 0x2a8a4a, 0xe0a020]; inst(new THREE.BoxGeometry(6, 2.6, 2.4), new THREE.MeshStandardMaterial({ map: this.w.T("container", 1, 1), color: 0xffffff, roughness: 0.7 }), it => set(it.x, it.y + 1.3 + (Math.random() < 0.3 ? 2.6 : 0), it.z, 0, -it.t, 0, 1)); break; }
       case "grass": inst(new THREE.ConeGeometry(0.4, 1, 5), M(0xb0a860, { roughness: 1 }), it => set(it.x, it.y + 0.4, it.z, 0, 0, 0, rnd(0.6, 1.4))); break;
       case "flags": { const cols = [0x2a6ad0, 0xf4f4f4, 0xd03030, 0x2a9a4a, 0xe8c020]; const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.5, 0.6), new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 1 }), list.length * 8); let k = 0; const cc = new THREE.Color(); list.forEach(it => { for (let j = 0; j < 8; j++) { set(it.x, it.y + 2.6 - Math.sin(j / 7 * Math.PI) * 0.5, it.z + j * 0.6, 0, 0, 0, 1); m4.compose(v, q, sc); im.setMatrixAt(k, m4); im.setColorAt(k, cc.setHex(cols[j % 5])); k++; } }); this.scene.add(im); break; }
@@ -431,8 +438,8 @@ export class Run extends MG {
       case "hovercraft": {
         const sk = new THREE.Mesh(new THREE.CapsuleGeometry(1.1, 1.8, 6, 16), dark); sk.rotation.x = Math.PI / 2; sk.scale.set(1.15, 1, 0.42); sk.position.y = 0.4; R.add(sk);
         box(2.0, 0.3, 3.2, bodyM, 0, 0.85, 0); box(2.02, 0.08, 3.2, trimM, 0, 1.0, 0);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.1, 8, 24), bodyM); ring.position.set(0, 1.9, 1.4); R.add(ring);
-        const fan = new THREE.Group(); fan.position.set(0, 1.9, 1.4); R.add(fan); for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.5, 0.04), dark); b.rotation.z = i * Math.PI / 4; fan.add(b); } g.userData.fan = fan;
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.08, 8, 24), bodyM); ring.position.set(0, 1.6, 1.55); R.add(ring);
+        const fan = new THREE.Group(); fan.position.set(0, 1.6, 1.55); R.add(fan); for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.05, 0.04), dark); b.rotation.z = i * Math.PI / 4; fan.add(b); } g.userData.fan = fan;
         box(0.6, 0.12, 0.06, lightM, 0, 0.95, -1.62); seat = 1.1; seatZ = 0.0; o.goggles = true; break;
       }
       case "minisub": {
@@ -448,7 +455,7 @@ export class Run extends MG {
         box(1.12, 0.1, 2.4, trimM, 0, 0.52, 0.15); for (const s of [-1, 1]) box(0.08, 0.06, 2.6, M(0xc0c8d0, { metalness: 0.9 }), s * 0.42, 0.02, 0);
         seat = 0.45; seatZ = 0.25; if (rider === "rory") { o.hat = "helmet"; o.hatColor = 0x7fe3ff; } break;
       }
-      case "wingsuit": { pose = "fly"; seat = 0; if (rider === "rory") { o.goggles = true; o.hat = "helmet"; o.hatColor = 0x7fe3ff; } break; }
+      case "wingsuit": { pose = "fly"; seat = 0; R.scale.setScalar(1.5); if (rider === "rory") { o.goggles = true; o.hat = "helmet"; o.hatColor = 0x7fe3ff; } break; }
     }
     if (rider) {
       const pw = new THREE.Group(); R.add(pw);
@@ -670,7 +677,7 @@ export class Run extends MG {
     const T = this.track, a = T.at(this.d, this.tmp), p = this.player, lift = this.lift;
     const surf = this.th.surf, bob = surf === "water" ? Math.sin(this.t * 7) * 0.08 : surf === "air" ? Math.sin(this.t * 2) * 0.3 : Math.sin(this.t * 17) * 0.02 * (this.v / 30);
     p.position.set(a.x + a.rx * this.o, a.y + lift + bob + (surf === "under" ? 0.8 : 0), a.z + a.rz * this.o);
-    p.rotation.order = "YXZ"; p.rotation.y = -a.t; p.rotation.x = Math.atan(a.slope) * (lift ? 0.5 : 1) + (this.air ? -this.vy * 0.015 : 0); p.rotation.z = clamp(-this.steerV * 0.05, -0.4, 0.4) * (this.ride === "motorbike" || this.ride === "wingsuit" || this.ride === "skis" || this.ride === "snowboard" ? 1.6 : 0.6);
+    p.rotation.order = "YXZ"; p.rotation.y = -a.t; p.rotation.x = Math.atan(a.slope) * (lift ? 0.5 : 1) + (this.air ? -this.vy * 0.015 : 0); p.rotation.z = clamp(-this.steerV * 0.05, -0.4, 0.4) * (this.ride === "motorbike" || this.ride === "wingsuit" || this.ride === "skis" || this.ride === "snowboard" ? 1.6 : this.ride === "hovercraft" || this.ride === "minisub" ? 0.3 : 0.6);
     if (surf === "chute") { p.rotation.z += -clamp(this.o / this.halfW, -1, 1) * 0.5; p.position.y += Math.pow(Math.abs(this.o) / (this.halfW + 1.2), 3) * 2.2; }
     const u = p.userData; if (u.wheels) for (const w2 of u.wheels) w2.rotation.x += this.v * dt / 0.4; if (u.fan) { if (u.fanAxis === "z") u.fan.rotation.z += dt * 30; else u.fan.rotation.z += dt * 30; }
     // spray from behind
@@ -701,7 +708,7 @@ export class Run extends MG {
     for (const sm of this.smokes || []) sm.material.rotation += dt * 0.05;
     if (this.waterMat && this.waterMat.normalMap) { this.waterMat.normalMap.offset.x += dt * 0.03; this.waterMat.normalMap.offset.y += dt * 0.02; }
     const cam = this.cam, air = surf === "air";
-    let back = air ? 8 : this.ride === "sportscar" || this.ride === "jeep" || this.ride === "hovercraft" ? 6.4 : 5.2, up = air ? 2.8 : this.ride === "minisub" ? 2.0 : 2.3;
+    let back = air ? 6 : this.ride === "sportscar" || this.ride === "jeep" || this.ride === "hovercraft" ? 6.4 : 5.2, up = air ? 2.0 : this.ride === "minisub" ? 2.0 : 2.3;
     if (this.mode === "escape" && this.phase === "run") { const k = 1 - clamp((this.d - this.pd - 10) / 30, 0, 1); back += k * 7; up += k * 2.5; }
     if (this.phase === "intro") {
       // circle round to the front, then swing in behind as the countdown ends

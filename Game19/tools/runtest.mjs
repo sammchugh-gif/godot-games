@@ -42,8 +42,11 @@ for (const r of runs) {
   await page.screenshot({ path: `${out}/${r.id}_run.png` });
   if (quick) { await ev(() => { __spy.mg.onDone = null; __spy.mg.stop(); __spy.mg = null; __spy.state = "world"; }); continue; }
   await ev(() => __spy.mg.solve());
+  // drawing the 3D world is what is slow without a GPU: stop drawing it while the autopilot drives
+  await ev(() => { __spy.debug.noRender = true; });
   let t = 0, st = "minigame";
-  while (st === "minigame" && t < 150) { await waitGame(2); t += 2; st = await ev(() => __spy.state); if (t === 12) await page.screenshot({ path: `${out}/${r.id}_auto.png` }); }
+  while (st === "minigame" && t < 150) { await waitGame(2); t += 2; st = await ev(() => __spy.state);  }
+  await ev(() => { __spy.debug.noRender = false; });
   const info = await ev(() => ({ state: __spy.state, same: __spy.world.scene && __spy.world.scene.uuid }));
   ck(info.state === "intel", `${r.id} finishes (${t} s with the autopilot)`);
   ck(info.same === cityScene, `${r.id} the city comes back`);

@@ -150,6 +150,7 @@ function pressButton(id, b) {
     case "mgquit": quitMinigame(); break;
     case "skip": if (G.dialogue.active) { G.dialogue.shown = 1e9; G.dialogue.tap(); } break;
     case "skipTitles": if (G.titles && G.titles.t > 1) G.titles.t = 99; break;
+    case "skipCine": if (G.world.cine && G.world.cine.t > 0.8) G.world.cine.t = G.world.cine.dur; break;
     case "credits": fadeOut(() => { G.credits = { t: 0 }; setState("credits"); fadeIn(); }); break;
     case "nextact": briefingFor(actOf(G.save.country)); break;
     case "titleFromCredits": fadeOut(() => { setState("title"); Music.setMode("calm"); fadeIn(); }); break;
@@ -196,9 +197,9 @@ function enterCountry(i) {
     setState("world"); G.pause = false;
     fadeIn();
     const first = !G.save.arrived[c.id];
-    if (first) G.card = i === 0 && coldOpenPending() ? { title: `${c.city.toUpperCase()}, ${c.country.toUpperCase()}`, sub: "SOMEWHERE ON THE ICE, RIGHT NOW", flag: c.flag, t: 0, dur: 3.4 } : { title: `CHAPTER ${i + 1}: ${c.chapter.toUpperCase()}`, sub: `${c.city.toUpperCase()}  ·  ${c.country.toUpperCase()}`, flag: c.flag, t: 0, dur: 3 };
+    if (first) G.cineLine = i === 0 && coldOpenPending() ? "SOMEWHERE ON THE ICE, RIGHT NOW" : `CHAPTER ${i + 1}  ·  ${c.chapter.toUpperCase()}`;
     G.save.arrived[c.id] = true; saveGame();
-    if (first) G.dialogue.show(c.arrive, null);
+    if (first) { G.world.startFlyover(4.2); G.afterCine = () => G.dialogue.show(c.arrive, null); }
   });
 }
 function currentMission() { const c = COUNTRIES[G.country]; return c.missions.find(m => !G.save.done.includes(m.id)) || null; }
@@ -362,6 +363,7 @@ function update(dt) {
   if (G.toast) { G.toast.t -= dt; if (G.toast.t <= 0) G.toast = null; }
   if (G.hint) { G.hint.t -= dt; if (G.hint.t <= 0) G.hint = null; }
   if (G.card) { G.card.t += dt; if (G.card.t > G.card.dur) G.card = null; }
+  if (G.afterCine && !G.world.cine) { const f = G.afterCine; G.afterCine = null; f(); }
   if (G.titles) { G.titles.t += dt; if (G.titles.t > 5.2) { const f = G.titles.then; G.titles = null; f(); } }
   G.dialogue.update(dt);
   if (G.state === "map") G.map.update(dt);
@@ -389,7 +391,7 @@ function draw(dt) {
   if (G.portrait) { UI.drawRotatePrompt(g, W, H, s, G.t); glCanvas.style.visibility = "hidden"; return; }
   const world3d = G.state === "world" || (G.state === "minigame" && G.mg && G.mg.needsWorld) || G.state === "intel";
   glCanvas.style.visibility = world3d ? "visible" : "hidden";
-  if (world3d) G.world.render();
+  if (world3d && !(G.debug && G.debug.noRender)) G.world.render();
   switch (G.state) {
     case "title": drawTitle(); break;
     case "menu": drawMenu(); break;
@@ -482,6 +484,15 @@ function drawMap() {
 function drawWorldHud() {
   const { W, H, s } = G;
   const c = COUNTRIES[G.country];
+  if (G.world.cine) {
+    // letterbox for the establishing shot, and the place's name across the screen
+    const k = G.world.cine.t / G.world.cine.dur, bars = H * 0.1 * clamp(Math.min(k * 5, (1 - k) * 5), 0, 1);
+    g.fillStyle = "#000"; g.fillRect(0, 0, W, bars); g.fillRect(0, H - bars, W, bars);
+    const a = clamp(Math.min((k - 0.1) * 4, (0.9 - k) * 4), 0, 1);
+    if (a > 0) { g.globalAlpha = a; textShadow(g, c.city.toUpperCase(), W / 2, H * 0.76, 54 * s, "#fff", "center", 900); text(g, c.country.toUpperCase(), W / 2, H * 0.76 + 42 * s, 20 * s, "#7fe3ff", "center", 800, UI.MONO); if (G.cineLine) text(g, G.cineLine, W / 2, bars / 2 + 2 * s, 16 * s, "#ffd166", "center", 800, UI.MONO); UI.drawFlag(g, c.flag, W / 2 - 24 * s, H * 0.76 - 80 * s, 48 * s, 32 * s); g.globalAlpha = 1; }
+    button("skipCine", 0, 0, W, H, "", "ghost", 0, { hidden: true });
+    return;
+  }
   if (G.pause) {
     g.fillStyle = "rgba(4,6,10,.75)"; g.fillRect(0, 0, W, H);
     text(g, "PAUSED", W / 2, H * 0.2, 40 * s, "#fff", "center", 900);

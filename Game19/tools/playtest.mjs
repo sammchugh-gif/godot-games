@@ -50,6 +50,9 @@ for (let ci = startCi; ci <= endCi; ci++) {
   await finishFade(); await waitGame(0.3);
   check(await state() === "world", `world ${c.id}`);
   await wait(400); await shot(`10_${c.id}_arrive`);
+  // the establishing shot sweeps in before anyone speaks
+  check(await ev(() => !!__spy.world.cine), `${c.id} opens with an establishing shot`);
+  await ev(() => { if (__spy.world.cine) __spy.world.cine.t = 99; }); await waitGame(0.3);
   await skipDialogue();
   for (let mi = 0; mi < c.missions.length; mi++) {
     const m = c.missions[mi];

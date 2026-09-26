@@ -5,9 +5,9 @@ import * as THREE from "./three.module.min.js";
 import { drawFlag, drawSymbol, rrect, TAU, clamp, lerp } from "./ui.js";
 import { SFX } from "./audio.js";
 
-const TEX_FILES = ["asphalt", "asphalt_n", "steel", "steel_n", "gunmetal", "gunmetal_n", "rivet", "rivet_n", "tech", "tech_n", "scifi_floor", "scifi_floor_n",
-  "container", "container_n", "train", "train_n", "ice", "ice_n", "lava", "trim", "trim_e", "pillars", "antislip", "antislip_n", "water_n", "carbon"];
-const SKY_FILES = ["sky_sunset", "sky_night"];
+const TEX_FILES = ["asphalt", "asphalt_n", "steel", "steel_n", "gunmetal", "gunmetal_n", "rivet", "rivet_n",
+  "container", "container_n", "ice", "ice_n", "lava", "pillars", "water_n"];
+const SKY_FILES = [];
 
 function hash(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = (h ^ (h >> 13)) * 1274126177; return ((h ^ (h >> 16)) >>> 0) / 4294967296; }
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
@@ -771,7 +771,7 @@ export class World {
     this.fill = new THREE.PointLight(0xfff0e0, 1.6, 14, 1.4); this.fill.castShadow = false; this.scene.add(this.fill);
     this.colliders = []; this.circles = []; this.interactables = []; this.people = []; this.updaters = [];
     this.photoTargets = []; this.kolya = null; this.t = 0; this.zoom = 1; this.fovBase = 72;
-    this.gcache = {}; this.mcache = {}; this.fcache = {}; this.sunLight = null; this.skyPreset = null;
+    this.gcache = {}; this.mcache = {}; this.fcache = {}; this.sunLight = null; this.skyPreset = null; this.cine = null;
   }
   load(id, info) {
     this.reset();
@@ -822,8 +822,19 @@ export class World {
     if (moved > 0.001) { p.bob += dt * 9; if (Math.sin(p.bob) > 0.98 && p.stepT <= 0) { SFX.step(); p.stepT = 0.25; } }
     p.stepT -= dt;
   }
+  // the establishing shot: sweep in over the place from high up and settle into Rory's eyes
+  startFlyover(dur) { const p = this.player; this.cine = { t: 0, dur: dur || 4.2, cx: p.x - Math.sin(p.yaw) * 14, cz: p.z - Math.cos(p.yaw) * 14 }; }
   updateCamera() {
     const p = this.player;
+    if (this.cine) {
+      const c = this.cine, k = clamp(c.t / c.dur, 0, 1), e = k * k * (3 - 2 * k), eye = p.eye === undefined ? 1.62 : p.eye;
+      const th0 = Math.atan2(p.x - c.cx, p.z - c.cz), d0 = Math.hypot(p.x - c.cx, p.z - c.cz), th = th0 + (1 - e) * 2.6, r = lerp(46, d0, e);
+      this.camera.position.set(c.cx + Math.sin(th) * r, lerp(30, eye, Math.pow(e, 1.4)), c.cz + Math.cos(th) * r);
+      const fx = p.x - Math.sin(p.yaw) * 10, fz = p.z - Math.cos(p.yaw) * 10;
+      this.camera.lookAt(lerp(c.cx, fx, e), lerp(2, eye, e), lerp(c.cz, fz, e));
+      if (this.fill) this.fill.position.set(p.x, 2.2, p.z);
+      return;
+    }
     const eye = p.eye === undefined ? 1.62 : p.eye;
     this.camera.position.set(p.x, eye + Math.sin(p.bob) * 0.035 * p.moving, p.z);
     this.camera.rotation.set(p.pitch + this.sway * 0.5, p.yaw + this.sway, p.roll || 0);
@@ -859,6 +870,7 @@ export class World {
   setZoom(z) { this.zoom = z; this.camera.fov = this.fovBase / z; this.camera.updateProjectionMatrix(); }
   update(dt, inp) {
     this.t += dt;
+    if (this.cine) { this.cine.t += dt; if (this.cine.t >= this.cine.dur) this.cine = null; inp = null; }
     if (inp) this.move(dt, inp.mx, inp.my, inp.dx, inp.dy);
     this.updateCamera();
     for (const u of this.updaters) u(dt);

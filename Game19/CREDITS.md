@@ -1,4 +1,4 @@
-# Agent Rory: Operation Eclipse — credits
+# Agent Rory: Meltdown — credits
 
 ## Textures (tex/)
 
@@ -7,10 +7,8 @@ Calabró, [CC-BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 Source: <https://github.com/godotengine/tps-demo>. Many of the original
 Substance materials were provided to that project by GameTextures.com.
 
-- `asphalt*` (set_asphalt), `scifi_floor*`, `tech*` (tech_panels_color),
-  `rivet*` (rivet_panels), `steel*`, `gunmetal*` (tile_painted_gun_metal),
-  `carbon.jpg`, `antislip*`, `pillars.jpg` (metal_pillars), `trim*`
-  (trim_emission_lights), `train*` (train_texture), `container*`
+- `asphalt*` (set_asphalt), `rivet*` (rivet_panels), `steel*`, `gunmetal*`
+  (tile_painted_gun_metal), `pillars.jpg` (metal_pillars), `container*`
 
 **three.js examples** — MIT licence, © three.js authors.
 Source: <https://github.com/mrdoob/three.js>.
@@ -22,17 +20,13 @@ Source: <https://github.com/mrdoob/three.js>.
 
 ## Skies
 
-- `sky_sunset.jpg` — Poly Haven "Venice Sunset" HDRI, tone-mapped,
-  [CC0](https://polyhaven.com/license).
-- `sky_night.jpg` — Poly Haven "Moonless Golf" HDRI, tone-mapped and tinted,
-  [CC0](https://polyhaven.com/license).
-
-Cairo and Rio use gradient skies generated in code.
+Every sky in Meltdown is painted in code (sun, clouds, stars, aurora and haze)
+and doubles as the light the whole scene is lit by.
 
 ## Everything else
 
 Buildings, windows, brick, plaster, cobbles, neon signs, hieroglyphs, flags,
-portraits, the world map, all fourteen mini-games and the user interface are
+portraits, the world map, all twenty-four mini-games, the chase tracks and the user interface are
 drawn in code. Every sound effect, the theme and the ambience are synthesised
 with WebAudio. Voices are the device's own speech synthesis.
 
