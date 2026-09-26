@@ -216,7 +216,7 @@ function titleCamera(dt) {
   G.bolt.pos.set(p.x + Math.cos(G.player.yaw) * -1.3, p.y, p.z - Math.sin(G.player.yaw) * -1.3); G.bolt.root.rotation.y = G.player.yaw;
   G.world.followShadow(p);
   animatePerson(G.player.rig, { dt, speed: 0, grounded: true, wave: Math.sin(G.t * 0.6) > 0.3 });
-  G.player.obj.position.copy(p);
+  G.player.obj.position.copy(p); G.player.obj.rotation.y = G.player.yaw; // facing the camera, like BOLT
   G.bolt.play(Math.sin(G.t * 0.5) > 0.6 ? "Dance" : "Idle");
   G.bolt.update(dt);
 }
