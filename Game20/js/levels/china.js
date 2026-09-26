@@ -25,7 +25,10 @@ function wall(w, pts) {
     const e = new THREE.Euler().setFromQuaternion(q, "YXZ");
     w.phys.fixedBox(cx, cy - 0.3, cz, 2.5, 0.3, len / 2, ry, { rx: e.x });
     for (const sx of [-2.7, 2.7]) w.phys.fixedBox(cx + Math.cos(ry) * sx, cy + 0.5, cz - Math.sin(ry) * sx, 0.3, 0.8, len / 2, ry, { rx: e.x });
-    w.phys.fixedBox(cx, (cy - 0.6) / 2, cz, 2.9, Math.max(0.1, (cy - 0.6) / 2), L / 2, ry);
+    // the base under it: its top stays below the walkway's lower end, or on a slope it would stick up
+    // through the walkway as an invisible step at the bottom of every climb
+    const baseTop = Math.min(y0, y1) - 0.7;
+    w.phys.fixedBox(cx, baseTop / 2, cz, 2.9, Math.max(0.1, baseTop / 2), L / 2, ry);
     segs.push({ x0, z0, y0, x1, z1, y1, ry });
   }
   return segs;
