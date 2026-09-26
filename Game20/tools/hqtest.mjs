@@ -60,7 +60,8 @@ await use("tea"); check(await ev(() => +localStorage.getItem("roryhq.biscuit") =
 await use("button"); check(await ev(() => __hq.alarm > 0), "the big red button sets the alarm off"); await waitT(0.6); await page.screenshot({ path: `${out}/alarm.png` }); await waitT(3.5);
 await use("chair"); check(await ev(() => !!__hq.spin), "spinning on the chair"); await waitT(1.2); await page.screenshot({ path: `${out}/spin.png` }); await waitT(3); check(await ev(() => !__hq.spin && !__hq.player.frozen), "off the chair again");
 await use("cat"); check(await ev(() => __hq.room.cat.purr > 0), "Agent Whiskers purrs"); await page.screenshot({ path: `${out}/cat.png` });
-await use("photo"); check(await ev(() => __hq.dialogue.active), "looking at the team photo"); await page.screenshot({ path: `${out}/photo.png` });
+await use("photo"); check(await ev(() => __hq.dialogue.active && !!document.querySelector('[data-layer="photo"] img')), "looking at the team photo, up close"); await waitT(0.5); await page.screenshot({ path: `${out}/photo.png` });
+await ev(() => { const b = document.querySelector('[data-layer="photo"] [data-a="close"]'); b.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); }); await waitT(0.2);
 await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.ring()); await waitT(0.5); check(await ev(() => __hq.ringing > 0), "the banana phone rings");
 await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing === 0), "and Rory answers it"); await page.screenshot({ path: `${out}/phone.png` }); await ev(() => __hq.debug.skip());
 // the play button goes to the game

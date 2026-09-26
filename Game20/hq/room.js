@@ -76,7 +76,7 @@ function boardTexture() {
       g.save(); g.translate(cx, cy); g.rotate(rot);
       if (hi === i) { g.shadowColor = "#ffd166"; g.shadowBlur = 60; g.fillStyle = "#ffd166"; g.fillRect(-w / 2 - 16, -h / 2 - 16, w + 32, h + 32); g.shadowBlur = 0; }
       g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-w / 2 + 10, -h / 2 + 12, w, h);
-      g.fillStyle = "#fbf8f0"; g.fillRect(-w / 2, -h / 2, w, h);
+      g.fillStyle = "#e6e0d0"; g.fillRect(-w / 2, -h / 2, w, h);
       // the photo
       const pw = w - 40, ph = 250, img = imgs[i];
       if (img.complete && img.naturalWidth) g.drawImage(img, -pw / 2, -h / 2 + 20, pw, ph);
@@ -306,12 +306,12 @@ function buildRoom(w) {
   const bz = -RD / 2 + 0.28;
   w.box(BW + 0.6, BH + 0.6, 0.2, M("wood", { args: [313, [90, 56, 30]] }), 0, 3.2, bz - 0.05, { collide: false });
   const board = boardTexture();
-  const bm = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshStandardMaterial({ map: board.tex, emissiveMap: board.tex, emissive: 0xffffff, emissiveIntensity: 0.14, roughness: 0.95 }));
+  const bm = new THREE.Mesh(new THREE.PlaneGeometry(BW, BH), new THREE.MeshStandardMaterial({ map: board.tex, emissiveMap: board.tex, emissive: 0xffffff, emissiveIntensity: 0.08, roughness: 0.95 }));
   bm.position.set(0, 3.2, bz + 0.07); bm.userData.dynamic = true; w.scene.add(bm);
-  const lamp = new THREE.SpotLight(0xfff0d8, 5, 14, 0.9, 0.6, 1.4); lamp.position.set(0, 5.9, bz + 3.2); lamp.target.position.set(0, 3.2, bz); w.scene.add(lamp); w.scene.add(lamp.target);
+  const lamp = new THREE.SpotLight(0xfff0d8, 3, 14, 0.9, 0.6, 1.4); lamp.position.set(0, 5.9, bz + 3.2); lamp.target.position.set(0, 3.2, bz); w.scene.add(lamp); w.scene.add(lamp.target);
   const screens = FILES.map((f, i) => {
     const x = (CARD_U[i] - 0.5) * BW, z = bz + 3;
-    const pad = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.35, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(f.accent).multiplyScalar(2.5), transparent: true })); pad.rotation.x = -Math.PI / 2; pad.position.set(x, 0.03, z); pad.userData.dynamic = true; w.scene.add(pad);
+    const pad = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.3, 48), new THREE.MeshBasicMaterial({ color: new THREE.Color(f.accent).multiplyScalar(1.3), transparent: true, opacity: 0.85 })); pad.rotation.x = -Math.PI / 2; pad.position.set(x, 0.03, z); pad.userData.dynamic = true; w.scene.add(pad);
     return { f, i, x, z, pad };
   });
   w.updaters.push((dt, t) => { screens.forEach((s, i) => s.pad.scale.setScalar(1 + Math.sin(t * 3 + i) * 0.05)); });
@@ -408,6 +408,9 @@ function patCat() {
 }
 function lookAtPhoto() {
   const n = count("roryhq.photo");
+  G.open = true; Audio.play("click");
+  const el = screen("photo", `<div class="card hqphoto"><img src="agents.jpg" alt="Our agents"><div class="plaque">OUR AGENTS</div><div class="row"><button class="btn ghost" data-a="close">BACK</button></div></div>`, "screen dim");
+  onTap(el, "[data-a]", () => { clearLayer("photo"); G.open = false; });
   G.dialogue.show(n === 1 ? [["frost", "Our agents. The finest POLARIS has ever had."], ["pip", "Look at those smiles. That's the face of a team that's just saved the world."], ["bolt", "I am not in this photo. I was charging."]]
     : [pick([["frost", "The best team I've ever had. Don't tell the others."], ["bolt", "I have zoomed in. Everyone is smiling. Mission status: happy."], ["pip", "One day I'll build a camera that floats. For group photos."]])], null);
 }
@@ -600,7 +603,7 @@ function buildTouch() {
   if (!G.input.touchUI) jump.style.display = "none";
   const st = G.stickEl = document.createElement("div"); st.className = "stick"; st.innerHTML = "<i></i>"; st.style.display = "none"; ui.appendChild(st);
   G.engine.canvas.addEventListener("pointerdown", () => { if (G.dialogue.active) G.dialogue.tap(); });
-  addEventListener("keydown", e => { if (G.dialogue.active && (e.code === "Space" || e.code === "Enter")) { G.dialogue.tap(); G.input.clear(); } if (e.code === "Escape" && G.open) { clearLayer("file"); G.open = false; } });
+  addEventListener("keydown", e => { if (G.dialogue.active && (e.code === "Space" || e.code === "Enter")) { G.dialogue.tap(); G.input.clear(); } if (e.code === "Escape" && G.open) { clearLayer("file"); clearLayer("photo"); G.open = false; } });
   const unlock = () => { Audio.start(); Speech.unlock(); };
   addEventListener("touchend", unlock, { passive: true }); addEventListener("click", unlock); addEventListener("keydown", unlock);
   Audio.mood("calm");
