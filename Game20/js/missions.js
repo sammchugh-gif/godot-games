@@ -105,7 +105,8 @@ class Mission {
         for (let jj = Math.max(0, cj - r); jj <= Math.min(nav.nz - 1, cj + r); jj++) for (let ii = Math.max(0, ci - r); ii <= Math.min(nav.nx - 1, ci + r); ii++) {
           const k = ii + jj * nav.nx; if (!nav.ok[k] || Math.abs(nav.h[k] - (cy + m.hy)) > 1.2) continue;
           const [nx, nz] = nav.xz(k), d = deck(t, nx, nz).out;
-          if (d < 1.0 && (!spots.has(k) || d < spots.get(k).d)) spots.set(k, { d, x: nx, y: nav.h[k], z: nz, m });
+          // (beside the deck, not under it: under a lift, jumping aboard hits it from below)
+          if (d > 0.3 && d < 1.0 && (!spots.has(k) || d < spots.get(k).d)) spots.set(k, { d, x: nx, y: nav.h[k], z: nz, m });
         }
       }
       // (one route test per landing: a spot near one that can't be walked to can't either)
@@ -547,7 +548,7 @@ class Tractor extends Mission {
       const o = this.add(thing(kind, color)); o.position.set(x, y, z); o.rotation.y = ry || 0;
       const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1 * o.userData.size, 0.05, 8, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff5ad8).multiplyScalar(3) }));
       ring.rotation.x = Math.PI / 2; ring.visible = false; this.add(ring);
-      return { o, ring, y0: y, state: "wait", at: 1.5 + i * (4.2 - this.lv * 0.6), h: 0, spin: (Math.random() - 0.5) * 0.8 };
+      return { o, ring, y0: y, state: "wait", at: 1.5 + i * (4.2 - this.lv * 0.45), h: 0, spin: (Math.random() - 0.5) * 0.8 };
     });
     this.pinned = 0; this.lost = 0;
   }
