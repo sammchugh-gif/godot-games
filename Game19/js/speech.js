@@ -93,7 +93,8 @@ export const Speech = {
     return best;
   },
   say(text, spec, cb) {
-    if (!this.available || !this.enabled || !text) { if (cb && cb.onEnd) cb.onEnd(); return false; }
+    // (a line with no words, like "...", is a pause, not something to say)
+    if (!this.available || !this.enabled || !text || !/[\p{L}\p{N}]/u.test(text)) { if (cb && cb.onEnd) cb.onEnd(); return false; }
     this.stop();
     if (this.audio && this.recorded) { const key = lineKey(text, spec); if (this.recorded.has(key)) return this.play(key, text, spec, cb); }
     return this.speak(text, spec, cb);
