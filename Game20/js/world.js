@@ -132,7 +132,7 @@ export class World {
     }
     geo.computeVertexNormals();
     const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; m.castShadow = !!o.cast; this.scene.add(m);
-    this.phys.world.createCollider(R.ColliderDesc.heightfield(n, n, heights, { x: size, y: 1, z: size }).setFriction(0.9));
+    this.terrainCol = this.phys.world.createCollider(R.ColliderDesc.heightfield(n, n, heights, { x: size, y: 1, z: size }).setFriction(0.9));
     this.heightAt = f;
     return m;
   }

@@ -882,22 +882,83 @@ class Drive extends Mission {
   }
   hud() { return { ...super.hud(), text: `Drive over the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.car.pos) - b.position.distanceTo(this.car.pos))[0]; return c ? c.position : null; }
+  debugState() { return { path: this.path ? this.path.length : null, blocked: this.blocked ? this.blocked.size : 0, freeFrac: this.grid ? +(this.grid.free.reduce((a, b) => a + b, 0) / this.grid.free.length).toFixed(2) : null }; }
+  // The autopilot's map: a 2 m grid over the drive, each square free or blocked (walls, rocks,
+  // domes), with its ground height so slopes too steep to climb can be avoided.
+  buildGrid() {
+    const S = 2, pad = 16, pts = [this.car.pos, ...this.cells.map(c => c.position)];
+    const x0 = Math.min(...pts.map(p => p.x)) - pad, x1 = Math.max(...pts.map(p => p.x)) + pad;
+    const z0 = Math.min(...pts.map(p => p.z)) - pad, z1 = Math.max(...pts.map(p => p.z)) + pad;
+    const nx = Math.ceil((x1 - x0) / S) + 1, nz = Math.ceil((z1 - z0) / S) + 1;
+    const h = new Float32Array(nx * nz), free = new Uint8Array(nx * nz);
+    const world = this.w.phys.world, ball = new R.Ball(1.3), rot = { x: 0, y: 0, z: 0, w: 1 };
+    const ha = this.w.heightAt || (() => this.data.start[1] - 0.5), terrain = this.w.terrainCol;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      const k = i + j * nx, x = x0 + i * S, z = z0 + j * S, y = h[k] = ha(x, z);
+      let hit = false;
+      world.intersectionsWithShape({ x, y: y + 1.5, z }, rot, ball, c => { if (c === terrain) return true; const b = c.parent(); if (b && !b.isFixed()) return true; hit = true; return false; });
+      free[k] = hit ? 0 : 1;
+    }
+    this.grid = { S, x0, z0, nx, nz, h, free };
+  }
+  cellOf(x, z) { const G = this.grid, i = Math.round((x - G.x0) / G.S), j = Math.round((z - G.z0) / G.S); return i < 0 || j < 0 || i >= G.nx || j >= G.nz ? -1 : i + j * G.nx; }
+  // A* from the buggy to (tx, tz); returns waypoints [[x, z], ...] or null
+  route(tx, tz) {
+    if (!this.grid) this.buildGrid();
+    const G = this.grid, { nx, nz, h, free, S } = G, s = this.cellOf(this.car.pos.x, this.car.pos.z), goal = this.cellOf(tx, tz);
+    if (s < 0 || goal < 0) return null;
+    const n = nx * nz, g = new Float32Array(n).fill(Infinity), from = new Int32Array(n).fill(-1), shut = new Uint8Array(n);
+    const gi = goal % nx, gj = (goal / nx) | 0, heur = k => Math.hypot((k % nx) - gi, ((k / nx) | 0) - gj) * S;
+    const heap = [], push = (k, f) => { heap.push([f, k]); let c = heap.length - 1; while (c > 0) { const p = (c - 1) >> 1; if (heap[p][0] <= heap[c][0]) break; [heap[p], heap[c]] = [heap[c], heap[p]]; c = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let c = 0; for (;;) { const l = 2 * c + 1, r = l + 1; let m = c; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === c) break; [heap[m], heap[c]] = [heap[c], heap[m]]; c = m; } } return top[1]; };
+    g[s] = 0; push(s, heur(s));
+    const ok = k => free[k] || k === s || k === goal;
+    while (heap.length) {
+      const k = pop(); if (shut[k]) continue; shut[k] = 1;
+      if (k === goal) break;
+      const i = k % nx, j = (k / nx) | 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        if (!di && !dj) continue;
+        const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
+        const q = ii + jj * nx; if (shut[q] || !ok(q) || (this.blocked && this.blocked.has(q))) continue;
+        // no cutting a blocked corner
+        if (di && dj && (!ok(i + di + j * nx) || !ok(i + (j + dj) * nx))) continue;
+        const d = (di && dj ? 1.414 : 1) * S, slope = Math.abs(h[q] - h[k]) / d;
+        if (slope > 0.8) continue;
+        const cost = g[k] + d * (1 + 2 * slope);
+        if (cost < g[q]) { g[q] = cost; from[q] = k; push(q, cost + heur(q)); }
+      }
+    }
+    if (from[goal] < 0 && goal !== s) return null;
+    const path = []; for (let k = goal; k >= 0 && k !== s; k = from[k]) path.push([G.x0 + (k % nx) * S, G.z0 + ((k / nx) | 0) * S]);
+    path.reverse(); path.push([tx, tz]);
+    return path;
+  }
   solve() {
-    let t = this.target(); if (!t) return;
+    const cell = this.target(); if (!cell) return;
     const car = this.car, inp = this.g.input, f = car.forward();
-    // heading round something we got stuck on
-    if (this.detour) { if (this.t > this.detourUntil || Math.hypot(this.detour.x - car.pos.x, this.detour.z - car.pos.z) < 3) this.detour = null; else t = this.detour; }
+    // follow a planned route to the cell, looking a few metres along it; replan now and then
+    if (cell !== this.routeFor || this.t > (this.replanAt ?? 0)) { this.path = this.route(cell.x, cell.z); this.routeFor = cell; this.replanAt = this.t + 2.5; }
+    let t = cell;
+    if (this.path && this.path.length) {
+      let best = 0, bd = Infinity;
+      this.path.forEach(([x, z], i) => { const d = Math.hypot(x - car.pos.x, z - car.pos.z); if (d < bd) { bd = d; best = i; } });
+      let k = best; while (k < this.path.length - 1 && Math.hypot(this.path[k][0] - car.pos.x, this.path[k][1] - car.pos.z) < 6) k++;
+      t = new THREE.Vector3(this.path[k][0], 0, this.path[k][1]);
+    }
     const to = t.clone().sub(car.pos).setY(0), d = to.length(); to.normalize();
     const ang = Math.atan2(f.x * to.z - f.z * to.x, f.x * to.x + f.z * to.z);
-    // is the cell inside the circle the buggy turns in at this speed? then no amount of steering reaches it
+    // is the point inside the circle the buggy turns in at this speed? then no amount of steering reaches it
     const lx = Math.abs(Math.sin(ang)) * d, lz = Math.cos(ang) * d;
     const inside = sp => { const R = 2 / Math.tan(0.45 - Math.min(0.25, Math.abs(sp) * 0.013)); return (lx - R) ** 2 + lz ** 2 < R * R * 0.9; };
     if (Math.abs(car.speed) > 0.6) this.movedAt = this.t;
-    // stuck against something: back off turning towards the cell, then go round it to the side
+    // stuck against something: back off turning towards the route, mark the square ahead blocked and replan
     if (this.t - (this.movedAt ?? this.t) > 1.5) {
       const side = Math.sign(ang) || 1;
       this.revUntil = this.t + 1.4; this.revSteer = -side; this.movedAt = this.t + 1.4;
-      this.detour = new THREE.Vector3(car.pos.x - f.z * side * 9 - f.x * 2, car.pos.y, car.pos.z + f.x * side * 9 - f.z * 2); this.detourUntil = this.t + 7;
+      const ahead = this.cellOf(car.pos.x + f.x * 2.5, car.pos.z + f.z * 2.5);
+      if (ahead >= 0) (this.blocked || (this.blocked = new Set())).add(ahead);
+      this.replanAt = this.t + 1.4;
     }
     // behind us and close, or too tight to turn into: reverse with the wheels the other way (a three-point turn)
     if (!this.revUntil && (inside(0) || (Math.abs(ang) > 1.9 && d < 12))) { this.revUntil = this.t + 2.5; this.revSteer = null; }
@@ -906,7 +967,7 @@ class Drive extends Mission {
     }
     this.revUntil = 0;
     inp.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
-    // ease off to tighten the turn when the cell is off to the side
+    // ease off to tighten the turn when the route bends
     this.autoThrottle = inside(car.speed) ? (car.speed > 3 ? -1 : 0.5) : Math.abs(ang) > 0.8 && car.speed > 7 ? 0.2 : 1;
   }
 }
