@@ -250,7 +250,7 @@ export const PLACES = [
     arrive: [["hale", "Touchdown. You're on the Moon, Agent Rory. Take small steps. Or big ones. Everything's floaty here."], ["rory", "I'm on the Moon. I'm actually on the Moon."], ["bolt", "I am the first robot called BOLT on the Moon. I checked."], ["pip", "Zero's base is over by the purple domes, and the Pump's battery is in the big crater. Let's end this."]],
     leave: [],
     missions: [
-      { id: "moon1", kind: "drive", lv: 3, title: "Moon Buggy", at: [2, 12], n: 8, time: 200,
+      { id: "moon1", kind: "drive", lv: 3, title: "Moon Buggy", at: [2, 12], n: 8, time: 240,
         intro: [["hale", "The lander carried a moon buggy. Cells from the Pump have rained down all over these craters."], ["pip", "Drive over every one. The buggy bounces a lot up here, so go easy on the bumps."]],
         outro: [["rory", "That was the best drive of my entire life."], ["bolt", "I was not in the buggy. I watched. It looked good."]] },
       { id: "moon2", kind: "cells", lv: 3, title: "Crater Hops", at: [-30, -8], n: 8, time: 200,
