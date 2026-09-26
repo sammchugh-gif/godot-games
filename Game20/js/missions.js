@@ -570,7 +570,8 @@ class Lasers extends Mission {
     const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side);
     this.p.camYaw = Math.atan2(-this.dir.x, -this.dir.z);
     inp.jumpHeld = false;
-    const mid = Math.max(-1, Math.min(1, -acr * 0.8));
+    // steer back to the middle (side points to Rory's left, and the stick's +x is to his right)
+    const mid = Math.max(-1, Math.min(1, acr * 0.8));
     const next = this.beams.find(b => b.f * this.len - along > 0.25);
     if (!next) { inp.forced = { mx: mid, my: 1 }; return; }
     const ahead = next.f * this.len - along;
