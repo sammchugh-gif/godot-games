@@ -866,7 +866,8 @@ class Drive extends Mission {
     for (const c of this.cells) {
       if (!c.visible) continue;
       spinCell(c, this.t);
-      if (c.position.distanceTo(this.car.pos) < 2.6) { c.visible = false; this.got++; this.g.fx.burst(c.position.x, c.position.y, c.position.z, 0x7fe3ff, 30); this.g.sound("cell"); this.g.addCells(1); if (this.got >= this.need) this.win(); }
+      // generous for small drivers: close enough across the ground, and a bounce over it still counts
+      if (Math.hypot(c.position.x - this.car.pos.x, c.position.z - this.car.pos.z) < 3 && Math.abs(c.position.y - this.car.pos.y) < 3) { c.visible = false; this.got++; this.g.fx.burst(c.position.x, c.position.y, c.position.z, 0x7fe3ff, 30); this.g.sound("cell"); this.g.addCells(1); if (this.got >= this.need) this.win(); }
     }
   }
   post() { this.car.sync(); }
@@ -883,14 +884,23 @@ class Drive extends Mission {
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.car.pos) - b.position.distanceTo(this.car.pos))[0]; return c ? c.position : null; }
   solve() {
     const t = this.target(); if (!t) return;
-    const car = this.car, f = car.forward(), to = t.clone().sub(car.pos).setY(0), d = to.length(); to.normalize();
+    const car = this.car, inp = this.g.input, f = car.forward(), to = t.clone().sub(car.pos).setY(0), d = to.length(); to.normalize();
     const ang = Math.atan2(f.x * to.z - f.z * to.x, f.x * to.x + f.z * to.z);
-    this.g.input.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
-    this.autoThrottle = Math.abs(ang) > 1.3 ? -1 : Math.abs(ang) > 0.8 && car.speed > 6 ? 0.2 : 1;
-    // stuck against something: back off a little
-    this.stuck = (this.stuck || 0) + (Math.abs(car.speed) < 0.5 ? 1 : -this.stuck);
-    if (this.stuck > 90) { this.autoThrottle = -1; if (this.stuck > 150) this.stuck = 0; }
-    void d;
+    // is the cell inside the circle the buggy turns in at this speed? then no amount of steering reaches it
+    const lx = Math.abs(Math.sin(ang)) * d, lz = Math.cos(ang) * d;
+    const inside = sp => { const R = 2 / Math.tan(0.45 - Math.min(0.25, Math.abs(sp) * 0.013)); return (lx - R) ** 2 + lz ** 2 < R * R * 0.9; };
+    if (Math.abs(car.speed) > 0.6) this.movedAt = this.t;
+    // stuck against something: back straight off
+    if (this.t - (this.movedAt ?? this.t) > 1.5) { this.revUntil = this.t + 1.2; this.revSteer = 0; this.movedAt = this.t + 1.2; }
+    // behind us and close, or too tight to turn into: reverse with the wheels the other way (a three-point turn)
+    if (!this.revUntil && (inside(0) || (Math.abs(ang) > 1.9 && d < 12))) { this.revUntil = this.t + 2.5; this.revSteer = null; }
+    if (this.revUntil && this.t < this.revUntil && (this.revSteer === 0 || Math.abs(ang) > 0.6)) {
+      inp.forced = { mx: this.revSteer ?? -Math.sign(ang), my: 0 }; this.autoThrottle = -1; return;
+    }
+    this.revUntil = 0;
+    inp.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
+    // ease off to tighten the turn when the cell is off to the side
+    this.autoThrottle = inside(car.speed) ? (car.speed > 3 ? -1 : 0.5) : Math.abs(ang) > 0.8 && car.speed > 7 ? 0.2 : 1;
   }
 }
 
