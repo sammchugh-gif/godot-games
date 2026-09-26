@@ -20,7 +20,7 @@ const ev = (fn, a) => page.evaluate(fn, a);
 const waitT = async s => { const t0 = await ev(() => __g.t); await page.waitForFunction(t => __g.t >= t, t0 + s, { timeout: 300000 }); };
 // camera per place: [from x, y, z, look x, y, z]
 const V = {
-  hq: [14, 7, 26, 0, 2, -8], tokyo: [10, 9, 44, 0, 10, -30], egypt: [18, 10, 34, -4, 8, -40], sydney: [24, 10, 34, -14, 6, -30],
+  hq: [7, 8, 20, 0, 2, -10], tokyo: [10, 9, 44, 0, 10, -30], egypt: [18, 10, 34, -4, 8, -40], sydney: [24, 10, 34, -14, 6, -30],
   rio: [30, 14, 40, -10, 8, -40], newyork: [18, 12, 40, 0, 16, -20], kenya: [20, 8, 30, 0, 4, -20], china: [-2, 14, 30, 20, 8, -20],
   india: [0, 8, 36, 0, 14, -60], island: [-40, 14, 50, 20, 8, -20], launch: [26, 12, 30, -2, 18, -30], station: [22, 10, 30, 0, 12, -60], moon: [16, 8, 40, 0, 6, -40],
 };
