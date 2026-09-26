@@ -125,10 +125,11 @@ export function buildTokyo(w) {
   const arcade = M("metal", { args: [25, [70, 60, 110]], repeat: [3, 1] });
   w.box(14, 6, 12, arcade, 18, 3, 20);
   neon(w, "ARCADE", 18, 4.6, 13.94, Math.PI, "#ff5ad8", { w: 8, h: 1.8, ei: 3 });
-  w.steps(10, 2.4, 0.6, 0.9, M("metal", { args: [26], repeat: [1, 1] }), 9.8, 0.2, 29.5, Math.PI);
+  w.steps(18, 2.4, 0.34, 0.6, M("metal", { args: [26], repeat: [1, 1] }), 9.8, 0.2, 31, Math.PI);
   w.pad(26, 0.2, 10, 15, 0x39f0ff);
   w.box(8, 0.3, 8, M("metal", { args: [27, [90, 96, 110]] }), 32, 10, 22);
   w.pad(18, 6.05, 18, 13, 0xff5ad8);
+  w.pad(23, 6.05, 23, 13, 0x7bed9f); // from the arcade roof over to the slab
   // lamps, vending machines, a park with cherry trees and a gate
   for (const [x, z] of [[-7, 14], [7, 14], [-7, -14], [7, -14], [-14, 7], [14, 7], [-14, -7], [14, -7], [-7, 30], [7, 30], [-7, 44], [7, 44]]) w.lamp(x, z, 5, 0xfff0d0, { ei: 5 });
   for (const [x, z, c] of [[-8.5, 22, 0xe83a3a], [-8.5, 24, 0x3a8ae8], [8.5, 36, 0xe8e8e8], [-24, 8.5, 0x3ae87a]]) { const v = new THREE.Group(); v.position.set(x, 0.18, z); w.scene.add(v); const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 0.8), M(c, { rough: 0.4 })); b.position.y = 0.95; b.castShadow = true; v.add(b); const f = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.05), M(0x9ad8ff, { emissive: 0x9ad8ff, ei: 1.8 })); f.position.set(0, 1.15, 0.41); v.add(f); v.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2; w.phys.fixedBox(x, 1.1, z, 0.55, 0.95, 0.55); }
@@ -155,7 +156,7 @@ export function buildTokyo(w) {
   for (const [x, z, c] of [[10, -10, 0xff5ad8], [-10, -10, 0x5ae8ff], [10, 10, 0xffd166], [-10, 10, 0x7bed9f]]) { const l = new THREE.PointLight(c, 18, 26, 1.8); l.position.set(x, 6, z); w.scene.add(l); }
   w.floorY = -20;
   w.missionData = {
-    tok1: { cells: [[16, 7.2, 22], [22, 7.2, 16], [32, 11.3, 22], [26, 5.5, 10], [18, 11, 18], [9.8, 4.5, 24], [30, 11.3, 25], [13, 7.2, 25]] },
+    tok1: { cells: [[16, 7.2, 22], [22, 7.2, 16], [32, 11.3, 22], [26, 5.5, 10], [18, 11, 18], [9.8, 5.3, 24], [30, 11.3, 25], [13, 7.2, 25]] },
     tok2: { things: [["vending", -8.5, 0.18, 22, Math.PI / 2, 0xe83a3a], ["bike", -4, 0.18, 18, 0.4, 0x2a8ad8], ["bin", 4, 0.18, 20, 0, 0x2a8a4a], ["vending", 8.5, 0.18, 36, -Math.PI / 2, 0xe8e8e8], ["bench", 5, 0.18, 28, 0.2], ["bike", -5, 0.18, 32, -0.3, 0xe83a3a], ["bin", 2, 0.18, 38, 0, 0x3a3a3a]] },
     tok3: { area: [-26, 28, 9], bots: [[-20, 0.3, 24], [-30, 0.3, 30], [-24, 0.3, 34], [-34, 0.3, 24], [-28, 0.3, 20]] },
     tok4: { rings: [[0, 6, -22, 2.2], [6, 10, -32, 2.2, 0.6], [10, 16, -44, 2.2, 0.9], [4, 22, -58, 2.2, 1.5], [-8, 28, -66, 2.2, 2.4], [-14, 34, -80, 2.2, 3], [-4, 40, -92, 2.2, 3.8], [10, 46, -88, 2.2, 4.6], [12, 52, -76, 2.2, 5.4], [0, 58, -66, 2.4, 6.2]], ceiling: 70 },

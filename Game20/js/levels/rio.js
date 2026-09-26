@@ -69,7 +69,7 @@ export function buildRio(w) {
   // the cable car line up the mountain
   const st0 = new THREE.Vector3(24, 8, -27), st1 = loaf.mid.clone().setY(loaf.mid.y + 12), st2 = loaf.top.clone().setY(loaf.top.y + 6);
   w.box(8, 8, 8, M("stone", { args: [87, [220, 214, 200]] }), st0.x, 4, st0.z - 5);
-  w.steps(12, 3, 0.66, 0.8, M("metal", { args: [88] }), st0.x - 6.5, 0.2, st0.z + 5, Math.PI);
+  w.steps(23, 3, 0.345, 0.42, M("metal", { args: [88] }), st0.x - 6.5, 0.2, st0.z + 5, Math.PI);
   w.box(3, 0.4, 6, M("metal", { args: [88] }), st0.x - 6.5, 7.9, st0.z - 2.7);
   for (const [a, b] of [[st0, st1], [st1, st2]]) { const len = a.distanceTo(b); const cab = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 4), M(0x1a1a1a)); cab.position.copy(a).add(b).multiplyScalar(0.5); cab.lookAt(b); cab.rotateX(Math.PI / 2); w.scene.add(cab); }
   const cars = [cableCar(w, st0.clone().setY(st0.y + 1.6), st1, -1.2, 0xe83a3a), cableCar(w, st0.clone().setY(st0.y + 1.6), st1, 1.4, 0xffd23f)];

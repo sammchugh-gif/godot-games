@@ -127,7 +127,7 @@ export class Walker {
     cc.setUp({ x: 0, y: 1, z: 0 });
     cc.setMaxSlopeClimbAngle(50 * Math.PI / 180);
     cc.setMinSlopeSlideAngle(35 * Math.PI / 180);
-    cc.enableAutostep(0.35, 0.15, true);
+    cc.enableAutostep(0.42, 0.15, true); // every staircase in the game rises 0.35 or less per step
     cc.enableSnapToGround(0.25);
     cc.setApplyImpulsesToDynamicBodies(true);
     cc.setCharacterMass(3);

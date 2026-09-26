@@ -14,7 +14,7 @@ function sail(w, parent, x, z, s, ry, tilt) {
 function operaHouse(w, x, z) {
   const podium = M("stone", { args: [63, [214, 190, 160]], repeat: [4, 1] });
   w.box(34, 2, 26, podium, x, 1, z);
-  w.steps(5, 14, 0.4, 0.9, podium, x, 0.2, z + 17.5, Math.PI);
+  w.steps(6, 14, 0.334, 0.75, podium, x, 0.2, z + 17.5, Math.PI);
   // the shells, floating a little off the podium
   const roof = new THREE.Group(); roof.position.set(x, 2, z); w.scene.add(roof);
   for (const [dx, dz, s] of [[-7, 6, 10], [-7, -1, 12], [-7, -8, 9], [7, 6, 8.5], [7, -1, 10.5], [7, -8, 7.5], [0, 10, 5]]) sail(w, roof, dx, dz, s, 0, -0.35);

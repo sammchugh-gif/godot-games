@@ -24,7 +24,7 @@ function minaret(w, x, z, h) {
 function taj(w, x, z) {
   const m = marble(), dark = M(0x2a2830, { rough: 0.6 }), gold = M(0xe8b030, { metal: 0.8, rough: 0.25 });
   w.box(48, 2, 48, m, x, 1, z);                       // the plinth
-  w.steps(4, 10, 0.5, 0.8, m, x, 0, z + 27.2, Math.PI);
+  w.steps(6, 10, 0.34, 0.55, m, x, 0, z + 27.2, Math.PI);
   // the main hall: an octagon with tall arched fronts
   const hall = w.cyl(14, 14, 16, m, x, 2 + 8, z, { seg: 8 }); hall.rotation.y = Math.PI / 8;
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; const px = x + Math.sin(a) * 12.95, pz = z + Math.cos(a) * 12.95; const arch = w.mesh(new THREE.PlaneGeometry(6, 10), dark, px, 7.5, pz, { ry: a, cast: false }); void arch; w.mesh(new THREE.CircleGeometry(3, 24, 0, Math.PI), dark, px, 12.5, pz, { ry: a, cast: false }); }
