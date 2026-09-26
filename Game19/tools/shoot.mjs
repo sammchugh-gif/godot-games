@@ -50,7 +50,7 @@ if (what === "scenes" || what === "all") {
   await page.waitForTimeout(300); await shot("map");
   await page.evaluate(() => { __spy.state = "map"; __spy.save.country = 9; __spy.save.done = __spy.debug.COUNTRIES.slice(0, 9).flatMap(c => c.missions.map(m => m.id)); });
   await page.waitForTimeout(300); await shot("map");
-  await page.evaluate(() => { __spy.state = "briefing"; __spy.dialogue.show(__spy.debug.BRIEFING || [["hale", "Agent Rory. Sit down. Last night the Royal Observatory in Greenwich was robbed."]], null); });
+  await page.evaluate(() => { __spy.state = "briefing"; __spy.dialogue.show(__spy.debug.BRIEFING || [["frost", "Agent Rory. Sit down. Something is melting Greenland from underneath."]], null); });
   await page.waitForTimeout(1200); await shot("briefing");
 }
 console.log("errors:", errors.length);

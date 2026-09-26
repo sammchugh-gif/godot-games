@@ -139,9 +139,10 @@ export class Run extends MG {
   heightAt(d, o) {
     const th = this.th, [flat, h, wid, floor] = th.prof, a = Math.abs(o), y = this.track.at(d, this.tmp2).y;
     const f = floor || 0, k = smooth((a - flat) / wid), n = vnoise(d / 23, o / 17) * (0.25 + k) * (h * 0.18 + 0.6);
+    if (th.surf === "water") return y + f + h * k + n * (a < flat ? 0.2 : 1);
     if (a < this.halfW + 0.5) return y;
     const edge = smooth((a - this.halfW - 0.5) / 4);
-    return y + (f + h * k + n * (th.surf === "water" && a < flat ? 0.2 : 1)) * edge;
+    return y + (f + h * k + n) * edge;
   }
   buildWorld() {
     const th = this.th, w = this.w, T = this.track, len = T.len;
@@ -375,9 +376,16 @@ export class Run extends MG {
       }
       case "speedboat": case "jetboat": case "tenderboat": {
         const L2 = kind === "jetboat" ? 4.2 : 5.0;
-        box(1.9, 0.6, L2, bodyM, 0, 0.15, 0); const nose = new THREE.Mesh(new THREE.ConeGeometry(0.95, 1.6, 4), bodyM); nose.rotation.x = -Math.PI / 2; nose.rotation.y = Math.PI / 4; nose.scale.set(1, 1, 0.45); nose.position.set(0, 0.15, -L2 / 2 - 0.7); R.add(nose);
-        box(1.95, 0.12, L2, trimM, 0, 0.47, 0); box(1.5, 0.45, 0.06, glass, 0, 0.8, -0.6, -0.4);
-        box(0.7, 0.5, 0.6, dark, 0, 0.55, L2 / 2 - 0.4); seat = 0.75; seatZ = 0.4; if (kind === "jetboat") o.hat = o.hat || "cap";
+        // a proper pointed hull, seen from above, pushed up into a boat
+        const hullShape = (wd, len) => { const sh = new THREE.Shape(); sh.moveTo(-wd, -len / 2); sh.lineTo(wd, -len / 2); sh.lineTo(wd, len / 2 - 1.4); sh.quadraticCurveTo(wd * 0.9, len / 2 - 0.2, 0, len / 2 + 0.5); sh.quadraticCurveTo(-wd * 0.9, len / 2 - 0.2, -wd, len / 2 - 1.4); sh.closePath(); return sh; };
+        const hg = new THREE.ExtrudeGeometry(hullShape(0.95, L2), { depth: 0.62, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.08, bevelSegments: 2 }); hg.rotateX(-Math.PI / 2);
+        const hull = new THREE.Mesh(hg, bodyM); hull.position.y = -0.2; hull.castShadow = true; R.add(hull);
+        const dg = new THREE.ExtrudeGeometry(hullShape(0.8, L2 - 0.4), { depth: 0.06, bevelEnabled: false }); dg.rotateX(-Math.PI / 2);
+        const deck = new THREE.Mesh(dg, M(0xf4f4f0, { roughness: 0.6, metalness: 0 })); deck.position.set(0, 0.44, 0.05); R.add(deck);
+        const stripe = new THREE.Mesh(new THREE.ExtrudeGeometry(hullShape(0.97, L2), { depth: 0.1, bevelEnabled: false }).rotateX(-Math.PI / 2), trimM); stripe.position.y = 0.2; R.add(stripe);
+        box(1.4, 0.42, 0.06, glass, 0, 0.72, -0.5, -0.45); box(1.2, 0.35, 0.9, M(0xf4f4f0, { metalness: 0 }), 0, 0.62, -0.05);
+        box(0.55, 0.45, 0.5, dark, 0, 0.55, L2 / 2 - 0.35); box(0.5, 0.1, 0.06, tail, 0, 0.62, L2 / 2 - 0.08);
+        seat = 0.8; seatZ = 0.55; if (kind === "jetboat") o.hat = o.hat || "cap";
         break;
       }
       case "sportscar": {
