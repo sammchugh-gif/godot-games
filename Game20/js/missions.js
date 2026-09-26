@@ -180,7 +180,7 @@ class Cells extends Mission {
   hud() { return { ...super.hud(), text: `Collect the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   debugState() {
     const f = x => Math.round(x * 10) / 10, pp = this.p.pos, w = this.p.walker, a = this.aim;
-    return { p: [f(pp.x), f(pp.y), f(pp.z)], aim: a ? this.cells.indexOf(a) : null, aimAt: a ? [f(a.position.x), f(a.position.y), f(a.position.z)] : null, onMover: w.onMover ? this.w.phys.movers.indexOf(w.onMover) : -1, grounded: w.grounded, board: this.board ? [f(this.board.x), f(this.board.y), f(this.board.z)] : null, aimFor: a ? f(this.t - this.aimT) : 0, path: this.navPath ? this.navPath.length : null, navI: this.navI };
+    return { p: [f(pp.x), f(pp.y), f(pp.z)], aim: a ? this.cells.indexOf(a) : null, aimAt: a ? [f(a.position.x), f(a.position.y), f(a.position.z)] : null, onMover: w.onMover ? this.w.phys.movers.indexOf(w.onMover) : -1, grounded: w.grounded, board: this.board ? [f(this.board.x), f(this.board.y), f(this.board.z)] : null, aimFor: a ? f(this.t - this.aimT) : 0, path: this.navPath ? this.navPath.length : null, navI: this.navI, climb: this.climbI, climbGoal: this.climbGoal };
   }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0]; return c ? c.position : null; }
   // autopilot: play it as a child would: walk, jump, and ride the pads for high cells. Only when a
@@ -193,7 +193,7 @@ class Cells extends Mission {
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
     if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; }
     // (a cell on a ferry or cable car may mean waiting a whole trip for it to come round)
-    if (this.t - this.aimT > (c.userData.follow ? 75 : 25)) {
+    if (this.t - this.aimT > (c.userData.follow ? 75 : this.data.climb ? 45 : 25)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
@@ -203,8 +203,47 @@ class Cells extends Mission {
     if (this.w.jetpack) { this.steer(c.position.x, c.position.z); inp.jumpHeld = up > -0.2; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
     // cells riding on something that moves: wait for it and hop on
     if (c.userData.follow) { this.rideTo(c.position.x, c.position.y, c.position.z, c.userData.follow.obj, this.cells.map(c => c.position)); return; }
+    // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
+    if (this.data.climb && this.climb(c)) return;
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
+  }
+  // The walking map has one floor per spot, so a tower of floors and switchback stairs is
+  // invisible to it. The level lists the climb instead (a line of points, bottom to top: foot of
+  // the stairs, each landing, each turn), and the autopilot walks it up or down, point to point,
+  // to the point nearest the cell, then straight to the cell. Returns false when the walking map
+  // can do the job.
+  climb(c) {
+    const P = this.data.climb, pp = this.p.pos, cp = c.position, inp = this.g.input;
+    const d3 = (q, x, y, z) => Math.hypot(q[0] - x, q[2] - z) + Math.abs(q[1] - y) * 1.5;
+    const at = q => Math.hypot(q[0] - pp.x, q[2] - pp.z) < 0.7 && Math.abs(q[1] - pp.y) < 1.2;
+    if (this.climbFor !== c) {
+      this.climbFor = c; this.climbAt = false;
+      this.ensureNav(this.cells.map(c => c.position));
+      const need = !this.nav.route(P[0][0], P[0][1], P[0][2], cp.x, cp.y, cp.z, 0.8);
+      this.climbGoal = 0; if (need) P.forEach((q, i) => { if (d3(q, cp.x, cp.y - 1.15, cp.z) < d3(P[this.climbGoal], cp.x, cp.y - 1.15, cp.z)) this.climbGoal = i; });
+      this.climbNeed = need;
+    }
+    const high = pp.y > P[0][1] + 1.5;
+    if (!this.climbNeed && !high) { this.climbI = undefined; return false; }
+    // fallen off, or not on the climb yet: from the ground, walk to its foot; from up high, the nearest point
+    if (this.climbI !== undefined && pp.y < P[this.climbI][1] - 4) this.climbI = undefined;
+    if (this.climbI === undefined) {
+      if (!high) { if (at(P[0])) { this.climbI = 0; this.climbAt = true; } else { this.walkTo(P[0][0], P[0][1] + 0.7, P[0][2], 0.5, this.cells.map(c => c.position)); return true; } }
+      else { let b = 0; P.forEach((q, i) => { if (d3(q, pp.x, pp.y, pp.z) < d3(P[b], pp.x, pp.y, pp.z)) b = i; }); this.climbI = b; this.climbAt = false; }
+    }
+    const q = P[this.climbI];
+    if (!this.climbAt) { this.steer(q[0], q[2]); if (at(q)) this.climbAt = true; return true; }
+    if (this.climbI === this.climbGoal) {
+      if (!this.climbNeed) { this.climbI = undefined; return false; } // back at the foot: walk from here
+      const up = cp.y - (pp.y + 0.7); this.steer(cp.x, cp.z, up > 1.0 && this.p.walker.grounded);
+      if (!this.p.walker.grounded) inp.jumpHeld = this.p.walker.vel.y > 0;
+      return true;
+    }
+    const n = P[this.climbI + Math.sign(this.climbGoal - this.climbI)];
+    this.steer(n[0], n[2]);
+    if (at(n)) this.climbI += Math.sign(this.climbGoal - this.climbI);
+    return true;
   }
 }
 
@@ -525,6 +564,17 @@ class Lasers extends Mission {
     }
     this.case = this.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.35), new THREE.MeshStandardMaterial({ color: 0xc0c8d0, metalness: 0.8, roughness: 0.25, emissive: 0x7fe3ff, emissiveIntensity: 0.4 })));
     this.case.position.copy(this.goal).setY(this.goal.y + 0.9);
+    // in a space suit Rory could fly over the lot, so a laser net overhead keeps him low
+    // enough that the bars still catch him
+    if (this.w.jetpack) {
+      const mid = this.from.clone().lerp(this.goal, 0.5), ry = Math.atan2(dir.x, dir.z), L = this.len + 3, top = this.from.y + 2.25;
+      const c = document.createElement("canvas"); c.width = c.height = 64;
+      const g = c.getContext("2d"); g.strokeStyle = "#ff3040"; g.lineWidth = 3; g.strokeRect(0, 0, 64, 64);
+      const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(this.width / 0.8, L / 0.8);
+      const net = this.add(new THREE.Mesh(new THREE.PlaneGeometry(this.width, L), new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(1, 1, 1).multiplyScalar(1.5), transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })));
+      net.rotation.set(-Math.PI / 2, ry, 0, "YXZ"); net.position.set(mid.x, top, mid.z);
+      this.ceil = this.w.phys.fixedBox(mid.x, top + 0.1, mid.z, this.width / 2, 0.1, L / 2, ry, { tag: "camthru" });
+    }
     this.tries = 0;
     this.p.teleport(this.from.x, this.from.y, this.from.z, Math.atan2(dir.x, dir.z));
   }
@@ -561,28 +611,45 @@ class Lasers extends Mission {
     this.p.teleport(this.from.x, this.from.y, this.from.z, Math.atan2(this.dir.x, this.dir.z));
     this.left = Math.max(1, this.left - 3);
   }
+  cleanup() { if (this.ceil) { this.w.phys.world.removeCollider(this.ceil, false); this.ceil = null; } super.cleanup(); }
   stars() { const s = super.stars(); return Math.max(1, s - (this.tries > 2 ? 1 : 0)); }
   hud() { return { ...super.hud(), text: this.tries ? `Reach the case — zapped ${this.tries}×` : "Jump the low beams. Wait for the others.", progress: Math.max(0, Math.min(1, this.p.pos.clone().sub(this.from).dot(this.dir) / this.len)) }; }
   target() { return this.goal; }
   // autopilot: keep to the middle, stop short of each beam, go when it will stay clear
   solve() {
-    const pp = this.p.pos, inp = this.g.input;
-    const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side);
+    const pp = this.p.pos, inp = this.g.input, w = this.p.walker;
+    const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side), feet = pp.y - this.from.y;
     this.p.camYaw = Math.atan2(-this.dir.x, -this.dir.z);
     inp.jumpHeld = false;
     // steer back to the middle (side points to Rory's left, and the stick's +x is to his right)
     const mid = Math.max(-1, Math.min(1, acr * 0.8));
-    const next = this.beams.find(b => b.f * this.len - along > 0.25);
+    // the first beam not yet behind him (a beam is only behind once he is clear of it)
+    const next = this.beams.find(b => along - b.f * this.len < 0.5);
     if (!next) { inp.forced = { mx: mid, my: 1 }; return; }
     const ahead = next.f * this.len - along;
+    this.dbg = { along: +along.toFixed(2), acr: +acr.toFixed(2), feet: +feet.toFixed(2), next: this.beams.indexOf(next), kind: next.kind, ahead: +ahead.toFixed(2) };
+    if (next.kind === "low") {
+      if (this.w.jetpack) {
+        // in a space suit: fly up before the beam, drift over it, and keep flying till past
+        inp.jumpHeld = feet < 0.9 && ahead < 2.5 && ahead > -0.5;
+        inp.forced = { mx: mid, my: ahead > 1.3 || feet > 0.6 ? 1 : 0 };
+      } else {
+        // jump it, holding the button for the full height
+        if (ahead < 1.15 && ahead > 0.35 && w.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
+        else if (!w.grounded && ahead > -0.5) inp.jumpHeld = w.vel.y > 0;
+        inp.forced = { mx: mid, my: 1 };
+      }
+      return;
+    }
+    // under a pillar or bar already: keep going
+    if (ahead < 0.4) { inp.forced = { mx: mid, my: 1 }; return; }
     const cross = ((ahead + 0.6) / 5.2) * 1.6 + 0.2;      // seconds until we're clear of it, with room to spare
     let go = true;
     if (next.kind === "sweep") { for (let k = 0; k <= 8; k++) if (Math.abs(this.across(next, this.t + cross * k / 8) - acr) < 1.1) go = false; }
-    else if (next.kind === "blink") { for (let k = 0; k <= 8; k++) if (this.lit(next, this.t + cross * k / 8)) go = false; }
-    else if (ahead < 1.15 && ahead > 0.35 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
+    else { for (let k = 0; k <= 8; k++) if (this.lit(next, this.t + cross * k / 8)) go = false; }
     if (go) inp.forced = { mx: mid, my: 1 };
     else inp.forced = { mx: mid, my: ahead > 1.6 ? 0.6 : 0 };
-    this.dbg = { along: +along.toFixed(2), acr: +acr.toFixed(2), next: this.beams.indexOf(next), kind: next.kind, ahead: +ahead.toFixed(2), go };
+    this.dbg.go = go;
   }
   debugState() { return { ...(this.dbg || {}), tries: this.tries }; }
 }

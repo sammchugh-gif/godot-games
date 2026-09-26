@@ -113,9 +113,10 @@ export class Physics {
     const hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude);
     return hit ? { toi: hit.timeOfImpact, collider: hit.collider } : null;
   }
-  // first hit along a ray, ignoring the given collider; returns distance or null
-  ray(from, dir, max, exclude) {
-    const hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude);
+  // first hit along a ray, ignoring the given collider (and any the predicate turns down);
+  // returns distance or null
+  ray(from, dir, max, exclude, pred) {
+    const hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude, undefined, pred);
     return hit ? hit.timeOfImpact : null;
   }
 }
@@ -145,6 +146,20 @@ export class Walker {
     this.body.setNextKinematicTranslation({ x, y: y + this.half + this.radius, z });
     this.vel.set(0, 0, 0); this.pos.set(x, y, z);
   }
+  // the lift onto a step (no higher than the autostep) just ahead in direction (dx, dz), or null
+  stepUp(dx, dz) {
+    const W = this.phys.world, t = this.body.translation(), feet = t.y - this.half - this.radius, top = 0.45;
+    const hit = W.castRay(new R.Ray({ x: t.x + dx * (this.radius + 0.1), y: feet + top, z: t.z + dz * (this.radius + 0.1) }, { x: 0, y: -1, z: 0 }), top, true, R.QueryFilterFlags.EXCLUDE_SENSORS, undefined, this.col);
+    if (!hit) return null;
+    const rise = top - hit.timeOfImpact;
+    if (rise < 0.04 || rise > 0.43) return null;
+    // and room for Rory standing on it
+    const move = { x: dx * 0.12, y: rise + 0.02, z: dz * 0.12 };
+    let clear = true;
+    W.intersectionsWithShape({ x: t.x + move.x, y: t.y + move.y, z: t.z + move.z }, { x: 0, y: 0, z: 0, w: 1 }, this.stepShape || (this.stepShape = new R.Capsule(this.half, this.radius)),
+      c => { if (c.handle !== this.col.handle && !c.isSensor()) { clear = false; return false; } return true; });
+    return clear ? move : null;
+  }
   // move by velocity for dt; returns the corrected displacement
   move(dt, gravityScale = 1) {
     if (!this.grounded || this.vel.y > 0) this.vel.y += this.phys.gravity * 1.25 * gravityScale * dt;
@@ -153,9 +168,17 @@ export class Walker {
     // ride along with a moving platform under our feet
     if (this.onMover) { want.x += this.onMover.vel.x * dt; want.y += Math.min(0, this.onMover.vel.y * dt); want.z += this.onMover.vel.z * dt; }
     this.cc.computeColliderMovement(this.col, want);
-    const m = this.cc.computedMovement();
+    let m = this.cc.computedMovement();
     const wasGrounded = this.grounded;
     this.grounded = this.cc.computedGrounded();
+    // Rapier's autostep won't lift a capsule that meets a step square-on (the step's face is
+    // parallel to "up", so its lift test counts the step as touching), so pushing straight up
+    // a staircase stalls at the first step. When grounded, pushing and getting nowhere, step up
+    // ourselves.
+    if (this.grounded && this.vel.y <= 0) {
+      const hw = Math.hypot(want.x, want.z);
+      if (hw > 1e-3 && Math.hypot(m.x, m.z) < hw * 0.3) { const s = this.stepUp(want.x / hw, want.z / hw); if (s) m = s; }
+    }
     if (this.grounded && this.vel.y < 0) this.vel.y = 0;
     // bumped our head
     if (this.vel.y > 0 && m.y < want.y * 0.5) this.vel.y = 0;

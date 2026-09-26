@@ -7,6 +7,9 @@ import { makePerson, animatePerson, RORY, spaceSuit } from "./people.js";
 
 const up = new THREE.Vector3(0, 1, 0);
 
+// the camera looks through colliders tagged "camthru" (a laser net Rory mustn't fly through)
+const seeThrough = c => c.userTag !== "camthru";
+
 export class Player {
   constructor(world, x = 0, y = 0, z = 0, yaw = 0) {
     this.world = world;
@@ -120,7 +123,7 @@ export class Player {
     const look = new THREE.Vector3(p.x, p.y + 1.25, p.z);
     const dir = new THREE.Vector3(Math.sin(this.camYaw) * Math.cos(this.camPitch), Math.sin(this.camPitch), Math.cos(this.camYaw) * Math.cos(this.camPitch));
     let dist = this.camDist;
-    const hit = this.world.phys.ray({ x: look.x, y: look.y, z: look.z }, { x: dir.x, y: dir.y, z: dir.z }, dist, this.walker.col);
+    const hit = this.world.phys.ray({ x: look.x, y: look.y, z: look.z }, { x: dir.x, y: dir.y, z: dir.z }, dist, this.walker.col, seeThrough);
     if (hit !== null) dist = Math.max(0.8, hit - 0.25);
     const want = look.clone().addScaledVector(dir, dist);
     if (this.snapCam) { this.camPos.copy(want); this.camLook.copy(look); this.snapCam = false; }
