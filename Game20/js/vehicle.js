@@ -79,7 +79,11 @@ export class Car {
     if (boost && this.boost <= 0) this.boost = 1.4;
     this.boost -= dt;
     const bo = this.boost > 0 ? 1.8 : 1;
-    let force = throttle * this.maxForce * bo, brake = 0;
+    // less push where gravity is weak (or the nose lifts off on the Moon), and no wheelies:
+    // if the front wheels leave the ground while the back ones drive, ease off
+    const gs = Math.min(1, Math.max(0.5, -this.phys.gravity / 20));
+    const front = vc.wheelIsInContact(0) || vc.wheelIsInContact(1), back = vc.wheelIsInContact(2) || vc.wheelIsInContact(3);
+    let force = throttle * this.maxForce * bo * gs * (!front && back && throttle > 0 ? 0.25 : 1), brake = 0;
     if (this.speed > this.maxSpeed * (this.boost > 0 ? 1.5 : 1) && force > 0) force = 0;
     if (throttle < 0 && this.speed > 1) { force = 0; brake = 60; }
     for (let i = 0; i < 4; i++) {
