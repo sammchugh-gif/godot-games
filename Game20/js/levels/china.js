@@ -98,7 +98,8 @@ export function buildChina(w) {
   w.gong = gong;
   w.floorY = -20;
   // lanterns for BOLT to fly through, along the wall
-  const rings = pts.slice(1, 10).map(([x, z, y], i) => [x + (i % 2 ? 3 : -3), y + 4 + (i % 3), z, 2.2, Math.atan2(pts[i + 2]?.[0] - x || 0, pts[i + 2]?.[1] - z || 1)]);
+  // (beside the watchtowers the ring goes wider, clear of the roof)
+  const rings = pts.slice(1, 10).map(([x, z, y], i) => { const tower = [2, 5, 8].includes(i + 1), dx = (i % 2 ? 1 : -1) * (tower ? 7.5 : 3); return [x + dx, y + 4 + (i % 3), z, 2.2, Math.atan2(pts[i + 2]?.[0] - x || 0, pts[i + 2]?.[1] - z || 1)]; });
   // cells along the walkway, and two on the tower roofs
   const cellsOn = []; for (let i = 1; i < pts.length - 1; i++) { const [x0, z0, y0] = pts[i], [x1, z1, y1] = pts[i + 1]; cellsOn.push([(x0 + x1) / 2, (y0 + y1) / 2 + 1, (z0 + z1) / 2]); }
   cellsOn.push([pts[2][0], pts[2][2] + 2.6, pts[2][1]], [pts[5][0], pts[5][2] + 2.6, pts[5][1]]);

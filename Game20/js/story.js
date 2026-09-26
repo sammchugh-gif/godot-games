@@ -190,7 +190,7 @@ export const PLACES = [
       { id: "isl1", kind: "lasers", lv: 4, title: "Laser Beach", at: [-24, 34], time: 150,
         intro: [["pip", "The beach is fenced with lasers. The only way in is straight through."], ["pip", "They're fast here. Watch the pattern, then go."]],
         outro: [["rory", "Through! The base is up the path."], ["zero", "Who let him through the laser fence? Floaters! Guard the yard!"]] },
-      { id: "isl2", kind: "stealth", lv: 2, title: "Base Patrol", at: [-16, -18],
+      { id: "isl2", kind: "stealth", lv: 2, title: "Base Patrol", at: [-16, -23],
         intro: [["pip", "The silo codes are in a case at the back of the yard. Two guards with searchlights."], ["pip", "Keep to the walls and behind the crates. Wait for them to walk away."]],
         outro: [["rory", "Got the silo codes!"], ["bolt", "I was very quiet. I did not beep once. Beep."]] },
       { id: "isl3", kind: "circuit", lv: 4, title: "Silo Doors", at: [14, -22],

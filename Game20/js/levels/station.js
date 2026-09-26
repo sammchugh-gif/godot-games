@@ -73,7 +73,7 @@ export function buildStation(w) {
   w.missionData = {
     sta1: { cells: [...wings.map(([x, y, z]) => [x, y + 1.3, z]), [0, 9, 0], [0, 12, -14]].slice(0, 8) },
     sta2: { title: "POWER REROUTE" },
-    sta3: { area: [4, 8, 14], bots: [[0, 0, 10], [8, 0, 4], [-6, 0, 2], [10, 0, 14], [-2, 0, 18], [6, 0, 20]] },
+    sta3: { area: [4, 8, 14], bots: [[0, 0, 10], [8, 0, 4], [-6, 0, 2], [10, 0, 14], [-4, 0, 14], [6, 0, 20]] },
     sta4: { start: [20, 0, 3], goal: [20, 0, 21], width: 6, beams: 9 },
     sta5: { things: [["crate", 6, 0, -4, 0, 0xd8c060], ["barrel", -4, 0, -6, 0, 0x3a8ad8], ["crate", 12, 0, 2, 0.4, 0xd8c060], ["barrel", -8, 0, -2, 0, 0xe83a3a], ["crate", 2, 0, 8, 1, 0xd8c060], ["barrel", 10, 0, 10, 0, 0x7bed9f], ["crate", -2, 0, 14, 0.3, 0xd8c060]] },
     sta6: { title: "PUMP CONTROLS" },

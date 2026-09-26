@@ -94,7 +94,7 @@ export function buildEgypt(w) {
   // the buggy chase goes out round the dunes and back through the plaza
   const loop = []; for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; loop.push([Math.cos(a) * (72 + Math.sin(a * 3) * 10), Math.sin(a) * (60 + Math.cos(a * 2) * 8) + 5]); }
   w.missionData = {
-    egy1: { cells: [[-34, 1.8, 22 + 10.2], [-34 - 8.5, 2.8, 22], [-34, 3.8, 22 - 6.8], [-34 + 5, 4.8, 22], [-34, 5.8, 22 + 3.3], [-34, topY + 1.2, 22], [-34, topY + 3.5, 22], [-42, 1.8, 30]] },
+    egy1: { cells: [[-34, 1.8, 22 + 10.2], [-34 - 8.5, 2.8, 22], [-34, 3.8, 22 - 6.8], [-34 + 5, 4.8, 22], [-34, 5.8, 22 + 3.3], [-34, topY + 1.2, 22], [-34, topY + 3.5, 22], [-42, 2.9, 30]] },
     egy2: { pad: [-8, 0, -14], padR: 2.2, size: 1.1, blocks: [[4, 0.8, -12], [-18, 0.8, -8], [0, 0.8, -26], [-14, 0.8, -20], [8, 0.8, -20]] },
     egy3: { start: [30, 0.1, 11], goal: [30, 0.1, -15], width: 6 },
     egy4: { path: loop, y: 0.3, car: "buggy", quarry: "buggy", lead: 26 },
