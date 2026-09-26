@@ -59,7 +59,7 @@ export function buildIndia(w) {
   for (const [z, spans] of rows) for (const [a, b] of spans) w.box(b - a, 1.6, 1.2, hedge, (a + b) / 2, 0.8, z);
   // the east garden: flower beds and the stack mission's fountain plinth
   for (let i = 0; i < 6; i++) w.box(4, 0.5, 2.5, M([0xff9a2a, 0xffd23f, 0xe83a6a][i % 3], { rough: 0.9 }), 14 + (i % 3) * 6, 0.25, -14 + Math.floor(i / 3) * 24);
-  w.cyl(3.2, 3.4, 0.6, M("stone", { args: [159, [236, 230, 220]] }), 20, 0.3, 6, { seg: 24 });
+  w.cyl(3.2, 3.4, 0.35, M("stone", { args: [159, [236, 230, 220]] }), 20, 0.175, 6, { seg: 24 }); // a step up, not a climb
   // the gate at the south end
   const red = M("stone", { args: [161, [170, 70, 50]], repeat: [3, 2] });
   w.box(20, 12, 5, red, 0, 6, 40); w.mesh(new THREE.PlaneGeometry(5, 8), M(0x1a1410), 0, 4, 37.45, { ry: Math.PI, cast: false });
@@ -72,7 +72,7 @@ export function buildIndia(w) {
   w.missionData = {
     ind1: { start: [-18, 0.1, 26], goal: [-18, 0.1, -24], range: 7, guards: [{ path: [[-28, 12], [-8, 12]], speed: 1.6, pause: 1.2 }, { path: [[-8, 0], [-28, 0]], speed: 1.5, pause: 1.2, phase: 5 }, { path: [[-28, -12], [-8, -12]], speed: 1.7, pause: 1, phase: 2 }],
       route: [[-22, 0.1, 19.8], [-18, 0.1, 19.8], [-14, 0.1, 7.6], [-9.5, 0.1, 7.6], [-9.5, 0.1, 4.4], [-20, 0.1, 4.4], [-26.5, 0.1, 4.4], [-26.5, 0.1, -4.4], [-26.5, 0.1, -7.6], [-20, 0.1, -7.6], [-18, 0.1, -7.6], [-18, 0.1, -16.4], [-18, 0.1, -21]] },
-    ind2: { pad: [20, 0.6, 6], padR: 2.6, size: 1.0, blocks: [[12, 0.6, 16], [28, 0.6, 18], [26, 0.6, -4], [12, 0.6, -4], [30, 0.6, 8]] },
+    ind2: { pad: [20, 0.35, 6], padR: 2.6, size: 1.0, blocks: [[12, 0.6, 16], [28, 0.6, 18], [26, 0.6, -4], [12, 0.6, -4], [30, 0.6, 8]] },
     ind3: { title: "WORKSHOP HATCH" },
     ind4: { cells: [...[[-21, -41], [21, -41], [-21, -83], [21, -83]].flatMap(([mx, mz], i) => { const d = Math.hypot(mx, mz + 62), dx = mx / d * 1.6, dz = (mz + 62) / d * 1.6; return [[mx + dx, minTop([0.33, 0.66, 0.97, 0.66][i]) + 1.1, mz + dz]]; }), [-21 - 1.1, minTop(0.97) + 1.1, -83 - 1.1], [21 + 1.1, minTop(0.97) + 1.1, -41 + 1.1], [0, 3.2, -36], [8, 3.2, -36]] },
   };
