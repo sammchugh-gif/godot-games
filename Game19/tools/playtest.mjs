@@ -34,12 +34,9 @@ const check = (cond, msg) => { if (!cond) { fail++; console.log("FAIL:", msg); }
 
 await ev(() => __spy.debug.press("start")); await wait(200);
 check(await state() === "menu", "menu");
-await ev(() => __spy.debug.press("newgame")); await wait(100); await finishFade();
-check(await state() === "briefing", "briefing");
-await wait(1500); await shot("00_briefing");
-await skipDialogue(); await finishFade(); await wait(100);
-check(await state() === "map", "map after briefing");
-await shot("01_map");
+// Act One opens cold: straight onto the ice in Greenland, no briefing yet
+await ev(() => __spy.debug.press("newgame")); await wait(100); await finishFade(); await waitGame(0.3);
+check(await state() === "world", "the cold open starts in the world");
 
 const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
 const startCi = +(process.argv[3] || 0);
@@ -47,8 +44,8 @@ const endCi = Math.min(COUNTRIES.length - 1, +(process.argv[4] || COUNTRIES.leng
 if (startCi > 0) { await ev(ci => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; }, startCi); await wait(300); }
 for (let ci = startCi; ci <= endCi; ci++) {
   const c = COUNTRIES[ci];
-  // fly
-  await ev(() => __spy.debug.press("fly")); await waitGame(0.2);
+  // fly (Greenland is already under our feet after the cold open)
+  if (!(ci === 0 && await state() === "world")) await ev(() => __spy.debug.press("fly")); await waitGame(0.2);
   await ev(() => { if (__spy.map.flight) __spy.map.flight.t = 99; }); await waitGame(0.2);
   await finishFade(); await waitGame(0.3);
   check(await state() === "world", `world ${c.id}`);
@@ -81,7 +78,15 @@ for (let ci = startCi; ci <= endCi; ci++) {
     await skipDialogue(); await wait(200);
     const lastOfCountry = mi === c.missions.length - 1;
     const actEnd = lastOfCountry && (ci === COUNTRIES.length - 1 || COUNTRIES[ci + 1].act !== COUNTRIES[ci].act);
-    if (lastOfCountry && !actEnd) { await wait(200); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", `map after ${c.id}`); }
+    if (lastOfCountry && !actEnd && ci === 0) {
+      // after the cold open: the titles, then Admiral Frost's briefing
+      await wait(200); await skipDialogue(); await finishFade(); await wait(200);
+      check(await state() === "briefing" && await ev(() => !!__spy.titles), "titles roll after Greenland");
+      await waitGame(1.5); await shot("05_titles");
+      await ev(() => { __spy.titles.t = 99; }); await waitGame(0.2); await finishFade(); await wait(300); await shot("06_briefing");
+      await skipDialogue(); await finishFade(); await wait(200);
+      check(await state() === "map", "map after the Act One briefing"); await shot("07_map");
+    } else if (lastOfCountry && !actEnd) { await wait(200); await skipDialogue(); await finishFade(); await wait(200); check(await state() === "map", `map after ${c.id}`); }
     if (actEnd) {
       await finishFade(); await wait(300);
       check(await state() === "ending", `ending of act ${COUNTRIES[ci].act}`);
@@ -94,7 +99,7 @@ for (let ci = startCi; ci <= endCi; ci++) {
 if (endCi === COUNTRIES.length - 1) {
   await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
   check(await state() === "credits", "credits");
-  const save = await ev(() => JSON.parse(localStorage.getItem("agentrory.save")));
+  const save = await ev(() => JSON.parse(localStorage.getItem("rorymeltdown.save")));
   check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
 }
 console.log("errors:", errors.length, "fails:", fail);

@@ -20,7 +20,7 @@ const open = async path => {
   return page;
 };
 const keys = page => page.evaluate(() => Object.keys(localStorage).sort());
-const save = page => page.evaluate(() => { try { return JSON.parse(localStorage.getItem("agentrory.save")); } catch (e) { return null; } });
+const save = page => page.evaluate(() => { try { return JSON.parse(localStorage.getItem("rorymeltdown.save")); } catch (e) { return null; } });
 
 // ---- play far enough to write a real save
 let page = await open();
@@ -68,7 +68,7 @@ await page.close();
 // ---- a save written by the build he is playing now, before stars and bugs existed
 page = await open();
 await page.evaluate(() => {
-  localStorage.setItem("agentrory.save", JSON.stringify({
+  localStorage.setItem("rorymeltdown.save", JSON.stringify({
     version: 2, country: 5, done: ["lon1","lon2","lon3","lon4","ven1","ven2","ven3","ven4","cai1"],
     code: [0,1,2,3], arrived: { london: true, venice: true, cairo: true }, briefed: { 1: true }, finished: false
   }));
@@ -111,7 +111,7 @@ await page.close();
 page = await open();
 await page.evaluate(() => {
   const C = __spy.debug.COUNTRIES;
-  localStorage.setItem("agentrory.save", JSON.stringify({
+  localStorage.setItem("rorymeltdown.save", JSON.stringify({
     version: 2, country: 13, done: C.filter(c => c.act <= 2).flatMap(c => c.missions.map(m => m.id)),
     code: [0,1,2,3,4], arrived: Object.fromEntries(C.filter(c => c.act <= 2).map(c => [c.id, true])), briefed: { 1: true, 2: true }, finished: true, stars: {}, bugs: []
   }));

@@ -1,116 +1,89 @@
-# Agent Rory: Operation Eclipse
+# Agent Rory: Meltdown
 
-A first-person spy adventure for the iPad's browser, in three acts. In
-**Operation Eclipse** Rory, the youngest field agent of M.I.S.T., follows the
-stolen plans for a sun-blotting mirror through London, Venice, Istanbul,
-Cairo, Marrakech, Tokyo, New York, Rio de Janeiro and a frozen launch site in
-Siberia. In **Operation Midnight** UMBRA's Chairman has hidden seven Shadow
-Lanterns over seven cities, and the hunt runs from Paris and Nairobi through
-Reykjavik, Agra, Singapore, Beijing, Sydney and Chichen Itza to the Alps. In
-**Operation Aurora** the buyer behind it all, the Curator, wants the Northern
-Lights themselves, and the last Prism Keys are at Machu Picchu, in Amsterdam
-and under the Antarctic ice. Twenty-one countries, ninety missions, and every
-mission is a mini-game that wins a piece of intel. The intel is the thread:
-each piece tells you where to go next.
+Rory's own spy movie, for the iPad's browser, and a completely new game after
+*Operation Eclipse*: new story, new agency, new cast, eighteen new places and
+twenty-four new mini-games.
 
-Play it at <https://sammchugh-gif.github.io/godot-games/agent-rory/>. On the
-iPad, open the link in Safari, then Share → Add to Home Screen for a fullscreen
-icon. Landscape. Every character speaks with the iPad's own voices (the
-gondolier is Italian, the villain is French, the henchman is Russian), and
-everything they say is also in a text box, so the game is complete with the
-sound off.
+Baron Magnus Kaldera, who owns Kaldera Heating ("Keeping the world toasty since
+1896") and lives inside a volcano, has built six **Inferno Engines** to melt
+Antarctica from underneath unless the world pays him a trillion dollars.
+POLARIS, the secret agency that guards the frozen ends of the Earth from a
+submarine called the *Narwhal*, sends its youngest agent.
 
-The whole story, cast and mission design is in [STORY.md](STORY.md).
+The game opens cold, in the middle of the action on the Greenland ice, and only
+rolls its titles once Greenland is done. Then three acts:
+
+- **Act One: Thin Ice.** Greenland, Norway, Monaco, Barcelona, Santorini and
+  a train through the Canadian Rockies.
+- **Act Two: Heatwave.** Dubai, the Atacama Desert, Mount Bromo, Seoul, the
+  Khumbu and Cape Town.
+- **Act Three: Meltdown.** Rotorua, Ushuaia, the Antarctic Peninsula, the Ross
+  Ice Shelf, the Ice Caves and Mount Erebus.
+
+Ninety missions: four mini-games and a chase in every place. Play it at
+<https://sammchugh-gif.github.io/godot-games/agent-rory-meltdown/>. On the iPad,
+open the link in Safari, then Share → Add to Home Screen. Landscape. Everyone
+speaks with the iPad's own voices, and everything they say is also on screen.
+
+The story, cast and mission design are in [STORY.md](STORY.md).
 
 ## How to play
 
-- **Walk**: left thumb anywhere on the left half of the screen.
-- **Look**: drag anywhere on the right half.
-- **Investigate / talk**: walk up to a glowing marker or a person and tap the
-  big green button (or tap them). A yellow arrow points at the current
-  objective whenever it is off screen; the Spy Watch top-left says what it is.
-- **Mini-games** are all touch: drag dials, tap tiles, slide needles. Every
-  one has a HINT button (Aunt Vi tells you what to do) and a LEAVE button.
-  Getting something wrong never costs progress; you just have another go.
-- **Pause** (top-right) has the Dossier, which holds every piece of intel
-  you have won, including the abort code you will need at the end.
-- Progress is saved in the browser after every mission. CONTINUE on the menu
-  picks up where you left off.
-- Desktop for testing: WASD walks, mouse-drag looks, E investigates, Esc
-  pauses, H asks for a hint.
+- **Walk** with the left thumb, **look** by dragging on the right, and tap the
+  big green button at a glowing marker or a person. The yellow arrow points at
+  the next mission.
+- Every mission is a mini-game. **HINT** has Pip explain what to do next;
+  **LEAVE** walks away without losing anything.
+- Three stars for a mission with no hint and hardly any slips; replay any
+  mission from the dossier to beat your stars.
+- Three of the Baron's listening bugs are hidden in every place.
 
-## Stars, replay and the hidden bugs
+### The chases
 
-Every mission scores one to three stars (three for no hint and a clean run),
-kept as a best in the dossier alongside a running total, and any finished
-mission can be replayed from there. Three UMBRA listening devices are hidden
-in each city, sixty-three in all, counted on the spy watch and in the dossier.
+The last mission in every place is a chase or a stunt, eighteen of them on
+fourteen rides: snowmobile, speedboat, sports car, motorbike, jet ski, skis,
+dune buggy, wingsuit, snowboard, jet boat, jeep, hovercraft, mini-sub and
+bobsled. Each builds its own world for as long as it lasts: a long winding
+track through the landscape, with the ride seen from behind.
 
-## The thirty-seven mini-games
+- **Drag anywhere** to steer.
+- **BOOST** for a burst of speed. Blue snowflakes (rings, in the air and under
+  the ice) and ramps give you more boosts.
+- In a **catch**, close the gap and press **TAG** when the quarry is in range.
+- In an **escape**, stay ahead of the crack, the wave, the avalanche or the
+  convoy until the finish. If it catches you, you lose a little ground. There
+  is no way to lose, only to take longer.
 
-Lie detector, safe cracker, cipher wheel, masked ball, radio tuner, mirror
-maze, keypad memory, circuit hack, lock pick, wire cut, telephoto (played
-inside the 3D world), stealth yard, shredder, the countdown override,
-codebreaker, reactor rods (towers of Hanoi), satellite photo (swap the
-tiles), sonar, vault rings, spot the difference, laser hall and passport
-match; and fourteen more spread through all three acts: fingerprints, Morse
-code, tangled wires, the shell game, the balance scale, anagrams, the star
-chart, the grapple gun, thin ice, the oscilloscope, the fog maze, crate
-stacking, triangulation and picross. Each of those is met twice and a long way
-apart, once at a gentle level to learn it and once at full difficulty near the
-end. Six missions are chases: a boat, a rocket backpack, a tuk-tuk, a jeep, a
-bicycle and a snowmobile.
-Every mission carries a difficulty level from 1 to 4, and each game
-grows with it: more statements and subtler spikes on the polygraph, four
-numbers on the safe, up to 24 dancers and five clues, 11 by 11 mirror
-chambers, eight pins, a fifth wiring rule, a second searchlight, five-symbol
-codes and seventy-second countdowns. The full list of all ninety missions,
-with their levels and the intel each one wins, is in [STORY.md](STORY.md).
+### The mini-games
 
-## How it is built
+Twelve for the brain and twelve for the thumbs, each with four levels and a
+hint: Ice Slide, Gridlock, Blackout, Power Lines, Identikit, Crane Claw, Crowd
+Search, Blend In, Floe Hop, Drone Pilot, Tag 'Em, Paint Pellets, Coolant
+Pipes, Cargo Hold, Logic Lock, Railway Points, Gearbox, Coolant Measure,
+Gadget Case, Dance Floor, Skydive, Tightrope, Heli Lander and Cooling Tower.
+The puzzles are generated fresh every time and checked by a solver, which also
+drives the hints.
 
-No engine download, no build step. The page is plain HTML and ES modules
-and loads in a couple of seconds.
+## For developers
 
-- `js/main.js` — the game loop: state machine (title, briefing, map, world,
-  mini-game, intel, ending, credits), pointer routing (floating stick, look
-  drag, immediate-mode buttons), HUD, mission flow, save, and a `window.__spy`
-  debug handle the tests use.
-- `js/story.js` — the story as data: characters with voice and portrait
-  attributes, three acts, twenty-one countries, ninety missions with
-  dialogue and intel.
-- `js/world.js`, `js/scenes.js`, `js/scenes2.js` and `js/scenes3.js` — the first-person world on three.js:
-  procedural textures (windows, brick, plaster, neon, hieroglyphs, flags),
-  building helpers, collision, people built from boxes, weather, water, an
-  aurora shader, and the twenty-one scenes with their landmarks.
-- `js/minigames.js`, `js/minigames2.js`, `js/minigames3.js`, `js/chase.js`,
-  `js/mgbase.js` — the thirty-seven mini-games, each with a hint, a solver
-  and difficulty scaling.
-- `js/ui.js` — canvas drawing, procedural portraits, the dialogue box, the
-  world map (simplified continents), the dossier, the intel stamp.
-- `js/audio.js` — every sound and the theme are synthesised with WebAudio;
-  ambience (rain, canal water, wind, city, waves, blizzard) is filtered noise.
-- `js/speech.js` — a wrapper over the browser's speech synthesis that picks a
-  voice per character by language and name.
-- `tex/` — texture sets from the Godot TPS demo and three.js examples, scaled
-  for the web (see `CREDITS.md`). Everything else is drawn in code.
-- `js/three.module.min.js` — three.js r185, MIT.
+No build step: ES modules and a vendored three.js. `sh publish.sh` copies the
+game into `docs/agent-rory-meltdown/`.
 
-### Testing without an iPad
+- `js/main.js`: the game loop, input, HUD and mission flow.
+- `js/story.js`: every line of the story, the cast, the places and the acts.
+- `js/world.js`, `js/scenekit.js`, `js/scenes1.js` to `js/scenes6.js`: the 3D
+  world, its building blocks and the eighteen places.
+- `js/mgbase.js`, `js/fx.js`, `js/games1.js` to `js/games4.js`: the mini-game
+  base, the shared effects kit and the twenty-four mini-games.
+- `js/run.js`: the chase engine.
 
-```bash
-cd Game9
-node tools/shoot.mjs /tmp/shots scenes    # screenshots of every scene and screen
-node tools/playtest.mjs /tmp/playtest      # plays the whole game with the solvers
-node tools/gametest.mjs /tmp/gametest      # starts and solves every mission's mini-game directly
-node tools/savecheck.mjs                   # from the repo root: progress survives reloads and older saves still load
-```
+Checks, all headless (Playwright with SwiftShader), run from this folder:
 
-Both use the Chromium that Playwright installs and a software renderer, so
-frame rates are low there; on an iPad the game runs at 60 frames per second.
-
-### Publishing
-
-```bash
-./publish.sh    # copies the game into docs/agent-rory/
-```
+- `node tools/gametest.mjs /tmp/out [kinds]`: every mission's mini-game, won by its solver.
+- `node tools/runtest.mjs /tmp/out [ids]`: every chase, driven and finished, and the city restored.
+- `node tools/runshot.mjs /tmp/out [ids] [seconds]`: pictures of chases in motion.
+- `node tools/playtest.mjs`: plays the story through, dialogue and all.
+- `node tools/stationcheck.mjs`, `bugcheck.mjs`, `lifecheck.mjs`: every
+  station reachable, every bug inside the map and away from the stations,
+  crowds that never walk through walls.
+- `node tools/shoot.mjs /tmp/out scenes [ids]`: screenshots of the places.

@@ -33,9 +33,9 @@ SCENES.newzealand = function () {
   this.water(12, 80, -36, 0, 0x3a7a8a, { opacity: 0.95 }); this.collider(-36, 0, 6, 40); this.pier(-30.5, 8, 2.5, 5, Math.PI / 2); this.ride("jetboat", -36, 8, 0, 0x16324f, 0x7fe3ff);
   stations(this, "newzealand", [[10, -10], [-12, -8], [-14, 12], [16, 3], [-27, 8]]);
   contact(this, "aroha", 3, 10, Math.PI * 0.9, { coat: 0x1a6a6a, hair: 0x1a1010, hairStyle: "long", skin: 0xb07a52 });
-  this.crowd([[-16, 0], [14, 0], [14, 8], [-16, 8]], 5, { speed: 0.8, hat: "cap", coats: [0xe03a3a, 0x2a6ad0, 0xf4f4f4, 0x2a8a4a] });
+  this.crowd([[-16, -2], [14, -2], [14, 6], [-16, 6]], 5, { speed: 0.8, hat: "cap", coats: [0xe03a3a, 0x2a6ad0, 0xf4f4f4, 0x2a8a4a] });
   this.birds(0, 14, -10, 20, 5, { speed: 0.2, color: 0x2a2a2a });
-  this.bug(-30, 0.09, -18); this.bug(30, 0.09, 20); this.bug(0, 0.09, -2);
+  this.bug(-28, 0.09, -20); this.bug(30, 0.09, 20); this.bug(0, 0.09, -2);
   return { x: 0, z: 12, yaw: 0, bounds: { x0: -30, x1: 32, z0: -24, z1: 24 } };
 };
 
@@ -68,7 +68,7 @@ SCENES.argentina = function () {
   this.traffic([[-34, 28], [34, 28], [34, 31], [-34, 31]], 2, { speed: 7 });
   this.birds(0, 14, -24, 22, 6, { speed: 0.22, color: 0xf4f4f4 });
   this.weather("snow", 400);
-  this.bug(-32, 0.09, 14); this.bug(32, 0.09, -8); this.bug(-6, 0.09, 20);
+  this.bug(-32, 0.09, 14); this.bug(32, 0.09, -8); this.bug(-6, 0.09, 16);
   return { x: 0, z: 14, yaw: 0, bounds: { x0: -34, x1: 34, z0: -14, z1: 20 } };
 };
 

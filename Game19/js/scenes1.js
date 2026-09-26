@@ -36,7 +36,7 @@ SCENES.greenland = function () {
   this.ride("snowmobile", 21, 7, -0.6);
   stations(this, "greenland", [[-8, -16], [14, -3], [4, -13], [-9, 7.5], [19, 9]]);
   contact(this, "nuka", -4, 8, Math.PI * 0.85, { coat: 0x3a6aa0, hair: 0x141414, skin: 0xd8a878, hat: "hood", hatColor: 0x3a6aa0, hatColor2: 0xf0e8d8, kid: true });
-  this.crowd([[-22, 2], [-12, 2], [-12, 12], [-22, 12]], 3, { speed: 0.8, hat: "beanie", coats: [0xc0392b, 0x2a6ab0, 0xe0a020] });
+  this.crowd([[-22, 1], [-13, 1], [-13, 10], [-22, 10]], 3, { speed: 0.8, hat: "beanie", coats: [0xc0392b, 0x2a6ab0, 0xe0a020] });
   this.birds(0, 14, -30, 18, 5, { speed: 0.2, color: 0xf4f4f4 });
   for (const [x, z] of [[-16, -2], [8, 4], [-2, -10], [12, 14]]) this.lamp(x, z, 4, 0xfff0d0, 0, 0, { post: 0x2a2a2a });
   this.bug(-28, 0.09, 16); this.bug(28, 0.09, -12); this.bug(-4, 0.09, -2);
@@ -71,7 +71,7 @@ SCENES.norway = function () {
   this.pier(-30, -14, 3, 12, 0); this.ride("speedboat", -27.5, -24, Math.PI);
   stations(this, "norway", [[-10, -12], [20, 5], [8, -6], [-18, 6], [-30, -12]]);
   { const lars = contact(this, "lars", 4, 8, Math.PI, { coat: 0x1b2a4a, hair: 0xd0c8b8, skin: 0xf0c8a8, hat: "captain", beard: 0xd0c8b8, prop: "pipe" }); const parrot = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), this.M({ color: 0x2ecc71 })); parrot.position.set(0.28, 1.55, 0); lars.grp.add(parrot); const beak = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 5), this.M({ color: 0xffd23f })); beak.rotation.x = Math.PI / 2; beak.position.set(0.28, 1.57, 0.12); lars.grp.add(beak); }
-  this.crowd([[-8, -10], [16, -10], [16, 0], [-8, 0]], 4, { speed: 1.0, hat: "hardhat", coats: [0xe0a020, 0xe05a10, 0x2a6ab0] });
+  this.crowd([[-8, -4], [4, -4], [4, 2], [-8, 2]], 4, { speed: 1.0, hat: "hardhat", coats: [0xe0a020, 0xe05a10, 0x2a6ab0] });
   this.traffic([[-34, 18], [30, 18], [30, 22], [-34, 22]], 2, { speed: 6, colors: [0xe8e4dc, 0x2a2a30] });
   this.birds(0, 16, -24, 20, 6, { speed: 0.22, color: 0xf4f4f4 });
   this.bug(28, 0.09, 16); this.bug(-34, 0.09, 16); this.bug(2, 0.09, -8);

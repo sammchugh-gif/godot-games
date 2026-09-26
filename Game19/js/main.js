@@ -9,7 +9,7 @@ import { makeMinigame, loadGames } from "./minigames.js";
 const { clamp, lerp, ease, text, textShadow, rrect, panel, chip, drawButton, TAU } = UI;
 const ui = document.getElementById("ui"), g = ui.getContext("2d");
 const glCanvas = document.getElementById("gl");
-const store = { get(k, d) { try { const v = localStorage.getItem("agentrory." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem("agentrory." + k, JSON.stringify(v)); } catch (e) {} } };
+const store = { get(k, d) { try { const v = localStorage.getItem("rorymeltdown." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem("rorymeltdown." + k, JSON.stringify(v)); } catch (e) {} } };
 
 const G = {
   W: 0, H: 0, s: 1, DPR: 1, t: 0, state: "boot", prev: "boot",
@@ -532,8 +532,7 @@ function drawWorldHud() {
   }
 }
 function currentStation() {
-  const c = COUNTRIES[G.country]; const [m1, m2] = c.missions;
-  const m = !G.save.done.includes(m1.id) ? m1 : !G.save.done.includes(m2.id) ? m2 : null;
+  const m = currentMission();
   if (!m) return null;
   return G.world.interactables.find(i => i.id === m.station && i.enabled) || null;
 }

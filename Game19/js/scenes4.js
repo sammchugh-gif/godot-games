@@ -34,7 +34,7 @@ SCENES.korea = function () {
   contact(this, "minjun", -3, 9, Math.PI * 0.9, { coat: 0x8a2ae0, hair: 0x141414, skin: 0xf0d8c0, prop: "tablet", kid: true });
   this.crowd([[-22, -2], [22, -2], [22, 8], [-22, 8]], 8, { speed: 1.0, coats: [0x1a1a22, 0xf4f4f4, 0xff4ad8, 0x40e0d0, 0xe0a020, 0x3a3a48] });
   this.traffic([[-26, 22], [26, 22], [26, 25], [-26, 25]], 4, { speed: 8, colors: [0xf4f4f4, 0x1a1a22, 0xe03a3a, 0x2a6ad0] });
-  this.bug(-26, 0.09, 18); this.bug(26, 0.09, -22); this.bug(-10, 0.09, -18);
+  this.bug(-23, 0.09, 18); this.bug(-23, 0.09, -17); this.bug(-10, 0.09, -18);
   return { x: 0, z: 14, yaw: 0, bounds: { x0: -25, x1: 25, z0: -19, z1: 21 } };
 };
 
@@ -61,7 +61,7 @@ SCENES.nepal = function () {
   this.animal("yak", 6, 18, 2.6); this.animal("yak", 9, 20, 2.0); this.animal("yak", 12, 16, 3.0);
   stations(this, "nepal", [[25, 4], [-20, -2], [-16, -11], [12, -20], [-26, 13]]);
   contact(this, "tenzing", 2, 10, Math.PI * 0.9, { coat: 0xe0a020, hair: 0x141414, skin: 0xb8845a, hat: "beanie", hatColor: 0xc0392b, kid: true });
-  this.crowd([[-10, 0], [16, 0], [16, 12], [-10, 12]], 4, { speed: 0.7, hat: "beanie", coats: [0xe03a3a, 0x2a6ad0, 0xe0a020, 0x2a8a4a] });
+  this.crowd([[-10, -2], [16, -2], [16, 7], [-10, 7]], 4, { speed: 0.7, hat: "beanie", coats: [0xe03a3a, 0x2a6ad0, 0xe0a020, 0x2a8a4a] });
   this.birds(10, 26, -20, 30, 3, { speed: 0.1, color: 0x1a1a1a, size: 1.4 });
   this.weather("snow", 500);
   this.bug(-30, 0.09, -20); this.bug(20, 0.09, 22); this.bug(-4, 0.09, 2);
@@ -94,9 +94,9 @@ SCENES.southafrica = function () {
   { this.plane(18, 10, this.M({ map: PT.sand(135), color: 0xf0e0c0 }), 30, 0.02, 14, -Math.PI / 2); for (let i = 0; i < 4; i++) this.rock(24 + i * 4, 18 - (i % 2) * 3, 1.2 + (i % 2) * 0.6, { color: 0x8a8070 }); this.penguins(30, 12, 3.5, 9); }
   stations(this, "southafrica", [[-12, -5], [-6, -14], [-20, 11], [19, -2], [-30, -12]]);
   contact(this, "thandi", 4, 10, Math.PI * 0.9, { coat: 0x2a8a4a, hair: 0x111111, hairStyle: "curly", skin: 0x6b4226, hat: "ranger", hatColor: 0x6a5a3a });
-  this.crowd([[-16, 0], [14, 0], [14, 8], [-16, 8]], 6, { speed: 0.9, coats: [0xe03a8a, 0x2ab0e0, 0xf0c020, 0xf4f4f4, 0x3a3a44] });
+  this.crowd([[-16, -2], [14, -2], [14, 6], [-16, 6]], 6, { speed: 0.9, coats: [0xe03a8a, 0x2ab0e0, 0xf0c020, 0xf4f4f4, 0x3a3a44] });
   this.traffic([[-34, 28], [34, 28], [34, 31], [-34, 31]], 3, { speed: 8 });
   this.birds(0, 14, -24, 22, 7, { speed: 0.22, color: 0xf4f4f4 });
-  this.bug(-32, 0.09, 4); this.bug(32, 0.09, 26); this.bug(8, 0.09, -12);
+  this.bug(-32, 0.09, 4); this.bug(32, 0.09, 18); this.bug(8, 0.09, -12);
   return { x: 0, z: 12, yaw: 0, bounds: { x0: -34, x1: 34, z0: -14, z1: 20 } };
 };

@@ -32,7 +32,7 @@ SCENES.dubai = function () {
   for (const [x, z] of [[-10, -4], [10, -4], [-10, 6], [10, 16], [-4, 18], [6, -20], [-6, -20]]) this.palm(x, z, 8);
   stations(this, "dubai", [[14, -12], [24, -14], [-22, -7], [-18, 10], [14, 6]]);
   contact(this, "omar", 2, 10, Math.PI, { coat: 0x2a8ac0, hair: 0x1a1010, skin: 0xc8946a, hat: "hardhat", hatColor: 0xf4f4f4 });
-  this.crowd([[-12, -6], [12, -6], [12, 14], [-12, 14]], 6, { speed: 0.9, coats: [0xf4f4f4, 0x1a1a1e, 0xf4f4f4, 0x2a6ad0, 0xe0a020] });
+  this.crowd([[-12, -6], [12, -6], [12, 4], [-12, 4]], 6, { speed: 0.9, coats: [0xf4f4f4, 0x1a1a1e, 0xf4f4f4, 0x2a6ad0, 0xe0a020] });
   this.traffic([[-34, 24], [34, 24], [34, 27], [-34, 27]], 4, { speed: 9, colors: [0xf4f4f4, 0xd4a017, 0x1a1a1e, 0xc0202a] });
   this.birds(0, 20, -20, 18, 4, { speed: 0.2, color: 0x2a2a2a });
   this.bug(-30, 0.09, 20); this.bug(30, 0.09, 20); this.bug(-4, 0.09, -26);
@@ -95,7 +95,7 @@ SCENES.indonesia = function () {
   this.animal("horse", 10, 14, -2.4); this.animal("horse", 12.5, 15, -2.2);
   stations(this, "indonesia", [[-12, -10], [14, -8], [20, 4], [-16, 14], [8, -20]]);
   contact(this, "budi", 2, 10, Math.PI * 0.9, { coat: 0xc05a20, hair: 0x141414, skin: 0xb07a4e, hat: "bandana", hatColor: 0x3a6a3a });
-  this.crowd([[-26, 6], [4, 6], [4, 18], [-26, 18]], 6, { speed: 0.8, coats: [0xe03a3a, 0x2a9a4a, 0xf0c020, 0x2a6ad0, 0xf4f4f4] });
+  this.crowd([[-26, 6], [-6, 6], [-6, 18], [-26, 18]], 6, { speed: 0.8, coats: [0xe03a3a, 0x2a9a4a, 0xf0c020, 0x2a6ad0, 0xf4f4f4] });
   this.birds(0, 20, -10, 22, 5, { speed: 0.2, color: 0x2a2a2a });
   this.bug(-30, 0.09, -8); this.bug(30, 0.09, 20); this.bug(2, 0.09, 26);
   return { x: 0, z: 12, yaw: 0, bounds: { x0: -32, x1: 32, z0: -26, z1: 28 } };

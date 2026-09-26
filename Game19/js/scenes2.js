@@ -72,7 +72,7 @@ SCENES.greece = function () {
   { this.box(1.8, 0.6, 3, this.M({ color: 0x3a3a3a }), -20, 0.3, 14, {}); this.ride("jetski", -20, 14, 0.4, 0x16324f, 0x7fe3ff).position.y = 0.7; }
   stations(this, "greece", [[8, -14], [-2, -13], [-12, -6], [14, -14], [-20, 11]]);
   contact(this, "nikos", 2, 8, Math.PI * 0.9, { coat: 0x2a6ab0, hair: 0x1a1a1a, hairStyle: "curly", skin: 0xd8a878, kid: true });
-  this.crowd([[-20, 4], [20, 4], [20, 12], [-20, 12]], 5, { speed: 0.8, hat: "cap", coats: [0xf4f4f4, 0x2a6ad0, 0xe0a020, 0xe07a9a] });
+  this.crowd([[-18, 2], [12, 2], [12, 8], [-18, 8]], 5, { speed: 0.8, hat: "cap", coats: [0xf4f4f4, 0x2a6ad0, 0xe0a020, 0xe07a9a] });
   this.birds(0, 10, -30, 20, 6, { speed: 0.2, color: 0xf4f4f4 });
   this.bug(30, 0.09, 20); this.bug(-30, 0.09, -8); this.bug(4, 0.09, 26);
   return { x: 0, z: 14, yaw: 0, bounds: { x0: -34, x1: 34, z0: -15.5, z1: 28 } };
@@ -104,9 +104,9 @@ SCENES.canada = function () {
   this.animal("moose", 8, 14, -2.2);
   stations(this, "canada", [[-2, -7], [14, -7], [-18, -7], [22, 8], [-22, 12]]);
   contact(this, "mac", 4, 12, Math.PI * 0.8, { coat: 0x3a5a2a, hair: 0xa0502a, skin: 0xf0c8a8, hat: "ranger", hatColor: 0x7a5a3a });
-  this.crowd([[-16, 0], [16, 0], [16, 6], [-16, 6]], 5, { speed: 0.8, hat: "beanie", coats: [0xc0392b, 0x2a6ad0, 0xe0a020, 0x2a8a4a] });
+  this.crowd([[-16, 3], [16, 3], [16, 8], [-16, 8]], 5, { speed: 0.8, hat: "beanie", coats: [0xc0392b, 0x2a6ad0, 0xe0a020, 0x2a8a4a] });
   this.birds(0, 18, -30, 20, 5, { speed: 0.18, color: 0x2a2a2a });
   this.weather("snow", 700);
-  this.bug(-30, 0.09, -4); this.bug(18, 0.09, 18); this.bug(6, 0.09, 2);
+  this.bug(-28, 0.09, 20); this.bug(18, 0.09, 18); this.bug(6, 0.09, 2);
   return { x: 0, z: 14, yaw: 0, bounds: { x0: -30, x1: 32, z0: -9.5, z1: 22 } };
 };
