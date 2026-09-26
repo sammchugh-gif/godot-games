@@ -5,7 +5,7 @@ import { landRings } from "./land.js";
 
 const toV = (lat, lon, r = 1) => { const a = lat * Math.PI / 180, b = lon * Math.PI / 180; return new THREE.Vector3(Math.cos(a) * Math.cos(b) * r, Math.sin(a) * r, -Math.cos(a) * Math.sin(b) * r); };
 
-function earthTexture() {
+export function earthTexture() {
   const W = 2048, H = 1024, c = document.createElement("canvas"); c.width = W; c.height = H;
   const g = c.getContext("2d");
   const sea = g.createLinearGradient(0, 0, 0, H); sea.addColorStop(0, "#123a6a"); sea.addColorStop(0.5, "#1a5a9a"); sea.addColorStop(1, "#123a6a");

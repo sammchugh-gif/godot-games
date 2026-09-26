@@ -371,50 +371,58 @@ class Drone extends Mission {
 }
 
 // ------------------------------------------------------------ Laser hall
+// Three kinds of beam: a low bar to jump, a pillar of light that sweeps across
+// the hall (go when it's on the other side), and a bar that blinks on and off
+// (go while it's off; it flickers just before it comes back).
 class Lasers extends Mission {
   start() {
     const d = this.data;
     this.from = v3(d.start); this.goal = v3(d.goal); this.width = d.width || 6;
     const dir = this.goal.clone().sub(this.from); this.len = dir.length(); dir.normalize(); this.dir = dir;
     this.side = new THREE.Vector3(dir.z, 0, -dir.x);
-    const beamMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff2a3a).multiplyScalar(4) });
     const n = d.beams || (3 + this.lv * 2);
+    const KIND = ["sweep", "low", "blink"];
     this.beams = [];
     for (let i = 0; i < n; i++) {
-      const f = (i + 1) / (n + 1), kind = (i + this.lv) % 3;
+      const kind = KIND[(i + this.lv) % 3];
       const g = new THREE.Group(); this.add(g);
-      const m = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1), beamMat); g.add(m);
-      const b = { g, m, f, kind, speed: 0.6 + this.lv * 0.25 + (i % 3) * 0.2, phase: i * 1.7, y: kind === 1 ? 0.35 : 1.0 };
-      if (kind === 0) { m.scale.z = this.width; }             // a bar across the hall that slides along it
-      else if (kind === 1) { m.scale.z = this.width; }        // a low bar: jump it
-      else { m.scale.set(1, 1, 1); m.geometry = new THREE.BoxGeometry(0.06, 2.4, 0.06); b.y = 1.2; } // a pillar that sweeps across
-      this.beams.push(b);
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff2a3a).multiplyScalar(4), transparent: true });
+      const geo = kind === "sweep" ? new THREE.BoxGeometry(0.08, 2.4, 0.08) : new THREE.BoxGeometry(0.07, 0.07, this.width);
+      const m = new THREE.Mesh(geo, mat); g.add(m);
+      // emitters on the walls
+      for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({ color: 0x2a2a30, metalness: 0.7 })); e.position.set(0, 0, s * this.width / 2); if (kind !== "sweep") g.add(e); }
+      this.beams.push({ g, m, kind, f: (i + 1) / (n + 1),
+        y: kind === "low" ? 0.35 : kind === "blink" ? 1.0 : 1.2,
+        speed: (0.7 + this.lv * 0.22) * (1 + (i % 3) * 0.12), phase: i * 1.9,
+        on: 1.5 - this.lv * 0.12, off: 1.5 - this.lv * 0.1 });
     }
-    // the goal: a glowing case
     this.case = this.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.35), new THREE.MeshStandardMaterial({ color: 0xc0c8d0, metalness: 0.8, roughness: 0.25, emissive: 0x7fe3ff, emissiveIntensity: 0.4 })));
     this.case.position.copy(this.goal).setY(this.goal.y + 0.9);
     this.tries = 0;
     this.p.teleport(this.from.x, this.from.y, this.from.z, Math.atan2(dir.x, dir.z));
   }
-  beamPos(b, t) {
-    const along = b.kind === 0 ? b.f + Math.sin(t * b.speed + b.phase) * 0.06 : b.f;
-    const across = b.kind === 2 ? Math.sin(t * b.speed * 1.3 + b.phase) * this.width * 0.45 : 0;
-    const c = this.from.clone().addScaledVector(this.dir, along * this.len).addScaledVector(this.side, across);
-    c.y = this.from.y + b.y;
-    return c;
-  }
+  // where the sweeping pillar is across the hall at time t (-w/2..w/2)
+  across(b, t) { return b.kind === "sweep" ? Math.sin(t * b.speed + b.phase) * this.width * 0.42 : 0; }
+  // is a blinking bar lit at time t?
+  lit(b, t) { if (b.kind !== "blink") return true; const per = b.on + b.off, u = ((t + b.phase) % per + per) % per; return u < b.on; }
   update(dt) {
     const pp = this.p.pos;
+    const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side), feet = pp.y - this.from.y, head = feet + 1.35;
     for (const b of this.beams) {
-      const c = this.beamPos(b, this.t);
-      b.g.position.copy(c); b.g.rotation.y = Math.atan2(this.side.x, this.side.z);
-      b.m.material.color.setScalar(3 + Math.sin(this.t * 20) * 0.6).multiply(new THREE.Color(1, 0.12, 0.15));
-      // touching a beam: zap back to the start
-      const rel = pp.clone().sub(c), along = rel.dot(this.dir), across = rel.dot(this.side);
-      const feet = pp.y - this.from.y, head = feet + 1.35;
-      let hit = false;
-      if (b.kind === 2) hit = Math.abs(along) < 0.35 && Math.abs(across) < 0.35;
-      else hit = Math.abs(along) < 0.3 && Math.abs(across) < this.width / 2 && b.y > feet && b.y < head;
+      const a = this.across(b, this.t);
+      b.g.position.copy(this.from).addScaledVector(this.dir, b.f * this.len).addScaledVector(this.side, a).setY(this.from.y + b.y);
+      b.g.rotation.y = Math.atan2(this.side.x, this.side.z);
+      const on = this.lit(b, this.t);
+      // a blinking bar flickers for half a second before it comes back on
+      const per = b.on + b.off, u = ((this.t + b.phase) % per + per) % per;
+      const warn = b.kind === "blink" && !on && u > per - 0.5;
+      b.m.visible = on || (warn && Math.sin(this.t * 40) > 0);
+      b.m.material.opacity = on ? 1 : 0.4;
+      if (!on) continue;
+      const da = along - b.f * this.len;
+      let hit;
+      if (b.kind === "sweep") hit = Math.abs(da) < 0.35 && Math.abs(acr - a) < 0.4;
+      else hit = Math.abs(da) < 0.3 && Math.abs(acr) < this.width / 2 && b.y > feet && b.y < head;
       if (hit) { this.zap(); return; }
     }
     if (pp.distanceTo(this.goal) < 1.3) { this.g.fx.burst(this.case.position.x, this.case.position.y, this.case.position.z, 0x7fe3ff, 30); this.case.visible = false; this.win(); }
@@ -424,35 +432,34 @@ class Lasers extends Mission {
     this.tries++; this.g.sound("hit");
     this.g.fx.burst(this.p.pos.x, this.p.pos.y + 0.8, this.p.pos.z, 0xff3a3a, 30);
     this.p.teleport(this.from.x, this.from.y, this.from.z, Math.atan2(this.dir.x, this.dir.z));
-    this.left = Math.max(1, this.left - 5);
+    this.left = Math.max(1, this.left - 3);
   }
   stars() { const s = super.stars(); return Math.max(1, s - (this.tries > 2 ? 1 : 0)); }
-  hud() { return { ...super.hud(), text: this.tries ? `Reach the case — zapped ${this.tries}×` : "Reach the case without touching a laser", progress: Math.max(0, Math.min(1, this.p.pos.clone().sub(this.from).dot(this.dir) / this.len)) }; }
+  hud() { return { ...super.hud(), text: this.tries ? `Reach the case — zapped ${this.tries}×` : "Jump the low beams. Wait for the others.", progress: Math.max(0, Math.min(1, this.p.pos.clone().sub(this.from).dot(this.dir) / this.len)) }; }
   target() { return this.goal; }
-  // autopilot: step forward only when the next beam will be clear as we pass it
-  solve(dt) {
-    const pp = this.p.pos, along = pp.clone().sub(this.from).dot(this.dir);
-    const across = pp.clone().sub(this.from).dot(this.side);
-    const inp = this.g.input;
+  // autopilot: walk up to each beam, then go when it's safe
+  solve() {
+    const pp = this.p.pos, inp = this.g.input;
+    const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side);
     this.p.camYaw = Math.atan2(-this.dir.x, -this.dir.z);
-    let go = true, jump = false, side = -across * 0.5;
-    for (const b of this.beams) {
-      const bAlong = b.f * this.len;
-      const ahead = bAlong - along;
-      if (ahead < -0.6 || ahead > 2.2) continue;
-      const tArrive = Math.max(0, ahead) / 5.4;
-      if (b.kind === 1) { if (ahead < 1.3 && ahead > 0.2 && this.p.walker.grounded) jump = true; continue; }
-      for (let k = 0; k <= 4; k++) {
-        const c = this.beamPos(b, this.t + tArrive * k / 4 + 0.15);
-        const rel = new THREE.Vector3(pp.x, 0, pp.z).sub(c.setY(0));
-        const bAl = this.dir.dot(rel), bAc = this.side.dot(rel);
-        if (b.kind === 0 && Math.abs(bAl - (ahead - Math.max(0, ahead) * k / 4)) < 0.9) go = false;
-        if (b.kind === 2 && Math.abs(bAc) < 1.1) { go = false; side = bAc > 0 ? 1 : -1; }
-      }
+    inp.jumpHeld = false;
+    const next = this.beams.find(b => b.f * this.len - along > -0.4);
+    const steerAcross = t => Math.max(-1, Math.min(1, (t - acr) * 0.8));
+    if (!next) { inp.forced = { mx: steerAcross(0), my: 1 }; return; }
+    const ahead = next.f * this.len - along;
+    const run = 5.2, cross = (ahead + 0.5) / run;          // seconds until we're clear of it
+    let go = true, lane = 0;
+    if (next.kind === "sweep") {
+      // keep to the side the pillar is moving away from, and only cross when it stays clear
+      for (let k = 0; k <= 6; k++) { const t = this.t + cross * k / 6; if (Math.abs(this.across(next, t) - acr) < 1.2) go = false; }
+      lane = this.across(next, this.t) > 0 ? -this.width * 0.3 : this.width * 0.3;
+    } else if (next.kind === "blink") {
+      for (let k = 0; k <= 6; k++) if (this.lit(next, this.t + cross * k / 6 + 0.05)) go = false;
+    } else if (next.kind === "low") {
+      if (ahead < 1.15 && ahead > 0.35 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
     }
-    inp.forced = go ? { mx: Math.max(-1, Math.min(1, side * 0.3)), my: 1 } : { mx: 0, my: 0 };
-    if (jump) { inp.jumpPressed = true; inp.jumpHeld = true; } else inp.jumpHeld = false;
-    void dt;
+    if (!go && ahead < 1.6) inp.forced = { mx: steerAcross(lane), my: ahead < 1.2 ? -0.4 : 0 };
+    else inp.forced = { mx: steerAcross(next.kind === "sweep" ? lane : 0), my: 1 };
   }
 }
 
@@ -572,7 +579,7 @@ class Chase extends Mission {
     const to = tgt.clone().sub(cp).setY(0).normalize();
     const cross = f.x * to.z - f.z * to.x, dot = f.x * to.x + f.z * to.z;
     const ang = Math.atan2(cross, dot);
-    this.g.input.forced = { mx: Math.max(-1, Math.min(1, -ang * 2.2)), my: 0 };
+    this.g.input.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
     this.autoThrottle = Math.abs(ang) > 1.2 && car.speed > 8 ? 0.2 : 1;
     this.autoBoost = gap > 18 && Math.abs(ang) < 0.25;
   }
@@ -822,7 +829,7 @@ class Drive extends Mission {
     const t = this.target(); if (!t) return;
     const car = this.car, f = car.forward(), to = t.clone().sub(car.pos).setY(0), d = to.length(); to.normalize();
     const ang = Math.atan2(f.x * to.z - f.z * to.x, f.x * to.x + f.z * to.z);
-    this.g.input.forced = { mx: Math.max(-1, Math.min(1, -ang * 2.2)), my: 0 };
+    this.g.input.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
     this.autoThrottle = Math.abs(ang) > 1.3 ? -1 : Math.abs(ang) > 0.8 && car.speed > 6 ? 0.2 : 1;
     // stuck against something: back off a little
     this.stuck = (this.stuck || 0) + (Math.abs(car.speed) < 0.5 ? 1 : -this.stuck);
