@@ -6,6 +6,7 @@ import { R } from "./physics.js";
 import { Robot } from "./robots.js";
 import { Car } from "./vehicle.js";
 import { Circuit, Codes } from "./missions2.js";
+import { Nav } from "./nav.js";
 import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing } from "./props.js";
@@ -38,6 +39,35 @@ class Mission {
   stars() { if (!this.time) return 3; const f = this.left / this.time; return f > 0.45 ? 3 : f > 0.2 ? 2 : 1; }
   hud() { return { label: this.def.title.toUpperCase(), text: "", progress: null, timer: this.time ? this.left : null }; }
   cleanup() { for (const o of this.objs) { o.parent && o.parent.remove(o); } this.objs = []; }
+  // autopilot: follow a planned route (walking, steps, jumps, gaps, drops and pads) to within
+  // reach of a point, then jump for it if it is above. pts widen the map to cover the mission.
+  walkTo(tx, ty, tz, reach = 0.8, pts = []) {
+    const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
+    if (!this.nav) {
+      const all = [pp, { x: tx, z: tz }, ...pts];
+      this.nav = new Nav(this.w, Math.min(...all.map(q => q.x)) - 14, Math.max(...all.map(q => q.x)) + 14, Math.min(...all.map(q => q.z)) - 14, Math.max(...all.map(q => q.z)) + 14);
+    }
+    const far = !this.navTo || Math.hypot(this.navTo[0] - tx, this.navTo[2] - tz) > 1.5 || Math.abs(this.navTo[1] - ty) > 1;
+    if (w.grounded && (far || this.t > this.navAt)) {
+      this.navPath = this.nav.route(pp.x, pp.y, pp.z, tx, ty, tz, reach); this.navTo = [tx, ty, tz]; this.navI = 0; this.navAt = this.t + 4; this.navMoved = this.t;
+    }
+    const path = this.navPath;
+    const up = ty - (pp.y + 0.7), dh = Math.hypot(tx - pp.x, tz - pp.z);
+    if (!path) { this.steer(tx, tz, up > 1.0 && dh < 2.2); return dh; }
+    // progress along the route: the furthest square just ahead that Rory is standing on
+    if (w.grounded) for (let i = this.navI; i < Math.min(path.length, this.navI + 8); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 0.7 && Math.abs(q.h - pp.y) < 0.8) { if (i > this.navI) this.navMoved = this.t; this.navI = i; } }
+    if (w.grounded && this.t - this.navMoved > 3) this.navAt = 0; // not getting anywhere: plan again
+    const next = path[this.navI + 1];
+    // at the end: step in and jump for it if it is up high
+    if (!next) { this.steer(tx, tz, up > 1.0 && w.grounded); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return dh; }
+    if (!w.grounded) { this.steer(next.x, next.z); inp.jumpHeld = w.vel.y > 0; return dh; }
+    if (next.how === "pad") { const q = path[this.navI]; this.steer(q.x, q.z); return dh; }
+    if (next.how === "jump" || next.how === "gap") { this.steer(next.x, next.z, true); return dh; }
+    // walking: aim a few squares along, but not past the next jump or pad
+    let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
+    this.steer(path[j].x, path[j].z);
+    return dh;
+  }
   // autopilot helpers: steer toward a point (camera-relative stick)
   steer(x, z, jump = false) {
     const p = this.p, dx = x - p.pos.x, dz = z - p.pos.z, d = Math.hypot(dx, dz);
@@ -80,10 +110,11 @@ class Cells extends Mission {
   // cell has not been reached for 25 s does it teleport there, and it notes the cell so the test
   // can report it (a cell nobody can reach is a bug in the level).
   solve() {
-    const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
+    // keep after one cell until it is collected, then take the nearest
+    const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
-    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.pad = null; }
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; }
     if (this.t - this.aimT > 25) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
@@ -92,18 +123,10 @@ class Cells extends Mission {
     inp.jumpHeld = false;
     // in space: jet up or drift down to the cell's height while flying at it
     if (this.w.jetpack) { this.steer(c.position.x, c.position.z); inp.jumpHeld = up > -0.2; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
-    // in the air: steer at the cell, holding JUMP to float
-    if (!w.grounded) { this.steer(c.position.x, c.position.z); inp.jumpHeld = true; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
-    // too high to jump to from here: use the pad that throws Rory highest near the cell
-    if (up > 2.6) {
-      if (!this.pad) {
-        const pads = this.w.pads.filter(p => p.y + p.power * p.power / 31 > c.position.y);
-        this.pad = pads.sort((a, b) => Math.hypot(a.x - c.position.x, a.z - c.position.z) - Math.hypot(b.x - c.position.x, b.z - c.position.z))[0] || null;
-      }
-      if (this.pad) { this.steer(this.pad.x, this.pad.z); return; }
-    }
-    // on the level: walk up and jump for it
-    this.steer(c.position.x, c.position.z, up > 1.0 && dh < 2.2);
+    // cells riding on something that moves: run and jump at them
+    if (c.userData.follow) { this.steer(c.position.x, c.position.z, up > 0.8 && dh < 3 && w.grounded); if (!w.grounded) inp.jumpHeld = true; return; }
+    // everywhere else: plan a route over the level and follow it
+    this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
   }
 }
 
@@ -181,8 +204,9 @@ class Roundup extends Mission {
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
     if (b !== this.aim) { this.aim = b; this.aimT = this.t; }
     if (this.t - this.aimT > 25) { (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} floater ${this.bots.indexOf(b)}`); this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2); this.aimT = this.t; return; }
-    const d = this.steer(b.r.pos.x, b.r.pos.z, b.r.pos.y - pp.y > 1.2 && b.r.pos.distanceTo(pp) < 4);
-    if (d < 3.5) { this.p.yaw = Math.atan2(b.r.pos.x - pp.x, b.r.pos.z - pp.z); this.g.input.actionPressed = true; }
+    this.g.input.jumpHeld = false;
+    const d = this.walkTo(b.r.pos.x, b.r.pos.y + 0.6, b.r.pos.z, 2.5, this.bots.map(b => b.r.pos));
+    if (d < 3.5 && Math.abs(b.r.pos.y - pp.y) < 1.2) { this.p.yaw = Math.atan2(b.r.pos.x - pp.x, b.r.pos.z - pp.z); this.g.input.actionPressed = true; }
   }
 }
 
@@ -320,7 +344,8 @@ class Tractor extends Mission {
     const live = this.items.filter(i => i.state === "float"), can = live.filter(it => Math.hypot(it.o.position.x - pp.x, it.o.position.z - pp.z) / 6.5 < (9 - it.h) / rate(it));
     const f = (can.length ? can : live).sort((a, b) => b.h - a.h)[0];
     if (!f) { this.g.input.forced = { mx: 0, my: 0 }; return; }
-    const d = this.steer(f.o.position.x, f.o.position.z + 1.5);
+    this.g.input.jumpHeld = false;
+    const d = this.walkTo(f.o.position.x, f.y0 + 0.7, f.o.position.z, 2.0, this.items.map(i => i.o.position));
     if (d < 2.5 && this.near === f) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
   }
 }
