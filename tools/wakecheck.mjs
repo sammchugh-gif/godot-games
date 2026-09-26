@@ -72,7 +72,18 @@ for (const slug of slugs) {
   const errs = []; pg.on('pageerror', e => errs.push(e.message));
   await pg.goto(`http://127.0.0.1:8399/docs/${slug}/`, { waitUntil: 'load', timeout: 20000 });
   await sleep(1200);
-  await pg.evaluate(`document.querySelectorAll('.shelf-menu-stuck,.shelf-menu-veil').forEach(e => e.remove())`);
+  /* and until the page answers promptly: a game building its 3D scene
+     (Pinball Quest compiles its shaders and captures its reflections) can
+     hold the page for many seconds here in software rendering, and a tap
+     it has not yet read tells us nothing about the sound */
+  for (const t0 = Date.now(); Date.now() - t0 < 90000;) {
+    const a = Date.now();
+    await pg.evaluate('new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))');
+    if (Date.now() - a < 250) break;
+  }
+  await sleep(300);
+  /* the shelf's overlays (by id: they have no class) must not take the tap */
+  await pg.evaluate(`document.querySelectorAll('#shelf-menu-stuck,#shelf-menu-veil').forEach(e => e.remove())`);
   const cdp = await ctx.newCDPSession(pg);
   const audio = cfg.audio || 'window.__audio()', actx = cfg.ctx || 'window.__audioCtx()';
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 215, y: 300 }] });

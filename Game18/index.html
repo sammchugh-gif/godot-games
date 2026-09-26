@@ -1317,12 +1317,19 @@ function viewFor(G,seat,extra){
    hands:G.seats.map(x=>x.hand.slice())}}
  return Object.assign(v,extra||{})}
 
-const HOST={G:null,me:0,seats:[],scores:[0,0,0,0],claimAt:[0,0,0,0],botAt:0,sentT:-1,round:0,mode:"easy",views:null,ended:-1};
+const HOST={G:null,me:0,seats:[],scores:[0,0,0,0],claimAt:[0,0,0,0],botAt:0,sentT:-1,round:0,mode:"easy",views:null,ended:-1,logN:0,showAt:0};
+// A thrown or called tile is shown big in the middle of the table for SHOW
+// seconds, and then whoever plays next - if it is a bot - visibly thinks for
+// THINK more before it plays. Without this a table of bots threw a tile a
+// second, straight into the pile, faster than a child could follow.
+// (Bots in Settings: "take their time" is 1.6 times as long, "quick" half.)
+const SHOW=1.3,THINK=0.9;
+function paceMul(){const sp=settings.speed;return sp===0?1.6:sp===2?0.5:1}
 // seats: {kind:"me"|"bot"|"remote", name, col, cid, conn, live}
 const BOT_NAMES=["Mei","Leo","Pip","Bo","Kit","Ren"];
 function hostNewGame(){const H=HOST;const names=H.seats.map(s=>s.name),bots=H.seats.map(s=>s.kind==="bot"||s.kind==="remote"&&!s.live);
  H.G=newGame({mode:H.mode,seed:(Date.now()^Math.floor(Math.random()*1e9))>>>0,dealer:H.round%4,names,bots});
- H.claimAt=[0,0,0,0];H.botAt=now()+0.6;H.sentT=-1;H.ended=-1;H.views=null;hostSend()}
+ H.claimAt=[0,0,0,0];H.botAt=now()+0.6;H.sentT=-1;H.ended=-1;H.views=null;H.logN=0;H.showAt=0;hostSend()}
 function now(){return performance.now()/1000}
 function claimSecs(){return settings.claim}
 // one tick of the game on the host: bots, a human who has let a claim run
@@ -1332,8 +1339,11 @@ function hostTick(){const H=HOST,G=H.G;if(!G)return;const t=now();
    // (a pass can settle the discard, and then there are no claims left to look at)
    if(!H.claimAt[i])H.claimAt[i]=t+claimSecs();else if(t>H.claimAt[i]){H.claimAt[i]=0;claim(G,i,null);if(G.phase!=="claims")break}}}
  else H.claimAt=[0,0,0,0];
- const w=waitingOn(G);
- if(G.phase!=="end"&&w.some(i=>G.seats[i].bot)&&t>=H.botAt){botStep(G);
+ // a tile thrown or called (or play starting) holds the bots for a moment
+ for(let k=H.logN;k<G.log.length;k++){const e=G.log[k];if(e.k==="discard"||e.k==="call"||e.k==="play")H.showAt=t}
+ H.logN=G.log.length;
+ const w=waitingOn(G),pm=paceMul(),gate=G.phase==="turn"?H.showAt+(SHOW+THINK)*pm:G.phase==="claims"?H.showAt+0.8*pm:0;
+ if(G.phase!=="end"&&w.some(i=>G.seats[i].bot)&&t>=H.botAt&&t>=gate){botStep(G);
   const sp=settings.speed,d={charleston:0.35,vote:0.3,courtesy:0.3,turn:0.95,claims:0.45}[G.phase]||0.6;H.botAt=t+d*(sp===0?1.6:sp===2?0.5:1)}
  if(G.t!==H.sentT)hostSend()}
 // the running scores take a finished game's payments once, before anyone is told
@@ -1439,7 +1449,7 @@ window.addEventListener("resize",reflow);window.addEventListener("orientationcha
 window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
 if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
 resize();setInterval(sizeWatch,200);
-const BUILD="2026.09.24-4";
+const BUILD="2026.09.26-1";
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),TAU=Math.PI*2;
 
 // ================================================================ saves
@@ -1695,18 +1705,25 @@ function startSolo(){netClose();ROLE="host";const H=HOST;H.me=0;H.round=0;H.scor
 
 // ================================================================ the table
 let order=[],sel=new Set(),lastT=-1,lastPhase="",dropT=0,gotResult=-1,pinAuto=true,hintT=0,swapHint=null;
-function openTable(){scene="table";order=[];sel.clear();lastT=-1;gotResult=-1;cardPin=null;pinAuto=true}
+// what is moving on the table: a thrown tile flying to the middle, a call
+// popping up by whoever made it, "Your turn!" when it comes round
+let anims=[],spot=null,rackMid=null;const poolPos=new Map(),FLY=0.4;
+function openTable(){scene="table";order=[];sel.clear();lastT=-1;gotResult=-1;cardPin=null;pinAuto=true;anims=[]}
 // keep the rack in the player's own order: gone tiles leave, new ones go on the end
 function syncOrder(v){const have=new Set(v.hand);order=order.filter(i=>have.has(i));for(const i of v.hand)if(!order.includes(i))order.push(i);
  for(const i of[...sel])if(!have.has(i))sel.delete(i)}
 function sortRack(){order.sort((a,b)=>{const ta=TILE[a],tb=TILE[b],k=t=>t===T_J?-1:t;return k(ta)-k(tb)||a-b})}
 // sounds and the like for whatever happened since the last view
 function onNewView(was,v){if(!v)return;const seen=was?was.t:-1;
- for(const e of v.log){if(e.t<=seen)continue;
+ // (a view's t is the next entry's number, so an entry numbered was.t is new)
+ for(const e of v.log){if(e.t<seen)continue;
+  // (nothing replays for a player joining a game already going)
+  if(was&&e.k==="discard")anims.push({k:"throw",id:e.id,seat:e.seat,t0:T});
+  if(was&&e.k==="call")anims.push({k:"call",seat:e.seat,n:e.n,tile:e.tile,t0:T});
   if(e.k==="discard"){sfx("clack");dropT=T}else if(e.k==="call"){sfx("call");if(e.seat===v.me)say("You called it")}else if(e.k==="passed")sfx("whoosh");
   else if(e.k==="mahjong")sfx(e.seat===v.me?"mahjong":"lose");else if(e.k==="swap")sfx("joker");else if(e.k==="wall")sfx("wall");
   else if(e.k==="draw"&&e.seat===v.me)sfx("pick");else if(e.k==="joined"||e.k==="left")sfx("join")}
- if(v.phase==="turn"&&v.turn===v.me&&(!was||was.turn!==v.me||was.phase!=="turn"))sfx("turn");
+ if(v.phase==="turn"&&v.turn===v.me&&(!was||was.turn!==v.me||was.phase!=="turn")){sfx("turn");if(was)anims.push({k:"yours",t0:T})}
  if(v.phase==="end"&&gotResult!==v.t){gotResult=v.t;recordResult(v)}}
 function recordResult(v){const r=v.result;if(!r)return;me.games++;if(!r.wall&&r.winner===v.me){me.wins++;me.best=Math.max(me.best,r.hand?r.hand.value:0)}
  if(r.pay)me.points+=r.pay[v.me];save()}
@@ -1736,6 +1753,10 @@ function drawTable(dt){const v=myView();felt();if(!v){txt(NET.err||"Waiting for 
   const x0=W/2-(rowN*tw+(drawnSep&&r===rows-1?0.4*tw:0))/2;let x=x0+c*tw+(drawnSep&&id===v.drawn&&r===rows-1?0.4*tw:0);
   const lift=sel.has(id)?-tw*0.28:0;rack.push({id,x,y:rackY+r*(th+8*U)+lift,w:tw,h:th})});
  if(drag){const i=rack.findIndex(q=>q.id===drag.id);if(i>=0)rack[i].x=drag.x-tw/2,rack[i].y-=tw*0.2}
+ rackMid={x:W/2,y:rackY+th/2};
+ // my turn: the rack glows
+ if(v.phase==="turn"&&v.turn===v.me&&rack.length){const x0=Math.min(...rack.map(q=>q.x))-8*U,x1=Math.max(...rack.map(q=>q.x+q.w))+8*U,y0=Math.min(...rack.map(q=>q.y))-8*U,y1=Math.max(...rack.map(q=>q.y+q.h))+6*U;
+  cx.save();cx.globalAlpha=0.55+0.35*Math.sin(T*4.5);cx.strokeStyle="#ffd43b";cx.lineWidth=4*U;rr(x0,y0,x1-x0,y1-y0,12*U);cx.stroke();cx.restore()}
  const need=pinNeeds(v);
  for(const q of rack){const c=TILE[q.id];tile(c,q.x,q.y,q.w*0.97,{glow:sel.has(q.id)?"#ffd43b":q.id===v.drawn&&v.turn===v.me?"#74c0fc":null,dot:need&&need.has(c)?"#51cf66":null,alpha:need&&!need.has(c)&&c!==T_J?0.78:1})}
  // ---- my exposures, above the rack
@@ -1745,11 +1766,12 @@ function drawTable(dt){const v=myView();felt();if(!v){txt(NET.err||"Waiting for 
  for(let r=1;r<4;r++)drawSeat(v,(v.me+r)%4,r,port,rackY);
  // ---- the pool
  drawPool(v,port,eY);
+ drawTurnEdge(v);drawAnims(v);
  // ---- the hand the player is going for, just above their buttons
  if(settings.hints&&cardPin!=null&&v.phase!=="end"&&!(v.phase==="claims"&&v.claim))drawGoal(v,eY-44*U-8*U-(v.exp[v.me].length?0:-(tw*0.2)));
  // ---- what the player can do
  drawActions(v,rackY,eY,tw);
- if(v.phase==="end")drawResult(v);
+ if(v.phase==="end")drawResult(v);else drawYours();
  txt(v.scores?"":"",0,0,1)}
 let rack=[];
 function drawExposures(v,seat,x,y,w,al,vertical){const ex=v.exp[seat];if(!ex.length)return 0;let total=0;for(const e of ex)total+=e.k*w+w*0.4;total-=w*0.4;
@@ -1760,12 +1782,16 @@ function drawSeat(v,s,r,port,rackY){const sk=skin(),w=Math.min(150*U,W*0.3),h=46
  if(r===2){x=W/2-w/2;y=topY()+44*U}else if(port){x=r===1?sideR()-w:sideL();y=topY()+98*U}else{x=r===1?sideR()-w:sideL();y=H*0.34}
  const turn=v.turn===s&&(v.phase==="turn"),col=v.names[s]?PCOLS[s%6]:"#aaa";
  cx.fillStyle=turn?"rgba(255,212,59,0.95)":skin().panel;rr(x,y,w,h,12*U);cx.fill();
+ // whose turn it is: a ring that breathes round their name
+ if(turn){cx.save();cx.globalAlpha=0.5+0.45*Math.sin(T*4.5);cx.strokeStyle="#fff3bf";cx.lineWidth=3*U;rr(x-4*U,y-4*U,w+8*U,h+8*U,15*U);cx.stroke();cx.restore()}
  cx.fillStyle=col;cx.beginPath();cx.arc(x+22*U,y+h/2,14*U,0,TAU);cx.fill();txt(v.bots[s]?"B":v.names[s][0],x+22*U,y+h/2+1,14*U,"#fff","center",900);
  fitTxt(v.names[s],x+42*U,y+15*U,15*U,w-70*U,turn?"#3a2600":skin().ink,"left",900);
  txt(v.counts[s]+" tiles",x+42*U,y+33*U,11*U,turn?"#5a3a00":skin().ink,"left",700);
  if(s===v.dealer){cx.fillStyle="#e03131";cx.beginPath();cx.arc(x+w-14*U,y+14*U,10*U,0,TAU);cx.fill();txt("E",x+w-14*U,y+15*U,11*U,"#fff","center",900)}
  if(v.picks&&v.picks[s]){txt("OK",x+w-14*U,y+34*U,11*U,"#8ce99a","center",900)}
  if(v.claimsLeft&&v.claimsLeft[s]&&s!==v.me){txt("...",x+w-14*U,y+34*U,14*U,"#ffe066","center",900)}
+ // a bot thinking: three dots taking turns to bounce
+ if(turn&&v.bots[s])for(let k=0;k<3;k++){const b=Math.max(0,Math.sin(T*6-k*0.9))*4*U;cx.fillStyle="#5a3a00";cx.beginPath();cx.arc(x+w-30*U+k*9*U,y+34*U-b,3*U,0,TAU);cx.fill()}
  // their exposures under the name
  const ew=Math.min(24*U,(w-4*U)/Math.max(1,Math.min(9,v.exp[s].reduce((a,e)=>a+e.k+0.4,0))));
  if(v.exp[s].length){let ex=x,ey=y+h+4*U;for(let ei=0;ei<v.exp[s].length;ei++){const e=v.exp[s][ei];if(ex+e.k*ew>x+w+2){ex=x;ey+=ew*1.34+3*U}
@@ -1782,13 +1808,47 @@ function drawPool(v,port,eY){
  const areaW=right-left,areaH=bot-top;if(areaH<40)return;
  // the latest discard, big, with who threw it
  const L=v.last&&(v.phase==="claims"||v.phase==="turn"&&v.calledFrom<0)?v.last:null,bw=Math.min(58*U,areaH*0.36);let y0=top;
- if(v.last&&v.phase==="claims"){const k=ease((T-dropT)/0.25),x=W/2-bw/2,y=top+(1-k)*-20*U;tileId(v.last[0],x,y,bw,{glow:"#ffd43b"});
+ spot={x:W/2,y:top,w:bw,areaW};
+ if(v.last&&v.phase==="claims"){const x=W/2-bw/2,y=top,flying=anims.some(a=>a.k==="throw"&&a.id===v.last[0]&&T-a.t0<FLY);if(!flying)tileId(v.last[0],x,y,bw,{glow:"#ffd43b"});
   fitTxt((v.last[1]===v.me?"You":v.names[v.last[1]])+" threw "+tname(v.last[0]),W/2,y+bw*1.34+12*U,13*U,areaW,skin().ink,"center",800);y0=top+bw*1.34+24*U}
  const pool=v.pool,m=pool.length;if(!m)return;const h2=bot-y0;
  let pw=34*U;for(;pw>12;pw-=1){const cols=Math.floor(areaW/pw),rowsN=Math.ceil(m/cols);if(rowsN*pw*1.34<=h2)break}
  // the pile sits in the middle of the space it has
  const cols=Math.floor(areaW/pw),rowsN=Math.ceil(m/cols),x0=W/2-Math.min(cols,m)*pw/2,yy=v.phase==="claims"?y0:y0+Math.max(0,(h2-rowsN*pw*1.34)/2);
- pool.forEach(([id,from],i)=>{const r=i/cols|0,c=i%cols;tileId(id,x0+c*pw,yy+r*pw*1.34,pw*0.95,{alpha:i===m-1&&v.phase!=="claims"?1:0.92})})}
+ poolPos.clear();const shown=SHOW*paceMul()+0.3;
+ pool.forEach(([id,from],i)=>{const r=i/cols|0,c=i%cols,x=x0+c*pw,y=yy+r*pw*1.34;poolPos.set(id,{x,y,w:pw*0.95});
+  if(anims.some(a=>a.k==="throw"&&a.id===id&&T-a.t0<shown))return;// still on its way in
+  tileId(id,x,y,pw*0.95,{alpha:i===m-1&&v.phase!=="claims"?1:0.92})})}
+// the side of the table whose turn it is glows a little
+function drawTurnEdge(v){if(v.phase!=="turn"||v.turn===v.me)return;const r=rel(v,v.turn),d=70*U,a=0.22+0.14*Math.sin(T*4.5);let g;
+ if(r===1)g=cx.createLinearGradient(W,0,W-d,0);else if(r===3)g=cx.createLinearGradient(0,0,d,0);else g=cx.createLinearGradient(0,0,0,d);
+ g.addColorStop(0,"rgba(255,212,59,"+a+")");g.addColorStop(1,"rgba(255,212,59,0)");cx.fillStyle=g;
+ if(r===1)cx.fillRect(W-d,0,d,H);else if(r===3)cx.fillRect(0,0,d,H);else cx.fillRect(0,0,W,d)}
+function drawAnims(v){const show=SHOW*paceMul(),nm=i=>i===v.me?"You":v.names[i];anims=anims.filter(a=>T-a.t0<show+1.2);
+ for(const a of anims){const age=T-a.t0;
+  if(a.k==="throw"&&spot){const r=rel(v,a.seat),b=r===0?null:seatBox[r],o=r===0?rackMid:b?{x:b.x+b.w/2,y:b.y+b.h/2}:null;if(!o)continue;
+   const bw=spot.w,tx=spot.x-bw/2,ty=spot.y,live=v.phase==="claims"&&v.last&&v.last[0]===a.id;
+   // from the thrower's seat to the middle, in an arc, growing
+   if(age<FLY){const k=ease(age/FLY),w=lerp(bw*0.5,bw,k),x=lerp(o.x,spot.x,k)-w/2,y=lerp(o.y-w*0.67,ty,k)-Math.sin(k*Math.PI)*36*U;tileId(a.id,x,y,w,{glow:"#ffd43b"});continue}
+   if(live)continue;// the call panel's own display holds it from here
+   // someone called it: it has gone to them, and their call says so
+   if(!v.pool.some(p=>p[0]===a.id))continue;
+   // held in the middle, with who threw it, then down into the pile
+   if(age<show){const cw=Math.min(spot.areaW,260*U);panel(W/2-cw/2,ty-8*U,cw,bw*1.34+38*U,"rgba(255,250,240,0.9)");tileId(a.id,tx,ty,bw,{glow:"#ffd43b"});
+    fitTxt(nm(a.seat)+" threw "+tname(a.id),W/2,ty+bw*1.34+15*U,14*U,cw-16*U,"#3a2600","center",900);continue}
+   const k=ease((age-show)/0.3);if(k>=1)continue;const p=poolPos.get(a.id);
+   if(p)tileId(a.id,lerp(tx,p.x,k),lerp(ty,p.y,k),lerp(bw,p.w,k));else{cx.save();cx.globalAlpha=1-k;tileId(a.id,tx,ty,bw);cx.restore()}}
+  else if(a.k==="call"&&age<show+0.4){const r=rel(v,a.seat),b=r===0?null:seatBox[r],o=r===0&&rackMid?{x:W/2,y:rackMid.y-110*U}:b?{x:b.x+b.w/2,y:b.y+b.h+26*U}:null;if(!o)continue;
+   const sc=age<0.18?ease(age/0.18)*1.25:1.25-0.25*ease((age-0.18)/0.2),al=age>show?1-(age-show)/0.4:1,word=["","","","PUNG!","KONG!","QUINT!"][a.n]||"CALL!";
+   cx.save();cx.globalAlpha=al;cx.translate(o.x,o.y);cx.scale(sc,sc);font(26*U,900);const ww=cx.measureText(word).width+30*U;
+   cx.fillStyle="#e8590c";rr(-ww/2,-22*U,ww,44*U,22*U);cx.fill();cx.strokeStyle="#fff";cx.lineWidth=3*U;cx.stroke();txt(word,0,1,26*U,"#fff","center",900);cx.restore();
+   cx.save();cx.globalAlpha=al;fitTxt(nm(a.seat)+" called "+tName(a.tile),o.x,o.y+34*U,13*U,220*U,skin().ink,"center",900);cx.restore()}
+  }}
+// "Your turn!" over the rack, on top of everything, as the turn comes round
+function drawYours(){for(const a of anims){const age=T-a.t0;if(a.k!=="yours"||age>=1.4||!rackMid)continue;const sc=age<0.2?ease(age/0.2)*1.1:1.1-0.1*ease((age-0.2)/0.2),al=age>1?1-(age-1)/0.4:1;
+  cx.save();cx.globalAlpha=al;cx.translate(W/2,rackMid.y);cx.scale(sc,sc);font(26*U,900);const ww=cx.measureText("Your turn!").width+40*U;
+  cx.fillStyle="rgba(0,0,0,0.3)";rr(-ww/2,-20*U,ww,48*U,24*U);cx.fill();cx.fillStyle="#ffd43b";rr(-ww/2,-24*U,ww,48*U,24*U);cx.fill();cx.strokeStyle="#fff";cx.lineWidth=3*U;cx.stroke();
+  txt("Your turn!",0,1,26*U,"#3a2600","center",900);cx.restore()}}
 // ---- the player's buttons for the phase they are in
 function drawActions(v,rackY,eY,tw){const bh=44*U,y=eY-bh-8*U-(v.exp[v.me].length?0:-(tw*0.2)),ym=Math.min(y,rackY-bh-8*U);swapHint=null;
  const row=(items)=>{const gap=8*U,tot=items.reduce((a,b)=>a+b.w,0)+gap*(items.length-1);let x=W/2-tot/2;for(const b of items){button(x,ym,b.w,bh,b.label,b.fn,b.o);x+=b.w+gap}};

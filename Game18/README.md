@@ -72,6 +72,15 @@ card is theirs and changes every year. Tap **Card** at the table:
   doubles again with no jokers (not on singles and pairs, which can never
   have any). The totals carry on from game to game, and East moves along
   one seat each game.
+- **Following along.** Whoever's turn it is has their name lit up with a
+  ring that breathes, the side of the table they sit on glows, and a bot
+  shows three dots while it thinks. A thrown tile flies from the thrower to
+  the middle of the table and stays there, big, with "Leo threw 5 Dot",
+  before it drops into the pile; a call pops up **PUNG!** (or KONG!, QUINT!)
+  by whoever made it; and **Your turn!** pops over your rack when it comes
+  round. A bot waits about 1.3 seconds after a throw, then thinks for about
+  0.9 more before it plays (Settings, Bots: "take their time" is 1.6 times
+  as long, "quick" half).
 - **?** lifts the tiles a bot would pass or throw. **Sort** puts the rack in
   order; you can also drag tiles to arrange them.
 
