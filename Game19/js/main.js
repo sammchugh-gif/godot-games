@@ -149,6 +149,7 @@ function pressButton(id, b) {
     case "hint": showHint(); break;
     case "mgquit": quitMinigame(); break;
     case "skip": if (G.dialogue.active) { G.dialogue.shown = 1e9; G.dialogue.tap(); } break;
+    case "skipTitles": if (G.titles && G.titles.t > 1) G.titles.t = 99; break;
     case "credits": fadeOut(() => { G.credits = { t: 0 }; setState("credits"); fadeIn(); }); break;
     case "nextact": briefingFor(actOf(G.save.country)); break;
     case "titleFromCredits": fadeOut(() => { setState("title"); Music.setMode("calm"); fadeIn(); }); break;
@@ -162,10 +163,19 @@ function beginGame(fresh) {
   if (fresh) { G.save = newSave(); saveGame(); }
   G.confirmNew = false;
   const act = actOf(G.save.country);
+  // Act One opens cold, in the middle of the action in Greenland
+  if (coldOpenPending()) { enterCountry(0); return; }
   if (!G.save.briefed[act]) briefingFor(act); else goMap();
 }
+function coldOpenPending() { return ACTS[0].coldOpen && !G.save.briefed[1] && G.save.country === 0; }
 function briefingFor(act) {
-  fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("tense"); G.card = { title: `ACT ${actWord(act)}`, sub: ACTS[act - 1].title.toUpperCase(), flag: "uk", t: 0, dur: 3 }; G.dialogue.show(ACTS[act - 1].briefing, () => { G.save.briefed[act] = true; saveGame(); goMap(); }); });
+  G.briefAct = act;
+  // after the cold open the titles roll before the first briefing
+  if (act === 1 && ACTS[0].coldOpen && G.save.arrived.greenland) { fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("theme"); G.titles = { t: 0, then: () => showBriefing(act) }; SFX.boom(); }); return; }
+  showBriefing(act);
+}
+function showBriefing(act) {
+  fadeOut(() => { setState("briefing"); fadeIn(); Music.setMode("tense"); G.card = { title: `ACT ${actWord(act)}`, sub: ACTS[act - 1].title.toUpperCase(), flag: "polaris", t: 0, dur: 3 }; G.dialogue.show(ACTS[act - 1].briefing, () => { G.save.briefed[act] = true; saveGame(); goMap(); }); });
 }
 function goMap() {
   fadeOut(() => { Ambience.stop(); Music.setMode("calm"); setState("map"); fadeIn(); });
@@ -174,7 +184,7 @@ function flyNext() {
   const to = G.save.country;
   if (G.save.finished) { fadeOut(() => { G.credits = { t: 0 }; setState("credits"); fadeIn(); }); return; }
   if (G.save.arrived[COUNTRIES[to].id] || to === 0) { enterCountry(to); return; }
-  const from = COUNTRIES[to - 1].act !== COUNTRIES[to].act ? 0 : to - 1;
+  const from = to - 1;
   G.map.fly(from, to, () => enterCountry(to));
 }
 function enterCountry(i) {
@@ -186,7 +196,7 @@ function enterCountry(i) {
     setState("world"); G.pause = false;
     fadeIn();
     const first = !G.save.arrived[c.id];
-    if (first) G.card = { title: `CHAPTER ${i + 1}: ${c.chapter.toUpperCase()}`, sub: `${c.city.toUpperCase()}  ·  ${c.country.toUpperCase()}`, flag: c.flag, t: 0, dur: 3 };
+    if (first) G.card = i === 0 && coldOpenPending() ? { title: `${c.city.toUpperCase()}, ${c.country.toUpperCase()}`, sub: "SOMEWHERE ON THE ICE, RIGHT NOW", flag: c.flag, t: 0, dur: 3.4 } : { title: `CHAPTER ${i + 1}: ${c.chapter.toUpperCase()}`, sub: `${c.city.toUpperCase()}  ·  ${c.country.toUpperCase()}`, flag: c.flag, t: 0, dur: 3 };
     G.save.arrived[c.id] = true; saveGame();
     if (first) G.dialogue.show(c.arrive, null);
   });
@@ -208,8 +218,8 @@ function interact(it) {
     if (!G.save.bugs.includes(it.id)) G.save.bugs.push(it.id);
     G.world.removeBug(it); saveGame(); SFX.unlock();
     const here = bugsIn(c.id), all = G.save.bugs.length;
-    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/${COUNTRIES.length * 3})` : `UMBRA bug disabled.  ${here} of 3 in ${c.city}`, 3);
-    Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : "One of UMBRA's listening devices. Off it goes.", CHARS.pip.voice, null);
+    toast(here >= 3 ? `All three bugs found in ${c.city}!  (${all}/${COUNTRIES.length * 3})` : `Kaldera bug disabled.  ${here} of 3 in ${c.city}`, 3);
+    Speech.say(here >= 3 ? `That is every bug in ${c.city}. Nicely spotted.` : "One of the Baron's listening bugs. Off it goes.", CHARS.pip.voice, null);
     return;
   }
   if (it.kind === "npc") {
@@ -307,7 +317,7 @@ function afterOutro(m) {
   const last = c.missions[c.missions.length - 1];
   if (m.id === last.id) {
     if (isActEnd(G.country)) { finishAct(c.act); return; }
-    // chapter close: Kolya runs off, then the plane
+    // chapter close: the leaving lines, then the next city
     G.dialogue.show(c.leave, () => { goNextCountry(G.country + 1); });
   } else {
     refreshStations();
@@ -352,6 +362,7 @@ function update(dt) {
   if (G.toast) { G.toast.t -= dt; if (G.toast.t <= 0) G.toast = null; }
   if (G.hint) { G.hint.t -= dt; if (G.hint.t <= 0) G.hint = null; }
   if (G.card) { G.card.t += dt; if (G.card.t > G.card.dur) G.card = null; }
+  if (G.titles) { G.titles.t += dt; if (G.titles.t > 5.2) { const f = G.titles.then; G.titles = null; f(); } }
   G.dialogue.update(dt);
   if (G.state === "map") G.map.update(dt);
   if (G.state === "world" || (G.state === "minigame" && G.mg && G.mg.needsWorld)) {
@@ -382,7 +393,7 @@ function draw(dt) {
   switch (G.state) {
     case "title": drawTitle(); break;
     case "menu": drawMenu(); break;
-    case "briefing": UI.drawBriefingRoom(g, W, H, s, G.t); drawSkip(); break;
+    case "briefing": if (G.titles) drawTitles(); else { UI.drawBriefingRoom(g, W, H, s, G.t, G.briefAct); drawSkip(); } break;
     case "map": drawMap(); break;
     case "world": drawWorldHud(); break;
     case "minigame": if (G.mg) { const o = G.mg.fx ? G.mg.fx.offset() : { x: 0, y: 0 }; g.save(); g.translate(o.x, o.y); G.mg.draw(g, W, H, s); g.restore(); drawMgChrome(); } break;
@@ -415,11 +426,21 @@ function button(id, x, y, w, h, label, style, size, opts) { G.buttons.add(id, x,
 function drawSkip() { if (G.dialogue.active) button("skip", G.W - 96 * G.s, 14 * G.s, 82 * G.s, 36 * G.s, "NEXT", "ghost", 15 * G.s); }
 
 // ------------------------------------------------------------- screens
+// the opening titles, after the cold open in Greenland
+function drawTitles() {
+  const { W, H, s } = G, k = G.titles.t;
+  UI.drawTitleBackdrop(g, W, H, s, G.t);
+  g.fillStyle = `rgba(0,0,0,${clamp(1 - k * 0.6, 0.35, 1)})`; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#000"; g.fillRect(0, 0, W, H * 0.11); g.fillRect(0, H * 0.89, W, H * 0.11);
+  const a = clamp((k - 0.4) / 0.8, 0, 1), sc = 0.8 + 0.2 * ease(a);
+  g.save(); g.globalAlpha = a; g.translate(W / 2, H * 0.42); g.scale(sc, sc); UI.drawLogo(g, 0, 0, 60 * s, G.t); g.restore();
+  if (k > 2.4) { g.globalAlpha = clamp((k - 2.4) / 0.6, 0, 1); text(g, "An idea by Rory", W / 2, H * 0.72, 20 * s, "#c8d0e0", "center", 600); text(g, "STARRING AGENT RORY AS AGENT R", W / 2, H * 0.72 + 32 * s, 15 * s, "#7fe3ff", "center", 800, UI.MONO); g.globalAlpha = 1; }
+  button("skipTitles", 0, 0, W, H, "", "ghost", 0, { hidden: true });
+}
 function drawTitle() {
   const { W, H, s } = G;
   UI.drawTitleBackdrop(g, W, H, s, G.t);
-  textShadow(g, "AGENT RORY", W / 2, H * 0.66, 64 * s, "#fff", "center", 900);
-  textShadow(g, "MELTDOWN", W / 2, H * 0.66 + 54 * s, 34 * s, "#ff7a2a", "center", 900);
+  UI.drawLogo(g, W / 2, H * 0.2, 58 * s, G.t);
   if (Math.sin(G.t * 3) > -0.2) text(g, "TAP TO START", W / 2, H * 0.88, 22 * s, "#fff", "center", 700);
   text(g, "Sophia, Rory and Dylan Games, Inc", W / 2, H - 22 * s, 13 * s, "rgba(255,255,255,.45)", "center", 500);
   button("start", 0, 0, W, H, "", "ghost", 0, { hidden: true });
@@ -427,8 +448,7 @@ function drawTitle() {
 function drawMenu() {
   const { W, H, s } = G;
   UI.drawTitleBackdrop(g, W, H, s, G.t);
-  textShadow(g, "AGENT RORY", W / 2, H * 0.16, 52 * s, "#fff", "center", 900);
-  textShadow(g, "MELTDOWN", W / 2, H * 0.16 + 44 * s, 26 * s, "#ff7a2a", "center", 900);
+  UI.drawLogo(g, W / 2, H * 0.12, 40 * s, G.t);
   const bw = 320 * s, bx = W / 2 - bw / 2; let y = H * 0.36;
   const has = G.save && (G.save.done.length || G.save.briefed);
   if (has) { const n = G.save.done.length; button("continue", bx, y, bw, 64 * s, `CONTINUE  (${n}/${TOTAL})`, "primary"); y += 78 * s; }
@@ -525,7 +545,7 @@ function drawMgChrome() {
 }
 function drawEnding() {
   const { W, H, s } = G;
-  UI.drawBriefingRoom(g, W, H, s, G.t);
+  UI.drawBriefingRoom(g, W, H, s, G.t, G.endingAct);
   if (G.endingPhase === 1) {
     g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, 0, W, H);
     // the medal
