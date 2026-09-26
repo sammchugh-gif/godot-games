@@ -753,26 +753,29 @@ class Boss extends Mission {
       b.play("Walking");
       let r = Math.atan2(dx, dz) - b.root.rotation.y; r = Math.atan2(Math.sin(r), Math.cos(r)); b.root.rotation.y += r * Math.min(1, dt * 2);
       if (d > 5) { b.pos.x += Math.sin(b.root.rotation.y) * this.speed * dt; b.pos.z += Math.cos(b.root.rotation.y) * this.speed * dt; }
-      if (this.st > 3.2 - this.lv * 0.3 || d < 4) { this.state = "pound"; this.st = 0; b.play("Jump"); }
+      // it winds up after a short walk, or sooner if Rory is right under it (never straight after being zapped)
+      if (this.st > 3.4 - this.lv * 0.3 || (d < 4 && this.st > 1.4)) { this.state = "pound"; this.st = 0; b.play("Jump"); }
     } else if (this.state === "pound") {
       if (this.st > 0.7 && !this.pounded) {
         this.pounded = true; this.g.sound("hit"); this.g.fx.puff(b.pos.x, b.pos.y + 0.2, b.pos.z, 0xd8c8b0, 30);
         const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.18, 8, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff5ad8).multiplyScalar(3) }));
         ring.rotation.x = Math.PI / 2; ring.position.set(b.pos.x, b.pos.y + 0.3, b.pos.z); this.add(ring);
-        this.rings.push({ m: ring, r: 1, hit: false });
+        // a ring can't catch Rory if he was already inside where it starts
+        this.rings.push({ m: ring, r: 1, hit: Math.hypot(pp.x - b.pos.x, pp.z - b.pos.z) < 2 });
       }
       if (this.st > 1.1) { this.state = "stuck"; this.st = 0; this.pounded = false; b.play("Death"); }
     } else if (this.state === "stuck") {
       if (Math.random() < 0.3) this.g.fx.trail(this.back().x, this.back().y, this.back().z, 0xffd166, 0.3);
-      if (this.st > 3.2 - this.lv * 0.3) { this.state = "walk"; this.st = 0; b.play("Standing"); }
+      if (this.st > 4 - this.lv * 0.3) { this.state = "walk"; this.st = 0; b.play("Standing"); }
     } else if (this.state === "hurt") {
       if (this.st > 1.2) { this.state = "walk"; this.st = 0; }
     }
     // shock rings roll outward; jumping clears them
     for (const r of this.rings) {
-      r.r += dt * (7 + this.lv); r.m.scale.setScalar(r.r); r.m.material.opacity = 1;
+      r.r += dt * this.ringSpeed(); r.m.scale.setScalar(r.r); r.m.material.opacity = 1;
       const dist = Math.hypot(pp.x - r.m.position.x, pp.z - r.m.position.z);
-      if (!r.hit && Math.abs(dist - r.r) < 0.6 && pp.y - this.c.y < 0.5 && this.inv <= 0) { r.hit = true; this.ouch(); }
+      // it only catches feet on the ground: any jump at all clears it
+      if (!r.hit && Math.abs(dist - r.r) < 0.5 && this.p.walker.grounded && this.inv <= 0) { r.hit = true; this.ouch(); }
       if (r.r > this.arenaR * 1.6) r.m.visible = false;
     }
     this.rings = this.rings.filter(r => r.m.visible);
@@ -793,7 +796,7 @@ class Boss extends Mission {
     }
   }
   ouch() {
-    this.hearts--; this.inv = 1.2; this.g.sound("fail");
+    this.hearts--; this.inv = 2; this.g.sound("fail");
     const pp = this.p.pos, away = pp.clone().sub(this.b.pos).setY(0).normalize();
     this.p.walker.vel.set(away.x * 8, 7, away.z * 8); this.p.walker.grounded = false;
     this.g.fx.burst(pp.x, pp.y + 1, pp.z, 0xff3a3a, 20);
@@ -808,6 +811,7 @@ class Boss extends Mission {
     this.g.addCells(3);
     this.finishing = true; this.later(2.2, () => this.win());
   }
+  ringSpeed() { return 5.5 + this.lv * 0.7; }
   stars() { return this.hearts >= 3 ? 3 : this.hearts === 2 ? 2 : 1; }
   hud() { return { ...super.hud(), text: `${"❤".repeat(Math.max(0, this.hearts))}${"♡".repeat(3 - Math.max(0, this.hearts))}  Boss: ${"■".repeat(Math.max(0, this.hp))}${"□".repeat(this.need - Math.max(0, this.hp))}`, progress: 1 - this.hp / this.need }; }
   actionLabel() { return "ZAP"; }
@@ -815,18 +819,31 @@ class Boss extends Mission {
   solve() {
     const b = this.b, pp = this.p.pos, inp = this.g.input;
     if (this.state === "gone") { inp.forced = { mx: 0, my: 0 }; return; }
-    // jump any ring about to reach us
-    for (const r of this.rings) { const dist = Math.hypot(pp.x - r.m.position.x, pp.z - r.m.position.z); if (dist - r.r > 0 && dist - r.r < 1.8 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; } }
-    if (this.state === "stuck") {
-      const y = b.root.rotation.y, bx = b.pos.x - Math.sin(y) * 3, bz = b.pos.z - Math.cos(y) * 3;
-      const d = this.steer(bx, bz);
-      if (d < 1.2) { inp.forced = { mx: 0, my: 0 }; this.p.yaw = Math.atan2(b.pos.x - pp.x, b.pos.z - pp.z); inp.actionPressed = true; }
-    } else {
-      // keep away: circle the arena at a safe distance
-      const a = Math.atan2(pp.x - this.c.x, pp.z - this.c.z) + 0.6, R = this.arenaR * 0.7;
-      const d = Math.hypot(pp.x - b.pos.x, pp.z - b.pos.z);
-      if (d < 9) this.steer(this.c.x + Math.sin(a) * R, this.c.z + Math.cos(a) * R); else inp.forced = { mx: 0, my: 0 };
+    // jump any ring about to reach us (a fifth of a second before it arrives)
+    for (const r of this.rings) {
+      if (r.hit) continue;
+      const gap = Math.hypot(pp.x - r.m.position.x, pp.z - r.m.position.z) - r.r;
+      if (gap > -0.3 && gap < this.ringSpeed() * 0.2 + 0.5 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
     }
+    const jump = inp.jumpPressed;
+    const d = Math.hypot(pp.x - b.pos.x, pp.z - b.pos.z);
+    if (this.state === "stuck") {
+      // round the side to the spot behind it, then zap
+      const y = b.root.rotation.y, bx = b.pos.x - Math.sin(y) * 3, bz = b.pos.z - Math.cos(y) * 3;
+      const side = Math.sign((pp.x - b.pos.x) * Math.cos(y) - (pp.z - b.pos.z) * Math.sin(y)) || 1;
+      const inFront = Math.sin(y) * (pp.x - b.pos.x) + Math.cos(y) * (pp.z - b.pos.z) > 0;
+      const tx = inFront ? b.pos.x + Math.cos(y) * 4 * side - Math.sin(y) * 1.5 : bx, tz = inFront ? b.pos.z - Math.sin(y) * 4 * side - Math.cos(y) * 1.5 : bz;
+      if (this.steer(tx, tz) < 1.2 && !inFront) { inp.forced = { mx: 0, my: 0 }; this.p.yaw = Math.atan2(b.pos.x - pp.x, b.pos.z - pp.z); inp.actionPressed = true; }
+    } else if (d < 8) {
+      // back off to a safe distance, straight away from it
+      const ax = pp.x - b.pos.x, az = pp.z - b.pos.z, n = Math.hypot(ax, az) || 1;
+      let tx = pp.x + ax / n * 4, tz = pp.z + az / n * 4;
+      // but not out of the arena: slide round the edge instead
+      const ex = tx - this.c.x, ez = tz - this.c.z, e = Math.hypot(ex, ez), R = this.arenaR * 0.8;
+      if (e > R) { const a = Math.atan2(ex, ez) + 0.9; tx = this.c.x + Math.sin(a) * R; tz = this.c.z + Math.cos(a) * R; }
+      this.steer(tx, tz);
+    } else inp.forced = { mx: 0, my: 0 };
+    if (jump) { inp.jumpPressed = true; inp.jumpHeld = true; }
   }
 }
 
