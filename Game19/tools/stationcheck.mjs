@@ -14,17 +14,20 @@ await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 const ev = (fn, arg) => page.evaluate(fn, arg);
+// wait on game time, not wall time: under software rendering a scene's first
+// frames can take seconds, and collision only settles once frames have run
+const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 60000 }); };
 const n = await ev(() => __spy.debug.COUNTRIES.length);
 let bad = 0;
-for (let ci = 0; ci < n; ci++) {
+for (let ci = +(process.env.FROM || 0); ci < n; ci++) {
   const info = await ev(ci => { __spy.debug.goto(ci, 0); const c = __spy.debug.COUNTRIES[ci]; for (const it of __spy.world.interactables) it.enabled = true; return { id: c.id, stations: c.missions.map(m => m.station), people: __spy.world.interactables.filter(i => i.kind === "npc").map(i => i.id) }; }, ci);
-  await page.waitForTimeout(400);
+  await waitGame(0.5);
   for (const st of [...info.stations, ...info.people]) {
     const sides = [[0, 1.5], [0, -1.5], [1.5, 0], [-1.5, 0]]; let ok = null; const tried = [];
     for (const [dx, dz] of sides) {
       const r = await ev(([st, dx, dz]) => { const it = __spy.world.interactables.find(i => i.id === st); if (!it) return { missing: true }; const p = __spy.world.player; p.x = it.x + dx; p.z = it.z + dz; p.yaw = Math.atan2(-(it.x - p.x), -(it.z - p.z)); return { x: it.x, z: it.z }; }, [st, dx, dz]);
       if (r.missing) { tried.push("missing"); break; }
-      await page.waitForTimeout(350);
+      await waitGame(0.4);
       const res = await ev(st => { const nr = __spy.world.nearest(); const p = __spy.world.player; const it = __spy.world.interactables.find(i => i.id === st); return { near: nr && nr.id, d: Math.hypot(p.x - it.x, p.z - it.z).toFixed(2) }; }, st);
       tried.push(`${dx},${dz}:${res.near}@${res.d}`);
       if (res.near === st) { ok = [dx, dz]; break; }

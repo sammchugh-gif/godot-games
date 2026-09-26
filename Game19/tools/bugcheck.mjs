@@ -14,6 +14,8 @@ await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 const ev = (f, a) => page.evaluate(f, a);
+// wait on game time, not wall time: collision only settles once frames have run
+const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 60000 }); };
 let bad = 0, total = 0;
 const n = await ev(() => __spy.debug.COUNTRIES.length);
 for (let ci = 0; ci < n; ci++) {
@@ -24,7 +26,7 @@ for (let ci = 0; ci < n; ci++) {
     return { id: __spy.debug.COUNTRIES[ci].id, bounds: w.bounds,
       bugs: w.interactables.filter(i => i.kind === "bug").map(i => ({ id: i.id, x: i.x, y: i.y, z: i.z })) };
   }, ci);
-  await page.waitForTimeout(350);
+  await waitGame(0.5);
   if (info.bugs.length !== 3) { bad++; console.log("BAD", info.id, "has", info.bugs.length, "bugs, expected 3"); }
   // a bug parked next to a station wins nearest() and blocks the mission
   const clash = await ev(() => {
@@ -50,7 +52,7 @@ for (let ci = 0; ci < n; ci++) {
         return {};
       }, [b.id, dx, dz]);
       if (r.gone) break;
-      await page.waitForTimeout(260);
+      await waitGame(0.4);
       const near = await ev(() => { const nr = __spy.world.nearest(); return nr ? nr.id : null; });
       if (near === b.id) { ok = [dx, dz]; break; }
     }
