@@ -10,6 +10,7 @@ import { Nav } from "./nav.js";
 import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing } from "./props.js";
+import { toast } from "./ui.js";
 
 const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -633,6 +634,9 @@ class Chase extends Mission {
     const boost = inp.takeJump() || this.autoBoost;
     this.car.drive(dt, throttle, inp.mx, boost);
     this.autoBoost = false;
+    // stuck against a wall with the pedal down for two seconds: back on the road, facing the right way
+    this.stuckT = Math.abs(this.car.speed) < 0.6 && throttle > 0 ? (this.stuckT || 0) + dt : 0;
+    if (this.stuckT > 2) { this.stuckT = 0; this.backOnRoad(); }
     // the quarry keeps its distance: slower when far ahead, faster when caught up
     const cs = this.carS();
     // how fast Rory is actually getting along the route (not his speedometer: a wide line round
@@ -659,7 +663,18 @@ class Chase extends Mission {
     }
     if (this.car.boost > 0 && Math.random() < 0.8) { const f = this.car.forward(); this.g.fx.trail(this.car.pos.x - f.x * 1.6, this.car.pos.y + 0.2, this.car.pos.z - f.z * 1.6, 0x7fe3ff, 0.35); }
   }
-  debugState() { const f = x => Math.round(x * 10) / 10; return { gap: f(this.s - (this.cs || 0)), qv: f(this.qv), rv: f(this.csv || 0), tags: this.tags, cs: f(this.cs || 0) }; }
+  debugState() { const f = x => Math.round(x * 10) / 10; return { gap: f(this.s - (this.cs || 0)), qv: f(this.qv), rv: f(this.csv || 0), tags: this.tags, cs: f(this.cs || 0), resets: this.resets || 0 }; }
+  // put Rory's car back on the route where he'd got to, pointing along it
+  backOnRoad() {
+    const s = (this.cs || 0) + 3, u = ((s % this.len) + this.len) % this.len / this.len;
+    const p = this.curve.getPointAt(u), t = this.curve.getTangentAt(u), yaw = Math.atan2(t.x, t.z);
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)), b = this.car.body;
+    b.setTranslation({ x: p.x, y: this.hAt(p.x, p.z) + 0.9, z: p.z }, true); b.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true);
+    b.setLinvel({ x: 0, y: 0, z: 0 }, true); b.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    this.resets = (this.resets || 0) + 1;
+    this.g.fx.puff(p.x, p.y + 0.3, p.z, 0xd8d8e0, 20);
+    toast("Back on the road!", 1.6);
+  }
   bubble() {
     this.qv = 0; this.boostT = 0;
     const b = this.add(makeBubble(1.8)); b.position.copy(this.q.position).setY(this.q.position.y + 0.9);
@@ -708,8 +723,12 @@ class Chase extends Mission {
     const cross = f.x * to.z - f.z * to.x, dot = f.x * to.x + f.z * to.z;
     const ang = Math.atan2(cross, dot);
     this.g.input.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
-    this.autoThrottle = Math.abs(ang) > 1.2 && car.speed > 8 ? 0.2 : 1;
-    this.autoBoost = (gap > 18 || gap < 10) && Math.abs(ang) < 0.25;
+    // look up the road: how much it turns in the next stretch, and ease off for a sharp corner
+    const at = k => { const u = ((((cs + k) % this.len) + this.len) % this.len) / this.len, t = this.curve.getTangentAt(u); return Math.atan2(t.x, t.z); };
+    let bend = at(car.speed * 1.6 + 6) - at(2); bend = Math.abs(Math.atan2(Math.sin(bend), Math.cos(bend)));
+    const safe = bend > 1.0 ? 9 : bend > 0.5 ? 13 : 99;
+    this.autoThrottle = (Math.abs(ang) > 1.2 && car.speed > 8) || car.speed > safe + 3 ? -1 : car.speed > safe ? 0.2 : 1;
+    this.autoBoost = (gap > 18 || gap < 10) && Math.abs(ang) < 0.25 && bend < 0.3;
   }
 }
 function animateSeat(rig, dt, steer) {
