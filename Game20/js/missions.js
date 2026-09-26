@@ -437,29 +437,23 @@ class Lasers extends Mission {
   stars() { const s = super.stars(); return Math.max(1, s - (this.tries > 2 ? 1 : 0)); }
   hud() { return { ...super.hud(), text: this.tries ? `Reach the case — zapped ${this.tries}×` : "Jump the low beams. Wait for the others.", progress: Math.max(0, Math.min(1, this.p.pos.clone().sub(this.from).dot(this.dir) / this.len)) }; }
   target() { return this.goal; }
-  // autopilot: walk up to each beam, then go when it's safe
+  // autopilot: keep to the middle, stop short of each beam, go when it will stay clear
   solve() {
     const pp = this.p.pos, inp = this.g.input;
     const rel = pp.clone().sub(this.from), along = rel.dot(this.dir), acr = rel.dot(this.side);
     this.p.camYaw = Math.atan2(-this.dir.x, -this.dir.z);
     inp.jumpHeld = false;
-    const next = this.beams.find(b => b.f * this.len - along > -0.4);
-    const steerAcross = t => Math.max(-1, Math.min(1, (t - acr) * 0.8));
-    if (!next) { inp.forced = { mx: steerAcross(0), my: 1 }; return; }
+    const mid = Math.max(-1, Math.min(1, -acr * 0.8));
+    const next = this.beams.find(b => b.f * this.len - along > 0.25);
+    if (!next) { inp.forced = { mx: mid, my: 1 }; return; }
     const ahead = next.f * this.len - along;
-    const run = 5.2, cross = (ahead + 0.5) / run;          // seconds until we're clear of it
-    let go = true, lane = 0;
-    if (next.kind === "sweep") {
-      // keep to the side the pillar is moving away from, and only cross when it stays clear
-      for (let k = 0; k <= 6; k++) { const t = this.t + cross * k / 6; if (Math.abs(this.across(next, t) - acr) < 1.2) go = false; }
-      lane = this.across(next, this.t) > 0 ? -this.width * 0.3 : this.width * 0.3;
-    } else if (next.kind === "blink") {
-      for (let k = 0; k <= 6; k++) if (this.lit(next, this.t + cross * k / 6 + 0.05)) go = false;
-    } else if (next.kind === "low") {
-      if (ahead < 1.15 && ahead > 0.35 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
-    }
-    if (!go && ahead < 1.6) inp.forced = { mx: steerAcross(lane), my: ahead < 1.2 ? -0.4 : 0 };
-    else inp.forced = { mx: steerAcross(next.kind === "sweep" ? lane : 0), my: 1 };
+    const cross = ((ahead + 0.6) / 5.2) * 1.6 + 0.2;      // seconds until we're clear of it, with room to spare
+    let go = true;
+    if (next.kind === "sweep") { for (let k = 0; k <= 8; k++) if (Math.abs(this.across(next, this.t + cross * k / 8) - acr) < 1.1) go = false; }
+    else if (next.kind === "blink") { for (let k = 0; k <= 8; k++) if (this.lit(next, this.t + cross * k / 8)) go = false; }
+    else if (ahead < 1.15 && ahead > 0.35 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
+    if (go) inp.forced = { mx: mid, my: 1 };
+    else inp.forced = { mx: mid, my: ahead > 1.6 ? 0.6 : 0 };
   }
 }
 
