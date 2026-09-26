@@ -55,6 +55,8 @@ Every kind has an autopilot (`solve`) used by the tests.
   and sound; `js/ui.js` screens, dialogue and HUD; `js/portraits.js` the 3D
   dialogue faces.
 - `STORY.md` is written from `js/story.js` by `node tools/storydoc.mjs`.
+- `js/vendor/` three.js r185 and its addons, Rapier 0.21 (compat build),
+  Tone.js 15. `models/robot.glb` RobotExpressive.
 
 ## Playing
 
@@ -68,12 +70,21 @@ Every kind has an autopilot (`solve`) used by the tests.
 - Three **golden bolts** are hidden in every place, thirty-nine in all.
 - The pause menu has **MISSIONS** (replay any finished mission for more stars)
   and **PICTURE** (simple, good or best graphics).
-- `js/vendor/` three.js r185 and its addons, Rapier 0.21 (compat build),
-  Tone.js 15. `models/robot.glb` RobotExpressive.
+
+## Agent Rory HQ
+
+`hq/` is the spy room the shelf opens. Rory walks round the room to three
+mission screens, one per Agent Rory game; each screen shows how far he has got
+(read from that game's save in localStorage), and OPEN (E) shows the file, to play or
+continue. The room imports this game's engine from
+`../agent-rory-zero-gravity/js/`, so `publish.sh` copies both into `docs/`.
+`hq/list.html` is the quick card list, and the fallback on devices without
+WebGL.
 
 ## Tests
 
-Serve this folder and run, from `Game20/`:
+From `Game20/` (each tool serves the folder itself and drives headless
+Chromium with Playwright):
 
 - `node tools/missions.mjs [id,id,...]` starts each mission directly and lets
   its autopilot finish it (defaults to all sixty).
