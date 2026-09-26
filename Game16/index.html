@@ -68,7 +68,7 @@ resize();
 
 // Shown small on the title screen, so it is always clear which version a
 // phone is running. A Home Screen app can hold on to an old copy for days.
-const BUILD="2026.09.24-2";
+const BUILD="2026.09.26-2";
 const TAU=Math.PI*2;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t);
 // Levels are built from a seed, so the same number gives the same jungle on
@@ -90,9 +90,11 @@ const store={get(k,d){try{const v=localStorage.getItem("vineswing."+k);return v=
 const PCOLS=["#ff6b6b","#4dabf7","#51cf66","#fcc419","#cc5de8","#ff922b"];
 function newProfile(name,i){return{id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e4),name,col:PCOLS[i%PCOLS.length],
  bananas:0,stars:{},best:{},owned:{monkey:1,nohat:1,leaves:1},char:"monkey",hat:"nohat",trail:"leaves",
- items:{magnet:1,shield:1,reach:1},worlds:[1,0,0,0,0,0],daily:{},streak:0,lastDaily:"",flips:0}}
+ items:{magnet:1,shield:1,reach:1},worlds:[1,0,0,0,0,0,1],daily:{},streak:0,lastDaily:"",flips:0}}
 let profiles=store.get("profiles",null);
 if(!Array.isArray(profiles)||!profiles.length){profiles=["Sophia","Rory","Dylan"].map(newProfile);store.set("profiles",profiles)}
+// the Grove came after these profiles were made: it is open for everyone
+for(const p of profiles)if(p.worlds&&!p.worlds[6])p.worlds[6]=1;
 let me=profiles.find(p=>p.id===store.get("who",""))||profiles[0];
 function save(){store.set("profiles",profiles);store.set("who",me.id)}
 const settings=Object.assign({music:true,sfx:true},store.get("settings",{}));
@@ -130,11 +132,20 @@ const WORLDS=[
  {name:"Safari Savanna",short:"Safari",sky:["#f5a25d","#fff1cf"],far:"#dca872",mid:"#7d6a2c",near:"#9a7a2e",floor:"#5f8a76",floorTop:"#c8e3c0",
   ring:"#a0522d",ledge:"#b8653a",ledgeTop:"#d9b85a",acc:"#ffcf5a",price:150,need:10,hazard:"river",after:0},
  {name:"Night Rainforest",short:"Night",sky:["#0b1330","#34507a"],far:"#1d3550",mid:"#16293f",near:"#0e1c2c",floor:"#1d4a6a",floorTop:"#6fd0ff",
-  ring:"#7fe0c8",ledge:"#3c3a4c",ledgeTop:"#3f8f6a",acc:"#9ff0ff",price:350,need:12,hazard:"water",after:4}];
+  ring:"#7fe0c8",ledge:"#3c3a4c",ledgeTop:"#3f8f6a",acc:"#9ff0ff",price:350,need:12,hazard:"water",after:4},
+ // The easy world, open to everyone, before the Jungle: rings close together
+ // and level with each other, flags close together, nothing that hurts. It
+ // is painted (and sounds) like the Jungle - art says which world to look like.
+ {name:"Banana Grove",short:"Grove",sky:["#ffd43b","#fff3bf"],far:"#6dbb8a",mid:"#3e8f5c",near:"#1f5e3a",floor:"#2b93bd",floorTop:"#7fd6f0",
+  ring:"#c98a3c",ledge:"#8a5a2e",ledgeTop:"#5fbf4a",acc:"#ffd43b",price:0,need:0,hazard:"water",art:0,easy:1}];
+const artOf=w=>WORLDS[w].art!=null?WORLDS[w].art:w;
+// what a level is called on the map and its card: the Grove comes before
+// the Jungle's 1-1, so its levels are 0-1 to 0-10
+const shownId=(w,i)=>(WORLDS[w].easy?0:w+1)+"-"+(i+1);
 WORLDS[1].after=0;WORLDS[2].after=1;
 // The map shows the worlds from easiest to hardest; the new ones sit
 // between the old ones rather than after the volcano.
-const TAB_ORDER=[0,4,1,5,2,3];
+const TAB_ORDER=[6,0,4,1,5,2,3];
 // Every level has a name, so "the barrel one" is something a child can say.
 const LEVEL_NAMES=[
  ["First Swing","Banana Trail","Bamboo Climb","Treetop Dash","Hoop Highway","Thorny Dip","Long Jumps","Buzzy Bees","Prickle Pass","Canopy King"],
@@ -142,7 +153,8 @@ const LEVEL_NAMES=[
  ["Sliding Rings","Water Wheels","Bee Mist","Wobbly Ropes","Rapids Rush","Thorn Falls","Rainbow Leap","Slippery Run","Cloud Swing","The Big Drop"],
  ["Hot Start","Fireball Alley","Lava Hop","Ember Run","Ash Clouds","Crumbly Crater","Magma Leap","Smoky Swing","Molten Mayhem","Volcano Crown"],
  ["Zip Across","Termite Towers","Hippo River","Zebra Dash","Buzzing Acacias","Giraffe Run","Dusty Hoops","Thorn Tree Trail","Sliding Sunset","King of the Plains"],
- ["Springy Branches","Moonlit Rings","Night Bees","Thorn Thicket","Owl Hollow","Crumbly Roots","Shadow Swing","Starry Hoops","Midnight Maze","Dawn Chorus"]];
+ ["Springy Branches","Moonlit Rings","Night Bees","Thorn Thicket","Owl Hollow","Crumbly Roots","Shadow Swing","Starry Hoops","Midnight Maze","Dawn Chorus"],
+ ["Easy Swing","Monkey Steps","Little Leaps","Banana Bunch","Hoop-de-Loop","Sunny Swing","Swing Along","Treetop Hoops","Coconut Climb","Grove Hero"]];
 // Cosmetic only. Nothing in the shop makes a level easier except the
 // power-ups, which are used up.
 const CHARS=[
@@ -173,15 +185,16 @@ const FEAT_AT=[
  {move:0,ring:0,pillar:0,lowthorn:1,crumble:3,bee:2,highthorn:5,wheel:1,barrel:4,pole:7},
  {move:0,ring:0,pillar:0,lowthorn:0,crumble:0,bee:0,highthorn:2,pole:0,barrel:0,zip:1,spring:2,wheel:3},
  {pillar:1,ring:0,lowthorn:2,bee:4,highthorn:6,move:7,zip:0,pole:3},
- {move:0,bee:0,lowthorn:1,crumble:2,highthorn:3,ring:4,pillar:5,spring:0,zip:4,pole:6}];
+ {move:0,bee:0,lowthorn:1,crumble:2,highthorn:3,ring:4,pillar:5,spring:0,zip:4,pole:6},
+ {ring:4,pole:8}];
 const NEWK={pole:1,barrel:1,zip:1,spring:1,wheel:1};
 const NAME_LEAN=[[/Hoop/,"ring"],[/Bee/,"bee"],[/Crumbl/,"crumble"],[/Sliding|Wobbly/,"move"],[/Pillar|Tower/,"pillar"],
  [/Thorn|Prickl|Spiky/,"thorn"],[/Barrel/,"barrel"],[/Climb|Bamboo/,"pole"],[/Zip/,"zip"],[/Spring/,"spring"],[/Wheel/,"wheel"]];
 const LEAN_NAME={pole:"Climbing poles",barrel:"Blast barrels",zip:"Zip lines",spring:"Springy branches",wheel:"Water wheels"};
-const D0=[0,.2,.34,.5,.12,.3],DSTEP=[.042,.04,.04,.05,.04,.04];
+const D0=[0,.2,.34,.5,.12,.3,0],DSTEP=[.042,.04,.04,.05,.04,.04,.01];
 // Seeds that tools/vinecheck.mjs has proved finishable; a level without one
 // in here falls back to its default.
-const SEEDS={"1-1":54782730,"1-2":809111715,"1-3":1126830078,"1-4":1907153369,"1-5":14302617,"1-6":524654,"1-7":1140061159,"1-8":52695715,"1-9":1334160978,"1-10":1142209216,"2-1":1796381347,"2-2":1865447672,"2-3":1583427631,"2-4":2110270634,"2-5":1325104912,"2-6":999173227,"2-7":1453167897,"2-8":452432911,"2-9":1354113437,"2-10":1874529810,"3-1":1090745578,"3-2":1703182393,"3-3":673782214,"3-4":201762207,"3-5":1371735810,"3-6":229327742,"3-7":387720881,"3-8":1326078790,"3-9":1103193178,"3-10":405304718,"4-1":2031094301,"4-2":362985819,"4-3":2065603724,"4-4":2080119948,"4-5":563148908,"4-6":2110020807,"4-7":1912784705,"4-8":75872511,"4-9":2140341872,"4-10":1495296593,"5-1":1577737646,"5-2":137414,"5-3":119719895,"5-4":1711472794,"5-5":206944689,"5-6":924535609,"5-7":1046947090,"5-8":336525504,"5-9":541205243,"5-10":1894092265,"6-1":40604,"6-2":572918313,"6-3":449773362,"6-4":354791,"6-5":778196435,"6-6":579354177,"6-7":79982344,"6-8":1057198180,"6-9":1530745272,"6-10":1184785201};
+const SEEDS={"1-1":54782730,"1-2":809111715,"1-3":1126830078,"1-4":1907153369,"1-5":14302617,"1-6":524654,"1-7":1140061159,"1-8":52695715,"1-9":1334160978,"1-10":1142209216,"2-1":1796381347,"2-2":1865447672,"2-3":1583427631,"2-4":2110270634,"2-5":1325104912,"2-6":999173227,"2-7":1453167897,"2-8":452432911,"2-9":1354113437,"2-10":1874529810,"3-1":1090745578,"3-2":1703182393,"3-3":673782214,"3-4":201762207,"3-5":1371735810,"3-6":229327742,"3-7":387720881,"3-8":1326078790,"3-9":1103193178,"3-10":405304718,"4-1":2031094301,"4-2":362985819,"4-3":2065603724,"4-4":2080119948,"4-5":563148908,"4-6":2110020807,"4-7":1912784705,"4-8":75872511,"4-9":2140341872,"4-10":1495296593,"5-1":1577737646,"5-2":137414,"5-3":119719895,"5-4":1711472794,"5-5":206944689,"5-6":924535609,"5-7":1046947090,"5-8":336525504,"5-9":541205243,"5-10":1894092265,"6-1":40604,"6-2":572918313,"6-3":449773362,"6-4":354791,"6-5":778196435,"6-6":579354177,"6-7":79982344,"6-8":1057198180,"6-9":1530745272,"6-10":1184785201,"7-1":48523,"7-2":153252,"7-3":1624592314,"7-4":1225930301,"7-5":1088911510,"7-6":1849317775,"7-7":1524897530,"7-8":1231241475,"7-9":1034985125,"7-10":595975541};
 function levelSpec(w,i){const feats={},at=FEAT_AT[w];
  for(const k in at)if(i>=at[k])feats[k]=at[k]===i&&(w>0||i>0)?(NEWK[k]?4:3):NEWK[k]?2:1;
  // so that no two levels feel the same, each one leans on one thing: the
@@ -192,9 +205,9 @@ function levelSpec(w,i){const feats={},at=FEAT_AT[w];
  const nk=[];for(const k in feats)for(let n=NEWK[k]?2:1;n--;)nk.push(k);
  if(nk.length&&!nk.some(k=>feats[k]>2))feats[nk[(i*7+w*3)%nk.length]]=3;
  const d=D0[w]+DSTEP[w]*i;
- const len=w===0&&i===0?1500:w===0&&i===1?2000:2400+d*4000;
+ const easy=!!WORLDS[w].easy,len=easy?1400+120*i:w===0&&i===0?1500:w===0&&i===1?2000:2400+d*4000;
  const id=(w+1)+"-"+(i+1);
- return{id,world:w,idx:i,d,len,feats,seed:SEEDS[id]||(1009+w*7919+i*104729),tut:w===0&&i<3?i+1:0,name:LEVEL_NAMES[w][i]}}
+ return{id,world:w,idx:i,d,len,feats,seed:SEEDS[id]||(1009+w*7919+i*104729),tut:w===0&&i<3?i+1:0,easy,name:LEVEL_NAMES[w][i]}}
 function dayKey(dt){dt=dt||new Date();return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0")}
 function dailySpec(key){let h=2166136261;for(const c of key){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}h>>>=0;
  const day=Math.floor(Date.parse(key+"T12:00:00Z")/864e5),w=((day%6)+6)%6,feats={};
@@ -214,7 +227,8 @@ function genLevel(sp){
  let ax=250,ay=230;
  const A=(x,y,type,o)=>{const a=Object.assign({x,y,type:type||0,mx:0,my:0,ms:0,mp:0},o||{});L.anchors.push(a);return a};
  A(ax,ay);
- const gold=[],spc=()=>lerp(sp.tut?255:265,345,d)*(0.93+0.14*r()),nh=y=>clamp(y+(r()*2-1)*lerp(20,95,d),125,285);
+ // (in the Grove the rings are closer together and nearly level)
+ const gold=[],spc=()=>lerp(sp.easy?235:sp.tut?255:265,345,d)*(0.93+0.14*r()),nh=y=>clamp(y+(r()*2-1)*lerp(sp.easy?12:20,95,d),125,285);
  const B=(x,y)=>L.bananas.push({x,y});
  // bananas trace the way from one ring to the next: under the one you are
  // on, and in an arc over the gap to the next
@@ -230,7 +244,7 @@ function genLevel(sp){
  let since=0,last="",count=0;const star=Object.keys(f).sort((a,b)=>f[b]-f[a]).find(k=>f[k]>=3);
  // the very first level gets its ledges closer together: a splash there
  // should cost a few seconds, not the whole level
- const cpEvery=sp.tut===1?450:lerp(1100,1650,d);
+ const cpEvery=sp.tut===1?450:sp.easy?650:lerp(1100,1650,d);
  if(sp.tut===1){L.signs.push({x:120,y:250,t:"HOLD",icon:1},{x:640,y:330,t:"LET GO",icon:2})}
  if(sp.tut===2){L.signs.push({x:160,y:250,t:"GOLD BANANAS",icon:3})}
  while(ax<sp.len){
@@ -358,7 +372,7 @@ function beeAt(b,t){AP.x=b.x+b.ax*Math.sin(t*b.s*0.5+b.p);AP.y=b.y+b.ay*Math.sin
 function newRun(L,o){o=o||{};return{x:0,y:PLAT-MR,vx:0,vy:0,att:-1,L:0,Lt:0,t:0,gr:1,rot:0,spin:0,air:0,cp:0,dead:0,fin:0,
  bn:new Uint8Array(L.bananas.length),gd:new Uint8Array(L.golds.length),br:new Uint8Array(L.anchors.length),cr:new Float32Array(L.anchors.length),
  rg:new Float32Array(L.rings.length),nb:0,ng:0,flips:0,deaths:0,grabs:0,shield:o.shield?1:0,magnet:o.magnet?1:0,reach:o.reach?REACH_BIG:REACH,
- held:0,nog:0,hopT:0,last:-1,lastT:0,bt:0,bh:0,ch:0,zu:0,zv:0,peg:0,ct:0,ev:null}}
+ held:0,cl:0,cc:0,nog:0,hopT:0,last:-1,lastT:0,bt:0,bh:0,ch:0,zu:0,zv:0,peg:0,ct:0,ev:null}}
 function cloneRun(s){const c=Object.assign({},s);c.bn=s.bn.slice();c.gd=s.gd.slice();c.br=s.br.slice();c.cr=s.cr.slice();c.rg=s.rg.slice();c.ev=null;return c}
 function emit(s,k,a,b,c){if(s.ev)s.ev.push({k,a,b,c})}
 // Which ring a hold would take: the furthest one forward within reach, as long
@@ -423,6 +437,9 @@ function ride(L,s,a,hold){const i=s.att;s.gr=0;
   if(!hold){s.vx=s.vx*1.5+60;s.vy=s.vy*1.5-320;s.att=-1;s.spin=2;s.last=i;s.lastT=0.4;emit(s,"let")}}}
 // the lowest a hanging monkey may swing: its feet well clear of the water
 const safeLen=ay=>FLOOR-64-ay,GRABMIN=100;
+// after a catch close to a ring, how high its swing may go: 1 is level
+// with the ring, 2.5 right round it (see the brake in step)
+const SWING_UP=1.3;
 function step(L,s,hold,pull){
  if(s.fin)return;
  s.t+=DT;
@@ -440,7 +457,7 @@ function step(L,s,hold,pull){
    // a catch close to the ring still gives a comfortable length of vine,
    // slack until the monkey drops onto it: a very short vine whirls the
    // monkey round the ring faster than anyone can aim a let-go
-   s.att=i;s.L=s.Lt=clamp(Math.max(d,s.gr?d:GRABMIN),LMIN,s.reach);s.grabs++;
+   s.att=i;s.L=s.Lt=clamp(Math.max(d,s.gr?d:GRABMIN),LMIN,s.reach);s.grabs++;s.cl=0;s.cc=!s.gr&&d<GRABMIN?1:0;
    if(s.gr){// from a standing start the vine reels in and lifts the monkey clear of the ledge
     s.Lt=clamp(d*0.66,LMIN,s.reach);s.gr=0}
    else{// a grab in flight keeps the speed and turns it along the swing, so a
@@ -461,14 +478,25 @@ function step(L,s,hold,pull){
  if(s.att>=0){const a=L.anchors[s.att],p=anchorAt(a,s.t),dx=s.x-p.x,dy=s.y-p.y,d=Math.hypot(dx,dy)||1,nx=dx/d,ny=dy/d;
   // holding on pumps the swing a little each way, like legs on a playground swing
   const tx=-ny,ty=nx,vt=s.vx*tx+s.vy*ty,sp=Math.hypot(s.vx,s.vy);
-  // (less so on a short vine, which would otherwise wind up into a whirl)
-  if(sp<Math.min(950,450+2.2*s.L)&&Math.abs(vt)>20){const g=Math.sign(vt)*420*DT;s.vx+=tx*g;s.vy+=ty*g}
+  // (less so on a short vine, which would otherwise wind up into a whirl),
+  // and after a close catch never much beyond a swing level with the ring.
+  // (A crumbling ring drops the monkey within a second anyway.)
+  const up=sp*sp+2*GRAV*(p.y+s.L-s.y),lvl=2*GRAV*s.L,tame=s.cc&&!s.cl&&(a.type===0||a.type===2);
+  if(sp<Math.min(950,450+2.2*s.L)&&(!tame||up<SWING_UP*lvl)&&Math.abs(vt)>20){const g=Math.sign(vt)*420*DT;s.vx+=tx*g;s.vy+=ty*g}
   // sliding a finger up the screen climbs the vine, down lowers it. Climbing
   // keeps the swing's turning moment, so a shorter vine swings faster - the
   // skater pulling in their arms - and that is a skill worth learning
   if(pull){const L0=s.L,nl=clamp(s.L+pull,LMIN,Math.min(s.reach+40,safeLen(p.y)));
    if(nl<L0&&d>=L0-2){const k=L0/nl-1;let bx=s.vx+tx*vt*k,by=s.vy+ty*vt*k;const b=Math.hypot(bx,by);if(b>VMAX){bx*=VMAX/b;by*=VMAX/b}s.vx=bx;s.vy=by}
-   s.L=nl;s.Lt=Math.min(s.Lt,nl);if(pull>0)s.Lt=nl}
+   s.L=nl;s.Lt=Math.min(s.Lt,nl);if(pull>0)s.Lt=nl;if(pull<0)s.cl=1}
+  // A fast catch close to a ring used to whirl the monkey up over the top:
+  // the vine went slack and it flopped round and round the ring, out of
+  // anyone's control. So after a close catch the swing is gently eased back
+  // to one that stops a little above level with the ring. A player who
+  // climbed the vine for speed has asked for the whirl, and keeps it; a
+  // catch from further out keeps all its speed, as it always did.
+  if(tame&&d>=s.L-2&&up>SWING_UP*lvl){const h=2*GRAV*(p.y+s.L-s.y),e=SWING_UP*lvl+(up-SWING_UP*lvl)*Math.exp(-DT/0.2),v2=Math.max(e-h,0);
+   const k=sp>1?Math.sqrt(v2)/sp:1;s.vx*=k;s.vy*=k}
   const cap=safeLen(p.y);if(s.Lt>cap)s.Lt=Math.max(LMIN,cap);
   if(s.L>s.Lt)s.L=Math.max(s.Lt,s.L-900*DT);
   if(a.type===1){s.cr[s.att]+=DT;if(s.cr[s.att]>0.85){s.br[s.att]=1;emit(s,"crumble",s.att);
@@ -784,8 +812,12 @@ function drawSpecial(w,a,i,s,T,tgt){const t=s?s.t:T,on=s&&s.att===i;
   else{const col=w===3?"#3a2a24":w===5?"#2f3a44":w===1?"#8a7250":"#5a4a3a",g=cx.createLinearGradient(a.x-11,0,a.x+11,0);g.addColorStop(0,shade(col,-0.3));g.addColorStop(0.45,shade(col,0.25));g.addColorStop(1,shade(col,-0.35));
    cx.fillStyle=g;rrW(a.x-11,a.y,22,h,8);cx.fill();cx.strokeStyle=shade(col,-0.45);cx.lineWidth=1.5;for(let y=a.y+30;y<FLOOR;y+=34){cx.beginPath();cx.moveTo(a.x-9,y);cx.quadraticCurveTo(a.x,y+6,a.x+9,y);cx.stroke()}
    if(w!==3)for(let y=a.y+60;y<FLOOR-40;y+=90){cx.fillStyle=w===5?"#3f8f6a":"#5f9f3a";cx.beginPath();cx.ellipse(a.x+(y%180?8:-8),y,8,4,0.4,0,TAU);cx.fill()}}
-  // a tuft of leaves on top, bent over with the wind
-  const sw=Math.sin(T*1.3+a.x)*0.12;for(let k=0;k<5;k++)leaf(a.x,a.y+4,34,-Math.PI/2+(k-2)*0.55+sw,w===3?"#6a4a3a":w===5?"#2f8f6a":"#5fae3a");
+  // a round cap on top. (It used to be a tuft of pointed leaves, which the
+  // kids took for spikes that would hurt, and so kept away from the poles.)
+  const capC=w===0||w===4?"#a4c050":w===3?"#4a3a30":w===5?"#3a4652":w===1?"#9a8260":"#6a5a4a";
+  cx.fillStyle=capC;cx.beginPath();cx.ellipse(a.x,a.y+2,13,10,0,Math.PI,TAU);cx.closePath();cx.fill();
+  cx.strokeStyle=shade(capC,-0.35);cx.lineWidth=1.5;cx.stroke();
+  cx.fillStyle="rgba(255,255,255,0.35)";cx.beginPath();cx.ellipse(a.x-4,a.y-3,4,2.5,-0.3,0,TAU);cx.fill();
   // dashes up the side say "climb me" the first few times
   if(tgt&&!on){cx.strokeStyle="rgba(255,255,200,0.8)";cx.lineWidth=3;for(let k=0;k<3;k++){const yy=a.y+120+((T*80+k*40)%120);cx.beginPath();cx.moveTo(a.x-24,yy+8);cx.lineTo(a.x-18,yy);cx.lineTo(a.x-12,yy+8);cx.stroke()}}}
  else if(a.type===4){// a blast barrel, pointing the way it will fire
@@ -1272,7 +1304,7 @@ function loadGhost(id){const g=store.get(ghostKey(id),null);return g&&g.pts&&g.p
 let fx=null;
 function freshFx(){return{shake:0,combo:0,best:0,comboBn:0,air:false,dieX:0,dieY:0,dieKind:"",zoom:1,praise:0}}
 function startLevel(sp,use){fx=freshFx();lv=genLevel(sp);items=use||{};run=newRun(lv,items);started=false;acc=0;steps=0;rec=[];ghost=loadGhost(sp.id);
- parts.length=0;pops.length=0;ribbon=[];doneInfo=null;camSnap=true;scene="play";setMusic(lv.world)}
+ parts.length=0;pops.length=0;ribbon=[];doneInfo=null;camSnap=true;scene="play";setMusic(artOf(lv.world))}
 function restart(){startLevel(lv.spec,{})}
 function nextSpec(){const s=lv.spec;if(s.daily||s.idx>=9)return null;const n=levelSpec(s.world,s.idx+1);return unlocked(s.world,s.idx+1)?n:null}
 function finishRun(){const s=lv.spec,t=Math.round(run.t*10)/10,id=s.id,daily=!!s.daily;
@@ -1341,7 +1373,7 @@ function playUpdate(dt){if(!started){if(holding()){started=true;
   step(lv,run,holding(),d);if(d<0){fx.pullT=T;if((climbTick+=-d)>45){climbTick=0;sfx("tick")}}steps++;if(steps%8===0)rec.push(Math.round(run.x),Math.round(run.y),run.att);handleEvents();acc-=DT;if(run.fin)break}}
 
 // ================================================================ scene
-function drawScene(L,s,o){o=o||{};const w=L.world;
+function drawScene(L,s,o){o=o||{};const w=artOf(L.world);
  const x0=cam.x-W/2/cam.z-120,x1=cam.x+W/2/cam.z+120,vis=x=>x>x0&&x<x1;
  drawBack(w,T);worldXf();
  for(const g of L.signs)if(vis(g.x))drawSign(g);
@@ -1492,7 +1524,7 @@ function autoHold(L,s){if(s.att>=0){const A=L.anchors[s.att];
 let demoAcc=0;
 function demoUpdate(dt){if(!demo||demo.run.fin||demo.run.deaths>2){const n=demo?(demo.n+1)%6:0,L=genLevel(levelSpec(TAB_ORDER[n],4));demo={L,run:newRun(L),n};camSnap=true}
  demoAcc=Math.min(demoAcc+dt,0.25);while(demoAcc>=DT){step(demo.L,demo.run,autoHold(demo.L,demo.run));demoAcc-=DT}
- const s=demo.run;zoomMul=1;shk.x=shk.y=0;stepCritters(demo.L.world,dt,s);camTo(s.x+W/cam.z*0.12,lerp(s.y,330,0.5),camSnap?1:Math.min(1,dt*3));camSnap=false;
+ const s=demo.run;zoomMul=1;shk.x=shk.y=0;stepCritters(artOf(demo.L.world),dt,s);camTo(s.x+W/cam.z*0.12,lerp(s.y,330,0.5),camSnap?1:Math.min(1,dt*3));camSnap=false;
  const C=CHARS.find(c=>c.id===me.char);drawScene(demo.L,s,{char:me.char,hat:me.hat,col:me.col,dt})}
 
 function drawTitle(){dim(0.15);
@@ -1562,23 +1594,23 @@ function drawWho(){dim(0.55);txt("Who's playing?",W/2,topY()+30*U,34*U,"#fff","c
 function ask(q,d){try{holds.clear();const v=window.prompt(q,d);return v?String(v).trim().slice(0,12):""}catch(e){return""}}
 
 function drawMap(){dim(0.5);checkUpdate();
- const tabs=grid(6,sideL()+46*U,topY(),sideR()-sideL()-46*U-(W>H?170*U:0),W>H?52*U:96*U,6*U,2.4);
+ const tabs=grid(TAB_ORDER.length,sideL()+46*U,topY(),sideR()-sideL()-46*U-(W>H?170*U:0),W>H?52*U:96*U,6*U,2.4);
  TAB_ORDER.forEach((w,ti)=>{const Wd=WORLDS[w],c=tabs[ti],open=me.worlds[w],sel=w===selWorld;
   button(c.x,c.y,c.w,c.h,c.w<150*U?Wd.short:Wd.name,()=>{selWorld=w},{col:sel?Wd.sky[0]:shade(Wd.sky[0],-0.35),ink:sel?"#1a1a1a":"#e9ecef",ring:sel?"#fff":null,fs:c.h*0.34,icon:open?null:"lock"})});
  if(W>H)bananaChip(sideR(),topY()+7*U,true);else bananaChip(sideR(),botY()-44*U,true);
- const top=tabs[5].y+tabs[5].h+14*U,bottom=botY()-64*U,Wd=WORLDS[selWorld];
+ const top=tabs[tabs.length-1].y+tabs[tabs.length-1].h+14*U,bottom=botY()-64*U,Wd=WORLDS[selWorld];
  if(!me.worlds[selWorld]){const pw=Math.min(W-sideL()*2,440*U),ph=Math.min(bottom-top,230*U),px=W/2-pw/2,py=(top+bottom)/2-ph/2;panel(px,py,pw,ph);
   fitTxt(Wd.name+" is locked",W/2,py+36*U,26*U,pw-30*U,"#5a3a00");
   const prev=WORLDS[Wd.after],have=totalStars(me,Wd.after);
   fitTxt("Get "+Wd.need+" stars in "+prev.name+" ("+have+" so far)",W/2,py+80*U,17*U,pw-30*U,have>=Wd.need?"#2b8a3e":"#7a5a3a");
   fitTxt("then unlock it in the shop for "+Wd.price+" bananas",W/2,py+108*U,17*U,pw-30*U,"#7a5a3a");
-  button(W/2-100*U,py+ph-70*U,200*U,52*U,"Go to Shop",()=>{scene="shop";shopTab=4;shopSel=TAB_ORDER.indexOf(selWorld)-1},{col:"#74c0fc",ink:"#0b3050"});
+  button(W/2-100*U,py+ph-70*U,200*U,52*U,"Go to Shop",()=>{scene="shop";shopTab=4;shopSel=shopWorlds().indexOf(selWorld)},{col:"#74c0fc",ink:"#0b3050"});
   backBtn(()=>{scene="title"});return}
  const cells=grid(10,sideL(),top,sideR()-sideL(),bottom-top,10*U,1.05);
  cells.forEach((c,i)=>{const id=(selWorld+1)+"-"+(i+1),open=unlocked(selWorld,i),st=me.stars[id]||0,fam=familyTimes(id);
   panel(c.x,c.y,c.w,c.h,open?"#fff8e8":"rgba(255,255,255,0.3)");
   if(!open){icon("lock",c.x+c.w/2,c.y+c.h/2,c.h*0.35,"rgba(40,40,40,0.55)");return}
-  txt(id,c.x+c.w/2,c.y+c.h*0.24,c.h*0.2,"#5a3a00","center",900);fitTxt(LEVEL_NAMES[selWorld][i],c.x+c.w/2,c.y+c.h*0.43,c.h*0.1,c.w*0.9,"#9a7a50","center",800);
+  txt(shownId(selWorld,i),c.x+c.w/2,c.y+c.h*0.24,c.h*0.2,"#5a3a00","center",900);fitTxt(LEVEL_NAMES[selWorld][i],c.x+c.w/2,c.y+c.h*0.43,c.h*0.1,c.w*0.9,"#9a7a50","center",800);
   const is=c.h*0.15,cy2=c.y+c.h*0.64;
   icon("flag",c.x+c.w/2-is*1.4,cy2,is,st&1?"#2b8a3e":"#d6cfc2");icon("gold",c.x+c.w/2,cy2,is,st&2?"#f59f00":"#d6cfc2");icon("clock",c.x+c.w/2+is*1.4,cy2,is,st&4?"#1c7ed6":"#d6cfc2");
   if(fam.length){const f=fam[0];cx.fillStyle=f.p.col;cx.beginPath();cx.arc(c.x+c.w*0.2,c.y+c.h*0.86,c.h*0.08,0,TAU);cx.fill();
@@ -1592,7 +1624,7 @@ function drawMap(){dim(0.5);checkUpdate();
 function drawCard(){if(!card){scene="title";return}dim(0.55);const sp=card.spec,L=card.L&&card.L.id===sp.id?card.L:(card.L=genLevel(sp));
  const pw=Math.min(W-SAFE.l-SAFE.r-24*U,520*U),ph=Math.min(H-SAFE.t-SAFE.b-24*U,560*U),px=W/2-pw/2,py=Math.max(SAFE.t+12*U,H/2-ph/2);
  panel(px,py,pw,ph);const k=ph/560;
- const title=card.daily?"Daily Jungle":"Level "+sp.id;
+ const title=card.daily?"Daily Jungle":"Level "+shownId(sp.world,sp.idx);
  fitTxt(title,W/2,py+38*k,34*k,pw-120*U,"#5a3a00","center",900);
  // and what the level leans on, when it is one of the new things
  const lean=Object.keys(sp.feats).sort((a,b)=>sp.feats[b]-sp.feats[a]).find(q=>NEWK[q]&&sp.feats[q]>=3);
@@ -1618,7 +1650,9 @@ function drawCard(){if(!card){scene="title";return}dim(0.55);const sp=card.spec,
  button(W/2-gw/2,py+ph-gh-14*k,gw,gh,"GO!",()=>{startLevel(sp,Object.assign({},card.use))},{col:"#69db7c",ink:"#113a1a",fs:gh*0.5})}
 
 const SHOP_TABS=["Monkeys","Hats","Trails","Power-ups","Worlds"];
-function shopList(){return[CHARS,HATS,TRAILS,ITEMS,TAB_ORDER.slice(1).map(wi=>Object.assign({id:"world"+wi,wi},WORLDS[wi]))][shopTab]}
+function shopList(){return[CHARS,HATS,TRAILS,ITEMS,shopWorlds().map(wi=>Object.assign({id:"world"+wi,wi},WORLDS[wi]))][shopTab]}
+// the worlds that have to be bought: every one but the two that start open
+function shopWorlds(){return TAB_ORDER.filter(w=>WORLDS[w].price>0)}
 function drawShop(){dim(0.55);
  const tabs=grid(5,sideL()+46*U,topY(),sideR()-sideL()-46*U-(W>H?150*U:0),W>H?48*U:92*U,6*U,W>H?2.8:2.4);
  SHOP_TABS.forEach((t,i)=>button(tabs[i].x,tabs[i].y,tabs[i].w,tabs[i].h,t,()=>{shopTab=i;shopSel=null},{col:i===shopTab?"#ffd43b":"#868e96",ink:i===shopTab?"#3a2400":"#fff",fs:tabs[i].h*0.36}));
@@ -1707,7 +1741,7 @@ function playFrame(dt){playUpdate(dt);const s=run;
  fx.shake=Math.max(0,fx.shake-dt*30);shk.x=(Math.random()-0.5)*fx.shake;shk.y=(Math.random()-0.5)*fx.shake;
  let fxX=s.x,fxY=s.y,look=clamp(s.vx*0.28,-160,320);if(s.dead>0){const r=rescuePos(lv,s);fxX=r.x;fxY=r.y;look=0}
  camTo(fxX+look+W/cam.z*0.1,lerp(fxY,330,0.45),camSnap?1:Math.min(1,dt*(s.dead>0?3:4.5)));camSnap=false;
- stepCritters(lv.world,dt,s);
+ stepCritters(artOf(lv.world),dt,s);
  // the trail
  const sp=Math.hypot(s.vx,s.vy);if(started&&!(s.dead>0)&&sp>320){if(me.trail==="rainbow"){ribbon.push({x:s.x,y:s.y});if(ribbon.length>26)ribbon.shift()}else if(Math.random()<sp/900)trailPuff(me.trail,s.x-s.vx*0.02,s.y-s.vy*0.02)}
  else if(ribbon.length)ribbon.shift();

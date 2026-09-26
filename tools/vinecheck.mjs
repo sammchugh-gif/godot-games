@@ -20,7 +20,8 @@
      node tools/vinecheck.mjs 1-4          one level
      node tools/vinecheck.mjs daily 30     thirty days of daily runs from today
      node tools/vinecheck.mjs seeds        search for seeds that pass, print SEEDS
-     node tools/vinecheck.mjs seeds 1-3,2-5   only those levels */
+     node tools/vinecheck.mjs seeds 1-3,2-5   only those levels
+     node tools/vinecheck.mjs swing        a catch close to a ring stays in hand */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,7 +37,7 @@ function cut(from, to) {
 }
 const SEC = '// ================================================================ ';
 const src = cut('const TAU=Math.PI*2;', SEC + 'saves') + cut(SEC + 'content', SEC + 'render') +
-  '\n;globalThis.G={respawn,WORLDS,levelSpec,dailySpec,dayKey,genLevel,newRun,cloneRun,step,pickTarget,SEEDS,DT,FLOOR};';
+  '\n;globalThis.G={respawn,WORLDS,levelSpec,dailySpec,dayKey,genLevel,newRun,cloneRun,step,pickTarget,anchorAt,SEEDS,DT,FLOOR};';
 const ctx = vm.createContext({ Math, Object, Uint8Array, Float32Array, Date, String, Array, Number, JSON, isFinite });
 vm.runInContext(src, ctx);
 const G = ctx.G;
@@ -61,7 +62,7 @@ function move(L, s0, r, w, c) {
   }
   s.stall = 1; return s;
 }
-function solve(L, wantGold, from, hanging) {
+function solve(L, wantGold, from, hanging, width = BEAM) {
   const start = from || G.newRun(L);
   /* the opening catch off the ledge */
   let s = G.cloneRun(start);
@@ -92,17 +93,28 @@ function solve(L, wantGold, from, hanging) {
     for (const k of kids) {
       const key = k.s.att + ':' + Math.round(k.s.x / 40) + ':' + k.s.ng;
       if (seen.has(key)) continue; seen.add(key); beam.push(k);
-      if (beam.length >= BEAM) break;
+      if (beam.length >= width) break;
     }
     function score(k) { return (k.s.fin ? 1e6 - k.s.t * 100 : k.s.x) + (wantGold ? k.s.ng * 400 : 0); }
   }
   return best;
   function score(k) { return (k.s.fin ? 1e6 - k.s.t * 100 : 0) + (wantGold ? k.s.ng * 1e5 : 0); }
 }
+/* The robot keeps only the few attempts that got furthest, so now and then
+   it prunes the one way on and gives up where a player would not. Any way
+   through it finds proves the level can be done, so before it calls a level
+   stuck it looks again, keeping twice as many. */
+function solve2(L, wantGold, from, hanging) {
+  const a = solve(L, wantGold, from, hanging);
+  if (a && (!wantGold || a.s.ng === L.golds.length)) return a;
+  const b = solve(L, wantGold, from, hanging, BEAM * 2);
+  if (!a) return b; if (!b) return a;
+  return b.s.ng > a.s.ng ? b : a;
+}
 function check(sp) {
   const L = G.genLevel(sp), t0 = Date.now();
-  const b = solve(L, false);
-  const g = b ? solve(L, true) : null;
+  const b = solve2(L, false);
+  const g = b ? solve2(L, true) : null;
   const win = b ? b.win : [];
   /* every checkpoint: splash just past it, come back on it, carry on */
   let respawns = 0; const stuck = [];
@@ -119,7 +131,7 @@ function check(sp) {
     for (const wait of [0, 0.4, 0.8, 1.2, 1.6, 2.0]) {
       if (!back) break;
       const w0 = G.cloneRun(s); for (let t = 0; t < wait; t += G.DT) G.step(L, w0, false);
-      if (solve(L, false, w0)) { out = true; break; }
+      if (solve2(L, false, w0)) { out = true; break; }
     }
     if (out) respawns++; else stuck.push(c);
   }
@@ -147,7 +159,7 @@ function check(sp) {
     const probe = G.cloneRun(s); probe.ev = []; let hurt = false;
     for (let t = 0; t < 2 && !hurt; t += G.DT) { G.step(L, probe, true); hurt = probe.ev.some(e => e.k === 'die' && e.a !== 'floor'); probe.ev.length = 0; }
     if (hurt) continue;
-    if (!solve(L, false, s, true)) traps.push(c);
+    if (!solve2(L, false, s, true)) traps.push(c);
   }
   const minW = win.length ? Math.min(...win) : 0, avgW = win.length ? win.reduce((a, c) => a + c, 0) / win.length : 0;
   return { id: sp.id, seed: sp.seed, ok: !!b && !stuck.length && !traps.length, stuck, traps, cps: L.cps.length, respawns, time: b ? b.s.t : null, par: L.par, golds: g ? g.s.ng : 0,
@@ -158,9 +170,54 @@ function line(r) {
     `  golds ${r.golds}/3  window min ${(r.minW * 100).toFixed(0).padStart(3)}% avg ${(r.avgW * 100).toFixed(0).padStart(3)}%` +
     `  rings ${r.rings} len ${r.len}  ledges ${r.respawns}/${r.cps}${r.stuck.length ? ' STUCK AT ' + r.stuck.join(',') : ''}${r.traps.length ? ' TRAPPED BY THE WALL AT ' + r.traps.join(',') : ''}  (${r.ms}ms)`;
 }
+/* The kids found the monkey went out of control after a catch close to a
+   ring: a short vine and a fast catch whirled it up over the top, the vine
+   went slack and it flopped round and round. From every ring on the way
+   through the easier worlds, fly on after a spread of let-go and wait times,
+   and wherever the next catch is a close one, keep holding for two and a
+   half seconds and watch: the swing must not go up over the ring, nor turn
+   the monkey right round it. */
+function swing(worlds) {
+  const RS2 = [], WS2 = [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8]; for (let r = 0.1; r <= 1.6; r += 0.1) RS2.push(r);
+  let n = 0, over = 0, round = 0;
+  for (const w of worlds) for (let i = 0; i < 10; i++) {
+    const L = G.genLevel(G.levelSpec(w, i));
+    let s = G.newRun(L); for (let t = 0; t < 1 && s.att < 0; t += G.DT) G.step(L, s, true);
+    for (let hop = 0; hop < 40 && s && !s.fin; hop++) {
+      let best = null;
+      for (const r of RS2) for (const wt of WS2) {
+        const c = G.cloneRun(s), d0 = c.deaths;
+        for (let t = 0; t < r; t += G.DT) G.step(L, c, true);
+        for (let t = 0; t < wt; t += G.DT) G.step(L, c, false);
+        const g0 = c.grabs; let ok = false;
+        for (let t = 0; t < 2.5; t += G.DT) { G.step(L, c, true); if (c.deaths > d0 || c.fin) break; if (c.grabs > g0 && c.att >= 0) { ok = true; break; } }
+        if (!ok || c.deaths > d0) continue;
+        if (!best || c.x > best.x) best = c;
+        const a = L.anchors[c.att]; if (a.type > 2) continue;
+        let p = G.anchorAt(a, c.t); if (Math.hypot(c.x - p.x, c.y - p.y) >= 100) continue;
+        const m = G.cloneRun(c); let prev = Math.atan2(m.x - p.x, m.y - p.y), ang = 0, up = false;
+        for (let t = 0; t < 2.5; t += G.DT) {
+          G.step(L, m, true); if (m.att !== c.att || m.deaths > d0) break;
+          p = G.anchorAt(a, m.t); const dx = m.x - p.x, dy = m.y - p.y, th = Math.atan2(dx, dy);
+          let q = th - prev; if (q > Math.PI) q -= 2 * Math.PI; if (q < -Math.PI) q += 2 * Math.PI; ang += q; prev = th;
+          if (dy < -0.5 * m.L) up = true;
+        }
+        n++; if (up) over++; if (Math.abs(ang) > 1.8 * Math.PI) round++;
+      }
+      s = best;
+    }
+  }
+  const po = 100 * over / n, pr = 100 * round / n;
+  console.log(`${n} close catches: ${po.toFixed(1)}% swung up over the ring, ${pr.toFixed(1)}% went right round it`);
+  /* before the fix: 67% up over the ring, 28% right round it */
+  return n > 200 && po < 8 && pr < 1;
+}
 const arg = process.argv[2];
 let bad = 0;
-if (arg === 'daily') {
+if (arg === 'swing') {
+  if (!swing([6, 0, 4].filter(w => w < G.WORLDS.length))) { bad++; console.log('FAIL a close catch still whirls the monkey round its ring'); }
+  else console.log('ok   a close catch stays in hand');
+} else if (arg === 'daily') {
   const n = +process.argv[3] || 14, d = new Date();
   for (let i = 0; i < n; i++) {
     const r = check(G.dailySpec(G.dayKey(new Date(d.getTime() + i * 864e5))));
@@ -189,6 +246,6 @@ if (arg === 'daily') {
   }
 }
 /* how wide the narrowest window may be, world by world */
-function MINW(w) { return [0.14, 0.1, 0.08, 0.06, 0.12, 0.09][w]; }
-console.log(bad ? `\n${bad} levels cannot be finished` : '\nevery level can be finished');
+function MINW(w) { return [0.14, 0.1, 0.08, 0.06, 0.12, 0.09, 0.3][w]; }
+if (arg !== 'swing') console.log(bad ? `\n${bad} levels cannot be finished` : '\nevery level can be finished');
 process.exit(bad ? 1 : 0);
