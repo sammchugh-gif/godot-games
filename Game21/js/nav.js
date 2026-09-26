@@ -28,7 +28,7 @@ export class Nav {
       // the ground reaches all the way down; so does anything whose underside the upward ray can't find
       let bot = bots.get(hd);
       if (bot === undefined || bot > top || (terrain && hd === terrain.handle)) bot = -1e9;
-      out.push([bot, top]);
+      out.push([bot, top, terrain && hd === terrain.handle]);
     }
     return out;
   }
@@ -45,9 +45,19 @@ export class Nav {
       const c = i + j * nx, x = this.x0 + i * S, z = this.z0 + j * S;
       const sol = this.solids[c] = this.column(x, z);
       first[c] = hs.length;
-      const tops = sol.map(s => s[1]).filter(t => t > floor + 0.5).sort((a, b) => b - a);
-      for (const t of tops) {
+      const tops = sol.filter(s => s[1] > floor + 0.5).sort((a, b) => b[1] - a[1]);
+      for (const [, t, isGround] of tops) {
         if (hs.length > first[c] && hs[hs.length - 1] - t < 0.05) continue; // the same floor twice
+        // nothing solid right over it (a floor buried under a slab is no floor)
+        let buried = false; for (const [b, tt] of sol) if (b < t + TALL && tt > t + 0.02 && !(Math.abs(tt - t) < 0.02)) { buried = true; break; }
+        if (buried) continue;
+        // footing all round (not the very edge of a crate, where he'd slide off): three of four points
+        // a hand's width out are inside something solid just below the floor
+        if (!isGround) {
+          let feet = 0;
+          for (const [ox, oz] of [[0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2]]) { let inside = false; W.intersectionsWithPoint({ x: x + ox, y: t - 0.05, z: z + oz }, () => { inside = true; return false; }, f); if (inside || (this.w.heightAt && this.w.heightAt(x + ox, z + oz) > t - 0.05)) feet++; }
+          if (feet < 3) continue;
+        }
         // Rory fits here: nothing solid from a step's height above the floor up to the top of his
         // head, within his width (a wall beside him, a ceiling over him, or being inside something)
         let clear = true;

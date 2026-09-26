@@ -156,7 +156,7 @@ export class Sea {
     this.under = C(o.under ?? 0x0d5a78); this.deepUnder = C(o.deepUnder ?? 0x020a14);
     this.absorb = o.absorb || [0.17, 0.05, 0.03];
     const sky = world.sky || { top: "#2d6fd0", mid: "#8fc0ec", sunColor: "#fff4dc", sunI: 2 };
-    const size = o.size ?? 700, seg = Math.min(220, Math.round(size / 3));
+    const size = o.size ?? 700, seg = Math.min(150, Math.round(size / 4.5));
     const box = this.box = o.box || [0, 0, 160, 160];
     this.depthTex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); this.depthTex.needsUpdate = true;
     this.u = {

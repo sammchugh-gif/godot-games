@@ -16,6 +16,13 @@ const _q = new THREE.Quaternion(), _e = new THREE.Euler();
 export class Physics {
   constructor(gravity = -20) {
     this.world = new R.World({ x: 0, y: gravity, z: 0 });
+    // an exactly vertical ray through an exact heightfield grid point can slip through the
+    // terrain; nudge the origin of vertical rays a few millimetres off the grid
+    const W = this.world, jig = r => {
+      if (Math.abs(r.dir.x) + Math.abs(r.dir.z) < 1e-6) r.origin = { x: r.origin.x + 0.0031, y: r.origin.y, z: r.origin.z + 0.0017 };
+      return r;
+    };
+    for (const k of ["castRay", "castRayAndGetNormal", "intersectionsWithRay"]) { const f = W[k].bind(W); W[k] = (ray, ...a) => f(jig(ray), ...a); }
     this.gravity = gravity;
     this.links = [];     // dynamic bodies and the meshes that follow them
     this.movers = [];    // kinematic platforms moved by a function of time

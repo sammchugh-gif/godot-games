@@ -1,5 +1,5 @@
 // The animated robot (RobotExpressive by Tomás Laulhé, CC0) cloned and
-// repainted: BOLT, Rory's partner, and Professor Zero's Floater henchbots.
+// repainted: BOLT, Rory's partner, and Captain Undertow's Drips (in diving helmets).
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
@@ -17,6 +17,7 @@ export const LOOKS = {
   bolt:    { Main: 0xf2f5fa, Grey: 0x3aa8e8, Black: 0x16202c, glow: 0x7fe3ff },
   floater: { Main: 0x8a4ad8, Grey: 0x3a3a48, Black: 0x14101c, glow: 0xff5ad8 },
   boss:    { Main: 0x2a2a34, Grey: 0xd83a8a, Black: 0x0a0a10, glow: 0xff3a6a },
+  digger:  { Main: 0xe87a1a, Grey: 0x2a3a4a, Black: 0x14100c, glow: 0xffd23f, helmet: true },
   guard:   { Main: 0xe8a020, Grey: 0x4a4a52, Black: 0x121216, glow: 0xffd23f },
   drip:    { Main: 0x2ac8c0, Grey: 0x1a5a8a, Black: 0x0a1a24, glow: 0x7fe3ff, helmet: true },
   kraken:  { Main: 0x5a2a8a, Grey: 0x2ac8c0, Black: 0x14081c, glow: 0xff3a6a },

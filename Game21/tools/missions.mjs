@@ -10,7 +10,7 @@ const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s", "-c-1
 const killServer = () => { try { process.kill(-server.pid); } catch (e) { /* already gone */ } };
 await new Promise(r => setTimeout(r, 1500));
 const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-webgl"] });
-const page = await browser.newPage({ viewport: { width: +(process.env.W || 640), height: +(process.env.H || 420) } });
+const page = await browser.newPage({ viewport: { width: +(process.env.W || 480), height: +(process.env.H || 300) } });
 const errors = [];
 page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", String(e).slice(0, 600)); });
 page.on("console", m => { if (m.type() === "error") { errors.push(m.text()); console.log("console.error:", m.text().slice(0, 400)); } });
@@ -27,7 +27,7 @@ for (const id of ids) {
   const ok = await ev(id => __g.debug.start(id), id);
   if (!ok) { console.log("FAIL: no mission", id); fail++; continue; }
   await waitT(0.5);
-  await ev(() => { __g.autoSolve = true; });
+  await ev(s => { __g.autoSolve = true; __g.testSteps = s; }, +(process.env.STEPS || 4));
   const t0 = await ev(() => __g.t);
   let shotMid = false, st;
   while (true) {
@@ -45,7 +45,7 @@ for (const id of ids) {
   if (!won) { fail++; await page.screenshot({ path: `${out}/${id}_fail.png` }); }
   // anything the autopilot could not reach by playing, and had to teleport to
   for (const t of await ev(() => { const t = __g.teleports || []; __g.teleports = []; return t; })) console.log("TELEPORT:", t);
-  await ev(() => { __g.autoSolve = false; __g.input.forced = null; });
+  await ev(() => { __g.autoSolve = false; __g.input.forced = null; __g.testSteps = 1; });
 }
 console.log("errors:", errors.length, "fails:", fail);
 await browser.close(); killServer(); process.exit(fail || errors.length ? 1 : 0);

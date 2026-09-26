@@ -223,7 +223,7 @@ export class Cells extends Mission {
   }
 }
 
-// ------------------------------------------------------------ Floater round-up
+// ------------------------------------------------------------ Round-up: bubble the Drips
 export class Roundup extends Mission {
   start() {
     const d = this.data;
@@ -233,7 +233,7 @@ export class Roundup extends Mission {
     const spots = d.bots || [];
     for (let i = 0; i < this.need; i++) {
       const s = spots[i % Math.max(1, spots.length)] || [this.area[0] + i * 2, 0, this.area[1]];
-      const r = new Robot("floater", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
+      const r = new Robot(d.robot || "drip", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
       this.bots.push({ r, state: "walk", goal: this.pickGoal(), t: 0, bubble: null, speed: 1.2 + this.lv * 0.5 });
     }
     this.popped = 0; this.cool = 0;
@@ -289,7 +289,7 @@ export class Roundup extends Mission {
     if (this.popped >= this.need) { this.finishing = true; this.later(1.6, () => this.win()); }
   }
   actionLabel() { return "ZAP"; }
-  hud() { return { ...super.hud(), text: `Bubble the Floaters  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
+  hud() { return { ...super.hud(), text: `Bubble the Drips  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
   target() { const b = this.bots.find(b => b.state === "walk"); return b ? b.r.pos : null; }
   // autopilot: run after the nearest Floater and zap it; teleports (and notes it) only if one can't be caught in 25 s
   solve() {
@@ -631,7 +631,7 @@ export class Lasers extends Mission {
   debugState() { return { ...(this.dbg || {}), tries: this.tries }; }
 }
 
-// ------------------------------------------------------------ Car chase: catch the Floater and bump it
+// ------------------------------------------------------------ Car chase: catch the Drip and bump it
 export class Chase extends Mission {
   start() {
     const d = this.data;
@@ -649,7 +649,7 @@ export class Chase extends Mission {
     const qc = new Car(this.w, 0, -50, 0, 0, d.quarry || "kart", { color: 0x8a4ad8, trim: 0xff5ad8 });
     q.add(qc.mesh); qc.mesh.position.set(0, 0, 0); this.w.phys.world.removeVehicleController(qc.vc); this.w.phys.world.removeRigidBody(qc.body);
     this.qcar = qc;
-    this.bot = new Robot("floater", 1.0); this.bot.root.position.set(0, 0.2, -0.3); this.bot.play("Sitting"); q.add(this.bot.root);
+    this.bot = new Robot("drip", 1.0); this.bot.root.position.set(0, 0.2, -0.3); this.bot.play("Sitting"); q.add(this.bot.root);
     this.qbody = this.w.phys.world.createRigidBody(R.RigidBodyDesc.kinematicPositionBased().setTranslation(0, -50, 0));
     this.w.phys.world.createCollider(R.ColliderDesc.cuboid(0.9, 0.5, 1.4).setTranslation(0, 0.5, 0), this.qbody);
     this.g.driveMode = this;
@@ -757,7 +757,7 @@ export class Chase extends Mission {
     this.g.bolt.root.visible = true; this.g.bolt.pos.set(c.x + 3, c.y, c.z);
     super.cleanup();
   }
-  hud() { return { ...super.hud(), text: `Catch the Floater and bump it  ${this.tags}/${this.need}`, progress: this.tags / this.need }; }
+  hud() { return { ...super.hud(), text: `Catch the Drip and bump it  ${this.tags}/${this.need}`, progress: this.tags / this.need }; }
   target() { return this.q.position; }
   actionLabel() { return null; }
   solve() {
@@ -795,7 +795,7 @@ export class Stealth extends Mission {
     const L = d.range || (7 + this.lv), half = (d.angle || 26 + this.lv * 3) * Math.PI / 180;
     this.range = L; this.half = half;
     this.guards = (d.guards || []).map((gd, i) => {
-      const r = new Robot("guard", 1.45); this.add(r.root);
+      const r = new Robot(d.robot || "drip", 1.45); this.add(r.root);
       const pts = gd.path.map(([x, z]) => new THREE.Vector2(x, z));
       const segs = []; let total = 0;
       for (let k = 0; k < pts.length; k++) { const a = pts[k], b = pts[(k + 1) % pts.length]; const l = a.distanceTo(b); segs.push({ a, b, l, t0: total }); total += l; }
@@ -914,7 +914,7 @@ export class Stealth extends Mission {
   }
 }
 
-// ------------------------------------------------------------ Boss: the Big Floater
+// ------------------------------------------------------------ Boss: a giant robot (the Drip Digger, the Kraken)
 // It stomps after Rory; its ground-pound sends out a ring (jump it!); after a
 // pound it's stuck for a moment, and a ZAP on the glowing battery on its back hurts it.
 export class Boss extends Mission {
@@ -922,7 +922,7 @@ export class Boss extends Mission {
     const d = this.data;
     this.c = v3(d.center || [0, 0, 0]); this.arenaR = d.radius || 16;
     this.hp = this.need = this.def.n || 3; this.hearts = 3;
-    const b = this.b = new Robot("boss", d.height || 6); b.root.position.set(this.c.x, this.c.y, this.c.z - this.arenaR * 0.5); this.add(b.root);
+    const b = this.b = new Robot(d.robot || "boss", d.height || 6); b.root.position.set(this.c.x, this.c.y, this.c.z - this.arenaR * 0.5); this.add(b.root);
     // the battery on its back
     this.bat = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.1, 16), new THREE.MeshStandardMaterial({ color: 0xff5ad8, emissive: 0xff3ad8, emissiveIntensity: 2 }));
     this.add(this.bat);

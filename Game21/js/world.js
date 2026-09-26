@@ -142,6 +142,19 @@ export class World {
     this.heightAt = f;
     return m;
   }
+  // a skin laid over the ground (sand on a beach, mud in a harbour): a patch of the terrain's own
+  // shape, a hand's breadth above it, where inside(x, z) says so
+  overlay(x, z, sx, sz, mat, inside = () => true, lift = 0.04) {
+    const n = Math.max(8, Math.round(Math.max(sx, sz) / 1.5)), geo = new THREE.PlaneGeometry(sx, sz, n, n); geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position, keep = [];
+    for (let i = 0; i < pos.count; i++) { const px = pos.getX(i) + x, pz = pos.getZ(i) + z; pos.setY(i, (this.heightAt ? this.heightAt(px, pz) : 0) + lift); keep.push(inside(px, pz)); }
+    // drop the triangles outside the patch
+    const idx = geo.index.array, out = [];
+    for (let t = 0; t < idx.length; t += 3) if (keep[idx[t]] && keep[idx[t + 1]] && keep[idx[t + 2]]) out.push(idx[t], idx[t + 1], idx[t + 2]);
+    geo.setIndex(out); geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, mat); m.position.set(x, 0, z); m.receiveShadow = true; this.scene.add(m);
+    return m;
+  }
   mesh(geo, mat, x, y, z, o = {}) {
     const m = new THREE.Mesh(geo, mat);
     m.position.set(x, y, z);
@@ -229,7 +242,7 @@ export class World {
     (this.airVents || (this.airVents = [])).push(v);
     const rock = M(0x4a4640, { rough: 0.95, flat: true });
     for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; this.mesh(new THREE.DodecahedronGeometry(0.35 + (i % 2) * 0.15, 0), rock, x + Math.cos(a) * 0.6, y + 0.1, z + Math.sin(a) * 0.6); }
-    this.updaters.push(dt => { if (this.fx && Math.random() < dt * 40) this.fx.bubble(x + (Math.random() - 0.5) * 0.7, y + 0.3, z + (Math.random() - 0.5) * 0.7, this.sea ? this.sea.level : y + h); });
+    this.updaters.push(dt => { if (this.fx && Math.random() < dt * 40) this.fx.bubble(x + (Math.random() - 0.5) * 0.7, y + 0.3, z + (Math.random() - 0.5) * 0.7, Math.min(this.sea ? this.sea.level : Infinity, y + h)); });
     return v;
   }
   trigger(x, y, z, r, fn, once = true) { const t = { x, y, z, r, fn, once, done: false }; this.triggers.push(t); return t; }

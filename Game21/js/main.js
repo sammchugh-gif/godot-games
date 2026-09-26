@@ -19,10 +19,13 @@ import { Craft } from "./craft.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
 import { Travel } from "./globe.js";
 import { buildPen } from "./levels/pen.js";
+import { buildCornwall } from "./levels/cornwall.js";
+import { buildFundy } from "./levels/fundy.js";
+import { buildPanama } from "./levels/panama.js";
 import { buildCove } from "./levels/cove.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
-const LEVELS = { pen: buildPen };
+const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
@@ -61,7 +64,10 @@ async function boot() {
   const frame = now => {
     // (the first frame after a long boot can carry a timestamp from before it: never step backwards)
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
-    try { tick(dt); } catch (e) { console.error(e); }
+    // (under test, several fixed steps of the game per picture drawn, so the autopilots aren't
+    // held back by how slowly a software renderer draws)
+    const steps = window.__test ? (G.testSteps || 1) : 1;
+    try { for (let i = 0; i < steps; i++) { G.drawNow = i === steps - 1; tick(steps > 1 ? 1 / 30 : dt); } } catch (e) { console.error(e); }
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -114,7 +120,10 @@ function loadPlace(id) {
     const at = m.at || (info.at && info.at[m.id]) || [0, 0];
     const b = makeBeacon(0xffd166);
     const gy = world.phys.ray({ x: at[0], y: 30, z: at[1] }, { x: 0, y: -1, z: 0 }, 60);
-    b.position.set(at[0], gy !== null ? 30 - gy : 0, at[1]);
+    let y = gy !== null ? 30 - gy : 0;
+    // a beacon over deep water floats on the sea, where Rory swims
+    if (world.sea && y < world.sea.level) y = world.sea.level;
+    b.position.set(at[0], y, at[1]); b.userData.miss = gy === null;
     world.scene.add(b); G.beacons[m.id] = b;
   }
   G.arrow = makeArrow(); world.scene.add(G.arrow);
@@ -408,7 +417,7 @@ G.unpilot = (x, y, z) => {
 // ------------------------------------------------------------ the loop
 function sound(n) { Audio.play(n); }
 // the sea follows the camera and switches the fog over when it goes under
-function draw() { if (G.world.sea) G.world.sea.frame(G.engine.camera); G.engine.render(); }
+function draw() { if (G.drawNow === false) return; if (G.world.sea) G.world.sea.frame(G.engine.camera); G.engine.render(); }
 G.sound = sound;
 G.addCells = n => { G.save.cells += n; G.hud.set({ cells: G.save.cells }); };
 
@@ -594,7 +603,7 @@ G.debug = {
     for (const g of G.bolts) solid(g.b.position.x, g.b.position.y, g.b.position.z, "golden starfish");
     for (const m of G.place.missions) {
       const b = G.beacons[m.id]; solid(b.position.x, b.position.y + 0.7, b.position.z, `beacon ${m.id}`);
-      if (b.position.y < -1) out.push(`beacon ${m.id} is below the ground (${b.position.y.toFixed(1)})`);
+      if (b.userData.miss) out.push(`beacon ${m.id} found no ground under it`);
       const d = w.missionData && w.missionData[m.id];
       if (!d && !["circuit", "codes"].includes(m.kind)) { out.push(`${m.id} has no mission data`); continue; }
       if (!d) continue;
@@ -608,7 +617,7 @@ G.debug = {
       for (const r of d.rings || []) solid(r[0], r[1], r[2], `${m.id} ring`);
       if (d.center) solid(d.center[0], d.center[1] + 0.7, d.center[2], `${m.id} arena`);
       if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
-      // Floaters stand on the terrain wherever they walk, whatever height they're listed at
+      // Drips stand on the terrain wherever they walk, whatever height they're listed at
       if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);
       if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (d.start ? d.start[1] : 0) + 0.7, z, `${m.id} guard path`);
     }

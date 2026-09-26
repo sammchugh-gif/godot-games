@@ -63,7 +63,7 @@ export function buildPen(w) {
   // cranes, containers, crates and a hut
   const crate = M("wood", { args: [8, [150, 110, 70]], repeat: [1, 1] });
   for (const [x, z, c] of [[-38, 14, 0x2a6ad8], [-38, 17, 0xd83a3a], [-31, 16, 0x2a9a5a]]) w.box(6, 2.6, 2.4, M(c, { rough: 0.6, metal: 0.3 }), x, 2.5, z);
-  for (const [x, y, z] of [[4, 1.7, 8], [5.1, 1.7, 8], [4.5, 2.7, 8], [-4, 1.7, 14], [10, 1.7, 3.5], [-34.4, 1.7, 13.5], [-33.4, 1.7, 13.5], [-34.4, 2.7, 13.5]]) w.box(1, 1, 1, crate, x, y, z);
+  for (const [x, y, z] of [[4, 1.85, 8], [5.4, 1.85, 8], [4.7, 3.15, 8], [-4, 1.85, 14], [10, 1.85, 3.5], [-34.1, 1.85, 13.5], [-32.7, 1.85, 13.5], [-34.1, 3.15, 13.5]]) w.box(1.3, 1.3, 1.3, crate, x, y, z);
   w.building(14, 7, 8, -12, 24, { y: 1.2, wall: [220, 226, 232], seed: 21, win: { lit: 0.3, glow: "#bfefff", glass: "#3a5a7a" } });
   w.sign("POLARIS", 7, 1.4, -12, 5.6, 19.9, 0, { bg: "#0c1a36", fg: "#9fe0ff", glow: 1.4 });
   const crane = M(0xe8a020, { metal: 0.4, rough: 0.5 });
@@ -78,7 +78,7 @@ export function buildPen(w) {
   w.floorY = -40;
   const pearl = (x, y, z) => [x, y, z];
   w.missionData = {
-    pen1: { cells: [pearl(-6, 2.3, 6), pearl(4.5, 3.9, 8), pearl(10, 2.8, 3.5), pearl(-4, 2.8, 14), pearl(-38, 4.6, 14), pearl(-12, 3.2, -8)] },
+    pen1: { cells: [pearl(-6, 2.3, 6), pearl(4.7, 4.6, 8), pearl(10, 3.3, 3.5), pearl(-4, 3.3, 14), pearl(-38, 4.6, 14), pearl(-12, 3.2, -8)] },
     pen2: { cells: [pearl(18, -1, 9), pearl(24, -2.5, 7), pearl(20, -4.5, 14), pearl(26, -5, 8), pearl(17, -5.4, 15)], floor: -6.2 },
     pen3: { sub: [36, -2.5, -16, Math.PI], exit: [36, 1.5, 2], rings: [[34, -3, -26, 2.4, 0], [24, -4, -36, 2.4, 0.8], [10, -6, -44, 2.4, 1.4], [-4, -8, -40, 2.4, 2.2], [-12, -5, -32, 2.4, 3], [-30, -9, -30, 2.4, 2.4], [-46, -6, -22, 2.4, 3.6], [-40, -3, -8, 2.4, 4.4]], floor: -17 },
     pen4: { area: [-26, 10, 9], bots: [[-30, 1.2, 8], [-22, 1.2, 12], [-26, 1.2, 5], [-18, 1.2, 9]] },
