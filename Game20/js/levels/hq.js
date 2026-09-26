@@ -17,6 +17,7 @@ export function buildHQ(w) {
   const stone = M("stone", { args: [8, [200, 196, 188]], repeat: [2, 1] });
   w.steps(5, 4, 0.35, 0.8, stone, -12, 0.2, -2, Math.PI);
   w.box(8, 1.95, 6, stone, -12, 1.2, -10);
+  w.box(4, 1.95, 1.1, stone, -12, 1.2, -6.5); // the landing between the top step and the ledge
   w.ramp(3, 6, 1.9, M("metal", { args: [2], repeat: [1, 2] }), 12, 0.2, 4, Math.PI);
   w.box(6, 2.1, 6, stone, 12, 1.05, -5);
   // floating platforms, one that drifts

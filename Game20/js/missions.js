@@ -62,7 +62,13 @@ class Mission {
     if (!next) { this.steer(tx, tz, up > 1.0 && w.grounded); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return dh; }
     if (!w.grounded) { this.steer(next.x, next.z); inp.jumpHeld = w.vel.y > 0; return dh; }
     if (next.how === "pad") { const q = path[this.navI]; this.steer(q.x, q.z); return dh; }
-    if (next.how === "jump" || next.how === "gap") { this.steer(next.x, next.z, true); return dh; }
+    if (next.how === "jump") { this.steer(next.x, next.z, true); return dh; }
+    // a gap: run at it and take off at the edge
+    if (next.how === "gap") {
+      const d = Math.hypot(next.x - pp.x, next.z - pp.z), ux = (next.x - pp.x) / (d || 1), uz = (next.z - pp.z) / (d || 1);
+      this.steer(next.x, next.z, this.nav.top(pp.x + ux * 0.5, pp.z + uz * 0.5) < pp.y - 0.4 || d < 1.0);
+      return dh;
+    }
     // walking: aim a few squares along, but not past the next jump or pad
     let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
     this.steer(path[j].x, path[j].z);
