@@ -509,8 +509,10 @@ class Chase extends Mission {
     this.autoBoost = false;
     // the quarry keeps its distance: slower when far ahead, faster when caught up
     const gap = this.s - this.carS();
-    const base = 10 + this.lv * 1.6;
-    let v = base * (gap > 45 ? 0.6 : gap > 30 ? 0.85 : gap < 8 ? 1.12 : 1);
+    const base = 10 + this.lv * 1.6, cv = Math.max(0, this.car.speed);
+    // the Floater always stays catchable: it drives a little slower than Rory
+    // does while he's far behind, and only runs flat out once he's close
+    let v = gap > 40 ? Math.min(base, Math.max(4, cv * 0.6)) : gap > 14 ? Math.min(base, Math.max(5, cv * 0.82)) : gap > 7 ? Math.min(base, Math.max(5, cv * 0.9)) : Math.min(base, Math.max(6, cv * 0.95));
     if (this.boostT > 0) { this.boostT -= dt; v += 7; }
     this.qv += (v - this.qv) * Math.min(1, dt * 2);
     this.s += this.qv * dt;
@@ -575,7 +577,7 @@ class Chase extends Mission {
     const ang = Math.atan2(cross, dot);
     this.g.input.forced = { mx: Math.max(-1, Math.min(1, ang * 2.2)), my: 0 };
     this.autoThrottle = Math.abs(ang) > 1.2 && car.speed > 8 ? 0.2 : 1;
-    this.autoBoost = gap > 18 && Math.abs(ang) < 0.25;
+    this.autoBoost = (gap > 18 || gap < 10) && Math.abs(ang) < 0.25;
   }
 }
 function animateSeat(rig, dt, steer) {
