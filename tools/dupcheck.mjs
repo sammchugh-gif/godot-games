@@ -18,7 +18,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /* Paws of Fury has carried two buildCritter's since before this check
    existed; the second is the one that runs and is the one every caller
    wants. It stays listed here rather than fixed blind. */
-const KNOWN = { 'paws-of-fury': ['buildCritter'] };
+/* Mahjong Club's tile and face painters each live inside their own
+   (()=>{ ... })() with a frame, petal and rr of their own, written at
+   column one; they never meet the page's frame (the loop) or rr (the
+   drawing kit). */
+const KNOWN = { 'paws-of-fury': ['buildCritter'], 'mahjong-club': ['frame', 'petal', 'rr'] };
 
 let bad = 0;
 for (const slug of fs.readdirSync(path.join(ROOT, 'docs')).sort()) {
