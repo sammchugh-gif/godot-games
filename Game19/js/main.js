@@ -385,7 +385,7 @@ function draw(dt) {
     case "briefing": UI.drawBriefingRoom(g, W, H, s, G.t); drawSkip(); break;
     case "map": drawMap(); break;
     case "world": drawWorldHud(); break;
-    case "minigame": if (G.mg) { G.mg.draw(g, W, H, s); drawMgChrome(); } break;
+    case "minigame": if (G.mg) { const o = G.mg.fx ? G.mg.fx.offset() : { x: 0, y: 0 }; g.save(); g.translate(o.x, o.y); G.mg.draw(g, W, H, s); g.restore(); drawMgChrome(); } break;
     case "intel": if (G.stamp) UI.drawStamp(g, W, H, s, G.stamp.k, G.stamp.m.intel.title, G.stamp.m.intel.text, G.stamp.t, G.stamp.stars, G.stamp.record); break;
     case "dossier": { const rows = []; G.dossierH = UI.drawDossier(g, W, H, s, G.save, G.dossierScroll, G.t, G.save.code, rows); for (const r of rows) G.buttons.add("replay:" + r.id, r.x, r.y, r.w, r.h, { onDown: false, hidden: true }); button("closeDossier", W / 2 - 90 * s, H - 66 * s, 180 * s, 50 * s, "CLOSE", "dark", 18 * s); break; }
     case "ending": drawEnding(); break;

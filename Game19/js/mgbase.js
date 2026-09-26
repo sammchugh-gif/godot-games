@@ -1,119 +1,101 @@
-// Shared pieces of every mini-game: the base class, the safe dial, the wire
-// device and Vi's manual, and small random helpers.
+// The base every Meltdown mini-game builds on: level, slips and stars, the
+// shared effects kit, a themed animated backdrop with a glassy title strip,
+// the message toast and the win celebration.
 import { SFX } from "./audio.js";
-import { text, textShadow, rrect, panel, chip, wrap, paragraph, drawPortrait, drawSymbol, clamp, lerp, ease, TAU, FONT, MONO } from "./ui.js";
+import { text, rrect, clamp, TAU, FONT, MONO } from "./ui.js";
+import { FX, PAL, backdrop, icon } from "./fx.js";
 
 export const rnd = (a, b) => a + Math.random() * (b - a), rint = (a, b) => Math.floor(rnd(a, b + 1)), pick = a => a[Math.floor(Math.random() * a.length)];
 export const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-export const COLORS = { red: "#e63946", blue: "#3a86ff", yellow: "#ffd60a", white: "#f1f1f1", black: "#3a3d45", green: "#2ecc71" };
 
+// pick the value for this game's level: L(mg, forLevel1, forLevel2, ...)
 export const L = (mg, ...v) => v[Math.min(v.length, Math.max(1, mg.level || 1)) - 1];
 
 export class MG {
-  constructor(G, m) { this.G = G; this.m = m; this.level = m.level || 1; this.params = m.params || {}; this.t = 0; this.done = false; this.onDone = null; this.msg = null; this.title = m.title; this.sub = ""; this.instr = ""; this.misses = 0; this.hintsUsed = 0; this.slipAllow = 1; }
+  constructor(G, m) {
+    this.G = G; this.m = m; this.level = m.level || 1; this.params = m.params || {};
+    this.t = 0; this.done = false; this.onDone = null; this.msg = null;
+    this.title = m.title; this.sub = ""; this.instr = ""; this.theme = "lab"; this.icon = "snowflake";
+    this.misses = 0; this.hintsUsed = 0; this.slipAllow = 1;
+    this.fx = new FX(); this.W = 1180; this.H = 820; this.s = 1; this._keys = {}; this.hintT = 0;
+  }
   start() {} stop() {}
-  update(dt) { this.t += dt; if (this.msg) { this.msg.t -= dt; if (this.msg.t <= 0) this.msg = null; } this.tick(dt); }
+  update(dt) { this.t += dt; this.fx.update(dt); this.hintT = Math.max(0, this.hintT - dt); if (this.msg) { this.msg.t -= dt; if (this.msg.t <= 0) this.msg = null; } this.tick(dt); }
   tick() {}
-  say(t, good, dur) { this.msg = { text: t, t: dur || 2.6, good }; if (good === true) SFX.good(); else if (good === false) { SFX.bad(); this.miss(); } }
+  say(t, good, dur) {
+    this.msg = { text: t, t: dur || 2.2, good, t0: dur || 2.2 };
+    if (good === true) SFX.good();
+    else if (good === false) { SFX.bad(); this.miss(); this.fx.shake(7, 0.28); this.fx.flash(PAL.danger, 0.2); }
+  }
   // a slip: something the player got wrong. Costs a star once past the game's allowance.
   miss(n) { this.misses += n || 1; }
   // three stars: no hint and no more slips than this game allows. Two: one of those. One: finished.
   stars() { let n = 3; if (this.hintsUsed > 0) n--; if (this.misses > this.slipAllow) n--; return Math.max(1, n); }
-  win() { if (this.done) return; this.done = true; SFX.fanfare(); this.say("INTEL SECURED", true, 3); setTimeout(() => { if (this.onDone) this.onDone(true); }, 1100); }
+  win() {
+    if (this.done) return; this.done = true; SFX.fanfare();
+    const { W, H } = this;
+    this.fx.flash("#ffffff", 0.35); this.fx.ring(W / 2, H / 2, PAL.gold, 260, 0.8); this.fx.ring(W / 2, H / 2, PAL.ice, 180, 0.6);
+    this.fx.burst(W / 2, H / 2, PAL.pieces, 90, 760 * this.s, { up: 200 * this.s, life: 1.6, shape: "chip" });
+    this.say("INTEL SECURED", true, 3);
+    setTimeout(() => { if (this.onDone) this.onDone(true); }, 1300);
+  }
   down() {} move() {} up() {} button() {}
   hint() { return ""; }
-  // shared chrome: a dark backdrop, mission strip, message toast
-  frame(g, W, H, s, bg) {
-    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, bg ? bg[0] : "#121826"); gr.addColorStop(1, bg ? bg[1] : "#070a12");
-    g.fillStyle = gr; g.fillRect(0, 0, W, H);
-    g.strokeStyle = "rgba(255,255,255,.04)"; g.lineWidth = 1; for (let x = 0; x < W; x += 40 * s) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); } for (let y = 0; y < H; y += 40 * s) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
-    text(g, this.title.toUpperCase(), 20 * s, 32 * s, 22 * s, "#ffd166", "left", 900);
-    if (this.sub) text(g, this.sub, 24 * s + g.measureText(this.title.toUpperCase()).width + 16 * s, 33 * s, 14 * s, "rgba(255,255,255,.55)", "left", 600, MONO);
-    if (this.instr) text(g, this.instr, W / 2, H - 22 * s, 15 * s, "rgba(255,255,255,.7)", "center", 600);
+  // a key that went down since the last check (arrow keys on a desk computer)
+  keyHit(code) { const k = !!(this.G.input && this.G.input.keys && this.G.input.keys[code]); const was = this._keys[code]; this._keys[code] = k; return k && !was; }
+  keyDown(code) { return !!(this.G.input && this.G.input.keys && this.G.input.keys[code]); }
+  arrowHit() { const h = [this.keyHit("ArrowUp"), this.keyHit("ArrowDown"), this.keyHit("ArrowLeft"), this.keyHit("ArrowRight")]; return h[0] ? [0, -1] : h[1] ? [0, 1] : h[2] ? [-1, 0] : h[3] ? [1, 0] : null; }
+  // a small celebration at a point: for a solved part of a puzzle
+  pop(x, y, color) { this.fx.burst(x, y, color || PAL.pieces, 18, 300 * this.s, { gravity: 500 * this.s, life: 0.7 }); this.fx.ring(x, y, color || PAL.ice, 50, 0.45); }
+
+  // shared chrome: the themed backdrop, the title strip and the instruction pill
+  frame(g, W, H, s, theme) {
+    this.W = W; this.H = H; this.s = s;
+    backdrop(g, W, H, s, this.t, theme || this.theme);
+    const title = this.title.toUpperCase();
+    g.font = `900 ${20 * s}px ${FONT}`; const tw = g.measureText(title).width;
+    g.font = `600 ${13 * s}px ${MONO}`; const sw = this.sub ? g.measureText(this.sub).width + 22 * s : 0;
+    const bw = Math.min(W - 240 * s, 64 * s + tw + sw + 84 * s);
+    g.save();
+    g.fillStyle = "rgba(6,14,26,.72)"; rrect(g, 12 * s, 12 * s, bw, 42 * s, 21 * s); g.fill();
+    g.strokeStyle = "rgba(127,227,255,.35)"; g.lineWidth = 1.5 * s; g.stroke();
+    g.fillStyle = PAL.lava; g.beginPath(); g.arc(33 * s, 33 * s, 14 * s, 0, TAU); g.fill();
+    icon(g, this.icon, 33 * s, 33 * s, 18 * s, "#fff");
+    text(g, title, 56 * s, 34 * s, 20 * s, PAL.snow, "left", 900);
+    // the level as four pips
+    const px = 56 * s + tw + 14 * s;
+    for (let i = 0; i < 4; i++) { g.fillStyle = i < this.level ? PAL.ice : "rgba(255,255,255,.18)"; g.beginPath(); g.arc(px + i * 11 * s, 33 * s, 3.6 * s, 0, TAU); g.fill(); }
+    if (this.sub) text(g, this.sub, px + 52 * s, 34 * s, 13 * s, PAL.dim, "left", 600, MONO);
+    g.restore();
+    if (this.instr) {
+      g.font = `700 ${15 * s}px ${FONT}`; const iw = Math.min(W - 24 * s, g.measureText(this.instr).width + 36 * s);
+      g.fillStyle = "rgba(6,14,26,.6)"; rrect(g, W / 2 - iw / 2, H - 38 * s, iw, 30 * s, 15 * s); g.fill();
+      text(g, this.instr, W / 2, H - 22 * s, Math.min(15 * s, 15 * s * (W - 60 * s) / Math.max(1, iw - 36 * s)), "rgba(232,242,255,.88)", "center", 700);
+    }
   }
+  // the effects and the toast, drawn over everything
   drawMsg(g, W, H, s) {
+    this.fx.draw(g, s, W, H);
     if (!this.msg) return;
-    const a = clamp(this.msg.t * 2, 0, 1); g.globalAlpha = a;
-    const w = Math.min(W - 40 * s, 620 * s);
-    panel(g, W / 2 - w / 2, H * 0.5 - 34 * s, w, 68 * s, s, { bg: this.msg.good === true ? "rgba(20,110,60,.95)" : this.msg.good === false ? "rgba(140,30,40,.95)" : "rgba(30,40,70,.95)", border: "rgba(255,255,255,.4)" });
-    text(g, this.msg.text, W / 2, H * 0.5 + 1, Math.min(24 * s, 24 * s * 560 / Math.max(560, g.measureText(this.msg.text).width)), "#fff", "center", 800);
-    g.globalAlpha = 1;
+    const m = this.msg, age = m.t0 - m.t, a = clamp(m.t * 3, 0, 1), pop = clamp(age * 6, 0, 1);
+    const good = m.good === true, bad = m.good === false;
+    g.save(); g.globalAlpha = a;
+    g.font = `900 ${26 * s}px ${FONT}`; const w = Math.min(W - 40 * s, g.measureText(m.text).width + 90 * s);
+    g.translate(W / 2, H * 0.5); g.scale(0.7 + 0.3 * pop + Math.sin(pop * Math.PI) * 0.08, 0.7 + 0.3 * pop + Math.sin(pop * Math.PI) * 0.08);
+    g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 24 * s;
+    g.fillStyle = good ? "rgba(16,120,70,.94)" : bad ? "rgba(150,26,40,.94)" : "rgba(14,34,62,.94)";
+    rrect(g, -w / 2, -32 * s, w, 64 * s, 32 * s); g.fill(); g.shadowColor = "transparent";
+    g.strokeStyle = good ? PAL.ok : bad ? "#ff8a94" : PAL.ice; g.lineWidth = 2 * s; g.stroke();
+    icon(g, good ? "check" : bad ? "cross" : "snowflake", -w / 2 + 34 * s, 0, 24 * s, "#fff");
+    text(g, m.text, 16 * s, 2 * s, Math.min(26 * s, 26 * s * (w - 90 * s) / Math.max(1, g.measureText(m.text).width)), "#fff", "center", 900);
+    g.restore();
   }
   btn(id, x, y, w, h, label, style, size, opts) { this.G.buttons.add("mg:" + id, x, y, w, h, Object.assign({ label, style, size }, opts || {})); }
-}
-
-// ------------------------------------------------------------- shared parts
-// A safe dial: drag around it to turn, reports the number under the pointer.
-export class Dial {
-  constructor() { this.angle = 0; this.drag = null; this.spin = 0; }
-  get number() { return ((Math.round(-this.angle / (TAU / 100)) % 100) + 100) % 100; }
-  setNumber(n) { this.angle = -n * TAU / 100; }
-  down(x, y, id, cx, cy, r) { if (Math.hypot(x - cx, y - cy) < r * 1.35) this.drag = { id, a: Math.atan2(y - cy, x - cx) }; }
-  move(x, y, id, cx, cy) { if (!this.drag || this.drag.id !== id) return; const a = Math.atan2(y - cy, x - cx); let d = a - this.drag.a; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; this.angle += d; this.spin = d; this.drag.a = a; }
-  up(id) { if (this.drag && this.drag.id === id) this.drag = null; }
-  draw(g, cx, cy, r, s, litNumber) {
-    g.save(); g.translate(cx, cy);
-    const gr = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.2, 0, 0, r * 1.1); gr.addColorStop(0, "#8a8f98"); gr.addColorStop(1, "#2a2e36");
-    g.fillStyle = "#111"; g.beginPath(); g.arc(0, 0, r * 1.12, 0, TAU); g.fill();
-    g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r * 1.06, 0, TAU); g.fill();
-    g.save(); g.rotate(this.angle);
-    g.fillStyle = "#3a3f48"; g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
-    for (let i = 0; i < 100; i++) { const a = i * TAU / 100 - Math.PI / 2; const long = i % 10 === 0; g.strokeStyle = long ? "#fff" : "rgba(255,255,255,.45)"; g.lineWidth = long ? 3 * s : 1.5 * s; g.beginPath(); g.moveTo(Math.cos(a) * r * 0.86, Math.sin(a) * r * 0.86); g.lineTo(Math.cos(a) * r * (long ? 0.72 : 0.78), Math.sin(a) * r * (long ? 0.72 : 0.78)); g.stroke();
-      if (long) { g.save(); g.translate(Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.6); g.rotate(a + Math.PI / 2); text(g, String(i), 0, 0, r * 0.13, "#fff", "center", 800, MONO); g.restore(); } }
-    g.fillStyle = "#23262c"; g.beginPath(); g.arc(0, 0, r * 0.42, 0, TAU); g.fill();
-    g.strokeStyle = "rgba(255,255,255,.2)"; g.lineWidth = 2; g.stroke();
-    g.restore();
-    // pointer
-    g.fillStyle = litNumber ? "#2ecc71" : "#ffd166"; g.beginPath(); g.moveTo(0, -r * 0.98); g.lineTo(-r * 0.06, -r * 1.14); g.lineTo(r * 0.06, -r * 1.14); g.closePath(); g.fill();
-    text(g, String(this.number).padStart(2, "0"), 0, 0, r * 0.28, litNumber ? "#2ecc71" : "#fff", "center", 900, MONO);
-    g.restore();
+  // a board that fits the play area: returns {x, y, cell} for cols x rows
+  fit(cols, rows, W, H, s, o) {
+    o = o || {}; const top = (o.top || 76) * s, bot = (o.bottom || 56) * s, side = (o.side || 30) * s;
+    const cell = Math.min((W - side * 2 - (o.right || 0) * s - (o.left || 0) * s) / cols, (H - top - bot) / rows, (o.max || 110) * s);
+    const bw = cell * cols, bh = cell * rows;
+    return { x: (o.left || 0) * s + (W - (o.left || 0) * s - (o.right || 0) * s - bw) / 2, y: top + (H - top - bot - bh) / 2, cell, w: bw, h: bh };
   }
-}
-// A device with five coloured wires, a display and a light, and the manual.
-export const RULE_DEFS = [
-  { text: "If there is exactly ONE red wire, cut the RED wire.", test: d => d.wires.filter(w => w === "red").length === 1 ? d.wires.indexOf("red") : -1 },
-  { text: "Otherwise, if the light is ON, cut the LAST wire.", test: d => d.light ? 4 : -1 },
-  { text: "Otherwise, if the number is EVEN, cut the BLUE wire.", test: d => d.num % 2 === 0 ? (d.wires.filter(w => w === "blue").length === 1 ? d.wires.indexOf("blue") : -2) : -1 },
-  { text: "Otherwise, if there are TWO or more yellow wires, cut the FIRST yellow wire.", test: d => d.wires.filter(w => w === "yellow").length >= 2 ? d.wires.indexOf("yellow") : -1, min: 3 },
-  { text: "Otherwise, cut the WHITE wire.", test: d => d.wires.filter(w => w === "white").length === 1 ? d.wires.indexOf("white") : -2 },
-];
-export function rulesFor(level) { return RULE_DEFS.filter(r => !r.min || (level || 1) >= r.min); }
-export function makeDevice(rule, level) {
-  const cols = Object.keys(COLORS), rules = rulesFor(level);
-  for (let tries = 0; tries < 800; tries++) {
-    const wires = []; for (let i = 0; i < 5; i++) wires.push(pick(cols));
-    const d = { wires, num: rint(1, 9), light: Math.random() < 0.5, answer: -1, rule: -1, cut: [] };
-    let bad = false;
-    for (let i = 0; i < rules.length; i++) { const a = rules[i].test(d); if (a === -1) continue; if (a === -2) { bad = true; break; } d.rule = i; d.answer = a; break; }
-    if (bad || d.rule < 0) continue;
-    if (rule !== undefined && d.rule !== rule) continue;
-    return d;
-  }
-  return { wires: ["red", "blue", "yellow", "white", "black"], num: 3, light: false, answer: 0, rule: 0, cut: [] };
-}
-export function drawDevice(g, d, x, y, w, h, s, t, wireRects) {
-  panel(g, x, y, w, h, s, { bg: "#2b2f38", border: "#556", r: 12 * s });
-  g.fillStyle = "#1a1d24"; rrect(g, x + 16 * s, y + 16 * s, w * 0.36, 64 * s, 8 * s); g.fill();
-  text(g, String(d.num), x + 16 * s + w * 0.18, y + 48 * s, 44 * s, "#ff4d4d", "center", 900, MONO);
-  g.fillStyle = d.light ? "#2ecc71" : "#1b3b25"; g.beginPath(); g.arc(x + w * 0.62, y + 48 * s, 16 * s, 0, TAU); g.fill();
-  if (d.light) { g.fillStyle = "rgba(46,204,113,.35)"; g.beginPath(); g.arc(x + w * 0.62, y + 48 * s, 26 * s + Math.sin(t * 6) * 3 * s, 0, TAU); g.fill(); }
-  text(g, "LIGHT", x + w * 0.62, y + 82 * s, 12 * s, "#aaa", "center", 700, MONO);
-  text(g, "SCREEN", x + 16 * s + w * 0.18, y + 94 * s, 12 * s, "#aaa", "center", 700, MONO);
-  const wy0 = y + 120 * s, wh = h - 140 * s, gap = wh / 5;
-  wireRects.length = 0;
-  d.wires.forEach((c, i) => {
-    const wy = wy0 + gap * i + gap / 2;
-    g.fillStyle = "#555"; g.fillRect(x + 20 * s, wy - 10 * s, 14 * s, 20 * s); g.fillRect(x + w - 34 * s, wy - 10 * s, 14 * s, 20 * s);
-    g.strokeStyle = COLORS[c]; g.lineWidth = 12 * s; g.lineCap = "round";
-    if (d.cut.includes(i)) { g.beginPath(); g.moveTo(x + 34 * s, wy); g.quadraticCurveTo(x + w * 0.3, wy + 8 * s, x + w * 0.42, wy - 10 * s); g.stroke(); g.beginPath(); g.moveTo(x + w - 34 * s, wy); g.quadraticCurveTo(x + w * 0.7, wy - 6 * s, x + w * 0.58, wy + 12 * s); g.stroke(); }
-    else { g.beginPath(); g.moveTo(x + 34 * s, wy); g.bezierCurveTo(x + w * 0.35, wy - 6 * s, x + w * 0.65, wy + 6 * s, x + w - 34 * s, wy); g.stroke(); }
-    if (c === "black") { g.strokeStyle = "rgba(255,255,255,.45)"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x + 34 * s, wy - 4 * s); g.bezierCurveTo(x + w * 0.35, wy - 10 * s, x + w * 0.65, wy + 2 * s, x + w - 34 * s, wy - 4 * s); g.stroke(); }
-    wireRects.push({ i, x: x + 20 * s, y: wy - gap / 2, w: w - 40 * s, h: gap });
-  });
-}
-export function drawManual(g, x, y, w, h, s, highlight, level) {
-  panel(g, x, y, w, h, s, { bg: "rgba(255,248,225,.96)", border: "#c9a15a", r: 10 * s });
-  text(g, "VI'S MANUAL: read in order", x + 16 * s, y + 22 * s, 15 * s, "#7a4a10", "left", 900, MONO);
-  let yy = y + 50 * s;
-  rulesFor(level).forEach((r, i) => { const lines = wrap(g, `${i + 1}. ${r.text}`, w - 32 * s, 15 * s, 600); lines.forEach(l => { text(g, l, x + 16 * s, yy, 15 * s, i === highlight ? "#b00020" : "#2a1a0a", "left", i === highlight ? 800 : 600); yy += 19 * s; }); yy += 6 * s; });
 }
