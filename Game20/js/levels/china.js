@@ -20,11 +20,12 @@ function wall(w, pts) {
     // the base down to the ground
     const base = new THREE.Mesh(new THREE.BoxGeometry(5.8, Math.max(y0, y1) + 1, L + 0.2), dark); base.position.set(0, -(Math.max(y0, y1) + 1) / 2 - 0.55 - Math.abs(y1 - y0) / 2, 0); base.castShadow = true; g.add(base);
     g.updateMatrixWorld(true);
-    // colliders: the slab and the two parapets, tilted
+    // colliders: the slab and the two parapets, with exactly the slab's tilt (turned, then pitched;
+    // rebuilding it from angles in the other order made the walkway slope the wrong way)
     const q = new THREE.Quaternion(); slab.getWorldQuaternion(q);
-    const e = new THREE.Euler().setFromQuaternion(q, "YXZ");
-    w.phys.fixedBox(cx, cy - 0.3, cz, 2.5, 0.3, len / 2, ry, { rx: e.x });
-    for (const sx of [-2.7, 2.7]) w.phys.fixedBox(cx + Math.cos(ry) * sx, cy + 0.5, cz - Math.sin(ry) * sx, 0.3, 0.8, len / 2, ry, { rx: e.x });
+    const sp = new THREE.Vector3(); slab.getWorldPosition(sp);
+    w.phys.fixedBox(sp.x, sp.y, sp.z, 2.5, 0.3, len / 2, 0, { q });
+    for (const sx of [-2.7, 2.7]) { const pp = new THREE.Vector3(sx, 0.35, 0).applyMatrix4(g.matrixWorld); w.phys.fixedBox(pp.x, pp.y + 0.15, pp.z, 0.3, 0.8, len / 2, 0, { q }); }
     // the base under it: its top stays below the walkway's lower end, or on a slope it would stick up
     // through the walkway as an invisible step at the bottom of every climb
     const baseTop = Math.min(y0, y1) - 0.7;
@@ -77,7 +78,7 @@ export function buildChina(w) {
   // the wall climbs out of the valley, along the ridge, and back down
   const pts = [[-14, 2, 1.4], [-14, -8, 3.4], [-8, -20, 6.0], [4, -30, 8.4], [18, -36, 10.6], [32, -34, 12.0], [44, -24, 12.4], [50, -10, 11.0], [52, 6, 8.6], [48, 20, 6.4], [40, 30, 4.4]];
   const segs = wall(w, pts);
-  w.steps(4, 5, 0.35, 0.7, M("stone", { args: [131, [170, 160, 140]] }), -14, 0, 5.6, Math.PI);
+  w.steps(4, 5, 0.35, 0.7, M("stone", { args: [131, [170, 160, 140]] }), -14, 0, 5.1, Math.PI); // ends where the wall begins
   for (const i of [2, 5, 8]) { const [x, z, y] = pts[i], s = segs[i] || segs[i - 1]; watchtower(w, x, z, y, s.ry); }
   // the great fort at the end, with the relay room: a long hall with no roof
   const fort = M("stone", { args: [147, [166, 156, 136]], repeat: [4, 1] });

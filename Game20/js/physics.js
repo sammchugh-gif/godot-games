@@ -25,7 +25,9 @@ export class Physics {
   // --- static shapes (the level)
   fixedBox(x, y, z, hx, hy, hz, ry = 0, o = {}) {
     const d = R.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z).setFriction(o.friction ?? 0.8);
-    if (ry || o.rx || o.rz) { _q.setFromEuler(_e.set(o.rx || 0, ry, o.rz || 0)); d.setRotation({ x: _q.x, y: _q.y, z: _q.z, w: _q.w }); }
+    // o.q: an exact rotation (a quaternion), for colliders that must match a mesh's world rotation
+    if (o.q) d.setRotation({ x: o.q.x, y: o.q.y, z: o.q.z, w: o.q.w });
+    else if (ry || o.rx || o.rz) { _q.setFromEuler(_e.set(o.rx || 0, ry, o.rz || 0)); d.setRotation({ x: _q.x, y: _q.y, z: _q.z, w: _q.w }); }
     if (o.restitution) d.setRestitution(o.restitution);
     const c = this.world.createCollider(d);
     if (o.tag) c.userTag = o.tag;
