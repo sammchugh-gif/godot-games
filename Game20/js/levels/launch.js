@@ -56,7 +56,7 @@ function gantry(w, x, z) {
 export function buildLaunch(w) {
   w.setSky("day");
   w.ground(M("grass", { args: [183, [110, 150, 80]], repeat: [60, 60] }), 500);
-  w.water(800, 300, 0, 0.05, -230, 0x1a6aa8, { opacity: 0.95 });
+  w.water(800, 300, 0, 0.3, -230, 0x1a6aa8, { opacity: 0.95 }); // clear of the grass under it (at 5 cm they flickered)
   w.box(800, 0.4, 30, M("sand", { args: [185], repeat: [60, 3] }), 0, 0.02, -75, { collide: false });
   // the pad and the rocket
   w.box(34, 3, 34, M("paving", { args: [187, [190, 190, 186], 64], repeat: [6, 6] }), 0, 1.5, -30);

@@ -31,7 +31,7 @@ function liberty(w, x, z) {
 export function buildNewYork(w) {
   w.setSky("day");
   w.ground(M("asphalt", { args: [105], repeat: [60, 60] }), 500);
-  w.water(600, 300, 0, 0.05, 260, 0x2a5a7a, { opacity: 0.95 });
+  w.water(600, 300, 0, 0.3, 260, 0x2a5a7a, { opacity: 0.95 }); // clear of the ground under it (at 5 cm they flickered)
   // pavements: the blocks between the avenues
   const pave = M("paving", { args: [107, [178, 172, 164], 32], repeat: [6, 6] });
   const roadsX = [-30, 0, 30], roadsZ = [-30, 0, 30];
