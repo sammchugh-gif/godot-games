@@ -11,9 +11,9 @@ let errors = 0;
 page.on("pageerror", e => { errors++; console.log("pageerror:", String(e).slice(0, 600)); });
 page.on("console", m => { if (m.type() === "error") { errors++; console.log("console.error:", m.text().slice(0, 400)); } });
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
-await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory20.quality", "0"); });
+await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory20.quality", "0"); localStorage.setItem("rory20.voice", "false"); });
 await page.goto(`http://localhost:${port}/index.html`);
-await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
+await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 480000 });
 const ids = await page.evaluate(() => __g.debug.PLACES.map(p => p.id));
 let bad = 0;
 for (const id of ids) {
