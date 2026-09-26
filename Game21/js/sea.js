@@ -11,13 +11,15 @@ export const SEA = {
   uSea: { value: new THREE.Vector4(0, 0, 0, 1) },       // on, surface height, time, caustic strength
   uSeaAbs: { value: new THREE.Vector3(0.1, 0.04, 0.028) }, // how fast red, green and blue fade per metre
   uSeaSun: { value: new THREE.Color(1, 1, 1) },
+  uPing: { value: new THREE.Vector4(0, -1e4, 0, 0) },       // TORPEDO's sonar: where it pinged, and how far the ring has spread
+  uPingI: { value: 0 },
 };
 let installed = false;
 export function installSeaLight() {
   if (installed) return; installed = true;
   const C = THREE.ShaderChunk;
   C.common += `
-uniform vec4 uSea; uniform vec3 uSeaAbs; uniform vec3 uSeaSun;
+uniform vec4 uSea; uniform vec3 uSeaAbs; uniform vec3 uSeaSun; uniform vec4 uPing; uniform float uPingI;
 varying vec3 vSeaW;
 float seaCaustic(vec2 p, float t) {
   mat3 m = mat3(-2.0, -1.0, 2.0, 3.0, -2.0, 1.0, 1.0, 2.0, 2.0);
@@ -34,6 +36,10 @@ float seaCaustic(vec2 p, float t) {
   #endif
     vSeaW = (modelMatrix * sw).xyz; }`;
   C.lights_fragment_end += `
+  if (uPingI > 0.001) {
+    float pr = length(vSeaW - uPing.xyz), pd = abs(pr - uPing.w);
+    reflectedLight.indirectDiffuse += vec3(0.3, 0.9, 1.0) * (exp(-pd * pd * 1.2) * 1.8 + step(pr, uPing.w) * 0.12) * uPingI;
+  }
   if (uSea.x > 0.5) {
     float dep = uSea.y - vSeaW.y;
     if (dep > 0.0) {
@@ -198,7 +204,8 @@ export class Sea {
     const N = 192, [cx, cz, w, d] = this.box, data = new Uint8Array(N * N * 4);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const x = cx + ((i + 0.5) / N - 0.5) * w, z = cz + ((j + 0.5) / N - 0.5) * d;
-      const top = this.level + 30, hit = phys.ray({ x, y: top, z }, { x: 0, y: -1, z: 0 }, 110);
+      // (from just above the water, so a roof or a bridge overhead isn't taken for the sea bed)
+      const top = this.level + 0.6, hit = phys.ray({ x, y: top, z }, { x: 0, y: -1, z: 0 }, 80);
       let floor = hit === null ? -1e9 : top - hit;
       if (this.world.heightAt) floor = Math.max(floor, this.world.heightAt(x, z));
       const dep = Math.max(0, Math.min(16, this.level - floor));

@@ -44,7 +44,7 @@ export class World {
     this.t = 0;
     this.q = engine.quality;
     this.sea = null;
-    SEA.uSea.value.x = 0; // no sea until the level makes one
+    SEA.uSea.value.x = 0; SEA.uPingI.value = 0; // no sea until the level makes one
     document.body.classList.remove("underwater");
   }
   // the sea (see sea.js): waves, shallows and foam, and the world under the surface

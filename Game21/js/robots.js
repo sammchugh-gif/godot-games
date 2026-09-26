@@ -18,6 +18,8 @@ export const LOOKS = {
   floater: { Main: 0x8a4ad8, Grey: 0x3a3a48, Black: 0x14101c, glow: 0xff5ad8 },
   boss:    { Main: 0x2a2a34, Grey: 0xd83a8a, Black: 0x0a0a10, glow: 0xff3a6a },
   guard:   { Main: 0xe8a020, Grey: 0x4a4a52, Black: 0x121216, glow: 0xffd23f },
+  drip:    { Main: 0x2ac8c0, Grey: 0x1a5a8a, Black: 0x0a1a24, glow: 0x7fe3ff, helmet: true },
+  kraken:  { Main: 0x5a2a8a, Grey: 0x2ac8c0, Black: 0x14081c, glow: 0xff3a6a },
 };
 
 const matCache = new Map();
@@ -55,6 +57,14 @@ export class Robot {
       const at = head.worldToLocal(new THREE.Vector3(hp.x, top + height * 0.02, hp.z));
       this.light.position.copy(at); this.light.scale.set(1 / ws.x, 1 / ws.y, 1 / ws.z);
       head.add(this.light);
+    }
+    if (LOOKS[look].helmet && head) {
+      const top = new THREE.Box3().setFromObject(head), c = top.getCenter(new THREE.Vector3()), r = (top.max.y - top.min.y) * 0.75;
+      const glass = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), new THREE.MeshPhysicalMaterial({ color: 0xdff4ff, transparent: true, opacity: 0.28, roughness: 0.05, clearcoat: 1, depthWrite: false }));
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.75, r * 0.12, 8, 24), new THREE.MeshStandardMaterial({ color: 0xc89a3a, metalness: 0.9, roughness: 0.3 }));
+      const hp = head.getWorldPosition(new THREE.Vector3()), ws = head.getWorldScale(new THREE.Vector3());
+      for (const [m, dy] of [[glass, 0], [ring, -r * 0.7]]) { const at = head.worldToLocal(new THREE.Vector3(c.x, c.y + dy, c.z)); m.position.copy(at); m.scale.set(1 / ws.x, 1 / ws.y, 1 / ws.z); if (m === ring) m.rotation.x = Math.PI / 2; head.add(m); }
+      void hp;
     }
     this.mixer = new THREE.AnimationMixer(s);
     this.actions = {};

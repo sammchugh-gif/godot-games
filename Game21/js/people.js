@@ -134,6 +134,10 @@ function hat(head, r, kind, color) {
   if (kind === "beret") { const b = add(new THREE.SphereGeometry(r * 1.05, 18, 10), -r * 0.1, r * 0.7, 0); b.scale.set(1.1, 0.35, 1.1); }
   if (kind === "hardhat") { add(new THREE.SphereGeometry(r * 1.1, 18, 10, 0, Math.PI * 2, 0, 1.45), 0, r * 0.2, 0).material = mat(color ?? 0xffc020, { rough: 0.3 }); add(new THREE.CylinderGeometry(r * 1.3, r * 1.3, r * 0.05, 20), 0, r * 0.35, 0).material = mat(color ?? 0xffc020, { rough: 0.3 }); }
   if (kind === "chef") { const c = add(new THREE.CylinderGeometry(r * 0.8, r * 0.75, r * 0.9, 16), 0, r * 1.1, 0); c.material = mat(0xffffff); const t = add(new THREE.SphereGeometry(r * 0.9, 14, 10), 0, r * 1.6, 0); t.material = mat(0xffffff); t.scale.y = 0.6; }
+  // a captain's peaked cap: a white (or navy) crown, a black peak and a gold badge
+  if (kind === "captain") { const c = add(new THREE.CylinderGeometry(r * 1.12, r * 0.98, r * 0.42, 22), 0, r * 0.72, -r * 0.05); c.scale.z = 1.05; add(new THREE.BoxGeometry(r * 1.1, r * 0.05, r * 0.55), 0, r * 0.52, r * 0.85).material = mat(0x14161c, { rough: 0.3 }); add(new THREE.CylinderGeometry(r * 1.0, r * 1.0, r * 0.1, 22), 0, r * 0.55, -r * 0.05).material = mat(0x14161c); add(new THREE.SphereGeometry(r * 0.12, 10, 8), 0, r * 0.75, r * 1.05).material = mat(0xd8b04a, { metal: 0.9, rough: 0.3 }); }
+  if (kind === "beanie") { const b = add(new THREE.SphereGeometry(r * 1.08, 20, 10, 0, Math.PI * 2, 0, 1.45), 0, r * 0.18, 0); b.scale.y = 1.05; add(new THREE.SphereGeometry(r * 0.22, 10, 8), 0, r * 1.25, 0).material = mat(0xf4f4f4, { rough: 0.95 }); }
+  if (kind === "sunhat") { add(new THREE.CylinderGeometry(r * 1.9, r * 1.9, r * 0.05, 24), 0, r * 0.62, 0); add(new THREE.CylinderGeometry(r * 0.85, r * 1.0, r * 0.6, 20), 0, r * 0.9, 0); }
   if (kind === "straw") { add(new THREE.CylinderGeometry(r * 1.6, r * 1.6, r * 0.05, 22), 0, r * 0.6, 0).material = mat(0xe8c870, { rough: 0.9 }); add(new THREE.CylinderGeometry(r * 0.75, r * 0.8, r * 0.45, 16), 0, r * 0.82, 0).material = mat(0xe8c870, { rough: 0.9 }); }
 }
 

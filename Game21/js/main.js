@@ -13,27 +13,17 @@ import { Audio } from "./audio.js";
 import { Speech } from "./speech.js";
 import { Portraits } from "./portraits.js";
 import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "./ui.js";
-import { makeBeacon, animateBeacon, makeArrow, makeGoldBolt } from "./props.js";
-import { makeMission } from "./missions.js";
+import { makeBeacon, animateBeacon, makeArrow, makeStarfish } from "./props.js";
+import { makeMission } from "./kinds.js";
+import { Craft } from "./craft.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
-import { buildHQ as buildHQ0 } from "./levels/hq.js";
-import { buildCove } from "./levels/cove.js";
-const buildHQ = new URLSearchParams(location.search).has("cove") ? buildCove : buildHQ0;
-import { buildTokyo } from "./levels/tokyo.js";
-import { buildEgypt } from "./levels/egypt.js";
-import { buildSydney } from "./levels/sydney.js";
-import { buildRio } from "./levels/rio.js";
 import { Travel } from "./globe.js";
-import { buildNewYork } from "./levels/newyork.js";
-import { buildKenya } from "./levels/kenya.js";
-import { buildChina } from "./levels/china.js";
-import { buildIndia } from "./levels/india.js";
-import { buildIsland } from "./levels/island.js";
-import { buildLaunch } from "./levels/launch.js";
-import { buildStation } from "./levels/station.js";
-import { buildMoon } from "./levels/moon.js";
+import { buildPen } from "./levels/pen.js";
+import { buildCove } from "./levels/cove.js";
 
-const LEVELS = { hq: buildHQ, tokyo: buildTokyo, egypt: buildEgypt, sydney: buildSydney, rio: buildRio, newyork: buildNewYork, kenya: buildKenya, china: buildChina, india: buildIndia, island: buildIsland, launch: buildLaunch, station: buildStation, moon: buildMoon };
+// each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
+const LEVELS = { pen: buildPen };
+const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
 const progress = f => { bar.style.width = Math.round(f * 100) + "%"; };
@@ -87,7 +77,7 @@ function loadPlace(id) {
   if (G.phys) { try { G.phys.world.free(); } catch (e) { /* already gone */ } }
   const phys = G.phys = new Physics(-20);
   const world = G.world = new World(G.engine, phys);
-  const info = (LEVELS[place.id] || buildHQ)(world);
+  const info = (COVE ? buildCove : LEVELS[place.id] || buildPen)(world);
   G.baked = world.bake();
   if (info.apply) info.apply(G.save);
   G.levelInfo = info;
@@ -120,16 +110,18 @@ function loadPlace(id) {
   world.phys.refresh();
   G.beacons = {};
   for (const m of place.missions) {
+    // each level says where its missions start (or the story does)
+    const at = m.at || (info.at && info.at[m.id]) || [0, 0];
     const b = makeBeacon(0xffd166);
-    const gy = world.phys.ray({ x: m.at[0], y: 30, z: m.at[1] }, { x: 0, y: -1, z: 0 }, 60);
-    b.position.set(m.at[0], gy !== null ? 30 - gy : 0, m.at[1]);
+    const gy = world.phys.ray({ x: at[0], y: 30, z: at[1] }, { x: 0, y: -1, z: 0 }, 60);
+    b.position.set(at[0], gy !== null ? 30 - gy : 0, at[1]);
     world.scene.add(b); G.beacons[m.id] = b;
   }
   G.arrow = makeArrow(); world.scene.add(G.arrow);
   refreshBeacons();
   hideBolts(place, info);
 }
-// three golden bolts per place, tucked away at ground level somewhere off the
+// three golden starfish per place, tucked away at ground level somewhere off the
 // beaten track; the spots are the same every time you visit
 function hideBolts(place, info) {
   G.save.bolts = G.save.bolts || [];
@@ -156,7 +148,7 @@ function hideBolts(place, info) {
   found.forEach((p, i) => {
     const id = place.id + ":" + i;
     if (G.save.bolts.includes(id)) return;
-    const b = makeGoldBolt(); b.position.set(p[0], p[1] + 0.6, p[2]); G.world.scene.add(b);
+    const b = makeStarfish(); b.position.set(p[0], p[1] + 0.5, p[2]); G.world.scene.add(b);
     G.bolts.push({ id, b });
   });
 }
@@ -169,9 +161,9 @@ function updateBolts(dt) {
       g.b.visible = false; G.save.bolts.push(g.id); saveGame();
       G.fx.burst(g.b.position.x, g.b.position.y, g.b.position.z, 0xffd166, 40); sound("star");
       const here = G.bolts.filter(q => !q.b.visible).length + (3 - G.bolts.length);
-      toast(`Golden bolt! ${here} of 3 in ${G.place.name} · ${G.save.bolts.length} of ${PLACES.length * 3}`, 3);
+      toast(`Golden starfish! ${here} of 3 in ${G.place.name} · ${G.save.bolts.length} of ${PLACES.length * 3}`, 3);
       G.hud.set({ bolts: G.save.bolts.length });
-      if (here === 3) Speech.say("All three golden bolts here! BOLT is very pleased.", CHARS.bolt.voice);
+      if (here === 3) Speech.say("All three golden starfish here! TORPEDO is very pleased.", CHARS.torpedo.voice);
     }
   }
 }
@@ -325,7 +317,7 @@ function nextPlace() {
   G.travel.play(G.place, nxt, PLACES, () => {
     clearLayer("travel");
     loadPlace(nxt.id); startPlace();
-    if (chapterChange) { const c = CHAPTERS[nxt.ch - 1]; banner(`CHAPTER ${["ONE", "TWO", "THREE"][nxt.ch - 1]}`, c.title, 3); }
+    if (chapterChange) { const c = CHAPTERS[nxt.ch - 1]; banner(`ACT ${["ONE", "TWO", "THREE"][nxt.ch - 1]}`, c.title, 3); }
   });
 }
 
@@ -354,16 +346,18 @@ function replay(id) {
   beginMission(def);
 }
 
-// the ending: fireworks over the Moon, the score, then the credits
+// the end of what's built so far: the score, then the credits. Deep Red comes an act at a time,
+// so after the last place of an act it says what comes next.
 function theEnd() {
   G.state = "end"; G.hud.hide(); setTouch(false); G.input.forced = null;
   G.save.finished = true; saveGame();
   Audio.mood("theme"); sound("win");
+  const act = G.place.ch, last = act >= 3;
   const stars = ALL.reduce((n, m) => n + (G.save.stars[m.id] || 0), 0);
-  const s = screen("end", `<div class="title-sub" style="letter-spacing:.5em">MISSION COMPLETE</div>
-    <div class="title-logo" style="font-size:clamp(34px,7vw,80px)">THE END</div>
-    <div class="card" style="margin-top:8px"><div style="font-weight:900;font-size:22px">${ALL.length} missions · <span style="color:#ffd166">★ ${stars}</span> of ${ALL.length * 3} · <span style="color:#7fe3ff">${G.save.cells}</span> Gravity Cells · <span style="color:#ffd166">${(G.save.bolts || []).length}</span> of ${PLACES.length * 3} golden bolts</div>
-    <div style="margin-top:6px;color:#8ea4c4">The world has its gravity back, and Professor Zero makes toys now.</div></div>
+  const s = screen("end", `<div class="title-sub" style="letter-spacing:.5em">${last ? "MISSION COMPLETE" : `END OF ACT ${["ONE", "TWO", "THREE"][act - 1]}`}</div>
+    <div class="title-logo" style="font-size:clamp(34px,7vw,80px)">${last ? "THE END" : "TO BE CONTINUED"}</div>
+    <div class="card" style="margin-top:8px"><div style="font-weight:900;font-size:22px">${ALL.length} missions · <span style="color:#ffd166">★ ${stars}</span> of ${ALL.length * 3} · <span style="color:#7ff4e8">${G.save.cells}</span> Tide Pearls · <span style="color:#ffd166">${(G.save.bolts || []).length}</span> of ${PLACES.length * 3} golden starfish</div>
+    <div style="margin-top:6px;color:#8ea4c4">${last ? "The sea is home, and it's raining on every harbour in the world." : `Captain Undertow has dived into the deep. Act ${["Two: Into the Abyss", "Three: Red Planet"][act - 1] || "Two"} is coming soon!`}</div></div>
     <div class="credits" style="max-height:34vh;overflow:hidden;position:relative;width:min(560px,90vw)"><div class="roll">${CREDITS.map(([a, b]) => `<div style="margin:14px 0"><div style="color:#ffd166;font-weight:900;letter-spacing:.2em;font-size:13px">${a.toUpperCase()}</div><div style="font-weight:800;font-size:18px">${b}</div></div>`).join("")}</div></div>
     <button class="btn gold" data-a="t">BACK TO THE TITLE</button>`, "screen dim");
   const roll = s.querySelector(".roll"); let y = 0; const move = () => { if (!roll.isConnected) return; y += 0.5; roll.style.transform = `translateY(${-y}px)`; if (y > roll.scrollHeight) y = -200; requestAnimationFrame(move); }; move();
@@ -390,6 +384,26 @@ function pause() {
     if (a === "title") { if (G.mission) { G.mission.cleanup(); G.mission = null; } G.dialogue.skipAll(); loadPlace(G.save.place); showTitle(); }
   });
 }
+
+// ------------------------------------------------------------ piloting TORPEDO or a jet-ski
+// Rory climbs in (his figure sits in the seat), the craft takes the stick and the camera, and
+// BOLT rides along out of sight
+G.pilot = (kind, x, y, z, yaw) => {
+  if (G.craft) G.unpilot();
+  const c = G.craft = new Craft(G.world, x, y, z, yaw, kind);
+  c.ignore.add(G.player.walker.col.handle);
+  c.board(G.player.rig); G.player.blob.visible = false;
+  G.bolt.root.visible = false;
+  c.onBump = v => { sound("land"); if (v > 6) G.fx.puff(c.pos.x, c.pos.y, c.pos.z, 0xc8e8ff, 8); };
+  if (G.world.dark) c.lightsOn(true);
+  return c;
+};
+G.unpilot = (x, y, z) => {
+  const c = G.craft; if (!c) return;
+  c.leave(G.world.scene); G.craft = null; c.dispose();
+  G.bolt.root.visible = true;
+  G.player.teleport(x ?? c.pos.x, y ?? c.pos.y + 0.5, z ?? c.pos.z, c.yaw);
+};
 
 // ------------------------------------------------------------ the loop
 function sound(n) { Audio.play(n); }
@@ -433,10 +447,11 @@ function tick(dt) {
   G.player.waving = G.state === "result";
   const drone = G.droneMode;
   G.player.frozen = !!drone; G.player.camOverride = !!drone;
-  if (G.driveMode) { G.input.takeLook(); G.driveMode.ride(dt); }
+  if (G.craft) { G.craft.drive(dt, G.input, !canMove); G.player.walker.teleport(G.craft.pos.x, G.craft.pos.y - 0.4, G.craft.pos.z); }
+  else if (G.driveMode) { G.input.takeLook(); G.driveMode.ride(dt); }
   else if (drone) { const mx = G.input.mx, my = G.input.my; G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; G.player.update(dt, G.input, G.engine.camera); G.input.mx = mx; G.input.my = my; }
   else G.player.update(dt, G.input, G.engine.camera);
-  if (drone || G.driveMode) { G.bolt.update(dt); } else updateBolt(dt);
+  if (drone || G.driveMode || G.craft) { G.bolt.update(dt); } else updateBolt(dt);
   if (G.contact) { animatePerson(G.contact, { dt, speed: 0, grounded: true, talk: G.talking === G.place.contact }); const c = G.contact.root.position; G.contact.root.rotation.y += (Math.atan2(G.player.pos.x - c.x, G.player.pos.z - c.z) - G.contact.root.rotation.y) * Math.min(1, dt * 2); }
   if (G.state === "mission" && G.mission && !G.dialogue.active) {
     if (G.autoSolve) G.mission.solve(dt);
@@ -473,6 +488,7 @@ function tick(dt) {
   G.phys.step(dt);
   if (G.mission && G.mission.post) G.mission.post(dt);
   if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
+  if (G.craft) G.craft.camera(G.engine.camera, dt);
   G.fx.update(dt);
   swimUI();
   drawTouch();
@@ -517,11 +533,11 @@ function buildTouch() {
 function setTouch(on) { G.touchOn = on; const show = on && G.input.touchUI; G.jumpBtn.style.display = show ? "grid" : "none"; if (!show) { G.actBtn.classList.add("hidden"); G.diveBtn.classList.add("hidden"); } }
 // in the water JUMP swims up and DIVE swims down; the air meter shows under the water
 function swimUI() {
-  const p = G.player, swim = p.swimming && (G.state === "explore" || G.state === "mission");
+  const p = G.player, sub = G.craft && G.craft.kind === "sub", swim = (p.swimming || sub) && (G.state === "explore" || G.state === "mission");
   if (G.touchOn && G.input.touchUI) G.diveBtn.classList.toggle("hidden", !swim);
-  const label = G.world.jetpack ? "JET" : swim && p.headUnder ? "UP" : "JUMP";
+  const label = G.world.jetpack ? "JET" : sub || (swim && p.headUnder) ? "UP" : "JUMP";
   if (G.jumpBtn.textContent !== label) G.jumpBtn.textContent = label;
-  G.hud.air((swim && p.headUnder) || p.air < p.airMax - 0.05 ? p.air / p.airMax : null);
+  G.hud.air(!G.craft && ((swim && p.headUnder) || p.air < p.airMax - 0.05) ? p.air / p.airMax : null);
 }
 function showAction(label) {
   if (!G.touchOn) return;
@@ -574,8 +590,8 @@ G.debug = {
     };
     const info = G.levelInfo;
     solid(info.spawn[0], info.spawn[1] + 0.7, info.spawn[2], "spawn");
-    if (G.bolts.length !== 3) out.push(`only ${G.bolts.length} golden bolts could be hidden`);
-    for (const g of G.bolts) solid(g.b.position.x, g.b.position.y, g.b.position.z, "golden bolt");
+    if (G.bolts.length !== 3) out.push(`only ${G.bolts.length} golden starfish could be hidden`);
+    for (const g of G.bolts) solid(g.b.position.x, g.b.position.y, g.b.position.z, "golden starfish");
     for (const m of G.place.missions) {
       const b = G.beacons[m.id]; solid(b.position.x, b.position.y + 0.7, b.position.z, `beacon ${m.id}`);
       if (b.position.y < -1) out.push(`beacon ${m.id} is below the ground (${b.position.y.toFixed(1)})`);

@@ -2,10 +2,11 @@
 // guide arrow, gravity bubbles and the tractor beam.
 import * as THREE from "three";
 
-const cellGeo = new THREE.IcosahedronGeometry(0.32, 3), coreGeo = new THREE.IcosahedronGeometry(0.16, 2), ringGeo = new THREE.TorusGeometry(0.46, 0.03, 8, 40);
-const cellMat = new THREE.MeshStandardMaterial({ color: 0x3aa8ff, emissive: 0x3ab0ff, emissiveIntensity: 1.6, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.8 });
-const coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdff6ff).multiplyScalar(4) });
-const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(2.5) });
+// a Tide Pearl: a pearly ball with a little captured sea sloshing inside it, and two thin rings
+const cellGeo = new THREE.SphereGeometry(0.32, 28, 18), coreGeo = new THREE.IcosahedronGeometry(0.2, 3), ringGeo = new THREE.TorusGeometry(0.46, 0.025, 8, 40);
+const cellMat = new THREE.MeshPhysicalMaterial({ color: 0xf4f8ff, emissive: 0x3ad8d0, emissiveIntensity: 0.9, roughness: 0.12, metalness: 0.05, iridescence: 1, iridescenceIOR: 1.6, clearcoat: 1, transparent: true, opacity: 0.88 });
+const coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7ff4e8).multiplyScalar(3) });
+const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xa8fff0).multiplyScalar(2.2) });
 
 export function makeCell() {
   const g = new THREE.Group();
@@ -130,6 +131,14 @@ export function thing(kind, color) {
 }
 
 // a golden bolt, BOLT's favourite thing: three hidden in every place
+// a golden starfish: three hidden in every place
+export function makeStarfish() {
+  const sh = new THREE.Shape();
+  for (let i = 0; i <= 10; i++) { const a = i / 10 * Math.PI * 2 + Math.PI / 2, r = i % 2 ? 0.16 : 0.42; sh[i ? "lineTo" : "moveTo"](Math.cos(a) * r, Math.sin(a) * r); }
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.08, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 3 }); geo.center();
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xffc83a, emissive: 0xffa010, emissiveIntensity: 0.9, roughness: 0.3, metalness: 0.6 }));
+  const g = new THREE.Group(); g.add(m); m.rotation.x = -0.4; return g;
+}
 export function makeGoldBolt() {
   const g = new THREE.Group();
   const gold = new THREE.MeshStandardMaterial({ color: 0xffc83a, metalness: 0.9, roughness: 0.25, emissive: 0xffa010, emissiveIntensity: 0.6 });
