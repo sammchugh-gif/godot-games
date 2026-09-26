@@ -97,16 +97,24 @@ class Mission {
       return { out, top: cy + m.hy, x: cx + ix * c + iz * sn, z: cz - ix * sn + iz * c };
     };
     if (!this.board || this.board.m !== m) {
-      // the ground the deck passes closest to over the next minute and a half
-      let best = null; const R = Math.max(m.hx, m.hz) + 1.5;
+      // the ground the deck passes closest to over the next minute and a half, that Rory can walk to
+      const spots = new Map(); const R = Math.max(m.hx, m.hz) + 1.5;
       for (let dt = 0; dt < 90; dt += 0.5) {
         const t = this.w.phys.t + dt, [cx, cy, cz] = m.fn(t);
         const ci = Math.round((cx - nav.x0) / nav.S), cj = Math.round((cz - nav.z0) / nav.S), r = Math.ceil(R / nav.S);
         for (let jj = Math.max(0, cj - r); jj <= Math.min(nav.nz - 1, cj + r); jj++) for (let ii = Math.max(0, ci - r); ii <= Math.min(nav.nx - 1, ci + r); ii++) {
           const k = ii + jj * nav.nx; if (!nav.ok[k] || Math.abs(nav.h[k] - (cy + m.hy)) > 1.2) continue;
           const [nx, nz] = nav.xz(k), d = deck(t, nx, nz).out;
-          if (d < 1.0 && (!best || d < best.d)) best = { d, x: nx, y: nav.h[k], z: nz, m };
+          if (d < 1.0 && (!spots.has(k) || d < spots.get(k).d)) spots.set(k, { d, x: nx, y: nav.h[k], z: nz, m });
         }
+      }
+      // (one route test per landing: a spot near one that can't be walked to can't either)
+      let best = null, tries = 0; const no = [];
+      for (const sp of [...spots.values()].sort((a, b) => a.d - b.d)) {
+        if (no.some(q => Math.hypot(q.x - sp.x, q.z - sp.z) < 3 && Math.abs(q.y - sp.y) < 0.6)) continue;
+        if (++tries > 12) break;
+        if (Math.hypot(sp.x - pp.x, sp.z - pp.z) < 1 && Math.abs(sp.y - pp.y) < 0.6 || nav.route(pp.x, pp.y, pp.z, sp.x, sp.y + 0.7, sp.z, 0.4)) { best = sp; break; }
+        no.push(sp);
       }
       this.board = best;
     }
@@ -205,12 +213,46 @@ class Cells extends Mission {
     if (c.userData.follow) { this.rideTo(c.position.x, c.position.y, c.position.z, c.userData.follow.obj, this.cells.map(c => c.position)); return; }
     // up in a low-gravity bubble: bounce off its pad and float to it
     if (this.zoneFly(c)) return;
+    // hanging in the air by a bounce pad: bounce and steer at it on the way up
+    if (this.padFly(c)) return;
     // somewhere only something that moves goes (the top of the cable car): ride it there
     if (this.rideFor(c)) return;
     // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
     if (this.data.climb && this.climb(c)) return;
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
+  }
+  // can Rory get to cell c from (x, y, z) on foot: by walking there, or by walking to a bounce
+  // pad that throws him past it
+  reachable(x, y, z, c) {
+    const cp = c.position, nav = this.nav;
+    if (nav.route(x, y, z, cp.x, cp.y, cp.z, 0.8)) return true;
+    const P = this.padFor(c);
+    return !!(P && nav.route(x, y, z, P.x, P.y + 0.7, P.z, 0.6));
+  }
+  // a bounce pad (not in a low-gravity bubble) that throws Rory high enough, close enough, to catch
+  // a cell hanging in the air
+  padFor(c) {
+    const cp = c.position;
+    return (this.w.pads || []).filter(P => P.y < cp.y && Math.hypot(P.x - cp.x, P.z - cp.z) < 5 && P.y + 0.7 + P.power * P.power / 31 > cp.y - 0.2 && !(this.w.zones || []).some(z => Math.hypot(P.x - z.x, P.z - z.z) < z.r))
+      .sort((a, b) => Math.hypot(a.x - cp.x, a.z - cp.z) - Math.hypot(b.x - cp.x, b.z - cp.z))[0] || null;
+  }
+  // A cell hanging in mid-air beside a bounce pad (no floor under it to walk to): walk onto the
+  // pad and steer at the cell on the way up. Returns false when the cell can be walked to, or
+  // there's no such pad, or the pad can't be walked to from here (then maybe a ride gets there).
+  padFly(c) {
+    const cp = c.position, pp = this.p.pos, w = this.p.walker, inp = this.g.input, nav = this.ensureNav(this.cells.map(c => c.position));
+    if (this.flyCell !== c) { this.flyCell = c; this.flyP = nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8) ? null : this.padFor(c); this.flying = false; }
+    const P = this.flyP; if (!P) return false;
+    const onPad = Math.hypot(pp.x - P.x, pp.z - P.z) < P.r && Math.abs(pp.y - P.y) < 0.5;
+    if (!w.grounded && this.flying) { this.steer(cp.x, cp.z); inp.jumpHeld = w.vel.y > 0; if (Math.hypot(cp.x - pp.x, cp.z - pp.z) < 0.3) inp.forced = { mx: 0, my: 0 }; return true; }
+    if (w.grounded) this.flying = false;
+    if (onPad) { this.flying = true; this.steer(cp.x, cp.z); return true; }
+    if (!w.grounded) return true;
+    if ((this.padT = (this.padT || 0) + 1) % 30 === 1) this.padOk = !!nav.route(pp.x, pp.y, pp.z, P.x, P.y + 0.7, P.z, 0.6);
+    if (!this.padOk) return false;
+    this.walkTo(P.x, P.y + 0.7, P.z, 0.6, this.cells.map(c => c.position));
+    return true;
   }
   // A cell no walk leads to may be where a moving platform goes: the cable car carries Rory
   // through it ("through"), or drops him where he can walk to it ("drop"). Find which, board
@@ -222,7 +264,7 @@ class Cells extends Mission {
     if (this.rideCell !== c) {
       this.rideCell = c; this.ride = null;
       if (!nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8)) {
-        const leads = new Map(), goes = k => { if (!leads.has(k)) { const [kx, kz] = nav.xz(k); leads.set(k, !!nav.route(kx, nav.h[k], kz, cp.x, cp.y, cp.z, 0.8)); } return leads.get(k); };
+        const leads = new Map(), goes = k => { if (!leads.has(k)) { const [kx, kz] = nav.xz(k); leads.set(k, this.reachable(kx, nav.h[k], kz, c)); } return leads.get(k); };
         for (const m of this.w.phys.movers) {
           if (!m.fn) continue;
           for (let dt = 0; dt < 120 && !(this.ride && this.ride.mode === "through"); dt += 0.5) {
@@ -236,7 +278,7 @@ class Cells extends Mission {
     if (!this.ride) return false;
     const { m, mode } = this.ride;
     // got off onto ground that leads there: walk
-    if (!w.onMover && w.grounded && Math.abs(pp.y - cp.y) < 4 && (this.walkT = (this.walkT || 0) + 1) % 30 === 1) this.canWalk = !!nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
+    if (!w.onMover && w.grounded && (this.walkT = (this.walkT || 0) + 1) % 30 === 1) this.canWalk = this.reachable(pp.x, pp.y, pp.z, c);
     if (!w.onMover && this.canWalk) return false;
     if (w.onMover === m) {
       this.canWalk = false;
