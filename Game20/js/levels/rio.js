@@ -69,8 +69,9 @@ export function buildRio(w) {
   // the cable car line up the mountain
   const st0 = new THREE.Vector3(24, 8, -27), st1 = loaf.mid.clone().setY(loaf.mid.y + 12), st2 = loaf.top.clone().setY(loaf.top.y + 6);
   w.box(8, 8, 8, M("stone", { args: [87, [220, 214, 200]] }), st0.x, 4, st0.z - 5);
-  w.steps(23, 3, 0.345, 0.42, M("metal", { args: [88] }), st0.x - 6.5, 0.2, st0.z + 5, Math.PI);
-  w.box(3, 0.4, 6, M("metal", { args: [88] }), st0.x - 6.5, 7.9, st0.z - 2.7);
+  // the stairs end where the landing starts, and the landing reaches the station block
+  w.steps(23, 3, 0.345, 0.42, M("metal", { args: [88] }), st0.x - 6.5, 0.2, st0.z + 10, Math.PI);
+  w.box(4, 0.4, 6, M("metal", { args: [88] }), st0.x - 6, 7.9, st0.z - 2.7);
   for (const [a, b] of [[st0, st1], [st1, st2]]) { const len = a.distanceTo(b); const cab = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, len, 4), M(0x1a1a1a)); cab.position.copy(a).add(b).multiplyScalar(0.5); cab.lookAt(b); cab.rotateX(Math.PI / 2); w.scene.add(cab); }
   const cars = [cableCar(w, st0.clone().setY(st0.y + 1.6), st1, -1.2, 0xe83a3a), cableCar(w, st0.clone().setY(st0.y + 1.6), st1, 1.4, 0xffd23f)];
   w.cars = cars;
@@ -96,7 +97,7 @@ export function buildRio(w) {
   const loopPath = []; for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; loopPath.push([Math.cos(a) * 50, 34 + Math.sin(a) * 21]); }
   w.missionData = {
     rio1: { area: [0, 32, 16], bots: [[-10, 0.2, 30], [10, 0.2, 34], [0, 0.2, 40], [-16, 0.2, 38], [16, 0.2, 26], [4, 0.2, 24]] },
-    rio2: { cells: [{ obj: cars[0].g, off: [0, 1.0, 0] }, { obj: cars[1].g, off: [0, 1.0, 0] }, [st0.x - 6.5, 9.2, st0.z - 2.7], [st1.x, st1.y - 0.4, st1.z], [st1.x, st1.y - 0.4, st1.z + 6], [st0.x - 6.5, 4.2, st0.z + 1], [st0.x, 9.2, st0.z - 5]] },
+    rio2: { cells: [{ obj: cars[0].g, off: [0, 1.0, 0] }, { obj: cars[1].g, off: [0, 1.0, 0] }, [st0.x - 6.5, 9.2, st0.z - 2.7], [st1.x, st1.y - 0.4, st1.z], [st1.x, st1.y - 0.4, st1.z + 6], [st0.x - 6.5, 4.7, st0.z + 6], [st0.x, 9.2, st0.z - 5]] },
     rio3: { path: loopPath, y: 0.4, car: "kart", quarry: "kart", lead: 24 },
     rio4: { center: [arena.x, 0.2, arena.z], radius: 18, height: 6.5 },
   };

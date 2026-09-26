@@ -41,12 +41,16 @@ class Mission {
   cleanup() { for (const o of this.objs) { o.parent && o.parent.remove(o); } this.objs = []; }
   // autopilot: follow a planned route (walking, steps, jumps, gaps, drops and pads) to within
   // reach of a point, then jump for it if it is above. pts widen the map to cover the mission.
+  ensureNav(pts) {
+    if (this.nav) return this.nav;
+    const all = [this.p.pos, ...pts];
+    return (this.nav = new Nav(this.w, Math.min(...all.map(q => q.x)) - 14, Math.max(...all.map(q => q.x)) + 14, Math.min(...all.map(q => q.z)) - 14, Math.max(...all.map(q => q.z)) + 14));
+  }
   walkTo(tx, ty, tz, reach = 0.8, pts = []) {
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
-    if (!this.nav) {
-      const all = [pp, { x: tx, z: tz }, ...pts];
-      this.nav = new Nav(this.w, Math.min(...all.map(q => q.x)) - 14, Math.max(...all.map(q => q.x)) + 14, Math.min(...all.map(q => q.z)) - 14, Math.max(...all.map(q => q.z)) + 14);
-    }
+    this.ensureNav([{ x: tx, z: tz }, ...pts]);
+    // riding something that moves: get off onto ground that leads there first
+    if (w.onMover) { this.disembark(tx, ty, tz, reach); return Math.hypot(tx - pp.x, tz - pp.z); }
     const far = !this.navTo || Math.hypot(this.navTo[0] - tx, this.navTo[2] - tz) > 1.5 || Math.abs(this.navTo[1] - ty) > 1;
     if (w.grounded && (far || this.t > this.navAt)) {
       this.navPath = this.nav.route(pp.x, pp.y, pp.z, tx, ty, tz, reach); this.navTo = [tx, ty, tz]; this.navI = 0; this.navAt = this.t + 4; this.navMoved = this.t;
@@ -73,6 +77,49 @@ class Mission {
     let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
     this.steer(path[j].x, path[j].z);
     return dh;
+  }
+  // the moving platform (ferry deck, cable car roof) that carries obj
+  moverOf(obj) { let best = null, bd = 3; for (const m of this.w.phys.movers) { const d = m.mesh.position.distanceTo(obj.position); if (d < bd) { bd = d; best = m; } } return best; }
+  // autopilot for a target riding on a moving platform: wait on the ground the platform passes
+  // closest to, hop on as it comes by, and walk to the target on board
+  rideTo(tx, ty, tz, obj, pts = []) {
+    const inp = this.g.input, pp = this.p.pos, w = this.p.walker, m = this.moverOf(obj), nav = this.ensureNav(pts);
+    if (!m) { this.steer(tx, tz); return; }
+    if (w.onMover === m) { this.steer(tx, tz, ty - (pp.y + 0.7) > 1.0 && w.grounded); if (!w.grounded) inp.jumpHeld = w.vel.y > 0; return; }
+    if (w.onMover) { this.disembark(tx, ty, tz, 0.8, m); return; }
+    const r = Math.min(m.hx, m.hz);
+    if (!this.board || this.board.m !== m) {
+      let best = null;
+      for (let dt = 0; dt < 90; dt += 0.5) {
+        const [x, y, z] = m.fn(this.w.phys.t + dt), k = nav.nearestOk(x, y + m.hy, z, r + 1.5, 1.2);
+        if (k < 0) continue;
+        const [nx, nz] = nav.xz(k), d = Math.hypot(nx - x, nz - z);
+        if (!best || d < best.d) best = { d, x: nx, y: nav.h[k], z: nz, m };
+      }
+      this.board = best;
+    }
+    const c = m.mesh.position, top = c.y + m.hy, dc = Math.hypot(c.x - pp.x, c.z - pp.z);
+    // it's here: jump aboard, aiming a little ahead of it
+    if (w.grounded && dc < r + 1.2 && top - pp.y > -0.8 && top - pp.y < 1.6) { this.steer(c.x + m.vel.x * 0.3, c.z + m.vel.z * 0.3, true); return; }
+    if (!w.grounded) { this.steer(c.x + m.vel.x * 0.2, c.z + m.vel.z * 0.2); inp.jumpHeld = w.vel.y > 0; return; }
+    if (!this.board) { this.steer(tx, tz); return; }
+    // otherwise go to the waiting spot and wait there
+    this.walkTo(this.board.x, this.board.y + 0.7, this.board.z, 0.4, pts);
+    if (Math.hypot(this.board.x - pp.x, this.board.z - pp.z) < 0.5) inp.forced = { mx: 0, my: 0 };
+  }
+  // on a moving platform but heading somewhere else: when ground that leads there (or to the
+  // platform wanted next) comes within a hop, jump onto it; until then stand still
+  disembark(tx, ty, tz, reach, want = null) {
+    const pp = this.p.pos, nav = this.nav, k = nav.nearestOk(pp.x, pp.y, pp.z, 2.4, 1.2);
+    const leads = k >= 0 && (this.leadCache || (this.leadCache = new Map())).get(`${k}|${tx.toFixed(0)},${tz.toFixed(0)}`);
+    let ok = leads;
+    if (k >= 0 && leads === undefined) {
+      const [x, z] = nav.xz(k);
+      ok = want ? true : !!nav.route(x, nav.h[k], z, tx, ty, tz, reach);
+      this.leadCache.set(`${k}|${tx.toFixed(0)},${tz.toFixed(0)}`, ok);
+    }
+    if (k >= 0 && ok) { const [x, z] = nav.xz(k); this.steer(x, z, true); return; }
+    this.g.input.forced = { mx: 0, my: 0 };
   }
   // autopilot helpers: steer toward a point (camera-relative stick)
   steer(x, z, jump = false) {
@@ -120,8 +167,9 @@ class Cells extends Mission {
     const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
-    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; }
-    if (this.t - this.aimT > 25) {
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; }
+    // (a cell on a ferry or cable car may mean waiting a whole trip for it to come round)
+    if (this.t - this.aimT > (c.userData.follow ? 75 : 25)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
@@ -129,8 +177,8 @@ class Cells extends Mission {
     inp.jumpHeld = false;
     // in space: jet up or drift down to the cell's height while flying at it
     if (this.w.jetpack) { this.steer(c.position.x, c.position.z); inp.jumpHeld = up > -0.2; if (dh < 0.4) inp.forced = { mx: 0, my: 0 }; return; }
-    // cells riding on something that moves: run and jump at them
-    if (c.userData.follow) { this.steer(c.position.x, c.position.z, up > 0.8 && dh < 3 && w.grounded); if (!w.grounded) inp.jumpHeld = true; return; }
+    // cells riding on something that moves: wait for it and hop on
+    if (c.userData.follow) { this.rideTo(c.position.x, c.position.y, c.position.z, c.userData.follow.obj, this.cells.map(c => c.position)); return; }
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
   }

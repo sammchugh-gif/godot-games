@@ -34,6 +34,16 @@ export class Nav {
     this.pads = (this.w.pads || []).map(p => ({ ...p, k: this.cellOf(p.x, p.z), apex: p.power * p.power / 31 }));
   }
   cellOf(x, z) { const i = Math.round((x - this.x0) / this.S), j = Math.round((z - this.z0) / this.S); return i < 0 || j < 0 || i >= this.nx || j >= this.nz ? -1 : i + j * this.nx; }
+  // the nearest standable square within maxD across and maxDy up or down of (x, y, z), or -1
+  nearestOk(x, y, z, maxD, maxDy) {
+    const { nx, nz, S, h, ok } = this, ci = Math.round((x - this.x0) / S), cj = Math.round((z - this.z0) / S), r = Math.ceil(maxD / S);
+    let best = -1, bd = maxD;
+    for (let j = Math.max(0, cj - r); j <= Math.min(nz - 1, cj + r); j++) for (let i = Math.max(0, ci - r); i <= Math.min(nx - 1, ci + r); i++) {
+      const k = i + j * nx; if (!ok[k] || Math.abs(h[k] - y) > maxDy) continue;
+      const d = Math.hypot(this.x0 + i * S - x, this.z0 + j * S - z); if (d < bd) { bd = d; best = k; }
+    }
+    return best;
+  }
   xz(k) { return [this.x0 + (k % this.nx) * this.S, this.z0 + ((k / this.nx) | 0) * this.S]; }
   // the moves out of square k: [to, cost, how]
   moves(k, out) {

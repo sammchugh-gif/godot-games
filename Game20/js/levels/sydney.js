@@ -100,8 +100,9 @@ export function buildSydney(w) {
   w.missionData = {
     syd1: { things: [["umbrella", 36, 0.1, 8, 0, 0xff6a3a], ["surfboard", 40, 0.1, 14, 0.4, 0x3ad0ff], ["umbrella", 44, 0.1, 20, 0, 0x3a8ad8], ["surfboard", 48, 0.1, 6, -0.3, 0xffd23f], ["umbrella", 52, 0.1, 16, 0, 0xffd23f], ["barrel", 38, 0.1, 24, 0], ["surfboard", 54, 0.1, 24, 1.2, 0xff6ad5], ["umbrella", 34, 0.1, 18, 0, 0x7bed9f]] },
     syd2: { cells: [
-      { obj: ferries[0].g, off: [0, 1.3, 4] }, { obj: ferries[0].g, off: [0, 3.4, 0] }, { obj: ferries[1].g, off: [0, 1.3, -4] }, { obj: ferries[1].g, off: [0, 3.4, 0] },
-      { obj: ferries[2].g, off: [0, 1.3, 4] }, { obj: ferries[2].g, off: [0, 3.4, 0] }, [-22, 1.3, 54], [20, 1.3, 54]] },
+      // one cell at each end of each ferry's deck (the cabin roof is for exploring, not required)
+      { obj: ferries[0].g, off: [0, 1.3, 4] }, { obj: ferries[0].g, off: [0, 1.3, -4] }, { obj: ferries[1].g, off: [0, 1.3, -4] }, { obj: ferries[1].g, off: [0, 1.3, 4] },
+      { obj: ferries[2].g, off: [0, 1.3, 4] }, { obj: ferries[2].g, off: [0, 1.3, -4] }, [-22, 1.3, 54], [20, 1.3, 54]] },
     syd3: { rings: [[-6, 6, 20, 2.4], [-10, 8, 0, 2.4], [-18, 12, -20, 2.4], [-20, 9, -40, 2.4], [-8, 7, -60, 2.6], [4, 7, -78, 3], [16, 24, -78, 3, Math.PI / 2], [28, 12, -64, 2.6, 2], [30, 6, -40, 2.4, 2.8]], ceiling: 60 },
     syd4: { start: [22, 0.2, -1], goal: [22, 0.2, -21.8], range: 8, guards: [{ path: [[14, -11], [30, -11]], speed: 1.7, pause: 1.4 }, { path: [[30, -17], [14, -17]], speed: 1.5, pause: 1.2, phase: 4 }],
       route: [[22, 0.2, -3.5], [16.5, 0.2, -6.2], [16.5, 0.2, -12.4], [22, 0.2, -12.2], [22, 0.2, -15.8], [16.5, 0.2, -18.6], [22, 0.2, -21.8]] },

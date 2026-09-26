@@ -75,7 +75,7 @@ export class Physics {
   mover(mesh, hx, hy, hz, fn) {
     const body = this.world.createRigidBody(R.RigidBodyDesc.kinematicPositionBased().setTranslation(mesh.position.x, mesh.position.y, mesh.position.z));
     this.world.createCollider(R.ColliderDesc.cuboid(hx, hy, hz).setFriction(1), body);
-    const m = { body, mesh, fn, last: new THREE.Vector3().copy(mesh.position), vel: new THREE.Vector3() };
+    const m = { body, mesh, fn, hx, hy, hz, last: new THREE.Vector3().copy(mesh.position), vel: new THREE.Vector3() };
     this.movers.push(m);
     return m;
   }
