@@ -76,8 +76,9 @@ export function buildSydney(w) {
   w.mesh(new THREE.BoxGeometry(400, 4, 40), M("grass", { args: [75, [80, 130, 70]], repeat: [30, 3] }), 0, 0, -150, { cast: false });
   operaHouse(w, -18, -20);
   bridge(w, -78);
-  // the city skyline behind the quay
-  for (let i = 0; i < 9; i++) w.building(10, 20 + (i * 13) % 30, 10, -60 + i * 14, 50 + (i % 2) * 12, { wall: [180 + (i % 3) * 20, 196, 210], seed: 80 + i, win: { lit: 0.2, glass: "#6a9ac8" }, trim: 0x8a9098 });
+  // the city skyline across the harbour, beyond the ferry loops, on its own shore
+  w.box(170, 1, 34, M("paving", { args: [81, [190, 186, 178], 48], repeat: [20, 4] }), -4, -0.3, 133);
+  for (let i = 0; i < 9; i++) w.building(10, 20 + (i * 13) % 30, 10, -60 + i * 14, 126 + (i % 2) * 12, { wall: [180 + (i % 3) * 20, 196, 210], seed: 80 + i, win: { lit: 0.2, glass: "#6a9ac8" }, trim: 0x8a9098 });
   // the quay front: lamps, palms, benches
   for (let x = -36; x <= 26; x += 10) w.lamp(x, 38, 4.2, 0xfff0d0);
   for (const [x, z] of [[-34, 30], [-26, 34], [10, 34], [26, 30], [34, 4], [58, 26], [60, 4]]) w.palm(x, z, 8);
