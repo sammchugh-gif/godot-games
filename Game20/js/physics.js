@@ -22,6 +22,9 @@ export class Physics {
     this.t = 0;
   }
   setGravity(g) { this.gravity = g; this.world.gravity = { x: 0, y: g, z: 0 }; }
+  // rays and shape queries only see colliders once the world has stepped: take one tiny step
+  // so a freshly built level can be ray-cast against straight away
+  refresh() { this.world.timestep = 1e-4; this.world.step(); }
   // --- static shapes (the level)
   fixedBox(x, y, z, hx, hy, hz, ry = 0, o = {}) {
     const d = R.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z).setFriction(o.friction ?? 0.8);

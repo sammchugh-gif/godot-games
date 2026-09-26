@@ -111,7 +111,9 @@ function loadPlace(id) {
     world.scene.add(rig.root);
     world.phys.fixedCyl(info.contact[0], info.contact[1] + 0.7, info.contact[2], 0.35, 0.7);
   } else G.contact = null;
-  // beacons for every mission in this place
+  // beacons for every mission in this place (placed by casting rays at the new level, so let the
+  // physics world see it first)
+  world.phys.refresh();
   G.beacons = {};
   for (const m of place.missions) {
     const b = makeBeacon(0xffd166);
@@ -573,7 +575,8 @@ G.debug = {
       for (const r of d.rings || []) solid(r[0], r[1], r[2], `${m.id} ring`);
       if (d.center) solid(d.center[0], d.center[1] + 0.7, d.center[2], `${m.id} arena`);
       if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
-      if (d.bots) for (const b of d.bots) solid(b[0], b[1] + 0.7, b[2], `${m.id} bot`);
+      // Floaters stand on the terrain wherever they walk, whatever height they're listed at
+      if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);
       if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (d.start ? d.start[1] : 0) + 0.7, z, `${m.id} guard path`);
     }
     return out;
