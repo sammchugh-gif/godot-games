@@ -43,6 +43,8 @@ export const Audio = {
     this.setMusic(this.music); this.setSfx(this.sfx);
     if (mode) { const m = mode; mode = null; this.mood(m); }
   },
+  // the music dips while someone is talking, so the words come through
+  duck(on) { if (!bus || this.ducked === on) return; this.ducked = on; bus.volume.rampTo(on ? -22 : -15, on ? 0.2 : 0.6); },
   setMusic(on) { this.music = on; localStorage.setItem("rory20.music", on ? "1" : "0"); if (bus) bus.mute = !on; },
   setSfx(on) { this.sfx = on; localStorage.setItem("rory20.sfx", on ? "1" : "0"); if (sfxBus) sfxBus.mute = !on; },
   // "theme" exploring, "tense" missions, "chase", "calm" menus, "space"

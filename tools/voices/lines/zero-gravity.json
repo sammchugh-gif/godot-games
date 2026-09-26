@@ -2184,12 +2184,6 @@
   "from": "hq/room.js"
  },
  {
-  "key": "0hbh5h8",
-  "who": "rory",
-  "text": "...",
-  "from": "hq/room.js"
- },
- {
   "key": "18l7ka9",
   "who": "frost",
   "text": "Carry on.",
@@ -2250,12 +2244,6 @@
   "from": "hq/room.js"
  },
  {
-  "key": "0mdz75a",
-  "who": "frost",
-  "text": "pip",
-  "from": "hq/room.js"
- },
- {
   "key": "1ll3k30",
   "who": "frost",
   "text": "Welcome to POLARIS headquarters, Agent Rory.",
@@ -2296,5 +2284,347 @@
   "who": "pip",
   "text": "Again! Do it again!",
   "from": "hq/room.js"
+ },
+ {
+  "key": "11hd1l6",
+  "who": "bolt",
+  "text": "Look for the tall beam of light, Rory. That is where we go next.",
+  "from": "main.js"
+ },
+ {
+  "key": "11qzj49",
+  "who": "bolt",
+  "text": "The glowing beacon is where the next mission starts.",
+  "from": "main.js"
+ },
+ {
+  "key": "0bhcjnp",
+  "who": "bolt",
+  "text": "I am ready when you are. I am always ready. Mostly.",
+  "from": "main.js"
+ },
+ {
+  "key": "1gz2uef",
+  "who": "bolt",
+  "text": "Drag the screen to look around. Then run!",
+  "from": "main.js"
+ },
+ {
+  "key": "1q6ayxp",
+  "who": "pip",
+  "text": "The beacon for Cell School is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1bu0wm7",
+  "who": "pip",
+  "text": "The beacon for Pad Practice is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1owoxhu",
+  "who": "pip",
+  "text": "The beacon for Practice Bots is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0p7cgp7",
+  "who": "pip",
+  "text": "The beacon for Block Drop is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "13ixe8w",
+  "who": "pip",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "03kulnk",
+  "who": "yuki",
+  "text": "The beacon for Rooftop Cells is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "02hh6m1",
+  "who": "yuki",
+  "text": "The beacon for Vending Machine Rescue is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0bj48km",
+  "who": "yuki",
+  "text": "The beacon for Park Floaters is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0xmmou1",
+  "who": "yuki",
+  "text": "The beacon for Tower Flight is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "13w5h3b",
+  "who": "yuki",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "090w5h0",
+  "who": "amira",
+  "text": "The beacon for The Step Pyramid is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0b9kf7i",
+  "who": "amira",
+  "text": "The beacon for Capstone Blocks is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0j6rjz6",
+  "who": "amira",
+  "text": "The beacon for Tomb of Lasers is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1xc21nx",
+  "who": "amira",
+  "text": "The beacon for Dune Chase is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "19tzsic",
+  "who": "amira",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "10r7lxm",
+  "who": "jack",
+  "text": "The beacon for Beach Rescue is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "15mjcu9",
+  "who": "jack",
+  "text": "The beacon for Ferry Hop is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "06jpyx3",
+  "who": "jack",
+  "text": "The beacon for Bridge Flight is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1l0olxl",
+  "who": "jack",
+  "text": "The beacon for Warehouse Sneak is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "01sg5vz",
+  "who": "jack",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "1ghnw1n",
+  "who": "lucas",
+  "text": "The beacon for Carnival Floaters is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1rws0hx",
+  "who": "lucas",
+  "text": "The beacon for Cable Car Cells is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1dq4zgy",
+  "who": "lucas",
+  "text": "The beacon for Parade Chase is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1mlnlfz",
+  "who": "lucas",
+  "text": "The beacon for The Big Floater is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1eycgp6",
+  "who": "lucas",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "1ipjqb2",
+  "who": "marcus",
+  "text": "The beacon for Taxi Rescue is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0b3n401",
+  "who": "marcus",
+  "text": "The beacon for Rooftop Run is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "01egult",
+  "who": "marcus",
+  "text": "The beacon for Power to the Square is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1nwkj2j",
+  "who": "marcus",
+  "text": "The beacon for Taxi Chase is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "176ckqg",
+  "who": "marcus",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "1tn9zou",
+  "who": "wanjiru",
+  "text": "The beacon for Floating Animals is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0vcws25",
+  "who": "wanjiru",
+  "text": "The beacon for Safari Chase is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0c5cw6o",
+  "who": "wanjiru",
+  "text": "The beacon for Watering Hole is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1xiroxr",
+  "who": "wanjiru",
+  "text": "The beacon for Shut Down the Tower is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "06zq9f6",
+  "who": "wanjiru",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "0hqtlqg",
+  "who": "mei",
+  "text": "The beacon for Walk the Wall is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "06im6oh",
+  "who": "mei",
+  "text": "The beacon for Temple Bells is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1rqpknm",
+  "who": "mei",
+  "text": "The beacon for Lantern Flight is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "15jw6nv",
+  "who": "mei",
+  "text": "The beacon for The Relay Room is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1y6usp1",
+  "who": "mei",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "1b36umi",
+  "who": "arjun",
+  "text": "The beacon for Garden Guards is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1r0035g",
+  "who": "arjun",
+  "text": "The beacon for Fountain Fix is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0rhx8s4",
+  "who": "arjun",
+  "text": "The beacon for Workshop Hatch is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1jy2akw",
+  "who": "arjun",
+  "text": "The beacon for Minaret Signals is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0melcjk",
+  "who": "arjun",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "0kbhzih",
+  "who": "hale",
+  "text": "The beacon for Launch Sequence is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0wjqouz",
+  "who": "hale",
+  "text": "The beacon for Gantry Climb is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "1faa1ud",
+  "who": "hale",
+  "text": "The beacon for Rocket Check is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0cpj8y8",
+  "who": "hale",
+  "text": "The beacon for Pad Chase is glowing. Look for the tall beam of light!",
+  "from": "main.js"
+ },
+ {
+  "key": "0qt1znk",
+  "who": "hale",
+  "text": "That's everything here. Great work, Agent Rory!",
+  "from": "main.js"
+ },
+ {
+  "key": "0qyqnro",
+  "who": "frost",
+  "text": "Operation Eclipse. Where it all began, Agent Rory. UMBRA and the stolen sun.",
+  "from": "room.js"
+ },
+ {
+  "key": "051rkf1",
+  "who": "frost",
+  "text": "Meltdown. Baron Kaldera, a volcano, and a great deal of melting ice.",
+  "from": "room.js"
+ },
+ {
+  "key": "151785m",
+  "who": "frost",
+  "text": "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon.",
+  "from": "room.js"
  }
 ]

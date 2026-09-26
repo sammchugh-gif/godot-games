@@ -472,6 +472,7 @@ function tick(dt) {
   if (G.mission && G.mission.post) G.mission.post(dt);
   if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
   G.fx.update(dt);
+  Audio.duck(Speech.speaking);
   drawTouch();
   G.engine.render();
 }

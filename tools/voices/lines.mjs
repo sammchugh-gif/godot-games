@@ -17,6 +17,8 @@ const CH = story.CHARS;
 const lines = new Map();
 const add = (who, text, from) => {
   if (!CH[who] || typeof text !== "string" || !text.trim() || text.includes("${")) return;
+  // nothing to say ("..."), or a character's name in a list of them, not a line
+  if (!/[\p{L}\p{N}]/u.test(text) || CH[text]) return;
   const key = lineKey(text, CH[who].voice);
   if (!lines.has(key)) lines.set(key, { key, who, text, from });
 };
@@ -68,6 +70,16 @@ for (const c of countries) {
 // finding the listening bugs
 const bug = main.match(/`That is every bug in \$\{c\.city\}\. Nicely spotted\.` : "([^"]+)", CHARS\.(\w+)\.voice/);
 if (bug) { add(bug[2], bug[1], "main.js"); for (const c of countries) if (c.city) add(bug[2], `That is every bug in ${c.city}. Nicely spotted.`, "main.js"); }
+
+// Zero Gravity: BOLT's nudges, the contacts pointing at the next beacon, and in the HQ, Frost
+// reading out each file
+const nudges = main.match(/const NUDGES = \[([^\]]+)\]/);
+if (nudges) for (const m of nudges[1].matchAll(new RegExp(str, "g"))) add("bolt", unq(m[1]), "main.js");
+if (main.includes("is glowing. Look for the tall beam of light!")) for (const p of story.PLACES || []) if (p.contact) {
+  for (const m of p.missions || []) add(p.contact, `The beacon for ${m.title} is glowing. Look for the tall beam of light!`, "main.js");
+  add(p.contact, "That's everything here. Great work, Agent Rory!", "main.js");
+}
+for (const f of files) if (f.endsWith("room.js")) for (const m of fs.readFileSync(f, "utf8").matchAll(new RegExp(`frost:\\s*${str}`, "g"))) add("frost", unq(m[1]), "room.js");
 
 const all = [...lines.values()];
 fs.writeFileSync(out, JSON.stringify(all, null, 1));
