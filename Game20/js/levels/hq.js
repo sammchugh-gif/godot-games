@@ -28,6 +28,7 @@ export function buildHQ(w) {
   // bounce pads
   w.pad(0, 0.2, -12, 15);
   w.pad(-4, 0.2, -2, 12, 0xff5ad8);
+  w.pad(16, 0.2, -11, 13, 0x7bed9f); // up to the fixed platform without needing the drifting one
   // the low-gravity bubble
   w.zone(-4, 5, -20, 6, 0.18);
   // crates to push, balls to kick
