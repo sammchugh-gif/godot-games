@@ -166,7 +166,15 @@ export class Walker {
     this.vel.y = Math.max(this.vel.y, -30);
     const want = { x: this.vel.x * dt, y: this.vel.y * dt, z: this.vel.z * dt };
     // ride along with a moving platform under our feet
-    if (this.onMover) { want.x += this.onMover.vel.x * dt; want.y += this.onMover.vel.y * dt; want.z += this.onMover.vel.z * dt; }
+    if (this.onMover) {
+      // carried exactly as far (and turned exactly as much) as the platform moves in this physics step
+      const m = this.onMover, sdt = Math.min(dt, 1 / 30), t = this.body.translation();
+      if (m.fn) {
+        const [x0, y0, z0, r0 = 0] = m.fn(this.phys.t), [x1, y1, z1, r1 = 0] = m.fn(this.phys.t + sdt);
+        const ox = t.x - x0, oz = t.z - z0, a = r1 - r0, c = Math.cos(a), sn = Math.sin(a);
+        want.x += x1 + ox * c + oz * sn - t.x; want.y += y1 - y0; want.z += z1 - ox * sn + oz * c - t.z;
+      } else { want.x += m.vel.x * sdt; want.y += m.vel.y * sdt; want.z += m.vel.z * sdt; }
+    }
     this.cc.computeColliderMovement(this.col, want);
     let m = this.cc.computedMovement();
     const wasGrounded = this.grounded;
@@ -195,6 +203,12 @@ export class Walker {
         const c = this.cc.computedCollision(i);
         if (!c || !c.collider) continue;
         const b = c.collider.parent();
+        if (b && b.isKinematic()) { const mv = this.phys.movers.find(q => q.body === b); if (mv) this.onMover = mv; }
+      }
+      // standing still reports no collisions at all, so also look straight down under his feet
+      if (!this.onMover) {
+        const hit = this.phys.world.castRay(new R.Ray({ x: n.x, y: n.y - this.half - this.radius + 0.1, z: n.z }, { x: 0, y: -1, z: 0 }), 0.6, true, R.QueryFilterFlags.EXCLUDE_SENSORS, undefined, this.col);
+        const b = hit && hit.collider && hit.collider.parent();
         if (b && b.isKinematic()) { const mv = this.phys.movers.find(q => q.body === b); if (mv) this.onMover = mv; }
       }
     }
