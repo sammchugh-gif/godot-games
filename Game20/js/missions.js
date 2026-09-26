@@ -581,7 +581,9 @@ class Lasers extends Mission {
     else if (ahead < 1.15 && ahead > 0.35 && this.p.walker.grounded) { inp.jumpPressed = true; inp.jumpHeld = true; }
     if (go) inp.forced = { mx: mid, my: 1 };
     else inp.forced = { mx: mid, my: ahead > 1.6 ? 0.6 : 0 };
+    this.dbg = { along: +along.toFixed(2), acr: +acr.toFixed(2), next: this.beams.indexOf(next), kind: next.kind, ahead: +ahead.toFixed(2), go };
   }
+  debugState() { return { ...(this.dbg || {}), tries: this.tries }; }
 }
 
 // ------------------------------------------------------------ Car chase: catch the Floater and bump it

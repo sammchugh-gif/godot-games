@@ -71,7 +71,11 @@ function bamboo(w, x, z, n) {
 
 export function buildChina(w) {
   w.setSky("morning");
-  const hills = (x, z) => Math.max(0, Math.hypot(x, z - 10) - 24) * 0.18 * (1 + Math.sin(x * 0.05) * 0.5) + Math.sin(x * 0.04 + z * 0.03) * 1.5 * Math.min(1, Math.max(0, (Math.hypot(x, z - 10) - 24) / 20));
+  const rolling = (x, z) => Math.max(0, Math.hypot(x, z - 10) - 24) * 0.18 * (1 + Math.sin(x * 0.05) * 0.5) + Math.sin(x * 0.04 + z * 0.03) * 1.5 * Math.min(1, Math.max(0, (Math.hypot(x, z - 10) - 24) / 20));
+  // the hills stop at the valley where the wall comes down to the fort, so the fort stands on the
+  // ground instead of inside a hill (it was buried up to 11 m deep)
+  const valley = (x, z) => Math.max(...[[40, 54, 26], [44, 24, 13]].map(([cx, cz, R]) => Math.min(1, Math.max(0, (R - Math.hypot(x - cx, z - cz)) / (R * 0.4)))));
+  const hills = (x, z) => rolling(x, z) * (1 - valley(x, z));
   w.terrain(360, 96, hills, M("grass", { args: [145, [96, 130, 70]], repeat: [60, 60], normal: 0.6 }));
   w.phys.fixedBox(0, -3, 0, 400, 1, 400);
   w.mountains(18, 200, 110, { seed: 17, snow: false, color: 0x5a7a6a });

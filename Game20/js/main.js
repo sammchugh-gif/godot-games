@@ -550,6 +550,8 @@ G.debug = {
       let hit = null;
       phys.world.intersectionsWithPoint({ x, y, z }, c => { if (skipSensor && c.isSensor()) return true; const b = c.parent(); if (b && b.isDynamic()) return true; if (c === G.player.walker.col) return true; hit = c; return false; });
       if (hit) out.push(`${what} at ${[x, y, z].map(v => v.toFixed(1)).join(",")} is inside something solid`);
+      // the terrain is a heightfield, not a solid, so a point under a hill needs its own test
+      else if (w.heightAt && w.heightAt(x, z) > y - 0.3) out.push(`${what} at ${[x, y, z].map(v => v.toFixed(1)).join(",")} is under the ground (${w.heightAt(x, z).toFixed(1)})`);
     };
     const info = G.levelInfo;
     solid(info.spawn[0], info.spawn[1] + 0.7, info.spawn[2], "spawn");
