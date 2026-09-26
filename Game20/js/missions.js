@@ -59,7 +59,7 @@ class Mission {
     if (w.grounded && this.t - this.navMoved > 3) this.navAt = 0; // not getting anywhere: plan again
     const next = path[this.navI + 1];
     // at the end: step in and jump for it if it is up high
-    if (!next) { this.steer(tx, tz, up > 1.0 && w.grounded); if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return dh; }
+    if (!next) { this.steer(tx, tz, up > 1.0 && w.grounded); if (!w.grounded) inp.jumpHeld = w.vel.y > 0; if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return dh; }
     if (!w.grounded) { this.steer(next.x, next.z); inp.jumpHeld = w.vel.y > 0; return dh; }
     if (next.how === "pad") { const q = path[this.navI]; this.steer(q.x, q.z); return dh; }
     if (next.how === "jump") { this.steer(next.x, next.z, true); return dh; }
