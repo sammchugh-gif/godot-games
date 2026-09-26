@@ -37,8 +37,9 @@ function bridge(w, z) {
   // flags on the top
   for (const x of [-4, 4]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.8), M(0x2a4ab0, { side: THREE.DoubleSide })); f.position.set(x, deck - 6 + rise + 3, z); f.userData.dynamic = true; w.scene.add(f); w.updaters.push((dt, t) => { f.rotation.y = Math.sin(t * 3 + x) * 0.3; }); }
 }
-function ferry(w, path, speed, phase, color = 0x2a8a4a) {
-  // a green and cream harbour ferry, hovering above the water, that you can ride
+function ferry(w, path, speed, phase, color = 0x2a8a4a, dwell = 5) {
+  // a green and cream harbour ferry, hovering above the water, that you can ride; it waits
+  // alongside its wharf (the first point of its loop) for a few seconds every trip
   const g = new THREE.Group(); w.scene.add(g);
   const hull = M(color, { rough: 0.4 }), cream = M(0xf0e8d0, { rough: 0.5 }), trim = M(0xf0c020, { rough: 0.5 }), deckM = M("wood", { args: [67, [150, 110, 70]], repeat: [2, 1] });
   const add = (geo, m, x, y, z) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); me.castShadow = true; g.add(me); return me; };
@@ -51,7 +52,8 @@ function ferry(w, path, speed, phase, color = 0x2a8a4a) {
   const curve = new THREE.CatmullRomCurve3(path.map(([x, z]) => new THREE.Vector3(x, 0, z)), true);
   const len = curve.getLength();
   g.position.copy(curve.getPointAt(0));
-  const fn = t => { const u = (((t * speed + phase) % len) + len) % len / len; const p = curve.getPointAt(u), tg = curve.getTangentAt(u); return [p.x, 0.9 + Math.sin(t * 1.2 + phase) * 0.15, p.z, Math.atan2(tg.x, tg.z)]; };
+  const T = len / speed + dwell;
+  const fn = t => { const s = (((t + phase) % T) + T) % T, u = s < dwell ? 0 : Math.min(0.9999, (s - dwell) * speed / len); const p = curve.getPointAt(u), tg = curve.getTangentAt(u); return [p.x, 0.9 + Math.sin(t * 1.2 + phase) * 0.15, p.z, Math.atan2(tg.x, tg.z)]; };
   // the deck and the cabin roof are both platforms
   w.phys.mover(g, 2.5, 0.2, 6, fn);
   const roof = new THREE.Object3D(); w.scene.add(roof);
@@ -82,9 +84,10 @@ export function buildSydney(w) {
   for (const [x, z, ry] of [[-10, 26, 0], [4, 26, 0], [-30, 12, Math.PI / 2]]) w.bench(x, z, ry);
   // ferries looping between the wharves and the point
   const ferries = [
-    ferry(w, [[-22, 60], [-40, 80], [-10, 95], [10, 72]], 3.2, 0, 0x2a8a4a),
-    ferry(w, [[0, 62], [30, 76], [52, 60], [26, 58]], 3.6, 20, 0x2a6a8a),
-    ferry(w, [[20, 62], [44, 90], [0, 104], [-12, 76]], 3.0, 45, 0x8a3a2a),
+    // each loop starts broadside to the end of a wharf, with a step's gap between deck and planks
+    ferry(w, [[-22, 57.8], [-42, 64], [-40, 82], [-10, 95], [8, 66]], 3.2, 0, 0x2a8a4a),
+    ferry(w, [[0, 57.8], [26, 66], [50, 62], [36, 82], [-18, 70]], 3.6, 14, 0x2a6a8a),
+    ferry(w, [[20, 57.8], [40, 70], [44, 92], [0, 104], [-6, 72]], 3.0, 29, 0x8a3a2a),
   ];
   w.ferries = ferries;
   // Zero's warehouse: a walled yard of crates behind the quay
