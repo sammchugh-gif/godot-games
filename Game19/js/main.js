@@ -245,7 +245,7 @@ function startMinigame(m) {
   G.mg = mg; G.mgMission = m; G.toast = null; G.hint = null;
   const card = () => { G.card = { title: `MISSION ${missionNumber(m)}`, sub: m.title.toUpperCase(), flag: (countryOf(m) || COUNTRIES[G.country]).flag, t: 0, dur: 2.4 }; };
   mg.onDone = ok => { if (ok) wonMinigame(m); else quitMinigame(); };
-  if (mg.needsWorld) { setState("minigame"); card(); if (mg.start) mg.start(); }
+  if (mg.needsWorld) { setState("minigame"); if (!mg.noCard) card(); if (mg.start) mg.start(); }
   else fadeOut(() => { setState("minigame"); fadeIn(); card(); if (mg.start) mg.start(); });
   Music.setMode("tense");
 }

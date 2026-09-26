@@ -51,7 +51,7 @@ export class MG {
   // shared chrome: the themed backdrop, the title strip and the instruction pill
   frame(g, W, H, s, theme) {
     this.W = W; this.H = H; this.s = s;
-    backdrop(g, W, H, s, this.t, theme || this.theme);
+    if ((theme || this.theme) !== "none") backdrop(g, W, H, s, this.t, theme || this.theme);
     const title = this.title.toUpperCase();
     g.font = `900 ${20 * s}px ${FONT}`; const tw = g.measureText(title).width;
     g.font = `600 ${13 * s}px ${MONO}`; const sw = this.sub ? g.measureText(this.sub).width + 22 * s : 0;
