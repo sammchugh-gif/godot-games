@@ -45,7 +45,8 @@ export class Engine {
       const c = this.composer = new EffectComposer(r);
       this.renderPass = new RenderPass(this.scene, this.camera);
       c.addPass(this.renderPass);
-      this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.4, 1.0);
+      // threshold above sunlit walls, so only lights and glowing things bloom (not whole façades)
+      this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.5, 0.4, 1.6);
       c.addPass(this.bloom);
       if (quality === 2) { this.smaa = new SMAAPass(); c.addPass(this.smaa); }
       c.addPass(new OutputPass());

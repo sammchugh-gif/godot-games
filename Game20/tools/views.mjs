@@ -25,12 +25,12 @@ const V = {
   india: [0, 8, 36, 0, 14, -60], island: [-40, 14, 50, 20, 8, -20], launch: [26, 12, 30, -2, 18, -30], station: [22, 10, 30, 0, 12, -60], moon: [16, 8, 40, 0, 6, -40],
 };
 const ids = process.argv[3] ? process.argv[3].split(",") : Object.keys(V);
-if (process.env.TITLE !== "0") { await waitT(2); await page.screenshot({ path: `${out}/00_title.jpg`, quality: 88, type: "jpeg" }); }
+if (process.env.TITLE !== "0") { await waitT(2); await page.screenshot({ path: `${out}/00_title.jpg`, quality: 88, type: "jpeg", timeout: 240000 }); }
 for (const id of ids) {
   await ev(id => __g.debug.load(id), id);
   await ev(v => __g.debug.view(...v), V[id]);
   await waitT(1.5);
-  await page.screenshot({ path: `${out}/${id}.jpg`, quality: 88, type: "jpeg" });
+  await page.screenshot({ path: `${out}/${id}.jpg`, quality: 88, type: "jpeg", timeout: 240000 });
   console.log("shot", id, JSON.stringify(await ev(() => __g.debug.stats())));
 }
 await browser.close(); killServer(); process.exit(0);

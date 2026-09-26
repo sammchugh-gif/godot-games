@@ -67,7 +67,8 @@ async function boot() {
   showTitle();
   let last = performance.now();
   const frame = now => {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    // (the first frame after a long boot can carry a timestamp from before it: never step backwards)
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
     try { tick(dt); } catch (e) { console.error(e); }
     requestAnimationFrame(frame);
   };

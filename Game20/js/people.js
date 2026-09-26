@@ -139,7 +139,7 @@ function hat(head, r, kind, color) {
 
 // pose the rig. s: { speed, grounded, vy, float, talk, wave, sit, dt }
 export function animatePerson(rig, s) {
-  const dt = s.dt || 0.016;
+  const dt = Math.max(0, s.dt || 0.016);
   const sp = Math.min(s.speed || 0, 9);
   rig.phase += dt * (3 + sp * 2.1);
   const p = rig.phase;

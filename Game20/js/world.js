@@ -273,7 +273,7 @@ export class World {
   }
   // a building with a textured front on all four sides and a roof
   building(w, h, d, x, z, o = {}) {
-    const fac = M("facade", { args: [o.seed || 1, o.wall || [220, 210, 190], Math.max(2, Math.round(w / 3)), Math.max(2, Math.round(h / 3.2)), o.win || {}], repeat: [1, 1], ei: o.ei ?? (this.sky && this.sky.stars ? 1.4 : 0.25) });
+    const fac = M("facade", { args: [o.seed || 1, o.wall || [220, 210, 190], Math.max(2, Math.round(w / 3)), Math.max(2, Math.round(h / 3.2)), o.win || {}], repeat: [1, 1], ei: o.ei ?? (this.sky && this.sky.stars ? 0.9 : 0.15) });
     const m = this.box(w, h, d, fac, x, h / 2 + (o.y || 0), z, { ry: o.ry || 0 });
     if (o.roof === "pitched") { const r = this.mesh(new THREE.CylinderGeometry(0.01, Math.max(w, d) * 0.72, h * 0.3, 4), M("roof", { args: [o.seed || 1, o.roofColor || [170, 80, 60]], repeat: [3, 2] }), x, h + h * 0.15 + (o.y || 0), z, { ry: (o.ry || 0) + Math.PI / 4 }); r.scale.set(w / Math.max(w, d), 1, d / Math.max(w, d)); }
     else if (o.roof !== "none") this.mesh(new THREE.BoxGeometry(w + 0.4, 0.4, d + 0.4), M(o.trim ?? 0x8a8478), x, h + 0.2 + (o.y || 0), z, { ry: o.ry || 0 });

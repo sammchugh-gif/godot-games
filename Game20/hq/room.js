@@ -467,7 +467,7 @@ async function boot() {
       : [["frost", pick(["Welcome back, Agent Rory. Which mission today?", "Agent Rory. The files are on the board, as always.", "Good to see you, Agent Rory. Pick a file. Or have a cup of tea first."])]], null);
   }, 900);
   let last = performance.now();
-  const frame = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; try { tick(dt); } catch (e) { console.error(e); } requestAnimationFrame(frame); };
+  const frame = now => { const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; try { tick(dt); } catch (e) { console.error(e); } requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
 }
 
