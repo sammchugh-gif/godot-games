@@ -53,7 +53,7 @@ class IceSlide extends MG {
       const grid = []; for (let y = 0; y < n; y++) { grid.push(new Array(n).fill(0)); } grid[0][2] = 1;
       best = { grid, exit: [n, 1], start: [0, 0], par: 2 };
     }
-    this.grid = best.grid; this.exit = best.exit; this.start = best.start; this.par = best.par;
+    this.grid = best.grid; this.exit = best.exit; this.home = best.start; this.par = best.par;
     this.px = best.start[0]; this.py = best.start[1]; this.dx = this.px; this.dy = this.py;
   }
   // slide from (x, y) in direction d: where you stop, or "out" through the exit
@@ -91,7 +91,7 @@ class IceSlide extends MG {
     this.anim = { x0: this.px, y0: this.py, x1: r.x + (r.out ? d[0] * 2 : 0), y1: r.y + (r.out ? d[1] * 2 : 0), t: 0, dur: 0.08 + dist * 0.07, out: r.out, d };
     this.px = r.x; this.py = r.y;
   }
-  reset() { if (this.done) return; this.px = this.start[0]; this.py = this.start[1]; this.dx = this.px; this.dy = this.py; this.anim = null; this.miss(); SFX.back(); this.fx.flash(PAL.ice, 0.2); }
+  reset() { if (this.done) return; this.px = this.home[0]; this.py = this.home[1]; this.dx = this.px; this.dy = this.py; this.anim = null; this.miss(); SFX.back(); this.fx.flash(PAL.ice, 0.2); }
   tick(dt) {
     const k = this.arrowHit(); if (k) this.go(k);
     const a = this.anim;
@@ -121,7 +121,7 @@ class IceSlide extends MG {
     const w = { "1,0": "right", "-1,0": "left", "0,1": "down", "0,-1": "up" }[p[0].join()];
     return `Slide ${w} first. The whole way out takes ${p.length} slide${p.length > 1 ? "s" : ""}.`;
   }
-  solve() { if (this.anim) return; const p = this.solveFrom(this.px, this.py); if (!p) { this.px = this.start[0]; this.py = this.start[1]; this.dx = this.px; this.dy = this.py; return; } this.go(p[0]); }
+  solve() { if (this.anim) return; const p = this.solveFrom(this.px, this.py); if (!p) { this.px = this.home[0]; this.py = this.home[1]; this.dx = this.px; this.dy = this.py; return; } this.go(p[0]); }
   draw(g, W, H, s) {
     this.frame(g, W, H, s);
     const n = this.n, b = this.b = this.fit(n + 2, n + 2, W, H, s, { max: 84, right: 150 }), c = b.cell;
