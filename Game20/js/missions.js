@@ -646,7 +646,7 @@ class Chase extends Mission {
     const gap = this.s - cs, base = 10 + this.lv * 1.6, rv = this.csv ?? 0;
     // the Floater always stays catchable: it drives a little slower along the route than Rory
     // does, by more the further behind he is, however slowly he drives
-    const r = gap > 40 ? 0.6 : gap > 14 ? 0.8 : gap > 7 ? 0.88 : 0.95;
+    const r = gap > 40 ? 0.6 : gap > 14 ? 0.8 : 0.86;
     let v = Math.min(base, Math.max(3, rv * r));
     if (this.boostT > 0) { this.boostT -= dt; v += 7; }
     this.qv += (v - this.qv) * Math.min(1, dt * 2);
@@ -655,7 +655,8 @@ class Chase extends Mission {
     this.bot.update(dt);
     this.cool -= dt;
     const d = this.car.pos.distanceTo(this.q.position);
-    if (d < 3.4 && this.cool <= 0) {
+    // a bump counts from about a metre off its back bumper: close enough is close enough
+    if (d < 4.2 && this.cool <= 0) {
       this.tags++; this.cool = 2.2; this.boostT = 1.6; this.wob = 1;
       this.g.fx.burst(this.q.position.x, this.q.position.y + 1, this.q.position.z, 0xffd166, 36, { speed: 6 });
       this.g.sound("hit"); this.bot.play("No");
