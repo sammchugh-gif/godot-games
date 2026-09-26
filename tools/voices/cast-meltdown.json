@@ -1,0 +1,152 @@
+{
+ "_default": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "rory": {
+  "voice": "bf_lily:0.7,bm_fable:0.3",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.15
+ },
+ "frost": {
+  "voice": "bm_george",
+  "lang": "en-gb",
+  "speed": 0.85,
+  "pitch": 0.94
+ },
+ "pip": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 1.08
+ },
+ "watch": {
+  "voice": "bf_alice",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "zara": {
+  "voice": "af_heart",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "kaldera": {
+  "voice": "em_alex:0.6,am_onyx:0.4",
+  "lang": "en-us",
+  "speed": 0.82,
+  "pitch": 0.9
+ },
+ "scorch": {
+  "voice": "af_nova",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.95
+ },
+ "bruno": {
+  "voice": "am_onyx",
+  "lang": "en-us",
+  "speed": 0.85,
+  "pitch": 0.88
+ },
+ "cinder": {
+  "voice": "bm_lewis",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.08
+ },
+ "nuka": {
+  "voice": "bf_isabella",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.08
+ },
+ "lars": {
+  "voice": "bm_daniel",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 0.95
+ },
+ "luca": {
+  "voice": "im_nicola",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.08
+ },
+ "ines": {
+  "voice": "ef_dora",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.05
+ },
+ "nikos": {
+  "voice": "pm_alex",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "mac": {
+  "voice": "af_sarah",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "omar": {
+  "voice": "hm_omega",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "valentina": {
+  "voice": "pf_dora",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "budi": {
+  "voice": "hm_psi",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "minjun": {
+  "voice": "am_liam",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "tenzing": {
+  "voice": "hm_omega:0.5,bm_lewis:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "thandi": {
+  "voice": "bf_emma:0.5,af_kore:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.04
+ },
+ "aroha": {
+  "voice": "af_aoede",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "lucia": {
+  "voice": "ef_dora:0.5,af_bella:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.06
+ },
+ "ellie": {
+  "voice": "bf_isabella:0.5,bf_emma:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ }
+}

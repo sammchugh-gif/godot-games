@@ -65,7 +65,8 @@ Every kind has an autopilot (`solve`) used by the tests.
 - **JUMP** (Space): hold it for a higher jump; in space it's **JET**.
 - **USE** (E): zap, grab, drop, pin and talk. The button changes name to say
   what it will do.
-- The yellow arrow over Rory's head always points to what's next. BOLT gives a
+- Each mission starts at a tall beam of light. A yellow arrow over Rory's head
+  can point the way too (ARROW in the pause menu; it starts off). BOLT gives a
   nudge if Rory stands still for a while.
 - Three **golden bolts** are hidden in every place, thirty-nine in all.
 - The pause menu has **MISSIONS** (replay any finished mission for more stars)
