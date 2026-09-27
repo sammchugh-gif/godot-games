@@ -25,6 +25,9 @@ const swimMixin = {
   // Rory swims to (x, y, z): along a planned route through open water, up for air when he needs it
   swimTo(x, y, z) {
     const g = this.g, p = this.p, inp = g.input, c = [p.pos.x, p.pos.y + 0.7, p.pos.z], sea = this.w.sea;
+    // still on dry land (a pontoon, a ledge, the beach): walk the way the walking map says, off the
+    // edge and into the water, and swim from there
+    if (!p.swimming && !p.headUnder) return this.walkTo(x, y, z, 1.0, (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q));
     const lvl = sea ? sea.level : 0;
     if (!this.nav3) {
       const pts = [c, [x, y, z], ...(this.navPts || [])];
@@ -427,7 +430,7 @@ export class Escort extends Mission {
         const t = ((ax - pp.x) * rz - (az - pp.z) * rx) / den, u = ((ax - pp.x) * sz - (az - pp.z) * sx) / den;
         if (t < -0.1 || t > 1.1 || u < 0 || u > 1) continue;
         const cx = ax + sx * t, cz = az + sz * t;
-        if (Math.hypot(cx - pp.x, cz - pp.z) < 3.5 && Math.hypot(cr.c.position.x - cx, cr.c.position.z - cz) < 8) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+        if (Math.hypot(cx - pp.x, cz - pp.z) < 3.5 && Math.hypot(cr.c.position.x - cx, cr.c.position.z - cz) < 6) { this.g.input.forced = { mx: 0, my: 0 }; return; }
       }
     }
     if (this.water) this.swimTo(tgt.x, tgt.y + (waiting.length ? 0 : 0.5), tgt.z);
@@ -493,6 +496,7 @@ export class Divers extends Roundup {
     this.g.sound("zap");
   }
   hud() { return { ...super.hud(), text: `Bubble the Drip divers  ${this.popped}/${this.need}` }; }
+  debugState() { const f = v => +v.toFixed(1), pp = this.p.pos; return { p: pp.toArray().map(f), sw: this.p.swimming, under: this.p.headUnder, air: f(this.p.air), gasp: !!this.gasping, bots: this.bots.filter(b => b.state === "walk").map(b => b.r.pos.toArray().map(f)).slice(0, 3), path: this.swimPath ? this.swimPath.length : null }; }
   solve() {
     const pp = this.p.pos, b = this.bots.filter(b => b.state === "walk").sort((a, c) => a.r.pos.distanceTo(pp) - c.r.pos.distanceTo(pp))[0];
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }

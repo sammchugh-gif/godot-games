@@ -115,7 +115,7 @@ export function buildHongKong(w) {
   };
   // (each loop passes close by somewhere to jump aboard: the pier's end, the ferry pier's end, the
   // pier's side; the loops never cross)
-  const J = [junk([0, -41, 20, 12, 70], Math.PI / 2 + 0.3), junk([42, -34.1, 16, 14.2, 80], 1.2), junk([-20, -15, 14.1, 8, 60], -1)];
+  const J = [junk([0, -41, 20, 12, 46], Math.PI / 2 + 0.3), junk([42, -34.1, 16, 14.2, 50], 1.2), junk([-20, -15, 14.1, 8, 40], -1)];
 
   // ---- the harbour's life: gulls, a shoal under the pier
   school(w, 0, 16, -30, 16, 10, 0xf4f4f4);

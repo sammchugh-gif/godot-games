@@ -8,6 +8,7 @@
 import { R } from "./physics.js";
 
 const STEP = 0.45, JUMP_UP = 1.9, DROP = 8, GAP = 3.8, TALL = 1.35;
+const GAPDIRS = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1], [2, 1], [1, 2], [-1, 2], [-2, 1], [-2, -1], [-1, -2], [1, -2], [2, -1]];
 const FLAGS = () => R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCLUDE_KINEMATIC | R.QueryFilterFlags.EXCLUDE_SENSORS;
 
 export class Nav {
@@ -111,6 +112,19 @@ export class Nav {
   // the floor in column c that you'd walk onto from height y (within a step), or -1
   walkable(c, y) { let best = -1, bd = STEP; for (let k = this.first[c]; k < this.first[c + 1]; k++) { const d = Math.abs(this.h[k] - y); if (d <= bd) { bd = d; best = k; } } return best; }
   // the moves out of floor k: [to, cost, how]
+  // is there anything in the way (a railing, a wall) on the straight line from floor k's spot to
+  // (x2, z2), at knee height above whichever floor is higher (thin things sit between the spots the
+  // map knows about, so each move checks its own line; the answers are kept)
+  blocked(k, q, x2, z2, yy) {
+    const key = k * 1048576 + q, m = this.walls || (this.walls = new Map());
+    let v = m.get(key);
+    if (v === undefined) {
+      const [x, z] = this.xz(k), dx = x2 - x, dz = z2 - z, d = Math.hypot(dx, dz);
+      v = d > 0 && !!this.w.phys.world.castRay(new R.Ray({ x, y: yy + 0.5, z }, { x: dx / d, y: 0, z: dz / d }), d, true, FLAGS());
+      m.set(key, v);
+    }
+    return v;
+  }
   moves(k, out) {
     out.length = 0;
     const { nx, nz, S, h } = this, c = this.col[k], i = c % nx, j = (c / nx) | 0, y = h[k];
@@ -120,8 +134,10 @@ export class Nav {
       const c2 = ii + jj * nx, d = (di && dj ? 1.414 : 1) * S;
       // no cutting corners past a wall or an edge
       if (di && dj && (this.walkable(i + di + j * nx, y) < 0 || this.walkable(i + (j + dj) * nx, y) < 0)) continue;
+      const x2 = this.x0 + ii * S, z2 = this.z0 + jj * S;
       for (let q = this.first[c2]; q < this.first[c2 + 1]; q++) {
         const dh = h[q] - y;
+        if (this.blocked(k, q, x2, z2, Math.max(y, h[q]))) continue;
         if (Math.abs(dh) <= STEP) out.push([q, d, "walk"]);
         // up onto a ledge: room over his head for the jump
         else if (dh > 0 && dh <= JUMP_UP && this.ceil[k] > dh + TALL + 0.2) out.push([q, d + 2, "jump"]);
@@ -130,15 +146,17 @@ export class Nav {
       }
     }
     // jumping a gap in a straight line: over lower ground (or nothing) to a floor no higher than a small hop
-    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-      const step = (di && dj ? 1.414 : 1) * S;
-      for (let m = 2; m * step <= GAP; m++) {
+    // (sixteen directions, so rocks at odd angles to the map's grid line up with one of them)
+    for (const [di, dj] of GAPDIRS) {
+      const step = Math.hypot(di, dj) * S;
+      for (let m = Math.abs(di) + Math.abs(dj) > 2 ? 1 : 2; m * step <= GAP; m++) {
         const ii = i + di * m, jj = j + dj * m; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) break;
         let clear = true;
-        for (let t = 1; t < m; t++) if (this.occupied((i + di * t) + (j + dj * t) * nx, y - 1, y + TALL + 0.6)) { clear = false; break; }
+        for (let t = 1; t < m; t++) if (this.occupied((i + di * t) + (j + dj * t) * nx, y - 0.4, y + TALL + 0.6)) { clear = false; break; }
         if (!clear) break;
+        // (landing on the ground far below doesn't end the search: a rock further on may be the one to jump to)
         const c2 = ii + jj * nx; let hit = false;
-        for (let q = this.first[c2]; q < this.first[c2 + 1]; q++) { const dh = h[q] - y; if (dh <= 1.0 && dh >= -DROP && !this.occupied(c2, h[q] + 0.05, y + TALL)) { out.push([q, m * step + 3, "gap"]); hit = true; } }
+        for (let q = this.first[c2]; q < this.first[c2 + 1]; q++) { const dh = h[q] - y; if (dh <= (m * step <= 2.5 ? 1.35 : 1.0) && dh >= -DROP && !this.occupied(c2, h[q] + 0.05, y + TALL) && !this.blocked(k, q, this.x0 + ii * S, this.z0 + jj * S, Math.max(y, h[q]))) { out.push([q, m * step + 3, "gap"]); if (dh > -0.6) hit = true; } }
         if (hit) break;
       }
     }

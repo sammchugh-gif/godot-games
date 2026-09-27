@@ -613,6 +613,8 @@ G.debug = {
     if (G.place.id !== place.id) loadPlace(place.id);
     startPlace();
     const def = place.missions.find(m => m.id === id);
+    // (from where a player would start it: standing in its beacon)
+    const bc = G.beacons[id]; if (bc) G.player.teleport(bc.position.x, bc.position.y + 0.1, bc.position.z);
     G.mission = makeMission(G, def, G.world.missionData && G.world.missionData[id]);
     G.mission.start(); refreshBeacons();
     G.state = "mission"; G.input.clear();

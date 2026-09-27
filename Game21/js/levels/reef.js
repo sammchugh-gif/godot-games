@@ -124,6 +124,6 @@ export function buildReef(w) {
   return {
     stars: [[-18, h(-18, 32), 32], [30, h(30, 24), 24], [50, h(50, 38), 38]],
     spawn: [0, 1.25, 12], yaw: Math.PI, bolt: [-2, 1.25, 12], contact: [3, 1.25, 13, Math.PI * 0.9],
-    at: { reef1: [-7, 7], reef2: [7, 7], reef3: [-7, 13.5], reef4: [7, 13.5], reef5: [-2, 6.5], reef6: [2.5, 6.5] },
+    at: { reef1: [-7, 7], reef2: [7, 7], reef3: [-7, 13.5], reef4: [7, 13.5], reef5: [-80, 22], reef6: [2.5, 6.5] },
   };
 }

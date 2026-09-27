@@ -53,9 +53,10 @@ export class Cells extends Mission {
     const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
     const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
-    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; }
+    // (the time allowed grows with how far away it is: a child crossing a big level takes a while)
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; this.aimFar = c.position.distanceTo(pp) / 2.5; }
     // (a cell on a ferry or cable car may mean waiting a whole trip for it to come round)
-    if (this.t - this.aimT > (c.userData.follow || (this.ride && this.rideCell === c) ? 75 : this.data.climb ? 45 : 25)) {
+    if (this.t - this.aimT > (c.userData.follow || (this.ride && this.rideCell === c) ? 75 : this.data.climb ? 45 : 25) + (this.aimFar || 0)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} cell ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
