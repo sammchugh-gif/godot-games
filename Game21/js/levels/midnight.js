@@ -72,7 +72,7 @@ export function buildMidnight(w) {
     mid1: { cells: [bed(20, 20, 2), bed(4, 44, 3), bed(-20, 40, 5), bed(-30, 10, 3), bed(-40, -36, 5), bed(-8, -24, 2), bed(22, -48, 3)], floor: -40 },
     mid2: { rings: [[24, -16, -26, 2.8], [4, -20, -18, 2.8], [-18, -22, -10, 2.8], [-40, -24, 2, 2.8], [-62, -24, 12, 2.8], [-86, -24, 18, 2.8]], floor: -40 },
     mid3: { area: [-70, -40, 14], bots: [[-64, 0, -36], [-72, 0, -44], [-78, 0, -34], [-60, 0, -46], [-82, 0, -46], [-68, 0, -28]], floor: -30, lamps: true },
-    mid4: { sub: [34, -6, 18, -Math.PI * 0.75], exit: bell.spawn, dark: true, floor: -40,
+    mid4: { sub: [34, h(34, 18) + 2.4, 18, -Math.PI * 0.75], exit: bell.spawn, dark: true, floor: -40,
       marks: [bed(26, -32, 2.5), bed(0, -22, 2.5), bed(-28, -10, 2.5), bed(-54, -2, 2.5), bed(-80, 26, 2.5), bed(-104, 20, 2.5)] },
     mid5: { word: "MISTAKE", title: "THE LAMP BELOW" },
     mid6: { critter: "glim", water: true, kids: [bed(-110, 40, 3)], goal: [50, h(50, 38) + 2.2, 42], goalR: 3.5, floor: -40 },

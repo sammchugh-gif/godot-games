@@ -74,14 +74,14 @@ export function buildTwilight(w) {
   w.current(CUR, 3.6, 7);
 
   // ---- life that glows: lanternfish shoals, jellies, a squid on patrol
-  const SHOAL = { x: -20, y: -34, z: 34 };
+  const SHOAL = { x: -20, y: h(-20, 34) + 4, z: 34 };
   school(w, SHOAL.x, SHOAL.y, SHOAL.z, 90, 6, 0x6ad8ff, 2.2);
   school(w, 10, -10, 30, 50, 5, 0x6ad8ff, 2.2); school(w, -80, -44, -20, 60, 6, 0x9a7aff, 1.8);
   for (let k = 0; k < 6; k++) { const j = critter("jelly", 1 + (k % 3) * 0.3); w.scene.add(j); const px = -60 + k * 18, pz = -10 + (k % 2) * 30, py = -20 - k * 4, ph = k * 1.7; w.updaters.push((dt, t) => { j.position.set(px + Math.sin(t * 0.08 + ph) * 4, py + Math.sin(t * 0.3 + ph) * 2, pz + Math.cos(t * 0.07 + ph) * 4); animateCritter(j, dt, 0.3); }); }
   roam(w, "manta", { cx: -20, cz: 0, rx: 40, rz: 30, y: -20, dy: 3, period: 90, scale: 1.3 });
   w.airStation(-6, h(-6, 20), 20); w.airStation(-50, h(-50, 20), 20); w.vent(-80, h(-80, 10), 10, 20);
   // the lost lanternfish: little ones away from the shoal
-  const lost = [[12, -6, 18], [-4, -20, 50], [-44, -40, 52], [-40, -38, 22]];
+  const lost = [[12, 18], [-4, 50], [-44, 52], [-40, 22]].map(([x, z]) => [x, h(x, z) + 2.5, z]);
 
   // ---- the missions
   const bed = (x, z, up = 1.2) => [x, h(x, z) + up, z];
