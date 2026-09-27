@@ -60,6 +60,12 @@ export class Mission {
     if (this.p.swimming) {
       for (let i = this.navI; i < Math.min(path.length, this.navI + 12); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 1.3) this.navI = i; }
       const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.w.sea ? this.w.sea.level : 0;
+      // (a route that climbs straight out of the water onto something too high to reach from it, a
+      // pier's end or a quay wall: swim to a way out, steps or a ledge, instead)
+      if (q.h > L + 1.1 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2.5) {
+        const e = this.exitFor(tx, ty, tz, reach);
+        if (e) { const d = Math.hypot(e.x - pp.x, e.z - pp.z); this.steer(e.x, e.z, d < 1.6); inp.jumpHeld = !w.grounded; return dh; }
+      }
       this.steer(q.x, q.z, q.h > L - 0.3 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2);
       inp.jumpHeld = false;
       return dh;
