@@ -32,6 +32,8 @@ export function buildIce(w) {
       if (open && z0 !== null) { w.box(C, THICK, z - z0, under, x + C / 2, TOP - THICK / 2, (z0 + z) / 2); w.box(C, 0.06, z - z0, ice, x + C / 2, TOP + 0.03, (z0 + z) / 2, { collide: false }); z0 = null; }
     }
   }
+  // (each hole is somewhere to come up and breathe: the autopilot looks for air among the dry rooms)
+  for (const [hx, hz, r] of HOLES) w.dryRoom(hx - r + 0.4, 0, hz - r + 0.4, hx + r - 0.4, 3, hz + r - 0.4, { wl: 0, below: 60 });
   // rims of broken ice round each hole
   for (const [hx, hz, r] of HOLES) w.mesh(new THREE.TorusGeometry(r * 0.95, 0.3, 8, 24), M(0xe8f4fa, { rough: 0.3 }), hx, TOP, hz, { rx: Math.PI / 2 });
   // keels of old ice hanging down: the tunnels the sub chase threads
