@@ -50,9 +50,12 @@ export class Cells extends Mission {
   // can report it (a cell nobody can reach is a bug in the level).
   solve() {
     // keep after one cell until it is collected, then take the nearest
-    const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
+    // (riding something, finish the cells on board first: another boat may be nearer just now, but
+    // leaving means waiting a whole trip for this one to come round again)
+    const w = this.p.walker, aboard = k => w.onMover && k.userData.follow && this.moverOf(k.userData.follow.obj) === w.onMover;
+    const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => (aboard(b) - aboard(a)) || a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
-    const inp = this.g.input, pp = this.p.pos, w = this.p.walker;
+    const inp = this.g.input, pp = this.p.pos;
     // (the time allowed grows with how far away it is: a child crossing a big level takes a while)
     if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.navTo = null; this.board = null; this.aimFar = c.position.distanceTo(pp) / 2.5; }
     // (a cell on a ferry or cable car may mean waiting a whole trip for it to come round)
