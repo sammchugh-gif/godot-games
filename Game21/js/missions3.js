@@ -48,6 +48,8 @@ export const swimMixin = {
           for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
             const fx = nx + ox * nav.S, fz = nz + oz * nav.S, wl = this.waterLine(fx, nav.h[k], fz);
             if (nav.h[k] < wl - 0.5 || nav.top(fx, fz, nav.h[k] + 0.2) > wl - 1.2) continue;
+            // (not over a railing: the boat's sides are railed, its stern is open)
+            if (this.w.phys.ray({ x: nx, y: nav.h[k] + 0.5, z: nz }, { x: ox, y: 0, z: oz }, nav.S + 0.8) !== null) continue;
             const d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(fx - x, fz - z) * 0.25;
             if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz, off: [fx + ox, fz + oz] }; }
           }
