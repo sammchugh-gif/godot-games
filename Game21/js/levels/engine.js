@@ -85,7 +85,7 @@ export function buildEngine(w) {
   };
   return {
     stars: [bed(-80, -60, 0.3), bed(80, -20, 0.3), [AR.x - 10, AF + 0.4, AR.z - 10]],
-    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 4, bell.F + 0.1, bell.hole[1] + 1], contact: [bell.hole[0] - 2.5, bell.F, bell.hole[1] + 3.2, 2.2],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 4, bell.F + 0.1, bell.hole[1] + 1], contact: [bell.hole[0], bell.F, bell.hole[1] + 3.9, 2.8],
     swimTop: 58, lamp: 30,
     at: { eng1: [VALVE[0] * 1.2, VALVE[1] * 1.2, 6], eng2: [57.5, 43.5, bell.F + 1], eng3: [CORE[0] * 1.2, CORE[1] * 1.2, 6], eng4: [AR.x + 7, AR.z + 7, AF + 2], eng5: [62.5, 43.5, bell.F + 1], eng6: [62.5, 36.5, bell.F + 1] },
   };

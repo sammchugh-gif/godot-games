@@ -96,6 +96,6 @@ export function buildIce(w) {
     stars: [bed(-90, 40, 0.3), bed(70, 60, 0.3), [9, TOP + 0.3, 9]],
     spawn: [6, TOP + 0.1, 4], yaw: Math.PI, bolt: [4, TOP + 0.1, 5], contact: [8, TOP, 2.5, -2],
     swimTop: 0.6, lamp: 20,
-    at: { ice1: [3.5, 2.5], ice2: [-0.5, 5], ice3: [2, 6.5], ice4: [5, 7.5], ice5: [9, 1], ice6: [11, 3] },
+    at: { ice1: [3.5, 2.5], ice2: [-0.5, 5], ice3: [2, 6.5], ice4: [4.5, 10.5], ice5: [9, 1], ice6: [11, 3] },
   };
 }
