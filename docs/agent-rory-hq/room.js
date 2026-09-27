@@ -30,6 +30,9 @@ export const FILES = [
   { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 60,
     blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon. Sixty missions.",
     frost: "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon." },
+  { id: "deep", n: "FILE 004", kicker: "UNDER THE SEA", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#39d8c8", saves: ["rory21.save"], total: 59,
+    blurb: "Captain Undertow is draining the sea. Swim, dive and drive TORPEDO the submarine round ten coasts. Act One: fifty-nine missions.",
+    frost: "Deep Red. Captain Undertow, the vanishing sea, and a very talkative submarine." },
 ];
 // how far Rory has got in a file, from its saves
 export function progress(f) {
@@ -52,10 +55,10 @@ const count = key => { let n = 0; try { n = (+localStorage.getItem(key) || 0) + 
 const canvasTex = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
 
 // ------------------------------------------------------------ the mission board
-// a corkboard with the three mission files pinned to it, red string between the
+// a corkboard with the mission files pinned to it, red string between the
 // pins, and a few sticky notes. It redraws when Rory walks up to a file.
 const BW = 18, BH = 5.6, CW = 2048, CH = Math.round(2048 * BH / BW);
-const CARD_U = [0.2, 0.5, 0.8];
+const CARD_U = [0.14, 0.38, 0.62, 0.86];
 function boardTexture() {
   const c = document.createElement("canvas"); c.width = CW; c.height = CH;
   const g = c.getContext("2d"), tex = canvasTex(c);
@@ -72,7 +75,7 @@ function boardTexture() {
     g.save(); g.translate(CW / 2 + 470, 74); g.rotate(-0.18); g.strokeStyle = "#d8283a"; g.lineWidth = 7; g.strokeRect(-150, -34, 300, 68); g.fillStyle = "#d8283a"; g.font = "900 44px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("TOP SECRET", 0, 2); g.restore();
     const pins = [];
     FILES.forEach((f, i) => {
-      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 520, h = 470, rot = [-0.035, 0.02, -0.025][i];
+      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 440, h = 470, rot = [-0.035, 0.02, -0.025, 0.03][i];
       g.save(); g.translate(cx, cy); g.rotate(rot);
       if (hi === i) { g.shadowColor = "#ffd166"; g.shadowBlur = 60; g.fillStyle = "#ffd166"; g.fillRect(-w / 2 - 16, -h / 2 - 16, w + 32, h + 32); g.shadowBlur = 0; }
       g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-w / 2 + 10, -h / 2 + 12, w, h);
@@ -83,12 +86,12 @@ function boardTexture() {
       else { g.fillStyle = "#16305c"; g.fillRect(-pw / 2, -h / 2 + 20, pw, ph); }
       g.fillStyle = f.accent; g.fillRect(-pw / 2, -h / 2 + 20 + ph, pw, 8);
       g.fillStyle = "#6a7488"; g.font = "800 22px system-ui"; g.textAlign = "left"; g.textBaseline = "top"; g.fillText(f.n + "  ·  " + f.kicker, -pw / 2, -h / 2 + 290);
-      g.fillStyle = "#141c2c"; g.font = "900 46px system-ui"; g.fillText(f.title, -pw / 2, -h / 2 + 318);
+      g.fillStyle = "#141c2c"; g.font = "900 40px system-ui"; g.fillText(f.title, -pw / 2, -h / 2 + 320);
       // progress: a bar, the count and the stars
       const by = -h / 2 + 390; g.fillStyle = "#dde2ea"; g.fillRect(-pw / 2, by, pw - 150, 18); g.fillStyle = f.accent; g.fillRect(-pw / 2, by, (pw - 150) * p.done / f.total, 18);
       g.fillStyle = "#141c2c"; g.font = "800 26px system-ui"; g.fillText(`${p.done}/${f.total}`, pw / 2 - 138, by - 5);
       if (p.stars) { g.fillStyle = "#c88a10"; g.fillText("★ " + p.stars, -pw / 2, by + 30); }
-      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "zero" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
+      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "deep" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
       g.save(); g.translate(pw / 2 - 110, -h / 2 + 220); g.rotate(-0.22); g.strokeStyle = stamp[1]; g.lineWidth = 6; g.font = "900 34px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
       const sw = g.measureText(stamp[0]).width + 36; g.globalAlpha = 0.9; g.strokeRect(-sw / 2, -28, sw, 56); g.fillStyle = stamp[1]; g.fillText(stamp[0], 0, 2); g.restore();
       g.restore();
@@ -102,9 +105,9 @@ function boardTexture() {
     for (const [x, y] of [[90, 150], ...pins, [CW - 90, 150]]) { g.fillStyle = "#e8283a"; g.beginPath(); g.arc(x, y, 16, 0, 7); g.fill(); g.fillStyle = "rgba(255,255,255,.6)"; g.beginPath(); g.arc(x - 5, y - 5, 5, 0, 7); g.fill(); }
     // sticky notes
     const note = (x, y, rot, lines, col = "#ffe65a") => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(-72, -64, 150, 134); g.fillStyle = col; g.fillRect(-78, -70, 150, 134); g.fillStyle = "#2a2a3a"; g.font = "700 22px 'Comic Sans MS', 'Marker Felt', cursive"; g.textAlign = "center"; lines.forEach((l, k) => g.fillText(l, -3, -30 + k * 30)); g.restore(); };
-    note(100, CH - 150, 0.08, ["Where is", "BOLT's other", "sock?"]);
-    note(CW - 100, CH - 150, -0.07, ["Buy milk.", "And biscuits.", "LOTS of", "biscuits."], "#9ae8ff");
-    note(CW - 110, 330, 0.05, ["Zero =", "floating", "shoes??"], "#ffb0d8");
+    // (up in the corners, clear of the four files)
+    note(170, 72, 0.08, ["Where is", "BOLT's other", "sock?"]);
+    note(CW - 170, 72, -0.07, ["TORPEDO", "says hi!", "(he's", "waterproof)"], "#9ae8ff");
     tex.needsUpdate = true;
   };
   draw();
@@ -331,7 +334,7 @@ function buildRoom(w) {
   w.box(3, 4.2, 0.3, M(0x2a3040, { metal: 0.7, rough: 0.3 }), 0, 2.1, RD / 2 - 0.3, { collide: false });
   const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshStandardMaterial({ map: TEX.sign("TOP SECRET", { bg: "#2a0a10", fg: "#ff5a5a", border: "#ff5a5a" }), emissive: 0xff3a3a, emissiveIntensity: 0.5 }));
   doorSign.position.set(0, 4.6, RD / 2 - 0.47); doorSign.rotation.y = Math.PI; doorSign.userData.dynamic = true; w.scene.add(doorSign);
-  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 3 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 3 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
+  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 4 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 4 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
   terminal.position.set(-RW / 2 + 0.28, 2.3, 2.5); terminal.rotation.y = Math.PI / 2; terminal.userData.dynamic = true; w.scene.add(terminal);
   const posters = buildPosters(w, RW, RD);
   const tea = teaTrolley(w, 9.4, 6.6);
@@ -581,7 +584,7 @@ function updateBolt(dt) {
 }
 function talk(who) {
   const lines = who === "frost"
-    ? [["frost", pick(["Three mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity goes to the Moon.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
+    ? [["frost", pick(["Four mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
     : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun."])]];
   G.dialogue.show(lines, null);
 }
