@@ -106,15 +106,16 @@ export class Mission {
   }
   // the nearest spot to climb out of the water onto (a step or ledge no higher than a hop above the
   // surface) from which the walking map can get to (tx, ty, tz); remembered for each target
+  // (with no target, just the nearest way out of the water)
   exitFor(tx, ty, tz, reach) {
-    const nav = this.nav, L = this.w.sea.level, pp = this.p.pos, key = `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
+    const nav = this.nav, L = this.w.sea.level, pp = this.p.pos, any = tx == null, key = any ? "any" : `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
     if (this.exitKey !== key || this.exitNav !== nav) {
       this.exitKey = key; this.exitNav = nav; this.exits = [];
       const cand = [];
       for (let k = 0; k < nav.h.length; k++) if (nav.h[k] > L - 0.4 && nav.h[k] < L + 1.3) { const [x, z] = nav.xz(k); cand.push({ x, y: nav.h[k], z, d: Math.hypot(x - pp.x, z - pp.z) }); }
       cand.sort((a, b) => a.d - b.d);
       // (the closest few that lead there)
-      for (const c of cand) { if (this.exits.length >= 3 || c.d > 60) break; if (nav.route(c.x, c.y, c.z, tx, ty, tz, reach)) this.exits.push(c); }
+      for (const c of cand) { if (this.exits.length >= 3 || c.d > 60) break; if (any || nav.route(c.x, c.y, c.z, tx, ty, tz, reach)) this.exits.push(c); }
     }
     let best = null, bd = 1e9;
     for (const e of this.exits) { const d = Math.hypot(e.x - pp.x, e.z - pp.z); if (d < bd) { bd = d; best = e; } }
@@ -165,7 +166,13 @@ export class Mission {
       this.board = best;
     }
     // fallen in the water: climb out (a boat can't be boarded from the sea) and wait for it again
-    if (this.p.swimming) { const b = this.board; if (b) this.walkTo(b.x, b.y + 0.7, b.z, 0.5, pts); else this.walkTo(tx, ty, tz, 1.0, pts); return; }
+    if (this.p.swimming) {
+      const b = this.board;
+      if (b) { this.walkTo(b.x, b.y + 0.7, b.z, 0.5, pts); return; }
+      // (no spot to wait at worked out yet: out at the nearest step, and it's worked out from there)
+      const e = this.exitFor(null); if (e) { const d = Math.hypot(e.x - pp.x, e.z - pp.z); this.steer(e.x, e.z, d < 1.6); if (!w.grounded) inp.jumpHeld = true; return; }
+      this.walkTo(tx, ty, tz, 1.0, pts); return;
+    }
     const now = deck(this.w.phys.t, pp.x, pp.z);
     // it's here: jump aboard, towards a spot well inside the deck
     // (a deck a little below: it can be a longer hop, as the drop carries Rory further)
@@ -204,7 +211,8 @@ export class Mission {
     const m = this.p.walker.onMover;
     if (m && m.fn) {
       const [cx, , cz, ry = 0] = m.fn(this.w.phys.t), c = Math.cos(ry), sn = Math.sin(ry), dx = tx - cx, dz = tz - cz;
-      const ix = Math.max(-(m.hx - 0.5), Math.min(m.hx - 0.5, dx * c - dz * sn)), iz = Math.max(-(m.hz - 0.5), Math.min(m.hz - 0.5, dx * sn + dz * c));
+      // (well inside it: the deck turns under his feet as the boat goes round)
+      const ix = Math.max(-(m.hx - 1.2), Math.min(m.hx - 1.2, dx * c - dz * sn)), iz = Math.max(-(m.hz - 1.2), Math.min(m.hz - 1.2, dx * sn + dz * c));
       const ex = cx + ix * c + iz * sn, ez = cz - ix * sn + iz * c;
       if (Math.hypot(ex - pp.x, ez - pp.z) > 0.4) { this.steer(ex, ez); return; }
     }
