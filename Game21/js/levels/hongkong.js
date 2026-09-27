@@ -46,7 +46,11 @@ export function buildHongKong(w) {
   pier(w, 0, -3, 0, -25.5, TOP, 6, -12, deckM);
   for (let z = -6; z > -26; z -= 5) for (const s of [-1, 1]) w.cyl(0.2, 0.25, 0.6, M(0x1e2228, { metal: 0.6 }), s * 2.6, TOP + 0.3, z, { seg: 8 });
   // steps up out of the water, beside the pier
-  w.steps(5, 2, 0.44, 0.9, M("stone", { args: [43, [170, 164, 152]] }), 8, -0.2, -7.7, 0);
+  // (each flight stands on solid stone down to the harbour floor, so nobody swims in under it)
+  const stepStone = M("stone", { args: [43, [170, 164, 152]] });
+  w.steps(5, 2, 0.44, 0.9, stepStone, 8, -0.2, -7.7, 0); w.box(2, 12, 4.5, stepStone, 8, -6.2, -5.45);
+  // and on the pier's west side near its end (for anyone who misses a junk), clear of the junks' loops
+  w.steps(5, 2.5, 0.44, 0.9, stepStone, -4.25, -0.2, -25, 0); w.box(2.5, 12, 4.5, stepStone, -4.25, -6.2, -22.75);
   pier(w, 36, -3, 36, -16, TOP, 10, -12, deckM);
   w.box(10.4, 0.4, 13.4, M(0x2a7a4a), 36, TOP + 4.2, -9.5);
   for (const [x, z] of [[31.5, -4], [40.5, -4], [31.5, -15], [40.5, -15]]) w.cyl(0.18, 0.18, 4, M(0xe8e8e0), x, TOP + 2, z, { seg: 8 });
@@ -121,7 +125,7 @@ export function buildHongKong(w) {
   };
   // (each loop passes close by somewhere to jump aboard: the pier's end, the ferry pier's end, the
   // pier's side; the loops never cross)
-  const J = [junk([0, -40.5, 20, 12, 36], Math.PI / 2 + 0.3), junk([42, -33.6, 16, 14.2, 40], 1.2), junk([-20, -15, 14.1, 8, 32], -1)];
+  const J = [junk([0, -40.8, 20, 12, 36], Math.PI / 2 + 0.3), junk([42, -33.6, 16, 14.2, 40], 1.2), junk([-20, -15, 14.1, 8, 32], -1)];
 
   // ---- the harbour's life: gulls, a shoal under the pier
   school(w, 0, 16, -30, 16, 10, 0xf4f4f4);
