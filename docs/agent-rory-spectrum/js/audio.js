@@ -37,6 +37,15 @@ const MOODS = {
   deep:  { bpm: 0.75, lead: 0.15, drums: 0, hat: 0, minor: true },
 };
 
+// half a second of silence as a WAV, for keeping iOS's media session awake (see start)
+function silentWav(n = 12000) {
+  const b = new Uint8Array(44 + n * 2), d = new DataView(b.buffer), s = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  s(0, "RIFF"); d.setUint32(4, 36 + n * 2, true); s(8, "WAVEfmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+  d.setUint32(24, 24000, true); d.setUint32(28, 48000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); s(36, "data"); d.setUint32(40, n * 2, true);
+  let bin = ""; for (let i = 0; i < b.length; i += 4096) bin += String.fromCharCode.apply(null, b.subarray(i, i + 4096));
+  return "data:audio/wav;base64," + btoa(bin);
+}
+
 export const Audio = {
   music: localStorage.getItem("rory22.music") !== "0",
   sfx: localStorage.getItem("rory22.sfx") !== "0",
@@ -47,6 +56,17 @@ export const Audio = {
     if (!this.ctxMade) { this.ctxMade = true; try { Tone.setContext(new Tone.Context({ latencyHint: "balanced", lookAhead: 0.15 })); } catch (e) { /* keep Tone's own */ } }
     try { await Tone.start(); } catch (e) { this.starting = false; return; }
     if (Tone.getContext().state !== "running") { this.starting = false; return; }
+    // iOS mutes Web Audio (the music and every sound effect) when the phone or tablet is on
+    // silent, but not media like the recorded voices: so the voices played and nothing else did.
+    // Asking for a media session plays it all the same way. (Before iOS 17 there's no asking, but
+    // a silent media clip looping in the background does the same.)
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
+      else if (!this.keep && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document) {
+        const a = this.keep = new window.Audio(silentWav()); a.loop = true; a.volume = 0.01;
+        const p = a.play(); if (p && p.catch) p.catch(() => { this.keep = null; });
+      }
+    } catch (e) { /* not iOS, or nothing to ask */ }
     ready = true;
     // nothing below about 60 Hz (tablet speakers buzz), and a limiter for the loud moments
     Tone.getDestination().chain(new Tone.Filter({ frequency: 60, type: "highpass", rolloff: -24 }), new Tone.Limiter(-3));
@@ -101,6 +121,8 @@ export const Audio = {
     inst.tri = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle" }, envelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.1 } }).connect(sfxBus);
     inst.thud = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 3, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -8 }).connect(sfxBus);
     inst.noise = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.02, decay: 0.3, sustain: 0 }, volume: -14 }).connect(sfxBus);
+    // footsteps: a short soft thud of brown noise, a touch different each time
+    inst.step = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.002, decay: 0.07, sustain: 0 }, volume: -12 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     inst.splat = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.001, decay: 0.18, sustain: 0 }, volume: -6 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     inst.shimmer = new Tone.PolySynth(Tone.FMSynth, { harmonicity: 2, modulationIndex: 3, envelope: { attack: 0.01, decay: 0.6, sustain: 0, release: 0.6 }, volume: -14 }).connect(new Tone.FeedbackDelay({ delayTime: 0.12, feedback: 0.35, wet: 0.5 }).connect(sfxBus));
     Tone.getTransport().bpm.value = 104;
@@ -157,6 +179,7 @@ export const Audio = {
     const now = T().now();
     try {
       switch (name) {
+        case "step": inst.step.triggerAttackRelease(0.05, now, 0.55 + Math.random() * 0.35); break;
         case "jump": inst.blip.triggerAttackRelease("A5", 0.08, now); inst.blip.frequency.rampTo("E6", 0.08, now); break;
         case "land": inst.thud.triggerAttackRelease("G2", 0.1, now); break;
         case "pad": inst.tri.triggerAttackRelease(["C5", "G5"], 0.1, now); inst.tri.triggerAttackRelease(["E5", "C6"], 0.14, now + 0.07); break;
