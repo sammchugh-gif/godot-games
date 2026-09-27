@@ -37,6 +37,9 @@ export const Audio = {
     inst.tri = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle" }, envelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.1 } }).connect(sfxBus);
     inst.thud = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 3, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -8 }).connect(sfxBus);
     inst.noise = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.02, decay: 0.3, sustain: 0 }, volume: -14 }).connect(sfxBus);
+    // water: filtered noise for splashes and strokes
+    inst.water = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.004, decay: 0.28, sustain: 0 }, volume: -9 }).connect(new Tone.Filter(1500, "lowpass").connect(sfxBus));
+    inst.ping = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.002, decay: 0.9, sustain: 0, release: 0.6 }, volume: -6 }).connect(sfxBus);
     inst.woof = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -2 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     Tone.getTransport().bpm.value = 104;
     Tone.getTransport().start("+0.05");
@@ -84,6 +87,11 @@ export const Audio = {
         case "star": inst.tri.triggerAttackRelease(["G6", "D7"], 0.25, now); break;
         case "click": inst.blip.triggerAttackRelease("G5", 0.03, now); break;
         case "whoosh": inst.noise.triggerAttackRelease(0.4, now); break;
+        case "splash": inst.water.triggerAttackRelease(0.4, now); inst.thud.triggerAttackRelease("E2", 0.12, now); break;
+        case "swish": inst.water.triggerAttackRelease(0.07, now, 0.22); break;
+        case "gasp": inst.blip.triggerAttackRelease("C5", 0.12, now); inst.blip.frequency.rampTo("G5", 0.1, now); inst.water.triggerAttackRelease(0.1, now, 0.3); break;
+        case "ping": inst.ping.triggerAttackRelease("E6", 0.05, now); inst.ping.triggerAttackRelease("E6", 0.05, now + 0.45, 0.3); break;
+        case "lowair": inst.blip.triggerAttackRelease("B5", 0.05, now); inst.blip.triggerAttackRelease("B5", 0.05, now + 0.13); break;
         case "beep": inst.blip.triggerAttackRelease("A6", 0.05, now); inst.blip.triggerAttackRelease("E6", 0.05, now + 0.08); break;
         // HQ: tea, the alarm, the banana phone and the dog
         case "pour": inst.noise.triggerAttackRelease(1.1, now); break;

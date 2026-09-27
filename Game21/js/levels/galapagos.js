@@ -72,7 +72,8 @@ export function buildGalapagos(w) {
   // ---- the lava field: basalt columns stepping up to the high rocks, steam vents to bounce on,
   // and the Drip mast at the top
   const basalt = M("rock", { args: [63, [66, 62, 60]], repeat: [1, 2] }); basalt.flatShading = true;
-  const cols = [[-24, 44, 1.2], [-28, 46.5, 2.6], [-32, 48.5, 4], [-36.5, 49, 3], [-40.5, 51, 4.4], [-44, 53.5, 5.8], [-48.5, 54, 4.6], [-52.5, 56, 6], [-56, 59, 7.4], [-60, 61, 6.2], [-64, 59, 7.6], [-30, 55, 2], [-26, 58, 3.4], [-22, 56, 1.4]];
+  // (each column a hop across and no more than a metre up from the one before, so a jump always makes it)
+  const cols = [[-24, 44, 1.0], [-28, 46.5, 1.9], [-32, 48.5, 2.8], [-36.5, 49, 2.0], [-40.5, 51, 2.9], [-44, 53.5, 3.8], [-48.5, 54, 3.0], [-52.5, 56, 3.9], [-56, 59, 4.8], [-60, 61, 4.0], [-64, 59, 4.9], [-30, 55, 1.2], [-26, 58, 2.1], [-22, 56, 1.0]];
   const tops = cols.map(([x, z, ht]) => {
     const gy = h(x, z), top = gy + ht;
     w.mesh(new THREE.CylinderGeometry(1.25, 1.35, ht + 1, 6), basalt, x, top - (ht + 1) / 2, z);
@@ -152,7 +153,7 @@ export function buildGalapagos(w) {
   const T = tops, Hh = high;
   w.missionData = {
     gal1: { critter: "turtle", kids: [[40, h(40, 16), 16], [52, h(52, 18), 18], [62, h(62, 15), 15], [72, h(72, 17), 17]], goal: [56, h(56, 1), 1], goalR: 3.5, release: true,
-      crabs: [[36, 9, 76, 9, 1.4], [44, 12.5, 70, 12.5, 1.9]] },
+      crabs: [[36, 9, 76, 9, 1.1], [44, 12.5, 70, 12.5, 1.3]] },
     gal2: { area: [-44, 11, 11], costume: "iguana", decoys: [[-40, 8], [-50, 12], [-36, 14], [-46, 5], [-54, 9]],
       bots: [[-42, 0, 10], [-48, 0, 14], [-38, 0, 6], [-52, 0, 8], [-44, 0, 16]] },
     gal3: { cells: [pearl(18, h(18, -18) + 0.9, -18), pearl(26, h(26, -30) + 1, -30), pearl(36, h(36, -22) + 0.9, -22), pearl(14, h(14, -36) + 1, -36), pearl(40, h(40, -40) + 1, -40), pearl(24, -3, -40), pearl(8, h(8, -26) + 0.9, -26)], floor: -13 },

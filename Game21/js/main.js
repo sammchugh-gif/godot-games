@@ -16,6 +16,7 @@ import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "./ui.js
 import { makeBeacon, animateBeacon, makeArrow, makeStarfish } from "./props.js";
 import { makeMission } from "./kinds.js";
 import { Craft, subModel } from "./craft.js";
+import { critter } from "./critters.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
 import { Travel } from "./globe.js";
 import { buildPen } from "./levels/pen.js";
@@ -90,6 +91,7 @@ function loadPlace(id) {
   if (G.world) { G.world.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   if (G.phys) { try { G.phys.world.free(); } catch (e) { /* already gone */ } }
   const phys = G.phys = new Physics(-20);
+  G.lowAirSaid = false;
   const world = G.world = new World(G.engine, phys);
   const info = (COVE ? buildCove : LEVELS[place.id] || buildPen)(world);
   G.baked = world.bake();
@@ -106,6 +108,10 @@ function loadPlace(id) {
   G.player.onJump = () => sound("jump");
   G.player.onPad = () => sound("pad");
   G.player.onBurn = () => { toast("Hot hot hot! Keep off the glowing lava.", 3); sound("fail"); G.fx.puff(G.player.pos.x, G.player.pos.y, G.player.pos.z, 0xf0f0f0, 12); };
+  G.player.onSplash = (v, L) => { const p = G.player.pos; sound("splash"); G.fx.burst(p.x, L + 0.1, p.z, 0xe8f8ff, Math.min(40, 12 + v * 3), { speed: 2 + v * 0.3, up: 3 + v * 0.3, gravity: -12, life: 0.8, size: 0.28 }); G.fx.ring(p.x, L + 0.05, p.z, 0xcff4ff, 1.8); };
+  G.player.onSurface = L => { const p = G.player.pos; sound("gasp"); G.fx.burst(p.x, L + 0.1, p.z, 0xe8f8ff, 12, { speed: 1.5, up: 2, gravity: -10, life: 0.6, size: 0.2 }); };
+  G.player.onStroke = (top, L) => { if (!top) return; const p = G.player.pos; sound("swish"); G.fx.burst(p.x, L + 0.05, p.z, 0xe8f8ff, 5, { speed: 1, up: 0.8, gravity: -8, life: 0.5, size: 0.16 }); };
+  G.player.onLowAir = f => { sound("lowair"); if (!G.lowAirSaid) { G.lowAirSaid = true; toast("Air running low! Swim up, or find a stream of bubbles.", 3); } };
   G.player.onOutOfAir = () => { toast("Out of air! Back to dry land for a breath.", 3); sound("fail"); };
   G.player.onLand = v => { if (v > 7) { sound("land"); G.fx.puff(G.player.pos.x, G.player.pos.y + 0.05, G.player.pos.z); } };
   const bolt = G.bolt = new Robot("bolt", 1.0);
@@ -656,7 +662,7 @@ G.debug = {
     }
     return out;
   },
-  PLACES, CHAPTERS, THREE, store,
+  PLACES, CHAPTERS, THREE, store, critter,
   stats: () => ({ calls: G.engine.renderer.info.render.calls, tris: G.engine.renderer.info.render.triangles, baked: G.baked, fps: G.fps }),
 };
 

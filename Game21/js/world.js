@@ -106,7 +106,11 @@ export class World {
       for (let j = 0; j < 6; j++) { const p = new THREE.Mesh(geo, m); p.position.set((j - 2.5) * k * 0.55 + R() * 4, R() * k * 0.3, R() * k * 0.4); p.scale.setScalar(k * (0.5 + R() * 0.5)); p.scale.y *= 0.6; c.add(p); }
       g.add(c);
     }
-    this.scene.add(g);
+    // every puff of every cloud in one mesh: the sky is one draw call
+    g.updateMatrixWorld(true);
+    const puffs = []; g.traverse(n => { if (n.isMesh) puffs.push(n.geometry.clone().applyMatrix4(n.matrixWorld)); });
+    const all = new THREE.Mesh(mergeGeometries(puffs, false), m); g.clear(); g.add(all); puffs.forEach(p => p.dispose());
+    g.userData.dynamic = true; this.scene.add(g);
     this.updaters.push(dt => { g.rotation.y += dt * 0.002; });
   }
   earth() {
@@ -116,7 +120,7 @@ export class World {
     g.add(e);
     const atm = new THREE.Mesh(new THREE.SphereGeometry(126, 48, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color("#5ab0ff").multiplyScalar(1.4), transparent: true, opacity: 0.25, side: THREE.BackSide, fog: false, depthWrite: false }));
     g.add(atm);
-    g.position.set(-500, 380, -900); g.rotation.z = 0.4;
+    g.position.set(-500, 380, -900); g.rotation.z = 0.4; g.userData.dynamic = true;
     this.scene.add(g);
     this.updaters.push(dt => { e.rotation.y += dt * 0.01; });
   }
@@ -228,7 +232,7 @@ export class World {
   pad(x, y, z, power = 16, color = 0x39f0ff) {
     const g = new THREE.Group(); g.position.set(x, y, z); this.scene.add(g);
     const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.25, 0.25, 32), M(0x2a3040, { metal: 0.7, rough: 0.35 })); base.position.y = 0.12; base.castShadow = base.receiveShadow = true; g.add(base);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.07, 10, 40), M(color, { emissive: color, ei: 1.1 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.27; g.add(ring);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.07, 10, 40), M(color, { emissive: color, ei: 1.1 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.27; ring.userData.dynamic = true; g.add(ring);
     const disc = new THREE.Mesh(new THREE.CircleGeometry(0.72, 32), M(color, { emissive: color, ei: 0.25, opacity: 0.45 })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.26; g.add(disc);
     this.phys.fixedCyl(x, y + 0.12, z, 1.2, 0.125);
     const p = { x, y: y + 0.25, z, r: 1.1, power, ring, t: 0 };
@@ -363,25 +367,35 @@ export class World {
   update(dt) { this.t += dt; for (const u of this.updaters) u(dt, this.t); }
   // merge every static mesh that shares a material into one, so a level is a
   // few dozen draw calls instead of hundreds (road lines, stripes, crates...)
+  // Everything that never moves, merged into one mesh per material per patch of the level, so a
+  // place is a few dozen draw calls however many trees and boats it has. It looks inside groups
+  // too (a tree, a boat, a coral head), but leaves alone anything marked dynamic and everything
+  // under it. The patches (CELL metres square) let the renderer skip what's behind the camera.
   bake() {
     if (this.sea) this.sea.bakeDepth();
-    const groups = new Map();
-    for (const o of [...this.scene.children]) {
-      if (!o.isMesh || o.userData.dynamic || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.material.transparent || !o.geometry.attributes.uv || !o.geometry.attributes.normal) continue;
-      if (o.geometry.attributes.position.count > 20000) continue;
-      const key = o.material.uuid + (o.castShadow ? "c" : "") + (o.receiveShadow ? "r" : "");
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(o);
-    }
+    const CELL = 120, groups = new Map(), c = new THREE.Vector3();
+    this.scene.updateMatrixWorld(true);
+    const walk = o => {
+      if (o.userData.dynamic) return;
+      if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && !Array.isArray(o.material) && !o.material.transparent && o.geometry.attributes.uv && o.geometry.attributes.normal && o.geometry.attributes.position.count <= 20000) {
+        if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+        c.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld);
+        const key = o.material.uuid + (o.castShadow ? "c" : "") + (o.receiveShadow ? "r" : "") + "|" + Math.floor(c.x / CELL) + "," + Math.floor(c.z / CELL);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(o);
+      }
+      for (const ch of o.children) walk(ch);
+    };
+    for (const o of this.scene.children) walk(o);
     let merged = 0;
     for (const list of groups.values()) {
       if (list.length < 2) continue;
-      const geos = list.map(o => { o.updateMatrixWorld(true); const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(o.matrixWorld); for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(k)) g.deleteAttribute(k); g.clearGroups(); return g; });
+      const geos = list.map(o => { const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(o.matrixWorld); for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(k)) g.deleteAttribute(k); g.clearGroups(); return g; });
       const geo = mergeGeometries(geos, false);
       if (!geo) continue;
       const m = new THREE.Mesh(geo, list[0].material); m.castShadow = list[0].castShadow; m.receiveShadow = list[0].receiveShadow;
       this.scene.add(m);
-      for (const o of list) { this.scene.remove(o); }
+      for (const o of list) o.removeFromParent();
       for (const g of geos) g.dispose();
       merged += list.length;
     }

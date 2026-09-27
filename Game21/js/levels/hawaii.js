@@ -124,7 +124,8 @@ export function buildHawaii(w) {
   let seed = 3;
   for (let x = 16; x < 76; x += 5.5) for (let z = -16; z > -56; z -= 5.5) {
     const jx = x + Math.sin(seed * 1.7) * 2, jz = z + Math.cos(seed * 2.3) * 2, y = h(jx, jz);
-    if (y < -9 || y > -2.5) { seed++; continue; }
+    // (not on top of a pearl, and not in the surf's path)
+    if (y < -9 || y > -2.5 || [[22, -24], [36, -46], [48, -20], [62, -34], [70, -50], [30, -34], [52, -52]].some(([px, pz]) => Math.hypot(jx - px, jz - pz) < 3.5)) { seed++; continue; }
     coral(w, jx, y, jz, 1 + (seed % 4) * 0.5, seed++);
   }
   roam(w, "seaturtle", { cx: 42, cz: -30, rx: 14, rz: 8, y: -3.5, dy: 0.6, period: 50 });

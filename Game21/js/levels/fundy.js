@@ -36,7 +36,7 @@ export function buildFundy(w) {
   const pots = [[-25, -8, 11, 3, 1], [-12, -18, 12, 3.2, 2], [5, -10, 10, 2.8, 3], [18, -22, 13, 3.4, 4], [30, -6, 9, 2.6, 5], [-36, -26, 12, 3, 6]];
   const tops = pots.map(([x, z, ht, r, seed]) => {
     const y = mud(x, z) - 0.4, top = flowerpot(w, x, y, z, ht, r, { seed });
-    const px = x + r + 1.9, pz = z + 1, py = mud(px, pz), pw = Math.sqrt(31 * (top - py + 2.2));
+    const px = x + r + 1.9, pz = z + 1, py = mud(px, pz), pw = Math.sqrt(31 * (top - py + 3.4));
     w.pad(px, py, pz, pw, [0x39f0ff, 0xff5ad8, 0x7bed9f][seed % 3]);
     return { x, z, top, r };
   });

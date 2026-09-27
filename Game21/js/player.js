@@ -69,8 +69,15 @@ export class Player {
     if (sea) {
       const L = sea.height(w.pos.x, w.pos.z), depth = L - w.pos.y;
       this.surfaceY = L;
+      const was = this.swimming, wasUnder = this.headUnder;
       this.swimming = this.swimming ? depth > 0.85 : depth > 1.05 && !(w.grounded && depth < 1.2);
       this.headUnder = L > w.pos.y + (this.swimming ? 1.25 : 1.2);
+      // the moments the game makes a noise about: in with a splash, up for a gasp of air, a stroke
+      // now and then while swimming
+      if (this.swimming && !was && w.vel.y < -1.5 && this.onSplash) this.onSplash(-w.vel.y, L);
+      this.underT = this.headUnder ? (this.underT || 0) + dt : this.underT;
+      if (wasUnder && !this.headUnder) { if (this.underT > 2.5 && this.onSurface) this.onSurface(L); this.underT = 0; }
+      if (this.swimming && Math.hypot(w.vel.x, w.vel.z) > 1.2 && (this.strokeT = (this.strokeT || 0) - dt) <= 0) { this.strokeT = 0.75; if (this.onStroke) this.onStroke(!this.headUnder, L); }
     } else { this.swimming = false; this.headUnder = false; }
     let floating = false, jumped = false;
     if (this.swimming) { this.swim(dt, input, mag); w.move(dt, 0); }
@@ -154,8 +161,12 @@ export class Player {
     const w = this.walker, p = w.pos;
     let bubbles = false;
     for (const b of this.world.airVents || []) if (Math.hypot(p.x - b.x, p.z - b.z) < b.r && p.y > b.y - 1 && p.y < b.y + b.h) bubbles = true;
-    if (!this.headUnder || bubbles) this.air = Math.min(this.airMax, this.air + dt * (bubbles ? 12 : 25));
-    else this.air -= dt;
+    if (!this.headUnder || bubbles) { this.air = Math.min(this.airMax, this.air + dt * (bubbles ? 12 : 25)); this.lowT = 0; }
+    else {
+      this.air -= dt;
+      // running low: a warning beep every second or so
+      if (this.air < this.airMax * 0.25 && (this.lowT = (this.lowT || 0) - dt) <= 0) { this.lowT = 1.1; if (this.onLowAir) this.onLowAir(this.air / this.airMax); }
+    }
     if (this.air <= 0) { this.air = this.airMax; const s = this.lastSafe; this.teleport(s.x, s.y + 0.3, s.z); if (this.onOutOfAir) this.onOutOfAir(); }
     // a trail of bubbles from his helmet
     if (this.headUnder && this.world.fx && Math.random() < dt * 4) this.world.fx.bubble(p.x, p.y + 1.25 + (this.swimLift || 0), p.z, this.surfaceY, 2);

@@ -57,11 +57,37 @@ export function critter(kind, scale = 1) {
     const tail = P.parts.tail = new THREE.Group(); tail.position.z = -0.38; g.add(tail); part(tail, new THREE.ConeGeometry(0.08, 0.9, 6), skin, 0, 0.12, -0.45).rotation.x = -Math.PI / 2;
     for (const [sx, sz] of [[-1, 0.2], [1, 0.2], [-1, -0.25], [1, -0.25]]) part(g, new THREE.BoxGeometry(0.2, 0.04, 0.05), skin, sx * 0.18, 0.05, sz);
   } else if (kind === "tortoise") {
-    const shell = M(0x5a4a34, { rough: 0.8 }), skin = M(0x8a7a64, { rough: 0.9 });
-    part(g, sph(0.8, 18, 12), shell, 0, 0.55, 0, 1, 0.75, 1.15);
-    const head = P.parts.head = part(g, sph(0.2, 12, 8), skin, 0, 0.62, 1.05, 1, 0.85, 1.2); eye(head, 0.1, 0.05, 0.12, 0.03); eye(head, -0.1, 0.05, 0.12, 0.03);
-    part(g, new THREE.CylinderGeometry(0.12, 0.15, 0.35, 10), skin, 0, 0.55, 0.85).rotation.x = 1.1;
-    P.parts.legs = [[-1, 0.5], [1, 0.5], [-1, -0.5], [1, -0.5]].map(([sx, sz]) => part(g, new THREE.CylinderGeometry(0.14, 0.16, 0.45, 10), skin, sx * 0.55, 0.22, sz * 0.8));
+    // a Galápagos giant tortoise: a high domed shell of plates, a long leathery neck, a beaky face and
+    // legs like an elephant's
+    const shellM = M(0x3e3426, { rough: 0.85 }), plate = M(0x5c4a32, { rough: 0.8 }), rim = M(0x2e261c, { rough: 0.9 }), skin = M(0x7a705c, { rough: 0.95 });
+    const dome = new THREE.SphereGeometry(0.85, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    const shell = part(g, dome, shellM, 0, 0.36, 0, 1, 0.85, 1.2);
+    part(g, new THREE.CylinderGeometry(0.88, 0.8, 0.2, 22), rim, 0, 0.36, 0, 1, 1, 1.2);
+    part(g, sph(0.8, 16, 8), skin, 0, 0.36, 0, 1, 0.22, 1.15);
+    // the plates on the shell, each lying on the curve of the dome
+    const hex = new THREE.CylinderGeometry(0.21, 0.25, 0.05, 6), up = new THREE.Vector3(0, 1, 0);
+    const spots = [[0, 0]]; for (let k = 0; k < 6; k++) spots.push([0.62, k / 6 * Math.PI * 2 + 0.52]); for (let k = 0; k < 10; k++) spots.push([1.12, k / 10 * Math.PI * 2]);
+    for (const [th, a] of spots) {
+      const a0 = 0.85, b0 = 0.85 * 0.85, c0 = 0.85 * 1.2, px = Math.sin(th) * Math.cos(a) * a0, py = Math.cos(th) * b0, pz = Math.sin(th) * Math.sin(a) * c0;
+      const n = new THREE.Vector3(px / (a0 * a0), py / (b0 * b0), pz / (c0 * c0)).normalize();
+      const pl = part(g, hex, plate, px + n.x * 0.01, 0.36 + py + n.y * 0.01, pz + n.z * 0.01, th > 1 ? 0.85 : 1, 1, th > 1 ? 0.85 : 1);
+      pl.quaternion.setFromUnitVectors(up, n);
+    }
+    void shell;
+    // neck and head
+    const neck = part(g, new THREE.CylinderGeometry(0.12, 0.17, 0.7, 10), skin, 0, 0.62, 1.05); neck.rotation.x = 1.0;
+    const head = P.parts.head = new THREE.Group(); head.position.set(0, 0.88, 1.38); g.add(head);
+    part(head, sph(0.17, 14, 10), skin, 0, 0, 0, 0.9, 0.85, 1.3);
+    part(head, new THREE.ConeGeometry(0.08, 0.14, 8), M(0x4a4436, { rough: 0.6 }), 0, -0.04, 0.24, 1, 1, 0.7).rotation.x = Math.PI / 2;
+    eye(head, 0.1, 0.05, 0.1, 0.028); eye(head, -0.1, 0.05, 0.1, 0.028);
+    // legs, with pale toenails at the front
+    const nail = M(0xd8d0bc, { rough: 0.5 });
+    P.parts.legs = [[-1, 0.62], [1, 0.62], [-1, -0.62], [1, -0.62]].map(([sx, sz]) => {
+      const leg = part(g, new THREE.CylinderGeometry(0.15, 0.19, 0.46, 10), skin, sx * 0.58, 0.23, sz * 0.85);
+      if (sz > 0) for (let k = -1; k <= 1; k++) part(leg, new THREE.ConeGeometry(0.035, 0.08, 5), nail, k * 0.07, -0.2, 0.17).rotation.x = Math.PI / 2;
+      return leg;
+    });
+    part(g, new THREE.ConeGeometry(0.06, 0.2, 6), skin, 0, 0.3, -1.05).rotation.x = -Math.PI / 2 - 0.3;
   }
   g.scale.setScalar(scale);
   g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });

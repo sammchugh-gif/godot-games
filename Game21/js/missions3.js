@@ -276,7 +276,7 @@ export class Sonar extends Piloted {
   }
   actionLabel() { return "PING"; }
   doPing() {
-    this.ping = 0; this.pingFrom = this.craft.pos.clone(); this.g.sound("beep");
+    this.ping = 0; this.pingFrom = this.craft.pos.clone(); this.g.sound("ping");
     SEA.uPing.value.set(this.pingFrom.x, this.pingFrom.y, this.pingFrom.z, 0);
   }
   update(dt) {
@@ -409,6 +409,7 @@ export class Escort extends Mission {
     }
   }
   hud() { return { ...super.hud(), text: `Lead them home  ${this.saved}/${this.kids.length}`, progress: this.saved / this.kids.length }; }
+  debugState() { const f = v => +v.toFixed(1); return { p: this.p.pos.toArray().map(f), sw: this.p.swimming, kids: this.kids.map(k => [k.state, ...k.c.position.toArray().map(f)]), path: this.navPath ? this.navPath.length : null }; }
   target() { const w = this.kids.find(k => k.state === "wait" || k.state === "home"); return this.kids.some(k => k.state === "follow") ? this.goal : w ? w.c.position : this.goal; }
   solve() {
     const following = this.kids.filter(k => k.state === "follow"), waiting = this.kids.filter(k => k.state === "wait").sort((a, b) => a.c.position.distanceTo(this.p.pos) - b.c.position.distanceTo(this.p.pos));
@@ -416,8 +417,19 @@ export class Escort extends Mission {
     let tgt = waiting.length ? waiting[0].c.position : following.length ? this.goal : null;
     if (!tgt) return;
     if (!waiting.length && following.some(k => k.c.position.distanceTo(this.p.pos) > 4)) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.jumpHeld = false; return; }
-    // (keep clear of the crabs' beat: wait while one is crossing just ahead)
-    for (const cr of this.crabs) if (following.length && cr.c.position.distanceTo(this.p.pos) < 2.8) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+    // a crab's beat across the way home: wait short of it until the crab is well away from where
+    // we'll cross, then take the whole line of little ones over in one go
+    if (following.length && !waiting.length) {
+      const pp = this.p.pos, gx = this.goal.x, gz = this.goal.z;
+      for (const cr of this.crabs) {
+        const [ax, az] = cr.a, [bx, bz] = cr.b, rx = gx - pp.x, rz = gz - pp.z, sx = bx - ax, sz = bz - az, den = rx * sz - rz * sx;
+        if (Math.abs(den) < 1e-6) continue;
+        const t = ((ax - pp.x) * rz - (az - pp.z) * rx) / den, u = ((ax - pp.x) * sz - (az - pp.z) * sx) / den;
+        if (t < -0.1 || t > 1.1 || u < 0 || u > 1) continue;
+        const cx = ax + sx * t, cz = az + sz * t;
+        if (Math.hypot(cx - pp.x, cz - pp.z) < 3.5 && Math.hypot(cr.c.position.x - cx, cr.c.position.z - cz) < 8) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+      }
+    }
     if (this.water) this.swimTo(tgt.x, tgt.y + (waiting.length ? 0 : 0.5), tgt.z);
     else this.walkTo(tgt.x, tgt.y + 0.3, tgt.z, waiting.length ? 1.2 : 1.0, this.navPts.map(v3));
   }

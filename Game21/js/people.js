@@ -1,6 +1,7 @@
 // People built from smooth shapes, with a small rig (hips, spine, head, arms,
 // legs) that the walk, run, jump, float, wave and talk poses drive.
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const cache = new Map();
 function mat(color, o = {}) {
@@ -96,9 +97,33 @@ export function makePerson(o = {}) {
   hair(head, r, o.hairStyle || (kid ? "short" : "short"), hairM);
   if (o.earpiece) { const ep = mesh(sphere(r * 0.09, 10, 8), mat(0x7fe3ff, { emissive: 0x7fe3ff, ei: 2.5 }), r * 1.02, 0, r * 0.1, head); ep.castShadow = false; }
   if (o.hat) hat(head, r, o.hat, o.hatColor);
+  // the parts that move on their own stay separate; the rest of each joint's parts become one
+  // mesh per material (a person drops from about forty draw calls to about fifteen)
+  compact(root, new Set([rig.mouth, rig.browL, rig.browR, rig.handL, rig.handR, rig.watch].filter(Boolean)));
   root.traverse(n => { if (n.isMesh) n.userData.person = true; });
   rig.phase = Math.random() * 6; rig.blink = 2 + Math.random() * 3; rig.talk = 0; rig.wave = 0;
   return rig;
+}
+function compact(root, keep) {
+  const joints = []; root.traverse(n => { if (!n.isMesh) joints.push(n); });
+  for (const j of joints) {
+    const by = new Map();
+    for (const c of j.children) {
+      if (!c.isMesh || c.children.length || keep.has(c) || c.material.transparent) continue;
+      const k = c.material.uuid + (c.castShadow ? "c" : "");
+      if (!by.has(k)) by.set(k, []);
+      by.get(k).push(c);
+    }
+    for (const list of by.values()) {
+      if (list.length < 2) continue;
+      const geos = list.map(c => { c.updateMatrix(); const g = (c.geometry.index ? c.geometry.toNonIndexed() : c.geometry.clone()).applyMatrix4(c.matrix); for (const a of Object.keys(g.attributes)) if (!["position", "normal", "uv"].includes(a)) g.deleteAttribute(a); g.clearGroups(); return g; });
+      const geo = mergeGeometries(geos, false); if (!geo) continue;
+      const m = new THREE.Mesh(geo, list[0].material); m.castShadow = list[0].castShadow; m.receiveShadow = list[0].receiveShadow;
+      j.add(m);
+      for (const c of list) { j.remove(c); c.geometry.dispose(); }
+      for (const g of geos) g.dispose();
+    }
+  }
 }
 
 function hair(head, r, style, m) {
