@@ -28,18 +28,36 @@ export const swimMixin = {
     // still on dry land (a pontoon, a ledge, the beach): walk the way the walking map says, off the
     // edge and into the water, and swim from there
     if (!p.swimming && !p.headUnder) {
-      const pts = (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q), r = this.walkTo(x, y, z, 1.0, pts);
-      if (this.navPath || !sea) return r;
+      const pts = (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q), pp = p.pos;
+      // (whether it can be walked to is asked again only every few seconds: a way that isn't there
+      // costs a search of the whole map to find out)
+      const key = `${x.toFixed(0)},${y.toFixed(0)},${z.toFixed(0)}`;
+      if (!sea || this.dryKey !== key || this.t > this.dryAt) { this.ensureNav([{ x, z }, ...pts]); this.dryKey = key; this.dryAt = this.t + 4; this.dryWalk = !sea || !!this.nav.route(pp.x, pp.y, pp.z, x, y, z, 1.0); }
+      if (this.dryWalk) return this.walkTo(x, y, z, 1.0, pts);
       // no way there on foot (it's out over deep water): into the water at the nearest spot
       // that's deep enough to swim, and swim from there
-      const nav = this.nav, pp = p.pos;
+      const nav = this.nav, dh = Math.hypot(x - pp.x, z - pp.z);
       if (!this.entry || this.entry.from !== nav) {
         const can = nav.reachable(pp.x, pp.y, pp.z); let best = null, bd = 1e9;
         if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < this.waterLine(nav.xz(k)[0], nav.h[k] + 1, nav.xz(k)[1]) - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
+        // (none: the water is too deep to walk down into, off a dock or a ledge over the deep. The
+        // edge of the dry ground, with deep water just beyond it, and step off)
+        if (!best && can) for (let k = 0; k < nav.h.length; k++) {
+          if (!can[k]) continue;
+          const [nx, nz] = nav.xz(k);
+          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const fx = nx + ox * nav.S, fz = nz + oz * nav.S, wl = this.waterLine(fx, nav.h[k], fz);
+            if (nav.h[k] < wl - 0.5 || nav.top(fx, fz, nav.h[k] + 0.2) > wl - 1.2) continue;
+            const d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(fx - x, fz - z) * 0.25;
+            if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz, off: [fx + ox, fz + oz] }; }
+          }
+        }
         this.entry = { from: nav, at: best };
       }
       const e = this.entry.at;
-      return e ? this.walkTo(e.x, e.y + 0.3, e.z, 1.0, pts) : r;
+      if (!e) { this.steer(x, z); return dh; }
+      if (e.off && Math.hypot(e.x - pp.x, e.z - pp.z) < 0.8) { this.steer(e.off[0], e.off[1]); return dh; }
+      this.walkTo(e.x, e.y + 0.3, e.z, e.off ? 0.5 : 1.0, pts); return dh;
     }
     // (in the deep the surface is out of reach: the top of the water is where swimming stops)
     const deep = this.w.swimTop !== undefined, lvl = deep ? this.w.swimTop - 0.4 : sea ? sea.level : 0;
