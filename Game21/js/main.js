@@ -658,7 +658,8 @@ G.debug = {
     const s = G.levelInfo.spawn; G.player.teleport(s[0], s[1] + 0.1, s[2]);
     // (a beacon floating on the sea is swum to: the pearl sits just under the surface)
     const sea = G.world.sea, py = sea && Math.abs(y - sea.level) < 0.2 ? y - 0.3 : y + 0.9;
-    G.mission = makeMission(G, { id: "reach", kind: "dive", title: "Reach", n: 1 }, { cells: [[x, py, z]] });
+    // (the swimming map reaches down at least to -40, and further for a deep place)
+    G.mission = makeMission(G, { id: "reach", kind: "dive", title: "Reach", n: 1 }, { cells: [[x, py, z]], floor: Math.min(-40, py - 12, s[1] - 12) });
     G.mission.start(); G.state = "mission"; G.input.clear();
     return true;
   },
