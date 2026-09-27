@@ -50,7 +50,7 @@ export function buildHongKong(w) {
   const stepStone = M("stone", { args: [43, [170, 164, 152]] });
   w.steps(5, 2, 0.44, 0.9, stepStone, 8, -0.2, -7.7, 0); w.box(2, 12, 4.5, stepStone, 8, -6.2, -5.45);
   // and on the pier's west side near its end (for anyone who misses a junk), clear of the junks' loops
-  w.steps(5, 2.5, 0.44, 0.9, stepStone, -4.25, -0.2, -25, 0); w.box(2.5, 12, 4.5, stepStone, -4.25, -6.2, -22.75);
+  w.steps(5, 2.5, 0.44, 0.9, stepStone, -4.25, -0.2, -26, 0); w.box(2.5, 12, 4.5, stepStone, -4.25, -6.2, -23.75);
   pier(w, 36, -3, 36, -16, TOP, 10, -12, deckM);
   w.box(10.4, 0.4, 13.4, M(0x2a7a4a), 36, TOP + 4.2, -9.5);
   for (const [x, z] of [[31.5, -4], [40.5, -4], [31.5, -15], [40.5, -15]]) w.cyl(0.18, 0.18, 4, M(0xe8e8e0), x, TOP + 2, z, { seg: 8 });
@@ -108,9 +108,18 @@ export function buildHongKong(w) {
   // ---- the junks: three red-sail boats sailing loops round the harbour
   const sail = M(0xc83a2a, { rough: 0.8, side: THREE.DoubleSide }), wood = M("wood", { args: [8, [110, 70, 44]], repeat: [1, 3] });
   const junks = [];
-  const junk = (loop, phase) => {
-    const [cx, cz, rx, rz, T] = loop;
-    const fn = t => { const a = phase + t * Math.PI * 2 / T, x = cx + Math.cos(a) * rx, z = cz + Math.sin(a) * rz; const tx = -Math.sin(a) * rx, tz = Math.cos(a) * rz; return [x, 0.75, z, Math.atan2(tx, tz)]; };
+  // each junk sails its loop and docks for a few seconds beside a pier (easing in and out), so
+  // there's time to step aboard and off again; dock is the angle on the loop where it stops
+  const DWELL = 5;
+  const junk = (loop, phase, dock) => {
+    const [cx, cz, rx, rz, T] = loop, M = T - DWELL;
+    const fn = t => {
+      const s = ((t + phase / (Math.PI * 2) * T) % T + T) % T;
+      let a = dock;
+      if (s >= DWELL) { const x = (s - DWELL) / M; a = dock + Math.PI * 2 * (x - Math.sin(Math.PI * 2 * x) / (Math.PI * 2)); }
+      const px = cx + Math.cos(a) * rx, pz = cz + Math.sin(a) * rz, tx = -Math.sin(a) * rx, tz = Math.cos(a) * rz;
+      return [px, 0.75, pz, Math.atan2(tx, tz)];
+    };
     const m = w.platform(5, 1.1, 14, wood, ...fn(0).slice(0, 3), fn);
     // hull sides, a raised stern deck, two masts with batten sails
     const add = (geo, mat, x, y, z) => { const e = new THREE.Mesh(geo, mat); e.position.set(x, y, z); e.castShadow = true; e.userData.dynamic = true; m.add(e); return e; };
@@ -123,9 +132,9 @@ export function buildHongKong(w) {
     junks.push({ m, fn });
     return m;
   };
-  // (each loop passes close by somewhere to jump aboard: the pier's end, the ferry pier's end, the
-  // pier's side; the loops never cross)
-  const J = [junk([0, -40.8, 20, 12, 36], Math.PI / 2 + 0.3), junk([42, -33.6, 16, 14.2, 40], 1.2), junk([-20, -15, 14.1, 8, 32], -1)];
+  // (each docks beside a pier to be boarded: the pier's end, the ferry pier's end, the pier's side;
+  // the loops never cross, and clear the steps out of the water)
+  const J = [junk([0, -40.8, 20, 12, 44], Math.PI / 2 + 0.3, Math.PI / 2), junk([42, -33.9, 16, 14.2, 48], 1.2, Math.PI / 2), junk([-20, -14, 14.1, 7, 40], -1, 0)];
 
   // ---- the harbour's life: gulls, a shoal under the pier
   school(w, 0, 16, -30, 16, 10, 0xf4f4f4);
