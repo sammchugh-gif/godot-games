@@ -153,10 +153,11 @@ export class Dive extends Cells {
   solve() {
     const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
-    if (c !== this.aim) { this.aim = c; this.aimT = this.t; }
-    // (coming up for air doesn't count against getting there)
-    if (this.gasping) this.aimT += 1 / 60;
-    if (this.t - this.aimT > 45) {
+    // (the time allowed grows with how far away it is, and coming up for air doesn't count against it)
+    const dt = this.t - (this.solveT ?? this.t); this.solveT = this.t;
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.aimFar = c.position.distanceTo(this.p.pos) / 3; }
+    if (this.gasping) this.aimT += dt;
+    if (this.t - this.aimT > 45 + (this.aimFar || 0)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} pearl ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
