@@ -30,8 +30,8 @@ export const FILES = [
   { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 60,
     blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon. Sixty missions.",
     frost: "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon." },
-  { id: "deep", n: "FILE 004", kicker: "UNDER THE SEA", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#39d8c8", saves: ["rory21.save"], total: 59,
-    blurb: "Captain Undertow is draining the sea. Swim, dive and drive TORPEDO the submarine round ten coasts. Act One: fifty-nine missions.",
+  { id: "deep", n: "FILE 004", kicker: "UNDER THE SEA", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#39d8c8", saves: ["rory21.save"], total: 119,
+    blurb: "Captain Undertow is draining the sea. Swim, dive and drive TORPEDO the submarine round ten coasts, then down into the abyss. Acts One and Two: a hundred and nineteen missions.",
     frost: "Deep Red. Captain Undertow, the vanishing sea, and a very talkative submarine." },
 ];
 // how far Rory has got in a file, from its saves
