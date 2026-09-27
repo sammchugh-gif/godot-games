@@ -63,7 +63,7 @@ export function buildGlass(w) {
       guards: [{ path: [[-2, -10], [-2, 10]], speed: 1.3, y: F }, { path: [[-10, 10], [-10, -10]], speed: 1.2, phase: 0.5, y: F }, { path: [[2, -4.5], [-12, -4.5], [-12, 4.5], [2, 4.5]], speed: 1.1, y: F }] },
     gla3: { word: "HELP", title: "SILT'S LAMP" },
     gla4: { title: "UNDERTOW'S SAFE" },
-    gla5: { start: [-15, F + 0.1, 0], goal: [-29, F + 0.1, 0], width: 5.6 },
+    gla5: { start: [-15, F + 0.1, 0], goal: [-29, F + 0.1, 0], width: 5.6, beams: 7 },
     gla6: { sub: [-39, F - 1.6, 0, -Math.PI / 2], exit: [14, F + 0.1, 3], floor: -30,
       rings: [[-39, 1.2, 0, 2.6, 0], [-50, 1.5, -2, 2.6, -Math.PI / 2], [-66, 3, -8, 2.6, -1.9], [-80, 5, -20, 2.6, -2.4], [-86, 6, -38, 2.6, -2.9], [-80, 7, -56, 2.6, 2.6]] },
   };
