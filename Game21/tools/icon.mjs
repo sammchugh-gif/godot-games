@@ -1,5 +1,5 @@
 // Renders the home-screen icon: Rory's own 3D head, from the portrait system,
-// on a starry badge. node tools/icon.mjs  (writes icon.png)
+// under water, in a diving helmet. node tools/icon.mjs  (writes icon.png)
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -16,12 +16,16 @@ await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
 const url = await page.evaluate(() => {
   const face = __g.portraits.get("rory"), S = 180, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
-  const bg = g.createRadialGradient(90, 70, 10, 90, 90, 130); bg.addColorStop(0, "#2a4a8a"); bg.addColorStop(1, "#060c1c"); g.fillStyle = bg; g.fillRect(0, 0, S, S);
-  for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(255,255,255,${0.3 + (i % 5) * 0.12})`; g.beginPath(); g.arc((i * 73) % S, (i * 131) % S, 0.6 + (i % 3) * 0.5, 0, 7); g.fill(); }
-  // a ring of glowing blue round the head, like a Gravity Cell
-  g.strokeStyle = "rgba(127,227,255,.9)"; g.lineWidth = 5; g.shadowColor = "#7fe3ff"; g.shadowBlur = 18; g.beginPath(); g.ellipse(90, 96, 74, 26, -0.25, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0;
+  // deep water: bright near the top where the light comes down, dark blue below
+  const bg = g.createLinearGradient(0, 0, 0, S); bg.addColorStop(0, "#1aa8b8"); bg.addColorStop(0.45, "#0a4a78"); bg.addColorStop(1, "#03101c"); g.fillStyle = bg; g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 4; i++) { const r = g.createLinearGradient(0, 0, 0, S); r.addColorStop(0, "rgba(220,250,255,.22)"); r.addColorStop(1, "rgba(220,250,255,0)"); g.fillStyle = r; g.beginPath(); const x = 20 + i * 46; g.moveTo(x, 0); g.lineTo(x + 16, 0); g.lineTo(x + 34, S); g.lineTo(x + 6, S); g.fill(); }
+  // bubbles rising
+  for (let i = 0; i < 16; i++) { const x = (i * 61) % S, y = (i * 97) % S, r = 1.5 + (i % 4) * 1.2; g.strokeStyle = "rgba(230,250,255,.7)"; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, 7); g.fill(); }
   g.save(); g.beginPath(); g.arc(90, 86, 62, 0, Math.PI * 2); g.clip(); g.drawImage(face, 90 - 78, 86 - 80, 156, 156); g.restore();
-  g.fillStyle = "#ffd166"; g.font = "900 26px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 6; g.fillText("0G", 150, 156);
+  // the fish-bowl diving helmet: a glass rim with a shine
+  g.strokeStyle = "rgba(200,245,255,.9)"; g.lineWidth = 5; g.shadowColor = "#9ff0ff"; g.shadowBlur = 14; g.beginPath(); g.arc(90, 86, 66, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0;
+  g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 4; g.lineCap = "round"; g.beginPath(); g.arc(90, 86, 56, Math.PI * 1.1, Math.PI * 1.4); g.stroke();
+  g.fillStyle = "#ff5a4a"; g.font = "900 26px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 6; g.fillText("DR", 150, 156);
   return c.toDataURL("image/png");
 });
 fs.writeFileSync("icon.png", Buffer.from(url.split(",")[1], "base64"));
