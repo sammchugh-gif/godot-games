@@ -71,9 +71,10 @@ export function buildLiner(w) {
   const carpet = M(0x6a1a2a, { rough: 0.8 });
   w.steps(12, PORT[1] - PORT[0] - 0.2, RISE, RUN, carpet, (PORT[0] + PORT[1]) / 2, DK[0], ZS, 0);
   w.steps(12, STAR[1] - STAR[0] - 0.2, RISE, RUN, carpet, (STAR[0] + STAR[1]) / 2, DK[1], ZS, 0);
-  // banisters on the open side of each flight
-  w.fence(PORT[1] + 0.05, ZS, PORT[1] + 0.05, ZE, 1, brass, { y: (x, z) => DK[0] + Math.min(4, Math.max(0, (z - ZS) / RUN) * RISE) });
-  w.fence(STAR[0] - 0.05, ZS, STAR[0] - 0.05, ZE, 1, brass, { y: (x, z) => DK[1] + Math.min(4, Math.max(0, (z - ZS) / RUN) * RISE) });
+  // banisters on the open side of each flight (from the third step: the bottom two are open at the
+  // side, the way a grand staircase opens out at its foot)
+  w.fence(PORT[1] + 0.05, ZS + 2 * RUN, PORT[1] + 0.05, ZE, 1, brass, { y: (x, z) => DK[0] + Math.min(4, Math.max(0, (z - ZS) / RUN) * RISE) });
+  w.fence(STAR[0] - 0.05, ZS + 2 * RUN, STAR[0] - 0.05, ZE, 1, brass, { y: (x, z) => DK[1] + Math.min(4, Math.max(0, (z - ZS) / RUN) * RISE) });
   // the hold: crates and a pile of Undertow's barrels
   for (const [x, z] of [[4, 44], [2, 46], [-4, 42], [-5.5, 46.5], [5, 26]]) w.box(1.6, 1.4, 1.6, M("wood", { args: [5, [150, 110, 70]] }), x, DK[0] + 0.7, z);
   for (const [x, z] of [[-2, 30], [-1, 31.4], [0.4, 30.2]]) w.cyl(0.45, 0.45, 1.1, M(0x2a8a8a, { metal: 0.4 }), x, DK[0] + 0.55, z, { seg: 12 });

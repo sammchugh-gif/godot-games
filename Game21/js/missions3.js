@@ -189,6 +189,7 @@ class Piloted extends Mission {
     super.cleanup();
   }
   post() { if (this.craft && this.craft.rig === null && this.g.craft === this.craft) { /* already aboard */ } }
+  debugState() { const f = v => +v.toFixed(1), c = this.craft, t = this.target && this.target(); return c ? { p: c.pos.toArray().map(f), yaw: f(c.yaw || 0), v: f(c.vel.length()), to: t ? [f(t.x), f(t.y), f(t.z)] : null, route: this.drivePath ? [this.drivePath.length, this.driveI] : this.drivePath === null ? "none" : undefined } : {}; }
 }
 Object.assign(Piloted.prototype, swimMixin);
 
@@ -212,7 +213,6 @@ export class SubRings extends Piloted {
   }
   hud() { return { ...super.hud(), text: `Drive through the rings  ${this.next}/${this.rings.length}`, progress: this.next / this.rings.length }; }
   target() { const r = this.rings[this.next]; return r ? r.m.position : null; }
-  debugState() { const f = v => +v.toFixed(1), c = this.craft; return { next: this.next, p: c.pos.toArray().map(f), yaw: f(c.yaw || 0), v: c.vel ? f(c.vel.length()) : null }; }
   solve() {
     const r = this.rings[this.next]; if (!r) return;
     if (r !== this.aim) { this.aim = r; this.aimT = this.t; }
