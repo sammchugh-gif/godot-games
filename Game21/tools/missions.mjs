@@ -28,14 +28,15 @@ for (const id of ids) {
   if (!ok) { console.log("FAIL: no mission", id); fail++; continue; }
   await waitT(0.5);
   await ev(s => { __g.autoSolve = true; __g.testSteps = s; }, +(process.env.STEPS || 4));
-  const t0 = await ev(() => __g.t);
+  const t0 = await ev(() => __g.t), limit = await ev(() => (__g.mission && __g.mission.time) || 200);
   let shotMid = false, st;
   while (true) {
     st = await ev(() => __g.state);
     if (st !== "mission") break;
     const t = await ev(() => __g.t);
     if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png` }); shotMid = true; }
-    if (t - t0 > (+process.env.LIMIT || 200)) break;
+    // (until the mission's own clock runs out, and a little over for the ones without one)
+    if (t - t0 > (+process.env.LIMIT || limit + 20)) break;
     await waitT(0.5);
   }
   const t1 = await ev(() => __g.t);

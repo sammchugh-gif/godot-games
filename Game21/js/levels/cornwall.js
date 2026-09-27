@@ -50,6 +50,8 @@ export function buildCornwall(w) {
   w.overlay(-2.5, -10, 44, 46, mud, (x, z) => x > -24 && x < 19 && z > -33 && z < 11.5);
   w.overlay(-49, -12, 40, 50, M("sand", { args: [6, [222, 200, 158]], repeat: [14, 14] }), (x, z) => x < -30 && x > -68 && z > -36 && z < 11);
   w.overlay(-8, -60, 160, 60, M("sand", { args: [7, [196, 180, 140]], repeat: [30, 12] }), (x, z) => h(x, z) < LV - 0.3, 0.02);
+  // the cave's floor is wet rock, not grass
+  w.overlay(-96.5, -5, 57, 34, M("rock", { args: [81, [96, 90, 82]], repeat: [10, 6] }), (x, z) => x > -125 && x < -68 && z > -22 && z < 12, 0.03);
   // the piers and the harbour wall along the village front
   const granite = M("stone", { args: [41, [156, 150, 140]], repeat: [2, 10] });
   pier(w, 20, 12, 20, -28, 2, 4, -6, granite); pier(w, 20, -28, 6, -36, 2, 4, -8, granite);

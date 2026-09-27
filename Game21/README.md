@@ -68,5 +68,8 @@ Play it at `docs/agent-rory-deep-red/`, or from Agent Rory HQ on the shelf.
   that has to be reached is buried in something solid.
 - `node tools/missions.mjs [id,id]` starts each mission and lets its autopilot
   play it, reporting any place it had to teleport.
+- `node tools/beacons.mjs [place,place]` checks a player can get to every
+  mission's beacon from where Rory arrives: on foot by the walking map, or else
+  by the autopilot swimming and climbing there without teleporting.
 - `node tools/look.mjs outdir "" "name:x,y,z,lx,ly,lz" place` takes pictures
   from fixed cameras.
