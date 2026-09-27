@@ -19,6 +19,7 @@ await page.addInitScript(q => { window.__test = true; localStorage.clear(); loca
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
 const ev = (fn, a) => page.evaluate(fn, a);
+await ev(n => { __g.speed = n; }, +(process.env.SPEED || 4));
 const waitT = async s => { const t0 = await ev(() => __g.t); await page.waitForFunction(t => __g.t >= t, t0 + s, { timeout: 300000 }); };
 const all = await ev(() => __g.debug.PLACES.flatMap(p => p.missions.map(m => m.id)));
 const ids = process.argv[2] ? process.argv[2].split(",") : all;
@@ -36,6 +37,7 @@ for (const id of ids) {
     const t = await ev(() => __g.t);
     if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png` }); shotMid = true; }
     if (t - t0 > (+process.env.LIMIT || 200)) break;
+    if (process.env.DEBUG) console.log(t.toFixed(1), JSON.stringify(await ev(() => __g.mission && __g.mission.debugState ? __g.mission.debugState() : null)), JSON.stringify(await ev(() => { const p = __g.player.pos; return [p.x.toFixed(1), p.y.toFixed(1), p.z.toFixed(1), __g.player.walker.grounded, __g.player.swimming]; })));
     await waitT(0.5);
   }
   const t1 = await ev(() => __g.t);

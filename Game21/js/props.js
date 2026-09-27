@@ -1,9 +1,12 @@
-// Things that appear in every level: Gravity Cells, mission beacons, the
-// guide arrow, gravity bubbles and the tractor beam.
+// Things that appear in every level: Tide Crystals, air bubbles, mission
+// beacons, the guide arrow, bubbles, the tractor beam, and TORPEDO the sub.
 import * as THREE from "three";
 
-const cellGeo = new THREE.IcosahedronGeometry(0.32, 3), coreGeo = new THREE.IcosahedronGeometry(0.16, 2), ringGeo = new THREE.TorusGeometry(0.46, 0.03, 8, 40);
-const cellMat = new THREE.MeshStandardMaterial({ color: 0x3aa8ff, emissive: 0x3ab0ff, emissiveIntensity: 1.6, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.8 });
+// a Tide Crystal: seawater frozen into a glowing blue shard
+const cellGeo = new THREE.OctahedronGeometry(0.34, 0); cellGeo.scale(0.8, 1.45, 0.8);
+const coreGeo = new THREE.OctahedronGeometry(0.16, 0); coreGeo.scale(0.8, 1.5, 0.8);
+const ringGeo = new THREE.TorusGeometry(0.5, 0.03, 8, 40);
+const cellMat = new THREE.MeshPhysicalMaterial({ color: 0x6ad8ff, emissive: 0x2a9aff, emissiveIntensity: 1.3, roughness: 0.1, metalness: 0.05, transparent: true, opacity: 0.82, clearcoat: 1, flatShading: true });
 const coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdff6ff).multiplyScalar(4) });
 const ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(2.5) });
 
@@ -22,6 +25,16 @@ export function spinCell(c, t) {
   c.children[0].position.y = c.children[1].position.y = Math.sin(t * 2 + p) * 0.12;
   c.userData.rings[0].rotation.y = t * 2 + p; c.userData.rings[1].rotation.x = t * 1.6 + p;
   c.userData.rings[0].position.y = c.userData.rings[1].position.y = c.children[0].position.y;
+}
+
+// a silver air bubble: swim through it and the air bar fills
+const airMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, roughness: 0.05, metalness: 0.3, iridescence: 0.6, emissive: 0xbfe8ff, emissiveIntensity: 0.6, depthWrite: false });
+export function makeAirBubble() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14), airMat));
+  const hl = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffffff).multiplyScalar(3) })); hl.position.set(-0.2, 0.25, 0.3); g.add(hl);
+  g.userData.phase = Math.random() * 6;
+  return g;
 }
 
 // a tall column of light where a mission starts
@@ -123,6 +136,18 @@ export function thing(kind, color) {
       if (!zeb) for (const z of [-0.08, 0.08]) add(C(0.03, 0.2), M(0x6a3a1a), 0.85 + neckL * 0.36, legH + 0.7 + neckL, z);
       size = zeb ? 1.1 : 1.5; break;
     }
+    case "boat": { // a small open fishing boat
+      const hullM = M(color ?? 0x2a6ad8, { r: 0.4 }), woodM = M(0xc8a060, { r: 0.7 });
+      const hull = add(new THREE.CapsuleGeometry(0.9, 2.6, 6, 14), hullM, 0, 0.55, 0, Math.PI / 2); hull.scale.set(1, 0.75, 1);
+      const inner = add(new THREE.CapsuleGeometry(0.7, 2.4, 6, 14), woodM, 0, 0.7, 0, Math.PI / 2); inner.scale.set(1, 0.5, 1);
+      for (const z of [-0.9, 0.2, 1.1]) add(B(1.5, 0.08, 0.3), woodM, 0, 0.9, z);
+      add(C(0.05, 2.4, 6), woodM, 0, 2.1, -0.3);
+      size = 2; break; }
+    case "buoy": add(C(0.45, 0.5), M(color ?? 0xff5a2a), 0, 0.25, 0); add(new THREE.ConeGeometry(0.4, 1.2, 12), M(color ?? 0xff5a2a), 0, 1.1, 0); add(new THREE.SphereGeometry(0.12, 8, 6), M(0xffd23f, { e: 0xffd23f, ei: 2 }), 0, 1.8, 0); size = 0.8; break;
+    case "container": add(B(2.4, 2.4, 6), M(color ?? 0xd83a2a, { r: 0.6, m: 0.3 }), 0, 1.2, 0); for (let i = 0; i < 5; i++) add(B(2.44, 2.2, 0.08), M(color ?? 0xd83a2a, { r: 0.6, m: 0.3 }), 0, 1.2, -2.4 + i * 1.2); size = 2.6; break;
+    case "stilt": add(C(0.16, 2.2, 10), M(color ?? 0xb08850), 0, 1.1, 0); size = 0.7; break;
+    case "case": add(B(0.9, 0.5, 0.6), M(color ?? 0xc0c8d0, { m: 0.8, r: 0.25 }), 0, 0.25, 0); add(B(0.95, 0.06, 0.65), M(0x3a3a40), 0, 0.5, 0); size = 0.7; break;
+    case "pot": add(new THREE.CylinderGeometry(0.4, 0.3, 0.6, 12, 1, true), M(color ?? 0x8a5a2a, { r: 0.9 }), 0, 0.3, 0).material.side = THREE.DoubleSide; add(new THREE.TorusGeometry(0.4, 0.05, 6, 16), M(0x3a2a1a), 0, 0.6, 0, Math.PI / 2); size = 0.6; break;
     case "crate": default: add(B(1, 1, 1), M(color ?? 0xb08850), 0, 0.5, 0); size = 0.8; break;
   }
   g.userData.size = size;
@@ -139,4 +164,41 @@ export function makeGoldBolt() {
   const glow = new THREE.Mesh(new THREE.SphereGeometry(0.5, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd166).multiplyScalar(1.2), transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false }));
   g.add(glow);
   return g;
+}
+
+// TORPEDO: a small yellow two-seat submarine with big headlight eyes, the
+// same mesh in the pen, in the missions and in the dialogue portraits
+export function makeTorpedo() {
+  const g = new THREE.Group();
+  const yellow = new THREE.MeshPhysicalMaterial({ color: 0xffc820, roughness: 0.3, metalness: 0.3, clearcoat: 0.8 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1a2430, roughness: 0.5, metalness: 0.5 });
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0x9fe0ff, transparent: true, opacity: 0.35, roughness: 0.05, clearcoat: 1, depthWrite: false });
+  const add = (geo, m, x, y, z, rx = 0, ry = 0, rz = 0) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); me.rotation.set(rx, ry, rz); me.castShadow = true; g.add(me); return me; };
+  const hull = add(new THREE.CapsuleGeometry(0.75, 2.2, 8, 20), yellow, 0, 0.8, 0, Math.PI / 2); hull.scale.set(1, 0.85, 1);
+  add(new THREE.SphereGeometry(0.62, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), glass, 0, 1.15, 0.3); // the cockpit dome
+  add(new THREE.TorusGeometry(0.62, 0.06, 8, 28), dark, 0, 1.15, 0.3, Math.PI / 2);
+  add(new THREE.CylinderGeometry(0.3, 0.32, 0.4, 14), yellow, 0, 1.4, -0.8);   // the conning tower
+  add(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 6), dark, 0, 1.9, -0.8);
+  add(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshStandardMaterial({ color: 0xff3a3a, emissive: 0xff2a2a, emissiveIntensity: 3 }), 0, 2.25, -0.8);
+  // the eyes: two big headlights
+  const eyes = [-1, 1].map(s => { const e = add(new THREE.SphereGeometry(0.22, 14, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff4c0, emissiveIntensity: 2.5 }), s * 0.36, 0.95, 1.55); const p = add(new THREE.SphereGeometry(0.09, 10, 8), dark, s * 0.36, 0.97, 1.74); return { e, p }; });
+  const brows = [-1, 1].map(s => add(new THREE.BoxGeometry(0.3, 0.06, 0.06), dark, s * 0.36, 1.2, 1.6, 0, 0, s * 0.2));
+  // fins, a propeller in a ring, and the claw underneath
+  for (const s of [-1, 1]) add(new THREE.BoxGeometry(0.7, 0.05, 0.5), yellow, s * 0.9, 0.7, -0.9);
+  add(new THREE.BoxGeometry(0.05, 0.6, 0.5), yellow, 0, 1.3, -1.5);
+  add(new THREE.TorusGeometry(0.4, 0.05, 8, 20), dark, 0, 0.8, -1.9);
+  const prop = add(new THREE.BoxGeometry(0.7, 0.12, 0.03), dark, 0, 0.8, -1.9); const prop2 = add(new THREE.BoxGeometry(0.12, 0.7, 0.03), dark, 0, 0.8, -1.9);
+  const claw = new THREE.Group(); claw.position.set(0, 0.25, 0.4); g.add(claw);
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8), dark); arm.position.y = 0.05; claw.add(arm);
+  for (const s of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.12), dark); f.position.set(s * 0.14, -0.25, 0); f.rotation.z = -s * 0.3; claw.add(f); }
+  g.userData = { eyes, brows, prop: [prop, prop2], claw, hull };
+  return g;
+}
+export function animateTorpedo(g, dt, t, o = {}) {
+  const u = g.userData;
+  for (const p of u.prop) p.rotation.z += dt * (o.speed ?? 6);
+  const blink = Math.sin(t * 0.7) > 0.97;
+  for (const { e } of u.eyes) e.scale.y = blink ? 0.15 : 1;
+  u.brows.forEach((b, i) => { b.rotation.z = (i ? 1 : -1) * (o.talk ? 0.35 + Math.sin(t * 12) * 0.1 : 0.2); });
+  u.claw.rotation.x = o.claw ? 0.2 : 0;
 }

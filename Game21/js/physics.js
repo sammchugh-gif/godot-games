@@ -110,13 +110,16 @@ export class Physics {
   }
   // like ray(), but also says what was hit
   rayHit(from, dir, max, exclude) {
-    const hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude);
+    let hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude);
+    // a ray straight down exactly along a heightfield's grid line can slip between its triangles
+    if (!hit && dir.x === 0 && dir.z === 0) hit = this.world.castRay(new R.Ray({ x: from.x + 0.013, y: from.y, z: from.z + 0.017 }, dir), max, true, undefined, undefined, exclude);
     return hit ? { toi: hit.timeOfImpact, collider: hit.collider } : null;
   }
   // first hit along a ray, ignoring the given collider (and any the predicate turns down);
   // returns distance or null
   ray(from, dir, max, exclude, pred) {
-    const hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude, undefined, pred);
+    let hit = this.world.castRay(new R.Ray(from, dir), max, true, undefined, undefined, exclude, undefined, pred);
+    if (!hit && dir.x === 0 && dir.z === 0) hit = this.world.castRay(new R.Ray({ x: from.x + 0.013, y: from.y, z: from.z + 0.017 }, dir), max, true, undefined, undefined, exclude, undefined, pred);
     return hit ? hit.timeOfImpact : null;
   }
 }
@@ -139,6 +142,7 @@ export class Walker {
     cc.setCharacterMass(3);
     this.vel = new THREE.Vector3();
     this.grounded = false;
+    this.swim = false;
     this.pos = new THREE.Vector3(x, y, z);  // feet
   }
   teleport(x, y, z) {
@@ -161,9 +165,18 @@ export class Walker {
     return clear ? move : null;
   }
   // move by velocity for dt; returns the corrected displacement
+  setSwim(on) {
+    if (on === this.swim) return;
+    this.swim = on;
+    // snapping to the ground would glue a swimmer to the seabed
+    if (on) this.cc.disableSnapToGround(); else this.cc.enableSnapToGround(0.25);
+  }
   move(dt, gravityScale = 1) {
-    if (!this.grounded || this.vel.y > 0) this.vel.y += this.phys.gravity * 1.25 * gravityScale * dt;
-    this.vel.y = Math.max(this.vel.y, -30);
+    if (this.swim) { this.vel.y = Math.max(-6, Math.min(6, this.vel.y)); }
+    else {
+      if (!this.grounded || this.vel.y > 0) this.vel.y += this.phys.gravity * 1.25 * gravityScale * dt;
+      this.vel.y = Math.max(this.vel.y, -30);
+    }
     const want = { x: this.vel.x * dt, y: this.vel.y * dt, z: this.vel.z * dt };
     // ride along with a moving platform under our feet
     if (this.onMover) {
@@ -178,7 +191,7 @@ export class Walker {
     this.cc.computeColliderMovement(this.col, want);
     let m = this.cc.computedMovement();
     const wasGrounded = this.grounded;
-    this.grounded = this.cc.computedGrounded();
+    this.grounded = this.swim ? false : this.cc.computedGrounded();
     // Rapier's autostep won't lift a capsule that meets a step square-on (the step's face is
     // parallel to "up", so its lift test counts the step as touching), so pushing straight up
     // a staircase stalls at the first step. When grounded, pushing and getting nowhere, step up
@@ -188,8 +201,9 @@ export class Walker {
       if (hw > 1e-3 && Math.hypot(m.x, m.z) < hw * 0.3) { const s = this.stepUp(want.x / hw, want.z / hw); if (s) m = s; }
     }
     if (this.grounded && this.vel.y < 0) this.vel.y = 0;
-    // bumped our head
+    // bumped our head (or, swimming, the seabed or a roof)
     if (this.vel.y > 0 && m.y < want.y * 0.5) this.vel.y = 0;
+    if (this.swim && this.vel.y < 0 && m.y > want.y * 0.5) this.vel.y = 0;
     const t = this.body.translation();
     const n = { x: t.x + m.x, y: t.y + m.y, z: t.z + m.z };
     this.body.setNextKinematicTranslation(n);

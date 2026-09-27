@@ -5,16 +5,16 @@ import * as THREE from "three";
 import { R } from "./physics.js";
 import { Robot } from "./robots.js";
 import { Car } from "./vehicle.js";
-import { Circuit, Codes } from "./missions2.js";
+import { Circuit, Codes, Tide, Valves, Morse } from "./missions2.js";
 import { Nav } from "./nav.js";
 import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing } from "./props.js";
 import { toast } from "./ui.js";
 
-const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
+export const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
-class Mission {
+export class Mission {
   constructor(g, def, data) {
     this.g = g; this.def = def; this.data = data || {}; this.lv = def.lv || 1;
     this.time = def.time ?? 0; this.left = this.time; this.t = 0;
@@ -173,8 +173,8 @@ class Mission {
   }
 }
 
-// ------------------------------------------------------------ Gravity Cells
-class Cells extends Mission {
+// ------------------------------------------------------------ Tide Crystals
+export class Cells extends Mission {
   start() {
     const spots = this.data.cells || [];
     this.need = Math.min(this.def.n || spots.length, spots.length);
@@ -198,7 +198,7 @@ class Cells extends Mission {
       }
     }
   }
-  hud() { return { ...super.hud(), text: `Collect the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
+  hud() { return { ...super.hud(), text: `Collect the Tide Crystals  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   debugState() {
     const f = x => Math.round(x * 10) / 10, pp = this.p.pos, w = this.p.walker, a = this.aim;
     return { p: [f(pp.x), f(pp.y), f(pp.z)], aim: a ? this.cells.indexOf(a) : null, aimAt: a ? [f(a.position.x), f(a.position.y), f(a.position.z)] : null, onMover: w.onMover ? this.w.phys.movers.indexOf(w.onMover) : -1, grounded: w.grounded, board: this.board ? [f(this.board.x), f(this.board.y), f(this.board.z)] : null, aimFor: a ? f(this.t - this.aimT) : 0, path: this.navPath ? this.navPath.length : null, navI: this.navI, climb: this.climbI, climbGoal: this.climbGoal };
@@ -383,8 +383,8 @@ class Cells extends Mission {
   }
 }
 
-// ------------------------------------------------------------ Floater round-up
-class Roundup extends Mission {
+// ------------------------------------------------------------ Drip round-up
+export class Roundup extends Mission {
   start() {
     const d = this.data;
     this.area = d.area || [0, 0, 10];
@@ -393,7 +393,7 @@ class Roundup extends Mission {
     const spots = d.bots || [];
     for (let i = 0; i < this.need; i++) {
       const s = spots[i % Math.max(1, spots.length)] || [this.area[0] + i * 2, 0, this.area[1]];
-      const r = new Robot("floater", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
+      const r = new Robot("drip", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
       this.bots.push({ r, state: "walk", goal: this.pickGoal(), t: 0, bubble: null, speed: 1.2 + this.lv * 0.5 });
     }
     this.popped = 0; this.cool = 0;
@@ -411,7 +411,9 @@ class Roundup extends Mission {
         if (this.lv >= 2 && dp < 5) { const [x, z] = [b.r.pos.x + dx / dp * 4, b.r.pos.z + dz / dp * 4]; const [ax, az, ar] = this.area; const k = Math.hypot(x - ax, z - az) > ar ? 0.3 : 1; b.goal = [ax + (x - ax) * k, az + (z - az) * k]; b.r.play("Running"); b.speed = 2.2 + this.lv * 0.6; }
         else { b.r.play("Walking"); b.speed = 1.2 + this.lv * 0.4; }
         if (b.r.walkTo(b.goal[0], b.goal[1], b.speed, dt) < 0.3) b.goal = this.pickGoal();
-        if (this.w.heightAt) b.r.pos.y = this.w.heightAt(b.r.pos.x, b.r.pos.z);
+        // on whatever is under it: the ground, a deck, a quay
+        const g = this.w.phys.ray({ x: b.r.pos.x, y: b.r.pos.y + 1.5, z: b.r.pos.z }, { x: 0, y: -1, z: 0 }, 6, this.p.walker.col);
+        if (g !== null) b.r.pos.y += (b.r.pos.y + 1.5 - g - b.r.pos.y) * Math.min(1, dt * 12); else if (this.w.heightAt) b.r.pos.y = this.w.heightAt(b.r.pos.x, b.r.pos.z);
       } else if (b.state === "float") {
         b.t += dt; b.r.pos.y += dt * (1.5 + b.t); b.bubble.position.copy(b.r.pos); b.bubble.position.y += 0.65;
         b.r.root.rotation.y += dt * 2;
@@ -449,14 +451,14 @@ class Roundup extends Mission {
     if (this.popped >= this.need) { this.finishing = true; this.later(1.6, () => this.win()); }
   }
   actionLabel() { return "ZAP"; }
-  hud() { return { ...super.hud(), text: `Bubble the Floaters  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
+  hud() { return { ...super.hud(), text: `Bubble the Drips  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
   target() { const b = this.bots.find(b => b.state === "walk"); return b ? b.r.pos : null; }
   // autopilot: run after the nearest Floater and zap it; teleports (and notes it) only if one can't be caught in 25 s
   solve() {
     const pp = this.p.pos, b = this.bots.filter(b => b.state === "walk").sort((a, c) => a.r.pos.distanceTo(pp) - c.r.pos.distanceTo(pp))[0];
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
     if (b !== this.aim) { this.aim = b; this.aimT = this.t; }
-    if (this.t - this.aimT > 25) { (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} floater ${this.bots.indexOf(b)}`); this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2); this.aimT = this.t; return; }
+    if (this.t - this.aimT > 25) { (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} drip ${this.bots.indexOf(b)}`); this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2); this.aimT = this.t; return; }
     this.g.input.jumpHeld = false;
     const d = this.walkTo(b.r.pos.x, b.r.pos.y + 0.6, b.r.pos.z, 2.5, this.bots.map(b => b.r.pos));
     if (d < 3.5 && Math.abs(b.r.pos.y - pp.y) < 1.2) { this.p.yaw = Math.atan2(b.r.pos.x - pp.x, b.r.pos.z - pp.z); this.g.input.actionPressed = true; }
@@ -464,7 +466,7 @@ class Roundup extends Mission {
 }
 
 // ------------------------------------------------------------ Tractor-beam block stacking
-class Stack extends Mission {
+export class Stack extends Mission {
   start() {
     const d = this.data;
     this.pad = v3(d.pad || [0, 0, 0]); this.padR = d.padR || 2;
@@ -552,7 +554,7 @@ class Stack extends Mission {
 
 
 // ------------------------------------------------------------ Pin it down: things float up, Rory pins them back
-class Tractor extends Mission {
+export class Tractor extends Mission {
   start() {
     const d = this.data;
     this.need = this.def.n || 6;
@@ -605,7 +607,7 @@ class Tractor extends Mission {
 }
 
 // ------------------------------------------------------------ BOLT flies through rings
-class Drone extends Mission {
+export class Drone extends Mission {
   start() {
     const d = this.data;
     this.rings = (d.rings || []).map((r, i) => {
@@ -677,7 +679,7 @@ class Drone extends Mission {
 // Three kinds of beam: a low bar to jump, a pillar of light that sweeps across
 // the hall (go when it's on the other side), and a bar that blinks on and off
 // (go while it's off; it flickers just before it comes back).
-class Lasers extends Mission {
+export class Lasers extends Mission {
   start() {
     const d = this.data;
     this.from = v3(d.start); this.goal = v3(d.goal); this.width = d.width || 6;
@@ -791,8 +793,8 @@ class Lasers extends Mission {
   debugState() { return { ...(this.dbg || {}), tries: this.tries }; }
 }
 
-// ------------------------------------------------------------ Car chase: catch the Floater and bump it
-class Chase extends Mission {
+// ------------------------------------------------------------ Car chase: catch the Drip and bump it
+export class Chase extends Mission {
   start() {
     const d = this.data;
     const hAt = this.w.heightAt || (() => 0);
@@ -809,7 +811,7 @@ class Chase extends Mission {
     const qc = new Car(this.w, 0, -50, 0, 0, d.quarry || "kart", { color: 0x8a4ad8, trim: 0xff5ad8 });
     q.add(qc.mesh); qc.mesh.position.set(0, 0, 0); this.w.phys.world.removeVehicleController(qc.vc); this.w.phys.world.removeRigidBody(qc.body);
     this.qcar = qc;
-    this.bot = new Robot("floater", 1.0); this.bot.root.position.set(0, 0.2, -0.3); this.bot.play("Sitting"); q.add(this.bot.root);
+    this.bot = new Robot("drip", 1.0); this.bot.root.position.set(0, 0.2, -0.3); this.bot.play("Sitting"); q.add(this.bot.root);
     this.qbody = this.w.phys.world.createRigidBody(R.RigidBodyDesc.kinematicPositionBased().setTranslation(0, -50, 0));
     this.w.phys.world.createCollider(R.ColliderDesc.cuboid(0.9, 0.5, 1.4).setTranslation(0, 0.5, 0), this.qbody);
     this.g.driveMode = this;
@@ -917,7 +919,7 @@ class Chase extends Mission {
     this.g.bolt.root.visible = true; this.g.bolt.pos.set(c.x + 3, c.y, c.z);
     super.cleanup();
   }
-  hud() { return { ...super.hud(), text: `Catch the Floater and bump it  ${this.tags}/${this.need}`, progress: this.tags / this.need }; }
+  hud() { return { ...super.hud(), text: `Catch the Drip and bump it  ${this.tags}/${this.need}`, progress: this.tags / this.need }; }
   target() { return this.q.position; }
   actionLabel() { return null; }
   solve() {
@@ -939,7 +941,7 @@ class Chase extends Mission {
     this.autoBoost = (gap > 18 || gap < 10) && Math.abs(ang) < 0.25 && bend < 0.3;
   }
 }
-function animateSeat(rig, dt, steer) {
+export function animateSeat(rig, dt, steer) {
   rig.legL.rotation.set(-1.45, 0, 0); rig.legR.rotation.set(-1.45, 0, 0); rig.kneeL.rotation.x = 1.3; rig.kneeR.rotation.x = 1.3;
   rig.hips.position.y = rig.S.leg * 0.45;
   rig.armL.rotation.set(-1.0, 0, -0.15 - steer * 0.3); rig.armR.rotation.set(-1.0, 0, 0.15 - steer * 0.3); rig.elbowL.rotation.x = -0.5; rig.elbowR.rotation.x = -0.5;
@@ -948,7 +950,7 @@ function animateSeat(rig, dt, steer) {
 }
 
 // ------------------------------------------------------------ Sneak past the guard bots' searchlights
-class Stealth extends Mission {
+export class Stealth extends Mission {
   start() {
     const d = this.data;
     this.from = v3(d.start); this.goal = v3(d.goal);
@@ -1074,10 +1076,10 @@ class Stealth extends Mission {
   }
 }
 
-// ------------------------------------------------------------ Boss: the Big Floater
+// ------------------------------------------------------------ Boss: the Big Drip
 // It stomps after Rory; its ground-pound sends out a ring (jump it!); after a
 // pound it's stuck for a moment, and a ZAP on the glowing battery on its back hurts it.
-class Boss extends Mission {
+export class Boss extends Mission {
   start() {
     const d = this.data;
     this.c = v3(d.center || [0, 0, 0]); this.arenaR = d.radius || 16;
@@ -1106,7 +1108,7 @@ class Boss extends Mission {
     const b = this.b, pp = this.p.pos;
     b.update(dt); this.st += dt; this.cool -= dt; this.inv -= dt;
     this.placeRider(dt);
-    if (this.w.heightAt && this.state !== "gone") b.pos.y = this.w.heightAt(b.pos.x, b.pos.z);
+    if (this.state !== "gone") { const g = this.w.phys.ray({ x: b.pos.x, y: b.pos.y + 2, z: b.pos.z }, { x: 0, y: -1, z: 0 }, 8, this.p.walker.col); if (g !== null) b.pos.y = b.pos.y + 2 - g; else if (this.w.heightAt) b.pos.y = this.w.heightAt(b.pos.x, b.pos.z); }
     const dx = pp.x - b.pos.x, dz = pp.z - b.pos.z, d = Math.hypot(dx, dz);
     if (this.state === "walk") {
       b.play("Walking");
@@ -1207,7 +1209,7 @@ class Boss extends Mission {
 }
 
 // ------------------------------------------------------------ Drive and collect: a buggy, cells spread over rough ground
-class Drive extends Mission {
+export class Drive extends Mission {
   start() {
     const d = this.data;
     const [x, y, z, yaw] = d.start;
@@ -1239,7 +1241,7 @@ class Drive extends Mission {
     this.g.bolt.root.visible = true; this.g.bolt.pos.set(c.x + 3, c.y, c.z);
     super.cleanup();
   }
-  hud() { return { ...super.hud(), text: `Drive over the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
+  hud() { return { ...super.hud(), text: `Drive over the Tide Crystals  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.car.pos) - b.position.distanceTo(this.car.pos))[0]; return c ? c.position : null; }
   debugState() { return { path: this.path ? this.path.length : null, blocked: this.blocked ? this.blocked.size : 0, freeFrac: this.grid ? +(this.grid.free.reduce((a, b) => a + b, 0) / this.grid.free.length).toFixed(2) : null }; }
   // The autopilot's map: a 2 m grid over the drive, each square free or blocked (walls, rocks,
@@ -1331,5 +1333,6 @@ class Drive extends Mission {
   }
 }
 
-export const KINDS = { cells: Cells, roundup: Roundup, stack: Stack, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, circuit: Circuit, codes: Codes, drive: Drive };
+export const KINDS = { tide: Tide, valves: Valves, morse: Morse, cells: Cells, roundup: Roundup, stack: Stack, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, circuit: Circuit, codes: Codes, drive: Drive };
+// the sea missions (dive, sub, salvage, boat) and the new panels are registered by missions3.js
 export function makeMission(g, def, data) { const K = KINDS[def.kind]; return K ? new K(g, def, data) : null; }

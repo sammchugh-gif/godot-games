@@ -144,3 +144,181 @@ export class Codes extends Panel {
   stars() { return this.mistakes === 0 ? 3 : this.mistakes < 3 ? 2 : 1; }
   solve() { if (this.phase === "input") { this.cool = (this.cool || 0) + 1; if (this.cool % 4 === 0) this.press(this.seq[this.input.length]); } }
 }
+
+// ------------------------------------------------------------ Tide: sluice gates between basins
+// Tapping a gate lets a measure of water through: the basin on each side of it
+// goes up a step (and over the top, back to empty). Every basin must reach its
+// target line. Made by scrambling a solved row, so it always comes out.
+export class Tide extends Panel {
+  start() {
+    const N = this.N = [3, 4, 5, 6][this.lv - 1] || 4, LV = this.LV = 3;
+    this.text = "Tap a gate: the basins beside it fill by one. Match every target line!";
+    this.goal = []; for (let i = 0; i < N; i++) this.goal.push(Math.floor(Math.random() * LV));
+    // scramble with random taps; the answer is the taps that undo them
+    this.answer = []; for (let g = 0; g < N - 1; g++) this.answer.push(Math.floor(Math.random() * LV));
+    if (this.answer.every(a => a === 0)) this.answer[Math.floor(Math.random() * (N - 1))] = 1 + Math.floor(Math.random() * (LV - 1));
+    this.level = this.goal.slice();
+    this.answer.forEach((n, g) => { for (let k = 0; k < (LV - n) % LV; k++) this.tapGate(g, true); });
+    this.taps = 0; this.need = this.answer.reduce((a, b) => a + b, 0);
+    const el = screen("puzzle", `<div class="card puzzle" style="padding:14px 16px"><div class="title-sub" style="font-size:15px;letter-spacing:.3em">${this.data.title || "SLUICE GATES"}</div><canvas width="720" height="420" style="width:min(84vw,110vh);aspect-ratio:720/420;display:block;margin:8px auto;touch-action:none"></canvas></div>`, "screen dim");
+    this.cv = el.querySelector("canvas"); this.gx = this.cv.getContext("2d");
+    this.cv.addEventListener("pointerdown", e => { e.stopPropagation(); const r = this.cv.getBoundingClientRect(); this.tap((e.clientX - r.left) / r.width * 720, (e.clientY - r.top) / r.height * 420); });
+    this.splash = -1; this.draw();
+  }
+  tapGate(g, silent) { this.level[g] = (this.level[g] + 1) % this.LV; this.level[g + 1] = (this.level[g + 1] + 1) % this.LV; if (!silent) { this.taps++; this.answer[g] = (this.answer[g] + this.LV - 1) % this.LV; } }
+  geom() { const W = 720, pad = 40, bw = (W - pad * 2) / this.N; return { W, pad, bw, top: 70, bottom: 360 }; }
+  tap(px, py) {
+    if (this.done) return;
+    const { pad, bw, top, bottom } = this.geom();
+    if (py < top - 20 || py > bottom + 20) return;
+    // the nearest gate (the line between two basins) within half a basin
+    const g = Math.round((px - pad) / bw) - 1;
+    if (g < 0 || g >= this.N - 1 || Math.abs(px - (pad + (g + 1) * bw)) > bw * 0.35) return;
+    this.tapGate(g); this.g.sound("splash"); this.splash = g; this.draw();
+    if (this.level.every((l, i) => l === this.goal[i])) { this.g.sound("win"); this.win(); }
+  }
+  draw() {
+    const g = this.gx, { W, pad, bw, top, bottom } = this.geom(), N = this.N, LV = this.LV;
+    g.clearRect(0, 0, W, 420);
+    g.fillStyle = "#081226"; g.beginPath(); g.roundRect(8, 8, W - 16, 404, 18); g.fill();
+    for (let i = 0; i < N; i++) {
+      const x0 = pad + i * bw + 8, x1 = pad + (i + 1) * bw - 8, h = bottom - top;
+      g.fillStyle = "#0f1c34"; g.fillRect(x0, top, x1 - x0, h);
+      // the water
+      const lv = this.level[i] / (LV - 1), wy = bottom - h * (0.15 + lv * 0.7), ok = this.level[i] === this.goal[i];
+      g.fillStyle = ok ? "#3ad0c0" : "#2a6ad8"; g.fillRect(x0, wy, x1 - x0, bottom - wy);
+      g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(x0, wy, x1 - x0, 6);
+      // the target line
+      const ty = bottom - h * (0.15 + this.goal[i] / (LV - 1) * 0.7);
+      g.strokeStyle = ok ? "#7bed9f" : "#ffd166"; g.lineWidth = 4; g.setLineDash([10, 8]); g.beginPath(); g.moveTo(x0 - 4, ty); g.lineTo(x1 + 4, ty); g.stroke(); g.setLineDash([]);
+      g.fillStyle = ok ? "#7bed9f" : "#ffd166"; g.font = "900 22px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ok ? "✓" : "▸", x1 + 4 - 12, ty - 14);
+      g.strokeStyle = "#5a6a86"; g.lineWidth = 3; g.strokeRect(x0, top, x1 - x0, h);
+    }
+    // the gates
+    for (let gI = 0; gI < N - 1; gI++) {
+      const x = pad + (gI + 1) * bw, y = (top + bottom) / 2;
+      g.fillStyle = this.splash === gI ? "#ffd166" : "#c8d0e0"; g.beginPath(); g.roundRect(x - 16, y - 46, 32, 92, 8); g.fill();
+      g.fillStyle = "#081226"; g.font = "900 26px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⇅", x, y);
+    }
+    g.fillStyle = "#8ea4c4"; g.font = "800 18px system-ui"; g.textAlign = "center"; g.fillText("TAP A GATE · WATER MOVES INTO THE BASINS ON BOTH SIDES", W / 2, 40);
+    this.splash = -1;
+  }
+  stars() { return this.taps <= this.need + 1 ? 3 : this.taps <= this.need * 2 + 2 ? 2 : 1; }
+  solve() { if (this.done) return; this.st = (this.st || 0) + 1; if (this.st % 8) return; const gI = this.answer.findIndex(a => a > 0); if (gI >= 0) this.tap(this.geom().pad + (gI + 1) * this.geom().bw, 200); }
+}
+
+// ------------------------------------------------------------ Valves: turn the valves till every gauge sits in the green
+// A grid of valves, each set 0 to 3. A gauge at the end of each row and each
+// column reads the sum of its valves (wrapped round). Green when it reads its
+// target.
+export class Valves extends Panel {
+  start() {
+    const [R, C] = [[2, 2], [2, 3], [3, 3], [3, 4]][this.lv - 1] || [2, 3]; this.R = R; this.C = C; this.LV = 4;
+    this.text = "Tap a valve to turn it. Every gauge must sit in the green!";
+    // a random answer, targets from it, then scramble
+    this.answer = []; for (let i = 0; i < R * C; i++) this.answer.push(Math.floor(Math.random() * 4));
+    this.cur = this.answer.map(a => (a + 1 + Math.floor(Math.random() * 3)) % 4);
+    this.tRow = []; for (let r = 0; r < R; r++) { let s = 0; for (let c = 0; c < C; c++) s += this.answer[r * C + c]; this.tRow.push(s % 4); }
+    this.tCol = []; for (let c = 0; c < C; c++) { let s = 0; for (let r = 0; r < R; r++) s += this.answer[r * C + c]; this.tCol.push(s % 4); }
+    this.turns = 0; this.cur0 = this.cur.slice();
+    const el = screen("puzzle", `<div class="card puzzle" style="padding:14px 16px"><div class="title-sub" style="font-size:15px;letter-spacing:.3em">${this.data.title || "PRESSURE VALVES"}</div><canvas width="640" height="520" style="width:min(70vw,84vh);aspect-ratio:640/520;display:block;margin:8px auto;touch-action:none"></canvas></div>`, "screen dim");
+    this.cv = el.querySelector("canvas"); this.gx = this.cv.getContext("2d");
+    this.cv.addEventListener("pointerdown", e => { e.stopPropagation(); const r = this.cv.getBoundingClientRect(); this.tap((e.clientX - r.left) / r.width * 640, (e.clientY - r.top) / r.height * 520); });
+    this.draw();
+  }
+  cell() { const s = Math.min(480 / (this.C + 1), 400 / (this.R + 1)); return { s, x0: (640 - s * (this.C + 1)) / 2, y0: 60 }; }
+  reads() { const row = [], col = []; for (let r = 0; r < this.R; r++) { let s = 0; for (let c = 0; c < this.C; c++) s += this.cur[r * this.C + c]; row.push(s % 4); } for (let c = 0; c < this.C; c++) { let s = 0; for (let r = 0; r < this.R; r++) s += this.cur[r * this.C + c]; col.push(s % 4); } return { row, col }; }
+  solved() { const { row, col } = this.reads(); return row.every((v, i) => v === this.tRow[i]) && col.every((v, i) => v === this.tCol[i]); }
+  tap(px, py) {
+    if (this.done) return;
+    const { s, x0, y0 } = this.cell(), c = Math.floor((px - x0) / s), r = Math.floor((py - y0) / s);
+    if (c < 0 || r < 0 || c >= this.C || r >= this.R) return;
+    this.turn(r * this.C + c);
+  }
+  turn(k) { this.cur[k] = (this.cur[k] + 1) % 4; this.turns++; this.g.sound("click"); this.draw(); if (this.solved()) { this.g.sound("win"); this.win(); } }
+  draw() {
+    const g = this.gx, { s, x0, y0 } = this.cell(), { row, col } = this.reads();
+    g.clearRect(0, 0, 640, 520);
+    g.fillStyle = "#081226"; g.beginPath(); g.roundRect(8, 8, 624, 504, 18); g.fill();
+    // pipes
+    g.strokeStyle = "#3a4a66"; g.lineWidth = 14; g.lineCap = "round";
+    for (let r = 0; r < this.R; r++) { const y = y0 + (r + 0.5) * s; g.beginPath(); g.moveTo(x0 + s * 0.5, y); g.lineTo(x0 + (this.C + 0.5) * s, y); g.stroke(); }
+    for (let c = 0; c < this.C; c++) { const x = x0 + (c + 0.5) * s; g.beginPath(); g.moveTo(x, y0 + s * 0.5); g.lineTo(x, y0 + (this.R + 0.5) * s); g.stroke(); }
+    // valves: a wheel with a handle showing the setting
+    for (let r = 0; r < this.R; r++) for (let c = 0; c < this.C; c++) {
+      const k = r * this.C + c, x = x0 + (c + 0.5) * s, y = y0 + (r + 0.5) * s, a = this.cur[k] * Math.PI / 2 - Math.PI / 2;
+      g.fillStyle = "#1a2a48"; g.beginPath(); g.arc(x, y, s * 0.34, 0, 7); g.fill();
+      g.strokeStyle = "#c8d0e0"; g.lineWidth = 6; g.beginPath(); g.arc(x, y, s * 0.3, 0, 7); g.stroke();
+      g.strokeStyle = "#ffd166"; g.lineWidth = 10; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * s * 0.28, y + Math.sin(a) * s * 0.28); g.stroke();
+      g.fillStyle = "#ffffff"; g.font = `900 ${Math.round(s * 0.16)}px system-ui`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(this.cur[k]), x, y + s * 0.02);
+    }
+    // gauges: row gauges on the right, column gauges along the bottom
+    const gauge = (x, y, v, t) => {
+      const ok = v === t; g.fillStyle = ok ? "#1f6a3a" : "#4a1a24"; g.beginPath(); g.arc(x, y, s * 0.3, 0, 7); g.fill();
+      g.strokeStyle = ok ? "#7bed9f" : "#ff8a8a"; g.lineWidth = 5; g.beginPath(); g.arc(x, y, s * 0.3, 0, 7); g.stroke();
+      // the green zone at the target, the needle at the reading
+      const ta = -Math.PI * 0.75 + t * Math.PI / 2; g.strokeStyle = "#7bed9f"; g.lineWidth = 8; g.beginPath(); g.arc(x, y, s * 0.22, ta - 0.3, ta + 0.3); g.stroke();
+      const na = -Math.PI * 0.75 + v * Math.PI / 2; g.strokeStyle = "#ffffff"; g.lineWidth = 4; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(na) * s * 0.24, y + Math.sin(na) * s * 0.24); g.stroke();
+      g.fillStyle = "#fff"; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill();
+    };
+    for (let r = 0; r < this.R; r++) gauge(x0 + (this.C + 0.5) * s, y0 + (r + 0.5) * s, row[r], this.tRow[r]);
+    for (let c = 0; c < this.C; c++) gauge(x0 + (c + 0.5) * s, y0 + (this.R + 0.5) * s, col[c], this.tCol[c]);
+    g.fillStyle = "#8ea4c4"; g.font = "800 18px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("EACH GAUGE ADDS UP ITS ROW OR COLUMN", 320, 34);
+  }
+  stars() { let need = 0; for (let i = 0; i < this.cur.length; i++) need += (this.answer[i] - this.cur0[i] + 4) % 4; return this.turns <= need + 2 ? 3 : this.turns <= need * 2 + 3 ? 2 : 1; }
+  solve() { if (this.done) return; this.st = (this.st || 0) + 1; if (this.st % 7) return; const k = this.cur.findIndex((v, i) => v !== this.answer[i]); if (k >= 0) this.turn(k); }
+}
+
+// ------------------------------------------------------------ Morse: read the flashes, tap the letters
+const MORSE = { A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....", I: "..", K: "-.-", L: ".-..", M: "--", N: "-.", O: "---", P: ".--.", R: ".-.", S: "...", T: "-", U: "..-", W: ".--", Y: "-.--" };
+export class Morse extends Panel {
+  start() {
+    this.word = (this.data.word || "FUNDY").toUpperCase().split("").filter(ch => MORSE[ch]);
+    this.i = 0; this.mistakes = 0;
+    this.text = "Watch the lamp flash. Dot, dash. Tap the letter it spells!";
+    const el = screen("puzzle", `<div class="card" style="padding:14px 18px;text-align:center;max-width:640px">
+      <div class="title-sub" style="font-size:15px;letter-spacing:.3em">${this.data.title || "MORSE CODE"}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:10px 0">
+        <div class="lamp" style="width:84px;height:84px;border-radius:50%;background:#2a2a30;box-shadow:inset 0 0 0 6px #14161c;transition:background .06s,box-shadow .06s"></div>
+        <div class="tape" style="font:900 30px ui-monospace,monospace;color:#ffd166;letter-spacing:.2em;min-width:150px;text-align:left"></div>
+      </div>
+      <div class="word" style="font:900 34px ui-monospace,monospace;letter-spacing:.4em;color:#7fe3ff;margin:4px 0 10px"></div>
+      <div class="keys" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(56vh,80vw);margin:0 auto"></div>
+      <div class="msg" style="font-weight:900;font-size:17px;margin-top:10px;color:#8ea4c4"></div></div>`, "screen dim");
+    this.el = el; this.lamp = el.querySelector(".lamp"); this.tape = el.querySelector(".tape"); this.wordEl = el.querySelector(".word"); this.keys = el.querySelector(".keys"); this.msg = el.querySelector(".msg");
+    this.setLetter();
+  }
+  // the letter to find, with five decoys, in a shuffled keypad that shows each letter's code
+  setLetter() {
+    const want = this.word[this.i], pool = Object.keys(MORSE).filter(k => k !== want);
+    const picks = [want]; while (picks.length < 6) { const k = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; picks.push(k); }
+    picks.sort(() => Math.random() - 0.5);
+    this.keys.innerHTML = picks.map(k => `<div data-k="${k}" style="border-radius:16px;background:rgba(255,255,255,.1);border:2px solid rgba(127,227,255,.35);padding:10px 4px;cursor:pointer"><div style="font:900 26px system-ui">${k}</div><div style="font:900 18px ui-monospace,monospace;color:#ffd166;letter-spacing:.15em">${MORSE[k].replace(/\./g, "•").replace(/-/g, "—")}</div></div>`).join("");
+    onTap(this.el, "[data-k]", b => this.press(b.dataset.k));
+    this.wordEl.textContent = this.word.map((ch, k) => k < this.i ? ch : "_").join(" ");
+    this.tape.textContent = "";
+    // the flashes: [on, off] pairs in seconds
+    const code = MORSE[want]; this.seq = []; for (const ch of code) this.seq.push([ch === "." ? 0.22 : 0.62, 0.22]); this.seq[this.seq.length - 1][1] = 1.4;
+    this.k = 0; this.phase = 0; this.pt = -0.6; this.shown = "";
+    this.msg.textContent = `Letter ${this.i + 1} of ${this.word.length}. Watch...`;
+  }
+  light(on) { this.lamp.style.background = on ? "#fff4c0" : "#2a2a30"; this.lamp.style.boxShadow = on ? "0 0 40px #ffd166, inset 0 0 0 6px #ffe8a0" : "inset 0 0 0 6px #14161c"; }
+  update(dt) {
+    if (this.done) return;
+    this.pt += dt;
+    const [on, off] = this.seq[this.k];
+    if (this.phase === 0) { if (this.pt >= 0) { this.light(true); if (!this.beeped) { this.beeped = true; this.g.sound(on > 0.4 ? "beep" : "click"); this.shown += on > 0.4 ? "—" : "•"; this.tape.textContent = this.shown; } } if (this.pt >= on) { this.light(false); this.phase = 1; this.pt = 0; this.beeped = false; } }
+    else if (this.pt >= off) { this.phase = 0; this.pt = 0; this.k = (this.k + 1) % this.seq.length; if (this.k === 0) this.shown = ""; }
+  }
+  press(k) {
+    if (this.done) return;
+    if (k === this.word[this.i]) {
+      this.g.sound("cell"); this.i++;
+      if (this.i >= this.word.length) { this.wordEl.textContent = this.word.join(" "); this.msg.textContent = "Decoded: " + this.word.join(""); this.keys.innerHTML = ""; this.light(false); this.g.sound("win"); this.win(); return; }
+      this.setLetter();
+    } else { this.mistakes++; this.g.sound("fail"); this.msg.textContent = "Not that one. Watch the lamp again..."; this.k = 0; this.phase = 0; this.pt = -0.5; this.shown = ""; this.tape.textContent = ""; this.light(false); }
+  }
+  stars() { return this.mistakes === 0 ? 3 : this.mistakes < 3 ? 2 : 1; }
+  // autopilot: once the whole letter has flashed through, tap it
+  solve() { if (this.done) return; if (this.k === this.seq.length - 1 && this.phase === 1 && this.pt > 0.3) { this.cool = (this.cool || 0) + 1; if (this.cool % 3 === 0) this.press(this.word[this.i]); } }
+}

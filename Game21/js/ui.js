@@ -74,7 +74,7 @@ export class HUD {
     this.root.querySelector(".pause").addEventListener("pointerdown", e => { e.stopPropagation(); if (o && o.onPause) o.onPause(); });
     this.timerEl = null;
   }
-  hide() { clearLayer("hud"); clearLayer("timer"); clearLayer("prompt"); this.root = null; this.timerEl = null; }
+  hide() { clearLayer("hud"); clearLayer("timer"); clearLayer("prompt"); clearLayer("air"); this.root = null; this.timerEl = null; this.airEl = null; }
   set(o) {
     if (!this.root) return;
     if (o.label !== undefined) this.obj.querySelector("b").textContent = o.label;
@@ -86,6 +86,13 @@ export class HUD {
       if (o.timer === null) { clearLayer("timer"); this.timerEl = null; }
       else { if (!this.timerEl) this.timerEl = layer("timer", "timer", ""); const s = Math.max(0, Math.ceil(o.timer)); this.timerEl.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; this.timerEl.classList.toggle("low", o.timer < 10); }
     }
+  }
+  // the air bar while Rory is under water: null hides it, 0..1 fills it
+  air(f) {
+    if (f === null || f === undefined) { if (this.airEl) { this.airEl.remove(); this.airEl = null; } return; }
+    if (!this.airEl) this.airEl = layer("air", "air", `<b>AIR</b><div class="bar"><i></i></div>`);
+    const i = this.airEl.querySelector("i"); i.style.width = Math.round(f * 100) + "%";
+    this.airEl.classList.toggle("low", f < 0.25);
   }
   prompt(text) {
     const cur = document.querySelector('[data-layer="prompt"]');

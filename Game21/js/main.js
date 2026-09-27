@@ -15,25 +15,21 @@ import { Portraits } from "./portraits.js";
 import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "./ui.js";
 import { makeBeacon, animateBeacon, makeArrow, makeGoldBolt } from "./props.js";
 import { makeMission } from "./missions.js";
+import "./missions3.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
-import { buildHQ as buildHQ0 } from "./levels/hq.js";
-import { buildCove } from "./levels/cove.js";
-const buildHQ = new URLSearchParams(location.search).has("cove") ? buildCove : buildHQ0;
-import { buildTokyo } from "./levels/tokyo.js";
-import { buildEgypt } from "./levels/egypt.js";
-import { buildSydney } from "./levels/sydney.js";
-import { buildRio } from "./levels/rio.js";
+import { buildNarwhal } from "./levels/narwhal.js";
+import { buildCornwall } from "./levels/cornwall.js";
+import { buildFundy } from "./levels/fundy.js";
+import { buildPanama } from "./levels/panama.js";
+import { buildGalapagos } from "./levels/galapagos.js";
+import { buildHawaii } from "./levels/hawaii.js";
+import { buildReef } from "./levels/reef.js";
+import { buildHongKong } from "./levels/hongkong.js";
+import { buildMaldives } from "./levels/maldives.js";
+import { buildBermuda } from "./levels/bermuda.js";
 import { Travel } from "./globe.js";
-import { buildNewYork } from "./levels/newyork.js";
-import { buildKenya } from "./levels/kenya.js";
-import { buildChina } from "./levels/china.js";
-import { buildIndia } from "./levels/india.js";
-import { buildIsland } from "./levels/island.js";
-import { buildLaunch } from "./levels/launch.js";
-import { buildStation } from "./levels/station.js";
-import { buildMoon } from "./levels/moon.js";
 
-const LEVELS = { hq: buildHQ, tokyo: buildTokyo, egypt: buildEgypt, sydney: buildSydney, rio: buildRio, newyork: buildNewYork, kenya: buildKenya, china: buildChina, india: buildIndia, island: buildIsland, launch: buildLaunch, station: buildStation, moon: buildMoon };
+const LEVELS = { narwhal: buildNarwhal, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda };
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
 const progress = f => { bar.style.width = Math.round(f * 100) + "%"; };
@@ -61,6 +57,8 @@ async function boot() {
   G.hud = new HUD();
   G.travel = new Travel(engine);
   G.save = store.get("save", null) || newSave();
+  // the yellow guide arrow over Rory's head is off unless it's switched on in the pause menu
+  G.showArrow = store.get("arrow", false);
   buildTouch();
   progress(0.9);
   loadPlace(G.save.place);
@@ -71,7 +69,10 @@ async function boot() {
   const frame = now => {
     // (the first frame after a long boot can carry a timestamp from before it: never step backwards)
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now;
-    try { tick(dt); } catch (e) { console.error(e); }
+    // the tests run several ticks per drawn frame (G.speed), so a slow software renderer doesn't slow the game clock
+    const n = G.speed > 1 ? Math.round(G.speed) : 1;
+    for (let i = 0; i < n; i++) { G.skipDraw = i < n - 1; try { tick(n > 1 ? 0.05 : dt); } catch (e) { console.error(e); } }
+    G.skipDraw = false;
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -82,12 +83,13 @@ function saveGame() { store.set("save", G.save); }
 function loadPlace(id) {
   const place = G.place = PLACES.find(p => p.id === id) || PLACES[0];
   if (G.mission) { G.mission.cleanup(); G.mission = null; }
+  G.driveMode = null; G.droneMode = null;
   // let the last place go: its physics world and its geometry (materials and textures are shared)
-  if (G.world) { G.world.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
+  if (G.world) { if (G.world.sea) G.world.sea.dispose(); G.world.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   if (G.phys) { try { G.phys.world.free(); } catch (e) { /* already gone */ } }
   const phys = G.phys = new Physics(-20);
   const world = G.world = new World(G.engine, phys);
-  const info = (LEVELS[place.id] || buildHQ)(world);
+  const info = (LEVELS[place.id] || buildNarwhal)(world);
   G.baked = world.bake();
   if (info.apply) info.apply(G.save);
   G.levelInfo = info;
@@ -102,6 +104,9 @@ function loadPlace(id) {
   G.player.onJump = () => sound("jump");
   G.player.onPad = () => sound("pad");
   G.player.onLand = v => { if (v > 7) { sound("land"); G.fx.puff(G.player.pos.x, G.player.pos.y + 0.05, G.player.pos.z); } };
+  G.player.onSplash = () => { const p = G.player.pos, s = G.player.surface(); sound("splash"); G.fx.burst(p.x, s ?? p.y, p.z, 0xffffff, 26, { speed: 2.5, up: 3, life: 0.6, size: 0.5, gravity: -8, bright: 1.6 }); };
+  G.player.onBubble = () => { const p = G.player.pos; G.fx.burst(p.x + Math.sin(G.player.yaw) * 0.2, p.y + 1.4, p.z + Math.cos(G.player.yaw) * 0.2, 0xdff6ff, 3, { speed: 0.3, up: 1.5, life: 1.4, size: 0.25, gravity: 1.5, drag: 0.5, bright: 1.5 }); };
+  G.player.onNoAir = () => { if (G.state === "mission" && G.mission && G.mission.onNoAir) G.mission.onNoAir(); else { sound("gasp"); toast("Out of air! Up you go.", 2); } };
   const bolt = G.bolt = new Robot("bolt", 1.0);
   bolt.root.position.set(...(info.bolt || [x + 1.5, y, z]));
   world.scene.add(bolt.root);
@@ -129,14 +134,15 @@ function loadPlace(id) {
   hideBolts(place, info);
 }
 // three golden bolts per place, tucked away at ground level somewhere off the
-// beaten track; the spots are the same every time you visit
+// beaten track (and out of the sea); the spots are the same every time you visit
 function hideBolts(place, info) {
   G.save.bolts = G.save.bolts || [];
   G.bolts = [];
   let seed = [...place.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
   const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
   const [sx, sy, sz] = info.spawn, found = [];
-  for (let tries = 0; tries < 400 && found.length < 3; tries++) {
+  const sea = G.world.sea;
+  for (let tries = 0; tries < 600 && found.length < 3; tries++) {
     const a = rnd() * Math.PI * 2, d = 12 + rnd() * 26, x = sx + Math.cos(a) * d, z = sz + Math.sin(a) * d;
     const h = G.phys.rayHit({ x, y: sy + 30, z }, { x: 0, y: -1, z: 0 }, 60);
     if (!h) continue;
@@ -144,9 +150,10 @@ function hideBolts(place, info) {
     if (body && !body.isFixed()) continue; // not on a ferry, a lift or anything else that moves
     const y = sy + 30 - h.toi;
     if (y < sy - 1.5 || y > sy + 2.5) continue;
+    if (sea && y < sea.level + 0.3) continue;
     if (found.some(f => Math.hypot(f[0] - x, f[2] - z) < 12)) continue;
     if (Object.values(G.beacons).some(b => Math.hypot(b.position.x - x, b.position.z - z) < 5)) continue;
-    // not under water, not squeezed against a wall
+    // not squeezed against a wall
     let blocked = false;
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const h = G.phys.ray({ x, y: y + 0.8, z }, { x: dx, y: 0, z: dz }, 1.2); if (h !== null) blocked = true; }
     if (blocked) continue;
@@ -187,7 +194,7 @@ function showTitle() {
   const started = G.save.done.length > 0;
   const s = screen("title", `
     <div style="margin-top:2vh"><div class="title-logo">AGENT RORY</div>
-    <div class="title-sub">DEEP RED</div></div>
+    <div class="title-sub" style="color:#ff5a6a">DEEP RED</div></div>
     <div style="flex:1"></div>
     <div class="row">
       ${started ? `<button class="btn gold" data-a="continue">CONTINUE</button><button class="btn ghost" data-a="new">NEW GAME</button>` : `<button class="btn gold" data-a="play">PLAY</button>`}
@@ -206,7 +213,7 @@ function showTitle() {
     clearLayer("title");
     startPlace();
   });
-  Audio.mood("calm");
+  G.moodBase = "calm";
 }
 // the title camera circles Rory and BOLT
 function titleCamera(dt) {
@@ -231,7 +238,7 @@ function startPlace() {
   setTouch(true);
   G.hud.set({ cells: G.save.cells, bolts: (G.save.bolts || []).length });
   G.jumpBtn.textContent = G.world.jetpack ? "JET" : "JUMP";
-  Audio.mood(place.ch === 3 ? "space" : "theme");
+  G.moodBase = place.sea ? "sea" : "theme";
   G.player.snapCam = true;
   if (!G.save.arrived[place.id]) {
     banner(place.country.toUpperCase(), place.name);
@@ -258,19 +265,19 @@ function beginMission(def) {
     G.mission.start();
     refreshBeacons();
     banner(`MISSION ${missionNumber(def)}`, def.title);
-    Audio.mood(def.kind === "chase" ? "chase" : "tense");
+    G.moodBase = def.kind === "chase" || def.kind === "boat" ? "chase" : "tense";
     G.state = "mission";
     G.input.clear();
   });
 }
 G.onMissionWin = m => {
   const def = m.def, stars = m.stars();
-  G.state = "result"; G.input.forced = null;
+  G.state = "result"; G.input.forced = null; G.input.forcedDive = false;
   if (!G.save.done.includes(def.id)) G.save.done.push(def.id);
   if (G.levelInfo && G.levelInfo.apply) G.levelInfo.apply(G.save);
   G.save.stars[def.id] = Math.max(G.save.stars[def.id] || 0, stars);
   saveGame();
-  sound("win"); Audio.mood(G.place.ch === 3 ? "space" : "theme");
+  sound("win"); G.moodBase = G.place.sea ? "sea" : "theme";
   G.hud.set({ timer: null });
   G.bolt.play("Dance");
   const s = screen("result", `<div class="card"><div class="title-sub" style="letter-spacing:.3em">MISSION COMPLETE</div>
@@ -284,18 +291,16 @@ G.onMissionWin = m => {
     if (G.replaying) { G.replaying = false; if (G.place.id !== G.save.place) loadPlace(G.save.place); startPlace(); refreshBeacons(); updateObjective(); return; }
     G.state = "explore"; G.bolt.play("Idle");
     const last = !currentMission();
-    if (def.event === "zeroScreen") G.world.zeroFace = G.portraits.get("zero");
-    if (def.event === "launch") setTimeout(() => { G.world.launch = true; }, 1200);
+    if (def.event === "villainScreen") G.world.villainFace = G.portraits.get("undertow");
     talk(def.outro || [], () => {
-      G.world.zeroFace = null;
+      G.world.villainFace = null;
       refreshBeacons(); updateObjective();
-      if (last && G.place.leaveEvent === "launch") setTimeout(() => { G.world.launch = true; }, 2500);
       if (last) talk(G.place.leave || [], () => nextPlace());
     });
   });
 };
 G.onMissionLose = (m, why) => {
-  G.state = "result"; G.input.forced = null;
+  G.state = "result"; G.input.forced = null; G.input.forcedDive = false;
   sound("fail");
   const s = screen("result", `<div class="card"><div class="title-sub" style="letter-spacing:.3em;color:#ff9a9a">${why || "OUT OF TIME"}</div>
     <div style="font-weight:900;font-size:28px;margin:8px 0">${m.def.title}</div>
@@ -305,10 +310,10 @@ G.onMissionLose = (m, why) => {
     const def = m.def; m.cleanup(); G.mission = null;
     resetPlayer();
     if (b.dataset.a === "retry") { G.mission = makeMission(G, def, G.world.missionData[def.id]); G.mission.start(); G.state = "mission"; banner("TRY AGAIN", def.title, 1.6); }
-    else { G.state = "explore"; refreshBeacons(); updateObjective(); Audio.mood("theme"); }
+    else { G.state = "explore"; refreshBeacons(); updateObjective(); G.moodBase = G.place.sea ? "sea" : "theme"; }
   });
 };
-function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); }
+function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); G.player.air = 1; G.player.noAir = false; }
 function m_id() { const c = currentMission(); return c ? c.id : null; }
 function nextPlace() {
   const i = PLACES.indexOf(G.place);
@@ -319,12 +324,12 @@ function nextPlace() {
   if (G.mission) { G.mission.cleanup(); G.mission = null; }
   screen("travel", `<div class="banner" style="top:9%"><div class="t1">NEXT STOP · ${nxt.country.toUpperCase()}</div><div class="t2">${nxt.name}</div></div>`, "screen");
   document.querySelector('[data-layer="travel"]').style.pointerEvents = "none";
-  Audio.mood("calm"); sound("whoosh");
+  G.moodBase = "calm"; sound("whoosh");
   const chapterChange = nxt.ch !== G.place.ch;
   G.travel.play(G.place, nxt, PLACES, () => {
     clearLayer("travel");
     loadPlace(nxt.id); startPlace();
-    if (chapterChange) { const c = CHAPTERS[nxt.ch - 1]; banner(`CHAPTER ${["ONE", "TWO", "THREE"][nxt.ch - 1]}`, c.title, 3); }
+    if (chapterChange) { const c = CHAPTERS[nxt.ch - 1]; banner(`ACT ${["ONE", "TWO", "THREE"][nxt.ch - 1]}`, c.title, 3); }
   });
 }
 
@@ -335,7 +340,7 @@ function missionList() {
     if (!open) return "";
     return `<div style="margin:10px 0 4px;font-weight:900;color:#7fe3ff;letter-spacing:.12em;font-size:13px">${p.name.toUpperCase()}</div>` + p.missions.map(m => {
       const done = G.save.done.includes(m.id), st = G.save.stars[m.id] || 0;
-      return `<button class="btn ${done ? "ghost" : "ghost"} small" data-m="${m.id}" ${done ? "" : "disabled style='opacity:.35'"} style="margin:3px;${done ? "" : "opacity:.35"}">${missionNumber(m)}. ${m.title} <span style="color:#ffd166">${"★".repeat(st)}${"☆".repeat(done ? 3 - st : 0)}</span></button>`;
+      return `<button class="btn ghost small" data-m="${m.id}" ${done ? "" : "disabled"} style="margin:3px;${done ? "" : "opacity:.35"}">${missionNumber(m)}. ${m.title} <span style="color:#ffd166">${"★".repeat(st)}${"☆".repeat(done ? 3 - st : 0)}</span></button>`;
     }).join("");
   }).join("");
   const s = screen("missions", `<div class="title-sub" style="letter-spacing:.4em">MISSIONS</div><div class="card" style="max-height:62vh;overflow:auto;max-width:720px;text-align:left">${rows}</div><button class="btn gold" data-a="back">BACK</button>`, "screen dim");
@@ -353,16 +358,16 @@ function replay(id) {
   beginMission(def);
 }
 
-// the ending: fireworks over the Moon, the score, then the credits
+// the end of the act: fireworks over the sinking base, the score, then the credits
 function theEnd() {
   G.state = "end"; G.hud.hide(); setTouch(false); G.input.forced = null;
   G.save.finished = true; saveGame();
-  Audio.mood("theme"); sound("win");
+  G.moodBase = "theme"; sound("win");
   const stars = ALL.reduce((n, m) => n + (G.save.stars[m.id] || 0), 0);
-  const s = screen("end", `<div class="title-sub" style="letter-spacing:.5em">MISSION COMPLETE</div>
-    <div class="title-logo" style="font-size:clamp(34px,7vw,80px)">THE END</div>
-    <div class="card" style="margin-top:8px"><div style="font-weight:900;font-size:22px">${ALL.length} missions · <span style="color:#ffd166">★ ${stars}</span> of ${ALL.length * 3} · <span style="color:#7fe3ff">${G.save.cells}</span> Gravity Cells · <span style="color:#ffd166">${(G.save.bolts || []).length}</span> of ${PLACES.length * 3} golden bolts</div>
-    <div style="margin-top:6px;color:#8ea4c4">The world has its gravity back, and Professor Zero makes toys now.</div></div>
+  const s = screen("end", `<div class="title-sub" style="letter-spacing:.5em">ACT ONE COMPLETE</div>
+    <div class="title-logo" style="font-size:clamp(34px,7vw,80px)">TO BE CONTINUED</div>
+    <div class="card" style="margin-top:8px"><div style="font-weight:900;font-size:22px">${ALL.length} missions · <span style="color:#ffd166">★ ${stars}</span> of ${ALL.length * 3} · <span style="color:#7fe3ff">${G.save.cells}</span> Tide Crystals · <span style="color:#ffd166">${(G.save.bolts || []).length}</span> of ${PLACES.length * 3} golden bolts</div>
+    <div style="margin-top:6px;color:#8ea4c4">The coasts have their sea back. Captain Undertow has gone down to the Tidal Engine, and Rory, BOLT and TORPEDO are going after her. Act Two: Into the Abyss.</div></div>
     <div class="credits" style="max-height:34vh;overflow:hidden;position:relative;width:min(560px,90vw)"><div class="roll">${CREDITS.map(([a, b]) => `<div style="margin:14px 0"><div style="color:#ffd166;font-weight:900;letter-spacing:.2em;font-size:13px">${a.toUpperCase()}</div><div style="font-weight:800;font-size:18px">${b}</div></div>`).join("")}</div></div>
     <button class="btn gold" data-a="t">BACK TO THE TITLE</button>`, "screen dim");
   const roll = s.querySelector(".roll"); let y = 0; const move = () => { if (!roll.isConnected) return; y += 0.5; roll.style.transform = `translateY(${-y}px)`; if (y > roll.scrollHeight) y = -200; requestAnimationFrame(move); }; move();
@@ -376,12 +381,13 @@ function pause() {
   const s = screen("pause", `<div class="title-sub" style="letter-spacing:.4em">PAUSED</div>
     <div class="row"><button class="btn gold" data-a="resume">RESUME</button></div>
     <div class="row"><button class="btn ghost small" data-a="music">MUSIC ${Audio.music ? "ON" : "OFF"}</button><button class="btn ghost small" data-a="voice">VOICES ${Speech.enabled ? "ON" : "OFF"}</button></div>
-    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button></div>
+    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button><button class="btn ghost small" data-a="arrow">ARROW ${G.showArrow ? "ON" : "OFF"}</button></div>
     <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
   onTap(s, "[data-a]", b => {
     const a = b.dataset.a;
     if (a === "music") { Audio.setMusic(!Audio.music); b.textContent = "MUSIC " + (Audio.music ? "ON" : "OFF"); return; }
     if (a === "voice") { Speech.enabled = !Speech.enabled; store.set("voice", Speech.enabled); b.textContent = "VOICES " + (Speech.enabled ? "ON" : "OFF"); return; }
+    if (a === "arrow") { G.showArrow = !G.showArrow; store.set("arrow", G.showArrow); b.textContent = "ARROW " + (G.showArrow ? "ON" : "OFF"); return; }
     if (a === "gfx") { const q = (G.engine.quality + 1) % 3; try { localStorage.setItem("rory21.quality", q); } catch (e) { /* private mode */ } b.textContent = "PICTURE: " + ["SIMPLE", "GOOD", "BEST"][q] + " (restarts)"; setTimeout(() => location.reload(), 700); return; }
     clearLayer("pause");
     if (a === "missions") { missionList(); return; }
@@ -392,25 +398,36 @@ function pause() {
 
 // ------------------------------------------------------------ the loop
 function sound(n) { Audio.play(n); }
-// the sea follows the camera and switches the fog over when it goes under
-function draw() { if (G.world.sea) G.world.sea.frame(G.engine.camera); G.engine.render(); }
+// the sea follows the camera and switches the fog over when it goes under; the music goes
+// deep with it
+function draw() {
+  if (G.skipDraw) return;
+  const sea = G.world.sea;
+  if (sea) sea.frame(G.engine.camera);
+  Audio.mood(sea && sea.isUnder && G.moodBase !== "calm" ? "deep" : G.moodBase);
+  G.engine.render();
+}
 G.sound = sound;
 G.addCells = n => { G.save.cells += n; G.hud.set({ cells: G.save.cells }); };
 
 function updateBolt(dt) {
   const b = G.bolt, p = G.player;
   const sx = Math.cos(p.yaw) * 1.5, sz = -Math.sin(p.yaw) * 1.5;
-  const tx = p.pos.x - Math.sin(p.yaw) * 1.3 + sx, tz = p.pos.z - Math.cos(p.yaw) * 1.3 + sz;
+  let tx = p.pos.x - Math.sin(p.yaw) * 1.3 + sx, tz = p.pos.z - Math.cos(p.yaw) * 1.3 + sz;
+  // BOLT waits on the shore while Rory swims (he is only mostly waterproof)
+  const sea = G.world.sea;
+  if (p.swimming) { if (!b.shore) { b.shore = p.lastSafe.clone(); } tx = b.shore.x; tz = b.shore.z; } else b.shore = null;
   const d = Math.hypot(tx - b.pos.x, tz - b.pos.z);
-  if (d > 14 || Math.abs(b.pos.y - p.pos.y) > 5) { b.pos.set(tx, p.pos.y, tz); G.fx.burst(tx, p.pos.y + 0.6, tz, 0x7fe3ff, 16); }
+  if (!p.swimming && (d > 14 || Math.abs(b.pos.y - p.pos.y) > 5)) { b.pos.set(tx, p.pos.y, tz); G.fx.burst(tx, p.pos.y + 0.6, tz, 0x7fe3ff, 16); }
   const speed = d > 4 ? 6.5 : d > 1.0 ? 3 : 0;
   if (speed) b.walkTo(tx, tz, speed, dt);
   else { let r = Math.atan2(p.pos.x - b.pos.x, p.pos.z - b.pos.z) - b.root.rotation.y; r = Math.atan2(Math.sin(r), Math.cos(r)); b.root.rotation.y += r * Math.min(1, dt * 3); }
   const g = G.phys.ray({ x: b.pos.x, y: b.pos.y + 2, z: b.pos.z }, { x: 0, y: -1, z: 0 }, 12, G.player.walker.col);
-  const gy = g !== null ? b.pos.y + 2 - g : p.pos.y;
+  let gy = g !== null ? b.pos.y + 2 - g : p.pos.y;
+  if (sea) gy = Math.max(gy, sea.height(b.pos.x, b.pos.z) - 0.3); // paddling, not drowning
   b.pos.y += (gy - b.pos.y) * Math.min(1, dt * 10);
   b.waveT = (b.waveT || 0) - dt;
-  if (G.state !== "result" && b.waveT <= 0) b.play(speed > 4 ? "Running" : speed ? "Walking" : G.talking === "bolt" ? "Yes" : "Idle");
+  if (G.state !== "result" && b.waveT <= 0) b.play(speed > 4 ? "Running" : speed ? "Walking" : G.talking === "bolt" ? "Yes" : p.swimming && d < 2 ? "Wave" : "Idle");
   b.update(dt);
 }
 
@@ -422,26 +439,30 @@ function tick(dt) {
   if (G.state === "title") { titleCamera(dt); w.update(dt); G.phys.step(dt); G.fx.update(dt); draw(); return; }
   if (G.state === "paused") { draw(); return; }
   if (G.state === "view") { const v = G.viewCam, cam = G.engine.camera; cam.position.set(v[0], v[1], v[2]); cam.lookAt(v[3], v[4], v[5]); w.followShadow(new THREE.Vector3(v[3], v[4], v[5])); w.update(dt); G.phys.step(dt); G.fx.update(dt); G.bolt.update(dt); draw(); return; }
-  if (G.state === "travel") { G.travel.update(dt); draw(); return; }
+  if (G.state === "travel") { G.travel.update(dt); Audio.mood(G.moodBase); if (!G.skipDraw) G.engine.render(); return; }
   if (G.fireworks && Math.random() < dt * 3) { const p = G.player.pos; G.fx.burst(p.x + Math.random() * 30 - 15, p.y + 12 + Math.random() * 8, p.z - 10 - Math.random() * 10, [0xff3a6a, 0xffd23f, 0x3ad0ff, 0x7bed9f, 0xff9ae8][Math.floor(Math.random() * 5)], 50, { speed: 9, life: 1.4, size: 1, gravity: -3, up: 0 }); sound("pop"); }
   const canMove = (G.state === "explore" || G.state === "mission") && !G.dialogue.active && !(G.mission && G.mission.freeze);
-  G.player.waving = G.state === "end";
   G.input.poll();
-  if (!canMove) { G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; }
+  if (!canMove) { G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; if (G.dialogue.active) { G.input.jumpHeld = false; G.input.diveHeld = false; } }
   G.player.talking = G.talking === "rory";
-  G.player.waving = G.state === "result";
+  G.player.waving = G.state === "result" && !G.driveMode;
   const drone = G.droneMode;
-  G.player.frozen = !!drone; G.player.camOverride = !!drone;
+  G.player.frozen = !!drone || !!G.driveMode;
+  G.player.camOverride = !!drone;
   if (G.driveMode) { G.input.takeLook(); G.driveMode.ride(dt); }
   else if (drone) { const mx = G.input.mx, my = G.input.my; G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; G.player.update(dt, G.input, G.engine.camera); G.input.mx = mx; G.input.my = my; }
   else G.player.update(dt, G.input, G.engine.camera);
-  if (drone || G.driveMode) { G.bolt.update(dt); } else updateBolt(dt);
+  if (drone || G.driveMode) G.bolt.update(dt); else updateBolt(dt);
   if (G.contact) { animatePerson(G.contact, { dt, speed: 0, grounded: true, talk: G.talking === G.place.contact }); const c = G.contact.root.position; G.contact.root.rotation.y += (Math.atan2(G.player.pos.x - c.x, G.player.pos.z - c.z) - G.contact.root.rotation.y) * Math.min(1, dt * 2); }
   if (G.state === "mission" && G.mission && !G.dialogue.active) {
     if (G.autoSolve) G.mission.solve(dt);
     G.mission.tick(dt);
     if (G.mission) G.hud.set(G.mission.hud());
   }
+  // the air bar while Rory is under water, and the DIVE button while he swims or drives the sub
+  const swimming = G.player.swimming, subbing = !!(G.driveMode && G.driveMode.dive);
+  G.hud.air(swimming && (G.player.headUnder || G.player.air < 0.999) ? G.player.air : null);
+  showDive(swimming || subbing);
   // beacons and the guide arrow
   const cur = currentMission();
   for (const b of Object.values(G.beacons)) if (b.visible) animateBeacon(b, G.t);
@@ -451,10 +472,11 @@ function tick(dt) {
     if (Math.hypot(G.player.pos.x - b.position.x, G.player.pos.z - b.position.z) < 1.6 && Math.abs(G.player.pos.y - b.position.y) < 2) beginMission(cur);
   } else if (G.state === "mission" && G.mission && G.mission.target) target = G.mission.target();
   const a = G.arrow;
-  if (target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
+  const ap = G.driveMode && G.driveMode.pos ? G.driveMode.pos : G.player.pos;
+  if (G.showArrow && target && Math.hypot(target.x - ap.x, target.z - ap.z) > 3) {
     a.visible = true;
-    a.position.set(G.player.pos.x, G.player.pos.y + 2.25 + Math.sin(G.t * 4) * 0.06, G.player.pos.z);
-    a.rotation.y = Math.atan2(target.x - G.player.pos.x, target.z - G.player.pos.z);
+    a.position.set(ap.x, ap.y + 2.25 + Math.sin(G.t * 4) * 0.06, ap.z);
+    a.rotation.y = Math.atan2(target.x - ap.x, target.z - ap.z);
   } else a.visible = false;
   // talk to the contact
   if (G.contact && G.state === "explore" && !G.dialogue.active) {
@@ -472,12 +494,13 @@ function tick(dt) {
   G.phys.step(dt);
   if (G.mission && G.mission.post) G.mission.post(dt);
   if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
+  Audio.duck(Speech.speaking);
   G.fx.update(dt);
   drawTouch();
   draw();
 }
 // if Rory stands still for a while, BOLT pipes up with a nudge
-const NUDGES = ["Follow the yellow arrow, Rory. It knows the way.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
+const NUDGES = ["Look for the tall beam of light, Rory. That is where we go next.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
 function nudge(dt) {
   if (G.state !== "explore" || G.dialogue.active || !currentMission()) { G.idleT = 0; return; }
   G.idleT = (G.player.speed > 0.4 ? 0 : (G.idleT || 0) + dt);
@@ -485,7 +508,7 @@ function nudge(dt) {
 }
 function chatLines() {
   const who = G.place.contact, cur = currentMission();
-  return [[who, cur ? `The beacon for ${cur.title} is glowing. Follow the yellow arrow!` : "That's everything here. Great work, Agent Rory!"]];
+  return [[who, cur ? `The beacon for ${cur.title} is glowing. Look for the tall beam of light!` : "That's everything here. Great work, Agent Rory!"]];
 }
 
 // ------------------------------------------------------------ touch controls
@@ -494,6 +517,7 @@ function buildTouch() {
   const mk = (cls, txt, x, y) => { const b = document.createElement("div"); b.className = "pad-btn " + cls; b.textContent = txt; b.style.right = x + "px"; b.style.bottom = y + "px"; ui.appendChild(b); return b; };
   const jump = G.jumpBtn = mk("", "JUMP", 22, 30);
   const act = G.actBtn = mk("action hidden", "USE", 124, 52);
+  const dive = G.diveBtn = mk("dive hidden", "DIVE", 28, 130);
   const hold = (el, down, up) => {
     el.addEventListener("pointerdown", e => { e.stopPropagation(); el.classList.add("on"); down(); });
     const off = () => { el.classList.remove("on"); if (up) up(); };
@@ -501,6 +525,7 @@ function buildTouch() {
   };
   hold(jump, () => { G.input.jumpPressed = true; G.input.jumpHeld = true; }, () => { G.input.jumpHeld = false; });
   hold(act, () => { G.input.actionPressed = true; });
+  hold(dive, () => { G.input.diveTouch = true; }, () => { G.input.diveTouch = false; });
   const st = G.stickEl = document.createElement("div"); st.className = "stick"; st.innerHTML = "<i></i>"; st.style.display = "none"; ui.appendChild(st);
   // tapping the dialogue anywhere on the 3D view moves it on
   G.engine.canvas.addEventListener("pointerdown", () => { if (G.dialogue.active) G.dialogue.tap(); });
@@ -510,13 +535,14 @@ function buildTouch() {
   document.addEventListener("visibilitychange", () => { if (document.hidden && (G.state === "explore" || G.state === "mission")) pause(); });
   addEventListener("keydown", e => { if (G.dialogue.active && (e.code === "Space" || e.code === "Enter")) { G.dialogue.tap(); G.input.clear(); } if (e.code === "Escape" || e.code === "KeyP") pause(); });
 }
-function setTouch(on) { G.touchOn = on; const show = on && G.input.touchUI; G.jumpBtn.style.display = show ? "grid" : "none"; if (!show) G.actBtn.classList.add("hidden"); }
+function setTouch(on) { G.touchOn = on; const show = on && G.input.touchUI; G.jumpBtn.style.display = show ? "grid" : "none"; if (!show) { G.actBtn.classList.add("hidden"); G.diveBtn.classList.add("hidden"); } }
 function showAction(label) {
   if (!G.touchOn) return;
   if (!label) { G.actBtn.classList.add("hidden"); return; }
   G.actBtn.classList.remove("hidden"); if (G.actBtn.textContent !== label) G.actBtn.textContent = label;
   if (!G.input.touchUI) G.actBtn.classList.add("hidden");
 }
+function showDive(on) { const show = on && G.touchOn && G.input.touchUI; G.diveBtn.classList.toggle("hidden", !show); }
 function drawTouch() {
   const s = G.input.stick, el = G.stickEl;
   if (!s) { el.style.display = "none"; return; }
@@ -542,6 +568,7 @@ G.debug = {
     if (G.place.id !== place.id) loadPlace(place.id);
     startPlace();
     const def = place.missions.find(m => m.id === id);
+    const b = G.beacons[id]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2);
     G.mission = makeMission(G, def, G.world.missionData && G.world.missionData[id]);
     G.mission.start(); refreshBeacons();
     G.state = "mission"; G.input.clear();
@@ -550,9 +577,9 @@ G.debug = {
   load(id) { if (G.mission) { G.mission.cleanup(); G.mission = null; } loadPlace(id); return G.place.id; },
   // a fixed camera for screenshots: from (x, y, z) looking at (lx, ly, lz)
   view(x, y, z, lx, ly, lz) { clearLayer("title"); G.hud.hide(); setTouch(false); G.viewCam = [x, y, z, lx, ly, lz]; G.state = "view"; },
-  // anything that must be reachable but sits inside something solid
+  // anything that must be reachable but sits inside something solid (or, under the sea, above it)
   checkLevel() {
-    const w = G.world, phys = G.phys, out = [];
+    const w = G.world, phys = G.phys, out = [], sea = w.sea;
     const solid = (x, y, z, what, skipSensor) => {
       let hit = null;
       phys.world.intersectionsWithPoint({ x, y, z }, c => { if (skipSensor && c.isSensor()) return true; const b = c.parent(); if (b && b.isDynamic()) return true; if (c === G.player.walker.col) return true; hit = c; return false; });
@@ -560,16 +587,21 @@ G.debug = {
       // the terrain is a heightfield, not a solid, so a point under a hill needs its own test
       else if (w.heightAt && w.heightAt(x, z) > y - 0.3) out.push(`${what} at ${[x, y, z].map(v => v.toFixed(1)).join(",")} is under the ground (${w.heightAt(x, z).toFixed(1)})`);
     };
+    const wet = (x, y, z, what) => { if (!sea) { out.push(`${what} needs a sea`); return; } if (y > sea.height(x, z) - 0.8) out.push(`${what} at ${[x, y, z].map(v => v.toFixed(1)).join(",")} is not under the water (surface ${sea.height(x, z).toFixed(1)})`); solid(x, y, z, what); };
+    const dry = (x, y, z, what) => { if (sea && y < sea.height(x, z) + 0.1) out.push(`${what} at ${[x, y, z].map(v => v.toFixed(1)).join(",")} is in the sea`); solid(x, y + 0.7, z, what); };
     const info = G.levelInfo;
-    solid(info.spawn[0], info.spawn[1] + 0.7, info.spawn[2], "spawn");
+    dry(info.spawn[0], info.spawn[1], info.spawn[2], "spawn");
     if (G.bolts.length !== 3) out.push(`only ${G.bolts.length} golden bolts could be hidden`);
     for (const g of G.bolts) solid(g.b.position.x, g.b.position.y, g.b.position.z, "golden bolt");
     for (const m of G.place.missions) {
-      const b = G.beacons[m.id]; solid(b.position.x, b.position.y + 0.7, b.position.z, `beacon ${m.id}`);
+      const b = G.beacons[m.id]; dry(b.position.x, b.position.y, b.position.z, `beacon ${m.id}`);
       if (b.position.y < -1) out.push(`beacon ${m.id} is below the ground (${b.position.y.toFixed(1)})`);
       const d = w.missionData && w.missionData[m.id];
-      if (!d && !["circuit", "codes"].includes(m.kind)) { out.push(`${m.id} has no mission data`); continue; }
+      if (!d && !["circuit", "codes", "tide", "valves", "morse"].includes(m.kind)) { out.push(`${m.id} has no mission data`); continue; }
       if (!d) continue;
+      if (m.kind === "dive") { for (const c of d.cells || []) wet(c[0], c[1], c[2], `${m.id} crystal`); for (const c of d.bubbles || []) wet(c[0], c[1], c[2], `${m.id} bubble`); if (d.entry) { if (!sea || d.entry[1] > sea.height(d.entry[0], d.entry[2]) - 0.9) out.push(`${m.id} entry is not in deep enough water`); } else out.push(`${m.id} has no entry point`); if ((d.cells || []).length < (m.n || 0)) out.push(`${m.id} has ${(d.cells || []).length} crystals, needs ${m.n}`); continue; }
+      if (m.kind === "sub" || m.kind === "salvage") { wet(d.start[0], d.start[1], d.start[2], `${m.id} sub start`); for (const r of d.rings || []) wet(r[0], r[1], r[2], `${m.id} ring`); for (const c of d.crates || []) wet(c[0], c[1] + 0.3, c[2], `${m.id} case`); if (d.drop) wet(d.drop[0], d.drop[1] + 0.5, d.drop[2], `${m.id} drop`); if (d.exit) dry(d.exit[0], d.exit[1], d.exit[2], `${m.id} exit`); else out.push(`${m.id} has no exit`); continue; }
+      if (m.kind === "boat") { for (const [x, z] of d.path) { if (!sea) { out.push(`${m.id} needs a sea`); break; } const h = sea.height(x, z), floor = phys.ray({ x, y: h + 20, z }, { x: 0, y: -1, z: 0 }, 60); const fy = floor === null ? -1e9 : h + 20 - floor; if (fy > h - 0.6) out.push(`${m.id} route point ${x},${z} is on land (floor ${fy.toFixed(1)}, sea ${h.toFixed(1)})`); solid(x, h + 0.6, z, `${m.id} route point`); } if (d.exit) dry(d.exit[0], d.exit[1], d.exit[2], `${m.id} exit`); else out.push(`${m.id} has no exit`); continue; }
       for (const c of d.cells || []) if (Array.isArray(c)) solid(c[0], c[1], c[2], `${m.id} cell`);
       for (const b of d.blocks || []) solid(b[0], b[1] + 0.3, b[2], `${m.id} block`);
       if (d.pad) solid(d.pad[0], d.pad[1] + 0.8, d.pad[2], `${m.id} pad`);
@@ -579,8 +611,8 @@ G.debug = {
       for (const r of d.route || []) solid(r[0], r[1] + 0.7, r[2], `${m.id} route point`);
       for (const r of d.rings || []) solid(r[0], r[1], r[2], `${m.id} ring`);
       if (d.center) solid(d.center[0], d.center[1] + 0.7, d.center[2], `${m.id} arena`);
-      if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
-      // Floaters stand on the terrain wherever they walk, whatever height they're listed at
+      if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); if (sea && y < sea.height(x, z)) out.push(`${m.id} road point ${x},${z} is in the sea`); }
+      // Drips stand on the terrain wherever they walk, whatever height they're listed at
       if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);
       if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (d.start ? d.start[1] : 0) + 0.7, z, `${m.id} guard path`);
     }

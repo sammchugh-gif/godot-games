@@ -3,6 +3,7 @@
 import * as THREE from "three";
 import { makePerson, animatePerson } from "./people.js";
 import { Robot } from "./robots.js";
+import { makeTorpedo } from "./props.js";
 
 export class Portraits {
   constructor(renderer, chars) {
@@ -32,7 +33,9 @@ export class Portraits {
     const bg = new THREE.Color(ch.bg || (ch.side === "villain" ? "#3a1030" : "#10284a"));
     this.scene.background = bg;
     let obj, headY, dist;
-    if (ch.robot) {
+    if (ch.robot === "torpedo") {
+      obj = makeTorpedo(); obj.rotation.y = Math.PI * 0.85; headY = 1.0; dist = 4.2;
+    } else if (ch.robot) {
       const rb = new Robot(ch.robot, 1.2); rb.mixer.update(0.5); obj = rb.root; headY = 1.0; dist = 1.3;
     } else {
       const rig = makePerson(ch.look || {});
@@ -43,7 +46,7 @@ export class Portraits {
       headY = p.y; dist = rig.S.headR * 6.2;
     }
     this.scene.add(obj);
-    obj.rotation.y = -0.35;
+    if (ch.robot !== "torpedo") obj.rotation.y = -0.35;
     this.cam.position.set(dist * 0.28, headY + dist * 0.05, dist);
     this.cam.lookAt(0, headY - dist * 0.04, 0);
     r.setRenderTarget(this.rt); r.clear(); r.render(this.scene, this.cam); r.setRenderTarget(null);

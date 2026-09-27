@@ -19,6 +19,7 @@ await page.addInitScript(q => { window.__test = true; localStorage.clear(); if (
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 120000 });
 const ev = (fn, a) => page.evaluate(fn, a);
+await ev(n => { __g.speed = n; }, +(process.env.SPEED || 4));
 const waitT = async s => { const t0 = await ev(() => __g.t); await page.waitForFunction(t => __g.t >= t, t0 + s, { timeout: 180000 }); };
 let fail = 0;
 const check = (c, msg) => { if (!c) { fail++; console.log("FAIL:", msg); } else console.log("ok:", msg); };

@@ -30,6 +30,9 @@ export const FILES = [
   { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 60,
     blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon. Sixty missions.",
     frost: "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon." },
+  { id: "deepred", n: "FILE 004", kicker: "ACT ONE · THE SEA IS GOING DOWN", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#ff5a6a", saves: ["rory21.save"], total: 59,
+    blurb: "Captain Undertow is draining the sea. Rory, BOLT and TORPEDO the submarine swim, dive, sail and chase from Cornwall to the Bermuda Triangle. Fifty-nine missions in Act One.",
+    frost: "Deep Red. Captain Undertow, a submarine called TORPEDO, and the sea itself going missing. Our newest file." },
 ];
 // how far Rory has got in a file, from its saves
 export function progress(f) {
@@ -54,8 +57,8 @@ const canvasTex = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = TH
 // ------------------------------------------------------------ the mission board
 // a corkboard with the three mission files pinned to it, red string between the
 // pins, and a few sticky notes. It redraws when Rory walks up to a file.
-const BW = 18, BH = 5.6, CW = 2048, CH = Math.round(2048 * BH / BW);
-const CARD_U = [0.2, 0.5, 0.8];
+const BW = 22, BH = 5.6, CW = 2560, CH = Math.round(2560 * BH / BW);
+const CARD_U = [0.14, 0.38, 0.62, 0.86];
 function boardTexture() {
   const c = document.createElement("canvas"); c.width = CW; c.height = CH;
   const g = c.getContext("2d"), tex = canvasTex(c);
@@ -72,7 +75,7 @@ function boardTexture() {
     g.save(); g.translate(CW / 2 + 470, 74); g.rotate(-0.18); g.strokeStyle = "#d8283a"; g.lineWidth = 7; g.strokeRect(-150, -34, 300, 68); g.fillStyle = "#d8283a"; g.font = "900 44px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("TOP SECRET", 0, 2); g.restore();
     const pins = [];
     FILES.forEach((f, i) => {
-      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 520, h = 470, rot = [-0.035, 0.02, -0.025][i];
+      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 520, h = 470, rot = [-0.035, 0.02, -0.025, 0.03][i];
       g.save(); g.translate(cx, cy); g.rotate(rot);
       if (hi === i) { g.shadowColor = "#ffd166"; g.shadowBlur = 60; g.fillStyle = "#ffd166"; g.fillRect(-w / 2 - 16, -h / 2 - 16, w + 32, h + 32); g.shadowBlur = 0; }
       g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-w / 2 + 10, -h / 2 + 12, w, h);
@@ -88,7 +91,7 @@ function boardTexture() {
       const by = -h / 2 + 390; g.fillStyle = "#dde2ea"; g.fillRect(-pw / 2, by, pw - 150, 18); g.fillStyle = f.accent; g.fillRect(-pw / 2, by, (pw - 150) * p.done / f.total, 18);
       g.fillStyle = "#141c2c"; g.font = "800 26px system-ui"; g.fillText(`${p.done}/${f.total}`, pw / 2 - 138, by - 5);
       if (p.stars) { g.fillStyle = "#c88a10"; g.fillText("★ " + p.stars, -pw / 2, by + 30); }
-      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "zero" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
+      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "deepred" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
       g.save(); g.translate(pw / 2 - 110, -h / 2 + 220); g.rotate(-0.22); g.strokeStyle = stamp[1]; g.lineWidth = 6; g.font = "900 34px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
       const sw = g.measureText(stamp[0]).width + 36; g.globalAlpha = 0.9; g.strokeRect(-sw / 2, -28, sw, 56); g.fillStyle = stamp[1]; g.fillText(stamp[0], 0, 2); g.restore();
       g.restore();
@@ -105,6 +108,7 @@ function boardTexture() {
     note(100, CH - 150, 0.08, ["Where is", "BOLT's other", "sock?"]);
     note(CW - 100, CH - 150, -0.07, ["Buy milk.", "And biscuits.", "LOTS of", "biscuits."], "#9ae8ff");
     note(CW - 110, 330, 0.05, ["Zero =", "floating", "shoes??"], "#ffb0d8");
+    note(110, 330, -0.06, ["Who is", "draining", "the SEA?"], "#ffb0b0");
     tex.needsUpdate = true;
   };
   draw();
@@ -142,6 +146,14 @@ function buildPosters(w, RW, RD) {
   posterMesh(w, WX, 3, -7.2, Math.PI / 2, 2.2, 3, wanted("UMBRA", "stealing the sun", "one very big torch", (g, x, y, r) => {
     g.fillStyle = "#1a1420"; g.beginPath(); g.moveTo(x - r, y + r * 1.3); g.quadraticCurveTo(x - r * 1.1, y - r * 1.2, x, y - r * 1.2); g.quadraticCurveTo(x + r * 1.1, y - r * 1.2, x + r, y + r * 1.3); g.fill();
     g.fillStyle = "#ffd23f"; g.shadowColor = "#ffd23f"; g.shadowBlur = 20; for (const s of [-1, 1]) { g.beginPath(); g.ellipse(x + s * r * 0.32, y - r * 0.1, r * 0.16, r * 0.08, s * 0.3, 0, 7); g.fill(); } g.shadowBlur = 0;
+  }));
+  posterMesh(w, WX, 3, -2.0, Math.PI / 2, 2.2, 3, wanted("CAPTAIN UNDERTOW", "stealing the sea", "one very large bucket", (g, x, y, r) => {
+    g.fillStyle = "#e0c0b0"; g.beginPath(); g.arc(x, y + r * 0.1, r * 0.78, 0, 7); g.fill();
+    g.fillStyle = "#1a1a2a"; g.beginPath(); g.ellipse(x, y - r * 0.3, r * 0.95, r * 0.6, 0, Math.PI, 0); g.fill(); g.fillRect(x - r * 0.95, y - r * 0.3, r * 0.25, r * 1.2); g.fillRect(x + r * 0.7, y - r * 0.3, r * 0.25, r * 1.2);
+    g.fillStyle = "#8a1a2a"; g.fillRect(x - r * 1.05, y - r * 0.75, r * 2.1, r * 0.3); g.beginPath(); g.ellipse(x, y - r * 0.85, r * 0.8, r * 0.45, 0, Math.PI, 0); g.fill();
+    g.fillStyle = "#1a1a1a"; for (const s of [-1, 1]) { g.beginPath(); g.ellipse(x + s * r * 0.3, y - r * 0.05, r * 0.1, r * 0.07, 0, 0, 7); g.fill(); }
+    g.strokeStyle = "#1a1a1a"; g.lineWidth = 6; for (const s of [-1, 1]) { g.beginPath(); g.moveTo(x + s * r * 0.15, y - r * 0.28); g.lineTo(x + s * r * 0.45, y - r * 0.2); g.stroke(); }
+    g.strokeStyle = "#8a2a2a"; g.lineWidth = 7; g.beginPath(); g.moveTo(x - r * 0.3, y + r * 0.4); g.quadraticCurveTo(x, y + r * 0.25, x + r * 0.3, y + r * 0.4); g.stroke();
   }));
   posterMesh(w, WX, 3, -4.6, Math.PI / 2, 2.2, 3, wanted("BARON KALDERA", "melting Antarctica", "free ice lollies for life", (g, x, y, r) => {
     g.fillStyle = "#f0c8a0"; g.beginPath(); g.arc(x, y + r * 0.1, r * 0.8, 0, 7); g.fill();
@@ -331,7 +343,7 @@ function buildRoom(w) {
   w.box(3, 4.2, 0.3, M(0x2a3040, { metal: 0.7, rough: 0.3 }), 0, 2.1, RD / 2 - 0.3, { collide: false });
   const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshStandardMaterial({ map: TEX.sign("TOP SECRET", { bg: "#2a0a10", fg: "#ff5a5a", border: "#ff5a5a" }), emissive: 0xff3a3a, emissiveIntensity: 0.5 }));
   doorSign.position.set(0, 4.6, RD / 2 - 0.47); doorSign.rotation.y = Math.PI; doorSign.userData.dynamic = true; w.scene.add(doorSign);
-  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 3 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 3 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
+  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 4 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 4 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
   terminal.position.set(-RW / 2 + 0.28, 2.3, 2.5); terminal.rotation.y = Math.PI / 2; terminal.userData.dynamic = true; w.scene.add(terminal);
   const posters = buildPosters(w, RW, RD);
   const tea = teaTrolley(w, 9.4, 6.6);
@@ -581,8 +593,8 @@ function updateBolt(dt) {
 }
 function talk(who) {
   const lines = who === "frost"
-    ? [["frost", pick(["Three mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity goes to the Moon.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
-    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun."])]];
+    ? [["frost", pick(["Four mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity goes to the Moon. Deep Red goes under the sea.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong.", "Deep Red is the new one. Somebody is stealing the sea, and you'll need a submarine."])]]
+    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "In Deep Red you get TORPEDO. She's a submarine. She talks. I may have overdone the talking.", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun."])]];
   G.dialogue.show(lines, null);
 }
 function openFile(s) {

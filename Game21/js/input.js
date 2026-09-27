@@ -6,7 +6,7 @@ export class Input {
     this.keys = new Set();
     this.mx = 0; this.my = 0;           // move stick, -1..1 (my up = forward)
     this.lookX = 0; this.lookY = 0;     // camera drag since last read, pixels
-    this.jumpHeld = false; this.jumpPressed = false; this.actionPressed = false; this.boostHeld = false;
+    this.jumpHeld = false; this.jumpPressed = false; this.actionPressed = false; this.boostHeld = false; this.diveHeld = false; this.diveTouch = false;
     this.enabled = true;
     this.stick = null;                  // {id, x0, y0, x, y}
     this.look = null;                   // {id, x, y}
@@ -24,6 +24,7 @@ export class Input {
     addEventListener("pointerup", e => this.up(e));
     addEventListener("pointercancel", e => this.up(e));
     el.addEventListener("contextmenu", e => e.preventDefault());
+    el.addEventListener("wheel", e => { this.wheel(e.deltaY); e.preventDefault(); }, { passive: false });
   }
   down(e) {
     if (!this.enabled) return;
@@ -65,10 +66,14 @@ export class Input {
     if (l > 1) { x /= l; y /= l; }
     this.mx = x; this.my = y;
     this.boostHeld = k.has("ShiftLeft") || k.has("ShiftRight") || this.boostTouch;
+    // under water (and in the sub) the same keys mean "down"
+    this.diveHeld = k.has("ShiftLeft") || k.has("ShiftRight") || k.has("KeyC") || k.has("ControlLeft") || this.diveTouch || !!this.forcedDive;
     if (this.forced) { this.mx = this.forced.mx; this.my = this.forced.my; }
   }
   takeLook() { const r = [this.lookX, this.lookY]; this.lookX = 0; this.lookY = 0; return r; }
   takeJump() { const j = this.jumpPressed; this.jumpPressed = false; return j; }
   takeAction() { const a = this.actionPressed; this.actionPressed = false; return a; }
   clear() { this.jumpPressed = false; this.actionPressed = false; this.lookX = this.lookY = 0; }
+  // the mouse wheel dives and rises too
+  wheel(dy) { this.wheelY = (this.wheelY || 0) + dy; }
 }
