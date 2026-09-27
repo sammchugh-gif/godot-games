@@ -77,12 +77,17 @@ export function cliff(w, x, y, z, sx, sy, sz, o = {}) {
   const mat = M("rock", { args: [o.seed || 61, o.color || [118, 112, 102]], repeat: [Math.max(1, Math.round(sx / 6)), Math.max(1, Math.round(sy / 6))] });
   w.box(sx, sy, sz, mat, x, y, z, { ry: o.ry || 0 });
   if (o.lumps !== false) {
-    const R = rng(o.seed || 61), n = Math.round((sx + sz) / 3);
+    // boulders over the faces (about one to every ten square metres), flattened against the face
+    // so they break up the slab without sticking far out. They have no colliders, so the camera
+    // is told about them (w.camBlocks) to keep it from ending up inside one.
+    const R = rng(o.seed || 61), n = Math.min(70, Math.round((sx + sz) * sy / 10));
     for (let i = 0; i < n; i++) {
       const side = R() < 0.5 ? -1 : 1, alongX = R() < sx / (sx + sz);
       const px = alongX ? x + (R() - 0.5) * sx : x + side * sx / 2, pz = alongX ? z + side * sz / 2 : z + (R() - 0.5) * sz;
       const r = 1 + R() * 2.2, py = y - sy / 2 + R() * sy;
-      const m = w.mesh(new THREE.DodecahedronGeometry(r, 0), mat, px, py, pz, { cast: false }); m.rotation.set(R() * 3, R() * 3, R() * 3);
+      const m = w.mesh(new THREE.DodecahedronGeometry(r, 0), mat, px, py, pz, { cast: false });
+      if (alongX) { m.rotation.set(0, 0, R() * 3); m.scale.set(1, 1, 0.45); } else { m.rotation.set(R() * 3, 0, 0); m.scale.set(0.45, 1, 1); }
+      (w.camBlocks || (w.camBlocks = [])).push([px, py, pz, r * 0.9]);
     }
   }
 }

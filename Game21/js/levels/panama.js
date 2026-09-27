@@ -77,6 +77,17 @@ export function buildPanama(w) {
   for (const [ix, iz, r] of islands) for (let k = 0; k < Math.round(r * 0.8); k++) { const a = k * 2.4, d = (k % 3) / 3 * r * 0.5, x = ix + Math.cos(a) * d, z = iz + Math.sin(a) * d; if (h(x, z) > 1) w.palm(x, z, 7 + (k % 3)); }
   // rainforest on the hills round the locks
   for (let k = 0; k < 90; k++) { const a = k * 2.399, r = 70 + (k % 9) * 14, x = Math.cos(a) * r * 1.6, z = Math.sin(a) * r; if (Math.abs(z) < 30 && x > -70 && x < 100) continue; const y = h(x, z); if (y < 2) continue; w.tree(x, z, 12 + (k % 5) * 2.5, { y, color: [0x2a7a3a, 0x3a8a2a, 0x2a6a34][k % 3], collide: false }); }
+  // and nearer in, a belt of it south of the locks and along the north edge, with palms among the
+  // trees, so the locks sit in the green and not on a lawn (clear of the house, its yard and the
+  // gate machinery, where the missions are)
+  const RR = (i, s) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
+  for (let k = 0; k < 80; k++) {
+    const south = k % 3 !== 0, x = -60 + RR(k, 1) * 150, z = south ? -(19 + RR(k, 2) * 40) : 50 + RR(k, 2) * 12;
+    if (x > 88) continue;
+    const y = h(x, z); if (y < 2) continue;
+    if (k % 4 === 0) w.palm(x, z, 7 + RR(k, 3) * 3, { y });
+    else w.tree(x, z, 9 + RR(k, 3) * 6, { y, color: [0x2a7a3a, 0x3a8a2a, 0x2a6a34, 0x4a8a30][k % 4] });
+  }
   school(w, 170, -3, 0, 40, 5, 0xe8c83a);
   roam(w, "turtle", { cx: 150, cz: -10, rx: 20, rz: 12, y: -1.5, dy: 0.3, period: 60, scale: 4 });
   w.floorY = -30;
@@ -90,7 +101,7 @@ export function buildPanama(w) {
     pan6: { rings: [[-30, 26, 60, 2.2], [0, 30, 80, 2.2], [40, 28, 90, 2.2], [80, 32, 75, 2.2], [110, 30, 55, 2.2], [120, 26, 25, 2.2]], ceiling: 60 },
   };
   return {
-    spawn: [15, TOP, 34], yaw: Math.PI, bolt: [17, TOP, 34], contact: [10, TOP, 30, Math.PI],
+    spawn: [34, TOP, 36], yaw: Math.atan2(-34, -31), bolt: [36.5, TOP, 34.5], contact: [29, TOP, 33, Math.atan2(5, 3)],
     at: { pan1: [15, 17.5], pan2: [-30, 10.5], pan3: [15, 42], pan4: [-48, 26], pan5: [100, 12], pan6: [-30, 40] },
   };
 }

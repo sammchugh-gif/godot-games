@@ -184,10 +184,18 @@ export class Player {
     let dist = this.camDist;
     const hit = this.world.phys.ray({ x: look.x, y: look.y, z: look.z }, { x: dir.x, y: dir.y, z: dir.z }, dist, this.walker.col, seeThrough);
     if (hit !== null) dist = Math.max(0.8, hit - 0.25);
+    // boulders on the cliffs are only for looking at (no colliders): don't put the camera in one
+    let inRock = false;
+    for (const [bx, by, bz, br] of this.world.camBlocks || []) {
+      const ox = look.x - bx, oy = look.y - by, oz = look.z - bz, b = ox * dir.x + oy * dir.y + oz * dir.z, c = ox * ox + oy * oy + oz * oz - br * br, disc = b * b - c;
+      if (disc < 0) continue;
+      const t = -b - Math.sqrt(disc);
+      if (t > 0 && t < dist) { dist = Math.max(0.8, t - 0.3); inRock = true; }
+    }
     const want = look.clone().addScaledVector(dir, dist);
     if (this.snapCam) { this.camPos.copy(want); this.camLook.copy(look); this.snapCam = false; }
     const k = 1 - Math.exp(-dt * 10);
-    this.camPos.lerp(want, hit !== null ? 1 : k);
+    this.camPos.lerp(want, hit !== null || inRock ? 1 : k);
     this.camLook.lerp(look, 1 - Math.exp(-dt * 14));
     if (this.camOverride) return;
     camera.position.copy(this.camPos);

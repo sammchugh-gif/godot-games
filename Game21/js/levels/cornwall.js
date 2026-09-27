@@ -112,6 +112,12 @@ export function buildCornwall(w) {
   cliff(w, -114, -9, -17.5, 18, 12, 3, { ...rc, lumps: false, seed: 74 });
   cliff(w, -114, -9, 7.5, 18, 12, 3, { ...rc, lumps: false, seed: 75 });
   cliff(w, -124, -9, -5, 3, 12, 22, { ...rc, lumps: false, seed: 76 });
+  // the dark inside the mouth, seen from the beach (one-sided, so from inside it isn't there)
+  { const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 40, 4, 32, 40, 40);
+    gr.addColorStop(0, "rgba(6,8,10,0.85)"); gr.addColorStop(0.6, "rgba(8,10,12,0.6)"); gr.addColorStop(1, "rgba(10,12,14,0.25)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const veil = w.mesh(new THREE.PlaneGeometry(6, 5), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }), -70.5, 2, -5, { ry: Math.PI / 2, cast: false, collide: false });
+    veil.userData.dynamic = true; veil.renderOrder = 2; }
   // the ledge inside the cave mouth, with rock steps down into the pool
   w.steps(8, 3, 0.34, 0.5, M("stone", { args: [44, [120, 114, 104]] }), -82, -3.2, -5, Math.PI / 2);
   // the pump, and a lantern or two in the cave
