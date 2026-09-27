@@ -700,7 +700,8 @@ G.debug = {
       for (const k of d.marks || []) solid(k[0], k[1], k[2], `${m.id} marker`);
       if (d.sub) solid(d.sub[0], d.sub[1], d.sub[2], `${m.id} sub`);
       if (d.exit) solid(d.exit[0], d.exit[1] + 0.7, d.exit[2], `${m.id} exit`);
-      if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
+      // (a road on the ground is [x, z]; a route through the water, [x, y, z])
+      if (d.path) for (const p of d.path) { if (p.length >= 3) { solid(p[0], p[1], p[2], `${m.id} route`); continue; } const [x, z] = p, y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
       // Drips stand on the terrain wherever they walk, whatever height they're listed at
       if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);
       if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (d.start ? d.start[1] : 0) + 0.7, z, `${m.id} guard path`);
