@@ -151,9 +151,10 @@ export class Craft {
       const vy = frozen ? 0 : input.jumpHeld ? 3.5 : input.diveHeld ? -3.5 : 0;
       this.vel.y += (vy - this.vel.y) * Math.min(1, dt * 3);
     }
-    // (a current carries the sub along too)
-    const cur = !L.surface && this.world.currents ? this.world.currentAt(this.pos.x, this.pos.y, this.pos.z) : null;
-    const want = { x: (this.vel.x + (cur ? cur.x : 0)) * dt, y: (this.vel.y + (cur ? cur.y : 0)) * dt, z: (this.vel.z + (cur ? cur.z : 0)) * dt };
+    // (a current carries the sub along too, but half as much as a swimmer: her engine can push
+    // slowly across one, or even up it)
+    const cur = !L.surface && this.world.currents ? this.world.currentAt(this.pos.x, this.pos.y, this.pos.z) : null, ck = 0.5;
+    const want = { x: (this.vel.x + (cur ? cur.x * ck : 0)) * dt, y: (this.vel.y + (cur ? cur.y * ck : 0)) * dt, z: (this.vel.z + (cur ? cur.z * ck : 0)) * dt };
     this.cc.computeColliderMovement(this.col, want, R.QueryFilterFlags.EXCLUDE_SENSORS, undefined, this.pass);
     const m = this.cc.computedMovement();
     const lost = Math.hypot(want.x - m.x, want.z - m.z);
