@@ -15,7 +15,7 @@ import { Portraits } from "./portraits.js";
 import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "./ui.js";
 import { makeBeacon, animateBeacon, makeArrow, makeStarfish } from "./props.js";
 import { makeMission } from "./kinds.js";
-import { Craft } from "./craft.js";
+import { Craft, subModel } from "./craft.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
 import { Travel } from "./globe.js";
 import { buildPen } from "./levels/pen.js";
@@ -26,10 +26,12 @@ import { buildGalapagos } from "./levels/galapagos.js";
 import { buildHawaii } from "./levels/hawaii.js";
 import { buildReef } from "./levels/reef.js";
 import { buildHongKong } from "./levels/hongkong.js";
+import { buildMaldives } from "./levels/maldives.js";
+import { buildBermuda } from "./levels/bermuda.js";
 import { buildCove } from "./levels/cove.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
-const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong };
+const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
@@ -216,14 +218,21 @@ function showTitle() {
     clearLayer("title");
     startPlace();
   });
-  Audio.mood("calm");
+  setMood("calm");
 }
 // the title camera circles Rory and BOLT
 function titleCamera(dt) {
   const p = G.player.pos, cam = G.engine.camera, a = Math.sin(G.t * 0.1) * 0.6;
   const yaw = G.player.yaw + a;
-  cam.position.set(p.x + Math.sin(yaw) * 4.6 + 0.8, p.y + 1.1, p.z + Math.cos(yaw) * 4.6);
-  cam.lookAt(p.x + 0.8, p.y + 1.25, p.z);
+  // (framed on the middle of the three: BOLT, Rory, and TORPEDO hovering on his other side)
+  const rx = -Math.cos(G.player.yaw), rz = Math.sin(G.player.yaw), mx = p.x - rx * 0.5, mz = p.z - rz * 0.5;
+  cam.position.set(mx + Math.sin(yaw) * 5.6, p.y + 1.3, mz + Math.cos(yaw) * 5.6);
+  cam.lookAt(mx, p.y + 1.2, mz);
+  if (!G.titleSub) { G.titleSub = subModel(); G.world.scene.add(G.titleSub); }
+  const ts = G.titleSub, fx = Math.sin(G.player.yaw), fz = Math.cos(G.player.yaw);
+  ts.position.set(p.x - rx * 2.4 - fx * 1.4, p.y + 1.1 + Math.sin(G.t * 1.6) * 0.12, p.z - rz * 2.4 - fz * 1.4);
+  for (const b of Object.values(G.beacons)) b.visible = false;
+  ts.rotation.set(Math.sin(G.t * 1.1) * 0.06, G.player.yaw - 0.5 + Math.sin(G.t * 0.4) * 0.15, Math.sin(G.t * 1.3) * 0.08);
   // BOLT stands beside Rory for the photo
   G.bolt.pos.set(p.x + Math.cos(G.player.yaw) * -1.3, p.y, p.z - Math.sin(G.player.yaw) * -1.3); G.bolt.root.rotation.y = G.player.yaw;
   G.world.followShadow(p);
@@ -236,12 +245,13 @@ function titleCamera(dt) {
 // ------------------------------------------------------------ playing a place
 function startPlace() {
   const place = G.place;
+  if (G.titleSub) { G.titleSub.removeFromParent(); G.titleSub = null; }
   G.state = "explore";
   G.hud.show({ onPause: pause });
   setTouch(true);
   G.hud.set({ cells: G.save.cells, bolts: (G.save.bolts || []).length });
   G.jumpBtn.textContent = G.world.jetpack ? "JET" : "JUMP";
-  Audio.mood(place.ch === 3 ? "space" : "theme");
+  setMood(place.ch === 3 ? "space" : "theme");
   G.player.snapCam = true;
   if (!G.save.arrived[place.id]) {
     banner(place.country.toUpperCase(), place.name);
@@ -268,7 +278,7 @@ function beginMission(def) {
     G.mission.start();
     refreshBeacons();
     banner(`MISSION ${missionNumber(def)}`, def.title);
-    Audio.mood(def.kind === "chase" ? "chase" : "tense");
+    setMood(def.kind === "chase" ? "chase" : "tense");
     G.state = "mission";
     G.input.clear();
   });
@@ -280,7 +290,7 @@ G.onMissionWin = m => {
   if (G.levelInfo && G.levelInfo.apply) G.levelInfo.apply(G.save);
   G.save.stars[def.id] = Math.max(G.save.stars[def.id] || 0, stars);
   saveGame();
-  sound("win"); Audio.mood(G.place.ch === 3 ? "space" : "theme");
+  sound("win"); setMood(G.place.ch === 3 ? "space" : "theme");
   G.hud.set({ timer: null });
   G.bolt.play("Dance");
   const s = screen("result", `<div class="card"><div class="title-sub" style="letter-spacing:.3em">MISSION COMPLETE</div>
@@ -315,7 +325,7 @@ G.onMissionLose = (m, why) => {
     const def = m.def; m.cleanup(); G.mission = null;
     resetPlayer();
     if (b.dataset.a === "retry") { G.mission = makeMission(G, def, G.world.missionData[def.id]); G.mission.start(); G.state = "mission"; banner("TRY AGAIN", def.title, 1.6); }
-    else { G.state = "explore"; refreshBeacons(); updateObjective(); Audio.mood("theme"); }
+    else { G.state = "explore"; refreshBeacons(); updateObjective(); setMood("theme"); }
   });
 };
 function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); }
@@ -329,7 +339,7 @@ function nextPlace() {
   if (G.mission) { G.mission.cleanup(); G.mission = null; }
   screen("travel", `<div class="banner" style="top:9%"><div class="t1">NEXT STOP · ${nxt.country.toUpperCase()}</div><div class="t2">${nxt.name}</div></div>`, "screen");
   document.querySelector('[data-layer="travel"]').style.pointerEvents = "none";
-  Audio.mood("calm"); sound("whoosh");
+  setMood("calm"); sound("whoosh");
   const chapterChange = nxt.ch !== G.place.ch;
   G.travel.play(G.place, nxt, PLACES, () => {
     clearLayer("travel");
@@ -368,7 +378,7 @@ function replay(id) {
 function theEnd() {
   G.state = "end"; G.hud.hide(); setTouch(false); G.input.forced = null;
   G.save.finished = true; saveGame();
-  Audio.mood("theme"); sound("win");
+  setMood("theme"); sound("win");
   const act = G.place.ch, last = act >= 3;
   const stars = ALL.reduce((n, m) => n + (G.save.stars[m.id] || 0), 0);
   const s = screen("end", `<div class="title-sub" style="letter-spacing:.5em">${last ? "MISSION COMPLETE" : `END OF ACT ${["ONE", "TWO", "THREE"][act - 1]}`}</div>
@@ -425,6 +435,13 @@ G.unpilot = (x, y, z) => {
 
 // ------------------------------------------------------------ the loop
 function sound(n) { Audio.play(n); }
+// the music for what's happening; under the water (for more than a moment) it turns slow and glassy
+function setMood(m) { G.baseMood = m; G.underT = 0; Audio.mood(m); }
+function underwaterMusic(dt) {
+  const base = G.baseMood || "theme", under = G.player && G.player.headUnder && (base === "theme" || base === "tense");
+  G.underT = under ? Math.min(2, (G.underT || 0) + dt) : Math.max(0, (G.underT || 0) - dt);
+  if (G.underT >= 1.5) Audio.mood("under"); else if (G.underT <= 0) Audio.mood(base);
+}
 // the sea follows the camera and switches the fog over when it goes under
 function draw() { if (G.drawNow === false) return; if (G.world.sea) G.world.sea.frame(G.engine.camera); G.engine.render(); }
 G.sound = sound;
@@ -509,6 +526,7 @@ function tick(dt) {
   if (G.craft) G.craft.camera(G.engine.camera, dt);
   G.fx.update(dt);
   Audio.duck(Speech.speaking);
+  underwaterMusic(dt);
   swimUI();
   drawTouch();
   draw();

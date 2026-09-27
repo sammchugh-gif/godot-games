@@ -52,7 +52,8 @@ export function buildFundy(w) {
   w.building(5, 3, 4, -30, 22, { y: h(-30, 22) - 0.2, wall: [236, 232, 220], roof: "pitched", roofColor: [170, 60, 50], seed: 5 });
   w.cyl(0.06, 0.06, 7, M(0x8a939e, { metal: 0.8 }), -27, h(-27, 22) + 3.5, 22, { collide: false });
   w.sign("TIDE GAUGE", 2.4, 0.6, -30, h(-30, 22) + 2.2, 19.95, 0, { bg: "#0c2a3a", fg: "#9fe8ff", glow: 0.5 });
-  const roadPath = [[-70, 30], [-30, 28], [10, 26], [45, 34], [75, 50], [60, 78], [20, 84], [-30, 78], [-72, 62]];
+  // (the road keeps to the fields: it goes round the head of the mill creek, not down into it)
+  const roadPath = [[-70, 30], [-30, 28], [10, 30], [34, 46], [60, 50], [78, 60], [60, 80], [20, 84], [-30, 78], [-72, 62]];
   road(w, roadPath, 7);
   for (let k = 0; k < 26; k++) { const x = -90 + k * 7, z = 100 + (k % 3) * 6; w.pine(x, z, 8 + (k % 4), { y: h(x, z) }); }
   for (let k = 0; k < 10; k++) { const x = -60 + k * 11, z = 50 + (k % 2) * 10; w.tree(x, z, 5 + (k % 3), { y: h(x, z) }); }

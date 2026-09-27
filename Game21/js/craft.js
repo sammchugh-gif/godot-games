@@ -12,6 +12,7 @@ const LOOKS = {
   jetski: { r: 0.8, speed: 13, boost: 17, accel: 2.2, turn: 2.2, surface: true },
   boat:   { r: 1.2, speed: 10, boost: 13, accel: 1.8, turn: 1.6, surface: true },
   board:  { r: 0.6, speed: 8, boost: 8, accel: 3, turn: 1.4, surface: true },
+  seaplane: { r: 1.6, speed: 10, boost: 13, accel: 1.6, turn: 1.2, surface: true },
 };
 
 export class Craft {
@@ -26,7 +27,7 @@ export class Craft {
     this.col = this.phys.world.createCollider(R.ColliderDesc.ball(L.r).setFriction(0), this.body);
     const cc = this.cc = this.phys.world.createCharacterController(0.05);
     cc.setUp({ x: 0, y: 1, z: 0 }); cc.setSlideEnabled(true); cc.setMaxSlopeClimbAngle(Math.PI / 2); cc.setMinSlopeSlideAngle(Math.PI / 2);
-    this.mesh = kind === "sub" ? this.buildSub() : kind === "board" ? this.buildBoard() : this.buildJetski(kind === "boat");
+    this.mesh = kind === "sub" ? this.buildSub() : kind === "board" ? this.buildBoard() : kind === "seaplane" ? this.buildSeaplane() : this.buildJetski(kind === "boat");
     world.scene.add(this.mesh);
     this.bump = 0; this.speed = 0; this.boosting = false;
     this.ignore = new Set();   // colliders it passes through (Rory's own body while he's aboard)
@@ -85,6 +86,26 @@ export class Craft {
     add(new THREE.BoxGeometry(0.7, 0.06, 0.06), trim, 0, 0.62, 0.45);
     this.seat = new THREE.Vector3(0, 0.25 * s, -0.3 * s);
     this.prop = new THREE.Group(); body.add(this.prop);
+    g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
+    return g;
+  }
+  // a little floatplane: a white body on two floats, a high wing, a propeller on the nose
+  buildSeaplane() {
+    const g = new THREE.Group(), body = this.bodyG = new THREE.Group(); g.add(body);
+    const white = new THREE.MeshPhysicalMaterial({ color: 0xf4f4f8, roughness: 0.3, clearcoat: 1 }), red = new THREE.MeshStandardMaterial({ color: 0xd83a3a, roughness: 0.4 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.5, metalness: 0.5 }), glass = new THREE.MeshStandardMaterial({ color: 0x3a6a8a, roughness: 0.1, metalness: 0.4 });
+    const add = (geo, m, x, y, z) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); me.castShadow = true; body.add(me); return me; };
+    add(new THREE.CapsuleGeometry(0.55, 3.2, 10, 18), white, 0, 1.5, 0).rotation.x = Math.PI / 2;
+    add(new THREE.BoxGeometry(0.9, 0.5, 1.2), glass, 0, 1.95, 0.8);
+    add(new THREE.BoxGeometry(9, 0.12, 1.3), white, 0, 2.2, 0.4);
+    for (const sx of [-1, 1]) { add(new THREE.BoxGeometry(0.3, 0.12, 1.3), red, sx * 4.35, 2.21, 0.4); add(new THREE.CylinderGeometry(0.04, 0.04, 1.3, 6), dark, sx * 1.4, 1.55, 0.4).rotation.z = sx * 0.6; }
+    add(new THREE.BoxGeometry(0.1, 1.1, 0.9), red, 0, 2.2, -2.1);
+    add(new THREE.BoxGeometry(2.6, 0.08, 0.7), white, 0, 1.7, -2.1);
+    for (const sx of [-1, 1]) { const f = add(new THREE.CapsuleGeometry(0.28, 3.4, 8, 14), white, sx * 1.2, 0.3, 0.2); f.rotation.x = Math.PI / 2; for (const zz of [1, -0.6]) add(new THREE.CylinderGeometry(0.04, 0.04, 1.0, 6), dark, sx * 1.0, 0.85, zz).rotation.z = sx * 0.4; }
+    const prop = this.prop = new THREE.Group(); prop.position.set(0, 1.5, 2.25); body.add(prop);
+    add(new THREE.ConeGeometry(0.2, 0.3, 12), red, 0, 1.5, 2.2).rotation.x = Math.PI / 2;
+    for (let i = 0; i < 2; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 0.04), dark); b.rotation.z = i * Math.PI / 2; prop.add(b); }
+    this.seat = new THREE.Vector3(0, 1.3, 0.7);
     g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
     return g;
   }

@@ -235,7 +235,11 @@ export class Roundup extends Mission {
     for (let i = 0; i < this.need; i++) {
       const s = spots[i % Math.max(1, spots.length)] || [this.area[0] + i * 2, 0, this.area[1]];
       const r = new Robot(d.robot || "drip", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
-      this.bots.push({ r, state: "walk", goal: this.pickGoal(), t: 0, bubble: null, speed: 1.2 + this.lv * 0.5 });
+      // (on jetties each Drip keeps to its own lane: a walkway from (x0, z0) to (x1, z1) at height y)
+      const lane = d.lanes ? d.lanes[i % d.lanes.length] : null;
+      if (lane) { const t = (i * 0.37) % 1; r.root.position.set(lane[0] + (lane[2] - lane[0]) * t, lane[4], lane[1] + (lane[3] - lane[1]) * t); }
+      const b = { r, state: "walk", goal: null, t: 0, bubble: null, speed: 1.2 + this.lv * 0.5, lane };
+      b.goal = this.pickGoal(b); this.bots.push(b);
     }
     // Drips in costume (an iguana riding on the back of each one), and real animals wandering among
     // them that mustn't be bubbled
@@ -245,8 +249,10 @@ export class Roundup extends Mission {
     this.shots = [];
   }
   // how high a walking bot is: on the ground
-  botY(b) { return this.w.heightAt ? this.w.heightAt(b.r.pos.x, b.r.pos.z) : b.r.pos.y; }
-  pickGoal() { const [x, z, r] = this.area, a = Math.random() * Math.PI * 2, d = Math.random() * r; return [x + Math.cos(a) * d, z + Math.sin(a) * d]; }
+  botY(b) { return b.lane ? b.lane[4] : this.w.heightAt ? this.w.heightAt(b.r.pos.x, b.r.pos.z) : b.r.pos.y; }
+  pickGoal(b) {
+    if (b && b.lane) { const L = b.lane, t = Math.random(); return [L[0] + (L[2] - L[0]) * t, L[1] + (L[3] - L[1]) * t]; }
+    const [x, z, r] = this.area, a = Math.random() * Math.PI * 2, d = Math.random() * r; return [x + Math.cos(a) * d, z + Math.sin(a) * d]; }
   update(dt) {
     const pp = this.p.pos;
     this.cool -= dt;
@@ -255,9 +261,10 @@ export class Roundup extends Mission {
       if (b.state === "walk") {
         const dx = b.r.pos.x - pp.x, dz = b.r.pos.z - pp.z, dp = Math.hypot(dx, dz);
         // on harder levels the bots run away when Rory gets close
-        if (this.lv >= 2 && dp < 5) { const [x, z] = [b.r.pos.x + dx / dp * 4, b.r.pos.z + dz / dp * 4]; const [ax, az, ar] = this.area; const k = Math.hypot(x - ax, z - az) > ar ? 0.3 : 1; b.goal = [ax + (x - ax) * k, az + (z - az) * k]; b.r.play("Running"); b.speed = 2.2 + this.lv * 0.6; }
+        if (this.lv >= 2 && dp < 5 && b.lane) { const L = b.lane, e = Math.hypot(L[0] - pp.x, L[1] - pp.z) > Math.hypot(L[2] - pp.x, L[3] - pp.z) ? [L[0], L[1]] : [L[2], L[3]]; b.goal = e; b.r.play("Running"); b.speed = 2.2 + this.lv * 0.6; }
+        else if (this.lv >= 2 && dp < 5) { const [x, z] = [b.r.pos.x + dx / dp * 4, b.r.pos.z + dz / dp * 4]; const [ax, az, ar] = this.area; const k = Math.hypot(x - ax, z - az) > ar ? 0.3 : 1; b.goal = [ax + (x - ax) * k, az + (z - az) * k]; b.r.play("Running"); b.speed = 2.2 + this.lv * 0.6; }
         else { b.r.play("Walking"); b.speed = 1.2 + this.lv * 0.4; }
-        if (b.r.walkTo(b.goal[0], b.goal[1], b.speed, dt) < 0.3) b.goal = this.pickGoal();
+        if (b.r.walkTo(b.goal[0], b.goal[1], b.speed, dt) < 0.3) b.goal = this.pickGoal(b);
         b.r.pos.y = this.botY(b);
       } else if (b.state === "float") {
         b.t += dt; b.r.pos.y += dt * (1.5 + b.t); b.bubble.position.copy(b.r.pos); b.bubble.position.y += 0.65;
@@ -959,11 +966,33 @@ export class Boss extends Mission {
     this.add(this.bat);
     this.state = "walk"; this.st = 0; this.cool = 0; this.inv = 0; this.rings = [];
     this.speed = 2.2 + this.lv * 0.4;
+    // a robot squid has eight arms, each a chain of joints that curl and wave
+    if (d.arms) {
+      const mat = new THREE.MeshStandardMaterial({ color: 0x5a2a8a, roughness: 0.5, metalness: 0.3 }), sucker = new THREE.MeshStandardMaterial({ color: 0x2ac8c0, emissive: 0x2ac8c0, emissiveIntensity: 0.6 });
+      const s = (d.height || 6) / 6;
+      this.arms = [];
+      for (let i = 0; i < 8; i++) {
+        let parent = new THREE.Group(); parent.position.set(0, 0.2, 0); parent.rotation.y = i / 8 * Math.PI * 2; b.root.add(parent);
+        const joints = [];
+        for (let k = 0; k < 6; k++) {
+          const r = (0.32 - k * 0.045) * s, j = new THREE.Group(); j.position.z = k ? 0.55 * s : 0.5 * s; parent.add(j);
+          const seg = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), mat); seg.scale.z = 1.6; seg.castShadow = true; j.add(seg);
+          const dot = new THREE.Mesh(new THREE.SphereGeometry(r * 0.35, 6, 4), sucker); dot.position.y = -r * 0.8; j.add(dot);
+          joints.push(j); parent = j;
+        }
+        this.arms.push(joints);
+      }
+    }
     // Professor Zero rides the last one, in a glass bubble on its head
     if (d.rider) {
       const rig = this.rider = makePerson(CHARS[d.rider].look); this.add(rig.root);
       this.riderDome = this.add(new THREE.Mesh(new THREE.SphereGeometry(1.3, 24, 16), new THREE.MeshPhysicalMaterial({ color: 0xdff4ff, transparent: true, opacity: 0.25, roughness: 0.05, clearcoat: 1, depthWrite: false })));
     }
+  }
+  // the ground under the robot: a deck or the terrain, near the arena's height
+  floorAt(x, z) {
+    const h = this.w.phys.ray({ x, y: this.c.y + 3, z }, { x: 0, y: -1, z: 0 }, 8, this.p.walker.col);
+    return h !== null ? this.c.y + 3 - h : this.w.heightAt ? this.w.heightAt(x, z) : this.c.y;
   }
   placeRider(dt) {
     if (!this.rider) return;
@@ -977,7 +1006,8 @@ export class Boss extends Mission {
     const b = this.b, pp = this.p.pos;
     b.update(dt); this.st += dt; this.cool -= dt; this.inv -= dt;
     this.placeRider(dt);
-    if (this.w.heightAt && this.state !== "gone") b.pos.y = this.w.heightAt(b.pos.x, b.pos.z);
+    if (this.state !== "gone") b.pos.y = this.floorAt(b.pos.x, b.pos.z);
+    if (this.arms) this.arms.forEach((arm, i) => arm.forEach((j, k) => { j.rotation.x = 0.5 + Math.sin(this.t * 3 + i + k * 0.6) * 0.25 * (this.state === "stuck" ? 0.3 : 1); j.rotation.z = Math.cos(this.t * 2.2 + i * 1.3 + k) * 0.15; }));
     const dx = pp.x - b.pos.x, dz = pp.z - b.pos.z, d = Math.hypot(dx, dz);
     if (this.state === "walk") {
       b.play("Walking");

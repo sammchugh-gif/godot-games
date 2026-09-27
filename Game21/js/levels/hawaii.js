@@ -58,14 +58,20 @@ export function buildHawaii(w) {
 
   // ---- the lava coast: spatter cones, rocks and steam vents between the flows
   const cone = M("lava", { args: [22, [58, 52, 50]], repeat: [2, 2] });
-  const cones = [[-10, 10, 2.2, 1.6], [-13, 16, 3.6, 1.5], [-9, 21, 5, 1.6], [-14, 26, 6.4, 1.5], [-24, 12, 1.8, 1.7], [-26, 18, 3.2, 1.5], [-28, 24, 4.6, 1.5], [-40, 16, 2.4, 1.8], [-42, 22, 3.8, 1.6]];
-  const ctops = cones.map(([x, z, ht, r]) => {
-    const gy = h(x, z), top = gy + ht;
-    w.mesh(new THREE.CylinderGeometry(r, r * 1.5, ht + 1, 9), cone, x, top - (ht + 1) / 2, z);
-    w.phys.fixedCyl(x, top - (ht + 1) / 2, z, r, (ht + 1) / 2);
-    return [x, top, z];
+  // three chains of spatter cones, each a staircase of tops (a step up and a hop across each time),
+  // given as [x, z, the top's height]; a cone is never shorter than half a metre
+  const chains = [
+    [[-8, 8, 2.6], [-10.5, 11, 3.9], [-9, 14.5, 5.2], [-11.5, 17.5, 6.4], [-9.5, 21, 7.6]],
+    [[-23, 8, 3.2], [-25.5, 11, 4.5], [-23.5, 14.5, 5.8], [-26, 17.5, 7.0], [-24, 21, 8.2], [-26.5, 24, 9.4]],
+    [[-39, 13, 4.4], [-41.5, 16, 5.6], [-39.5, 19.5, 6.8]],
+  ];
+  const ctops = chains.flat().map(([x, z, top]) => {
+    const gy = h(x, z), ht = Math.max(0.5, top - gy), t = gy + ht, r = 1.3;
+    w.mesh(new THREE.CylinderGeometry(r, r * 1.5, ht + 1, 9), cone, x, t - (ht + 1) / 2, z);
+    w.phys.fixedCyl(x, t - (ht + 1) / 2, z, r, (ht + 1) / 2);
+    return [x, t, z];
   });
-  const vents = [[-6, 16, 17], [-22, 30, 17], [-38, 10, 16]];
+  const vents = [[-6, 16, 17], [-22, 30, 17], [-38, 10, 17]];
   for (const [x, z, p] of vents) w.pad(x, h(x, z), z, p, 0xf0f0f0);
   w.updaters.push(() => { if (w.fx) for (const [x, z] of vents) if (Math.random() < 0.3) w.fx.puff(x + (Math.random() - 0.5), h(x, z) + 0.5, z + (Math.random() - 0.5), 0xf0f4f4, 1); });
   const highs = [[-7, 20.5, 8], [-23, 34.5, 8.2], [-40.5, 7, 7.4]].map(([x, z, ht]) => {
@@ -135,7 +141,7 @@ export function buildHawaii(w) {
   const surfPearls = []; for (let k = 0; k < 12; k++) surfPearls.push([54 + Math.sin(k * 0.9) * 7, -62 + k * 4.6]);
   w.missionData = {
     haw1: { start: [54, 0, -70, 0], speed: 8, pearls: surfPearls, beach: 64, spare: 2, exit: [50, h(50, 8), 8] },
-    haw2: { cells: [on(C[1]), on(C[3]), on(C[5]), on(C[6]), on(C[8]), on(Hh[0]), on(Hh[1]), on(Hh[2])] },
+    haw2: { cells: [on(C[2]), on(C[4]), on(C[7]), on(C[10]), on(C[13]), on(Hh[0]), on(Hh[1]), on(Hh[2])] },
     haw3: { start: [TUBE.x1 - 1.5, TUBE.y, TUBE.z], goal: [TUBE.x0 + 3, TUBE.y, TUBE.z], width: 5.8 },
     haw4: { cells: [[22, h(22, -24) + 1, -24], [36, h(36, -46) + 1, -46], [48, h(48, -20) + 1, -20], [62, h(62, -34) + 1, -34], [70, h(70, -50) + 1, -50], [30, -2.5, -34], [52, h(52, -52) + 1, -52]], floor: -12 },
     haw5: { ride: "jetski", exit: [-36, 1.4, -5], path: [[-40, -12], [-75, -8], [-110, -4], [-140, -10], [-150, -30], [-120, -44], [-80, -40], [-50, -38], [-30, -26]] },
