@@ -135,6 +135,7 @@ export const swimMixin = {
     const path = this.drivePath;
     if (path) { while (this.driveI < path.length - 1 && Math.hypot(path[this.driveI][0] - c[0], path[this.driveI][1] - c[1], path[this.driveI][2] - c[2]) < 2) this.driveI++; tgt = path[Math.min(this.driveI, path.length - 1)]; }
     const dx = tgt[0] - c[0], dy = tgt[1] - c[1], dz = tgt[2] - c[2], dh = Math.hypot(dx, dz), d = Math.hypot(dx, dy, dz);
+    this.driveTgt = tgt;
     cr.camYaw = Math.atan2(-dx, -dz);
     // turn on the spot before going (a sub can't go sideways), and ease in to the end
     let face = Math.atan2(dx, dz) - cr.yaw; face = Math.abs(Math.atan2(Math.sin(face), Math.cos(face)));
@@ -193,7 +194,7 @@ class Piloted extends Mission {
     super.cleanup();
   }
   post() { if (this.craft && this.craft.rig === null && this.g.craft === this.craft) { /* already aboard */ } }
-  debugState() { const f = v => +v.toFixed(1), c = this.craft, t = this.target && this.target(); return c ? { p: c.pos.toArray().map(f), yaw: f(c.yaw || 0), v: f(c.vel.length()), to: t ? [f(t.x), f(t.y), f(t.z)] : null, route: this.drivePath ? [this.drivePath.length, this.driveI] : this.drivePath === null ? "none" : undefined } : {}; }
+  debugState() { const f = v => +v.toFixed(1), c = this.craft, t = this.target && this.target(); return c ? { p: c.pos.toArray().map(f), yaw: f(c.yaw || 0), v: f(c.vel.length()), to: t ? [f(t.x), f(t.y), f(t.z)] : null, tgt: this.driveTgt ? this.driveTgt.map(f) : null, gnd: this.w.groundAt ? f(this.w.groundAt(c.pos.x, c.pos.z)) : null, inp: this.g.input.forced, route: this.drivePath ? [this.drivePath.length, this.driveI] : this.drivePath === null ? "none" : undefined } : {}; }
 }
 Object.assign(Piloted.prototype, swimMixin);
 
