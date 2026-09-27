@@ -174,6 +174,14 @@ export class Sea {
     const m = this.mesh = new THREE.Mesh(geo, mat);
     m.position.set(o.x ?? 0, 0, o.z ?? 0); m.frustumCulled = false; m.userData.dynamic = true; m.renderOrder = 1;
     world.scene.add(m);
+    // out past its edge to the horizon, a frame of the same sea (plain: only the fog sees it), so the
+    // sky's pale bottom doesn't show as a band under the horizon
+    { const S = size / 2, F = 2800, mid = S + (F - S) / 2;
+      for (const [fw, fd, cx, cz] of [[2 * F, F - S, 0, -mid], [2 * F, F - S, 0, mid], [F - S, 2 * S, -mid, 0], [F - S, 2 * S, mid, 0]]) {
+        const g = new THREE.PlaneGeometry(fw, fd, 6, 3); g.rotateX(-Math.PI / 2);
+        const f = new THREE.Mesh(g, mat); f.position.set(m.position.x + cx, -0.02, m.position.z + cz); f.userData.off = [cx, cz];
+        f.frustumCulled = false; f.userData.dynamic = true; f.renderOrder = 1; world.scene.add(f); (this.skirt || (this.skirt = [])).push(f);
+      } }
     this.grid = size / seg;
     // light shafts and drifting specks, seen only from under the water
     this.rays = this.makeRays(); this.specks = this.makeSpecks();
@@ -248,6 +256,7 @@ export class Sea {
     u.uT.value = t; SEA.uSea.value.z = t;
     // keep the wave grid under the camera, snapped to the grid so the waves don't slide
     this.mesh.position.x = Math.round(cam.position.x / this.grid) * this.grid; this.mesh.position.z = Math.round(cam.position.z / this.grid) * this.grid;
+    for (const f of this.skirt || []) f.position.set(this.mesh.position.x + f.userData.off[0], -0.02, this.mesh.position.z + f.userData.off[1]);
     const depth = this.height(cam.position.x, cam.position.z) - cam.position.y;
     const under = depth > 0.02; this.camDepth = depth;
     if (under !== this.isUnder) {
