@@ -168,6 +168,8 @@ export class Craft {
       if (L.surface) this.pos.y = h + 0.05;
       else if (this.pos.y > h - 0.55) { this.pos.y = h - 0.55; this.vel.y = Math.min(0, this.vel.y); }
     }
+    // (never into the sea bed: driven hard down a steep canyon wall she could slip into the ground)
+    if (!L.surface && this.world.groundAt) { const gy = this.world.groundAt(this.pos.x, this.pos.z) + L.r * 0.9; if (this.pos.y < gy) { this.pos.y = gy; this.vel.y = Math.max(0, this.vel.y); } }
     this.body.setNextKinematicTranslation({ x: this.pos.x, y: this.pos.y, z: this.pos.z });
     this.speed = Math.hypot(this.vel.x, this.vel.z);
     this.pose(dt, sea);

@@ -14,10 +14,11 @@ import { toast } from "./ui.js";
 
 const v3 = a => new THREE.Vector3(a[0], a[1], a[2]);
 const ringMesh = (r, color = 0xffd166) => new THREE.Mesh(new THREE.TorusGeometry(r, 0.14, 12, 48), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.5, roughness: 0.3 }));
-// the box a route has to stay in: round every point given, and down to the sea floor
+// the box a route has to stay in: round every point given, down to the sea floor, and high enough
+// to go up and over a ridge between them (a canyon's rim)
 function boxAround(pts, pad = 10, floor = -40, top = 0) {
   const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), zs = pts.map(p => p[2]);
-  return [Math.min(...xs) - pad, Math.max(floor, Math.min(...ys) - pad), Math.min(...zs) - pad, Math.max(...xs) + pad, Math.min(top, Math.max(...ys) + 4), Math.max(...zs) + pad];
+  return [Math.min(...xs) - pad, Math.max(floor, Math.min(...ys) - pad), Math.min(...zs) - pad, Math.max(...xs) + pad, Math.min(top, Math.max(...ys) + 12), Math.max(...zs) + pad];
 }
 
 // ------------------------------------------------------------ helpers the underwater autopilots share

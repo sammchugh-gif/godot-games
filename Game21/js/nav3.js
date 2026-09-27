@@ -66,7 +66,7 @@ export class Nav3 {
     while (heap.length) {
       const k = pop(); if (shut[k]) continue; shut[k] = 1;
       if (k === e) { found = true; break; }
-      if (++count > 150000) break;
+      if (++count > 400000) break;
       const i = k % nx, j = ((k / nx) | 0) % ny, l = (k / (nx * ny)) | 0;
       for (let dl = -1; dl <= 1; dl++) for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
         if (!di && !dj && !dl) continue;
