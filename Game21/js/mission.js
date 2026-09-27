@@ -73,9 +73,12 @@ export class Mission {
       this.steer(next.x, next.z, this.nav.top(pp.x + ux * 0.5, pp.z + uz * 0.5, pp.y) < pp.y - 0.4 || d < 1.0);
       return dh;
     }
-    // walking: aim a few squares along, but not past the next jump or pad
-    let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
-    this.steer(path[j].x, path[j].z);
+    // walking: aim a few squares along, but not past the next jump, pad or drop (the way on from
+    // the bottom of a drop can double back underneath, under a pontoon or a ledge)
+    let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
+    // (and walk on past the foot of a drop: it can be only a hand's width beyond the edge)
+    const q = path[j], o = path[j - 1], L = Math.hypot(q.x - o.x, q.z - o.z) || 1, on = q.how === "drop" ? 0.8 / L : 0;
+    this.steer(q.x + (q.x - o.x) * on, q.z + (q.z - o.z) * on);
     return dh;
   }
   // the moving platform (ferry deck, cable car roof) that carries obj

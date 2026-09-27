@@ -412,7 +412,7 @@ export class Escort extends Mission {
     }
   }
   hud() { return { ...super.hud(), text: `Lead them home  ${this.saved}/${this.kids.length}`, progress: this.saved / this.kids.length }; }
-  debugState() { const f = v => +v.toFixed(1); return { p: this.p.pos.toArray().map(f), sw: this.p.swimming, kids: this.kids.map(k => [k.state, ...k.c.position.toArray().map(f)]), path: this.navPath ? this.navPath.length : null }; }
+  debugState() { const f = v => +v.toFixed(1); return { p: this.p.pos.toArray().map(f), sw: this.p.swimming, kids: this.kids.map(k => [k.state, ...k.c.position.toArray().map(f)]), path: this.navPath ? this.navPath.length : null, navI: this.navI, next: this.navPath ? this.navPath.slice(this.navI, this.navI + 3).map(q => [q.how, f(q.x), f(q.h), f(q.z)]) : null, end: this.navPath && this.navPath.length ? [f(this.navPath.at(-1).x), f(this.navPath.at(-1).h), f(this.navPath.at(-1).z)] : null, inp: this.g.input.forced }; }
   target() { const w = this.kids.find(k => k.state === "wait" || k.state === "home"); return this.kids.some(k => k.state === "follow") ? this.goal : w ? w.c.position : this.goal; }
   solve() {
     const following = this.kids.filter(k => k.state === "follow"), waiting = this.kids.filter(k => k.state === "wait").sort((a, b) => a.c.position.distanceTo(this.p.pos) - b.c.position.distanceTo(this.p.pos));
