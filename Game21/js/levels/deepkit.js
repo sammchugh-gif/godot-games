@@ -178,3 +178,68 @@ export function diveBell(w, x, y, z, o = {}) {
   const room = w.dryRoom(x - R, F - 0.3, z - R, x + R, F + WH + R, z + R, { wl: F - 0.3, below: F - 0.3 - y });
   return { F, room, spawn: [x + 2.2, F + 0.1, z + 1.2], hole: [x, z] };
 }
+
+// ------------------------------------------------------------ the vents
+// A black smoker: a knobbly chimney ht metres tall with scalding black water pouring out of its
+// top (a plume that pushes swimmers away) and a warm glow round its foot.
+export function smoker(w, x, y, z, ht = 8, o = {}) {
+  const rock = o.mat || M("rock", { args: [91, [52, 46, 44]], repeat: [2, 4], rough: 0.95 });
+  const segs = Math.max(2, Math.round(ht / 3));
+  for (let i = 0; i < segs; i++) { const r0 = 1.6 - i * 1.0 / segs, r1 = 1.6 - (i + 1) * 1.0 / segs, sh = ht / segs; w.cyl(r1 * 0.9, r0, sh, rock, x + Math.sin(i * 1.7) * 0.15, y + sh * (i + 0.5), z + Math.cos(i * 2.3) * 0.15, { seg: 7 }); }
+  // the smoke: dark specks rising and spreading, recycled
+  const n = 90, pos = new Float32Array(n * 3), st = [];
+  for (let i = 0; i < n; i++) st.push({ t: Math.random() * 6, a: Math.random() * 6.28, s: 0.5 + Math.random() * 0.8 });
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const smoke = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.9, color: 0x18161a, transparent: true, opacity: 0.55, depthWrite: false }));
+  smoke.frustumCulled = false; smoke.userData.dynamic = true; w.scene.add(smoke);
+  const top = y + ht;
+  w.updaters.push(dt => {
+    for (let i = 0; i < n; i++) { const k = st[i]; k.t += dt * k.s; if (k.t > 6) k.t -= 6; const r = 0.3 + k.t * 0.35; pos[i * 3] = x + Math.cos(k.a + k.t * 0.5) * r; pos[i * 3 + 1] = top + k.t * 2.2; pos[i * 3 + 2] = z + Math.sin(k.a + k.t * 0.5) * r; }
+    g.attributes.position.needsUpdate = true;
+  });
+  // the glow of hot rock at the mouth
+  w.mesh(new THREE.TorusGeometry(0.62, 0.14, 8, 18), M(0xff6a1a, { emissive: 0xff5a10, ei: 2.2 }), x, top, z, { rx: Math.PI / 2, cast: false });
+  if (o.light !== false) { const l = new THREE.PointLight(0xff7a2a, 6, 14, 1.5); l.position.set(x, top + 1, z); w.scene.add(l); }
+  return w.plume(x, top, z, 1.3, 13);
+}
+// a clump of giant tube worms: white tubes with red plumes on top
+export function tubeWorms(w, x, y, z, n = 20, spread = 1.6) {
+  const tube = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.07, 0.09, 1, 6), M(0xe8e4d8, { rough: 0.6 }), n);
+  const tip = new THREE.InstancedMesh(new THREE.SphereGeometry(0.13, 8, 6), M(0xd8203a, { rough: 0.5, emissive: 0x6a0a14, ei: 0.6 }), n);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.4, d = Math.sqrt(i / n) * spread, ht = 1.2 + ((i * 7) % 10) / 10 * 1.6, lx = x + Math.cos(a) * d, lz = z + Math.sin(a) * d, lean = (Math.sin(i * 3.1)) * 0.12;
+    q.setFromEuler(e.set(lean, 0, Math.cos(i * 1.7) * 0.12));
+    m4.compose(p.set(lx, y + ht / 2, lz), q, one.set(1, ht, 1)); tube.setMatrixAt(i, m4);
+    m4.compose(p.set(lx + Math.sin(e.z) * -ht * 0.5, y + ht, lz + Math.sin(lean) * ht * 0.5), q, one.set(1, 1.6, 1)); tip.setMatrixAt(i, m4);
+  }
+  tube.userData.dynamic = tip.userData.dynamic = true; w.scene.add(tube); w.scene.add(tip);
+}
+
+// ------------------------------------------------------------ station rooms
+// Walls round the rectangle x0..x1, z0..z1 from its floor at y up ht metres, with doorways (each
+// { side: "n" | "s" | "e" | "w", at, w }: n is the z1 side, e the x1 side; at is where along it)
+// and glass panes (glass: true) or solid panels. Returns nothing; it's all fixed.
+export function walls(w, x0, z0, x1, z1, y, ht, doors = [], o = {}) {
+  const T = 0.25, frame = o.frame || M(0xd8dde4, { metal: 0.7, rough: 0.35 }), solid = o.mat || M(0xc8ccd4, { metal: 0.4, rough: 0.5 });
+  const glass = o.glass ? (o.glassMat || new THREE.MeshPhysicalMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.14, roughness: 0.05, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide })) : null;
+  const DH = o.doorH ?? 2.6;
+  const run = (side, a0, a1, fixed, along) => {
+    const ds = doors.filter(d => d.side === side).sort((p, q) => p.at - q.at);
+    let a = a0;
+    const seg = (s0, s1, yb, yt) => {
+      if (s1 - s0 < 0.05 || yt - yb < 0.05) return;
+      const c = (s0 + s1) / 2, L = s1 - s0, cy = (yb + yt) / 2, hh = yt - yb;
+      const [x, z, sx, sz] = along === "x" ? [c, fixed, L, T] : [fixed, c, T, L];
+      if (glass && yb === y) { const m = w.mesh(new THREE.BoxGeometry(sx, hh, sz), glass, x, cy, z, { cast: false }); m.userData.dynamic = true; w.phys.fixedBox(x, cy, z, sx / 2, hh / 2, sz / 2); }
+      else w.box(sx, hh, sz, solid, x, cy, z);
+    };
+    for (const d of ds) { seg(a, d.at - d.w / 2, y, y + ht); seg(d.at - d.w / 2, d.at + d.w / 2, y + DH, y + ht); a = d.at + d.w / 2; }
+    seg(a, a1, y, y + ht);
+    // frames every few metres, and along the top
+    for (let s = a0; s <= a1 + 0.01; s += o.frameEvery || 3) { const [x, z] = along === "x" ? [s, fixed] : [fixed, s]; w.mesh(new THREE.BoxGeometry(0.14, ht, 0.14), frame, x, y + ht / 2, z, { cast: false }); }
+    const [x, z, sx, sz] = along === "x" ? [(a0 + a1) / 2, fixed, a1 - a0, 0.2] : [fixed, (a0 + a1) / 2, 0.2, a1 - a0];
+    w.mesh(new THREE.BoxGeometry(sx, 0.2, sz), frame, x, y + ht, z, { cast: false });
+  };
+  run("s", x0, x1, z0, "x"); run("n", x0, x1, z1, "x"); run("w", z0, z1, x0, "z"); run("e", z0, z1, x1, "z");
+}

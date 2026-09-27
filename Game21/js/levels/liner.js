@@ -18,7 +18,7 @@ export function buildLiner(w) {
   w.terrain(420, 180, h, M("sand", { args: [11, [120, 124, 120]], repeat: [80, 80] }));
   w.ocean({ level: 300, abyss: { top: 30, bottom: -46, k: [0.5, 0.95] }, under: 0x0e3a5a, deepUnder: 0x010812, see: 40, room: 70 });
   w.deepAt = 80;
-  w.floorY = -80;
+  w.floorY = -80; w.dark = true;
   const hullM = M(0x2a2a2e, { rough: 0.7, metal: 0.3 }), rust = M(0x5a3a2a, { rough: 0.85, metal: 0.2 }), white = M(0xb8b4a8, { rough: 0.7 });
   const deckM = M("wood", { args: [9, [110, 86, 60]], repeat: [4, 10] }), wall = M(0x8a7a64, { rough: 0.7 }), brass = M(0xc8963a, { metal: 0.8, rough: 0.3 });
   // ---- the hull: x -8..8, z -50 (stern)..50 (bow); decks at 0.4 (hold), 4.4 (cabins), 8.4 (ballroom), 12 (main)
@@ -91,7 +91,7 @@ export function buildLiner(w) {
   void pocket;
 
   // ---- aft, flooded: the engine room behind the breach, and Undertow's pipe through it
-  for (const z of [-20, -8, 4]) { w.box(4, 5, 8, M(0x3a3e44, { metal: 0.6, rough: 0.5 }), 2, DK[0] + 2.5, z); w.cyl(0.6, 0.6, 8, rust, 2, DK[0] + 5.6, z, { rz: Math.PI / 2, seg: 10 }); }
+  for (const z of [-20, -8, 4]) { w.box(4, 5, 8, M(0x3a3e44, { metal: 0.6, rough: 0.5 }), 2, DK[0] + 2.5, z); w.cyl(0.6, 0.6, 8, rust, 2, DK[0] + 5.6, z, { rz: Math.PI / 2, seg: 10, collide: false }); }
   w.box(2 * X - T, T, BULK - Z0, rust, 0, DK[0] - T / 2, (BULK + Z0) / 2);
   const panel = [-5.4, DK[0], -6];
   w.box(1.6, 2, 0.4, M(0x2a3a4a, { metal: 0.6 }), panel[0], DK[0] + 1, panel[2] - 1.4);

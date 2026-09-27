@@ -164,6 +164,14 @@ export class Player {
     else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
     else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
     if (this.inCurrent) vy += this.inCurrent.y;
+    // a vent's scalding plume shoves him back out of it
+    const hot = this.world.plumes && this.world.plumeAt(w.pos.x, w.pos.y + 0.7, w.pos.z);
+    if (hot) {
+      const dx = w.pos.x - hot.p.x, dz = w.pos.z - hot.p.z, d = Math.hypot(dx, dz) || 1;
+      w.vel.x = dx / d * 5; w.vel.z = dz / d * 5;
+      if ((this.hotT || 0) <= 0 && this.onScald) this.onScald(); this.hotT = 1.5;
+    }
+    this.hotT = (this.hotT || 0) - dt;
     // in the deep there's no swimming up to the surface: the sea is too deep
     const top = this.world.swimTop;
     if (top !== undefined && w.pos.y > top - 1) vy = Math.min(vy, (top - 1 - w.pos.y) * 2);

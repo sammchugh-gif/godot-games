@@ -279,13 +279,18 @@ export class World {
     this.updaters.push(dt => { glow.scale.setScalar(1 + Math.sin(this.t * 3) * 0.08); if (this.fx && Math.random() < dt * 6) this.fx.bubble(x + (Math.random() - 0.5) * 0.3, y + 1.8, z + (Math.random() - 0.5) * 0.3, y + 6); });
     return v;
   }
+  // a black smoker's plume of scalding water: a column r wide from y up h metres. Swimming into it
+  // pushes Rory back out (see player.js); it doesn't hurt TORPEDO
+  plume(x, y, z, r = 1.2, h = 12) { const p = { x, y, z, r, h }; (this.plumes || (this.plumes = [])).push(p); return p; }
+  plumeAt(x, y, z) { for (const p of this.plumes || []) { const d = Math.hypot(x - p.x, z - p.z); if (d < p.r && y > p.y - 0.5 && y < p.y + p.h) return { p, d }; } return null; }
   // ------------------------------------------------------------ the deep (Act Two)
   // a room of air under the sea (an air pocket in a wreck, a lab, an airlock): inside its walls the
   // water only comes up to its water line wl, so Rory walks, breathes and climbs out there.
   // below: how far under the room its water line still counts (an open-bottomed air pocket is
   // reached by swimming up into it from below)
   dryRoom(x0, y0, z0, x1, y1, z1, o = {}) {
-    const d = { x0, y0, z0, x1, y1, z1, wl: o.wl ?? y0, below: o.below ?? 1 };
+    // (air: where under it to come up and breathe, if not its middle: a moon pool)
+    const d = { x0, y0, z0, x1, y1, z1, wl: o.wl ?? y0, below: o.below ?? 1, air: o.air };
     (this.dry || (this.dry = [])).push(d);
     return d;
   }

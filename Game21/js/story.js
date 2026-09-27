@@ -35,7 +35,7 @@ export const CHAPTERS = [
 ];
 
 // Act Two's places join as each is built (story2.js has them all)
-export const READY = ["sunlight", "kelp", "liner"];
+export const READY = ["sunlight", "kelp", "liner", "twilight", "midnight", "vents", "glass", "ice", "mariana", "engine"];
 export const PLACES = [
   // ------------------------------------------------------------ 1. the sub pen
   { id: "pen", ch: 1, name: "POLARIS Sub Pen", country: "Scotland", flag: "sct", contact: "pip", lat: 57.1, lon: -5.6,

@@ -69,7 +69,8 @@ export function buildSunlight(w) {
   w.box(38, 5, 0.6, baseM, WX, -38, WZ - 13);
   w.box(0.6, 5, 14, baseM, WX - 19, -38, WZ - 6);
   // the fallen tower and the tanks
-  w.cyl(3, 3, 26, rust, WX + 24, -37, WZ + 20, { rz: Math.PI / 2 });
+  w.cyl(3, 3, 26, rust, WX + 24, -37, WZ + 20, { rz: Math.PI / 2, collide: false });
+  w.phys.fixedBox(WX + 24, -37, WZ + 20, 13, 2.8, 2.8);
   for (const [dx, dz] of [[-10, 20], [-4, 22]]) w.cyl(2.4, 2.4, 5, M(0x3a4a5a, { metal: 0.6, rough: 0.4 }), WX + dx, -37.5, WZ + dz, { seg: 16 });
   w.sign("UNDERTOW", 6, 1.2, WX, -31.6, WZ - 5, 0, { bg: "#0a2a4a", fg: "#2ad0c0", glow: 0.5 });
   const hallLamp = new THREE.PointLight(0x2ad0c0, 4, 14, 1.5); hallLamp.position.set(WX - 10, -36, WZ + 4); w.scene.add(hallLamp);

@@ -35,7 +35,7 @@ export const swimMixin = {
       const nav = this.nav, pp = p.pos;
       if (!this.entry || this.entry.from !== nav) {
         const can = nav.reachable(pp.x, pp.y, pp.z); let best = null, bd = 1e9;
-        if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < sea.level - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
+        if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < this.waterLine(nav.xz(k)[0], nav.h[k] + 1, nav.xz(k)[1]) - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
         this.entry = { from: nav, at: best };
       }
       const e = this.entry.at;
@@ -81,7 +81,7 @@ export const swimMixin = {
     let best = null;
     const put = (pt) => { const d = Math.hypot(pt[0] - c[0], pt[1] - c[1], pt[2] - c[2]); if (!best || d < best.d) best = { pt, d }; };
     for (const v of this.w.airVents || []) put([v.x, v.y + Math.min(1.5, v.h / 2), v.z]);
-    for (const r of this.w.dry || []) if (r.below >= 2) put([(r.x0 + r.x1) / 2, r.wl - 0.7, (r.z0 + r.z1) / 2]);
+    for (const r of this.w.dry || []) if (r.below >= 2) put(r.air ? [r.air[0], r.wl - 0.7, r.air[1]] : [(r.x0 + r.x1) / 2, r.wl - 0.7, (r.z0 + r.z1) / 2]);
     return best;
   },
   // steer along this.swimPath (or straight at pt): the stick across, JUMP up, DIVE down
@@ -104,7 +104,7 @@ export const swimMixin = {
   },
   // TORPEDO (or any craft) to (x, y, z) along a route through open water
   driveTo(x, y, z, slow = false) {
-    const cr = this.craft, inp = this.g.input, c = cr.pos.toArray(), sea = this.w.sea, lvl = sea ? sea.level : 0;
+    const cr = this.craft, inp = this.g.input, c = cr.pos.toArray(), sea = this.w.sea, lvl = this.w.swimTop !== undefined ? this.w.swimTop - 0.2 : sea ? sea.level : 0;
     if (!this.nav3) this.nav3 = new Nav3(this.w, boxAround([c, [x, y, z], ...(this.navPts || [])], 10, this.data.floor ?? -60, lvl - 0.8), cr.L.r + 0.15, 1.5, lvl - 0.8);
     if (!this.driveGoal || Math.hypot(this.driveGoal[0] - x, this.driveGoal[1] - y, this.driveGoal[2] - z) > 0.5 || this.t > this.driveAt) {
       this.driveGoal = [x, y, z]; this.driveAt = this.t + 3;
@@ -142,7 +142,7 @@ export class Dive extends Cells {
     const sea = this.w.sea;
     // a pearl above the water (on a rock, a jetty): walk to it the usual way, swimming the wet
     // parts of the route and climbing out where it comes ashore
-    if (!sea || c.position.y > sea.level + 0.3) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); if (this.navPath || !this.p.swimming) return; }
+    if (!sea || c.position.y > this.waterLine(c.position.x, c.position.y, c.position.z) + 0.3) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); if (this.navPath || !this.p.swimming) return; }
     this.swimTo(c.position.x, c.position.y, c.position.z);
   }
 }

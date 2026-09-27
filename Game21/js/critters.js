@@ -108,6 +108,18 @@ export function critter(kind, scale = 1) {
     P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.5, -0.2, 0.9); g.add(f); part(f, new THREE.BoxGeometry(0.4, 0.04, 0.22), skin, sx * 0.2, 0, 0); return f; });
     const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0, -1.7); g.add(tail);
     for (const sx of [-1, 1]) { const t = part(tail, new THREE.BoxGeometry(0.5, 0.05, 0.3), skin, sx * 0.25, 0, -0.1); t.rotation.y = sx * 0.4; }
+  } else if (kind === "glim") {
+    // Glim, the lost POLARIS probe: a round silver body, one big glowing eye, stubby fins, an
+    // antenna with a light on top, and a glow of its own in the dark
+    const shell = M(0xe8eef4, { rough: 0.25, metal: 0.6 }), glow = M(0x7ff4e8, { emissive: 0x7ff4e8, ei: 3 });
+    part(g, sph(0.35, 20, 14), shell, 0, 0, 0);
+    part(g, new THREE.TorusGeometry(0.35, 0.03, 8, 32), glow, 0, 0, 0).rotation.x = Math.PI / 2;
+    part(g, new THREE.CircleGeometry(0.16, 20), glow, 0, 0.04, 0.345);
+    part(g, sph(0.06, 10, 8), M(0x0a1a24), 0, 0.04, 0.35);
+    part(g, new THREE.CylinderGeometry(0.012, 0.012, 0.3, 5), shell, 0, 0.45, 0);
+    const tip = P.parts.head = part(g, sph(0.05, 10, 8), glow, 0, 0.62, 0);
+    tip.add(new THREE.PointLight(0x7ff4e8, 3, 7, 1.6));
+    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.34, -0.05, -0.05); g.add(f); part(f, new THREE.BoxGeometry(0.2, 0.03, 0.14), shell, sx * 0.1, 0, 0); return f; });
   } else if (kind === "manta") {
     const top = M(0x1a1c24, { rough: 0.5, side: THREE.DoubleSide }), belly = M(0xe8e8ec, { side: THREE.DoubleSide });
     const sh = new THREE.Shape(); sh.moveTo(0, 1.2); sh.quadraticCurveTo(1.6, 0.4, 2.6, -0.2); sh.quadraticCurveTo(1.2, -0.3, 0, -0.9); sh.quadraticCurveTo(-1.2, -0.3, -2.6, -0.2); sh.quadraticCurveTo(-1.6, 0.4, 0, 1.2);
@@ -200,9 +212,10 @@ export function roam(world, kind, o) {
 }
 
 // a shoal of little fish milling round a point, drawn as one instanced mesh
-export function school(world, cx, cy, cz, n = 40, r = 4, color = 0x3ab0e8) {
+// (glow: how brightly they shine, for the lanternfish of the deep)
+export function school(world, cx, cy, cz, n = 40, r = 4, color = 0x3ab0e8, glow = 0.15) {
   const body = new THREE.SphereGeometry(0.12, 8, 6); body.scale(0.45, 0.8, 1.4);
-  const mesh = new THREE.InstancedMesh(body, new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.3, emissive: color, emissiveIntensity: 0.15 }), n);
+  const mesh = new THREE.InstancedMesh(body, new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.3, emissive: color, emissiveIntensity: glow }), n);
   mesh.frustumCulled = false; mesh.userData.dynamic = true; world.scene.add(mesh);
   const fish = Array.from({ length: n }, (_, i) => ({ a: Math.random() * 6.28, r: r * (0.4 + Math.random() * 0.6), y: (Math.random() - 0.5) * r * 0.6, s: 0.6 + Math.random() * 0.5, ph: Math.random() * 6 }));
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);

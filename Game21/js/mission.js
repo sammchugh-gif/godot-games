@@ -11,6 +11,9 @@ export class Mission {
     this.objs = []; this.done = false; this.failed = false;
   }
   get w() { return this.g.world; }
+  // the water's surface over a point: the sea's level, or (in the deep, or under an air pocket's
+  // water line) the local one
+  waterLine(x, y, z) { const w = this.w, sea = w.sea; if (!sea) return 0; return sea.deep || w.dry ? w.surfaceAt(x, y, z) : sea.level; }
   get p() { return this.g.player; }
   add(o) { this.w.scene.add(o); this.objs.push(o); return o; }
   start() {}
@@ -59,7 +62,7 @@ export class Mission {
     // where it comes ashore
     if (this.p.swimming) {
       for (let i = this.navI; i < Math.min(path.length, this.navI + 12); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 1.3) this.navI = i; }
-      const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.w.sea ? this.w.sea.level : 0;
+      const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.waterLine(pp.x, pp.y + 1, pp.z);
       // (a route that climbs straight out of the water onto something too high to reach from it, a
       // pier's end or a quay wall: swim to a way out, steps or a ledge, instead)
       if (q.h > L + 1.1 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2.5) {
@@ -120,7 +123,7 @@ export class Mission {
   // surface) from which the walking map can get to (tx, ty, tz); remembered for each target
   // (with no target, just the nearest way out of the water)
   exitFor(tx, ty, tz, reach) {
-    const nav = this.nav, L = this.w.sea.level, pp = this.p.pos, any = tx == null, key = any ? "any" : `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
+    const nav = this.nav, pp = this.p.pos, L = this.waterLine(pp.x, pp.y + 1, pp.z), any = tx == null, key = any ? "any" : `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
     if (this.exitKey !== key || this.exitNav !== nav) {
       this.exitKey = key; this.exitNav = nav; this.exits = [];
       const cand = [];

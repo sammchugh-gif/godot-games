@@ -9,7 +9,7 @@ export const CHARS2 = {
   rosa:    { name: "Rosa", voice: V("f", "en-US", 1.2, 1.05), look: { skin: 0xd8a070, hair: 0x2a1a10, coat: 0xd8402a, trousers: 0x2a3a4a, kid: true, hairStyle: "ponytail", hat: "beanie", hatColor: 0x2a8a6a } },
   barnaby: { name: "Captain Barnaby", voice: V("m", "en-GB", 0.8, 0.9), look: { skin: 0xf0c8a8, hair: 0xe8e8e8, coat: 0x1a2a4a, trousers: 0x1a2a4a, shirt: 0xf0f0f0, moustache: 0xe8e8e8, hairStyle: "short", hat: "captain", hatColor: 0x1a2a4a } },
   hiro:    { name: "Dr Hiro", voice: V("m", "en-US", 1.0, 1.0), look: { skin: 0xf0d4b4, hair: 0x14141a, coat: 0xf08a1a, trousers: 0x2a2a3a, shirt: 0xf4f4f4, hairStyle: "short", glasses: 0x1a1a1a } },
-  glim:    { name: "Glim", side: "bolt", robot: "glim", voice: V("f", "en-GB", 1.5, 1.1), bg: "#0a2a3a" },
+  glim:    { name: "Glim", side: "bolt", critter: "glim", voice: V("f", "en-GB", 1.5, 1.1), bg: "#0a2a3a" },
   ama:     { name: "Dr Ama", voice: V("f", "en-GB", 1.0, 1.0), look: { skin: 0x6a4028, hair: 0x14100c, coat: 0xd8a020, trousers: 0x3a2a1a, shirt: 0xf0e8d8, hairStyle: "curly" } },
   silt:    { name: "Professor Silt", side: "villain", voice: V("m", "en-GB", 0.85, 0.9), look: { skin: 0xe8c8a8, hair: 0xd8d8d0, coat: 0x6a5a4a, trousers: 0x3a3228, shirt: 0xe8e0d0, tie: 0x2a6a4a, moustache: 0xd8d8d0, hairStyle: "bald", glasses: 0x6a5a3a } },
   nuka:    { name: "Nuka", voice: V("f", "en-US", 1.15, 1.0), look: { skin: 0xc89870, hair: 0x14100c, coat: 0xe8e8f0, trousers: 0x2a3a5a, kid: true, hairStyle: "long", hat: "beanie", hatColor: 0xd83a3a } },

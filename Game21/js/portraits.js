@@ -1,7 +1,8 @@
 // Dialogue portraits: each character's 3D head rendered once into a small
 // picture with studio lights, so the faces in the dialogue box match the world.
 import * as THREE from "three";
-import { makePerson, animatePerson } from "./people.js";
+import { critter } from "./critters.js";
+import { makePerson, animatePerson, diveSuit } from "./people.js";
 import { Robot } from "./robots.js";
 import { subModel } from "./craft.js";
 
@@ -20,7 +21,9 @@ export class Portraits {
   }
   // a fresh canvas each call, so the same face can sit in two places at once
   get(id) {
-    const ch = this.chars[id];
+    // (in the dive suit's places Rory's portrait wears the helmet too)
+    if (id === "rory" && this.suit) id = "rory_" + this.suit;
+    const ch = this.chars[id] || (id.startsWith("rory_") && { ...this.chars.rory, suit: id.slice(5) });
     if (!ch) return null;
     if (!this.cache.has(id)) this.cache.set(id, this.render(ch));
     const src = this.cache.get(id);
@@ -35,10 +38,13 @@ export class Portraits {
     let obj, headY, dist;
     if (ch.craft) {
       obj = subModel(); obj.rotation.y = 0.35; headY = 0.25; dist = 3.6;
+    } else if (ch.critter) {
+      obj = critter(ch.critter, 1.4); headY = 0.1; dist = 1.7;
     } else if (ch.robot) {
       const rb = new Robot(ch.robot, 1.2); rb.mixer.update(0.5); obj = rb.root; headY = 1.0; dist = 1.3;
     } else {
       const rig = makePerson(ch.look || {});
+      if (ch.suit === "dive") diveSuit(rig, true);
       animatePerson(rig, { dt: 1, speed: 0, grounded: true });
       for (const e of rig.eyes) e.scale.y = 1;
       obj = rig.root; obj.updateMatrixWorld(true);

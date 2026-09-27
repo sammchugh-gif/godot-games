@@ -24,6 +24,8 @@ export class Nav3 {
       let free = true;
       W.intersectionsWithShape({ x, y, z }, rot, ball, () => { free = false; return false; }, f);
       if (free && world.heightAt && world.heightAt(x, z) > y - r) free = false;
+      // (and keep out of the vents' scalding plumes)
+      if (free && world.plumes) for (const p of world.plumes) if (Math.hypot(x - p.x, z - p.z) < p.r + r + 0.4 && y > p.y - 1 && y < p.y + p.h + 1) { free = false; break; }
       open[k] = free ? 1 : 0;
     }
   }
