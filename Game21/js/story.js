@@ -66,7 +66,7 @@ export const PLACES = [
         outro: [["rory", "I'm in. There's a pipe going down into the water. It's humming."], ["pip", "A pump! Something is pumping the sea away from here."]] },
       { id: "cor3", kind: "cells", lv: 2, title: "Lighthouse Climb", n: 7, time: 180,
         intro: [["morwenna", "Gran says the lighthouse lamp has gone funny. It's flashing pearls instead of light."], ["pip", "The stairs wind round and round inside. Collect the pearls all the way to the top."]],
-        outro: [["rory", "From up here I can see the whole cove. And a boat with no lights, going out to sea."], ["morwenna", "Smugglers? Or Drips?"]] },
+        outro: [["rory", "From up here I can see the whole cove. And a boat with no lights, going out to sea."], ["morwenna", "Are they smugglers? Or are they Drips?"]] },
       { id: "cor4", kind: "morse", lv: 1, title: "Lamp Signals", time: 150,
         intro: [["morwenna", "Look! Somebody on that boat is flashing a lamp. Long and short flashes."], ["pip", "That's Morse code. Each letter is a pattern of flashes. Use the chart and work out the message!"]],
         outro: [["rory", "It says: PUMP ONE FULL. SEND TO FUNDY."], ["pip", "Somebody's sending the sea away. Let's switch off that pump first."]] },

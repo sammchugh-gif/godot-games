@@ -55,7 +55,7 @@ export function buildPanama(w) {
   for (const [x, y, z] of [[shipX - 5.5, deck + 0.65, 3.6], [shipX - 0.6, deck + 2.85, 3.8], [shipX + 4.4, deck + 5.05, 3.8], [shipX + 9.6, deck + 2.85, 3.8], [shipX + 14.5, deck + 0.65, 3.8], [shipX + 13.2, deck + 2.85, 2.5]]) w.box(1.3, 1.3, 1.3, crate, x, y, z);
   w.pad(shipX + 14.8, deck, -3.4, 14, 0xff5ad8);
   // a pad beside the bridge, up to its roof
-  w.pad(shipX - 11.6, deck, 0, 18, 0x39f0ff);
+  w.pad(shipX - 11.6, deck, 0, 20, 0x39f0ff);
   // the control house on the north side, its yard with crates to hide behind
   w.building(14, 9, 10, 15, 26, { y: TOP, wall: [236, 232, 220], seed: 51, win: { lit: 0.2, glass: "#3a5a7a" } });
   w.sign("MIRAFLORES CONTROL", 8, 1.2, 15, TOP + 7.5, 20.95, Math.PI, { bg: "#0c2a4a", fg: "#ffffff" });

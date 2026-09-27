@@ -43,12 +43,21 @@ export class Mission {
     // riding something that moves: get off onto ground that leads there first
     if (w.onMover) { this.disembark(tx, ty, tz, reach); return Math.hypot(tx - pp.x, tz - pp.z); }
     const far = !this.navTo || Math.hypot(this.navTo[0] - tx, this.navTo[2] - tz) > 1.5 || Math.abs(this.navTo[1] - ty) > 1;
-    if (w.grounded && (far || this.t > this.navAt)) {
+    if ((w.grounded || this.p.swimming) && (far || this.t > this.navAt)) {
       this.navPath = this.nav.route(pp.x, pp.y, pp.z, tx, ty, tz, reach); this.navTo = [tx, ty, tz]; this.navI = 0; this.navAt = this.t + 4; this.navMoved = this.t;
     }
     const path = this.navPath;
     const up = ty - (pp.y + 0.7), dh = Math.hypot(tx - pp.x, tz - pp.z);
     if (!path) { this.steer(tx, tz, up > 1.0 && dh < 2.2); return dh; }
+    // in the water: swim along the route's line (its squares are on the sea bed below) and hop out
+    // where it comes ashore
+    if (this.p.swimming) {
+      for (let i = this.navI; i < Math.min(path.length, this.navI + 12); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 1.3) this.navI = i; }
+      const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.w.sea ? this.w.sea.level : 0;
+      this.steer(q.x, q.z, q.h > L - 0.3 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2);
+      inp.jumpHeld = false;
+      return dh;
+    }
     // progress along the route: the furthest square just ahead that Rory is standing on
     if (w.grounded) for (let i = this.navI; i < Math.min(path.length, this.navI + 8); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 0.7 && Math.abs(q.h - pp.y) < 0.8) { if (i > this.navI) this.navMoved = this.t; this.navI = i; } }
     if (w.grounded && this.t - this.navMoved > 3) this.navAt = 0; // not getting anywhere: plan again
