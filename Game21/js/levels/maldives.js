@@ -94,6 +94,9 @@ export function buildMaldives(w) {
 
   // ---- the seaplane dock, a floating platform with a windsock
   w.box(10, 0.8, 6, deckM, -40, 0.4, -5);
+  // (a boardwalk out to it from the end of the west walk, and a step down onto the dock)
+  walk(-30, -20, -38, -14); walk(-38, -14, -38, -9.2);
+  w.box(2.4, 0.4, 1.2, deckM, -38, 1.0, -8.6);
   w.cyl(0.06, 0.06, 4, M(0xd8d8d8, { metal: 0.6 }), -44, 2.8, -7, { seg: 6, collide: false });
   w.cone(0.35, 1.4, M(0xff7a1a), -43.3, 4.5, -7, { rz: -Math.PI / 2 });
   w.sign("SEAPLANES", 3, 0.6, -40, 1.4, -1.95, 0, { bg: "#1a6a8a", fg: "#ffffff" });

@@ -32,9 +32,15 @@ export function buildBermuda(w) {
   w.fence(-50, 35, 50, 35, 1.1, railM, { y: D }); w.fence(-50, -35, -50, 35, 1.1, railM, { y: D }); w.fence(50, -35, 50, 35, 1.1, railM, { y: D });
   const dock = M("wood", { args: [9, [110, 96, 80]], repeat: [6, 2] });
   w.box(24, 1.2, 8, dock, 0, 0.6, -42);
-  w.steps(20, 3, 0.39, 0.35, M("metal", { args: [9, [140, 150, 160]] }), 0, 1.2, -41.2, 0);
+  // the stairs: a long flight along the back of the landing stage (gentle steps a child can run
+  // up), a landing at the top that bridges to the gap in the deck rail, and a handrail
+  const stairM = M("metal", { args: [9, [140, 150, 160]] });
+  w.steps(22, 2.5, 7.8 / 22, 0.45, stairM, -11, 1.2, -39.25, Math.PI / 2);
+  w.box(3.4, 0.3, 5.5, stairM, 0.6, D - 0.15, -37.75);
+  w.fence(-11, -38.05, -1.1, -38.05, 1, railM, { y: x => 1.2 + Math.min(1, Math.max(0, (x + 11) / 9.9)) * 7.8 });
+  w.fence(-1.1, -40.45, 2.25, -40.45, 1, railM, { y: D }); w.fence(2.25, -40.45, 2.25, -35.1, 1, railM, { y: D }); w.fence(-1.1, -38.05, -1.1, -35.1, 1, railM, { y: D });
   boat(w, -19, -1.2, -44, Math.PI / 2, { color: 0xf2f2f2, size: 1.6, name: "CADET" });
-  w.lamp(-11, -39, 4, 0xffe0a0, { y: 1.2, ei: 4, light: 4 }); w.lamp(11, -39, 4, 0xffe0a0, { y: 1.2, ei: 4, light: 4 });
+  w.lamp(-11, -45, 4, 0xffe0a0, { y: 1.2, ei: 4, light: 4 }); w.lamp(11, -39, 4, 0xffe0a0, { y: 1.2, ei: 4, light: 4 });
 
   // ---- on deck: container rows with lanes between (cover for sneaking), the main hatch
   const conts = [0x7a2a2a, 0x2a4a6a, 0x3a5a3a, 0x8a6a2a, 0x4a3a5a];

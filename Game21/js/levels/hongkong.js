@@ -91,7 +91,9 @@ export function buildHongKong(w) {
   w.box(13, 0.4, 17, M(0x2a2e34), sx0 + 8, deck + 9.2, sz);
   w.cyl(0.8, 1, 5, M(0xd83a3a), sx0 + 6, deck + 11.5, sz, { seg: 12 });
   // the gangway from the quay up to the deck
-  w.ramp(2.4, 11, deck - TOP, M("metal", { args: [9, [140, 150, 160]], repeat: [1, 4] }), -55, TOP, -2.5, Math.PI);
+  // (it starts back on the promenade so it meets the deck at the gap in the ship's rail)
+  w.ramp(2.4, 13, deck - TOP, M("metal", { args: [9, [140, 150, 160]], repeat: [1, 4] }), -55, TOP, 8, Math.PI);
+  w.fence(-56.25, 3, -56.25, -5, 1, railM, { y: (x, z) => TOP + (deck - TOP) * (8 - z) / 13 }); w.fence(-53.75, 3, -53.75, -5, 1, railM, { y: (x, z) => TOP + (deck - TOP) * (8 - z) / 13 });
   // searchlight posts along the deck
   for (let x = sx0 + 20; x < sx1; x += 18) w.lamp(x, sz - 9.7, 4, 0xfff0c0, { y: deck, ei: 3 });
 
@@ -133,6 +135,6 @@ export function buildHongKong(w) {
   };
   return {
     spawn: [10, TOP, 6], yaw: Math.PI, bolt: [12, TOP, 6], contact: [6, TOP, 4, Math.PI * 0.8],
-    at: { hk1: [0, -12], hk2: [-55, 3], hk3: [sx0 + 16, sz + 5], hk4: [-34, 6], hk5: [20, 10], hk6: [36, -8] },
+    at: { hk1: [0, -12], hk2: [-59, 9.5], hk3: [sx0 + 16, sz + 5], hk4: [-34, 6], hk5: [20, 10], hk6: [36, -8, 4] },
   };
 }

@@ -134,8 +134,9 @@ function loadPlace(id) {
     // each level says where its missions start (or the story does)
     const at = m.at || (info.at && info.at[m.id]) || [0, 0];
     const b = makeBeacon(0xffd166);
-    const gy = world.phys.ray({ x: at[0], y: 30, z: at[1] }, { x: 0, y: -1, z: 0 }, 60);
-    let y = gy !== null ? 30 - gy : 0;
+    // (a third number is a height to look down from, for a beacon under a roof: in a cave, below decks)
+    const top = at[2] ?? 30, gy = world.phys.ray({ x: at[0], y: top, z: at[1] }, { x: 0, y: -1, z: 0 }, top + 30);
+    let y = gy !== null ? top - gy : 0;
     // a beacon over deep water floats on the sea, where Rory swims
     if (world.sea && y < world.sea.level) y = world.sea.level;
     b.position.set(at[0], y, at[1]); b.userData.miss = gy === null;
@@ -621,6 +622,20 @@ G.debug = {
     return true;
   },
   load(id) { if (G.mission) { G.mission.cleanup(); G.mission = null; } loadPlace(id); return G.place.id; },
+  // can Rory get from where he arrives in a place to (x, y, z)? A one-pearl dive from the spawn,
+  // which the autopilot plays the way a child would: walking, swimming, climbing out
+  reach(place, x, y, z) {
+    clearLayer("title"); G.dialogue.skipAll();
+    if (G.mission) { G.mission.cleanup(); G.mission = null; }
+    if (G.place.id !== place) loadPlace(place);
+    startPlace(); G.dialogue.skipAll();
+    const s = G.levelInfo.spawn; G.player.teleport(s[0], s[1] + 0.1, s[2]);
+    // (a beacon floating on the sea is swum to: the pearl sits just under the surface)
+    const sea = G.world.sea, py = sea && Math.abs(y - sea.level) < 0.2 ? y - 0.3 : y + 0.9;
+    G.mission = makeMission(G, { id: "reach", kind: "dive", title: "Reach", n: 1 }, { cells: [[x, py, z]] });
+    G.mission.start(); G.state = "mission"; G.input.clear();
+    return true;
+  },
   // a fixed camera for screenshots: from (x, y, z) looking at (lx, ly, lz)
   view(x, y, z, lx, ly, lz) { clearLayer("title"); G.hud.hide(); setTouch(false); G.viewCam = [x, y, z, lx, ly, lz]; G.state = "view"; },
   // anything that must be reachable but sits inside something solid

@@ -27,7 +27,20 @@ const swimMixin = {
     const g = this.g, p = this.p, inp = g.input, c = [p.pos.x, p.pos.y + 0.7, p.pos.z], sea = this.w.sea;
     // still on dry land (a pontoon, a ledge, the beach): walk the way the walking map says, off the
     // edge and into the water, and swim from there
-    if (!p.swimming && !p.headUnder) return this.walkTo(x, y, z, 1.0, (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q));
+    if (!p.swimming && !p.headUnder) {
+      const pts = (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q), r = this.walkTo(x, y, z, 1.0, pts);
+      if (this.navPath || !sea) return r;
+      // no way there on foot (it's out over deep water): into the water at the nearest spot
+      // that's deep enough to swim, and swim from there
+      const nav = this.nav, pp = p.pos;
+      if (!this.entry || this.entry.from !== nav) {
+        const can = nav.reachable(pp.x, pp.y, pp.z); let best = null, bd = 1e9;
+        if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < sea.level - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
+        this.entry = { from: nav, at: best };
+      }
+      const e = this.entry.at;
+      return e ? this.walkTo(e.x, e.y + 0.3, e.z, 1.0, pts) : r;
+    }
     const lvl = sea ? sea.level : 0;
     if (!this.nav3) {
       const pts = [c, [x, y, z], ...(this.navPts || [])];
@@ -93,6 +106,7 @@ const swimMixin = {
 export class Dive extends Cells {
   start() { super.start(); this.navPts = this.cells.map(c => c.position.toArray()); }
   hud() { return { ...super.hud(), text: `Dive for the Tide Pearls  ${this.got}/${this.need}` }; }
+  debugState() { const f = v => +v.toFixed(1), sp = this.swimPath; return { p: this.p.pos.toArray().map(f), sw: this.p.swimming, air: f(this.p.air), gasp: !!this.gasping, aim: this.aim ? this.cells.indexOf(this.aim) : null, swim: sp ? [sp.length, this.swimI, (sp[this.swimI] || []).map(f)] : null, walk: this.navPath ? [this.navPath.length, this.navI] : null, next: this.navPath ? this.navPath.slice(this.navI, this.navI + 4).map(q => [q.how, f(q.x), f(q.h), f(q.z)]) : null, inp: this.g.input.forced }; }
   solve() {
     const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
@@ -104,8 +118,9 @@ export class Dive extends Cells {
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
     const sea = this.w.sea;
-    // a pearl above the water (on a rock, a jetty): walk to it the usual way
-    if (!sea || c.position.y > sea.level + 0.3) { if (!this.p.swimming) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); return; } }
+    // a pearl above the water (on a rock, a jetty): walk to it the usual way, swimming the wet
+    // parts of the route and climbing out where it comes ashore
+    if (!sea || c.position.y > sea.level + 0.3) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); if (this.navPath || !this.p.swimming) return; }
     this.swimTo(c.position.x, c.position.y, c.position.z);
   }
 }

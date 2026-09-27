@@ -70,12 +70,15 @@ export class Mission {
     // a gap: run at it and take off at the edge
     if (next.how === "gap") {
       const d = Math.hypot(next.x - pp.x, next.z - pp.z), ux = (next.x - pp.x) / (d || 1), uz = (next.z - pp.z) / (d || 1);
-      this.steer(next.x, next.z, this.nav.top(pp.x + ux * 0.5, pp.z + uz * 0.5, pp.y) < pp.y - 0.4 || d < 1.0);
+      // (up onto something from beside it, its edge keeps Rory further off: take off sooner)
+      this.steer(next.x, next.z, this.nav.top(pp.x + ux * 0.5, pp.z + uz * 0.5, pp.y) < pp.y - 0.4 || d < (next.h > pp.y + 0.5 ? 1.8 : 1.0));
       return dh;
     }
     // walking: aim a few squares along, but not past the next jump, pad or drop (the way on from
     // the bottom of a drop can double back underneath, under a pontoon or a ledge)
-    let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop")) j++;
+    // (nor past a square that can't be seen from here: aiming round a corner walks into it)
+    const seen = q => { const d = Math.hypot(q.x - pp.x, q.z - pp.z); return d < 0.1 || this.w.phys.ray({ x: pp.x, y: pp.y + 0.5, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, d, w.col) === null; };
+    let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop") && seen(path[j + 1])) j++;
     // (and walk on past the foot of a drop: it can be only a hand's width beyond the edge)
     const q = path[j], o = path[j - 1], L = Math.hypot(q.x - o.x, q.z - o.z) || 1, on = q.how === "drop" ? 0.8 / L : 0;
     this.steer(q.x + (q.x - o.x) * on, q.z + (q.z - o.z) * on);

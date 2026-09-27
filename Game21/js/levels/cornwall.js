@@ -75,7 +75,8 @@ export function buildCornwall(w) {
     boat(w, -18, -1.4, -20, 0.8, { roll: 0.25, color: 0xf2f2f2, name: "STARGAZY" }),
   ];
   // the village: cottages up the hill, the harbour master's hut and the pub
-  const R = (a, b) => a + (b - a) * ((Math.sin(a * 12.9898 + b * 78.233) * 43758.5453) % 1 + 1) % 1;
+  // a steady random number from 0 to 1 for each spot, so the village is the same every visit
+  const R = (a, b) => ((Math.sin(a * 12.9898 + b * 78.233) * 43758.5453) % 1 + 1) % 1;
   let i = 0;
   for (let z = 22; z < 52; z += 9) for (let x = -34; x < 32; x += 8.5) { if ((i++ % 5) === 2) continue; const xx = x + (z % 2) * 3, y = h(xx, z) - 0.3; cottage(w, xx, y, z, (R(x, z) - 0.5) * 0.3, { w: 5.5 + R(z, x) * 2, d: 4.5, h: 3.6 + R(x, x) * 1.5, wall: [[238, 236, 226], [230, 224, 206], [214, 222, 230]][i % 3] }); }
   cottage(w, -14, 2, 17, 0, { w: 9, d: 5.5, h: 4.5, wall: [70, 60, 56] });
@@ -135,7 +136,7 @@ export function buildCornwall(w) {
   };
   return {
     spawn: [-4, h(-4, 16), 16], yaw: Math.PI, bolt: [-2, h(-2, 16), 16], contact: [2, h(2, 14.5), 14.5, Math.PI],
-    at: { cor1: [-4, 14], cor2: [-40, 10], cor3: [lh.door[0], lh.door[2]], cor4: [62, -4], cor5: [-74, -5], cor6: [8, -34.5] },
+    at: { cor1: [-4, 14], cor2: [-40, 10], cor3: [lh.door[0], lh.door[2]], cor4: [62, -4], cor5: [-74, -5, 3], cor6: [8, -34.5] },
   };
 }
 void THREE;

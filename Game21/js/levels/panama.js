@@ -91,7 +91,7 @@ export function buildPanama(w) {
   };
   return {
     spawn: [15, TOP, 34], yaw: Math.PI, bolt: [17, TOP, 34], contact: [10, TOP, 30, Math.PI],
-    at: { pan1: [8, 23], pan2: [-30, 10.5], pan3: [15, 42], pan4: [-48, 26], pan5: [100, 12], pan6: [-30, 40] },
+    at: { pan1: [15, 17.5], pan2: [-30, 10.5], pan3: [15, 42], pan4: [-48, 26], pan5: [100, 12], pan6: [-30, 40] },
   };
 }
 void rocks;
