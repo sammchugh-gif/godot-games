@@ -108,7 +108,10 @@ export class Player {
     // fell off the world: back to the last safe ground
     // remember the last firm ground: only ground that can't move away (never a ferry deck or a cable car)
     this.breathe(dt);
-    if (w.grounded && w.onMover === null && !this.headUnder && !this.swimming) {
+    // hot lava underfoot: back to the last safe ground
+    const hot = w.grounded && this.world.flows && this.world.hotAt(w.pos.x, w.pos.z, w.pos.y);
+    if (hot) { const s = this.lastSafe; this.teleport(s.x, s.y + 0.3, s.z); if (this.onBurn) this.onBurn(); }
+    else if (w.grounded && w.onMover === null && !this.headUnder && !this.swimming) {
       const h = this.world.phys.rayHit({ x: w.pos.x, y: w.pos.y + 0.3, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 1.0, w.col);
       const body = h && h.collider.parent();
       if (h && (!body || body.isFixed())) this.lastSafe.copy(w.pos);

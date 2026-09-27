@@ -31,7 +31,7 @@ export function buildFundy(w) {
   // red mud and red cliffs
   const redMud = M("sand", { args: [15, [134, 76, 56]], repeat: [30, 30] }); redMud.roughness = 0.3;
   w.overlay(0, -40, 220, 106, redMud, (x, z) => z < edge(x) + 0.5 && h(x, z) > LV - 0.2, 0.03);
-  w.overlay(0, 12, 220, 10, M("stone", { args: [82, [164, 88, 62]], repeat: [40, 3] }), (x, z) => Math.abs(z - edge(x) - 1) < 2.4, 0.05);
+  w.overlay(0, 12, 220, 10, M("rock", { args: [82, [164, 88, 62]], repeat: [40, 3] }), (x, z) => Math.abs(z - edge(x) - 1) < 2.4, 0.05);
   // the Flowerpot Rocks, each with a bounce pad at its foot
   const pots = [[-25, -8, 11, 3, 1], [-12, -18, 12, 3.2, 2], [5, -10, 10, 2.8, 3], [18, -22, 13, 3.4, 4], [30, -6, 9, 2.6, 5], [-36, -26, 12, 3, 6]];
   const tops = pots.map(([x, z, ht, r, seed]) => {
@@ -46,7 +46,7 @@ export function buildFundy(w) {
   w.steps(29, 2.5, 0.345, 0.5, plank, 4.5, -2, 10.4, -Math.PI / 2);
   w.box(5, 0.3, 6, plank, -11.5, 7.85, 12.6);
   const rail = M(0x5a4030, { rough: 0.8 });
-  w.fence(-14, 15.4, -14, 9.8, 1.1, rail); w.fence(-14, 9.1, 4.6, 9.1, 1.1, rail);
+  w.fence(-14, 15.4, -14, 9.8, 1.1, rail, { y: 8 }); w.fence(-14, 9.1, -10, 9.1, 1.1, rail, { y: 8 }); w.fence(-10, 9.1, 4.6, 9.1, 1.1, rail, { y: (x) => -2 + (4.5 - x) / 14.5 * 10 + 0.35 });
   w.sign("HOPEWELL ROCKS", 4, 0.9, -11.5, 9.4, 15.6, Math.PI, { bg: "#1a3a2a", fg: "#f4e8c8" });
   // up top: the tide gauge hut, the fields, fences, and the shore road
   w.building(5, 3, 4, -30, 22, { y: h(-30, 22) - 0.2, wall: [236, 232, 220], roof: "pitched", roofColor: [170, 60, 50], seed: 5 });

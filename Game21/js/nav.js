@@ -48,6 +48,7 @@ export class Nav {
       const tops = sol.filter(s => s[1] > floor + 0.5).sort((a, b) => b[1] - a[1]);
       for (const [, t, isGround] of tops) {
         if (hs.length > first[c] && hs[hs.length - 1] - t < 0.05) continue; // the same floor twice
+        if (this.w.flows && this.w.hotAt(x, z, t)) continue; // glowing lava
         // nothing solid right over it (a floor buried under a slab is no floor)
         let buried = false; for (const [b, tt] of sol) if (b < t + TALL && tt > t + 0.02 && !(Math.abs(tt - t) < 0.02)) { buried = true; break; }
         if (buried) continue;
@@ -153,6 +154,18 @@ export class Nav {
     return out;
   }
   // A* to any floor from which the point (tx, ty, tz) can be touched: standing, or at the top of a jump
+  // every floor that can be got to from where Rory stands at (x, y, z): 1 in the returned array
+  // (worked out once per starting floor, so "can he walk there?" is then instant)
+  reachable(x, y, z) {
+    let s = this.nodeAt(x, y, z, 1);
+    if (s < 0) s = this.nearestOk(x, y, z, 3, 0.5);
+    if (s < 0) return null;
+    if (this._reach && this._reach.s === s) return this._reach.mark;
+    const mark = new Uint8Array(this.h.length), stack = [s], out = []; mark[s] = 1;
+    while (stack.length) { const k = stack.pop(); for (const [q] of this.moves(k, out)) if (!mark[q]) { mark[q] = 1; stack.push(q); } }
+    this._reach = { s, mark };
+    return mark;
+  }
   route(fx, fy, fz, tx, ty, tz, reach = 1.0) {
     const { h } = this, n = h.length;
     // start from the floor Rory is standing on, or else the nearest one at his height

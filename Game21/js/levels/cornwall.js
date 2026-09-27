@@ -128,7 +128,7 @@ export function buildCornwall(w) {
   w.missionData = {
     cor1: { cells: [B[0].aft, [5, B[1].roofY + 0.8, -15], [20, 2.8, -10], [-15, 2.8, -30], [-0.45, 0.7, -8], [0, 1.2, 9], B[2].aft, [9, 2.8, -34.3]] },
     cor2: { start: [-44, h(-44, 8), 8], goal: [-67, h(-67, -5), -5], guards: [{ path: [[-50, -2], [-62, -2]], speed: 1.4 }, { path: [[-57, 4], [-57, -14]], speed: 1.2, phase: 0.5 }] },
-    cor3: { cells: [3, 11, 19, 27, 35, 43].map(k => { const s = lh.steps[k]; return [s[0], s[1] + 0.8, s[2]]; }).concat([[lh.gallery[0], lh.top + 0.9, lh.gallery[2]]]) },
+    cor3: { cells: [3, 11, 19, 27, 35, 43].map(k => { const s = lh.steps[k]; return [s[0], s[1] + 0.8, s[2]]; }).concat([[lh.gallery[0], lh.top + 0.9, lh.gallery[2]]]), climb: lh.climb },
     cor4: { word: "FUNDY", title: "LAMP SIGNALS" },
     cor5: { cells: [[-84, -5, -5], [-90, -8.5, -5], [-96, -8.5, -5], [-102, -8.5, -5], [-110, -10, -3], [-116, -8, -6]], floor: -14 },
     cor6: { path: [[0, -48], [40, -60], [85, -52], [110, -30], [120, -60], [80, -84], [30, -88], [-20, -80], [-40, -62]] },

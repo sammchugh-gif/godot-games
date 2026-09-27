@@ -3,7 +3,7 @@
 // planned route (nav3.js), comes up for air, and waits for its passengers.
 import * as THREE from "three";
 import { Mission } from "./mission.js";
-import { Cells } from "./missions.js";
+import { Cells, Roundup } from "./missions.js";
 import { Nav3 } from "./nav3.js";
 import { Robot } from "./robots.js";
 import { Craft } from "./craft.js";
@@ -264,6 +264,8 @@ export class Sonar extends Piloted {
     const d = this.data;
     this.board("sub", d.sub);
     this.craft.lightsOn(true, 40);
+    // inside a pipe it's pitch black: turn the daylight right down while the mission runs
+    if (d.dark && this.w.sun) { this.lit = [this.w.sun.intensity, this.w.hemi.intensity]; this.w.sun.intensity *= 0.08; this.w.hemi.intensity *= 0.12; }
     this.marks = (d.marks || []).slice(0, this.def.n || 5).map(m => {
       const g = new THREE.Group(); g.position.set(m[0], m[1], m[2]); this.add(g);
       const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.4, 0), new THREE.MeshStandardMaterial({ color: 0x7fe3ff, emissive: 0x7fe3ff, emissiveIntensity: 0.6 })); g.add(core);
@@ -292,7 +294,7 @@ export class Sonar extends Piloted {
       if (m.g.position.distanceTo(this.craft.pos) < 2.6) { m.got = true; m.g.visible = false; this.got++; this.g.sound("cell"); this.g.fx.ring(m.g.position.x, m.g.position.y, m.g.position.z, 0x7fe3ff, 2); if (this.got >= this.marks.length) this.win(); }
     }
   }
-  cleanup() { SEA.uPingI.value = 0; super.cleanup(); }
+  cleanup() { SEA.uPingI.value = 0; if (this.lit) { this.w.sun.intensity = this.lit[0]; this.w.hemi.intensity = this.lit[1]; this.lit = null; } super.cleanup(); }
   hud() { return { ...super.hud(), text: `Ping and find the markers  ${this.got}/${this.marks.length}`, progress: this.got / this.marks.length }; }
   target() { const m = this.marks.find(m => !m.got); return m ? m.g.position : null; }
   solve() {
@@ -459,3 +461,34 @@ export class Surf extends Piloted {
     this.g.input.forced = { mx: 0, my: 1 };
   }
 }
+
+// ------------------------------------------------------------ Divers: Drips swimming round a pump; bubble them under water
+export class Divers extends Roundup {
+  start() {
+    super.start();
+    for (const b of this.bots) { b.swimY = 1.4 + Math.random() * 2; b.ph = Math.random() * 6; }
+    this.navPts = this.bots.map(b => b.r.pos.toArray());
+  }
+  botY(b) { return (this.w.heightAt ? this.w.heightAt(b.r.pos.x, b.r.pos.z) : 0) + (b.swimY || 1.5) + Math.sin(this.t * 1.3 + (b.ph || 0)) * 0.3; }
+  fire() {
+    // aim assist in three dimensions: at the nearest Drip in front, up or down
+    this.cool = 0.4;
+    const p = this.p, from = new THREE.Vector3(p.pos.x, p.pos.y + 0.9, p.pos.z), fw = new THREE.Vector3(Math.sin(p.yaw), 0, Math.cos(p.yaw));
+    let dir = fw.clone(), bd = 10;
+    for (const b of this.bots) { if (b.state !== "walk") continue; const to = b.r.pos.clone().setY(b.r.pos.y + 0.6).sub(from), d = to.length(); if (d < bd && to.clone().setY(0).normalize().dot(fw) > 0.5) { bd = d; dir = to.normalize(); } }
+    const m = this.add(makeBubble(0.3)); m.position.copy(from).addScaledVector(fw, 0.6);
+    this.shots.push({ m, v: dir.multiplyScalar(12), t: 0 });
+    this.g.sound("zap");
+  }
+  hud() { return { ...super.hud(), text: `Bubble the Drip divers  ${this.popped}/${this.need}` }; }
+  solve() {
+    const pp = this.p.pos, b = this.bots.filter(b => b.state === "walk").sort((a, c) => a.r.pos.distanceTo(pp) - c.r.pos.distanceTo(pp))[0];
+    if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+    if (b !== this.aim) { this.aim = b; this.aimT = this.t; }
+    if (this.t - this.aimT > 30) { (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} diver ${this.bots.indexOf(b)}`); this.p.teleport(b.r.pos.x + 2, b.r.pos.y, b.r.pos.z + 2); this.aimT = this.t; return; }
+    const d = b.r.pos.distanceTo(pp);
+    this.swimTo(b.r.pos.x, b.r.pos.y + 0.4, b.r.pos.z);
+    if (d < 5) { this.p.yaw = Math.atan2(b.r.pos.x - pp.x, b.r.pos.z - pp.z); if (this.cool <= 0) this.g.input.actionPressed = true; }
+  }
+}
+Object.assign(Divers.prototype, swimMixin);

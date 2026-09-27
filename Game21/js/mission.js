@@ -95,17 +95,13 @@ export class Mission {
           if (Math.abs(nav.h[k] - (cy + m.hy)) > 1.2) continue;
           const [nx, nz] = nav.xz(k), d = deck(t, nx, nz).out;
           // (beside the deck, not under it: under a lift, jumping aboard hits it from below)
-          if (d > 0.3 && d < 1.0 && (!spots.has(k) || d < spots.get(k).d)) spots.set(k, { d, x: nx, y: nav.h[k], z: nz, m });
+          if (d > 0.3 && d < 1.0 && (!spots.has(k) || d < spots.get(k).d)) spots.set(k, { d, x: nx, y: nav.h[k], z: nz, m, k });
         }
       }
-      // (one route test per landing: a spot near one that can't be walked to can't either)
-      let best = null, tries = 0; const no = [];
-      for (const sp of [...spots.values()].sort((a, b) => a.d - b.d)) {
-        if (no.some(q => Math.hypot(q.x - sp.x, q.z - sp.z) < 3 && Math.abs(q.y - sp.y) < 0.6)) continue;
-        if (++tries > 12) break;
-        if (Math.hypot(sp.x - pp.x, sp.z - pp.z) < 1 && Math.abs(sp.y - pp.y) < 0.6 || nav.route(pp.x, pp.y, pp.z, sp.x, sp.y + 0.7, sp.z, 0.4)) { best = sp; break; }
-        no.push(sp);
-      }
+      // the nearest landing Rory can walk to from here
+      const can = nav.reachable(pp.x, pp.y, pp.z);
+      let best = null;
+      for (const sp of [...spots.values()].sort((a, b) => a.d - b.d)) if (Math.hypot(sp.x - pp.x, sp.z - pp.z) < 1 && Math.abs(sp.y - pp.y) < 0.6 || (can && can[sp.k])) { best = sp; break; }
       this.board = best;
     }
     const now = deck(this.w.phys.t, pp.x, pp.z);

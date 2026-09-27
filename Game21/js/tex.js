@@ -86,6 +86,44 @@ export const TEX = {
       const R = rng(seed); for (let i = 0; i < 500; i++) { g.fillStyle = `rgba(0,0,0,${R() * 0.1})`; g.fillRect(R() * w, R() * h, 1 + R() * 3, 1 + R() * 3); }
     }, 3);
   },
+  // natural rock: blotchy at several scales, with dark cracks and pale flecks (boulders, cliffs)
+  rock(seed = 15, base = [128, 122, 114]) {
+    return make("rock" + seed + base, 256, (g, w, h) => {
+      noise(g, w, h, base, 30, seed, 16);
+      g.globalAlpha = 0.5; noise(g, w, h, base, 34, seed + 7, 4); g.globalAlpha = 0.35; noise(g, w, h, base, 26, seed + 3, 2); g.globalAlpha = 1;
+      const R = rng(seed);
+      g.strokeStyle = rgb(base, -70); g.lineCap = "round";
+      for (let i = 0; i < 14; i++) { let x = R() * w, y = R() * h; g.lineWidth = 0.8 + R() * 1.6; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++) { x += (R() - 0.5) * 40; y += (R() - 0.3) * 30; g.lineTo(x, y); } g.stroke(); }
+      for (let i = 0; i < 400; i++) { g.fillStyle = R() < 0.5 ? rgb(base, 40) : rgb(base, -40); g.globalAlpha = 0.4; g.fillRect(R() * w, R() * h, 1 + R() * 2, 1 + R() * 2); }
+      g.globalAlpha = 1;
+    }, 3);
+  },
+  // cooled lava: near-black, with ropey folds and little gas holes
+  lava(seed = 16, base = [52, 48, 48]) {
+    return make("lava" + seed + base, 256, (g, w, h) => {
+      noise(g, w, h, base, 16, seed, 8);
+      g.globalAlpha = 0.5; noise(g, w, h, base, 20, seed + 5, 2); g.globalAlpha = 1;
+      const R = rng(seed);
+      for (let i = 0; i < 40; i++) { const x = R() * w, y = R() * h, r = 10 + R() * 30, a = R() * 6; g.strokeStyle = rgb(base, 18 + R() * 16); g.lineWidth = 2 + R() * 2; g.globalAlpha = 0.6; g.beginPath(); g.arc(x, y, r, a, a + 1.2 + R()); g.stroke(); g.strokeStyle = rgb(base, -20); g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r + 3, a, a + 1.2); g.stroke(); }
+      g.globalAlpha = 1;
+      for (let i = 0; i < 260; i++) { g.fillStyle = rgb(base, -30); g.beginPath(); g.arc(R() * w, R() * h, 0.8 + R() * 1.8, 0, 7); g.fill(); }
+    }, 3.5);
+  },
+  // molten lava: dark crust plates floating on glowing orange, the glow in its own emissive map
+  magma(seed = 17) {
+    return make("magma" + seed, 256, (g, w, h) => {
+      const em = canvas(w, h), e = em.getContext("2d");
+      const hot = e.createLinearGradient(0, 0, w, h); hot.addColorStop(0, "#ffb020"); hot.addColorStop(0.5, "#ff5a08"); hot.addColorStop(1, "#ffa018");
+      g.fillStyle = hot; g.fillRect(0, 0, w, h); e.fillStyle = hot; e.fillRect(0, 0, w, h);
+      const R = rng(seed);
+      for (let i = 0; i < 26; i++) {
+        const cx = R() * w, cy = R() * h, r = 12 + R() * 26, n = 7;
+        g.fillStyle = `rgb(${40 + R() * 20},${30 + R() * 14},${28})`; e.fillStyle = "#000";
+        for (const c of [g, e]) { c.beginPath(); for (let k = 0; k < n; k++) { const a = k / n * 6.28, rr = r * (0.6 + R() * 0.5); c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } c.closePath(); c.fill(); }
+      }
+      return { emissive: em };
+    }, 2);
+  },
   sand(seed = 6, base = [226, 196, 140]) {
     return make("sand" + seed + base, 256, (g, w, h) => {
       noise(g, w, h, base, 18, seed, 2);

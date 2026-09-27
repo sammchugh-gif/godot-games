@@ -56,10 +56,11 @@ export function buildPen(w) {
   const stripe = new THREE.Mesh(new THREE.CylinderGeometry(3.02, 3.02, 0.6, 32, 1, true), M(0x9fe0ff, { emissive: 0x3aa8ff, ei: 0.8 })); stripe.rotation.z = Math.PI / 2; stripe.position.x = -8; nw.add(stripe);
   w.phys.fixedBox(-20, -0.8, -15, 20, 3, 3);
   w.phys.fixedBox(-16, 3.6, -15, 2.5, 2.5, 1.3);
-  w.fence(-34, -12, -6, -12, 1, dark); w.fence(-34, -18, -6, -18, 1, dark);
+  w.fence(-34, -12, -13.4, -12, 1, dark, { y: 2.2 }); w.fence(-10.6, -12, -6, -12, 1, dark, { y: 2.2 }); w.fence(-34, -18, -6, -18, 1, dark, { y: 2.2 });
   // the gangway from the quay to the deck
   w.ramp(2.2, 11.5, 1.0, M("metal", { args: [9, [140, 150, 160]], repeat: [1, 4] }), -12, 1.2, 0.4, Math.PI);
-  w.fence(-13.1, -1, -13.1, -10.5, 1, dark); w.fence(-10.9, -1, -10.9, -10.5, 1, dark);
+  const gang = (x, z) => 1.35 + (0.4 - z) / 11.5;
+  w.fence(-13.1, -1, -13.1, -10.5, 1, dark, { y: gang }); w.fence(-10.9, -1, -10.9, -10.5, 1, dark, { y: gang });
   // cranes, containers, crates and a hut
   const crate = M("wood", { args: [8, [150, 110, 70]], repeat: [1, 1] });
   for (const [x, z, c] of [[-38, 14, 0x2a6ad8], [-38, 17, 0xd83a3a], [-31, 16, 0x2a9a5a]]) w.box(6, 2.6, 2.4, M(c, { rough: 0.6, metal: 0.3 }), x, 2.5, z);

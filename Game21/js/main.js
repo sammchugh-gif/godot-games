@@ -22,10 +22,14 @@ import { buildPen } from "./levels/pen.js";
 import { buildCornwall } from "./levels/cornwall.js";
 import { buildFundy } from "./levels/fundy.js";
 import { buildPanama } from "./levels/panama.js";
+import { buildGalapagos } from "./levels/galapagos.js";
+import { buildHawaii } from "./levels/hawaii.js";
+import { buildReef } from "./levels/reef.js";
+import { buildHongKong } from "./levels/hongkong.js";
 import { buildCove } from "./levels/cove.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
-const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama };
+const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
@@ -50,6 +54,8 @@ async function boot() {
   G.speech = Speech;
   G.portraits = new Portraits(engine.renderer, CHARS);
   G.dialogue = new Dialogue(CHARS, G.portraits, Speech);
+  // the yellow guide arrow over Rory's head is off unless it's switched on in the pause menu
+  G.showArrow = store.get("arrow", false);
   G.dialogue.onLine = who => { G.talking = who; };
   G.hud = new HUD();
   G.travel = new Travel(engine);
@@ -97,6 +103,7 @@ function loadPlace(id) {
   if (info.gravity !== undefined) phys.setGravity(-20 * info.gravity);
   G.player.onJump = () => sound("jump");
   G.player.onPad = () => sound("pad");
+  G.player.onBurn = () => { toast("Hot hot hot! Keep off the glowing lava.", 3); sound("fail"); G.fx.puff(G.player.pos.x, G.player.pos.y, G.player.pos.z, 0xf0f0f0, 12); };
   G.player.onOutOfAir = () => { toast("Out of air! Back to dry land for a breath.", 3); sound("fail"); };
   G.player.onLand = v => { if (v > 7) { sound("land"); G.fx.puff(G.player.pos.x, G.player.pos.y + 0.05, G.player.pos.z); } };
   const bolt = G.bolt = new Robot("bolt", 1.0);
@@ -137,7 +144,8 @@ function hideBolts(place, info) {
   G.bolts = [];
   let seed = [...place.id].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
   const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
-  const [sx, sy, sz] = info.spawn, found = [];
+  // (a level can say exactly where they are: on the sea bed, say, where there's no dry land)
+  const [sx, sy, sz] = info.spawn, found = info.stars ? info.stars.slice(0, 3) : [];
   for (let tries = 0; tries < 400 && found.length < 3; tries++) {
     const a = rnd() * Math.PI * 2, d = 12 + rnd() * 26, x = sx + Math.cos(a) * d, z = sz + Math.sin(a) * d;
     const h = G.phys.rayHit({ x, y: sy + 30, z }, { x: 0, y: -1, z: 0 }, 60);
@@ -380,12 +388,13 @@ function pause() {
   const s = screen("pause", `<div class="title-sub" style="letter-spacing:.4em">PAUSED</div>
     <div class="row"><button class="btn gold" data-a="resume">RESUME</button></div>
     <div class="row"><button class="btn ghost small" data-a="music">MUSIC ${Audio.music ? "ON" : "OFF"}</button><button class="btn ghost small" data-a="voice">VOICES ${Speech.enabled ? "ON" : "OFF"}</button></div>
-    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button></div>
+    <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button><button class="btn ghost small" data-a="arrow">ARROW ${G.showArrow ? "ON" : "OFF"}</button></div>
     <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
   onTap(s, "[data-a]", b => {
     const a = b.dataset.a;
     if (a === "music") { Audio.setMusic(!Audio.music); b.textContent = "MUSIC " + (Audio.music ? "ON" : "OFF"); return; }
     if (a === "voice") { Speech.enabled = !Speech.enabled; store.set("voice", Speech.enabled); b.textContent = "VOICES " + (Speech.enabled ? "ON" : "OFF"); return; }
+    if (a === "arrow") { G.showArrow = !G.showArrow; store.set("arrow", G.showArrow); b.textContent = "ARROW " + (G.showArrow ? "ON" : "OFF"); return; }
     if (a === "gfx") { const q = (G.engine.quality + 1) % 3; try { localStorage.setItem("rory21.quality", q); } catch (e) { /* private mode */ } b.textContent = "PICTURE: " + ["SIMPLE", "GOOD", "BEST"][q] + " (restarts)"; setTimeout(() => location.reload(), 700); return; }
     clearLayer("pause");
     if (a === "missions") { missionList(); return; }
@@ -476,7 +485,7 @@ function tick(dt) {
     if (Math.hypot(G.player.pos.x - b.position.x, G.player.pos.z - b.position.z) < 1.6 && Math.abs(G.player.pos.y - b.position.y) < 2) beginMission(cur);
   } else if (G.state === "mission" && G.mission && G.mission.target) target = G.mission.target();
   const a = G.arrow;
-  if (target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
+  if (G.showArrow && target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
     a.visible = true;
     a.position.set(G.player.pos.x, G.player.pos.y + 2.25 + Math.sin(G.t * 4) * 0.06, G.player.pos.z);
     a.rotation.y = Math.atan2(target.x - G.player.pos.x, target.z - G.player.pos.z);
@@ -499,12 +508,13 @@ function tick(dt) {
   if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
   if (G.craft) G.craft.camera(G.engine.camera, dt);
   G.fx.update(dt);
+  Audio.duck(Speech.speaking);
   swimUI();
   drawTouch();
   draw();
 }
 // if Rory stands still for a while, BOLT pipes up with a nudge
-const NUDGES = ["Follow the yellow arrow, Rory. It knows the way.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
+const NUDGES = ["Look for the tall beam of light, Rory. That is where we go next.", "The glowing beacon is where the next mission starts.", "I am ready when you are. I am always ready. Mostly.", "Drag the screen to look around. Then run!"];
 function nudge(dt) {
   if (G.state !== "explore" || G.dialogue.active || !currentMission()) { G.idleT = 0; return; }
   G.idleT = (G.player.speed > 0.4 ? 0 : (G.idleT || 0) + dt);
@@ -512,7 +522,7 @@ function nudge(dt) {
 }
 function chatLines() {
   const who = G.place.contact, cur = currentMission();
-  return [[who, cur ? `The beacon for ${cur.title} is glowing. Follow the yellow arrow!` : "That's everything here. Great work, Agent Rory!"]];
+  return [[who, cur ? `The beacon for ${cur.title} is glowing. Look for the tall beam of light!` : "That's everything here. Great work, Agent Rory!"]];
 }
 
 // ------------------------------------------------------------ touch controls
@@ -616,6 +626,11 @@ G.debug = {
       for (const r of d.route || []) solid(r[0], r[1] + 0.7, r[2], `${m.id} route point`);
       for (const r of d.rings || []) solid(r[0], r[1], r[2], `${m.id} ring`);
       if (d.center) solid(d.center[0], d.center[1] + 0.7, d.center[2], `${m.id} arena`);
+      for (const k of d.kids || []) solid(k[0], k[1] + 0.3, k[2], `${m.id} little one`);
+      for (const it of d.items || []) solid(it[0], it[1] + 0.2, it[2], `${m.id} item`);
+      for (const k of d.marks || []) solid(k[0], k[1], k[2], `${m.id} marker`);
+      if (d.sub) solid(d.sub[0], d.sub[1], d.sub[2], `${m.id} sub`);
+      if (d.exit) solid(d.exit[0], d.exit[1] + 0.7, d.exit[2], `${m.id} exit`);
       if (d.path) for (const [x, z] of d.path) { const y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
       // Drips stand on the terrain wherever they walk, whatever height they're listed at
       if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);

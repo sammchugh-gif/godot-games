@@ -190,7 +190,7 @@ export const PLACES = [
       { id: "reef4", kind: "salvage", lv: 2, title: "Block the Pipe", n: 4, time: 200,
         intro: [["torpedo", "Rocks! Big ones. I will carry them. You steer, I strain."], ["pip", "Drop four boulders into the pipe's mouth, on the glowing ring."]],
         outro: [["rory", "Blocked! The water's stopped going down the pipe."], ["ruby", "Some Drips are still guarding the pump though."]] },
-      { id: "reef5", kind: "roundup", lv: 3, title: "Drip Divers", n: 6, time: 150,
+      { id: "reef5", kind: "divers", lv: 3, title: "Drip Divers", n: 6, time: 150,
         intro: [["ruby", "The Drips are swimming round the pump."], ["pip", "Swim up close and zap them into bubbles. They're slippery underwater."]],
         outro: [["bolt", "Six bubbles floating up. It looks like a lemonade."]] },
       { id: "reef6", kind: "escort", lv: 2, title: "Lost Clownfish", n: 3, time: 180,

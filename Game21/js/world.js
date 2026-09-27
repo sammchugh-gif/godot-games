@@ -139,15 +139,32 @@ export class World {
     geo.computeVertexNormals();
     const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; m.castShadow = !!o.cast; this.scene.add(m);
     this.terrainCol = this.phys.world.createCollider(R.ColliderDesc.heightfield(n, n, heights, { x: size, y: 1, z: size }).setFriction(0.9));
-    this.heightAt = f;
+    this.heightAt = f; this.tgrid = { size, seg: size / n };
+    // the height of the drawn ground (its triangles, not the smooth function), so skins laid over
+    // it don't dip under it between the grid points
+    const seg = size / n, vy = k => pos.getY(k);
+    this.groundAt = (x, z) => {
+      const gx = (x + size / 2) / seg, gz = (z + size / 2) / seg, ix = Math.floor(gx), iz = Math.floor(gz);
+      if (ix < 0 || iz < 0 || ix >= n || iz >= n) return f(x, z);
+      const u = gx - ix, v = gz - iz, a = vy(iz * (n + 1) + ix), b = vy((iz + 1) * (n + 1) + ix), c = vy((iz + 1) * (n + 1) + ix + 1), d = vy(iz * (n + 1) + ix + 1);
+      return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
+    };
     return m;
   }
   // a skin laid over the ground (sand on a beach, mud in a harbour): a patch of the terrain's own
   // shape, a hand's breadth above it, where inside(x, z) says so
   overlay(x, z, sx, sz, mat, inside = () => true, lift = 0.04) {
-    const n = Math.max(8, Math.round(Math.max(sx, sz) / 1.5)), geo = new THREE.PlaneGeometry(sx, sz, n, n); geo.rotateX(-Math.PI / 2);
+    let nx = Math.max(8, Math.round(Math.max(sx, sz) / 1.5)), nz = nx;
+    // over a terrain, the skin's grid is the terrain's own grid split in two each way, lined up
+    // with it: then every little triangle lies flat on one of the ground's, however steep it is
+    if (this.tgrid) {
+      const st = this.tgrid.seg / 2, o0 = -this.tgrid.size / 2, snap = (v, f) => o0 + f((v - o0) / st) * st;
+      const xa = snap(x - sx / 2, Math.floor), xb = snap(x + sx / 2, Math.ceil), za = snap(z - sz / 2, Math.floor), zb = snap(z + sz / 2, Math.ceil);
+      sx = xb - xa; sz = zb - za; x = (xa + xb) / 2; z = (za + zb) / 2; nx = Math.round(sx / st); nz = Math.round(sz / st);
+    }
+    const geo = new THREE.PlaneGeometry(sx, sz, nx, nz); geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position, keep = [];
-    for (let i = 0; i < pos.count; i++) { const px = pos.getX(i) + x, pz = pos.getZ(i) + z; pos.setY(i, (this.heightAt ? this.heightAt(px, pz) : 0) + lift); keep.push(inside(px, pz)); }
+    for (let i = 0; i < pos.count; i++) { const px = pos.getX(i) + x, pz = pos.getZ(i) + z; pos.setY(i, (this.groundAt ? this.groundAt(px, pz) : this.heightAt ? this.heightAt(px, pz) : 0) + lift); keep.push(inside(px, pz)); }
     // drop the triangles outside the patch
     const idx = geo.index.array, out = [];
     for (let t = 0; t < idx.length; t += 3) if (keep[idx[t]] && keep[idx[t + 1]] && keep[idx[t + 2]]) out.push(idx[t], idx[t + 1], idx[t + 2]);
@@ -245,6 +262,16 @@ export class World {
     this.updaters.push(dt => { if (this.fx && Math.random() < dt * 40) this.fx.bubble(x + (Math.random() - 0.5) * 0.7, y + 0.3, z + (Math.random() - 0.5) * 0.7, Math.min(this.sea ? this.sea.level : Infinity, y + h)); });
     return v;
   }
+  // glowing lava Rory mustn't stand on: a flow from (x0, z0) to (x1, z1), r wide, its surface at y
+  lavaFlow(x0, z0, x1, z1, r, y) { (this.flows || (this.flows = [])).push({ x0, z0, x1, z1, r, y }); }
+  hotAt(x, z, y) {
+    for (const f of this.flows || []) {
+      if (y > f.y + 0.6) continue;
+      const dx = f.x1 - f.x0, dz = f.z1 - f.z0, L = dx * dx + dz * dz, t = L ? Math.max(0, Math.min(1, ((x - f.x0) * dx + (z - f.z0) * dz) / L)) : 0;
+      if (Math.hypot(x - f.x0 - dx * t, z - f.z0 - dz * t) < f.r) return true;
+    }
+    return false;
+  }
   trigger(x, y, z, r, fn, once = true) { const t = { x, y, z, r, fn, once, done: false }; this.triggers.push(t); return t; }
   // ------------------------------------------------------------ decoration
   tree(x, z, h = 6, o = {}) {
@@ -263,20 +290,20 @@ export class World {
     if (o.collide !== false) this.phys.fixedCyl(x, (o.y || 0) + h * 0.2, z, h * 0.06, h * 0.2);
     return g;
   }
-  palm(x, z, h = 7) {
-    const g = new THREE.Group(); g.position.set(x, 0, z); this.scene.add(g);
+  palm(x, z, h = 7, o = {}) {
+    const y0 = o.y || 0, g = new THREE.Group(); g.position.set(x, y0, z); this.scene.add(g);
     const bark = M(0x8a6a44, { rough: 0.95 });
     for (let i = 0; i < 8; i++) { const s = new THREE.Mesh(new THREE.CylinderGeometry(0.16 - i * 0.008, 0.2 - i * 0.008, h / 8, 8), bark); s.position.set(Math.sin(i * 0.2) * i * 0.08, h / 16 + i * h / 8, 0); s.castShadow = true; g.add(s); }
     const leaf = M(0x3a9a3a, { rough: 0.7, side: THREE.DoubleSide });
     for (let i = 0; i < 7; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 3.6, 1, 4), leaf); const pos = l.geometry.attributes.position; for (let k = 0; k < pos.count; k++) pos.setZ(k, -Math.pow((pos.getY(k) + 1.8) / 3.6, 2) * 1.2); l.geometry.computeVertexNormals(); l.position.set(0.6, h, 0); l.rotation.set(-1.1, i / 7 * Math.PI * 2, 0, "YXZ"); l.translateY(1.6); l.castShadow = true; g.add(l); }
-    this.phys.fixedCyl(x, h / 2, z, 0.25, h / 2);
+    this.phys.fixedCyl(x, y0 + h / 2, z, 0.25, h / 2);
     return g;
   }
   lamp(x, z, h = 4.2, color = 0xffe0a0, o = {}) {
-    const post = M(o.post ?? 0x1e2228, { metal: 0.6, rough: 0.4 });
-    this.cyl(0.07, 0.1, h, post, x, h / 2, z, { seg: 10 });
-    const bulb = this.mesh(new THREE.SphereGeometry(0.22, 16, 10), M(color, { emissive: color, ei: o.ei ?? 4 }), x, h + 0.1, z, { cast: false });
-    if (o.light) { const l = new THREE.PointLight(color, o.light, 14, 1.6); l.position.set(x, h, z); this.scene.add(l); }
+    const post = M(o.post ?? 0x1e2228, { metal: 0.6, rough: 0.4 }), y0 = o.y || 0;
+    this.cyl(0.07, 0.1, h, post, x, y0 + h / 2, z, { seg: 10 });
+    const bulb = this.mesh(new THREE.SphereGeometry(0.22, 16, 10), M(color, { emissive: color, ei: o.ei ?? 4 }), x, y0 + h + 0.1, z, { cast: false });
+    if (o.light) { const l = new THREE.PointLight(color, o.light, 14, 1.6); l.position.set(x, y0 + h, z); this.scene.add(l); }
     return bulb;
   }
   bench(x, z, ry = 0) {
@@ -287,12 +314,15 @@ export class World {
     this.phys.fixedBox(x, 0.3, z, 0.9 * Math.abs(Math.cos(ry)) + 0.25 * Math.abs(Math.sin(ry)), 0.3, 0.25 * Math.abs(Math.cos(ry)) + 0.9 * Math.abs(Math.sin(ry)));
     return g;
   }
-  fence(x0, z0, x1, z1, h = 1, mat) {
+  // o.y: the ground under the fence, a height or a function (x, z) => height for sloping ground
+  fence(x0, z0, x1, z1, h = 1, mat, o = {}) {
     const len = Math.hypot(x1 - x0, z1 - z0), ry = Math.atan2(x1 - x0, z1 - z0), n = Math.max(1, Math.round(len / 2));
-    const m = mat || M(0x2a2e34, { metal: 0.5, rough: 0.5 });
-    for (let i = 0; i <= n; i++) this.mesh(new THREE.BoxGeometry(0.08, h, 0.08), m, x0 + (x1 - x0) * i / n, h / 2, z0 + (z1 - z0) * i / n);
-    this.box(0.05, 0.06, len, m, (x0 + x1) / 2, h * 0.9, (z0 + z1) / 2, { ry, collide: false });
-    this.phys.fixedBox((x0 + x1) / 2, h / 2, (z0 + z1) / 2, 0.08, h / 2, len / 2, ry);
+    const m = mat || M(0x2a2e34, { metal: 0.5, rough: 0.5 }), Y = typeof o.y === "function" ? o.y : () => o.y || 0;
+    for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n, z = z0 + (z1 - z0) * i / n; this.mesh(new THREE.BoxGeometry(0.08, h, 0.08), m, x, Y(x, z) + h / 2, z); }
+    const ya = Y(x0, z0), yb = Y(x1, z1), ym = (ya + yb) / 2, pitch = Math.atan2(yb - ya, len);
+    const rail = this.mesh(new THREE.BoxGeometry(0.05, 0.06, Math.hypot(len, yb - ya)), m, (x0 + x1) / 2, ym + h * 0.9, (z0 + z1) / 2);
+    rail.rotation.set(-pitch, ry, 0, "YXZ");
+    this.phys.fixedBox((x0 + x1) / 2, ym + h / 2, (z0 + z1) / 2, 0.08, h / 2 + Math.abs(yb - ya) / 2, len / 2, ry);
   }
   sign(text, w, h, x, y, z, ry = 0, o = {}) {
     const t = TEX.sign(text, { bg: o.bg, fg: o.fg, border: o.border, w: 512, h: Math.round(512 * h / w) });

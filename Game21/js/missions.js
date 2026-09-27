@@ -10,6 +10,7 @@ import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing } from "./props.js";
 import { toast } from "./ui.js";
+import { critter, animateCritter } from "./critters.js";
 
 const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -236,9 +237,15 @@ export class Roundup extends Mission {
       const r = new Robot(d.robot || "drip", 1.25); r.root.position.set(s[0], s[1], s[2]); this.add(r.root);
       this.bots.push({ r, state: "walk", goal: this.pickGoal(), t: 0, bubble: null, speed: 1.2 + this.lv * 0.5 });
     }
+    // Drips in costume (an iguana riding on the back of each one), and real animals wandering among
+    // them that mustn't be bubbled
+    if (d.costume) for (const b of this.bots) { const c = critter(d.costume, 1.5); c.position.set(0, 0.95, -0.1); c.rotation.x = -0.25; b.r.root.add(c); }
+    this.decoys = (d.decoys || []).map(([x, z]) => { const c = critter(d.costume || "iguana", 2.2); c.position.set(x, this.w.heightAt ? this.w.heightAt(x, z) : 0, z); this.add(c); return { c, goal: this.pickGoal(), rest: Math.random() * 3 }; });
     this.popped = 0; this.cool = 0;
     this.shots = [];
   }
+  // how high a walking bot is: on the ground
+  botY(b) { return this.w.heightAt ? this.w.heightAt(b.r.pos.x, b.r.pos.z) : b.r.pos.y; }
   pickGoal() { const [x, z, r] = this.area, a = Math.random() * Math.PI * 2, d = Math.random() * r; return [x + Math.cos(a) * d, z + Math.sin(a) * d]; }
   update(dt) {
     const pp = this.p.pos;
@@ -251,12 +258,22 @@ export class Roundup extends Mission {
         if (this.lv >= 2 && dp < 5) { const [x, z] = [b.r.pos.x + dx / dp * 4, b.r.pos.z + dz / dp * 4]; const [ax, az, ar] = this.area; const k = Math.hypot(x - ax, z - az) > ar ? 0.3 : 1; b.goal = [ax + (x - ax) * k, az + (z - az) * k]; b.r.play("Running"); b.speed = 2.2 + this.lv * 0.6; }
         else { b.r.play("Walking"); b.speed = 1.2 + this.lv * 0.4; }
         if (b.r.walkTo(b.goal[0], b.goal[1], b.speed, dt) < 0.3) b.goal = this.pickGoal();
-        if (this.w.heightAt) b.r.pos.y = this.w.heightAt(b.r.pos.x, b.r.pos.z);
+        b.r.pos.y = this.botY(b);
       } else if (b.state === "float") {
         b.t += dt; b.r.pos.y += dt * (1.5 + b.t); b.bubble.position.copy(b.r.pos); b.bubble.position.y += 0.65;
         b.r.root.rotation.y += dt * 2;
         if (b.t > 2.2) { b.state = "gone"; b.r.root.visible = false; b.bubble.visible = false; this.g.fx.burst(b.bubble.position.x, b.bubble.position.y, b.bubble.position.z, 0xff9ae8, 30); this.g.sound("pop"); this.g.addCells(1); }
       }
+    }
+    // the real animals amble about, stopping now and then
+    for (const k of this.decoys) {
+      const c = k.c;
+      if (k.rest > 0) { k.rest -= dt; animateCritter(c, dt, 0.1); continue; }
+      const dx = k.goal[0] - c.position.x, dz = k.goal[1] - c.position.z, dd = Math.hypot(dx, dz);
+      if (dd < 0.3) { k.goal = this.pickGoal(); k.rest = 1 + Math.random() * 3; continue; }
+      c.position.x += dx / dd * 0.7 * dt; c.position.z += dz / dd * 0.7 * dt; c.rotation.y = Math.atan2(dx, dz);
+      if (this.w.heightAt) c.position.y = this.w.heightAt(c.position.x, c.position.z);
+      animateCritter(c, dt, 0.6);
     }
     // shots in flight
     for (const s of this.shots) {
@@ -264,7 +281,13 @@ export class Roundup extends Mission {
       s.t += dt;
       s.m.position.addScaledVector(s.v, dt);
       const hit = this.bots.find(b => b.state === "walk" && b.r.pos.distanceTo(s.m.position.clone().setY(b.r.pos.y)) < 1.0 && Math.abs(s.m.position.y - b.r.pos.y - 0.6) < 1.2);
-      if (hit) { s.dead = true; s.m.visible = false; this.bubbleUp(hit); }
+      const oops = !hit && this.decoys.find(k => Math.hypot(k.c.position.x - s.m.position.x, k.c.position.z - s.m.position.z) < 1.1 && Math.abs(s.m.position.y - k.c.position.y - 0.4) < 1);
+      if (oops) {
+        s.dead = true; s.m.visible = false; oops.rest = 2;
+        this.g.fx.burst(oops.c.position.x, oops.c.position.y + 0.5, oops.c.position.z + 0.6, 0xffffff, 16); this.g.sound("fail");
+        toast("Achoo! It sneezed salt. That one's a real iguana.", 2.5);
+      }
+      else if (hit) { s.dead = true; s.m.visible = false; this.bubbleUp(hit); }
       else if (s.t > 0.8) { s.dead = true; s.m.visible = false; }
     }
     if (this.g.input.takeAction() && this.cool <= 0) this.fire();
@@ -827,19 +850,26 @@ export class Stealth extends Mission {
     if (d > this.range || d < 0.01) return d < 0.9;
     let a = Math.atan2(dx, dz) - pose.yaw; a = Math.atan2(Math.sin(a), Math.cos(a));
     if (Math.abs(a) > this.half) return false;
-    // walls block the light
-    const hit = this.g.phys.ray({ x: pose.x, y: y + 1.0, z: pose.z }, { x: dx / d, y: 0, z: dz / d }, d, this.p.walker.col);
-    return hit === null || hit > d - 0.4;
+    // walls block the light (a ray from the guard's lamp to the spot, up or down a slope)
+    const gy = this.guardY(g, pose.x, pose.z) + 1.0, dy = y + 1.0 - gy, L = Math.hypot(d, dy);
+    const hit = this.g.phys.ray({ x: pose.x, y: gy, z: pose.z }, { x: dx / L, y: dy / L, z: dz / L }, L, this.p.walker.col);
+    return hit === null || hit > L - 0.4;
+  }
+  // a guard stands on whatever is under it (sloping ground, a deck), near the height it was given
+  guardY(g, x, z) {
+    const h = this.g.phys.ray({ x, y: g.y + 2, z }, { x: 0, y: -1, z: 0 }, 4, this.p.walker.col);
+    return h !== null ? g.y + 2 - h : g.y;
   }
   update(dt) {
     const pp = this.p.pos;
     this.flash = Math.max(0, this.flash - dt);
     for (const g of this.guards) {
       const ps = this.pose(g, this.t);
-      g.r.pos.set(ps.x, g.y, ps.z); g.r.root.rotation.y = ps.yaw; g.r.play(ps.moving ? "Walking" : "Idle"); g.r.update(dt);
-      g.cone.position.set(ps.x, g.y + 0.06, ps.z); g.cone.rotation.z = ps.yaw - Math.PI / 2;
+      const gy = this.guardY(g, ps.x, ps.z);
+      g.r.pos.set(ps.x, gy, ps.z); g.r.root.rotation.y = ps.yaw; g.r.play(ps.moving ? "Walking" : "Idle"); g.r.update(dt);
+      g.cone.position.set(ps.x, gy + 0.06, ps.z); g.cone.rotation.z = ps.yaw - Math.PI / 2;
       g.cone.material.color.setHex(this.flash > 0 ? 0xff3a3a : 0xffe066).multiplyScalar(1.5);
-      if (this.flash <= 0 && this.sees(g, ps, pp.x, pp.z)) { this.spotted(g); return; }
+      if (this.flash <= 0 && this.sees(g, ps, pp.x, pp.z, pp.y)) { this.spotted(g); return; }
     }
     if (pp.distanceTo(this.goal) < 1.3) { this.case.visible = false; this.g.fx.burst(this.goal.x, this.goal.y + 1, this.goal.z, 0x7fe3ff, 30); this.win(); }
     this.case.rotation.y += dt;
@@ -865,15 +895,16 @@ export class Stealth extends Mission {
     const nx = Math.ceil((x1 - x0) / cell), nz = Math.ceil((z1 - z0) / cell), N = nx * nz;
     const cx = i => x0 + (i % nx + 0.5) * cell, cz = i => z0 + (Math.floor(i / nx) + 0.5) * cell;
     const world = this.g.phys.world, me = this.p.walker.col;
-    const blockedAt = (x, z) => { let hit = false; for (const [ox, oz] of [[0, 0], [0.35, 0], [-0.35, 0], [0, 0.35], [0, -0.35]]) world.intersectionsWithPoint({ x: x + ox, y: y + 0.7, z: z + oz }, c => { if (c === me) return true; const b = c.parent(); if (b && !b.isFixed()) return true; hit = true; return false; }); return hit; };
-    // the floor has to be there too
-    const floorAt = (x, z) => { const h = this.g.phys.ray({ x, y: y + 1.5, z }, { x: 0, y: -1, z: 0 }, 3, me); return h !== null && Math.abs(y + 1.5 - h - y) < 0.4; };
+    const blockedAt = (x, z, fy) => { let hit = false; for (const [ox, oz] of [[0, 0], [0.35, 0], [-0.35, 0], [0, 0.35], [0, -0.35]]) world.intersectionsWithPoint({ x: x + ox, y: fy + 0.7, z: z + oz }, c => { if (c === me) return true; const b = c.parent(); if (b && !b.isFixed()) return true; hit = true; return false; }); return hit; };
+    // the floor has to be there too (it may slope a little: each cell keeps its own height)
+    const fy = new Float32Array(N).fill(NaN);
+    for (let i = 0; i < N; i++) { const h = this.g.phys.ray({ x: cx(i), y: y + 2.5, z: cz(i) }, { x: 0, y: -1, z: 0 }, 5, me); if (h !== null) fy[i] = y + 2.5 - h; }
     const free = new Uint8Array(N);
-    for (let i = 0; i < N; i++) free[i] = !blockedAt(cx(i), cz(i)) && floorAt(cx(i), cz(i)) ? 1 : 0;
+    for (let i = 0; i < N; i++) free[i] = !isNaN(fy[i]) && !blockedAt(cx(i), cz(i), fy[i]) ? 1 : 0;
     const idx = (x, z) => { const i = Math.floor((x - x0) / cell), j = Math.floor((z - z0) / cell); return i < 0 || j < 0 || i >= nx || j >= nz ? -1 : j * nx + i; };
     const start = idx(this.p.pos.x, this.p.pos.z), goalR = 1.0;
     const t0 = this.t;
-    const seen = (i, k) => { const t = t0 + k * dt; for (const g of this.guards) { if (this.sees(g, this.pose(g, t), cx(i), cz(i)) || this.sees(g, this.pose(g, t + dt * 0.5), cx(i), cz(i))) return true; } return false; };
+    const seen = (i, k) => { const t = t0 + k * dt; for (const g of this.guards) { if (this.sees(g, this.pose(g, t), cx(i), cz(i), fy[i]) || this.sees(g, this.pose(g, t + dt * 0.5), cx(i), cz(i), fy[i])) return true; } return false; };
     let layer = new Int32Array(N).fill(-2); layer[start] = start;
     const parents = [layer];
     for (let k = 1; k <= steps; k++) {
@@ -884,14 +915,14 @@ export class Stealth extends Mission {
         const ix = i % nx, iz = Math.floor(i / nx);
         for (const [dx, dz] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const jx = ix + dx, jz = iz + dz; if (jx < 0 || jz < 0 || jx >= nx || jz >= nz) continue;
-          const j = jz * nx + jx; if (next[j] !== -2 || !free[j] || seen(j, k)) continue;
+          const j = jz * nx + jx; if (next[j] !== -2 || !free[j] || Math.abs(fy[j] - fy[i]) > 0.45 || seen(j, k)) continue;
           next[j] = i; any = true;
           if (Math.hypot(cx(j) - this.goal.x, cz(j) - this.goal.z) < goalR) {
             // walk the parents back to the start
             parents.push(next);
             const out = [j]; let cur = j;
             for (let q = k; q > 0; q--) { cur = parents[q][cur]; out.unshift(cur); }
-            return { t0, dt, cells: out.map(c2 => new THREE.Vector3(cx(c2), y, cz(c2))) };
+            return { t0, dt, cells: out.map(c2 => new THREE.Vector3(cx(c2), fy[c2], cz(c2))) };
           }
         }
       }

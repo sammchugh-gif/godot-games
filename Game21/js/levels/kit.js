@@ -60,7 +60,7 @@ export function pier(w, x0, z0, x1, z1, top, width = 4, bottom = -12, mat) {
 
 // a scatter of boulders round (cx, cz), sitting on the ground at y (or the terrain), each with a collider
 export function rocks(w, cx, cz, n, spread, size, o = {}) {
-  const R = rng(o.seed || 17), mat = M("stone", { args: [o.seed || 5, o.color || [120, 116, 108]], repeat: [1, 1] });
+  const R = rng(o.seed || 17), mat = M("rock", { args: [o.seed || 5, o.color || [120, 116, 108]], repeat: [1, 1] });
   const out = [];
   for (let i = 0; i < n; i++) {
     const a = R() * Math.PI * 2, d = Math.sqrt(R()) * spread, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
@@ -74,7 +74,7 @@ export function rocks(w, cx, cz, n, spread, size, o = {}) {
 
 // a slab of cliff rock: a box with a rock face, rough rocks stuck to its faces to break up the edges
 export function cliff(w, x, y, z, sx, sy, sz, o = {}) {
-  const mat = M("stone", { args: [o.seed || 61, o.color || [118, 112, 102]], repeat: [Math.max(1, Math.round(sx / 6)), Math.max(1, Math.round(sy / 6))] });
+  const mat = M("rock", { args: [o.seed || 61, o.color || [118, 112, 102]], repeat: [Math.max(1, Math.round(sx / 6)), Math.max(1, Math.round(sy / 6))] });
   w.box(sx, sy, sz, mat, x, y, z, { ry: o.ry || 0 });
   if (o.lumps !== false) {
     const R = rng(o.seed || 61), n = Math.round((sx + sz) / 3);
@@ -135,7 +135,10 @@ export function lighthouse(w, x, y, z, o = {}) {
   w.mesh(new THREE.SphereGeometry(Ri * 0.85, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), band, x, topY + 2.7 + 1.4, z);
   w.box(Ri * 1.7, 0.2, Ri * 1.7, dark, x, topY + 1.4, z, { collide: false });
   const lamp = w.mesh(new THREE.SphereGeometry(0.6, 16, 10), new THREE.MeshStandardMaterial({ color: 0xfff4c8, emissive: 0xfff0b0, emissiveIntensity: 5 }), x, topY + 2.6, z, { cast: false });
-  return { top: topY, steps, lamp, door: [x + Math.sin(doorA) * (Ro + 1.5), y, z + Math.cos(doorA) * (Ro + 1.5)], gallery: [x + Math.sin(doorA) * (Ro + 0.7), topY, z + Math.cos(doorA) * (Ro + 0.7)] };
+  // the way up for the autopilot: in at the door, up every step, across the landing, out onto the gallery
+  const at = (r, yy) => [x + Math.sin(doorA) * r, yy, z + Math.cos(doorA) * r];
+  const climb = [at(Ro + 1.5, y), at(rm, y + 0.3), ...steps, at(rm, topY), at(Ro + 0.7, topY)];
+  return { top: topY, steps, lamp, climb, door: at(Ro + 1.5, y), gallery: at(Ro + 0.7, topY) };
 }
 
 // a road along a closed loop of [x, z] points, laid on the ground: a strip of asphalt with a
@@ -167,11 +170,42 @@ function roadTex() {
 // a sea stack shaped like a flowerpot: narrow at the foot where the tides wore it away, wide at
 // the top, with trees growing on it. Returns the height of its flat top.
 export function flowerpot(w, x, y, z, h, r, o = {}) {
-  const red = M("stone", { args: [o.seed || 81, [168, 92, 64]], repeat: [2, 3] }), turf = M("grass", { args: [23, [80, 120, 60]], repeat: [2, 2] });
+  const red = M("rock", { args: [o.seed || 81, [168, 92, 64]], repeat: [2, 3] }), turf = M("grass", { args: [23, [80, 120, 60]], repeat: [2, 2] });
   const foot = w.cyl(r * 0.55, r * 0.65, h * 0.45, red, x, y + h * 0.225, z, { seg: 11 });
   const top = w.cyl(r, r * 0.6, h * 0.55, red, x, y + h * 0.45 + h * 0.275, z, { seg: 11 });
   foot.rotation.y = top.rotation.y = (o.seed || 1) * 0.7;
   w.cyl(r * 0.98, r * 0.98, 0.3, turf, x, y + h + 0.15, z, { seg: 11 });
   for (let k = 0; k < (o.trees ?? 3); k++) { const a = k * 2.1 + (o.seed || 0), d = r * 0.5; w.pine(x + Math.cos(a) * d, z + Math.sin(a) * d, 4 + (k % 2) * 1.5, { y: y + h + 0.3, collide: k === 0 }); }
   return y + h + 0.3;
+}
+
+// a coral head on the sea bed at (x, y, z), about s metres across: brain coral, branching coral,
+// a table coral or a sea fan (picked by the seed), in reef colours. Big ones get a collider.
+const CORAL = [0xff7a8a, 0xffb040, 0xb070e0, 0x40c8b0, 0xff5a5a, 0xf0e070, 0x6a90ff];
+export function coral(w, x, y, z, s = 1.5, seed = 1) {
+  const R = rng(seed * 31 + 7), col = CORAL[seed % CORAL.length], mat = M(col, { rough: 0.8, emissive: col, ei: 0.08 });
+  const kind = seed % 4, g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = R() * 6; w.scene.add(g);
+  const add = (geo, px, py, pz) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+  if (kind === 0) {
+    // brain coral: a lumpy dome
+    const geo = new THREE.IcosahedronGeometry(s / 2, 3), p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) { const vx = p.getX(i), vy = p.getY(i), vz = p.getZ(i), k = 1 + Math.sin(vx * 9 / s + vz * 5 / s) * 0.05 + Math.cos(vz * 11 / s) * 0.04; p.setXYZ(i, vx * k, Math.max(-s * 0.1, vy * k * 0.75), vz * k); }
+    geo.computeVertexNormals(); add(geo, 0, s * 0.1, 0);
+    if (s > 1) w.phys.fixedBall(x, y + s * 0.1, z, s * 0.4);
+  } else if (kind === 1) {
+    // branching (staghorn) coral: a bush of thin cones
+    for (let i = 0; i < 9; i++) { const a = R() * 6.28, t = 0.2 + R() * 0.7, br = add(new THREE.CylinderGeometry(0.03 * s, 0.08 * s, s * (0.5 + R() * 0.5), 6), (R() - 0.5) * s * 0.4, s * 0.3, (R() - 0.5) * s * 0.4); br.rotation.set(Math.cos(a) * t, 0, Math.sin(a) * t); }
+  } else if (kind === 2) {
+    // table coral: a flat plate on a stalk
+    add(new THREE.CylinderGeometry(0.1 * s, 0.14 * s, s * 0.5, 8), 0, s * 0.25, 0);
+    add(new THREE.CylinderGeometry(s * 0.6, s * 0.45, 0.12 * s, 14), 0, s * 0.52, 0);
+    if (s > 1) w.phys.fixedCyl(x, y + s * 0.52, z, s * 0.55, 0.06 * s);
+  } else {
+    // a sea fan: a flat lacy disc standing up
+    const fan = add(new THREE.CircleGeometry(s * 0.5, 16, 0, Math.PI), 0, 0.05, 0);
+    fan.material = M(col, { rough: 0.8, side: THREE.DoubleSide, emissive: col, ei: 0.1 });
+    add(new THREE.CylinderGeometry(0.03, 0.05, 0.3, 5), 0, 0.1, 0);
+  }
+  g.traverse(n => { if (n.isMesh) n.userData.dynamic = false; });
+  return g;
 }
