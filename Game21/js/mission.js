@@ -125,6 +125,7 @@ export class Mission {
     }
     let best = null, bd = 1e9;
     for (const e of this.exits) { const d = Math.hypot(e.x - pp.x, e.z - pp.z); if (d < bd) { bd = d; best = e; } }
+    this.lastExit = best;
     return best;
   }
   // the moving platform (ferry deck, cable car roof) that carries obj

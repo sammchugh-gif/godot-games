@@ -147,7 +147,12 @@ export class Player {
     const jump = input.takeJump() && !this.frozen;
     this.buffer = 0; this.coyote = 0;
     let vy;
-    if (atTop && jump && !input.diveHeld) { w.vel.y = 7.2; this.swimming = false; if (this.onJump) this.onJump(); return; }
+    // (hard enough to get his feet well clear of the water, and a push the way he's swimming, so a
+    // step or a low ledge at the edge can be climbed out onto)
+    if (atTop && jump && !input.diveHeld) {
+      w.vel.y = 9; const h = Math.hypot(w.vel.x, w.vel.z); if (h > 0.3) { w.vel.x += w.vel.x / h * 1.5; w.vel.z += w.vel.z / h * 1.5; }
+      this.swimming = false; if (this.onJump) this.onJump(); return;
+    }
     if (input.diveHeld && !this.frozen) vy = -3;
     else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
     else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
