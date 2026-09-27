@@ -44,7 +44,7 @@ export function buildIce(w) {
   w.box(2.6, 0.4, 1.2, M("wood", { args: [5, [140, 100, 60]] }), 4, TOP + 0.2, 8);
   w.cyl(0.05, 0.05, 4, M(0xd8d8d8), 6, TOP + 2, 1, { seg: 6 });
   w.box(1.2, 0.8, 0.02, M(0x2a6ad8), 6.6, TOP + 3.5, 1, { collide: false });
-  w.steps(4, 1.2, 0.35, 0.35, M(0x8a8a8a, { metal: 0.6 }), 2.6, TOP - 1.4, -1.2, -Math.PI / 2);
+  w.steps(4, 1.2, 0.35, 0.35, M(0x8a8a8a, { metal: 0.6 }), 2.5, TOP - 1.4, -1.2, Math.PI / 2);
 
   // ---- the factory: a hall on stilts over the trench, with a moon pool; conveyors of ice bricks
   const F = -14, FX0 = -30, FX1 = 10, FZ0 = -22, FZ1 = 2, POOL = { x0: 4, x1: 8, z0: -4, z1: 0 };
