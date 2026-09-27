@@ -482,7 +482,7 @@ export class Surf extends Piloted {
     const along = (c.pos.x - this.data.start[0]) * fw.x + (c.pos.z - this.data.start[2]) * fw.z;
     if (along > this.beach) { if (this.got >= this.need) this.win(); else this.lose("NOT ENOUGH PEARLS"); }
   }
-  hud() { return { ...super.hud(), text: `Surf in and grab the pearls  ${this.got}/${this.need}`, progress: Math.min(1, this.got / this.need) }; }
+  hud() { return { ...super.hud(), text: `Surf in and grab the pearls  ${Math.min(this.got, this.need)}/${this.need}`, progress: Math.min(1, this.got / this.need) }; }
   target() { const p = this.pearls.find(p => p.visible); return p ? p.position : null; }
   solve() {
     const c = this.craft, fw = new THREE.Vector3(Math.sin(this.data.start[3] || 0), 0, Math.cos(this.data.start[3] || 0));
