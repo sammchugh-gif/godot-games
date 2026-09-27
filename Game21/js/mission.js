@@ -112,7 +112,14 @@ export class Mission {
     // (nor past one where the straight line to it runs off an edge: cutting the corner of a pier
     // walks into the sea)
     const floored = (q, d) => { const lo = Math.min(pp.y, q.h) - 0.6, hi = Math.max(pp.y, q.h) + 0.3; for (let t = 0.4; t < d; t += 0.4) { const f = this.nav.top(pp.x + (q.x - pp.x) * t / d, pp.z + (q.z - pp.z) * t / d, hi); if (f < lo) return false; } return true; };
-    const seen = q => { const d = Math.hypot(q.x - pp.x, q.z - pp.z); return d < 0.1 || (this.w.phys.ray({ x: pp.x, y: pp.y + 0.5, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, d, w.col) === null && floored(q, d)); };
+    // (seen down both sides of Rory as well as the middle: a line that grazes the end of a banister
+    // snags her shoulder on it and turns her the wrong side of it)
+    const seen = q => {
+      const d = Math.hypot(q.x - pp.x, q.z - pp.z); if (d < 0.1) return true;
+      const ux = (q.x - pp.x) / d, uz = (q.z - pp.z) / d;
+      for (const s of [0, -0.28, 0.28]) if (this.w.phys.ray({ x: pp.x - uz * s, y: pp.y + 0.5, z: pp.z + ux * s }, { x: ux, y: 0, z: uz }, d, w.col) !== null) return false;
+      return floored(q, d);
+    };
     let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop") && seen(path[j + 1])) j++;
     // (and walk on past the foot of a drop: it can be only a hand's width beyond the edge)
     const q = path[j], o = path[j - 1], L = Math.hypot(q.x - o.x, q.z - o.z) || 1, on = q.how === "drop" ? 0.8 / L : 0;
