@@ -1,0 +1,104 @@
+{
+ "_default": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.0
+ },
+ "rory": {
+  "voice": "bf_lily:0.7,bm_fable:0.3",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.15
+ },
+ "frost": {
+  "voice": "bm_george",
+  "lang": "en-gb",
+  "speed": 0.85,
+  "pitch": 0.94
+ },
+ "pip": {
+  "voice": "bf_emma",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 1.08
+ },
+ "bolt": {
+  "voice": "am_puck",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.18
+ },
+ "torpedo": {
+  "voice": "bm_lewis:0.6,am_echo:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "undertow": {
+  "voice": "bf_isabella",
+  "lang": "en-gb",
+  "speed": 0.85,
+  "pitch": 0.95
+ },
+ "drip": {
+  "voice": "am_fenrir",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.3
+ },
+ "morwenna": {
+  "voice": "bf_alice",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "emile": {
+  "voice": "ff_siwis:0.5,am_liam:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "valeria": {
+  "voice": "ef_dora",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.08
+ },
+ "mateo": {
+  "voice": "em_alex",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "kai": {
+  "voice": "am_liam",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "ruby": {
+  "voice": "af_sarah:0.6,bf_lily:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "ming": {
+  "voice": "zm_yunxi:0.5,am_puck:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "aisha": {
+  "voice": "hf_alpha",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "nia": {
+  "voice": "af_kore:0.6,af_heart:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.08
+ }
+}
