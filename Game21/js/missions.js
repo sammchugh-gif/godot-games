@@ -247,7 +247,7 @@ export class Cells extends Mission {
   // a cell hanging in the air
   padFor(c) {
     const cp = c.position;
-    return (this.w.pads || []).filter(P => P.y < cp.y && Math.hypot(P.x - cp.x, P.z - cp.z) < 5 && P.y + 0.7 + P.power * P.power / 31 > cp.y - 0.2 && !(this.w.zones || []).some(z => Math.hypot(P.x - z.x, P.z - z.z) < z.r))
+    return (this.w.pads || []).filter(P => P.y < cp.y && Math.hypot(P.x - cp.x, P.z - cp.z) < 7.5 && P.y + 0.7 + P.power * P.power / 31 > cp.y - 0.2 && !(this.w.zones || []).some(z => Math.hypot(P.x - z.x, P.z - z.z) < z.r))
       .sort((a, b) => Math.hypot(a.x - cp.x, a.z - cp.z) - Math.hypot(b.x - cp.x, b.z - cp.z))[0] || null;
   }
   // A cell hanging in mid-air beside a bounce pad (no floor under it to walk to): walk onto the

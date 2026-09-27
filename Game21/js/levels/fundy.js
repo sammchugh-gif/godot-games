@@ -65,7 +65,7 @@ export function buildFundy(w) {
   crateStack(w, -20, LAND, -4, 3);
   // the flowerpot rocks on the mud, with pads at their feet
   const tops = [[4, 14, 6.5], [16, 8, 7], [24, 20, 6], [10, 26, 6.5]].map(([x, z, h]) => [x, z, flowerpot(w, x, z, h)]);
-  for (const [x, z] of [[0.5, 12], [12.5, 5], [22, 16.5], [6.5, 27]]) w.pad(x, MUD, z, 17, 0x7bed9f);
+  for (const [x, z] of [[-2, 12], [14, 2], [22, 26], [4, 28]]) w.pad(x, MUD, z, 17, 0x7bed9f); // six metres out from each rock: up clear of its side, across, and down on top
   // the tide gauge on stilts out on the mud, and the tide mill on the west shore
   const gauge = new THREE.Group(); gauge.position.set(-16, MUD, 22); w.scene.add(gauge);
   for (const [dx, dz] of [[-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [1.5, 1.5]]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3, 8), M(0x6a4a30)); p.position.set(dx, 1.5, dz); gauge.add(p); }

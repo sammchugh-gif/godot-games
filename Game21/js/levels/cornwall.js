@@ -72,7 +72,7 @@ export function buildCornwall(w) {
       route: [[-26, CY, -9], [-34, CY, -9], [-40, CY, -12], [CX, CY, -15], [CX, CY, CZ0 - 2]] },
     cw3: { start: [CX, CY, CZ0 - 4], goal: [CX, CY, CZ1 + 2], width: 7, beams: 7 },
     cw4: { title: "PUMP OFF SWITCH" },
-    cw5: { boat: "jetski", quarry: "motorboat", lead: 28, exit: [30, 1.6, -5, Math.PI], path: [[30, 10], [20, 24], [0, 36], [-24, 40], [-40, 30], [-44, 16], [-30, 8], [-6, 16], [16, 12], [40, 20], [52, 34], [44, 48], [22, 50], [8, 46], [12, 30]] },
+    cw5: { boat: "jetski", quarry: "motorboat", lead: 28, exit: [30, 1.6, -5, Math.PI], path: [[30, 12], [20, 26], [0, 38], [-24, 42], [-42, 34], [-48, 20], [-32, 20], [-6, 22], [16, 20], [40, 22], [52, 34], [44, 48], [22, 50], [8, 46], [12, 32]] },
     cw6: { title: "LIGHTHOUSE SIGNAL", word: "FUNDY" },
   };
   return { spawn: [0, LAND, -37], yaw: 0, bolt: [2, LAND, -37], contact: [-4, LAND, -35, 2.4], apply: save => { w.pumpOff = save.done.includes("cw4"); } };
