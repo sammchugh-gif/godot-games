@@ -137,7 +137,14 @@ export const swimMixin = {
     }
     let tgt = [x, y, z];
     const path = this.drivePath;
-    if (path) { while (this.driveI < path.length - 1 && Math.hypot(path[this.driveI][0] - c[0], path[this.driveI][1] - c[1], path[this.driveI][2] - c[2]) < 2) this.driveI++; tgt = path[Math.min(this.driveI, path.length - 1)]; }
+    if (path) {
+      while (this.driveI < path.length - 1 && Math.hypot(path[this.driveI][0] - c[0], path[this.driveI][1] - c[1], path[this.driveI][2] - c[2]) < 2) this.driveI++;
+      // (straight at the square ahead only if nothing's in the way: over a reef's crest the way on
+      // runs up and over, not through its edge)
+      let i = Math.min(this.driveI, path.length - 1);
+      while (i > 1 && !this.nav3.clear(c, path[i])) i--;
+      tgt = path[i];
+    }
     const dx = tgt[0] - c[0], dy = tgt[1] - c[1], dz = tgt[2] - c[2], dh = Math.hypot(dx, dz), d = Math.hypot(dx, dy, dz);
     this.driveTgt = tgt;
     cr.camYaw = Math.atan2(-dx, -dz);
