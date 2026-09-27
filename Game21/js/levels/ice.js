@@ -12,14 +12,15 @@ import { critter, animateCritter, roam, school } from "../critters.js";
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
 
 export function buildIce(w) {
-  w.setSky("snow");
+  // a clear Arctic day with the sun low: blue overhead, so the snow has something to stand against
+  w.setSky({ top: "#2f5f9e", mid: "#86aed6", bottom: "#d8e6f0", sun: [12, 150], sunColor: "#ffe2c4", sunI: 1.05, hemi: ["#b4cce8", "#6f8092", 0.42], fog: [90, 340], clouds: 6 });
   const h = (x, z) => -26 + Math.sin(x * 0.07) * Math.cos(z * 0.06) * 2 - 14 * S(18, 6, Math.abs(z + 10 + Math.sin(x * 0.05) * 4));
   w.terrain(420, 170, h, M("sand", { args: [11, [120, 128, 136]], repeat: [80, 80] }));
-  w.ocean({ level: 0, box: [0, 0, 240, 200], shallow: 0x8ad8e8, deep: 0x1a4a6a, under: 0x3a7aa0, deepUnder: 0x061a2a, clear: 0.2, waves: 0.15, caustics: 1.5, see: 36 });
+  w.ocean({ level: 0, box: [0, 0, 240, 200], shallow: 0x123a58, deep: 0x06182c, under: 0x3a7aa0, deepUnder: 0x061a2a, clear: 0.2, waves: 0.15, caustics: 1.5, see: 36 });
   w.deepAt = 60; w.floorY = -60;
   // ---- the pack ice: a roof over everything but the holes; its top is the snow Rory walks on
   const HOLES = [[0, 0, 3.2], [-40, 30, 2.6], [36, -40, 2.6], [-70, -30, 2.6], [60, 30, 2.6]];
-  const ice = M("snow", { args: [5, [232, 240, 248]], repeat: [60, 60] }), under = M(0xcfe8f4, { rough: 0.3, emissive: 0x6a9ab8, ei: 0.35 });
+  const ice = M("snow", { args: [5, [192, 210, 230]], repeat: [60, 60] }), under = M(0xcfe8f4, { rough: 0.3, emissive: 0x6a9ab8, ei: 0.35 });
   const R0 = 110, TOP = 1.2, THICK = 3;
   // (a grid of slabs with the hole cells left out, so the roof has colliders with holes in it)
   const C = 4;
@@ -34,6 +35,13 @@ export function buildIce(w) {
   }
   // (each hole is somewhere to come up and breathe: the autopilot looks for air among the dry rooms)
   for (const [hx, hz, r] of HOLES) w.dryRoom(hx - r + 0.4, 0, hz - r + 0.4, hx + r - 0.4, 3, hz + r - 0.4, { wl: 0, below: 60 });
+  // pressure ridges: where the floes have pushed together, a wall of jumbled blocks (away from the camp)
+  const ridgeM = M(0xd4e4f2, { rough: 0.35, emissive: 0x3a5a78, ei: 0.12 });
+  let rs = 3; const RR = () => { rs = (rs * 16807) % 2147483647; return rs / 2147483647; };
+  for (const [x0, z0, x1, z1] of [[24, -30, 60, -8], [-30, 28, 4, 44], [20, 44, 56, 58], [-60, -14, -34, -40]]) {
+    const n = Math.round(Math.hypot(x1 - x0, z1 - z0) / 1.6);
+    for (let i = 0; i <= n; i++) { const t = i / n, s = 0.8 + RR() * 1.6; w.box(s, s * (0.6 + RR() * 0.8), s * (0.7 + RR() * 0.6), ridgeM, x0 + (x1 - x0) * t + (RR() - 0.5), TOP + s * 0.3, z0 + (z1 - z0) * t + (RR() - 0.5), { ry: RR() * 3, rx: (RR() - 0.5) * 0.6, rz: (RR() - 0.5) * 0.6 }); }
+  }
   // rims of broken ice round each hole
   for (const [hx, hz, r] of HOLES) w.mesh(new THREE.TorusGeometry(r * 0.95, 0.3, 8, 24), M(0xe8f4fa, { rough: 0.3 }), hx, TOP, hz, { rx: Math.PI / 2 });
   // keels of old ice hanging down: the tunnels the sub chase threads
@@ -42,7 +50,7 @@ export function buildIce(w) {
 
   // ---- Nuka's camp on the ice: tents, a sledge, a flag, a ladder down the dive hole
   const tent = M(0xe86a3a, { rough: 0.8 });
-  for (const [x, z, ry] of [[8, 6, 0.4], [10, -4, -0.3]]) { const t = w.mesh(new THREE.ConeGeometry(2, 2.4, 4), tent, x, TOP + 1.2, z, { ry }); w.phys.fixedCyl(x, TOP + 1.2, z, 1.4, 1.2); void t; }
+  for (const [x, z, ry] of [[14, 10, 0.4], [14, -7, -0.3]]) { const t = w.mesh(new THREE.ConeGeometry(2, 2.4, 4), tent, x, TOP + 1.2, z, { ry }); w.phys.fixedCyl(x, TOP + 1.2, z, 1.4, 1.2); void t; }
   w.box(2.6, 0.4, 1.2, M("wood", { args: [5, [140, 100, 60]] }), 4, TOP + 0.2, 8);
   w.cyl(0.05, 0.05, 4, M(0xd8d8d8), 6, TOP + 2, 1, { seg: 6 });
   w.box(1.2, 0.8, 0.02, M(0x2a6ad8), 6.6, TOP + 3.5, 1, { collide: false });
