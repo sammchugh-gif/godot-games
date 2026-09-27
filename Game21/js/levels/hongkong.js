@@ -16,7 +16,8 @@ export function buildHongKong(w) {
   // the Kowloon side is flat at 2 behind its sea wall; the harbour bed is at -12; the island rises
   // steeply on the far side
   const h = (x, z) => {
-    let y = z > -3 ? TOP : -12 + 14 * S(-12, -3, z);
+    // (the harbour floor is under the water right up to the quay wall: no bank shows outside it)
+    let y = z > -2.6 ? TOP : -12 + 11 * S(-12, -3.2, z);
     // the island: a sea wall, a flat strip of city, then the Peak's green hills behind
     if (z < -160) y = TOP + Math.max(0, -212 - z) * (2.2 + Math.sin(x * 0.02) * 0.8);
     return y;
@@ -27,7 +28,8 @@ export function buildHongKong(w) {
   // the sea wall and the promenade: rails, lamps, palms, benches, the clock tower
   w.box(300, 14, 1.2, M("stone", { args: [55, [150, 146, 138]], repeat: [60, 3] }), -20, TOP - 7, -2.6);
   w.fence(-150, -2.2, -12, -2.2, 1.1, M(0xd8dce0, { metal: 0.6 }), { y: TOP });
-  w.fence(12, -2.2, 120, -2.2, 1.1, M(0xd8dce0, { metal: 0.6 }), { y: TOP });
+  // (with gaps where the piers meet the promenade)
+  w.fence(12, -2.2, 30.5, -2.2, 1.1, M(0xd8dce0, { metal: 0.6 }), { y: TOP }); w.fence(41.5, -2.2, 120, -2.2, 1.1, M(0xd8dce0, { metal: 0.6 }), { y: TOP });
   for (let x = -10; x <= 110; x += 12) { w.lamp(x, 1.5, 4.2, 0xffe0a0, { y: TOP }); }
   for (let x = 20; x <= 100; x += 16) w.palm(x, 6, 7, { y: TOP });
   const clock = M("brick", { args: [56, [196, 120, 90], [176, 104, 80], [230, 220, 200]], repeat: [2, 8] });
