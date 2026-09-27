@@ -34,7 +34,8 @@ for (const id of ids) {
     st = await ev(() => __g.state);
     if (st !== "mission") break;
     const t = await ev(() => __g.t);
-    if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png` }); shotMid = true; }
+    // (a picture is nice to have: on a busy machine it can be slow, and that mustn't stop the run)
+    if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png`, timeout: 120000 }).catch(e => console.log("(no picture:", String(e).slice(0, 80) + ")")); shotMid = true; }
     // (until the mission's own clock runs out, and a little over for the ones without one)
     if (t - t0 > (+process.env.LIMIT || limit + 20)) break;
     await waitT(0.5);
@@ -43,7 +44,7 @@ for (const id of ids) {
   const won = await ev(id => __g.save.done.includes(id), id);
   const hud = await ev(() => document.querySelector(".objective span")?.textContent);
   console.log(`${won ? "ok" : "FAIL"}: ${id} ${st} in ${(t1 - t0).toFixed(1)}s game time  [${hud}]  ${JSON.stringify(await ev(() => __g.debug.stats()))}`);
-  if (!won) { fail++; await page.screenshot({ path: `${out}/${id}_fail.png` }); }
+  if (!won) { fail++; await page.screenshot({ path: `${out}/${id}_fail.png`, timeout: 120000 }).catch(() => {}); }
   // anything the autopilot could not reach by playing, and had to teleport to
   for (const t of await ev(() => { const t = __g.teleports || []; __g.teleports = []; return t; })) console.log("TELEPORT:", t);
   await ev(() => { __g.autoSolve = false; __g.input.forced = null; __g.testSteps = 1; });
