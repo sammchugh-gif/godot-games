@@ -6,9 +6,9 @@ back. POLARIS traces it to Captain Undertow, an ocean scientist who is pumping
 the sea away for a plan of her own. Rory, BOLT and a new partner, TORPEDO the
 little yellow submarine, follow the pumps round the world's coasts.
 
-Deep Red is released one act at a time. **Act One: The Sea Is Going Down** is here: ten
-places and fifty-nine missions. Acts Two (into the abyss) and Three (Mars)
-follow. The whole plan is in `STORY.md`.
+Deep Red is released one act at a time. **Act One: The Sea Is Going Down** and **Act Two:
+Into the Abyss** are here: twenty places and a hundred and nineteen missions. Act Three
+(Mars) follows. The whole plan is in `STORY.md`.
 
 Play it at `docs/agent-rory-deep-red/`, or from Agent Rory HQ on the shelf.
 
@@ -46,6 +46,29 @@ Play it at `docs/agent-rory-deep-red/`, or from Agent Rory HQ on the shelf.
 | The Maldives | the new sandbanks, the lagoon sluices, manta point, the water villas, the island pumps, the seaplane |
 | The Bermuda Triangle | the deck patrol, the pump hall, the engine room, compass chaos, the Kraken, following Undertow down |
 
+## Act Two
+
+Rory wears a diving suit from here on: a fish-bowl helmet with a lamp, a tank with ninety
+seconds of air, flippers. Most of the act is too deep to have a surface: the light fades to
+black and what glows is alive. Every deep place starts in a POLARIS dive bell with a moon pool.
+
+| Place | Missions |
+|---|---|
+| The Sunlight Zone | the first dive in the suit, the warm current, Drips in the blue, manta rings, the sunken base, following the pipe |
+| The Kelp Forest | the canopy, otter nets, the kelp chase, net cutters, the kelp maze, the otter pups |
+| The Sunken Liner | into the air pocket (an airlock), deck by deck, the ballroom, the engine room valves, the captain's safe, she's shifting! |
+| The Twilight Zone | where's the pipe?, lanternfish, the down-current, the Drip beacon, rings in the gloom, the pipe junction |
+| The Midnight Zone | living lights, the jelly drift, Drips in the dark, the canyon map, a message from below, towing Glim home |
+| The Hydrothermal Vents | black smokers, the tube-worm maze, the pump house, the chimney chase, the sensor sled, the heat exchanger |
+| The Glass Station | the airlock, the labs, Silt's signal, the plans, the security wing, out through the moon pool |
+| The Ice Trench | under the pack ice, the brick factory, the conveyor, stopping the freezer, the ice tunnels, the narwhals |
+| The Mariana Trench | the pressure doors, down the trench, the Great Pipe, Undertow's logbook, the deepest place, the last door |
+| The Tidal Engine | the intake valves, the Drip army, the Engine's heart, the Kraken Mark Two, the cargo pod, up the lift shaft |
+
+New kinds of mission: **Current** (ride the currents through rings), **Valves** (turn the
+valve wheels until every gauge sits in the green) and **Airlock** (outer door, pump, inner
+door, in the right order: the levers refuse anything unsafe).
+
 ## Files
 
 - `js/sea.js` the sea (surface, depth map, the light under water); `js/craft.js`
@@ -53,11 +76,15 @@ Play it at `docs/agent-rory-deep-red/`, or from Agent Rory HQ on the shelf.
   fish, sea lions, mantas, crabs, iguanas and tortoises; `js/nav.js` the walking
   map for the autopilots (several floors per spot) and `js/nav3.js` its
   open-water cousin.
-- `js/missions.js`, `js/missions2.js`, `js/missions3.js` the mission kinds,
+- `js/levels/deepkit.js` Act Two's pieces: airlocks, the dive bell, kelp, black smokers,
+  tube worms, station walls. Dry rooms, currents, hot plumes and air stations are in
+  `js/world.js`; the abyss (a sea with no surface in reach) is `w.ocean({ abyss })`.
+- `js/missions.js`, `js/missions2.js`, `js/missions3.js`, `js/missions4.js` the mission kinds,
   listed by name in `js/kinds.js`; every kind has an autopilot (`solve`).
 - `js/levels/*.js` one file per place, built from `js/levels/kit.js` (boats,
   cottages, piers, rocks, cliffs, a lighthouse, roads, flowerpot rocks, coral).
-- `js/story.js` the cast, places, missions and every line; `STORY.md` is the
+- `js/story.js` (Act One) and `js/story2.js` (Act Two) the cast, places, missions and every
+  line; `STORY.md` is the
   plan for all three acts.
 - The engine underneath (renderer, Rapier physics, Rory, BOLT, the HUD, the
   dialogue, the 3D portraits, Tone.js music) comes from Zero Gravity.
