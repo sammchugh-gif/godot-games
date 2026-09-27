@@ -195,6 +195,9 @@ export class Airlock extends Mission {
     if (!inside) {
       const dn = Math.hypot(pp.x - near[0], pp.z - near[1]);
       if (dn > 1.2 && !this.entered) { this.go(near[0], a.y + 0.8, near[1]); return; }
+      // (outside the door but below it, come up level with it first: straight in from underneath
+      // is into the airlock's floor)
+      if (!this.entered && this.p.swimming && Math.abs(pp.y + 0.7 - (a.y + 0.8)) > 0.6) { this.follow3([near[0], a.y + 0.8, near[1]], 0.5); return; }
       this.entered = true; this.straight(a.x, a.y + 0.8, a.z); return;
     }
     const k = a.next(g);
