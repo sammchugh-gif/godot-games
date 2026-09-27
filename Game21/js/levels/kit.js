@@ -128,8 +128,11 @@ export function lighthouse(w, x, y, z, o = {}) {
   // the top: a floor round the stairwell, the gallery outside the door, the lamp room above
   const topY = y + 0.3 + rise * n;
   const last = doorA + Math.PI * 0.35 + (n - 1) / per * Math.PI * 2;
-  const land = new THREE.Mesh(new THREE.RingGeometry(r0, Ri, 24, 1, last + 0.3 - Math.PI / 2, Math.PI * 1.5), stone); land.rotation.x = -Math.PI / 2; land.position.set(x, topY, z); w.scene.add(land);
-  for (let k = 0; k < 6; k++) { const a = last + 0.55 + k * 0.78; w.phys.fixedBox(x + Math.sin(a) * rm, topY - 0.12, z + Math.cos(a) * rm, 0.55, 0.12, (r1 - r0) / 2, a); }
+  // (the landing runs on round from the top step, but stops short of the stairs' last turn: they
+  // need the headroom under it. Its boxes overlap, so there are no gaps out by the wall.)
+  const L0 = last + 0.3, LN = 2.8;
+  const land = new THREE.Mesh(new THREE.RingGeometry(r0, Ri, 24, 1, L0 - Math.PI / 2, LN), stone); land.rotation.x = -Math.PI / 2; land.position.set(x, topY, z); w.scene.add(land);
+  for (let a = L0 + 0.17; a < L0 + LN - 0.1; a += 0.3) w.phys.fixedBox(x + Math.sin(a) * rm, topY - 0.12, z + Math.cos(a) * rm, 0.55, 0.12, (r1 - r0) / 2, a);
   const gal = new THREE.Mesh(new THREE.RingGeometry(Ro - 0.05, Ro + 1.3, 32), dark); gal.rotation.x = -Math.PI / 2; gal.position.set(x, topY + 0.01, z); w.scene.add(gal);
   for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; w.phys.fixedBox(x + Math.sin(a) * (Ro + 0.6), topY - 0.15, z + Math.cos(a) * (Ro + 0.6), 0.55, 0.15, 0.7, a); }
   for (let k = 0; k < 32; k++) { const a = k / 32 * Math.PI * 2; w.mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), dark, x + Math.sin(a) * (Ro + 1.25), topY + 0.55, z + Math.cos(a) * (Ro + 1.25)); }
@@ -140,10 +143,10 @@ export function lighthouse(w, x, y, z, o = {}) {
   w.mesh(new THREE.SphereGeometry(Ri * 0.85, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), band, x, topY + 2.7 + 1.4, z);
   w.box(Ri * 1.7, 0.2, Ri * 1.7, dark, x, topY + 1.4, z, { collide: false });
   const lamp = w.mesh(new THREE.SphereGeometry(0.6, 16, 10), new THREE.MeshStandardMaterial({ color: 0xfff4c8, emissive: 0xfff0b0, emissiveIntensity: 5 }), x, topY + 2.6, z, { cast: false });
-  // the way up for the autopilot: in at the door, up every step, across the landing, out onto the gallery
-  const at = (r, yy) => [x + Math.sin(doorA) * r, yy, z + Math.cos(doorA) * r];
-  const climb = [at(Ro + 1.5, y), at(rm, y + 0.3), ...steps, at(rm, topY), at(Ro + 0.7, topY)];
-  return { top: topY, steps, lamp, climb, door: at(Ro + 1.5, y), gallery: at(Ro + 0.7, topY) };
+  // the way up for the autopilot: in at the door, up every step, onto the landing, out onto the gallery
+  const at = (r, yy, a = doorA) => [x + Math.sin(a) * r, yy, z + Math.cos(a) * r], out = last + 0.9;
+  const climb = [at(Ro + 1.5, y), at(rm, y + 0.3), ...steps, at(rm, topY, out), at(Ro + 0.7, topY, out)];
+  return { top: topY, steps, lamp, climb, door: at(Ro + 1.5, y), gallery: at(Ro + 0.7, topY, out) };
 }
 
 // a road along a closed loop of [x, z] points, laid on the ground: a strip of asphalt with a

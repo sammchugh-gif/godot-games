@@ -198,12 +198,13 @@ export class Cells extends Mission {
     if (this.climbFor !== c) {
       this.climbFor = c; this.climbAt = false;
       this.ensureNav(this.cells.map(c => c.position));
-      const need = !this.nav.route(P[0][0], P[0][1], P[0][2], cp.x, cp.y, cp.z, 0.8);
+      // (from where Rory is now: if the walking map has a way, it walks it, up or down the stairs)
+      const need = !this.nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
       this.climbGoal = 0; if (need) P.forEach((q, i) => { if (d3(q, cp.x, cp.y - 1.15, cp.z) < d3(P[this.climbGoal], cp.x, cp.y - 1.15, cp.z)) this.climbGoal = i; });
       this.climbNeed = need;
     }
     const high = pp.y > P[0][1] + 1.5;
-    if (!this.climbNeed && !high) { this.climbI = undefined; return false; }
+    if (!this.climbNeed) { this.climbI = undefined; return false; }
     // fallen off, or not on the climb yet: from the ground, walk to its foot; from up high, the nearest point
     if (this.climbI !== undefined && pp.y < P[this.climbI][1] - 4) this.climbI = undefined;
     if (this.climbI === undefined) {
