@@ -478,8 +478,8 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 **Mission 37: Baobab Tops** (Colour Drops, level 3)
 
-> **Fara:** The drops are up in the baobabs. There are pads at the bottom of each one.
-> **Pip:** Bounce up, land on the top, grab the drops. Eight!
+> **Fara:** The drops are in the baobabs: on the branches, and in the red dust between them.
+> **Pip:** Jump for the ones on the branches. Eight! And if you climb the branches to the top, the view is the best in Madagascar.
 
 *After:*
 

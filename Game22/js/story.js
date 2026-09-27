@@ -253,7 +253,7 @@ export const PLACES = [
         intro: [["pip", "The gangway up to the Monochrome is fenced with grey beams. Touch one and it drains you back to the bottom."], ["pip", "Jump the low ones, wait for the moving ones. Then you're aboard."]],
         outro: [["rory", "I'm on the ship."], ["grisaille", "Welcome to the Monochrome, Agent Rory. Wipe your feet. Everything here is spotless. And grey."]] },
     ] },
-  { id: "monochrome", ch: 3, name: "The Monochrome", country: "Over the Namib", flag: "zz", contact: null, hue: 0xffffff,
+  { id: "monochrome", ch: 3, name: "The Monochrome", country: "Over the Namib", flag: "zz", contact: null, lat: -23.6, lon: 16.4, hue: 0xffffff,
     arrive: [["pip", "Rory, you're in her gallery. Every colour she's taken is hanging on these walls in a jar."], ["frost", "Open the jars, Agent Rory. Every one. And find the Baroness."], ["palette", "It's so grey in here I've gone grey myself. This is the worst I've ever felt. Let's fix it."]],
     leave: [],
     missions: [

@@ -611,6 +611,8 @@ G.debug = {
     return true;
   },
   load(id) { if (G.mission) { G.mission.cleanup(); G.mission = null; } loadPlace(id); return G.place.id; },
+  // fly on to the next place (the travel screen, the arrival)
+  next() { for (const m of G.place.missions) if (!G.save.done.includes(m.id)) G.save.done.push(m.id); G.dialogue.skipAll(); nextPlace(); },
   // a fixed camera for screenshots: from (x, y, z) looking at (lx, ly, lz)
   view(x, y, z, lx, ly, lz) { clearLayer("title"); G.hud.hide(); setTouch(false); G.viewCam = [x, y, z, lx, ly, lz]; G.state = "view"; },
   // anything that must be reachable but sits inside something solid (or, under the sea, above it)
