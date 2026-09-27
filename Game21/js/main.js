@@ -102,7 +102,7 @@ function loadPlace(id) {
   const [x, y, z] = info.spawn;
   G.spawn = info;
   G.player = new Player(world, x, y, z, info.yaw || 0);
-  G.player.suit(!!place.suit);
+  G.player.suit(place.suit || false); G.player.lamp(info.lamp || 0);
   world.jetpack = !!info.jetpack; world.gravityScale = info.gravity ?? 1;
   if (info.gravity !== undefined) phys.setGravity(-20 * info.gravity);
   G.player.onJump = () => sound("jump");
