@@ -9,9 +9,10 @@ export function buildPen(w) {
   w.setSky({ top: "#3a64a8", mid: "#a8c0d8", bottom: "#d8dde0", sun: [24, 150], sunColor: "#fff0dc", sunI: 2.0, hemi: ["#d0dcec", "#4a5a48", 0.62], fog: [70, 360], clouds: 26, cloudTint: "#e8ecf0" });
   // the land: the quay's shore at 1.2, rising to hills behind; the loch falls away to 16 m deep
   // in front; the training pool is a pit in the quay
-  const pool = (x, z) => x > 14 && x < 28 && z > 5 && z < 17;
+  // (the pit is dug a metre below the tiled floor and out under the quay, so no grass shows)
+  const pool = (x, z) => x > 12.5 && x < 29.5 && z > 3.5 && z < 18.5;
   const h = (x, z) => {
-    if (pool(x, z)) return -6;
+    if (pool(x, z)) return -7;
     if (z >= 1) return (z < 23 && Math.abs(x) < 50 ? 0.9 : 1.2) + Math.max(0, z - 26) * 0.35 + Math.max(0, Math.abs(x) - 44) * 0.3 + Math.sin(x * 0.08) * Math.max(0, z - 30) * 0.08;
     const off = Math.min(1, (0.5 - z + 3) / 13);
     return 1.2 - off * 17 + Math.sin(x * 0.2) * Math.cos(z * 0.15) * 0.6 * off + Math.max(0, Math.abs(x) - 70) * 0.45;
