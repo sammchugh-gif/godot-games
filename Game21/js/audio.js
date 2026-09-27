@@ -10,44 +10,34 @@ export const Audio = {
     const Tone = T();
     if (!Tone || ready || this.starting) return;
     this.starting = true;
-    // a roomier audio buffer than Tone's default, so the sound doesn't crackle when the 3D is busy
-    // (made inside the tap, which iOS requires)
-    if (!this.ctxMade) { this.ctxMade = true; try { Tone.setContext(new Tone.Context({ latencyHint: "balanced", lookAhead: 0.15 })); } catch (e) { /* keep Tone's own */ } }
     try { await Tone.start(); } catch (e) { this.starting = false; return; }
     if (Tone.getContext().state !== "running") { this.starting = false; return; }
     ready = true;
-    // Tablet speakers can't play deep bass: they buzz. So nothing goes below about 60 Hz (a steep
-    // filter on everything), the bass plucks rather than drones, there is no held sawtooth
-    // chord, and a limiter keeps loud moments from clipping.
-    Tone.getDestination().chain(new Tone.Filter({ frequency: 60, type: "highpass", rolloff: -24 }), new Tone.Limiter(-3));
-    const rev = new Tone.Reverb({ decay: 1.6, wet: 0.2 }).toDestination();
-    const del = new Tone.FeedbackDelay({ delayTime: "8n.", feedback: 0.2, wet: 0.12 }).connect(rev);
-    bus = new Tone.Volume(-15).connect(del); bus.connect(rev);
-    sfxBus = new Tone.Volume(-8).toDestination();
-    inst.kick = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 3, envelope: { attack: 0.001, decay: 0.18, sustain: 0 }, volume: -8 }).connect(bus);
-    inst.snare = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -10 }).connect(new Tone.Filter(2000, "highpass").connect(bus));
-    inst.hat = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 }, volume: -22 }).connect(new Tone.Filter(8000, "highpass").connect(bus));
-    inst.bass = new Tone.MonoSynth({ oscillator: { type: "triangle" }, filter: { Q: 0.5, type: "lowpass" }, filterEnvelope: { attack: 0.004, decay: 0.15, sustain: 0.3, baseFrequency: 300, octaves: 2.5 }, envelope: { attack: 0.004, decay: 0.18, sustain: 0.08, release: 0.08 }, volume: -4 }).connect(bus);
-    inst.stab = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.15, sustain: 0.05, release: 0.25 }, volume: -13 }).connect(bus);
-    inst.pad = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "custom", partials: [1, 0.25, 0.08] }, envelope: { attack: 0.5, decay: 0.6, sustain: 0.35, release: 1.2 }, volume: -19 }).connect(bus);
-    inst.lead = new Tone.FMSynth({ harmonicity: 2, modulationIndex: 1.5, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.3 }, volume: -15 }).connect(bus);
-    inst.bell = new Tone.PolySynth(Tone.FMSynth, { harmonicity: 3.01, modulationIndex: 4, envelope: { attack: 0.001, decay: 0.8, sustain: 0, release: 0.8 }, modulationEnvelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.2 }, volume: -17 }).connect(bus);
+    const rev = new Tone.Reverb({ decay: 2.6, wet: 0.22 }).toDestination();
+    const del = new Tone.FeedbackDelay({ delayTime: "8n.", feedback: 0.25, wet: 0.14 }).connect(rev);
+    bus = new Tone.Volume(-12).connect(del); bus.connect(rev);
+    sfxBus = new Tone.Volume(-6).toDestination();
+    inst.kick = new Tone.MembraneSynth({ pitchDecay: 0.03, octaves: 6, envelope: { attack: 0.001, decay: 0.3, sustain: 0 } }).connect(bus);
+    inst.snare = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.16, sustain: 0 } }).connect(new Tone.Filter(2400, "highpass").connect(bus));
+    inst.hat = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.04, sustain: 0 }, volume: -14 }).connect(new Tone.Filter(8000, "highpass").connect(bus));
+    inst.bass = new Tone.MonoSynth({ oscillator: { type: "sawtooth" }, filter: { Q: 2, type: "lowpass" }, filterEnvelope: { attack: 0.005, decay: 0.12, sustain: 0.2, baseFrequency: 120, octaves: 2.6 }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.4, release: 0.1 }, volume: -4 }).connect(bus);
+    inst.stab = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "square" }, envelope: { attack: 0.005, decay: 0.12, sustain: 0.1, release: 0.2 }, volume: -16 }).connect(bus);
+    inst.pad = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "fatsawtooth", count: 3, spread: 30 }, envelope: { attack: 0.6, decay: 0.4, sustain: 0.7, release: 1.6 }, volume: -22 }).connect(bus);
+    inst.lead = new Tone.FMSynth({ harmonicity: 2, modulationIndex: 3, envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.4 }, volume: -14 }).connect(bus);
+    inst.bell = new Tone.MetalSynth({ envelope: { attack: 0.001, decay: 0.6, release: 0.2 }, harmonicity: 8, modulationIndex: 20, resonance: 3000, volume: -26 }).connect(bus);
     // effects
     inst.blip = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.002, decay: 0.12, sustain: 0, release: 0.05 } }).connect(sfxBus);
     inst.tri = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle" }, envelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.1 } }).connect(sfxBus);
     inst.thud = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 3, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -8 }).connect(sfxBus);
-    inst.noise = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.02, decay: 0.3, sustain: 0 }, volume: -14 }).connect(sfxBus);
-    inst.woof = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -2 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
+    inst.noise = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.02, decay: 0.3, sustain: 0 }, volume: -12 }).connect(sfxBus);
     Tone.getTransport().bpm.value = 104;
     Tone.getTransport().start("+0.05");
     this.setMusic(this.music); this.setSfx(this.sfx);
     if (mode) { const m = mode; mode = null; this.mood(m); }
   },
-  // the music dips while someone is talking, so the words come through
-  duck(on) { if (!bus || this.ducked === on) return; this.ducked = on; bus.volume.rampTo(on ? -22 : -15, on ? 0.2 : 0.6); },
   setMusic(on) { this.music = on; localStorage.setItem("rory21.music", on ? "1" : "0"); if (bus) bus.mute = !on; },
   setSfx(on) { this.sfx = on; localStorage.setItem("rory21.sfx", on ? "1" : "0"); if (sfxBus) sfxBus.mute = !on; },
-  // "theme" exploring, "tense" missions, "chase", "calm" menus, "sea" the coasts, "deep" under water
+  // "theme" exploring, "tense" missions, "chase", "calm" menus, "space"
   mood(m) {
     if (m === mode) return;
     mode = m;
@@ -58,12 +48,12 @@ export const Audio = {
     const S = SONGS[m] || SONGS.theme;
     Tone.getTransport().bpm.rampTo(S.bpm, 0.5);
     const seq = (steps, fn, sub = "16n") => { const p = new Tone.Sequence((time, v) => { if (v !== null && v !== undefined && v !== "-") fn(time, v); }, steps, sub); p.start(0); parts.push(p); };
-    if (S.kick) seq(S.kick, t => inst.kick.triggerAttackRelease("C2", "8n", t));
+    if (S.kick) seq(S.kick, t => inst.kick.triggerAttackRelease("C1", "8n", t));
     if (S.snare) seq(S.snare, t => inst.snare.triggerAttackRelease("16n", t));
     if (S.hat) seq(S.hat, (t, v) => inst.hat.triggerAttackRelease("32n", t, v === "x" ? 1 : 0.5));
-    if (S.bass) seq(S.bass, (t, n) => inst.bass.triggerAttackRelease(Tone.Frequency(n).toFrequency() * 2, "16n", t));
+    if (S.bass) seq(S.bass, (t, n) => inst.bass.triggerAttackRelease(n, "16n", t));
     if (S.stab) seq(S.stab, (t, c) => inst.stab.triggerAttackRelease(c.split(" "), "16n", t), "8n");
-    if (S.pad) seq(S.pad, (t, c) => inst.pad.triggerAttackRelease(c.split(" "), "2n", t), "1m");
+    if (S.pad) seq(S.pad, (t, c) => inst.pad.triggerAttackRelease(c.split(" "), "1m", t), "1m");
     if (S.lead) seq(S.lead, (t, n) => inst.lead.triggerAttackRelease(n, "8n", t), "8n");
     if (S.bell) seq(S.bell, (t, n) => inst.bell.triggerAttackRelease(n, "8n", t), "4n");
   },
@@ -73,33 +63,25 @@ export const Audio = {
     try {
       switch (name) {
         case "jump": inst.blip.triggerAttackRelease("A5", 0.08, now); inst.blip.frequency.rampTo("E6", 0.08, now); break;
-        case "land": inst.thud.triggerAttackRelease("G2", 0.1, now); break;
+        case "land": inst.thud.triggerAttackRelease("G1", 0.1, now); break;
         case "pad": inst.tri.triggerAttackRelease(["C5", "G5"], 0.1, now); inst.tri.triggerAttackRelease(["E5", "C6"], 0.14, now + 0.07); break;
         case "cell": ["E6", "G6", "B6", "E7"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.08, now + i * 0.045)); break;
         case "pop": inst.blip.triggerAttackRelease("C6", 0.05, now); inst.noise.triggerAttackRelease(0.05, now); break;
         case "zap": inst.blip.triggerAttackRelease("E6", 0.1, now); inst.blip.frequency.rampTo("E4", 0.1, now); break;
-        case "hit": inst.thud.triggerAttackRelease("C3", 0.2, now); inst.noise.triggerAttackRelease(0.15, now); break;
+        case "hit": inst.thud.triggerAttackRelease("C2", 0.2, now); inst.noise.triggerAttackRelease(0.15, now); break;
         case "fail": ["G4", "Eb4", "C4"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.18, now + i * 0.14)); break;
         case "win": ["C5", "E5", "G5", "C6", "G5", "C6"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.14, now + i * 0.09)); break;
         case "star": inst.tri.triggerAttackRelease(["G6", "D7"], 0.25, now); break;
         case "click": inst.blip.triggerAttackRelease("G5", 0.03, now); break;
         case "whoosh": inst.noise.triggerAttackRelease(0.4, now); break;
         case "beep": inst.blip.triggerAttackRelease("A6", 0.05, now); inst.blip.triggerAttackRelease("E6", 0.05, now + 0.08); break;
-        // HQ: tea, the alarm, the banana phone and the dog
+        // HQ: tea, the alarm, the banana phone and the cat
         case "pour": inst.noise.triggerAttackRelease(1.1, now); break;
         case "slurp": inst.blip.triggerAttackRelease("C5", 0.12, now); inst.blip.frequency.rampTo("G5", 0.12, now); break;
         case "alarm": ["A5", "E5", "A5", "E5"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.2, now + i * 0.22)); break;
         case "ring": for (let i = 0; i < 6; i++) inst.tri.triggerAttackRelease(i % 2 ? "E6" : "G6", 0.05, now + i * 0.07); break;
-        // the sea: splashes, bubbles, the sonar ping, the sub's claw, a boat horn
-        case "splash": inst.noise.triggerAttackRelease(0.35, now); inst.blip.triggerAttackRelease("C4", 0.12, now); inst.blip.frequency.rampTo("G3", 0.12, now); break;
-        case "bubble": inst.blip.triggerAttackRelease("E5", 0.05, now); inst.blip.frequency.rampTo("B5", 0.05, now); break;
-        case "breath": inst.noise.triggerAttackRelease(0.5, now); break;
-        case "ping": inst.blip.triggerAttackRelease("A6", 0.4, now); inst.blip.frequency.rampTo("A5", 0.4, now); inst.tri.triggerAttackRelease("A6", 0.1, now + 0.35); break;
-        case "grab": inst.thud.triggerAttackRelease("E3", 0.08, now); inst.blip.triggerAttackRelease("E6", 0.06, now + 0.05); break;
-        case "horn": inst.tri.triggerAttackRelease(["A3", "E4"], 0.5, now); break;
-        case "gasp": inst.noise.triggerAttackRelease(0.25, now); inst.blip.triggerAttackRelease("G5", 0.1, now); break;
-        case "woof": for (const d of [0, 0.22]) { inst.woof.triggerAttackRelease("A3", 0.09, now + d); inst.woof.frequency.setValueAtTime(440, now + d); inst.woof.frequency.exponentialRampToValueAtTime(180, now + d + 0.09); } break;
-        case "pant": for (let i = 0; i < 4; i++) inst.noise.triggerAttackRelease(0.05, now + i * 0.16); break;
+        case "purr": for (let i = 0; i < 4; i++) inst.thud.triggerAttackRelease("A1", 0.07, now + i * 0.11); break;
+        case "meow": inst.blip.triggerAttackRelease("B5", 0.35, now); inst.blip.frequency.rampTo("E5", 0.3, now + 0.05); break;
       }
     } catch (e) { /* a busy synth is not worth a crash */ }
   },
@@ -125,15 +107,6 @@ const SONGS = {
   calm: { bpm: 84,
     pad: ["E3 G3 B3 D4", "C3 E3 G3 B3", "A2 C3 E3 G3", "B2 D3 F#3 A3"],
     bell: ["E6", _, "B5", _, "G5", _, "B5", _, "E6", _, "D6", _, "B5", _, _, _] },
-  // the sea: a slow swell with a bell over it; under water, only the pad and a far-off bell
-  sea: { bpm: 96,
-    kick: [X, _, _, _, _, _, _, _, X, _, _, _, _, _, X, _], hat: [_, _, o, _, _, _, o, _, _, _, o, _, _, _, o, _],
-    pad: ["E3 G3 B3 D4", "C3 E3 G3 B3", "A2 C3 E3 G3", "D3 F#3 A3 C4"],
-    bass: ["E2", _, _, _, _, _, "E2", _, _, _, _, _, _, _, "G2", _, "C2", _, _, _, _, _, "C2", _, _, _, _, _, _, _, "D2", _],
-    bell: ["B5", _, _, _, "E6", _, _, _, "G5", _, _, _, "D6", _, _, _] },
-  deep: { bpm: 72,
-    pad: ["D3 F3 A3 C4", "Bb2 D3 F3 A3", "G2 Bb2 D3 F3", "A2 C3 E3 G3"],
-    bell: ["D6", _, _, _, _, _, "A5", _, _, _, _, _, "F6", _, _, _] },
   space: { bpm: 92,
     kick: [X, _, _, _, _, _, _, _, X, _, _, _, _, _, _, _], hat: [_, _, o, _, _, _, o, _, _, _, o, _, _, _, o, _],
     pad: ["D3 F3 A3 C4", "Bb2 D3 F3 A3", "G2 Bb2 D3 F3", "A2 C#3 E3 G3"],

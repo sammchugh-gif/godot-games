@@ -16,8 +16,7 @@ export class Nav {
   // the height of the highest fixed surface under (x, z), ignoring things that move
   top(x, z) {
     const phys = this.w.phys, flags = R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCLUDE_KINEMATIC | R.QueryFilterFlags.EXCLUDE_SENSORS;
-    let hit = phys.world.castRay(new R.Ray({ x, y: this.yTop, z }, { x: 0, y: -1, z: 0 }), this.yTop + 60, true, flags);
-    if (!hit) hit = phys.world.castRay(new R.Ray({ x: x + 0.013, y: this.yTop, z: z + 0.017 }, { x: 0, y: -1, z: 0 }), this.yTop + 60, true, flags);
+    const hit = phys.world.castRay(new R.Ray({ x, y: this.yTop, z }, { x: 0, y: -1, z: 0 }), this.yTop + 60, true, flags);
     return hit ? this.yTop - hit.timeOfImpact : -Infinity;
   }
   build() {

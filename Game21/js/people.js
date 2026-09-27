@@ -151,19 +151,13 @@ export function animatePerson(rig, s) {
   let kneeL = Math.max(0, -Math.cos(p)) * (0.4 + run * 0.9) * walk, kneeR = Math.max(0, Math.cos(p)) * (0.4 + run * 0.9) * walk;
   let bob = Math.abs(Math.cos(p)) * 0.04 * walk * (1 + run), lean = run * 0.18;
   let armZ = 0.12, elbow = -0.2 - run * 0.9 * walk;
-  if (s.swim) {
-    // swimming: a breaststroke, faster the faster he goes; treading water when still
-    const q = rig.phase * (0.5 + Math.min(1, (s.swimSpeed || 0) / 3) * 0.8), f = Math.sin(q);
-    legA = f * 0.55; kneeL = 0.35 + Math.max(0, -f) * 0.8; kneeR = 0.35 + Math.max(0, f) * 0.8;
-    armA = -0.9 + Math.cos(q) * 0.6; armZ = 0.9 + Math.sin(q + 0.5) * 0.5; elbow = -0.5 + Math.cos(q) * 0.3; bob = 0; lean = 0;
-  } else if (!s.grounded && !s.sit) {
+  if (!s.grounded && !s.sit) {
     if (s.float) { // drifting in low gravity: arms out, legs dangle
       const f = Math.sin(rig.phase * 0.4);
       legA = f * 0.2; kneeL = 0.3 + f * 0.1; kneeR = 0.3 - f * 0.1; armA = 0; armZ = 1.1 + f * 0.15; elbow = -0.3; bob = 0; lean = -0.05;
     } else if (s.vy > 0) { legA = 0.6; kneeL = 1.1; kneeR = 0.3; armA = -0.4; armZ = 0.5; elbow = -0.9; lean = 0.05; bob = 0; }
     else { legA = 0.25; kneeL = 0.5; kneeR = 0.4; armA = 0; armZ = 0.9; elbow = -0.4; lean = 0; bob = 0; }
   }
-  if (s.wade && !s.swim) { armZ += 0.35; }
   if (s.sit) { set(rig.legL, -1.45, 0, 0); set(rig.legR, -1.45, 0, 0); set(rig.kneeL, 1.4); set(rig.kneeR, 1.4); legA = null; }
   if (legA !== null) {
     set(rig.legL, legA, 0, 0); set(rig.legR, -legA, 0, 0);
@@ -209,19 +203,4 @@ export function spaceSuit(rig, on) {
     rig.suit = { parts: [helmet, collar, pack], flames };
   }
   for (const p of rig.suit.parts) p.visible = on;
-}
-
-// a diving kit: a mask with a snorkel, a small tank, and flippers
-export function divingSuit(rig, on) {
-  if (!rig.dive) {
-    const r = rig.S.headR;
-    const glass = new THREE.Mesh(new THREE.SphereGeometry(r * 0.72, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), new THREE.MeshPhysicalMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, roughness: 0.05, clearcoat: 1, depthWrite: false }));
-    glass.rotation.x = Math.PI / 2; glass.position.set(0, r * 0.05, r * 0.55); rig.head.add(glass);
-    const strap = new THREE.Mesh(new THREE.TorusGeometry(r * 1.02, r * 0.06, 6, 24), new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.6 })); strap.rotation.x = Math.PI / 2; strap.position.y = r * 0.05; rig.head.add(strap);
-    const snorkel = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.09, r * 0.09, r * 1.6, 8), new THREE.MeshStandardMaterial({ color: 0xffd23f, roughness: 0.4 })); snorkel.position.set(r * 0.95, r * 0.6, r * 0.3); rig.head.add(snorkel);
-    const tank = new THREE.Mesh(new THREE.CapsuleGeometry(rig.S.bodyR * 0.45, rig.S.torso * 0.7, 6, 12), new THREE.MeshStandardMaterial({ color: 0xffd23f, roughness: 0.35, metalness: 0.4 })); tank.position.set(0, rig.S.torso * 0.5, -rig.S.bodyR * 0.95); tank.castShadow = true; rig.spine.add(tank);
-    const fins = [-1, 1].map(side => { const f = new THREE.Mesh(new THREE.BoxGeometry(rig.S.legR * 2.4, 0.02, rig.S.legR * 4.5), new THREE.MeshStandardMaterial({ color: 0x2ad0d0, roughness: 0.5 })); f.position.set(0, -rig.S.leg * 0.5, rig.S.legR * 2.2); rig[side < 0 ? "kneeL" : "kneeR"].add(f); return f; });
-    rig.dive = { parts: [glass, strap, snorkel, tank, ...fins] };
-  }
-  for (const p of rig.dive.parts) p.visible = on;
 }

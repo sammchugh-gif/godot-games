@@ -1,5 +1,5 @@
 // The animated robot (RobotExpressive by Tomás Laulhé, CC0) cloned and
-// repainted: BOLT, Rory's partner, and Captain Undertow's Drips.
+// repainted: BOLT, Rory's partner, and Professor Zero's Floater henchbots.
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
@@ -16,9 +16,8 @@ export async function loadRobot(url = "models/robot.glb") {
 export const LOOKS = {
   bolt:    { Main: 0xf2f5fa, Grey: 0x3aa8e8, Black: 0x16202c, glow: 0x7fe3ff },
   floater: { Main: 0x8a4ad8, Grey: 0x3a3a48, Black: 0x14101c, glow: 0xff5ad8 },
-  drip:    { Main: 0x2ab8c8, Grey: 0x1a3a48, Black: 0x0a1a24, glow: 0x7fffe8 },
-  boss:    { Main: 0x1a4a5a, Grey: 0x2ad0d8, Black: 0x06141c, glow: 0x7fffe8 },
-  guard:   { Main: 0x3a9ab0, Grey: 0x3a4a52, Black: 0x0a1a20, glow: 0xffd23f },
+  boss:    { Main: 0x2a2a34, Grey: 0xd83a8a, Black: 0x0a0a10, glow: 0xff3a6a },
+  guard:   { Main: 0xe8a020, Grey: 0x4a4a52, Black: 0x121216, glow: 0xffd23f },
 };
 
 const matCache = new Map();
