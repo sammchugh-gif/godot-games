@@ -106,7 +106,10 @@ export class Mission {
     // walking: aim a few squares along, but not past the next jump, pad or drop (the way on from
     // the bottom of a drop can double back underneath, under a pontoon or a ledge)
     // (nor past a square that can't be seen from here: aiming round a corner walks into it)
-    const seen = q => { const d = Math.hypot(q.x - pp.x, q.z - pp.z); return d < 0.1 || this.w.phys.ray({ x: pp.x, y: pp.y + 0.5, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, d, w.col) === null; };
+    // (nor past one where the straight line to it runs off an edge: cutting the corner of a pier
+    // walks into the sea)
+    const floored = (q, d) => { const lo = Math.min(pp.y, q.h) - 0.6, hi = Math.max(pp.y, q.h) + 0.3; for (let t = 0.4; t < d; t += 0.4) { const f = this.nav.top(pp.x + (q.x - pp.x) * t / d, pp.z + (q.z - pp.z) * t / d, hi); if (f < lo) return false; } return true; };
+    const seen = q => { const d = Math.hypot(q.x - pp.x, q.z - pp.z); return d < 0.1 || (this.w.phys.ray({ x: pp.x, y: pp.y + 0.5, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, d, w.col) === null && floored(q, d)); };
     let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop") && seen(path[j + 1])) j++;
     // (and walk on past the foot of a drop: it can be only a hand's width beyond the edge)
     const q = path[j], o = path[j - 1], L = Math.hypot(q.x - o.x, q.z - o.z) || 1, on = q.how === "drop" ? 0.8 / L : 0;
