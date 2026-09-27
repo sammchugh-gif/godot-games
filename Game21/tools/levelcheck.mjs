@@ -16,7 +16,7 @@ await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType
 await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory21.quality", "0"); localStorage.setItem("rory21.voice", "false"); });
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 480000 });
-const ids = await page.evaluate(() => __g.debug.PLACES.map(p => p.id));
+const ids = process.argv[2] ? process.argv[2].split(",") : await page.evaluate(() => __g.debug.PLACES.map(p => p.id));
 let bad = 0;
 for (const id of ids) {
   const res = await page.evaluate(id => { __g.debug.load(id); return { probs: __g.debug.checkLevel(), baked: __g.baked }; }, id);

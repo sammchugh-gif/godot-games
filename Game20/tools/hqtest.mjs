@@ -36,7 +36,7 @@ await waitT(1.4); await page.screenshot({ path: `${out}/01_greeting.jpg`, type: 
 await ev(() => __hq.debug.skip()); await waitT(0.5);
 await page.screenshot({ path: `${out}/02_room.jpg`, type: "jpeg", quality: 88 });
 check((await ev(() => __hq.debug.progress("meltdown"))).done === 7, "Meltdown screen reads the save (7 done)");
-for (const id of ["eclipse", "meltdown", "zero", "spectrum"]) {
+for (const id of ["eclipse", "meltdown", "zero", "deep", "spectrum"]) {
   await ev(id => __hq.debug.goTo(id), id); await waitT(0.6);
   check(await ev(() => __hq.debug.near()) === id, `standing at the ${id} screen`);
   await page.screenshot({ path: `${out}/10_${id}_screen.jpg`, type: "jpeg", quality: 88 });

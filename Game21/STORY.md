@@ -82,6 +82,48 @@ stolen sea home as rain.
 30. **Undertow's Dome** — the finale: turn the Engine round and send the sea
     home. On Earth it rains for a week, the harbours fill, and the tide comes in.
 
+## Act Two in detail (the plan it is built to)
+
+Act One ends with Undertow diving from the sinking Bermuda base. Act Two follows her
+down, one ocean zone at a time, and gets darker, deeper and stranger as it goes.
+
+**What the engine needs for it**
+
+- **The dive suit.** From the Sunlight Zone on Rory wears a diving suit with a
+  fish-bowl helmet and a tank: a long air meter (a minute and a half), topped up at
+  air stations, bubble vents, TORPEDO's air hose and dry rooms. The helmet shows on
+  his 3D model and in his portrait.
+- **Deep places with no surface.** The sea level is far overhead; the light fades
+  with depth to black, and what glows is alive (bioluminescent plankton, lanternfish,
+  jellies). Rory's helmet lamp and TORPEDO's headlights light the way.
+- **Dry rooms under water**: the liner's air pockets, the Glass Station, the ice
+  factory. Airlocks between wet and dry.
+- **Currents** that carry Rory and TORPEDO (streams of drifting specks show them).
+- **Three new mission kinds**: *Current* (ride the currents to places you can't swim
+  to, against the clock), *Valves* (balance a pipe network so every gauge sits in the
+  green), *Airlock* (doors, pumps and hatches in the right order to get from wet to
+  dry and back). With Act One's 21, that makes 24.
+- **Every mission autopiloted from its beacon, and every beacon reachable from the
+  start** (`tools/missions.mjs`, `tools/beacons.mjs`), as in Act One.
+
+**The places** (about six missions each; the contact is who Rory meets there)
+
+| # | Place | Contact | Missions |
+|---|---|---|---|
+| 11 | The Sunlight Zone (the Atlantic, over the sunken Bermuda base) | Dr Lani Kealoha, marine biologist on the research ship *Albatross* | first dive in the suit; pearls on a turtle migration; ride the warm current; Drip divers in the blue; TORPEDO rings through a manta school; follow the wreck's oil slick down |
+| 12 | The Kelp Forest (California) | Rosa, a sea-otter rescuer | pearls in the kelp canopy; free otters from Drip nets; sub chase through swaying kelp; sea-urchin barrens clean-up; the kelp maze by sonar; lead an otter pup home |
+| 13 | The Sunken Liner (*RMS Neptune*) | Captain Barnaby Hook, retired, who sailed on her | airlock into the first air pocket; deck-by-deck pearls; the ballroom (stealth past Drip guards); the engine room valves; salvage the captain's safe; escape as she shifts |
+| 14 | The Twilight Zone | Dr Hiro Tanaka, pilot of the deep sub *Kaiko* | sonar hunt for Undertow's pipe; lanternfish escort; ride the down-current; codes on a Drip beacon; TORPEDO rings in the gloom; the pipe junction valves |
+| 15 | The Midnight Zone | Glim, a lost POLARIS probe that glows | everything that glows is alive: find the right lights; anglerfish lure stealth; jelly-field current ride; Drip divers in the dark; sonar map of the canyon; tow Glim home |
+| 16 | The Hydrothermal Vents | Dr Ama Mensah, vent geologist | black-smoker pearls (don't touch the hot water); tube-worm maze; pump-house circuit; vent-chimney sub chase; salvage the sensor sled; the heat-exchanger valves |
+| 17 | The Glass Station | Professor Silt, Undertow's engineer | airlock in; sneak through the labs; Silt's morse message; the plans (codes); Silt learns the truth and turns; out through the moon pool |
+| 18 | The Ice Trench (under the Arctic ice) | Nuka, an ice diver | pearls under the pack ice; the ice-brick factory stealth; conveyor lasers; stop the freezer (circuit); ice-tunnel sub chase; free the trapped narwhals |
+| 19 | The Mariana Trench | Professor Silt, now with POLARIS | the pressure-door descent (airlock); ride the trench current down; valves on the great pipe; salvage Undertow's logbook; sonar in the deepest place on Earth; the last door |
+| 20 | The Tidal Engine | Frost and Silt | shut the intake valves; Drip army round-up; the Engine's heart (circuit); the Kraken Mk II (boss); chase Undertow's cargo pod to the lift; she escapes up the space elevator |
+
+The act ends with the sea flowing back into the world's harbours, Undertow's cargo
+pod of frozen sea climbing a ribbon into the sky, and Frost calling Commander Vega.
+
 ## Missions
 
 About six per place, 180 in all, on at least twenty-four mission kinds, each

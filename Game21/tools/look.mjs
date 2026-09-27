@@ -20,6 +20,7 @@ await page.waitForFunction(() => window.__g && window.__g.state === "title", nul
 const ev = (fn, a) => page.evaluate(fn, a);
 const waitT = async s => { const t0 = await ev(() => __g.t); await page.waitForFunction(t => __g.t >= t, t0 + s, { timeout: 300000 }); };
 if (place) await ev(id => __g.debug.load(id), place);
+if (process.env.PRE) console.log("pre:", JSON.stringify(await page.evaluate(process.env.PRE)));
 for (const item of list.split(";")) {
   const [name, v] = item.split(":"); const c = v.split(",").map(Number);
   await ev(c => __g.debug.view(...c), c);
