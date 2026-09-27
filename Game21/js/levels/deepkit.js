@@ -173,7 +173,7 @@ export function diveBell(w, x, y, z, o = {}) {
   // lamps, a POLARIS sign, a bench and an air rack
   const lamp = new THREE.PointLight(0xfff0d8, 10, 14, 1.3); lamp.position.set(x, F + WH + 1.5, z); w.scene.add(lamp);
   w.sign("POLARIS", 2.2, 0.5, x, F + WH - 0.4, z - R * 0.85, 0, { bg: "#0a2a4a", fg: "#7ff4e8", glow: 0.6 });
-  w.box(2.4, 0.5, 0.6, yellow, x - R * 0.55, F + 0.25, z + R * 0.5, { ry: -0.6 });
+  w.box(2.4, 0.4, 0.6, yellow, x - R * 0.55, F + 0.2, z + R * 0.5, { ry: -0.6 }); // (low enough to step over)
   for (let i = 0; i < 4; i++) w.cyl(0.14, 0.14, 1, M(0xf2c418, { rough: 0.35, metal: 0.3 }), x + R * 0.6 + i * 0.3, F + 0.5, z - R * 0.35, { seg: 8, collide: false });
   const room = w.dryRoom(x - R, F - 0.3, z - R, x + R, F + WH + R, z + R, { wl: F - 0.3, below: F - 0.3 - y });
   // (Rory starts by the glass on the side the place's sights are, o.face being the way he looks)
