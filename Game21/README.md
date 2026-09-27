@@ -67,7 +67,7 @@ black and what glows is alive. Every deep place starts in a POLARIS dive bell wi
 
 New kinds of mission: **Current** (ride the currents through rings), **Valves** (turn the
 valve wheels until every gauge sits in the green) and **Airlock** (outer door, pump, inner
-door, in the right order: the levers refuse anything unsafe).
+door, in the right order: the levers refuse anything unsafe, and each refusal costs a star).
 
 ## Files
 
