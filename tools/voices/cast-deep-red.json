@@ -100,5 +100,59 @@
   "lang": "en-us",
   "speed": 0.9,
   "pitch": 1.08
+ },
+ "lani": {
+  "voice": "af_nova",
+  "lang": "en-us",
+  "speed": 0.88,
+  "pitch": 1.0
+ },
+ "rosa": {
+  "voice": "af_sky",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "barnaby": {
+  "voice": "bm_george:0.5,am_santa:0.5",
+  "lang": "en-gb",
+  "speed": 0.82,
+  "pitch": 0.9
+ },
+ "hiro": {
+  "voice": "jm_kumo",
+  "lang": "en-us",
+  "speed": 0.88,
+  "pitch": 1.0
+ },
+ "glim": {
+  "voice": "bf_alice",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.28
+ },
+ "ama": {
+  "voice": "af_kore",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 1.0
+ },
+ "silt": {
+  "voice": "bm_daniel:0.6,bm_fable:0.4",
+  "lang": "en-gb",
+  "speed": 0.82,
+  "pitch": 0.92
+ },
+ "nuka": {
+  "voice": "af_river",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "vega": {
+  "voice": "af_sarah",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 0.98
  }
 }

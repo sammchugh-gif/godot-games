@@ -25,7 +25,7 @@ export function buildKelp(w) {
   };
   w.terrain(460, 200, h, M("rock", { args: [91, [110, 104, 92]], repeat: [90, 90] }));
   w.overlay(-40, -50, 140, 60, M("sand", { args: [11, [196, 186, 150]], repeat: [30, 14] }), (x, z) => toPath(LANE, x, z) < 7, 0.05);
-  w.ocean({ level: 0, box: [0, -40, 240, 180], shallow: 0x3a9a8a, deep: 0x0a3a50, under: 0x1a6a70, deepUnder: 0x04161c, clear: 0.55, waves: 1.0, caustics: 5, see: 34 });
+  w.ocean({ level: 0, box: [0, -40, 240, 180], shallow: 0x3a9a8a, deep: 0x0a3a50, under: 0x1a6a70, deepUnder: 0x04161c, clear: 0.55, waves: 0.5, caustics: 5, see: 34 });
   w.deepAt = 60;
 
   // ---- Rosa's pontoon and her rescue boat
@@ -57,7 +57,7 @@ export function buildKelp(w) {
     stalks.push([jx, y, jz, -y - 0.3]);
     if (maze && R() < 0.5) stalks.push([jx + 1.2, h(jx + 1.2, jz + 0.8), jz + 0.8, -h(jx + 1.2, jz + 0.8) - 0.3]);
   }
-  kelp(w, stalks, { color: 0x7a6a2a });
+  kelp(w, stalks, { color: 0x7a6a2a, top: 0.04 });
   // the urchins on the barren
   const urchin = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.28, 0), M(0x5a2a6a, { rough: 0.6, flat: true }), 60);
   const m4 = new THREE.Matrix4();

@@ -119,13 +119,13 @@ export function kelp(w, stalks, o = {}) {
     const st = new THREE.CylinderGeometry(0.05, 0.08, ht, 5, Math.max(2, Math.round(ht / 2)), true); st.translate(x, y + ht / 2, z);
     geos.push(tag(st.index ? st.toNonIndexed() : st, y, ht));
     // blades up the stalk, turning as they go
-    for (let k = 0; k < ht / 0.9; k++) {
+    for (let k = 0; k < (ht - 1.4) / 0.9; k++) {
       const b = new THREE.PlaneGeometry(0.28, 1.1, 1, 2); b.translate(0.18, 0, 0); b.rotateZ(-0.7 + R() * 0.3); b.rotateY(k * 2.4 + R()); b.translate(x, y + 0.6 + k * 0.9, z);
       geos.push(tag(b.toNonIndexed(), y, ht));
     }
     // the canopy: long blades lying out along the surface
-    if (o.canopy !== false) for (let k = 0; k < 6; k++) {
-      const b = new THREE.PlaneGeometry(0.4, 3.2, 1, 3); b.rotateX(-Math.PI / 2 + 0.15); b.translate(0, 0, 1.6); b.rotateY(k * 1.05 + R()); b.translate(x, y + ht - 0.1, z);
+    if (o.canopy !== false) for (let k = 0; k < 7; k++) {
+      const b = new THREE.PlaneGeometry(0.5, 3.4, 1, 3); b.rotateX(-Math.PI / 2); b.translate(0, 0, 1.7); b.rotateY(k * 0.9 + R()); b.translate(x, (o.top ?? y + ht) - k * 0.012, z);
       geos.push(tag(b.toNonIndexed(), y, ht));
     }
   }

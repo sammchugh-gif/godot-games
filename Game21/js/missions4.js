@@ -161,7 +161,7 @@ export class Airlock extends Mission {
     if (s) {
       const g = this.want(s), there = s.a.S.outer === g.outer && s.a.S.inner === g.inner && s.a.S.water === g.water;
       const far = s.dir === "in" ? s.a.dry : s.a.sea;
-      if (there && Math.hypot(pp.x - far[0], pp.z - far[1]) < 1.4) { this.k++; this.g.sound("cell"); if (this.k < this.steps.length) toast("Through! On to the next one.", 2); }
+      if (there && Math.hypot(pp.x - far[0], pp.z - far[1]) < 1.4) { this.k++; this.entered = false; this.g.sound("cell"); if (this.k < this.steps.length) toast("Through! On to the next one.", 2); }
     } else if (pp.distanceTo(this.goal) < 1.8) this.win();
   }
   hint() {
@@ -225,7 +225,9 @@ export class Current extends Mission {
       m.lookAt(m.position.clone().add(dir));
       return { m, r, got: false };
     });
-    this.got = 0; this.navPts = this.rings.map(r => r.m.position.toArray());
+    this.got = 0; this.navPts = [...this.rings.map(r => r.m.position.toArray()), ...(this.w.currents || []).map(c => c.pts[0].toArray())];
+    // (the way to a current's start keeps out of its tube: nobody can swim up a current)
+    this.navBlock = (x, y, z) => { const a = this.along(x, y, z, 0.8); return !!a && a.s > 5; };
   }
   update() {
     const pp = this.p.pos, c = new THREE.Vector3(pp.x, pp.y + 0.7, pp.z);
@@ -239,25 +241,23 @@ export class Current extends Mission {
   hud() { return { ...super.hud(), text: `Ride the current through the rings  ${this.got}/${this.rings.length}`, progress: this.got / this.rings.length }; }
   target() { const r = this.rings[this.got]; return r ? r.m.position : null; }
   // which current (if any) runs through a point, and how far along it that is
-  along(x, y, z) {
+  along(x, y, z, pad = 0) {
     for (const c of this.w.currents || []) for (const q of c.seg) {
       const t = Math.max(0, Math.min(q.l, (x - q.a.x) * q.d.x + (y - q.a.y) * q.d.y + (z - q.a.z) * q.d.z));
-      if (Math.hypot(q.a.x + q.d.x * t - x, q.a.y + q.d.y * t - y, q.a.z + q.d.z * t - z) < c.r) return { c, s: q.s + t };
+      if (Math.hypot(q.a.x + q.d.x * t - x, q.a.y + q.d.y * t - y, q.a.z + q.d.z * t - z) < c.r + pad) return { c, s: q.s + t };
     }
     return null;
   }
   debugState() { const f = v => +v.toFixed(1), pp = this.p.pos, a = this.along(pp.x, pp.y + 0.7, pp.z); return { got: this.got, p: pp.toArray().map(f), sw: this.p.swimming, air: f(this.p.air), gasp: !!this.gasping, cur: a ? f(a.s) : null }; }
-  // autopilot: a ring in a current is reached by swimming into that current upstream of it and
-  // steering for the ring while it carries you; anything else, swim there
+  // autopilot: a ring in a current is reached by swimming (round the outside of the tube) to the
+  // current's start, then steering for the ring while the current carries you; missed it, round
+  // again. Anything else, swim there.
   solve() {
     const r = this.rings[this.got]; if (!r) return;
     const q = r.m.position, pp = this.p.pos, ring = this.along(q.x, q.y, q.z), me = this.along(pp.x, pp.y + 0.7, pp.z);
     if (ring && !this.gasping) {
       if (me && me.c === ring.c && me.s < ring.s + 1) { this.follow3([q.x, q.y, q.z], 0.5); return; }
-      // into the current a little way upstream of the ring (or at its start)
-      const s = Math.max(0, ring.s - 8), c = ring.c;
-      let e = c.pts[0];
-      for (const sg of c.seg) if (s >= sg.s && s <= sg.s + sg.l) e = sg.a.clone().addScaledVector(sg.d, s - sg.s);
+      const e = ring.c.pts[0];
       this.swimTo(e.x, e.y, e.z); return;
     }
     this.swimTo(q.x, q.y, q.z);

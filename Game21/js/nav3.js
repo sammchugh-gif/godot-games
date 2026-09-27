@@ -10,7 +10,8 @@ const FLAGS = () => R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCL
 export class Nav3 {
   // box: [x0, y0, z0, x1, y1, z1]; r: the swimmer's size; S: the grid spacing; top: the highest a
   // centre may be (under the surface)
-  constructor(world, box, r = 0.5, S = 1, top = Infinity) {
+  // (block: an extra test for cells to keep out of, (x, y, z) => true, such as a current's tube)
+  constructor(world, box, r = 0.5, S = 1, top = Infinity, block = null) {
     this.w = world; this.r = r; this.S = S;
     const [x0, y0, z0, x1, y1, z1] = box;
     this.x0 = x0; this.y0 = y0; this.z0 = z0;
@@ -24,6 +25,7 @@ export class Nav3 {
       let free = true;
       W.intersectionsWithShape({ x, y, z }, rot, ball, () => { free = false; return false; }, f);
       if (free && world.heightAt && world.heightAt(x, z) > y - r) free = false;
+      if (free && block && block(x, y, z)) free = false;
       // (and keep out of the vents' scalding plumes)
       if (free && world.plumes) for (const p of world.plumes) if (Math.hypot(x - p.x, z - p.z) < p.r + r + 0.4 && y > p.y - 1 && y < p.y + p.h + 1) { free = false; break; }
       open[k] = free ? 1 : 0;

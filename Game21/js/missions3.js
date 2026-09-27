@@ -45,7 +45,7 @@ export const swimMixin = {
     const deep = this.w.swimTop !== undefined, lvl = deep ? this.w.swimTop - 0.4 : sea ? sea.level : 0;
     if (!this.nav3) {
       const pts = [c, [x, y, z], ...(this.navPts || [])];
-      this.nav3 = new Nav3(this.w, boxAround(pts, 8, (this.data.floor ?? -40), lvl - 0.6), 0.45, 1, lvl - 0.6);
+      this.nav3 = new Nav3(this.w, boxAround(pts, 8, (this.data.floor ?? -40), lvl - 0.6), 0.45, 1, lvl - 0.6, this.navBlock);
     }
     // air: come up (or to a bubble stream) with time to spare
     if (!deep) {
