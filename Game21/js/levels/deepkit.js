@@ -108,28 +108,29 @@ export function airlock(w, x, y, z, q = 0, o = {}) {
 
 // ------------------------------------------------------------ kelp
 // A forest of giant kelp: for each [x, y, z, height] a stalk from the sea bed up to the surface,
-// its blades all the way up and a canopy spread on top. All of it is one mesh, and it sways in the
-// swell in its vertex shader (the higher up, the further), so a whole forest is one draw call.
+// its blades all the way up and a canopy spread on top. It sways in the swell in its vertex shader
+// (the higher up, the further). The forest is cut into square tiles, one mesh each, so only the
+// tiles in view are drawn (their bounds allow for the sway).
 // No colliders: Rory and TORPEDO push through it.
 export function kelp(w, stalks, o = {}) {
-  const geos = [];
+  const TILE = 24, tiles = new Map();
   const tag = (g, base, ht) => { const p = g.attributes.position, a = new Float32Array(p.count); for (let i = 0; i < p.count; i++) a[i] = Math.max(0, (p.getY(i) - base) / ht); g.setAttribute("aH", new THREE.BufferAttribute(a, 1)); for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv", "aH"].includes(k)) g.deleteAttribute(k); return g; };
   let seed = 1; const R = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   for (const [x, y, z, ht] of stalks) {
-    const st = new THREE.CylinderGeometry(0.05, 0.08, ht, 5, Math.max(2, Math.round(ht / 2)), true); st.translate(x, y + ht / 2, z);
+    const key = `${Math.floor(x / TILE)},${Math.floor(z / TILE)}`, geos = tiles.get(key) || tiles.set(key, []).get(key);
+    const st = new THREE.CylinderGeometry(0.05, 0.08, ht, 4, Math.max(2, Math.round(ht / 3)), true); st.translate(x, y + ht / 2, z);
     geos.push(tag(st.index ? st.toNonIndexed() : st, y, ht));
-    // blades up the stalk, turning as they go
-    for (let k = 0; k < (ht - 1.4) / 0.9; k++) {
-      const b = new THREE.PlaneGeometry(0.28, 1.1, 1, 2); b.translate(0.18, 0, 0); b.rotateZ(-0.7 + R() * 0.3); b.rotateY(k * 2.4 + R()); b.translate(x, y + 0.6 + k * 0.9, z);
+    // blades up the stalk, turning as they go (one segment each: the sway only changes with height)
+    for (let k = 0; k < (ht - 1.4) / 1.0; k++) {
+      const b = new THREE.PlaneGeometry(0.28, 1.1, 1, 1); b.translate(0.18, 0, 0); b.rotateZ(-0.7 + R() * 0.3); b.rotateY(k * 2.4 + R()); b.translate(x, y + 0.6 + k * 1.0, z);
       geos.push(tag(b.toNonIndexed(), y, ht));
     }
     // the canopy: long blades lying out along the surface
-    if (o.canopy !== false) for (let k = 0; k < 7; k++) {
-      const b = new THREE.PlaneGeometry(0.5, 3.4, 1, 3); b.rotateX(-Math.PI / 2); b.translate(0, 0, 1.7); b.rotateY(k * 0.9 + R()); b.translate(x, (o.top ?? y + ht) - k * 0.012, z);
+    if (o.canopy !== false) for (let k = 0; k < 6; k++) {
+      const b = new THREE.PlaneGeometry(0.5, 3.4, 1, 1); b.rotateX(-Math.PI / 2); b.translate(0, 0, 1.7); b.rotateY(k * 1.05 + R()); b.translate(x, (o.top ?? y + ht) - k * 0.012, z);
       geos.push(tag(b.toNonIndexed(), y, ht));
     }
   }
-  const geo = mergeGeometries(geos, false);
   const mat = new THREE.MeshStandardMaterial({ color: o.color ?? 0x6a7a2a, roughness: 0.7, side: THREE.DoubleSide, emissive: 0x1a2408, emissiveIntensity: 0.4 });
   const hook = THREE.MeshStandardMaterial.prototype.onBeforeCompile;
   mat.onBeforeCompile = sh => {
@@ -139,10 +140,14 @@ export function kelp(w, stalks, o = {}) {
         transformed.x += sin(uSea.z * 0.7 + ph.x + ph.y) * k; transformed.z += cos(uSea.z * 0.55 + ph.x * 0.7 - ph.y) * k * 0.8; }`);
   };
   mat.customProgramCacheKey = () => "kelp";
-  const m = new THREE.Mesh(geo, mat); m.castShadow = false; m.receiveShadow = true; m.frustumCulled = false; m.userData.dynamic = true;
-  w.scene.add(m);
-  for (const g of geos) g.dispose();
-  return m;
+  const out = [], reach = (o.sway ?? 1.2) + 1;
+  for (const geos of tiles.values()) {
+    const geo = mergeGeometries(geos, false); geo.computeBoundingSphere(); geo.boundingSphere.radius += reach;
+    const m = new THREE.Mesh(geo, mat); m.castShadow = false; m.receiveShadow = true; m.userData.dynamic = true;
+    w.scene.add(m); out.push(m);
+    for (const g of geos) g.dispose();
+  }
+  return out;
 }
 
 // ------------------------------------------------------------ the POLARIS dive bell
