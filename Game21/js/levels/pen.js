@@ -30,11 +30,22 @@ export function buildPen(w) {
   w.box(96, 0.02, 0.2, yellow, -2, 1.21, 1.4, { collide: false });
   for (let x = -46; x <= 42; x += 8) { w.cyl(0.25, 0.3, 0.6, dark, x, 1.5, 1.6, { seg: 12 }); }
   // the training pool: tiled walls, steps down one end, a bubble vent at the bottom
-  const tile = M("tiles", { args: [12, [214, 236, 240], [150, 190, 200], 10], repeat: [4, 2] });
-  for (const [x, z, sx, sz] of [[21, 4.75, 14.5, 0.5], [21, 17.25, 14.5, 0.5], [13.75, 11, 0.5, 13], [28.25, 11, 0.5, 13]]) w.box(sx, 8, sz, tile, x, -2.8, z, { cast: false });
-  w.box(14, 0.4, 12, tile, 21, -6.2, 11, { cast: false });
+  // (the tiles are the same size on every face of every box: a box's own texture coordinates
+  // stretch the picture to fit each face, which squeezed the tiles into flickering stripes on the
+  // thin steps. And the walls stop a hair under the quay, whose slabs lie over their tops: level
+  // with them, the two surfaces flickered through each other.)
+  const tile = M("tiles", { args: [12, [214, 236, 240], [150, 190, 200], 10], repeat: [1, 1] }), TILE = 2.5;
+  const tiled = (sx, sy, sz, x, y, z) => {
+    const m = w.box(sx, sy, sz, tile, x, y, z, { cast: false }), uv = m.geometry.attributes.uv;
+    const size = [[sz, sy], [sz, sy], [sx, sz], [sx, sz], [sx, sy], [sx, sy]];
+    for (let f = 0; f < 6; f++) for (let i = 0; i < 4; i++) { const k = f * 4 + i; uv.setXY(k, uv.getX(k) * size[f][0] / TILE, uv.getY(k) * size[f][1] / TILE); }
+    uv.needsUpdate = true;
+    return m;
+  };
+  for (const [x, z, sx, sz] of [[21, 4.75, 14.5, 0.5], [21, 17.25, 14.5, 0.5], [13.75, 11, 0.5, 13], [28.25, 11, 0.5, 13]]) tiled(sx, 7.98, sz, x, -2.81, z);
+  tiled(14, 0.4, 12, 21, -6.2, 11);
   // the steps: from the deck down into the water at the near end
-  w.steps(9, 3, 0.3, 0.45, tile, 16, -1.5, 9.25, Math.PI);
+  for (let i = 0; i < 9; i++) { const d = (i + 0.5) * 0.45, h = 0.3 * (i + 1); tiled(3, h, 0.45, 16, -1.5 + h / 2, 9.25 - d); }
   w.vent(26, -6, 15, 7);
   w.sign("TRAINING POOL", 5, 1.1, 21, 3.2, 17.6, Math.PI, { bg: "#0c2a3a", fg: "#9fe8ff", glow: 0.6 });
   w.box(0.12, 2.2, 0.12, dark, 18.6, 2.3, 17.6); w.box(0.12, 2.2, 0.12, dark, 23.4, 2.3, 17.6);

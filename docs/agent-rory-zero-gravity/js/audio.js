@@ -3,6 +3,23 @@
 const T = () => window.Tone;
 let ready = false, bus = null, sfxBus = null, parts = [], mode = null;
 const inst = {};
+// iOS mutes Web Audio (the music and every sound effect) when the phone or tablet is on silent,
+// but not media like the recorded voices: so the voices played and nothing else did. Asking for a
+// media session plays it all the same way. (Before iOS 17 there's no asking, but a silent media
+// clip looping in the background does the same.) Call it inside a tap.
+let keepAwake = null;
+function mediaSession() {
+  try {
+    if (navigator.audioSession) { navigator.audioSession.type = "playback"; return; }
+    if (keepAwake || !/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) || !("ontouchend" in document)) return;
+    const n = 12000, b = new Uint8Array(44 + n * 2), d = new DataView(b.buffer), s = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+    s(0, "RIFF"); d.setUint32(4, 36 + n * 2, true); s(8, "WAVEfmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+    d.setUint32(24, 24000, true); d.setUint32(28, 48000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); s(36, "data"); d.setUint32(40, n * 2, true);
+    let bin = ""; for (let i = 0; i < b.length; i += 4096) bin += String.fromCharCode.apply(null, b.subarray(i, i + 4096));
+    keepAwake = new window.Audio("data:audio/wav;base64," + btoa(bin)); keepAwake.loop = true; keepAwake.volume = 0.01;
+    const p = keepAwake.play(); if (p && p.catch) p.catch(() => { keepAwake = null; });
+  } catch (e) { /* not iOS, or nothing to ask */ }
+}
 export const Audio = {
   music: localStorage.getItem("rory20.music") !== "0",
   sfx: localStorage.getItem("rory20.sfx") !== "0",
@@ -10,6 +27,7 @@ export const Audio = {
     const Tone = T();
     if (!Tone || ready || this.starting) return;
     this.starting = true;
+    mediaSession();
     // a roomier audio buffer than Tone's default, so the sound doesn't crackle when the 3D is busy
     // (made inside the tap, which iOS requires)
     if (!this.ctxMade) { this.ctxMade = true; try { Tone.setContext(new Tone.Context({ latencyHint: "balanced", lookAhead: 0.15 })); } catch (e) { /* keep Tone's own */ } }

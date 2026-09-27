@@ -493,6 +493,12 @@ function tick(dt) {
   else if (G.driveMode) { G.input.takeLook(); G.driveMode.ride(dt); }
   else if (drone) { const mx = G.input.mx, my = G.input.my; G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; G.player.update(dt, G.input, G.engine.camera); G.input.mx = mx; G.input.my = my; }
   else G.player.update(dt, G.input, G.engine.camera);
+  // footsteps: one each stride while Rory walks or runs on the ground (a longer stride running)
+  if (!G.craft && !G.driveMode && !drone) {
+    const p = G.player;
+    if (p.walker.grounded && !p.swimming && p.speed > 0.8) { p.stepD = (p.stepD || 0) + p.speed * dt; if (p.stepD > 0.55 + p.speed * 0.1) { p.stepD = 0; sound("step"); } }
+    else p.stepD = 0.4;
+  }
   if (drone || G.driveMode || G.craft) { G.bolt.update(dt); } else updateBolt(dt);
   if (G.contact) { animatePerson(G.contact, { dt, speed: 0, grounded: true, talk: G.talking === G.place.contact }); const c = G.contact.root.position; G.contact.root.rotation.y += (Math.atan2(G.player.pos.x - c.x, G.player.pos.z - c.z) - G.contact.root.rotation.y) * Math.min(1, dt * 2); }
   if (G.state === "mission" && G.mission && !G.dialogue.active) {
