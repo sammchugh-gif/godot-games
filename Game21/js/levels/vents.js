@@ -63,7 +63,7 @@ export function buildVents(w) {
 
   // ---- the missions
   const bed = (x, z, up = 1.2) => [x, h(x, z) + up, z];
-  const onSmoker = (i, up, side) => { const s = SMOKERS[i]; return [s.x + side * 1.9, s.y + up, s.z]; };
+  const onSmoker = (i, up, side) => { const s = SMOKERS[i]; return [s.x + side * 2.7, s.y + up, s.z]; };
   const ring = (x, y, z, a) => [x, y, z, 2.6, a];
   w.missionData = {
     ven1: { cells: [onSmoker(0, 4, 1), onSmoker(1, 6, -1), onSmoker(2, 3, 1), onSmoker(3, 8, -1), onSmoker(4, 5, 1), onSmoker(5, 6, -1), onSmoker(3, 3, 1)], floor: -20 },
@@ -71,7 +71,7 @@ export function buildVents(w) {
       rings: WORMS.filter((_, k) => k % 4 === 1).map(([x, z], i) => ring(rift(z) + (x > rift(z) ? -1.5 : 1.5), h(x, z) + 3, z, 0)).slice(0, 6) },
     ven3: { title: "PUMP HOUSE" },
     ven4: { exit: bell.spawn, floor: -24, path: [[30, 8, 60], [14, 7, 48], [7, 6, 28], [12, 7, 8], [10, 6, -14], [8, 7, -36], [7, 6, -58], [-4, 8, -80], [-24, 9, -96]] },
-    ven5: { sub: [30, 4, 10, -Math.PI / 2], exit: bell.spawn, items: [bed(12, 40, 0.6), bed(-16, 30, 0.6), bed(16, -40, 0.6)], pad: RACK, padR: 2.8, floor: -24 },
+    ven5: { sub: [30, 4, 10, -Math.PI / 2], exit: bell.spawn, items: [bed(12, 40, 0.6), bed(-22, 30, 0.6), bed(16, -40, 0.6)], pad: RACK, padR: 2.8, floor: -24 },
     ven6: { title: "HEAT EXCHANGER" },
   };
   return {

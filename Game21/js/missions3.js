@@ -59,7 +59,11 @@ export const swimMixin = {
       }
       const e = this.entry.at;
       if (!e) { this.steer(x, z); return dh; }
-      if (e.off && Math.hypot(e.x - pp.x, e.z - pp.z) < 0.8) { this.steer(e.off[0], e.off[1]); return dh; }
+      // (once at the edge, step off and keep going: turning back to the square each time Rory is a
+      // step past it would leave him dithering on the brink)
+      const de = Math.hypot(e.x - pp.x, e.z - pp.z);
+      if (e.off && (de < 0.8 || (this.entry.go && de < 2.5))) { this.entry.go = true; this.steer(e.off[0], e.off[1]); return dh; }
+      this.entry.go = false;
       this.walkTo(e.x, e.y + 0.3, e.z, e.off ? 0.5 : 1.0, pts); return dh;
     }
     // (in the deep the surface is out of reach: the top of the water is where swimming stops)

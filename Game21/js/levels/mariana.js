@@ -74,9 +74,9 @@ export function buildMariana(w) {
     mar1: { steps: [[lockA, "in"], [lockB, "out"]], goal: [lockB.sea[0] - 2, PY + 1, lockB.sea[1]] },
     mar2: { rings: [[20, -10, 25, 2.8], [16, -32, 18, 2.8], [10, -48, 8, 2.8], [6, -62, -4, 2.8], [4, -70, -20, 2.8], [2, -72, -40, 2.8]], floor: -84 },
     mar3: { title: "THE GREAT PIPE" },
-    mar4: { sub: [44, 4, -8, -Math.PI / 2], exit: bell.spawn, thing: "crate", items: [bed(8, 52, 0.6), bed(-6, 36, 0.6), bed(10, 30, 0.6)], pad: [40, h(40, -8) + 1, -8], padR: 3.2, floor: -84 },
+    mar4: { sub: [44, 4, -8, -Math.PI / 2], exit: bell.spawn, thing: "crate", items: [bed(8, 52, 0.6), bed(-14, 36, 0.6), bed(10, 30, 0.6)], pad: [40, h(40, -8) + 1, -8], padR: 3.2, floor: -84 },
     mar5: { sub: [40, 2, -30, -Math.PI / 2], exit: bell.spawn, dark: true, floor: -84,
-      marks: [bed(6, -30, 3), bed(8, -50, 3), bed(2, -66, 3), bed(-6, -80, 3), bed(-10, -92, 5), bed(0, -100, 5)] },
+      marks: [bed(6, -30, 3), bed(8, -50, 3), bed(2, -66, 3), bed(-12, -80, 3), bed(-10, -92, 5), bed(0, -100, 5)] },
     mar6: { title: "THE LAST DOOR" },
   };
   return {

@@ -87,7 +87,7 @@ export function buildIce(w) {
       guards: [{ path: [[-4, -20], [-4, -6]], speed: 1.3, y: F }, { path: [[-14, -6], [-14, -20]], speed: 1.2, phase: 0.5, y: F }, { path: [[2, -13], [-12, -13]], speed: 1.4, y: F }] },
     ice3: { start: [8, F + 0.1, -13], goal: [-16, F + 0.1, -13], width: 5 },
     ice4: { title: "THE FREEZER" },
-    ice5: { exit: [8, TOP + 0.1, 6], floor: -40, path: [[0, -8, -40], [-20, -9, -54], [-40, -10, -66], [-60, -9, -54], [-80, -10, -64], [-96, -11, -50], [-86, -12, -20], [-70, -10, 10], [-60, -9, 44], [-80, -10, 60]] },
+    ice5: { exit: [8, TOP + 0.1, 6], floor: -40, path: [[0, -8, -40], [-20, -9, -54], [-40, -10, -66], [-60, -21, -54], [-80, -10, -64], [-96, -11, -50], [-86, -12, -20], [-70, -10, 10], [-60, -9, 44], [-80, -10, 60]] },
     ice6: { sub: [36, -6, -8, Math.PI / 2], exit: [8, TOP + 0.1, 6], thing: "ice", items: [[BAY.x - 6, -12, BAY.z], [BAY.x, -12, BAY.z - 6], [BAY.x + 6, -12, BAY.z], [BAY.x, -12, BAY.z + 6]], pad: [BAY.x - 18, h(BAY.x - 18, BAY.z) + 1, BAY.z], padR: 3.2, floor: -40 },
   };
   // (the blocks round the bay, on the sea bed under the narwhals; the salvage lifts them away)

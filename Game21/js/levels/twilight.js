@@ -88,7 +88,7 @@ export function buildTwilight(w) {
   const ring = (x, y, z, a) => [x, y, z, 2.6, a];
   w.missionData = {
     twi1: { sub: [26, 4, 0, -Math.PI / 2], exit: bell.spawn, dark: true, floor: -80,
-      marks: [bed(-62, 44, 3.2), bed(-66, 20, 3.2), bed(-84, -8, 3.2), bed(-102, -18, 3.2), bed(-52, -34, 3.2), bed(-44, -54, 3.2)] },
+      marks: [bed(-62, 44, 3.2), bed(-66, 20, 3.2), bed(-84, -8, 3.2), bed(-102, -18, 3.2), bed(-58, -30, 3.2), bed(-44, -54, 3.2)] },
     twi2: { critter: "lanternfish", water: true, kids: lost, goal: [SHOAL.x, SHOAL.y, SHOAL.z], goalR: 4, floor: -70 },
     twi3: { rings: [[16, 2.5, -18, 2.6], [0, -8, -18, 2.6], [-16, -26, -14, 2.6], [-32, -38, -8, 2.6], [-46, -48, -2, 2.6], [-54, -52, 4, 2.6]], floor: -70 },
     twi4: { title: "DRIP BEACON" },
