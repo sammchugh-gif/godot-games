@@ -55,6 +55,59 @@ export function critter(kind, scale = 1) {
     // swimming, it lies flat: the chest and head come down level with the body
     const chest = P.parts.chest = g.children[1];
     P.swimPose = () => { chest.position.set(0, 0.32, 0.62); chest.scale.set(0.8, 0.75, 1.1); head.position.set(0, 0.38, 1.05); for (const f of P.parts.fl) { f.position.y = 0.25; f.rotation.z = 0; } };
+  } else if (kind === "otter") {
+    // a sea otter floating on its back, paws on its chest: its middle is at y = 0 (the water line)
+    const fur = M(0x5a3a22, { rough: 0.7 }), face = M(0xc8b08a, { rough: 0.7 });
+    part(g, sph(0.2, 16, 12), fur, 0, 0, 0, 1, 0.7, 2.1);
+    const head = P.parts.head = new THREE.Group(); head.position.set(0, 0.1, 0.44); g.add(head);
+    part(head, sph(0.13, 14, 10), face, 0, 0, 0, 1, 0.95, 1);
+    part(head, sph(0.05, 10, 8), face, 0, -0.02, 0.11, 1.2, 0.8, 1);
+    part(head, sph(0.022, 8, 6), M(0x1a1410), 0, 0.01, 0.16);
+    eye(head, 0.055, 0.05, 0.09, 0.022); eye(head, -0.055, 0.05, 0.09, 0.022);
+    for (const sx of [-1, 1]) part(head, sph(0.03, 8, 6), fur, sx * 0.1, 0.09, -0.02);
+    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.1, 0.12, 0.22); g.add(f); part(f, sph(0.045, 8, 6), fur, 0, 0, 0.02, 1, 0.8, 1.4); return f; });
+    const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0.02, -0.4); g.add(tail);
+    part(tail, sph(0.07, 10, 8), fur, 0, 0, -0.14, 1.1, 0.5, 2.4);
+  } else if (kind === "lanternfish") {
+    // a little dark fish with rows of blue lights along its belly
+    const s = 0.14, body = M(0x1a2230, { rough: 0.3, metal: 0.4 }), glow = M(0x6ad8ff, { emissive: 0x6ad8ff, ei: 3 });
+    part(g, sph(s, 12, 8), body, 0, 0, 0, 0.5, 0.6, 1.4);
+    for (let k = -3; k <= 3; k++) for (const sx of [-1, 1]) part(g, sph(s * 0.08, 6, 4), glow, sx * s * 0.38, -s * 0.28, k * s * 0.3);
+    part(g, sph(s * 0.14, 8, 6), glow, 0, s * 0.1, s * 1.15);
+    eye(g, s * 0.25, s * 0.15, s * 1.0, s * 0.12); eye(g, -s * 0.25, s * 0.15, s * 1.0, s * 0.12);
+    const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0, -s * 1.3); g.add(tail);
+    part(tail, new THREE.ConeGeometry(s * 0.5, s * 0.8, 4), body, 0, 0, -s * 0.3, 0.3, 1, 1).rotation.x = -Math.PI / 2;
+  } else if (kind === "jelly") {
+    // a jellyfish: a glowing bell and trailing tentacles that sway
+    const col = P.color = 0xff7ad8, bell = new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: 1.2, transparent: true, opacity: 0.55, roughness: 0.2, side: THREE.DoubleSide, depthWrite: false });
+    const b = P.parts.bell = part(g, new THREE.SphereGeometry(0.4, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), bell, 0, 0, 0);
+    b.castShadow = false;
+    const tm = new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(1.4), transparent: true, opacity: 0.6, depthWrite: false });
+    P.parts.legs = [];
+    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, t = part(g, new THREE.CylinderGeometry(0.012, 0.004, 1.2, 3), tm, Math.cos(a) * 0.26, -0.6, Math.sin(a) * 0.26); t.castShadow = false; P.parts.legs.push(t); }
+  } else if (kind === "angler") {
+    // an anglerfish: a round dark body, a huge toothy mouth, and a glowing lure on a stalk
+    const body = M(0x2a1a22, { rough: 0.6 }), tooth = M(0xf0f0e0, { rough: 0.3 }), lure = M(0xb8ff6a, { emissive: 0xb8ff6a, ei: 4 });
+    part(g, sph(0.5, 18, 12), body, 0, 0, 0, 1, 0.9, 1.1);
+    part(g, sph(0.36, 14, 10), M(0x100810), 0, -0.1, 0.36, 1.1, 0.5, 0.5);
+    for (let k = 0; k < 9; k++) { const a = -0.9 + k * 0.225; part(g, new THREE.ConeGeometry(0.03, 0.14, 4), tooth, Math.sin(a) * 0.36, -0.02, 0.36 + Math.cos(a) * 0.14).rotation.x = Math.PI; }
+    eye(g, 0.2, 0.2, 0.36, 0.05); eye(g, -0.2, 0.2, 0.36, 0.05);
+    const stalk = part(g, new THREE.CylinderGeometry(0.015, 0.02, 0.7, 5), body, 0, 0.62, 0.3); stalk.rotation.x = 0.7;
+    const L = P.parts.head = part(g, sph(0.08, 10, 8), lure, 0, 0.86, 0.62);
+    const light = new THREE.PointLight(0xb8ff6a, 3, 6, 1.6); L.add(light);
+    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.46, -0.05, 0); g.add(f); part(f, new THREE.ConeGeometry(0.15, 0.3, 4), body, sx * 0.1, 0, 0, 0.4, 1, 1).rotation.z = -sx * Math.PI / 2; return f; });
+    const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0, -0.55); g.add(tail);
+    part(tail, new THREE.ConeGeometry(0.25, 0.4, 4), body, 0, 0, -0.15, 0.3, 1, 1).rotation.x = -Math.PI / 2;
+  } else if (kind === "narwhal") {
+    // a narwhal: a long mottled grey whale with a spiral tusk
+    const skin = M(0x8a929a, { rough: 0.5 }), belly = M(0xd8dce0, { rough: 0.5 }), tusk = M(0xf0e8d0, { rough: 0.4 });
+    part(g, sph(0.6, 20, 14), skin, 0, 0, 0, 1, 0.9, 3);
+    part(g, sph(0.55, 18, 12), belly, 0, -0.1, 0.2, 0.95, 0.75, 2.7);
+    part(g, new THREE.ConeGeometry(0.05, 2.2, 8), tusk, 0.08, 0.05, 2.8).rotation.x = Math.PI / 2;
+    eye(g, 0.3, 0.12, 1.3, 0.04); eye(g, -0.3, 0.12, 1.3, 0.04);
+    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.5, -0.2, 0.9); g.add(f); part(f, new THREE.BoxGeometry(0.4, 0.04, 0.22), skin, sx * 0.2, 0, 0); return f; });
+    const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0, -1.7); g.add(tail);
+    for (const sx of [-1, 1]) { const t = part(tail, new THREE.BoxGeometry(0.5, 0.05, 0.3), skin, sx * 0.25, 0, -0.1); t.rotation.y = sx * 0.4; }
   } else if (kind === "manta") {
     const top = M(0x1a1c24, { rough: 0.5, side: THREE.DoubleSide }), belly = M(0xe8e8ec, { side: THREE.DoubleSide });
     const sh = new THREE.Shape(); sh.moveTo(0, 1.2); sh.quadraticCurveTo(1.6, 0.4, 2.6, -0.2); sh.quadraticCurveTo(1.2, -0.3, 0, -0.9); sh.quadraticCurveTo(-1.2, -0.3, -2.6, -0.2); sh.quadraticCurveTo(-1.6, 0.4, 0, 1.2);
@@ -119,8 +172,9 @@ export function animateCritter(g, dt, speed = 1) {
   const t = P.t, p = P.parts;
   if (p.fl) p.fl.forEach((f, i) => { f.rotation.z = Math.sin(t + (i % 2 ? 0 : Math.PI)) * (k === "sealion" ? 0.5 : 0.6) * (0.3 + speed); f.rotation.y = Math.sin(t) * 0.3 * (i < 2 ? 1 : -1); });
   if (p.tail) p.tail.rotation.y = Math.sin(t * (k === "clownfish" || k === "fish" ? 2.5 : 1.2)) * 0.5;
-  if (p.legs) p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 1.5 + i) * 0.4 * speed; });
+  if (p.legs && k !== "jelly") p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 1.5 + i) * 0.4 * speed; });
   if (p.head && (k === "tortoise" || k === "iguana")) p.head.rotation.y = Math.sin(t * 0.3) * 0.3;
+  if (k === "jelly") { const q = Math.sin(t * 0.5); p.bell.scale.set(1 + q * 0.12, 1 - q * 0.15, 1 + q * 0.12); p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 0.4 + i) * 0.25; l.rotation.z = Math.cos(t * 0.3 + i * 1.7) * 0.25; }); }
   if (k === "manta") {
     const pos = P.geo.attributes.position, b = P.base;
     for (let i = 0; i < pos.count; i++) { const x = b[i * 3]; pos.setY(i, Math.sin(t * 0.6 - Math.abs(x) * 0.3) * Math.abs(x) * 0.28); }

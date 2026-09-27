@@ -58,7 +58,11 @@ export class Player {
     const target = (this.swimming ? this.swimSpeed : this.maxSpeed) * (input.boostHeld ? 1.35 : 1) * mag;
     const accel = this.swimming ? 8 : w.grounded ? 30 : 12;
     // horizontal velocity eases toward the stick
-    const tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
+    let tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
+    // a current carries him along on top of his own swimming
+    const cur = this.swimming && this.world.currents ? this.world.currentAt(w.pos.x, w.pos.y + 0.6, w.pos.z) : null;
+    this.inCurrent = cur;
+    if (cur) { tvx += cur.x; tvz += cur.z; }
     const k = Math.min(1, accel * dt / Math.max(1, this.maxSpeed));
     w.vel.x += (tvx - w.vel.x) * Math.min(1, k * 3);
     w.vel.z += (tvz - w.vel.z) * Math.min(1, k * 3);
@@ -70,7 +74,7 @@ export class Player {
     // in the sea: chest-deep water floats Rory (see swim())
     const sea = this.world.sea;
     if (sea) {
-      const L = sea.height(w.pos.x, w.pos.z), depth = L - w.pos.y;
+      const L = this.world.surfaceAt(w.pos.x, w.pos.y + 1, w.pos.z), depth = L - w.pos.y;
       this.surfaceY = L;
       const was = this.swimming, wasUnder = this.headUnder;
       this.swimming = this.swimming ? depth > 0.85 : depth > 1.05 && !(w.grounded && depth < 1.2);
@@ -159,6 +163,10 @@ export class Player {
     if (input.diveHeld && !this.frozen) vy = -3;
     else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
     else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
+    if (this.inCurrent) vy += this.inCurrent.y;
+    // in the deep there's no swimming up to the surface: the sea is too deep
+    const top = this.world.swimTop;
+    if (top !== undefined && w.pos.y > top - 1) vy = Math.min(vy, (top - 1 - w.pos.y) * 2);
     w.vel.y += (vy - w.vel.y) * Math.min(1, dt * 4);
     w.grounded = false;
     void mag;

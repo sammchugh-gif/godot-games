@@ -151,7 +151,9 @@ export class Craft {
       const vy = frozen ? 0 : input.jumpHeld ? 3.5 : input.diveHeld ? -3.5 : 0;
       this.vel.y += (vy - this.vel.y) * Math.min(1, dt * 3);
     }
-    const want = { x: this.vel.x * dt, y: this.vel.y * dt, z: this.vel.z * dt };
+    // (a current carries the sub along too)
+    const cur = !L.surface && this.world.currents ? this.world.currentAt(this.pos.x, this.pos.y, this.pos.z) : null;
+    const want = { x: (this.vel.x + (cur ? cur.x : 0)) * dt, y: (this.vel.y + (cur ? cur.y : 0)) * dt, z: (this.vel.z + (cur ? cur.z : 0)) * dt };
     this.cc.computeColliderMovement(this.col, want, R.QueryFilterFlags.EXCLUDE_SENSORS, undefined, this.pass);
     const m = this.cc.computedMovement();
     const lost = Math.hypot(want.x - m.x, want.z - m.z);
@@ -161,7 +163,7 @@ export class Craft {
     this.pos.x += m.x; this.pos.z += m.z; this.pos.y += m.y;
     // the sea's surface: the sub can come up until its dome breaks the surface; boats ride on it
     if (sea) {
-      const h = sea.height(this.pos.x, this.pos.z);
+      const h = Math.min(this.world.surfaceAt(this.pos.x, this.pos.y, this.pos.z), this.world.swimTop ?? Infinity);
       if (L.surface) this.pos.y = h + 0.05;
       else if (this.pos.y > h - 0.55) { this.pos.y = h - 0.55; this.vel.y = Math.min(0, this.vel.y); }
     }

@@ -21,7 +21,7 @@ function boxAround(pts, pad = 10, floor = -40, top = 0) {
 }
 
 // ------------------------------------------------------------ helpers the underwater autopilots share
-const swimMixin = {
+export const swimMixin = {
   // Rory swims to (x, y, z): along a planned route through open water, up for air when he needs it
   swimTo(x, y, z) {
     const g = this.g, p = this.p, inp = g.input, c = [p.pos.x, p.pos.y + 0.7, p.pos.z], sea = this.w.sea;
@@ -41,26 +41,48 @@ const swimMixin = {
       const e = this.entry.at;
       return e ? this.walkTo(e.x, e.y + 0.3, e.z, 1.0, pts) : r;
     }
-    const lvl = sea ? sea.level : 0;
+    // (in the deep the surface is out of reach: the top of the water is where swimming stops)
+    const deep = this.w.swimTop !== undefined, lvl = deep ? this.w.swimTop - 0.4 : sea ? sea.level : 0;
     if (!this.nav3) {
       const pts = [c, [x, y, z], ...(this.navPts || [])];
       this.nav3 = new Nav3(this.w, boxAround(pts, 8, (this.data.floor ?? -40), lvl - 0.6), 0.45, 1, lvl - 0.6);
     }
     // air: come up (or to a bubble stream) with time to spare
-    const depth = lvl - c[1];
-    if (p.headUnder && p.air < depth / 3 + 7) {
-      let best = [c[0], lvl - 0.8, c[2]], bd = depth;
-      for (const v of this.w.airVents || []) { const d = Math.hypot(v.x - c[0], v.y + 1 - c[1], v.z - c[2]); if (d < bd) { bd = d; best = [v.x, Math.min(v.y + 1.5, lvl - 1), v.z]; } }
-      this.gasping = true;
-      return this.follow3(best, 0.7);
+    if (!deep) {
+      const depth = lvl - c[1];
+      if (p.headUnder && p.air < depth / 3 + 7) {
+        let best = [c[0], lvl - 0.8, c[2]], bd = depth;
+        for (const v of this.w.airVents || []) { const d = Math.hypot(v.x - c[0], v.y + 1 - c[1], v.z - c[2]); if (d < bd) { bd = d; best = [v.x, Math.min(v.y + 1.5, lvl - 1), v.z]; } }
+        this.gasping = true;
+        return this.follow3(best, 0.7);
+      }
+      if (this.gasping && p.air < p.airMax * 0.9) { this.follow3([c[0], lvl - 0.8, c[2]], 0.7); return 1; }
+      this.gasping = false;
+    } else {
+      // in the deep: to the nearest air station, bubble stream or air pocket, along a route, and
+      // wait there until the tank is nearly full
+      const a = this.airNear(c);
+      if (a && p.headUnder && !this.gasping && p.air < a.d / 2.4 + 10) this.gasping = a.pt;
+      if (this.gasping) {
+        const g = this.gasping;
+        if (p.air >= p.airMax * 0.92) this.gasping = false;
+        else if (Math.hypot(g[0] - c[0], g[1] - c[1], g[2] - c[2]) < 1.2 || !p.headUnder) { this.follow3(g, 0.7); return 1; }
+        else { x = g[0]; y = g[1]; z = g[2]; }
+      }
     }
-    if (this.gasping && p.air < p.airMax * 0.9) { this.follow3([c[0], lvl - 0.8, c[2]], 0.7); return 1; }
-    this.gasping = false;
     if (!this.swimGoal || Math.hypot(this.swimGoal[0] - x, this.swimGoal[1] - y, this.swimGoal[2] - z) > 0.5 || this.t > this.swimAt) {
       this.swimGoal = [x, y, z]; this.swimAt = this.t + 4;
       this.swimPath = this.nav3.route(c, [x, y, z]); this.swimI = 1;
     }
     return this.follow3(this.swimPath ? null : [x, y, z], 0.9);
+  },
+  // the nearest place to breathe in the deep, as the crow swims: { pt, d }
+  airNear(c) {
+    let best = null;
+    const put = (pt) => { const d = Math.hypot(pt[0] - c[0], pt[1] - c[1], pt[2] - c[2]); if (!best || d < best.d) best = { pt, d }; };
+    for (const v of this.w.airVents || []) put([v.x, v.y + Math.min(1.5, v.h / 2), v.z]);
+    for (const r of this.w.dry || []) if (r.below >= 2) put([(r.x0 + r.x1) / 2, r.wl - 0.7, (r.z0 + r.z1) / 2]);
+    return best;
   },
   // steer along this.swimPath (or straight at pt): the stick across, JUMP up, DIVE down
   follow3(pt, reach) {
@@ -125,6 +147,15 @@ export class Dive extends Cells {
   }
 }
 Object.assign(Dive.prototype, swimMixin);
+
+// things TORPEDO's claw lifts in Act Two: a tangled net with floats, a ship's safe, a crate, a block
+// of ice (with something inside it)
+const SALVAGE = {
+  net: () => { const g = new THREE.Group(); const n = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), new THREE.MeshStandardMaterial({ color: 0x3a5a4a, wireframe: true })); g.add(n); const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), new THREE.MeshStandardMaterial({ color: 0x2a3a30, roughness: 0.9, transparent: true, opacity: 0.6 })); g.add(b); for (let k = 0; k < 4; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), new THREE.MeshStandardMaterial({ color: 0xf07a1a })); const a = k * 1.7; f.position.set(Math.cos(a) * 0.6, 0.3 + (k % 2) * 0.2, Math.sin(a) * 0.6); g.add(f); } return g; },
+  safe: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0x2a3a2a, metalness: 0.7, roughness: 0.4 })); b.castShadow = true; g.add(b); const d = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.08, 16), new THREE.MeshStandardMaterial({ color: 0xd8b04a, metalness: 0.9, roughness: 0.3 })); d.rotation.x = Math.PI / 2; d.position.z = 0.47; g.add(d); return g; },
+  crate: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.9), new THREE.MeshStandardMaterial({ color: 0x5a1a2a, roughness: 0.5, emissive: 0x2a0a10, emissiveIntensity: 0.4 })); b.castShadow = true; g.add(b); const s = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.12, 0.3), new THREE.MeshStandardMaterial({ color: 0x2ad0c0, emissive: 0x2ad0c0, emissiveIntensity: 0.8 })); g.add(s); return g; },
+  ice: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 1.3), new THREE.MeshStandardMaterial({ color: 0xcff4ff, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.7 })); g.add(b); return g; },
+};
 
 // ------------------------------------------------------------ piloting missions: in TORPEDO or on a jet-ski
 class Piloted extends Mission {
@@ -336,6 +367,7 @@ export class Salvage extends Piloted {
     const kind = d.thing || "part";
     this.items = (d.items || []).slice(0, this.def.n || 3).map(p => {
       const m = kind === "rock" ? new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), new THREE.MeshStandardMaterial({ color: 0x6a6a64, roughness: 0.95, flatShading: true }))
+        : SALVAGE[kind] ? SALVAGE[kind]()
         : new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 12), new THREE.MeshStandardMaterial({ color: 0x3a8ad8, metalness: 0.6, roughness: 0.4, emissive: 0x0a2a4a, emissiveIntensity: 0.5 }));
       m.position.set(p[0], p[1], p[2]); m.castShadow = true; this.add(m);
       return { m, state: "floor", home: p };
@@ -387,7 +419,7 @@ export class Escort extends Mission {
   start() {
     const d = this.data, kind = d.critter || "turtle";
     this.goal = v3(d.goal); this.goalR = d.goalR || 3;
-    this.water = kind === "clownfish";
+    this.water = d.water ?? kind === "clownfish";
     this.kids = (d.kids || []).slice(0, this.def.n || 3).map(k => { const c = critter(kind); c.position.set(k[0], k[1], k[2]); this.add(c); return { c, home: v3(k), state: "wait", t: 0 }; });
     const gm = this.add(ringMesh(this.goalR, 0x7bed9f)); gm.position.copy(this.goal); gm.rotation.x = Math.PI / 2;
     // crabs patrol back and forth; a crab scares a little one back to where it started

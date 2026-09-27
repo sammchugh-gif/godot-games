@@ -192,6 +192,17 @@ export class Sea {
     // be rebuilt the first time Rory dives
     this.see = o.see ?? 38;
     this.isUnder = false; this.camDepth = 0;
+    // a deep place (Act Two): the surface is far overhead and out of reach, so there are no waves to
+    // draw, no caustics and no shafts of light; the darkness is the level's own dim lights, and the
+    // fog goes from o.abyss.k[0] at height top to k[1] at height bottom
+    if (o.abyss) {
+      this.deep = { top: 60, bottom: 0, k: [0.4, 1], ...o.abyss };
+      m.visible = false; for (const f of this.skirt) f.visible = false; this.rays.visible = false;
+      SEA.uSea.value.x = 0;
+      if (world.skyDome) world.skyDome.visible = false;
+      // (from a dry room the water outside is still murky)
+      world.scene.fog = new THREE.Fog(this.under.clone().lerp(this.deepUnder, 0.5), 6, this.deep.room ?? 90); world.scene.background = world.scene.fog.color.clone();
+    }
   }
   // height of the surface at (x, z) now
   height(x, z) {
@@ -208,6 +219,7 @@ export class Sea {
   // how deep the water is under every spot of the play area: a ray down through the level at
   // each texel. Shallow water shows the sand and gets foam at its edges.
   bakeDepth() {
+    if (this.deep) return;
     const phys = this.world.phys; phys.refresh();
     const N = 192, [cx, cz, w, d] = this.box, data = new Uint8Array(N * N * 4);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
@@ -257,22 +269,24 @@ export class Sea {
     // keep the wave grid under the camera, snapped to the grid so the waves don't slide
     this.mesh.position.x = Math.round(cam.position.x / this.grid) * this.grid; this.mesh.position.z = Math.round(cam.position.z / this.grid) * this.grid;
     for (const f of this.skirt || []) f.position.set(this.mesh.position.x + f.userData.off[0], -0.02, this.mesh.position.z + f.userData.off[1]);
-    const depth = this.height(cam.position.x, cam.position.z) - cam.position.y;
-    const under = depth > 0.02; this.camDepth = depth;
+    const depth = this.world.surfaceAt(cam.position.x, cam.position.y, cam.position.z) - cam.position.y;
+    const under = depth > 0.02, D = this.deep; this.camDepth = depth;
     if (under !== this.isUnder) {
       this.isUnder = under;
       if (!s.fog) s.fog = new THREE.Fog(0x000000, 1e5, 1e6);
+      // (in the deep, the air in a dry room is only a little clearer than the water outside)
       if (under) { this.above = { c: s.fog.color.clone(), n: s.fog.near, f: s.fog.far, bg: s.background }; s.fog.near = 0.5; if (this.world.skyDome) this.world.skyDome.visible = false; }
+      else if (D) { s.fog.near = 6; s.fog.far = D.room ?? 90; s.background = s.fog.color; }
       else { s.fog.color.copy(this.above.c); s.fog.near = this.above.n; s.fog.far = this.above.f; s.background = this.above.bg; if (this.world.skyDome) this.world.skyDome.visible = true; }
-      this.rays.visible = this.specks.visible = under;
+      this.rays.visible = under && !D; this.specks.visible = under;
       document.body.classList.toggle("underwater", under);
     }
     if (under) {
       // the fog darkens and thickens with depth
-      const k = Math.min(1, Math.max(0, depth / (this.world.deepAt || 70)));
+      const k = D ? D.k[0] + (D.k[1] - D.k[0]) * Math.min(1, Math.max(0, (D.top - cam.position.y) / (D.top - D.bottom))) : Math.min(1, Math.max(0, depth / (this.world.deepAt || 70)));
       const c = this.under.clone().lerp(this.deepUnder, Math.pow(k, 0.7));
       s.fog.color.copy(c); s.fog.far = this.see * (1 - k * 0.45); s.background = c; u.uUnder.value.copy(c);
-      this.rayMat.opacity = Math.max(0, 1 - depth / 30);
+      this.rayMat.opacity = D ? 0 : Math.max(0, 1 - depth / 30);
       this.rays.position.set(cam.position.x, this.level, cam.position.z);
       for (const r of this.rays.children) {
         const d = r.userData; r.position.set(d.ox + Math.sin(t * 0.2 + d.ph) * 2, 0, d.oz);

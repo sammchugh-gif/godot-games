@@ -30,9 +30,13 @@ import { buildHongKong } from "./levels/hongkong.js";
 import { buildMaldives } from "./levels/maldives.js";
 import { buildBermuda } from "./levels/bermuda.js";
 import { buildCove } from "./levels/cove.js";
+import { buildSunlight } from "./levels/sunlight.js";
+import { buildKelp } from "./levels/kelp.js";
+import { buildLiner } from "./levels/liner.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
-const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda };
+const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda,
+  sunlight: buildSunlight, kelp: buildKelp, liner: buildLiner };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
@@ -102,7 +106,11 @@ function loadPlace(id) {
   const [x, y, z] = info.spawn;
   G.spawn = info;
   G.player = new Player(world, x, y, z, info.yaw || 0);
+  world.player = G.player;
   G.player.suit(place.suit || false); G.player.lamp(info.lamp || 0);
+  // the dive suit's tank holds a minute and a half of air
+  if (place.suit === "dive") G.player.airMax = G.player.air = 90;
+  world.swimTop = info.swimTop;
   world.jetpack = !!info.jetpack; world.gravityScale = info.gravity ?? 1;
   if (info.gravity !== undefined) phys.setGravity(-20 * info.gravity);
   G.player.onJump = () => sound("jump");
@@ -111,7 +119,7 @@ function loadPlace(id) {
   G.player.onSplash = (v, L) => { const p = G.player.pos; sound("splash"); G.fx.burst(p.x, L + 0.1, p.z, 0xe8f8ff, Math.min(40, 12 + v * 3), { speed: 2 + v * 0.3, up: 3 + v * 0.3, gravity: -12, life: 0.8, size: 0.28 }); G.fx.ring(p.x, L + 0.05, p.z, 0xcff4ff, 1.8); };
   G.player.onSurface = L => { const p = G.player.pos; sound("gasp"); G.fx.burst(p.x, L + 0.1, p.z, 0xe8f8ff, 12, { speed: 1.5, up: 2, gravity: -10, life: 0.6, size: 0.2 }); };
   G.player.onStroke = (top, L) => { if (!top) return; const p = G.player.pos; sound("swish"); G.fx.burst(p.x, L + 0.05, p.z, 0xe8f8ff, 5, { speed: 1, up: 0.8, gravity: -8, life: 0.5, size: 0.16 }); };
-  G.player.onLowAir = f => { sound("lowair"); if (!G.lowAirSaid) { G.lowAirSaid = true; toast("Air running low! Swim up, or find a stream of bubbles.", 3); } };
+  G.player.onLowAir = f => { sound("lowair"); if (!G.lowAirSaid) { G.lowAirSaid = true; toast(world.swimTop !== undefined ? "Air running low! Find an air station, a stream of bubbles or a dry room." : "Air running low! Swim up, or find a stream of bubbles.", 3); } };
   G.player.onOutOfAir = () => { toast("Out of air! Back to dry land for a breath.", 3); sound("fail"); };
   G.player.onLand = v => { if (v > 7) { sound("land"); G.fx.puff(G.player.pos.x, G.player.pos.y + 0.05, G.player.pos.z); } };
   const bolt = G.bolt = new Robot("bolt", 1.0);
@@ -137,8 +145,9 @@ function loadPlace(id) {
     // (a third number is a height to look down from, for a beacon under a roof: in a cave, below decks)
     const top = at[2] ?? 30, gy = world.phys.ray({ x: at[0], y: top, z: at[1] }, { x: 0, y: -1, z: 0 }, top + 30);
     let y = gy !== null ? top - gy : 0;
-    // a beacon over deep water floats on the sea, where Rory swims
-    if (world.sea && y < world.sea.level) y = world.sea.level;
+    // a beacon over deep water floats on the sea, where Rory swims (in the deep, where there's no
+    // reaching the surface, it stands on the sea bed)
+    if (world.sea && !world.sea.deep && y < world.sea.level) y = world.sea.level;
     b.position.set(at[0], y, at[1]); b.userData.miss = gy === null;
     world.scene.add(b); G.beacons[m.id] = b;
   }
@@ -283,6 +292,9 @@ function beginMission(def) {
     G.mission = makeMission(G, def, G.world.missionData && G.world.missionData[def.id]);
     if (!G.mission) { toast("That mission isn't built yet"); G.state = "explore"; return; }
     G.mission.start();
+    // (a mission that happens inside, beyond an airlock, starts in there: [x, y, z, yaw])
+    const enter = G.mission.data && G.mission.data.enter;
+    if (enter) G.player.teleport(enter[0], enter[1], enter[2], enter[3]);
     refreshBeacons();
     banner(`MISSION ${missionNumber(def)}`, def.title);
     setMood(def.kind === "chase" ? "chase" : "tense");

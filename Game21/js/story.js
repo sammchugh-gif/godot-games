@@ -2,6 +2,8 @@
 // lines. Captain Undertow is draining the sea; Rory, BOLT and TORPEDO the little
 // submarine follow the stolen water from the coasts to the deep, and then to Mars.
 
+import { CHARS2, ACT2 } from "./story2.js";
+
 const V = (g, lang, pitch = 1, rate = 1) => ({ g, langs: [lang, "en-GB"], pitch, rate });
 export const CHARS = {
   rory:    { name: "Rory", voice: V("m", "en-GB", 1.15, 1.05), look: { skin: 0xf3cfae, hair: 0x6b4423, eyes: 0x3b5f8a, coat: 0x16324f, trousers: 0x1a1f2a, shirt: 0xf4f6fa, tie: 0x0e1a2c, kid: true, earpiece: true, hairStyle: "rory" } },
@@ -20,6 +22,7 @@ export const CHARS = {
   ming:    { name: "Ming", voice: V("m", "zh-HK", 1.2, 1.0), look: { skin: 0xf0d4b4, hair: 0x14141a, coat: 0xd82a2a, trousers: 0x1a1a24, kid: true, hairStyle: "short" } },
   aisha:   { name: "Aisha", voice: V("f", "en-IN", 1.2, 1.0), look: { skin: 0x9a6a44, hair: 0x14100c, coat: 0xf4d020, trousers: 0x2a8a8a, kid: true, hairStyle: "long" } },
   nia:     { name: "Nia", voice: V("f", "en-US", 1.15, 1.0), look: { skin: 0x6a4028, hair: 0x14100c, coat: 0xe86a2a, trousers: 0x1a2a4a, kid: true, hairStyle: "curly", hat: "cap", hatColor: 0x1a2a4a } },
+  ...CHARS2,
 };
 
 // Mission kinds (missions.js, missions2.js, missions3.js). From Zero Gravity: cells (Tide
@@ -31,6 +34,8 @@ export const CHAPTERS = [
   { n: 3, title: "Red Planet", blurb: "The sea is on its way to Mars. So are you." },
 ];
 
+// Act Two's places join as each is built (story2.js has them all)
+export const READY = ["sunlight", "kelp", "liner"];
 export const PLACES = [
   // ------------------------------------------------------------ 1. the sub pen
   { id: "pen", ch: 1, name: "POLARIS Sub Pen", country: "Scotland", flag: "sct", contact: "pip", lat: 57.1, lon: -5.6,
@@ -269,6 +274,7 @@ export const PLACES = [
         intro: [["torpedo", "In you get, Rory! We are not losing her now."], ["pip", "Follow her submarine down through the sinking base. Stay close, through the rings she leaves behind!"]],
         outro: [["torpedo", "She is gone. Down there. Where it is dark."], ["rory", "We'll find her, TORPEDO. Whatever the Tidal Engine is."]] },
     ] },
+  ...ACT2.filter(p => READY.includes(p.id)),
 ];
 
 export const CREDITS = [
