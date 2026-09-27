@@ -64,7 +64,15 @@ export class Mission {
     const next = path[this.navI + 1];
     // at the end: step in and jump for it if it is up high
     if (!next) { this.steer(tx, tz, up > 1.0 && w.grounded); if (!w.grounded) inp.jumpHeld = w.vel.y > 0; if (dh < 0.3) inp.forced = { mx: 0, my: 0 }; return dh; }
-    if (!w.grounded) { this.steer(next.x, next.z); inp.jumpHeld = w.vel.y > 0; return dh; }
+    // (thrown up by a pad before the route saw him standing on it: head for where the pad lands him)
+    if (!w.grounded && path[this.navI + 2] && path[this.navI + 2].how === "pad" && Math.hypot(next.x - pp.x, next.z - pp.z) < 1.5 && w.vel.y > 2) this.navI++;
+    if (!w.grounded) {
+      const q = path[this.navI + 1] || next;
+      // (going up to somewhere higher: keep clear of its edge until above it, then drift over)
+      if (q.how === "pad" && q.h > pp.y + 0.2 && path[this.navI]) { const o = path[this.navI]; this.steer(o.x, o.z); if (Math.hypot(o.x - pp.x, o.z - pp.z) < 0.4) inp.forced = { mx: 0, my: 0 }; }
+      else this.steer(q.x, q.z);
+      inp.jumpHeld = w.vel.y > 0; return dh;
+    }
     if (next.how === "pad") { const q = path[this.navI]; this.steer(q.x, q.z); return dh; }
     if (next.how === "jump") { this.steer(next.x, next.z, true); return dh; }
     // a gap: run at it and take off at the edge

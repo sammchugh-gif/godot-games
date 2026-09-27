@@ -46,7 +46,7 @@ export function buildPanama(w) {
   w.box(44, 6, 10, hullM, shipX, deck - 3, 0); w.box(44.2, 1.4, 10.2, redM, shipX, deck - 5.4, 0, { collide: false });
   w.box(2, 1.2, 10, hullM, shipX + 22.5, deck - 0.2, 0);
   w.box(8, 8, 9, M(0xf2f2ee, { rough: 0.5 }), shipX - 17, deck + 4, 0);
-  w.box(8.4, 0.4, 9.4, M(0x2a2e34), shipX - 17, deck + 8.2, 0);
+  w.box(8, 0.4, 9, M(0x2a2e34), shipX - 17, deck + 8.2, 0); // (flush with the walls: no lip to bang your head on, coming up off the pad)
   w.sign("PACIFIC PEARL", 8, 1.2, shipX + 10, deck - 1.8, 5.02, 0, { bg: "#2a3a6a", fg: "#ffffff" });
   const colors = [0xd83a3a, 0x2a8ad8, 0x2a9a5a, 0xf0a020, 0x8a4ad8, 0xe8e8ec];
   const stacks = [[shipX - 8, 1], [shipX - 3, 2], [shipX + 2, 3], [shipX + 7, 2], [shipX + 12, 1], [shipX + 17, 2]];
