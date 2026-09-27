@@ -139,7 +139,8 @@ export function buildHawaii(w) {
   const on = (p, up = 0.9) => [p[0], p[1] + up, p[2]];
   const C = ctops, Hh = highs;
   // pearls for the surf, strung along the face of the wave as it runs in to the beach
-  const surfPearls = []; for (let k = 0; k < 12; k++) surfPearls.push([54 + Math.sin(k * 0.9) * 7, -62 + k * 4.6]);
+  // (a gentle S the board can follow at speed: never more than a couple of metres sideways per pearl)
+  const surfPearls = []; for (let k = 0; k < 12; k++) surfPearls.push([54 + Math.sin(k * 0.5) * 4.5, -62 + k * 4.8]);
   w.missionData = {
     haw1: { start: [54, 0, -70, 0], speed: 8, pearls: surfPearls, beach: 64, spare: 2, exit: [50, h(50, 8), 8] },
     haw2: { cells: [on(C[2]), on(C[4]), on(C[7]), on(C[10]), on(C[13]), on(Hh[0]), on(Hh[1]), on(Hh[2])] },
