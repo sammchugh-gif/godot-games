@@ -83,7 +83,7 @@ export function buildIce(w) {
   const bed = (x, z, up = 1.2) => [x, h(x, z) + up, z];
   w.missionData = {
     ice1: { cells: [[-4, -3, 8], [-20, -6, 24], [-40, -4, 18], [-60, -8, -20], [30, -5, -34], [48, -7, 20], [20, -16, 40]], floor: -40 },
-    ice2: { start: [7, F + 0.1, -18], goal: [-17, F + 0.9, -20],
+    ice2: { range: 6, angle: 30, start: [7, F + 0.1, -18], goal: [-17, F + 0.9, -20],
       guards: [{ path: [[-4, -20], [-4, -6]], speed: 1.3, y: F }, { path: [[-14, -6], [-14, -20]], speed: 1.2, phase: 0.5, y: F }, { path: [[2, -13], [-12, -13]], speed: 1.4, y: F }] },
     ice3: { start: [8, F + 0.1, -13], goal: [-16, F + 0.1, -13], width: 5 },
     ice4: { title: "THE FREEZER" },

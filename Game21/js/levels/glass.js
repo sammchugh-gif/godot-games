@@ -59,7 +59,7 @@ export function buildGlass(w) {
   // ---- the missions (the ones inside start where they happen)
   w.missionData = {
     gla1: { steps: [[lock, "in"]], goal: [14, F + 0.5, 0] },
-    gla2: { start: [4.5, F + 0.1, 0], goal: [-12.5, F + 0.9, 0],
+    gla2: { range: 6, angle: 30, start: [4.5, F + 0.1, 0], goal: [-12.5, F + 0.9, 0],
       guards: [{ path: [[-2, -10], [-2, 10]], speed: 1.3, y: F }, { path: [[-10, 10], [-10, -10]], speed: 1.2, phase: 0.5, y: F }, { path: [[2, -3], [-12, -3], [-12, 3], [2, 3]], speed: 1.1, y: F }] },
     gla3: { word: "HELP", title: "SILT'S LAMP" },
     gla4: { title: "UNDERTOW'S SAFE" },

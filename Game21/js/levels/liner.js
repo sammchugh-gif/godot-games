@@ -122,7 +122,7 @@ export function buildLiner(w) {
   w.missionData = {
     lin1: { steps: [[lock, "in"]], goal: [0, DK[0] + 0.5, 38] },
     lin2: { enter: [1, DK[0] + 0.1, 36, 0], cells: [inside(4, DK[0] + 1, 40), inside(-5, DK[0] + 1, 26), inside((PORT[0] + PORT[1]) / 2, DK[0] + 2.4 + 0.8, ZS + 6 * RUN), inside(0, DK[1] + 1, 30), inside(0, DK[1] + 1, 46), inside(5, DK[1] + 1, 41), inside((STAR[0] + STAR[1]) / 2, DK[1] + 2.4 + 0.8, ZS + 6 * RUN), inside(0, DK[2] + 1, 44)] },
-    lin3: { enter: [(STAR[0] + STAR[1]) / 2, DK[2] + 0.1, ZE + 1, Math.PI], start: [(STAR[0] + STAR[1]) / 2, DK[2] + 0.1, ZE + 1], goal: [0, DK[2] + 0.9, Z1 - 4.5],
+    lin3: { range: 6, angle: 30, enter: [(STAR[0] + STAR[1]) / 2, DK[2] + 0.1, ZE + 1, Math.PI], start: [(STAR[0] + STAR[1]) / 2, DK[2] + 0.1, ZE + 1], goal: [0, DK[2] + 0.9, Z1 - 4.5],
       guards: [{ path: [[-6, 32], [6, 32]], speed: 1.3, y: DK[2] }, { path: [[6, 40], [-6, 40]], speed: 1.5, phase: 0.4, y: DK[2] }, { path: [[-2.5, 45], [2.5, 45]], speed: 1.1, y: DK[2] }] },
     lin4: { title: "ENGINE ROOM VALVES" },
     lin5: { sub: [16, 8, 36, -Math.PI / 2], exit: bell.spawn, thing: "safe", items: [[-58, h(-58, 24) + 0.7, 24], [-66, h(-66, -4) + 0.7, -4], [-52, h(-52, 44) + 0.7, 44]], pad: [14, 1, 16], padR: 3, floor: -48 },
