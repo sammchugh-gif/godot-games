@@ -59,10 +59,10 @@ export function buildGlass(w) {
   // ---- the missions (the ones inside start where they happen)
   w.missionData = {
     gla1: { steps: [[lock, "in"]], goal: [14, F + 0.5, 0] },
-    gla2: { range: 6, angle: 30, start: [4.5, F + 0.1, 0], goal: [-12.5, F + 0.9, 0],
+    gla2: { range: 6, angle: 30, enter: [4.5, F + 0.1, 0, -Math.PI / 2], start: [4.5, F + 0.1, 0], goal: [-12.5, F + 0.9, 0],
       guards: [{ path: [[-2, -10], [-2, 10]], speed: 1.3, y: F }, { path: [[-10, 10], [-10, -10]], speed: 1.2, phase: 0.5, y: F }, { path: [[2, -4.5], [-12, -4.5], [-12, 4.5], [2, 4.5]], speed: 1.1, y: F }] },
-    gla3: { word: "HELP", title: "SILT'S LAMP" },
-    gla4: { title: "UNDERTOW'S SAFE" },
+    gla3: { word: "HELP", title: "SILT'S LAMP", enter: [15.5, F + 0.1, 3, -Math.PI / 2] },
+    gla4: { title: "UNDERTOW'S SAFE", enter: [-6, F + 0.1, 3, -Math.PI / 2] },
     gla5: { start: [-15, F + 0.1, 0], goal: [-29, F + 0.1, 0], width: 5.6, beams: 7 },
     gla6: { sub: [-39, F - 1.6, 0, -Math.PI / 2], exit: [14, F + 0.1, 3], floor: -30,
       rings: [[-39, 1.2, 0, 2.6, 0], [-50, 1.5, -2, 2.6, -Math.PI / 2], [-66, 3, -8, 2.6, -1.9], [-80, 5, -20, 2.6, -2.4], [-86, 6, -38, 2.6, -2.9], [-80, 7, -56, 2.6, 2.6]] },
@@ -71,6 +71,7 @@ export function buildGlass(w) {
     stars: [[X0 + 1.5, F + 0.4, Z1 - 1.5], [0, h(0, -40) + 0.3, -40], [70, h(70, 50) + 0.3, 50]],
     spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [15.5, F, 5.5, Math.PI],
     swimTop: 18, lamp: 36,
-    at: { gla1: [lock.sea[0] + 0.5, lock.sea[1], F + 1], gla2: [8.5, 2.5, F + 2], gla3: [15.5, 3, F + 2], gla4: [-6, 3, F + 2], gla5: [-16.5, 1.5, F + 2], gla6: [-33, -6, F + 2] },
+    // (the missions inside start in there: their beacons wait on the sea bed by the airlock's outer door)
+    at: { gla1: [lock.sea[0] + 0.5, lock.sea[1], F + 1], gla2: [lock.sea[0] + 3, 4, F + 1], gla3: [lock.sea[0] + 3, -4, F + 1], gla4: [lock.sea[0] + 6, 6, F + 1], gla5: [lock.sea[0] + 6, -6, F + 1], gla6: [lock.sea[0] + 8, 0, F + 1] },
   };
 }

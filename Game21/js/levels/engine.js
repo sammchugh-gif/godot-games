@@ -78,7 +78,7 @@ export function buildEngine(w) {
     eng1: { title: "INTAKE VALVES", valves: 5, gauges: 5 },
     eng2: { area: [0, 0, 30], lanes: Array.from({ length: 8 }, (_, k) => { const a = k / 8 * Math.PI * 2; return [Math.cos(a) * 25, Math.sin(a) * 25, Math.cos(a + 0.55) * 25, Math.sin(a + 0.55) * 25, 0]; }), bots: Array.from({ length: 8 }, (_, k) => [Math.cos(k / 8 * Math.PI * 2) * 25, 0, Math.sin(k / 8 * Math.PI * 2) * 25]), floor: -4, lamps: true },
     eng3: { title: "THE ENGINE'S HEART" },
-    eng4: { center: [AR.x + 3, AF, AR.z], radius: 8.5, robot: "kraken", height: 5.5, arms: true },
+    eng4: { enter: [AR.x + 7, AF + 0.1, AR.z + 7, -2.4], center: [AR.x + 3, AF, AR.z], radius: 8.5, robot: "kraken", height: 5.5, arms: true },
     eng5: { exit: bell.spawn, floor: -4, path: [[24, 8, 10], [26, 6, -10], [16, 5, -30], [20, 6, -50], [10, 8, -66], [18, 10, -76], [SH.x, 18, SH.z], [SH.x, 34, SH.z], [SH.x, 50, SH.z]] },
     eng6: { sub: [SH.x - 16, 6, SH.z + 20, Math.PI], exit: bell.spawn, floor: -4,
       rings: [[SH.x - 11, 10, SH.z + 4, 2.8, 1.9], [SH.x, 13, SH.z, 2.8, 1.9], [SH.x, 20, SH.z, 2.8, 0], [SH.x, 28, SH.z, 2.8, 0], [SH.x, 36, SH.z, 2.8, 0], [SH.x, 44, SH.z, 2.8, 0], [SH.x, 52, SH.z, 2.8, 0]] },
@@ -87,6 +87,6 @@ export function buildEngine(w) {
     stars: [bed(-80, -60, 0.3), bed(80, -20, 0.3), [AR.x - 10, AF + 0.4, AR.z - 10]],
     spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 4, bell.F + 0.1, bell.hole[1] + 1], contact: [bell.hole[0], bell.F, bell.hole[1] + 3.9, 2.8],
     swimTop: 58, lamp: 30,
-    at: { eng1: [VALVE[0] * 1.2, VALVE[1] * 1.2, 6], eng2: [57.5, 43.5, bell.F + 1], eng3: [CORE[0] * 1.2, CORE[1] * 1.2, 6], eng4: [AR.x + 7, AR.z + 7, AF + 2], eng5: [62.5, 43.5, bell.F + 1], eng6: [62.5, 36.5, bell.F + 1] },
+    at: { eng1: [VALVE[0] * 1.2, VALVE[1] * 1.2, 6], eng2: [57.5, 43.5, bell.F + 1], eng3: [CORE[0] * 1.2, CORE[1] * 1.2, 6], eng4: [AR.x + R + 5, AR.z, 4], eng5: [62.5, 43.5, bell.F + 1], eng6: [62.5, 36.5, bell.F + 1] },
   };
 }
