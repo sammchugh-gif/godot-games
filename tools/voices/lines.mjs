@@ -38,6 +38,7 @@ const str = `"((?:[^"\\\\\\n]|\\\\.)*)"`;
 const pair = new RegExp(`\\[\\s*"(\\w+)"\\s*,\\s*${str}\\s*[,\\]]`, "g");
 const said = new RegExp(`Speech\\.say\\(\\s*${str}\\s*,\\s*CHARS\\.(\\w+)\\.voice`, "g");
 const unq = s => JSON.parse(`"${s}"`);
+const picked = new RegExp(`\\[\\s*"(\\w+)"\\s*,\\s*pick\\(\\[((?:\\s*${str}\\s*,?)+)\\]\\)`, "g");
 const files = [];
 const scan = d => { for (const f of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, f.name); if (f.isDirectory()) { if (f.name !== "vendor") scan(p); } else if (f.name.endsWith(".js") && !f.name.includes(".min.")) files.push(p); } };
 scan(js);
@@ -46,6 +47,8 @@ for (const f of files) {
   const src = fs.readFileSync(f, "utf8"), rel = path.relative(dir, f);
   for (const m of src.matchAll(pair)) add(m[1], unq(m[2]), rel);
   for (const m of src.matchAll(said)) add(m[2], unq(m[1]), rel);
+  // ["who", pick(["one line", "or another"])]: every one of them
+  for (const m of src.matchAll(picked)) for (const q of m[2].matchAll(new RegExp(str, "g"))) add(m[1], unq(q[1]), rel);
 }
 
 // lines the games put together from the story's data (Operation Eclipse and Meltdown)

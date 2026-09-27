@@ -2286,6 +2286,72 @@
   "from": "hq/room.js"
  },
  {
+  "key": "1yz77sh",
+  "who": "frost",
+  "text": "Welcome back, Agent Rory. Which mission today?",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "03rk4uh",
+  "who": "frost",
+  "text": "Agent Rory. The files are on the board, as always.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "115t2bx",
+  "who": "frost",
+  "text": "Good to see you, Agent Rory. Pick a file. Or have a cup of tea first.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0k94280",
+  "who": "frost",
+  "text": "Four mission files, Agent Rory. Each one a different adventure.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0yjnaoq",
+  "who": "frost",
+  "text": "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1c34a3q",
+  "who": "frost",
+  "text": "The board shows how far you've got. Stars and all.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0wa8adi",
+  "who": "frost",
+  "text": "Have you tried the tea? Pip makes it far too strong.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1a85exh",
+  "who": "pip",
+  "text": "I built BOLT on this bench. He was supposed to be a toaster.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0nte152",
+  "who": "pip",
+  "text": "The gadgets here are all mine. The banana is also a phone. Don't ask.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "10keaqh",
+  "who": "pip",
+  "text": "My favourite is Zero Gravity. You get a jetpack!",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1i33z5p",
+  "who": "pip",
+  "text": "Whatever you do, don't press the big red button. Unless you want to. It's quite fun.",
+  "from": "hq/room.js"
+ },
+ {
   "key": "11hd1l6",
   "who": "bolt",
   "text": "Look for the tall beam of light, Rory. That is where we go next.",
