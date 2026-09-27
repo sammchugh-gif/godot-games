@@ -419,7 +419,8 @@ export class Escort extends Mission {
     // pick them all up first, then lead the way, waiting for stragglers
     let tgt = waiting.length ? waiting[0].c.position : following.length ? this.goal : null;
     if (!tgt) return;
-    if (!waiting.length && following.some(k => k.c.position.distanceTo(this.p.pos) > 4)) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.jumpHeld = false; return; }
+    // (the line gets longer with every little one in it, so the last one sits further back)
+    if (!waiting.length && following.some(k => Math.hypot(k.c.position.x - this.p.pos.x, k.c.position.z - this.p.pos.z) > 2.6 + following.length * 0.9)) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.jumpHeld = false; return; }
     // a crab's beat across the way home: wait short of it until the crab is well away from where
     // we'll cross, then take the whole line of little ones over in one go
     if (following.length && !waiting.length) {
