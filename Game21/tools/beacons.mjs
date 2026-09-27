@@ -17,7 +17,8 @@ const errors = [];
 page.on("pageerror", e => { errors.push(String(e)); console.log("pageerror:", String(e).slice(0, 400)); });
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.addInitScript(steps => { window.__steps = steps; window.__test = true; localStorage.clear(); localStorage.setItem("rory21.quality", "0"); localStorage.setItem("rory21.voice", "false"); }, process.env.STEPS || "4");
-await page.goto(`http://localhost:${port}/index.html`);
+// (the server can take a moment to start on a busy machine)
+for (let k = 0; ; k++) { try { await page.goto(`http://localhost:${port}/index.html`); break; } catch (e) { if (k > 10) throw e; await new Promise(r => setTimeout(r, 1500)); } }
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
 const places = process.argv[2] ? process.argv[2].split(",") : await page.evaluate(async () => (await import("/js/story.js")).PLACES.map(p => p.id));
 let bad = 0;
