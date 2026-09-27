@@ -70,7 +70,7 @@ export function buildTwilight(w) {
   w.updaters.push((dt, t) => { const on = Math.sin(t * 5) > 0.3 ? 1 : 0.1; blink.material.emissiveIntensity = 2 * on; bl.intensity = 8 * on; });
 
   // ---- the cold current down the slope beside the canyon
-  const CUR = [[34, -2, -12], [16, -8, -18], [0, -16, -18], [-16, -26, -14], [-32, -38, -8], [-46, -48, -2], [-54, -52, 4]];
+  const CUR = [[34, 4.5, -12], [16, 2.5, -18], [0, -8, -18], [-16, -26, -14], [-32, -38, -8], [-46, -48, -2], [-54, -52, 4]];
   w.current(CUR, 3.6, 7);
 
   // ---- life that glows: lanternfish shoals, jellies, a squid on patrol
@@ -90,7 +90,7 @@ export function buildTwilight(w) {
     twi1: { sub: [26, 4, 0, -Math.PI / 2], exit: bell.spawn, dark: true, floor: -80,
       marks: [bed(-62, 44, 3.2), bed(-66, 20, 3.2), bed(-84, -8, 3.2), bed(-102, -18, 3.2), bed(-52, -34, 3.2), bed(-44, -54, 3.2)] },
     twi2: { critter: "lanternfish", water: true, kids: lost, goal: [SHOAL.x, SHOAL.y, SHOAL.z], goalR: 4, floor: -70 },
-    twi3: { rings: [[16, -8, -18, 2.6], [0, -16, -18, 2.6], [-16, -26, -14, 2.6], [-32, -38, -8, 2.6], [-46, -48, -2, 2.6], [-54, -52, 4, 2.6]], floor: -70 },
+    twi3: { rings: [[16, 2.5, -18, 2.6], [0, -8, -18, 2.6], [-16, -26, -14, 2.6], [-32, -38, -8, 2.6], [-46, -48, -2, 2.6], [-54, -52, 4, 2.6]], floor: -70 },
     twi4: { title: "DRIP BEACON" },
     twi5: { sub: [24, -4, -24, -Math.PI / 2], exit: bell.spawn, floor: -80,
       rings: [ring(10, -8, -26, -1.5), ring(-8, -16, -32, -1.8), ring(-24, -26, -34, -1.5), ring(-40, -34, -30, -1.3), ring(-56, -40, -32, -1.8), ring(-72, -46, -38, -1.9)] },

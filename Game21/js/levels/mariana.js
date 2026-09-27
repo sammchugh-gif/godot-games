@@ -56,7 +56,7 @@ export function buildMariana(w) {
   const dl = new THREE.PointLight(0x2ad0c0, 10, 26, 1.4); dl.position.set(DOOR.x + 6, dy + 8, DOOR.z); w.scene.add(dl);
 
   // ---- the down-current: from the rim, down the eastern wall to the floor
-  const CUR = [[30, -4, 30], [22, -16, 26], [16, -32, 18], [10, -48, 8], [6, -62, -4], [4, -70, -20], [2, -72, -40]];
+  const CUR = [[34, 5.5, 32], [26, 3, 28], [20, -10, 25], [16, -32, 18], [10, -48, 8], [6, -62, -4], [4, -70, -20], [2, -72, -40]];
   w.current(CUR, 3.8, 7);
   // ---- Undertow's supply sled, wrecked on the floor, and its crates scattered
   const SLED = { x: 2, z: 44 }, sy = h(SLED.x, SLED.z);
@@ -72,7 +72,7 @@ export function buildMariana(w) {
   const bed = (x, z, up = 1.2) => [x, h(x, z) + up, z];
   w.missionData = {
     mar1: { steps: [[lockA, "in"], [lockB, "out"]], goal: [lockB.sea[0] - 2, PY + 1, lockB.sea[1]] },
-    mar2: { rings: [[22, -16, 26, 2.8], [16, -32, 18, 2.8], [10, -48, 8, 2.8], [6, -62, -4, 2.8], [4, -70, -20, 2.8], [2, -72, -40, 2.8]], floor: -84 },
+    mar2: { rings: [[20, -10, 25, 2.8], [16, -32, 18, 2.8], [10, -48, 8, 2.8], [6, -62, -4, 2.8], [4, -70, -20, 2.8], [2, -72, -40, 2.8]], floor: -84 },
     mar3: { title: "THE GREAT PIPE" },
     mar4: { sub: [44, 4, -8, -Math.PI / 2], exit: bell.spawn, thing: "crate", items: [bed(8, 52, 0.6), bed(-6, 36, 0.6), bed(10, 30, 0.6)], pad: [40, h(40, -8) + 1, -8], padR: 3.2, floor: -84 },
     mar5: { sub: [40, 2, -30, -Math.PI / 2], exit: bell.spawn, dark: true, floor: -84,
