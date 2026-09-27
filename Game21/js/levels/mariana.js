@@ -81,7 +81,7 @@ export function buildMariana(w) {
   };
   return {
     stars: [bed(-30, 80, 0.3), bed(10, -104, 0.3), bed(60, -60, 0.3)],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [bell.hole[0] - 2.5, bell.F, bell.hole[1] + 3.2, 2.2],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [bell.hole[0], bell.F, bell.hole[1] + 3.9, 2.8],
     swimTop: 8, lamp: 40,
     at: { mar1: [lockA.sea[0] + 0.5, lockA.sea[1], 3], mar2: [47.5, 3.5, bell.F + 1], mar3: [VS.x, VS.z - 4, vy + 4], mar4: [52.5, 3.5, bell.F + 1], mar5: [47.5, -3.5, bell.F + 1], mar6: [DOOR.x + 6, DOOR.z, dy + 6] },
   };

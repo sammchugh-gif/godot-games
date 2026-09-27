@@ -70,7 +70,7 @@ export function buildEngine(w) {
   school(w, 20, 14, 30, 60, 6, 0x9a7aff, 1.8);
   for (let k = 0; k < 4; k++) { const j = critter("jelly", 1.3); w.scene.add(j); const ph = k * 1.6; w.updaters.push((dt, t) => { j.position.set(Math.cos(t * 0.05 + ph) * 40, 16 + Math.sin(t * 0.3 + ph) * 3, Math.sin(t * 0.05 + ph) * 40); animateCritter(j, dt, 0.3); }); }
   w.airStation(30, h(30, 20), 20); w.airStation(-30, h(-30, -20), -20); w.airStation(40, h(40, -50), -50); w.airStation(-30, h(-30, 50), 50);
-  const bell = diveBell(w, 60, h(60, 40), 40);
+  const bell = diveBell(w, 60, h(60, 40), 40, { face: -2.2 });
 
   // ---- the missions
   const bed = (x, z, up = 1.2) => [x, h(x, z) + up, z];
@@ -85,8 +85,8 @@ export function buildEngine(w) {
   };
   return {
     stars: [bed(-80, -60, 0.3), bed(80, -20, 0.3), [AR.x - 10, AF + 0.4, AR.z - 10]],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [bell.hole[0] - 2.5, bell.F, bell.hole[1] + 3.2, 2.2],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 4, bell.F + 0.1, bell.hole[1] + 1], contact: [bell.hole[0] - 2.5, bell.F, bell.hole[1] + 3.2, 2.2],
     swimTop: 58, lamp: 30,
-    at: { eng1: [VALVE[0] * 1.2, VALVE[1] * 1.2, 6], eng2: [57.5, 43.5, bell.F + 1], eng3: [CORE[0] * 1.2, CORE[1] * 1.2, 6], eng4: [AR.x + 7, AR.z + 7, AF + 2], eng5: [62.5, 43.5, bell.F + 1], eng6: [57.5, 36.5, bell.F + 1] },
+    at: { eng1: [VALVE[0] * 1.2, VALVE[1] * 1.2, 6], eng2: [57.5, 43.5, bell.F + 1], eng3: [CORE[0] * 1.2, CORE[1] * 1.2, 6], eng4: [AR.x + 7, AR.z + 7, AF + 2], eng5: [62.5, 43.5, bell.F + 1], eng6: [62.5, 36.5, bell.F + 1] },
   };
 }

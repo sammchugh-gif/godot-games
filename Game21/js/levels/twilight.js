@@ -98,7 +98,7 @@ export function buildTwilight(w) {
   };
   return {
     stars: [bed(-90, -40, 0.3), bed(4, -30, 0.3), bed(-100, 30, 0.3)],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [bell.hole[0] - 3.8, bell.F + 0.1, bell.hole[1]], contact: [bell.hole[0] + 2.5, bell.F, bell.hole[1] - 3.5, -0.8],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1]], contact: [bell.hole[0] + 2.5, bell.F, bell.hole[1] - 3.5, -0.8],
     swimTop: 16, lamp: 30,
     at: { twi1: [27.5, 13.5, bell.F + 1], twi2: [32.5, 13.5, bell.F + 1], twi3: [34, -2, 6], twi4: [BEACON.x + 3, BEACON.z, by + 6], twi5: [27.5, 6.5, bell.F + 1], twi6: [JUNCTION.x + 6.5, JUNCTION.z, jy + 6] },
   };

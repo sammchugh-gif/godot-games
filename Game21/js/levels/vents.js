@@ -76,7 +76,7 @@ export function buildVents(w) {
   };
   return {
     stars: [bed(-2, -60, 0.3), bed(-60, 40, 0.3), bed(60, -40, 0.3)],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [bell.hole[0] - 2.5, bell.F, bell.hole[1] - 3.2, 0.8],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [bell.hole[0], bell.F, bell.hole[1] - 3.9, 0.3],
     swimTop: 14, lamp: 40,
     at: { ven1: [41.5, 23.5, bell.F + 1], ven2: [46.5, 23.5, bell.F + 1], ven3: [PH.x + 8, PH.z, py + 5], ven4: [41.5, 16.5, bell.F + 1], ven5: [46.5, 16.5, bell.F + 1], ven6: [HX.x + 5.5, HX.z, hy + 5] },
   };

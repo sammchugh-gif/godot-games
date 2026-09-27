@@ -130,7 +130,7 @@ export function buildLiner(w) {
   };
   return {
     stars: [[-3.5, DK[2] + 0.4, Z1 - 3], [-60, h(-60, 60) + 0.3, 60], [0, DK[3] + 0.6, 30]],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [19.5, bell.F + 0.1, 27.5], contact: [25.5, bell.F, 27.5, -0.8],
+    spawn: bell.spawn, yaw: bell.face, bolt: [19.5, bell.F + 0.1, 27.5], contact: [25.5, bell.F, 27.5, -0.8],
     swimTop: 34, lamp: 30,
     at: { lin1: [lock.sea[0] + 0.5, lock.sea[1], 3], lin2: [lock.sea[0] + 1.5, lock.sea[1] + 2.5, 3], lin3: [lock.sea[0] + 1.5, lock.sea[1] - 2.5, 3], lin4: [panel[0] + 1, panel[2], 3], lin5: [19.5, 33, bell.F + 1], lin6: [24.5, 33, bell.F + 1] },
   };

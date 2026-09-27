@@ -176,7 +176,9 @@ export function diveBell(w, x, y, z, o = {}) {
   w.box(2.4, 0.5, 0.6, yellow, x - R * 0.55, F + 0.25, z + R * 0.5, { ry: -0.6 });
   for (let i = 0; i < 4; i++) w.cyl(0.14, 0.14, 1, M(0xf2c418, { rough: 0.35, metal: 0.3 }), x + R * 0.6 + i * 0.3, F + 0.5, z - R * 0.35, { seg: 8, collide: false });
   const room = w.dryRoom(x - R, F - 0.3, z - R, x + R, F + WH + R, z + R, { wl: F - 0.3, below: F - 0.3 - y });
-  return { F, room, spawn: [x + 2.2, F + 0.1, z + 1.2], hole: [x, z] };
+  // (Rory starts by the glass on the side the place's sights are, o.face being the way he looks)
+  const fa = o.face ?? -Math.PI / 2;
+  return { F, room, spawn: [x + Math.sin(fa) * 3.2, F + 0.1, z + Math.cos(fa) * 3.2], hole: [x, z], face: fa };
 }
 
 // ------------------------------------------------------------ the vents

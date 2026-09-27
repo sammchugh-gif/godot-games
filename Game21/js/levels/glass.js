@@ -50,7 +50,7 @@ export function buildGlass(w) {
   w.dryRoom(X0 + 0.2, F, Z0 + 0.2, X1 - 0.2, F + HT, Z1 - 0.2, { wl: F, below: F - h(-39, 0), air: [(POOL.x0 + POOL.x1) / 2, (POOL.z0 + POOL.z1) / 2] });
 
   // ---- outside: the dive bell, and the life of the deep plain
-  const bell = diveBell(w, 46, h(46, 26), 26);
+  const bell = diveBell(w, 46, h(46, 26), 26, { face: -2.4 });
   roam(w, "angler", { cx: 10, cz: 30, rx: 14, rz: 8, y: 3, dy: 1, period: 60, scale: 2 });
   school(w, -10, 12, -26, 70, 6, 0x6ad8ff, 2.2);
   for (let k = 0; k < 5; k++) { const j = critter("jelly", 1.2); w.scene.add(j); const px = -60 + k * 30, pz = 30 - (k % 2) * 60, ph = k; w.updaters.push((dt, t) => { j.position.set(px + Math.sin(t * 0.07 + ph) * 5, 10 + Math.sin(t * 0.3 + ph) * 2, pz); animateCritter(j, dt, 0.3); }); }
@@ -69,7 +69,7 @@ export function buildGlass(w) {
   };
   return {
     stars: [[X0 + 1.5, F + 0.4, Z1 - 1.5], [0, h(0, -40) + 0.3, -40], [70, h(70, 50) + 0.3, 50]],
-    spawn: bell.spawn, yaw: Math.PI, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [15.5, F, 5.5, Math.PI],
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: [15.5, F, 5.5, Math.PI],
     swimTop: 18, lamp: 36,
     at: { gla1: [lock.sea[0] + 0.5, lock.sea[1], F + 1], gla2: [8.5, 2.5, F + 2], gla3: [15.5, 3, F + 2], gla4: [-6, 3, F + 2], gla5: [-16.5, 1.5, F + 2], gla6: [-33, -6, F + 2] },
   };

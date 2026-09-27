@@ -79,8 +79,8 @@ export function buildMidnight(w) {
   };
   return {
     stars: [bed(-120, -60, 0.3), bed(60, -80, 0.3), bed(-20, 70, 0.3)],
-    spawn: bell.spawn, yaw: -Math.PI / 2, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: null,
+    spawn: bell.spawn, yaw: bell.face, bolt: [bell.hole[0] + 3.8, bell.F + 0.1, bell.hole[1] - 1.5], contact: null,
     swimTop: 10, lamp: 40,
-    at: { mid1: [37.5, 33.5, bell.F + 1], mid2: [42.5, 33.5, bell.F + 1], mid3: [37.5, 26.5, bell.F + 1], mid4: [42.5, 26.5, bell.F + 1], mid5: [36.5, 28.5, bell.F + 1], mid6: [-104, 40, 6] },
+    at: { mid1: [38.5, 34, bell.F + 1], mid2: [42.5, 33.5, bell.F + 1], mid3: [38.5, 26, bell.F + 1], mid4: [42.5, 26.5, bell.F + 1], mid5: [36.2, 27.5, bell.F + 1], mid6: [-104, 40, 6] },
   };
 }
