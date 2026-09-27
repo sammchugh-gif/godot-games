@@ -59,11 +59,11 @@ export function buildReef(w) {
 
   // ---- the coral garden over the reef flat and down the wall, kept clear of the canyon
   // spots that must stay clear: the lost clownfish, the golden starfish
-  const KEEP = [[-20, 26], [30, -6], [-30, -12], [-18, 32], [30, 24]];
+  const KEEP = [[-20, 26], [30, -6], [-30, -12], [-18, 32], [30, 24], ...[-24, -12, -4, 8, 16, 26, -30, 36].map(x => [x, wallZ(x) - 4])];
   let seed = 11;
   for (let x = -60; x < 64; x += 3.3) for (let z = 34; z > -30; z -= 3.3) {
     const jx = x + Math.sin(seed * 1.3) * 1.6, jz = z + Math.cos(seed * 1.9) * 1.6, y = h(jx, jz); seed++;
-    if (y > -1.2 || y < -28 || KEEP.some(([kx, kz]) => Math.hypot(jx - kx, jz - kz) < 3.5) || toPath(CANYON, jx, jz) < 8 || jx < -36 || (Math.abs(jx) < 12 && jz > 3 && jz < 17) || Math.hypot(jx - 14, jz - 22) < 4) continue;
+    if (y > -1.2 || y < -28 || KEEP.some(([kx, kz]) => Math.hypot(jx - kx, jz - kz) < 4) || toPath(CANYON, jx, jz) < 8 || jx < -36 || (Math.abs(jx) < 12 && jz > 3 && jz < 17) || Math.hypot(jx - 14, jz - 22) < 4) continue;
     if ((seed * 7) % 10 < 3) continue;
     coral(w, jx, y, jz, 0.8 + (seed % 5) * 0.35, seed);
   }

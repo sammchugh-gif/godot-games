@@ -234,7 +234,7 @@ function titleCamera(dt) {
   const rx = -Math.cos(G.player.yaw), rz = Math.sin(G.player.yaw), mx = p.x - rx * 0.5, mz = p.z - rz * 0.5;
   cam.position.set(mx + Math.sin(yaw) * 5.6, p.y + 1.3, mz + Math.cos(yaw) * 5.6);
   cam.lookAt(mx, p.y + 1.2, mz);
-  if (!G.titleSub) { G.titleSub = subModel(); G.world.scene.add(G.titleSub); }
+  if (!G.titleSub || G.titleSub.parent !== G.world.scene) { G.titleSub = subModel(); G.world.scene.add(G.titleSub); }
   const ts = G.titleSub, fx = Math.sin(G.player.yaw), fz = Math.cos(G.player.yaw);
   ts.position.set(p.x - rx * 2.4 - fx * 1.4, p.y + 1.1 + Math.sin(G.t * 1.6) * 0.12, p.z - rz * 2.4 - fz * 1.4);
   for (const b of Object.values(G.beacons)) b.visible = false;

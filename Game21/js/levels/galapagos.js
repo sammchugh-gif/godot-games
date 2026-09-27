@@ -115,7 +115,7 @@ export function buildGalapagos(w) {
   for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) w.cyl(0.15, 0.15, 2.4, steel, jx + sx * 1.9, cy - 1.4, cz + sz * 1.9, { seg: 6 });
   w.sign("SALVAGE", 3, 0.7, jx, 2.6, bz + 2.02, 0, { bg: "#3a2a1a", fg: "#ffd166" });
   rocks(w, 30, -6, 6, 5, 1.8, { seed: 73, color: [70, 66, 62] });
-  for (const [x, z, ry] of [[28, -5, 0.4], [32, -7, 2.2], [30, -9, -1]]) { const c = critter("sealion", 1.2); c.position.set(x, 1.2, z); c.rotation.y = ry; w.scene.add(c); w.updaters.push(dt => animateCritter(c, dt, 0.05)); }
+  for (const [x, z, ry] of [[29, 9.5, 2.6], [32, 8.3, -2.2], [34.5, 10.6, 3.4]]) { const c = critter("sealion", 1.1); c.position.set(x, h(x, z), z); c.rotation.y = ry; w.scene.add(c); w.updaters.push(dt => animateCritter(c, dt, 0.05)); }
   roam(w, "sealion", { cx: 22, cz: -24, rx: 10, rz: 6, y: -2, dy: 0.8, period: 16 });
   roam(w, "sealion", { cx: 30, cz: -30, rx: 7, rz: 9, y: -4, dy: 1, period: 20, dir: -1 });
   roam(w, "seaturtle", { cx: 0, cz: -40, rx: 20, rz: 8, y: -5, dy: 0.5, period: 70 });

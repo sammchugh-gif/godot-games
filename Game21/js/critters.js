@@ -34,12 +34,26 @@ export function critter(kind, scale = 1) {
     for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) { const l = new THREE.Group(); l.position.set(sx * 0.22, 0.16, (i - 1) * 0.12); g.add(l); part(l, new THREE.BoxGeometry(0.22, 0.03, 0.03), red, sx * 0.1, -0.06, 0).rotation.z = sx * -0.6; P.parts.legs.push(l); }
     for (const sx of [-1, 1]) { const c = part(g, sph(0.08, 10, 8), red, sx * 0.2, 0.22, 0.26, 1.3, 0.8, 1); c.rotation.y = sx * 0.4; part(g, new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), red, sx * 0.07, 0.3, 0.14); eye(g, sx * 0.07, 0.37, 0.14, 0.022); }
   } else if (kind === "sealion") {
-    const fur = M(0x6a5a4a, { rough: 0.5, metal: 0.1 });
-    part(g, sph(0.45, 18, 12), fur, 0, 0, 0, 0.8, 0.8, 2.2);
-    const head = P.parts.head = part(g, sph(0.24, 14, 10), fur, 0, 0.12, 1.0, 1, 0.9, 1.2);
-    eye(head, 0.1, 0.06, 0.18, 0.04); eye(head, -0.1, 0.06, 0.18, 0.04); part(head, sph(0.06, 8, 6), M(0x1a1410), 0, -0.02, 0.27);
-    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.3, -0.1, 0.35); g.add(f); part(f, new THREE.BoxGeometry(0.5, 0.05, 0.25), fur, sx * 0.22, 0, 0); return f; });
-    const tail = P.parts.tail = new THREE.Group(); tail.position.z = -0.95; g.add(tail); part(tail, new THREE.BoxGeometry(0.5, 0.05, 0.3), fur, 0, 0, -0.1);
+    // a Galápagos sea lion propped up on its front flippers: a sleek body, a raised chest, a dog-like
+    // head with a snout, whiskers and big dark eyes. Its feet are at y = 0.
+    const fur = M(0x8a7258, { rough: 0.45, metal: 0.05 }), dark = M(0x5a4a3a, { rough: 0.5 });
+    part(g, sph(0.45, 18, 12), fur, 0, 0.3, -0.2, 0.75, 0.62, 1.9);
+    part(g, sph(0.32, 16, 12), fur, 0, 0.58, 0.62, 0.85, 1.15, 1);
+    const head = P.parts.head = new THREE.Group(); head.position.set(0, 0.98, 0.86); g.add(head);
+    part(head, sph(0.2, 16, 12), fur, 0, 0, 0, 0.9, 0.85, 1.05);
+    part(head, sph(0.11, 12, 8), fur, 0, -0.05, 0.2, 1, 0.8, 1.3);
+    part(head, sph(0.04, 8, 6), M(0x1a1410), 0, -0.02, 0.33);
+    eye(head, 0.09, 0.06, 0.14, 0.045); eye(head, -0.09, 0.06, 0.14, 0.045);
+    for (const sx of [-1, 1]) {
+      part(head, sph(0.03, 6, 4), dark, sx * 0.15, 0.1, -0.02);
+      for (let k = 0; k < 3; k++) { const wk = part(head, new THREE.CylinderGeometry(0.004, 0.004, 0.16, 3), M(0xf0ece0), sx * 0.1, -0.06 + k * 0.02, 0.26); wk.rotation.z = sx * (1.3 + k * 0.15); }
+    }
+    P.parts.fl = [-1, 1].map(sx => { const f = new THREE.Group(); f.position.set(sx * 0.26, 0.42, 0.62); g.add(f); const b = part(f, new THREE.BoxGeometry(0.14, 0.46, 0.22), dark, sx * 0.08, -0.22, 0.06); b.rotation.z = sx * 0.3; return f; });
+    const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0.14, -1.0); g.add(tail);
+    for (const sx of [-1, 1]) { const t = part(tail, new THREE.BoxGeometry(0.2, 0.04, 0.42), dark, sx * 0.14, 0, -0.16); t.rotation.y = sx * 0.35; }
+    // swimming, it lies flat: the chest and head come down level with the body
+    const chest = g.children[1];
+    P.swimPose = () => { chest.position.set(0, 0.32, 0.62); chest.scale.set(0.8, 0.75, 1.1); head.position.set(0, 0.38, 1.05); for (const f of P.parts.fl) { f.position.y = 0.25; f.rotation.z = 0; } };
   } else if (kind === "manta") {
     const top = M(0x1a1c24, { rough: 0.5, side: THREE.DoubleSide }), belly = M(0xe8e8ec, { side: THREE.DoubleSide });
     const sh = new THREE.Shape(); sh.moveTo(0, 1.2); sh.quadraticCurveTo(1.6, 0.4, 2.6, -0.2); sh.quadraticCurveTo(1.2, -0.3, 0, -0.9); sh.quadraticCurveTo(-1.2, -0.3, -2.6, -0.2); sh.quadraticCurveTo(-1.6, 0.4, 0, 1.2);
@@ -113,6 +127,7 @@ export function animateCritter(g, dt, speed = 1) {
 // (bobbing by dy), taking `period` seconds; it faces the way it's going
 export function roam(world, kind, o) {
   const c = critter(kind, o.scale || 1); world.scene.add(c);
+  if (c.userData.swimPose && o.y < (world.sea ? world.sea.level : 0)) c.userData.swimPose();
   const ph = o.phase ?? Math.random() * 6, dir = o.dir || 1;
   world.updaters.push((dt, t) => {
     const a = ph + dir * t * Math.PI * 2 / (o.period || 30);
