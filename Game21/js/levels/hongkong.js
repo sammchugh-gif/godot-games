@@ -55,6 +55,8 @@ export function buildHongKong(w) {
   { const hull = new THREE.Mesh(new THREE.BoxGeometry(12, 2.4, 6), M(0x2a6a4a)); hull.position.y = 0.4; ferry.add(hull);
     const top = new THREE.Mesh(new THREE.BoxGeometry(10.5, 1.8, 5.4), M(0xf2f2ee)); top.position.y = 2.5; ferry.add(top);
     ferry.rotation.y = Math.PI / 2; }
+  // a gangway from the ferry pier up onto the ferry's top deck
+  w.ramp(1.6, 3, 1.4, M("metal", { args: [9, [140, 150, 160]], repeat: [1, 2] }), 38.5, TOP, -10, Math.PI / 2);
 
   // ---- Kowloon's towers behind the promenade, and the island's skyline across the water
   const towers = [];
@@ -119,7 +121,7 @@ export function buildHongKong(w) {
   };
   // (each loop passes close by somewhere to jump aboard: the pier's end, the ferry pier's end, the
   // pier's side; the loops never cross)
-  const J = [junk([0, -40.5, 20, 12, 46], Math.PI / 2 + 0.3), junk([42, -33.6, 16, 14.2, 50], 1.2), junk([-20, -15, 14.1, 8, 40], -1)];
+  const J = [junk([0, -40.5, 20, 12, 36], Math.PI / 2 + 0.3), junk([42, -33.6, 16, 14.2, 40], 1.2), junk([-20, -15, 14.1, 8, 32], -1)];
 
   // ---- the harbour's life: gulls, a shoal under the pier
   school(w, 0, 16, -30, 16, 10, 0xf4f4f4);
