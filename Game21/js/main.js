@@ -151,7 +151,8 @@ function loadPlace(id) {
     const at = m.at || (info.at && info.at[m.id]) || [0, 0];
     const b = makeBeacon(0xffd166);
     // (a third number is a height to look down from, for a beacon under a roof: in a cave, below decks)
-    const top = at[2] ?? 30, gy = world.phys.ray({ x: at[0], y: top, z: at[1] }, { x: 0, y: -1, z: 0 }, top + 30);
+    // (deep down, where the height to look from is itself far below zero, look 60 m down)
+    const top = at[2] ?? 30, gy = world.phys.ray({ x: at[0], y: top, z: at[1] }, { x: 0, y: -1, z: 0 }, top + 30 > 0 ? top + 30 : 60);
     let y = gy !== null ? top - gy : 0;
     // a beacon over deep water floats on the sea, where Rory swims (in the deep, where there's no
     // reaching the surface, it stands on the sea bed)
