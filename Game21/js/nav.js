@@ -128,6 +128,9 @@ export class Nav {
   moves(k, out) {
     out.length = 0;
     const { nx, nz, S, h } = this, c = this.col[k], i = c % nx, j = (c / nx) | 0, y = h[k];
+    // (a floor under the sea is swum over, not walked: slower, and it costs air. A way round on dry
+    // land wins unless it's a lot longer)
+    const wet = this.w.sea ? this.w.sea.level - 1.0 : -Infinity, wetK = q => h[q] < wet ? 2 : 1;
     for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
       if (!di && !dj) continue;
       const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue;
@@ -138,7 +141,7 @@ export class Nav {
       for (let q = this.first[c2]; q < this.first[c2 + 1]; q++) {
         const dh = h[q] - y;
         if (this.blocked(k, q, x2, z2, Math.max(y, h[q]))) continue;
-        if (Math.abs(dh) <= STEP) out.push([q, d, "walk"]);
+        if (Math.abs(dh) <= STEP) out.push([q, d * wetK(q), "walk"]);
         // up onto a ledge: room over his head for the jump
         else if (dh > 0 && dh <= JUMP_UP && this.ceil[k] > dh + TALL + 0.2) out.push([q, d + 2, "jump"]);
         // off an edge: nothing in the way from the floor below up to his head
