@@ -409,17 +409,44 @@ export class Stack extends Mission {
   hud() { return { ...super.hud(), text: `Blocks on the pad  ${this.onPad}/${this.need}`, progress: this.onPad / this.need }; }
   target() { return this.carry ? this.pad : (this.blocks.find(b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) > this.padR) || {}).mesh?.position || this.pad; }
   // autopilot: walk (round hedges and walls, on the planned route) to a block, grab it, carry it
-  // to the pad and drop it
+  // to the pad and drop it. It drops from the pad's edge onto a clear spot, facing it (a dropped
+  // block lands about a metre ahead), so it never stands among the blocks already there and
+  // shoves them about, or lets one fall on its head.
   solve() {
-    const pts = [this.pad, ...this.blocks.map(b => b.mesh.position)];
+    const pts = [this.pad, ...this.blocks.map(b => b.mesh.position)], pp = this.p.pos;
     if (this.carry) {
-      const k = this.blocks.indexOf(this.carry) % 3, off = [[0, 0], [0.9, 0.3], [-0.8, -0.4]][k];
-      const d = this.walkTo(this.pad.x + off[0], this.pad.y + 0.5, this.pad.z + off[1], 0.4, pts);
-      if (d < 0.6) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
+      if (!this.plan) {
+        const others = this.blocks.filter(b => b !== this.carry).map(b => b.mesh.position);
+        let best = null, bs = -1;
+        for (let a = 0; a < 12; a++) for (const r of [0, 0.55, 0.95]) {
+          if (r === 0 && a) continue;
+          const L = new THREE.Vector3(this.pad.x + Math.cos(a / 12 * Math.PI * 2) * r, this.pad.y, this.pad.z + Math.sin(a / 12 * Math.PI * 2) * r);
+          // (dir: the way Rory faces to drop, from outside the pad in towards the spot)
+          const dir = r ? this.pad.clone().sub(L).setY(0) : new THREE.Vector3(this.pad.x - pp.x, 0, this.pad.z - pp.z);
+          dir.normalize();
+          const S = L.clone().addScaledVector(dir, -(this.padR + 0.5 - r)), P = L.clone().addScaledVector(dir, -1.0);
+          const score = Math.min(9, ...others.map(o => Math.hypot(o.x - L.x, o.z - L.z))) - Math.hypot(S.x - pp.x, S.z - pp.z) * 0.02;
+          if (others.some(o => Math.hypot(o.x - S.x, o.z - S.z) < 1.0 || Math.hypot(o.x - P.x, o.z - P.z) < 1.0)) continue;
+          if (score > bs) { bs = score; best = { L, S, far: this.padR + 0.5 - r }; }
+        }
+        this.plan = best || { L: this.pad.clone(), S: this.pad.clone().add(new THREE.Vector3(pp.x - this.pad.x, 0, pp.z - this.pad.z).setLength(this.padR + 0.5)), far: this.padR + 0.5 };
+      }
+      const { L, S, far } = this.plan, d = this.walkTo(S.x, this.pad.y + 0.5, S.z, 0.3, pts);
+      // (from its spot, a block lands ~0.95 m ahead: step in until it's that far from the target)
+      const toL = Math.hypot(L.x - pp.x, L.z - pp.z);
+      if (d < 0.5 || toL < far) {
+        if (toL > 1.0) { this.steer(L.x, L.z); return; }
+        this.p.yaw = Math.atan2(L.x - pp.x, L.z - pp.z); this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; this.plan = null;
+      }
       return;
     }
-    const b = this.blocks.find(b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) > this.padR - 0.2);
+    this.plan = null;
+    // (a block counted on the pad stays there; one still tumbling is left to settle)
+    const off = b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) >= this.padR;
+    const b = this.blocks.filter(off).sort((a, c) => a.mesh.position.distanceTo(pp) - c.mesh.position.distanceTo(pp))[0];
     if (!b) { this.g.input.forced = { mx: 0, my: 0 }; return; }
+    const v = b.body.linvel();
+    if (Math.hypot(v.x, v.y, v.z) > 0.5) { this.g.input.forced = { mx: 0, my: 0 }; return; }
     const q = b.mesh.position, d = this.walkTo(q.x, q.y, q.z, 1.4, pts);
     if (d < 1.8) { this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; }
   }

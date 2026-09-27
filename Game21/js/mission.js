@@ -66,7 +66,10 @@ export class Mission {
         const e = this.exitFor(tx, ty, tz, reach);
         if (e) { const d = Math.hypot(e.x - pp.x, e.z - pp.z); this.steer(e.x, e.z, d < 1.6); inp.jumpHeld = !w.grounded; return dh; }
       }
-      this.steer(q.x, q.z, q.h > L - 0.3 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2);
+      // (hop out where the route comes ashore: the first square out of the water, right ahead,
+      // even when the one being aimed at is further up the steps)
+      const out = path.slice(this.navI, this.navI + 3).find(n => n.h > L - 0.3);
+      this.steer(q.x, q.z, !!out && Math.hypot(out.x - pp.x, out.z - pp.z) < (out === q ? 2 : 1.6));
       inp.jumpHeld = false;
       return dh;
     }

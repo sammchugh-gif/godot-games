@@ -112,11 +112,11 @@ export function buildHongKong(w) {
   // there's time to step aboard and off again; dock is the angle on the loop where it stops
   const DWELL = 5;
   const junk = (loop, phase, dock) => {
-    const [cx, cz, rx, rz, T] = loop, M = T - DWELL;
+    const [cx, cz, rx, rz, T] = loop, span = T - DWELL;
     const fn = t => {
       const s = ((t + phase / (Math.PI * 2) * T) % T + T) % T;
       let a = dock;
-      if (s >= DWELL) { const x = (s - DWELL) / M; a = dock + Math.PI * 2 * (x - Math.sin(Math.PI * 2 * x) / (Math.PI * 2)); }
+      if (s >= DWELL) { const x = (s - DWELL) / span; a = dock + Math.PI * 2 * (x - Math.sin(Math.PI * 2 * x) / (Math.PI * 2)); }
       const px = cx + Math.cos(a) * rx, pz = cz + Math.sin(a) * rz, tx = -Math.sin(a) * rx, tz = Math.cos(a) * rz;
       return [px, 0.75, pz, Math.atan2(tx, tz)];
     };
