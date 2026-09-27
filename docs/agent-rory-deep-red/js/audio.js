@@ -2,6 +2,14 @@
 // through reverb and delay, with a mood per scene, and synthesized effects.
 const T = () => window.Tone;
 let ready = false, bus = null, sfxBus = null, parts = [], mode = null;
+// half a second of silence as a WAV, for keeping iOS's media session awake (see start)
+function silentWav(n = 12000) {
+  const b = new Uint8Array(44 + n * 2), d = new DataView(b.buffer), s = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  s(0, "RIFF"); d.setUint32(4, 36 + n * 2, true); s(8, "WAVEfmt "); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+  d.setUint32(24, 24000, true); d.setUint32(28, 48000, true); d.setUint16(32, 2, true); d.setUint16(34, 16, true); s(36, "data"); d.setUint32(40, n * 2, true);
+  let bin = ""; for (let i = 0; i < b.length; i += 4096) bin += String.fromCharCode.apply(null, b.subarray(i, i + 4096));
+  return "data:audio/wav;base64," + btoa(bin);
+}
 const inst = {};
 export const Audio = {
   music: localStorage.getItem("rory21.music") !== "0",
@@ -10,6 +18,17 @@ export const Audio = {
     const Tone = T();
     if (!Tone || ready || this.starting) return;
     this.starting = true;
+    // iOS mutes Web Audio (the music and every sound effect) when the phone or tablet is on
+    // silent, but not media like the recorded voices: so the voices played and nothing else did.
+    // Asking for a media session plays it all the same way. (Before iOS 17 there's no asking, but
+    // a silent media clip looping in the background does the same.)
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
+      else if (!this.keep && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document) {
+        const a = this.keep = new window.Audio(silentWav()); a.loop = true; a.volume = 0.01;
+        const p = a.play(); if (p && p.catch) p.catch(() => { this.keep = null; });
+      }
+    } catch (e) { /* not iOS, or nothing to ask */ }
     // a roomier audio buffer than Tone's default, so the sound doesn't crackle when the 3D is busy
     // (made inside the tap, which iOS requires)
     if (!this.ctxMade) { this.ctxMade = true; try { Tone.setContext(new Tone.Context({ latencyHint: "balanced", lookAhead: 0.15 })); } catch (e) { /* keep Tone's own */ } }
@@ -39,6 +58,8 @@ export const Audio = {
     inst.noise = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.02, decay: 0.3, sustain: 0 }, volume: -14 }).connect(sfxBus);
     // water: filtered noise for splashes and strokes
     inst.water = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.004, decay: 0.28, sustain: 0 }, volume: -9 }).connect(new Tone.Filter(1500, "lowpass").connect(sfxBus));
+    // footsteps: a short soft thud of brown noise, a touch different each time
+    inst.step = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.002, decay: 0.07, sustain: 0 }, volume: -12 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     inst.ping = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.002, decay: 0.9, sustain: 0, release: 0.6 }, volume: -6 }).connect(sfxBus);
     inst.woof = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -2 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     Tone.getTransport().bpm.value = 104;
@@ -77,6 +98,7 @@ export const Audio = {
       switch (name) {
         case "jump": inst.blip.triggerAttackRelease("A5", 0.08, now); inst.blip.frequency.rampTo("E6", 0.08, now); break;
         case "land": inst.thud.triggerAttackRelease("G2", 0.1, now); break;
+        case "step": inst.step.triggerAttackRelease(0.05, now, 0.55 + Math.random() * 0.35); break;
         case "pad": inst.tri.triggerAttackRelease(["C5", "G5"], 0.1, now); inst.tri.triggerAttackRelease(["E5", "C6"], 0.14, now + 0.07); break;
         case "cell": ["E6", "G6", "B6", "E7"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.08, now + i * 0.045)); break;
         case "pop": inst.blip.triggerAttackRelease("C6", 0.05, now); inst.noise.triggerAttackRelease(0.05, now); break;
