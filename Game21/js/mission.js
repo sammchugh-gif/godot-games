@@ -68,8 +68,14 @@ export class Mission {
     if (!w.grounded && path[this.navI + 2] && path[this.navI + 2].how === "pad" && Math.hypot(next.x - pp.x, next.z - pp.z) < 1.5 && w.vel.y > 2) this.navI++;
     if (!w.grounded) {
       const q = path[this.navI + 1] || next;
-      // (going up to somewhere higher: keep clear of its edge until above it, then drift over)
-      if (q.how === "pad" && q.h > pp.y + 0.2 && path[this.navI]) { const o = path[this.navI]; this.steer(o.x, o.z); if (Math.hypot(o.x - pp.x, o.z - pp.z) < 0.4) inp.forced = { mx: 0, my: 0 }; }
+      // (thrown up to somewhere higher: close in, but where its side is right there at Rory's feet,
+      // back off over the pad until he's above it, then drift over)
+      let wait = false;
+      if (q.how === "pad" && q.h > pp.y - 0.1 && path[this.navI]) {
+        const d = Math.hypot(q.x - pp.x, q.z - pp.z);
+        wait = d > 0.1 && this.w.phys.ray({ x: pp.x, y: pp.y + 0.3, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, 1.5, w.col) !== null;
+      }
+      if (wait) { const o = path[this.navI]; this.steer(o.x, o.z); if (Math.hypot(o.x - pp.x, o.z - pp.z) < 0.4) inp.forced = { mx: 0, my: 0 }; }
       else this.steer(q.x, q.z);
       inp.jumpHeld = w.vel.y > 0; return dh;
     }
