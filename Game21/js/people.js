@@ -104,7 +104,7 @@ export function makePerson(o = {}) {
   rig.phase = Math.random() * 6; rig.blink = 2 + Math.random() * 3; rig.talk = 0; rig.wave = 0;
   return rig;
 }
-function compact(root, keep) {
+export function compact(root, keep) {
   const joints = []; root.traverse(n => { if (!n.isMesh) joints.push(n); });
   for (const j of joints) {
     const by = new Map();

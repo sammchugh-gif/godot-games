@@ -4,6 +4,7 @@
 // iguanas and giant tortoises). critter(kind) makes one; animateCritter moves
 // its fins and legs; roam() sets one swimming round a loop; school() is a shoal.
 import * as THREE from "three";
+import { compact } from "./people.js";
 
 const mats = new Map();
 const M = (color, o = {}) => { const k = color + JSON.stringify(o); if (!mats.has(k)) mats.set(k, new THREE.MeshStandardMaterial({ color, roughness: o.rough ?? 0.6, metalness: o.metal ?? 0, emissive: o.emissive ?? 0, emissiveIntensity: o.ei ?? 1, side: o.side ?? THREE.FrontSide })); return mats.get(k); };
@@ -52,7 +53,7 @@ export function critter(kind, scale = 1) {
     const tail = P.parts.tail = new THREE.Group(); tail.position.set(0, 0.14, -1.0); g.add(tail);
     for (const sx of [-1, 1]) { const t = part(tail, new THREE.BoxGeometry(0.2, 0.04, 0.42), dark, sx * 0.14, 0, -0.16); t.rotation.y = sx * 0.35; }
     // swimming, it lies flat: the chest and head come down level with the body
-    const chest = g.children[1];
+    const chest = P.parts.chest = g.children[1];
     P.swimPose = () => { chest.position.set(0, 0.32, 0.62); chest.scale.set(0.8, 0.75, 1.1); head.position.set(0, 0.38, 1.05); for (const f of P.parts.fl) { f.position.y = 0.25; f.rotation.z = 0; } };
   } else if (kind === "manta") {
     const top = M(0x1a1c24, { rough: 0.5, side: THREE.DoubleSide }), belly = M(0xe8e8ec, { side: THREE.DoubleSide });
@@ -103,6 +104,10 @@ export function critter(kind, scale = 1) {
     });
     part(g, new THREE.ConeGeometry(0.06, 0.2, 6), skin, 0, 0.3, -1.05).rotation.x = -Math.PI / 2 - 0.3;
   }
+  // the parts that never move, merged into one mesh per material (ten iguanas were three hundred
+  // draw calls); the ones the animation or a change of pose moves stay as they are. (Mantas ripple
+  // their whole shape, so they're left alone.)
+  if (kind !== "manta") { const keep = new Set(); for (const v of Object.values(P.parts)) for (const m of [v].flat()) if (m && m.isMesh) keep.add(m); compact(g, keep); }
   g.scale.setScalar(scale);
   g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
   return g;
