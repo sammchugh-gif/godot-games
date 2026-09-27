@@ -74,7 +74,7 @@ export function buildFundy(w) {
   w.floorY = -30;
   const T = tops;
   w.missionData = {
-    fun1: { cells: [[T[0].x, T[0].top + 0.9, T[0].z], [T[1].x, T[1].top + 0.9, T[1].z], [T[2].x, T[2].top + 0.9, T[2].z], [T[3].x, T[3].top + 0.9, T[3].z], [T[4].x, T[4].top + 0.9, T[4].z], [T[5].x, T[5].top + 0.9, T[5].z], [-4, mud(-4, 0) + 1, 0], [0, 4.2, 10.4]] },
+    fun1: { cells: [[T[0].x, T[0].top + 0.9, T[0].z], [T[1].x, T[1].top + 0.9, T[1].z], [T[2].x, T[2].top + 0.9, T[2].z], [T[3].x, T[3].top + 0.9, T[3].z], [T[4].x, T[4].top + 0.9, T[4].z], [T[5].x, T[5].top + 0.9, T[5].z], [-4, mud(-4, 0) + 1, 0], [-4, 4.8, 10.4]] },
     fun2: { title: "THE TIDE MILL" },
     fun3: { area: [0, -40, 14], bots: [[-8, mud(-8, -36), -36], [6, mud(6, -44), -44], [-2, mud(-2, -30), -30], [10, mud(10, -34), -34], [-12, mud(-12, -46), -46]] },
     fun4: { title: "WAKE THE TIDE GAUGE" },
