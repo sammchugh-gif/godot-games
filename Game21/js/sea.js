@@ -200,6 +200,9 @@ export class Sea {
       m.visible = false; for (const f of this.skirt) f.visible = false; this.rays.visible = false;
       SEA.uSea.value.x = 0;
       if (world.skyDome) world.skyDome.visible = false;
+      // (and hardly any of the grey studio light every place gets for its shine: down here it would
+      // light everything up like fog)
+      world.scene.userData.envI = o.abyss.env ?? 0.03;
       // (from a dry room the water outside is still murky)
       world.scene.fog = new THREE.Fog(this.under.clone().lerp(this.deepUnder, 0.5), 6, this.deep.room ?? 90); world.scene.background = world.scene.fog.color.clone();
     }
