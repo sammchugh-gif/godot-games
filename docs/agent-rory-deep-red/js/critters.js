@@ -168,6 +168,19 @@ export function critter(kind, scale = 1) {
       return leg;
     });
     part(g, new THREE.ConeGeometry(0.06, 0.2, 6), skin, 0, 0.3, -1.05).rotation.x = -Math.PI / 2 - 0.3;
+  } else if (kind === "minirover") {
+    // one of Dr Amani's little rovers: a white box on six wheels, a solar deck, and a camera head
+    // on a mast that looks about
+    const white = M(0xecece8, { rough: 0.45, metal: 0.2 }), dark = M(0x2a2a30, { rough: 0.6 }), gold = M(0xd8a830, { rough: 0.35, metal: 0.7 });
+    part(g, new THREE.BoxGeometry(0.5, 0.2, 0.7), white, 0, 0.3, 0);
+    part(g, new THREE.BoxGeometry(0.62, 0.03, 0.6), M(0x1a2a6a, { rough: 0.25, metal: 0.4, emissive: 0x0a1a4a, ei: 0.5 }), 0, 0.42, -0.06);
+    part(g, new THREE.BoxGeometry(0.52, 0.06, 0.72), gold, 0, 0.19, 0);
+    P.parts.legs = [];
+    for (const sx of [-1, 1]) for (const sz of [-0.28, 0, 0.28]) { const wh = part(g, new THREE.CylinderGeometry(0.1, 0.1, 0.08, 12), dark, sx * 0.32, 0.1, sz); wh.rotation.z = Math.PI / 2; P.parts.legs.push(wh); }
+    part(g, new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6), white, 0.12, 0.6, 0.26);
+    const head = P.parts.head = new THREE.Group(); head.position.set(0.12, 0.8, 0.26); g.add(head);
+    part(head, new THREE.BoxGeometry(0.2, 0.1, 0.1), white);
+    for (const x of [-0.05, 0.05]) part(head, sph(0.03, 8, 6), M(0x6ad8ff, { emissive: 0x3ab0ff, ei: 1.5 }), x, 0, 0.05);
   }
   // the parts that never move, merged into one mesh per material (ten iguanas were three hundred
   // draw calls); the ones the animation or a change of pose moves stay as they are. (Mantas ripple
@@ -184,8 +197,9 @@ export function animateCritter(g, dt, speed = 1) {
   const t = P.t, p = P.parts;
   if (p.fl) p.fl.forEach((f, i) => { f.rotation.z = Math.sin(t + (i % 2 ? 0 : Math.PI)) * (k === "sealion" ? 0.5 : 0.6) * (0.3 + speed); f.rotation.y = Math.sin(t) * 0.3 * (i < 2 ? 1 : -1); });
   if (p.tail) p.tail.rotation.y = Math.sin(t * (k === "clownfish" || k === "fish" ? 2.5 : 1.2)) * 0.5;
-  if (p.legs && k !== "jelly") p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 1.5 + i) * 0.4 * speed; });
-  if (p.head && (k === "tortoise" || k === "iguana")) p.head.rotation.y = Math.sin(t * 0.3) * 0.3;
+  if (p.legs && k === "minirover") p.legs.forEach(l => { l.rotation.x += dt * speed * 9; });
+  else if (p.legs && k !== "jelly") p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 1.5 + i) * 0.4 * speed; });
+  if (p.head && (k === "tortoise" || k === "iguana" || k === "minirover")) p.head.rotation.y = Math.sin(t * 0.3) * (k === "minirover" ? 0.8 : 0.3);
   if (k === "jelly") { const q = Math.sin(t * 0.5); p.bell.scale.set(1 + q * 0.12, 1 - q * 0.15, 1 + q * 0.12); p.legs.forEach((l, i) => { l.rotation.x = Math.sin(t * 0.4 + i) * 0.25; l.rotation.z = Math.cos(t * 0.3 + i * 1.7) * 0.25; }); }
   if (k === "manta") {
     const pos = P.geo.attributes.position, b = P.base;

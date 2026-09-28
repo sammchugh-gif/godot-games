@@ -8,6 +8,9 @@ const LOOKS = {
   buggy: { color: 0xe8e8ec, trim: 0x7fe3ff, w: 0.95, l: 1.4, h: 0.3, wheel: 0.42 },
   taxi:  { color: 0xf4c820, trim: 0x1a1a1a, w: 0.9, l: 1.8, h: 0.35, wheel: 0.36 },
   jeep:  { color: 0x6a7a3a, trim: 0x2a2a2a, w: 0.95, l: 1.5, h: 0.35, wheel: 0.42 },
+  // Mars: a six-wheel-looking rover (four do the work) and a sand yacht with a sail
+  rover: { color: 0xf0f0f4, trim: 0xf07a1a, w: 1.05, l: 1.6, h: 0.3, wheel: 0.5, awd: true },
+  yacht: { color: 0x2ab8a8, trim: 0xf0c040, w: 1.0, l: 1.7, h: 0.2, wheel: 0.36 },
 };
 
 export class Car {
@@ -53,6 +56,33 @@ export class Car {
     const seat = add(new THREE.BoxGeometry(L.w * 1.1, 0.5, 0.35), dark, 0, 0.45, -L.l * 0.35); body.add(seat);
     const wheelBar = add(new THREE.TorusGeometry(0.2, 0.035, 8, 20), dark, 0, 0.62, L.l * 0.25); wheelBar.rotation.x = -0.9; body.add(wheelBar);
     if (kind === "taxi") { const sign = add(new THREE.BoxGeometry(0.6, 0.2, 0.25), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffd166, emissiveIntensity: 1.5 }), 0, 0.95, -0.2); body.add(sign); }
+    if (kind === "rover") {
+      // a camera mast at the front, a solar deck behind the seat, and a dish
+      const white = new THREE.MeshStandardMaterial({ color: 0xe8e8ec, roughness: 0.4, metalness: 0.4 });
+      body.add(add(new THREE.CylinderGeometry(0.05, 0.06, 1.1, 8), white, L.w * 0.6, 0.85, L.l * 0.7));
+      body.add(add(new THREE.BoxGeometry(0.34, 0.18, 0.22), white, L.w * 0.6, 1.45, L.l * 0.7));
+      body.add(add(new THREE.CircleGeometry(0.06, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(2) }), L.w * 0.6, 1.46, L.l * 0.7 + 0.115));
+      const panel = add(new THREE.BoxGeometry(L.w * 2.5, 0.05, L.l * 0.7), new THREE.MeshStandardMaterial({ color: 0x1a2a6a, roughness: 0.25, metalness: 0.5, emissive: 0x0a1a4a, emissiveIntensity: 0.4 }), 0, 0.62, -L.l * 0.72); body.add(panel);
+      const dish = add(new THREE.SphereGeometry(0.28, 14, 8, 0, Math.PI * 2, 0, Math.PI / 3), white, -L.w * 0.6, 0.95, L.l * 0.5); dish.rotation.x = -0.6; body.add(dish);
+      // the middle pair of wheels (for the look)
+      for (const sx of [-1, 1]) { const t = add(new THREE.CylinderGeometry(L.wheel * 0.9, L.wheel * 0.9, 0.24, 18), dark, sx * L.w * 0.95, -0.2, 0); t.rotation.z = Math.PI / 2; body.add(t); }
+    }
+    if (kind === "yacht") {
+      // a mast, a boom, and a striped sail swung out a little to the side
+      const mastM = new THREE.MeshStandardMaterial({ color: 0xe8e8ec, roughness: 0.35, metalness: 0.6 });
+      const mz = L.l * 0.45, H = 3.4;
+      body.add(add(new THREE.CylinderGeometry(0.05, 0.07, H, 8), mastM, 0, 0.3 + H / 2, mz));
+      const rig = new THREE.Group(); rig.position.set(0, 0.75, mz); rig.rotation.y = 0.35; body.add(rig);
+      const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, L.l * 1.7, 8), mastM); boom.rotation.x = Math.PI / 2; boom.position.z = -L.l * 0.85; rig.add(boom);
+      const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(0, H - 0.6); sh.lineTo(-L.l * 1.6, 0); sh.lineTo(0, 0);
+      const sailGeo = new THREE.ShapeGeometry(sh); sailGeo.rotateY(Math.PI / 2);
+      const c = document.createElement("canvas"); c.width = 64; c.height = 64; const cg = c.getContext("2d");
+      cg.fillStyle = "#f4f2ea"; cg.fillRect(0, 0, 64, 64); cg.fillStyle = "#f07a1a"; cg.fillRect(0, 24, 64, 8); cg.fillStyle = "#2ab8a8"; cg.fillRect(0, 36, 64, 5);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+      const uv = sailGeo.attributes.uv, pos = sailGeo.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, -pos.getZ(i) / (L.l * 1.6), pos.getY(i) / H);
+      const sail = new THREE.Mesh(sailGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8, side: THREE.DoubleSide })); sail.position.y = 0.1; sail.castShadow = true; rig.add(sail);
+      this.sail = rig;
+    }
     for (const sx of [-1, 1]) { const hl = add(new THREE.SphereGeometry(0.1, 10, 8), new THREE.MeshStandardMaterial({ color: 0xfff6d8, emissive: 0xfff0c0, emissiveIntensity: 3 }), sx * L.w * 0.6, 0.18, L.l + 0.12); body.add(hl); }
     for (const sx of [-1, 1]) { const tl = add(new THREE.BoxGeometry(0.22, 0.08, 0.04), new THREE.MeshStandardMaterial({ color: 0xff2a2a, emissive: 0xff2a2a, emissiveIntensity: 2 }), sx * L.w * 0.7, 0.22, -L.l - 0.02); body.add(tl); }
     // exhaust flame for the boost

@@ -2,7 +2,7 @@
 // mesh and its Rapier collider, plus props that tumble, platforms that move,
 // bounce pads and low-gravity bubbles.
 import * as THREE from "three";
-import { M, TEX, rng } from "./tex.js";
+import { M, TEX, rng, marsTexture } from "./tex.js";
 import { R } from "./physics.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Sea, SEA } from "./sea.js";
@@ -20,6 +20,13 @@ export const SKIES = {
   deep:     { top: "#02101c", mid: "#031a2a", bottom: "#010810", sun: [70, 30], sunColor: "#6ab0d8", sunI: 0.5, hemi: ["#3a7aa8", "#081018", 0.35], fog: null, clouds: 0 },
   space:    { top: "#000004", mid: "#02040c", bottom: "#000004", sun: [20, 60], sunColor: "#ffffff", sunI: 2.45, hemi: ["#6a7aa0", "#101018", 0.21], fog: null, clouds: 0, stars: 4000, earth: true },
   moon:     { top: "#000004", mid: "#03050c", bottom: "#101014", sun: [18, 120], sunColor: "#fffaf0", sunI: 2.74, hemi: ["#5a6480", "#202024", 0.24], fog: null, clouds: 0, stars: 4000, earth: true },
+  // Mars: a butterscotch sky, dust in the air, and Phobos and Deimos overhead
+  mars:     { top: "#8a5a40", mid: "#d8a47a", bottom: "#e8b890", sun: [40, 140], sunColor: "#fff2e0", sunI: 2.2, hemi: ["#f0c8a0", "#6a3420", 0.62], fog: [110, 520], clouds: 0, dust: 1, moons: true },
+  // the sun going down on Mars is blue
+  marsdusk: { top: "#16141e", mid: "#6a4640", bottom: "#a87866", sun: [7, 250], sunColor: "#9ac8ff", sunI: 1.3, hemi: ["#c0a0a8", "#3a2020", 0.5], fog: [90, 420], clouds: 0, stars: 700, dust: 0.5, moons: true },
+  duststorm:{ top: "#5a3018", mid: "#a8643a", bottom: "#b87444", sun: [40, 120], sunColor: "#ffc890", sunI: 0.9, hemi: ["#e8a070", "#4a2414", 0.8], fog: [14, 110], clouds: 0, dust: 4 },
+  // on Phobos: black sky, and Mars filling a quarter of it
+  phobos:   { top: "#000004", mid: "#03050c", bottom: "#0c0808", sun: [22, 100], sunColor: "#fff6ea", sunI: 2.6, hemi: ["#806a60", "#201814", 0.24], fog: null, clouds: 0, stars: 4000, mars: true },
 };
 
 const skyVert = `varying vec3 vDir; void main(){ vDir = normalize((modelMatrix * vec4(position,0.0)).xyz); vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }`;
@@ -79,6 +86,9 @@ export class World {
     if (s.clouds) this.clouds(s.clouds, s.cloudTint);
     if (s.moon) { const m = new THREE.Mesh(new THREE.SphereGeometry(30, 32, 16), new THREE.MeshBasicMaterial({ color: new THREE.Color("#fff6dc").multiplyScalar(3), fog: false })); m.position.copy(this.sunDir).multiplyScalar(1200); this.scene.add(m); }
     if (s.earth) this.earth();
+    if (s.mars) this.marsInSky();
+    if (s.moons) this.moons();
+    if (s.dust) this.dust(s.dust);
   }
   followShadow(p) {
     this.sun.position.copy(p).addScaledVector(this.sunDir, 100);
@@ -125,6 +135,46 @@ export class World {
     g.position.set(-500, 380, -900); g.rotation.z = 0.4; g.userData.dynamic = true;
     this.scene.add(g);
     this.updaters.push(dt => { e.rotation.y += dt * 0.01; });
+  }
+  marsInSky() {
+    const g = new THREE.Group();
+    const m = new THREE.Mesh(new THREE.SphereGeometry(400, 64, 40), new THREE.MeshStandardMaterial({ map: marsTexture(), roughness: 0.9, emissive: 0x3a1a10, emissiveIntensity: 0.25, fog: false }));
+    g.add(m);
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(408, 48, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color("#ffb080").multiplyScalar(1.2), transparent: true, opacity: 0.18, side: THREE.BackSide, fog: false, depthWrite: false })));
+    g.position.set(380, 330, -900); g.rotation.z = 0.3; g.userData.dynamic = true;
+    this.scene.add(g); this.planet = g;
+    this.updaters.push(dt => { m.rotation.y += dt * 0.004; });
+  }
+  // Phobos (fast, lumpy) and Deimos (a bright star) in the Martian sky
+  moons() {
+    const lumpy = new THREE.IcosahedronGeometry(1, 3), p = lumpy.attributes.position, R = rng(5);
+    for (let i = 0; i < p.count; i++) { const k = 0.85 + R() * 0.25; p.setXYZ(i, p.getX(i) * k * 1.35, p.getY(i) * k, p.getZ(i) * k); }
+    lumpy.computeVertexNormals();
+    const ph = new THREE.Mesh(lumpy, new THREE.MeshStandardMaterial({ color: 0x8a7a70, roughness: 1, emissive: 0x2a2018, emissiveIntensity: 0.5, fog: false }));
+    ph.scale.setScalar(16); ph.userData.dynamic = true; this.scene.add(ph);
+    const de = new THREE.Mesh(new THREE.SphereGeometry(4, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff0e0).multiplyScalar(1.6), fog: false }));
+    de.position.set(-700, 560, 500); de.userData.dynamic = true; this.scene.add(de);
+    this.updaters.push((dt, t) => { const a = 0.7 + t * 0.004; ph.position.set(Math.cos(a) * 900, 420 + Math.sin(a * 0.5) * 60, Math.sin(a) * 900); ph.rotation.y = a; });
+  }
+  // dust in the air: specks drifting on the wind, in a box that goes wherever the camera goes
+  dust(k, color = 0xe8b890) {
+    const n = Math.round(700 * k * (this.q === 2 ? 1 : 0.6)), S = 36, R = rng(91);
+    const pos = new Float32Array(n * 3);
+    for (let i = 0; i < n * 3; i++) pos[i] = (R() - 0.5) * S;
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: new THREE.Color(color).multiplyScalar(k > 2 ? 0.9 : 1.2), size: k > 2 ? 0.14 : 0.08, map: TEX.glow(), transparent: true, opacity: k > 2 ? 0.85 : 0.6, depthWrite: false }));
+    pts.frustumCulled = false; pts.userData.dynamic = true; this.scene.add(pts);
+    const wind = this.wind = new THREE.Vector3(k > 2 ? 11 : 2.4, 0, k > 2 ? 4 : 0.9);
+    const wrap = (v, c) => ((v - c + S / 2) % S + S) % S - S / 2 + c;
+    this.updaters.push((dt, t) => {
+      const cam = this.engine.camera; if (!cam) return;
+      const c = cam.position, a = g.attributes.position.array;
+      for (let i = 0; i < n; i++) {
+        const j = i * 3, f = Math.sin(t * 1.3 + i) * 0.4;
+        a[j] = wrap(a[j] + (wind.x + f) * dt, c.x); a[j + 1] = wrap(a[j + 1] + Math.sin(t * 0.7 + i * 1.3) * dt * 0.5, c.y); a[j + 2] = wrap(a[j + 2] + (wind.z - f) * dt, c.z);
+      }
+      g.attributes.position.needsUpdate = true;
+    });
   }
   // ------------------------------------------------------------ ground and shapes
   ground(mat, size = 400, o = {}) {
