@@ -7,7 +7,7 @@ import { World } from "./world.js";
 import { Input } from "./input.js";
 import { Player } from "./player.js";
 import { loadRobot, Robot } from "./robots.js";
-import { makePerson, animatePerson } from "./people.js";
+import { makePerson, animatePerson, spaceSuit, marsSuit } from "./people.js";
 import { FX } from "./fx.js";
 import { Audio } from "./audio.js";
 import { Speech } from "./speech.js";
@@ -42,11 +42,14 @@ import { buildMariana } from "./levels/mariana.js";
 import { buildEngine } from "./levels/engine.js";
 import { buildLaunch } from "./levels/launch.js";
 import { buildElevator } from "./levels/elevator.js";
+import { buildDock } from "./levels/dock.js";
+import { buildPhobos } from "./levels/phobos.js";
+import { buildJezero } from "./levels/jezero.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
 const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda,
   sunlight: buildSunlight, kelp: buildKelp, liner: buildLiner, twilight: buildTwilight, midnight: buildMidnight, vents: buildVents, glass: buildGlass, ice: buildIce, mariana: buildMariana, engine: buildEngine,
-  launch: buildLaunch, elevator: buildElevator };
+  launch: buildLaunch, elevator: buildElevator, dock: buildDock, phobos: buildPhobos, jezero: buildJezero };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");
@@ -121,8 +124,10 @@ function loadPlace(id) {
   // the dive suit's tank holds a minute and a half of air
   if (place.suit === "dive") G.player.airMax = G.player.air = 90;
   world.swimTop = info.swimTop;
-  world.jetpack = !!info.jetpack; world.gravityScale = info.gravity ?? 1;
-  if (info.gravity !== undefined) phys.setGravity(-20 * info.gravity);
+  // (low gravity and the jetpack: the level can say, or else the place)
+  const grav = info.gravity ?? place.gravity;
+  world.jetpack = !!(info.jetpack ?? place.jetpack); world.gravityScale = grav ?? 1;
+  if (grav !== undefined) phys.setGravity(-20 * grav);
   G.player.onJump = () => sound("jump");
   G.player.onPad = () => sound("pad");
   G.player.onBurn = () => { toast("Hot hot hot! Keep off the glowing lava.", 3); sound("fail"); G.fx.puff(G.player.pos.x, G.player.pos.y, G.player.pos.z, 0xf0f0f0, 12); };
@@ -140,6 +145,8 @@ function loadPlace(id) {
   const c = CHARS[place.contact];
   if (c && c.look && info.contact) {
     const rig = G.contact = makePerson(c.look);
+    // (out in space and on Mars, the contact wears a suit too)
+    if (place.suit && place.suit !== "dive") { spaceSuit(rig, true); if (place.suit === "mars") marsSuit(rig, true); }
     rig.root.position.set(info.contact[0], info.contact[1], info.contact[2]);
     rig.root.rotation.y = info.contact[3] || 0;
     world.scene.add(rig.root);

@@ -126,6 +126,13 @@ const SAY = {
   full: "Not while it's full of water! Pump it out first, or you'll flood the station.",
 };
 const DONE = { outer: ["The sea door is open.", "The sea door is shut."], pump: ["The water's gone! The pump's done.", "The water's in."], inner: ["The inner door is open.", "The inner door is shut."] };
+// (the same in space, with air where the water was)
+const SAY_SPACE = {
+  flood: "Not yet! Open the space door with the air still in and it all rushes out. Pump the air out first.",
+  doors: "Shut both doors before you pump!",
+  full: "Not yet! There's no air in there. Pump the air in first.",
+};
+const DONE_SPACE = { outer: ["The space door is open.", "The space door is shut."], pump: ["Air's in! The pump's done.", "The air's pumped out."], inner: ["The inner door is open.", "The inner door is shut."] };
 export class Airlock extends Mission {
   start() {
     this.steps = (this.data.steps || []).map(([a, dir]) => ({ a, dir }));
@@ -153,8 +160,8 @@ export class Airlock extends Mission {
       const k = this.nearLever();
       if (k) {
         const r = s.a.pull(k);
-        if (r === "ok") { this.g.sound(k === "pump" ? "whoosh" : "click"); toast(DONE[k][k === "pump" ? s.a.S.water : s.a.S[k] ? 0 : 1], 2); }
-        else if (r !== "wait") { this.mistakes++; this.g.sound("fail"); toast(SAY[r], 3.2); }
+        if (r === "ok") { this.g.sound(k === "pump" ? "whoosh" : "click"); toast((s.a.space ? DONE_SPACE : DONE)[k][k === "pump" ? s.a.S.water : s.a.S[k] ? 0 : 1], 2); }
+        else if (r !== "wait") { this.mistakes++; this.g.sound("fail"); toast((s.a.space ? SAY_SPACE : SAY)[r], 3.2); }
       }
     }
     // through this airlock: its far door open and Rory out past it
@@ -167,9 +174,9 @@ export class Airlock extends Mission {
   hint() {
     const s = this.cur; if (!s) return "Through! Now to the marker.";
     const a = s.a, pp = this.p.pos;
-    if (!a.inside(pp) && !(a.S.outer === this.want(s).outer && a.S.inner === this.want(s).inner && a.S.water === this.want(s).water)) return s.dir === "in" ? "Swim into the airlock" : "Walk into the airlock";
+    if (!a.inside(pp) && !(a.S.outer === this.want(s).outer && a.S.inner === this.want(s).inner && a.S.water === this.want(s).water)) return s.dir === "in" ? (a.space ? "Go into the airlock" : "Swim into the airlock") : "Walk into the airlock";
     const k = a.next(this.want(s));
-    return k ? { outer: "Pull the RED lever: the sea door", pump: "Pull the BLUE lever: the pump", inner: "Pull the GREEN lever: the inner door" }[k] : "The way's open. Go through!";
+    return k ? (a.space ? { outer: "Pull the RED lever: the space door", pump: "Pull the BLUE lever: the air pump", inner: "Pull the GREEN lever: the inner door" } : { outer: "Pull the RED lever: the sea door", pump: "Pull the BLUE lever: the pump", inner: "Pull the GREEN lever: the inner door" })[k] : "The way's open. Go through!";
   }
   hud() { return { ...super.hud(), text: this.hint() }; }
   actionLabel() { return this.nearLever() ? "PULL" : null; }

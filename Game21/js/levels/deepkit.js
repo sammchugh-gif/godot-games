@@ -42,9 +42,11 @@ export function airlock(w, x, y, z, q = 0, o = {}) {
   door(-1, "outer"); door(1, "inner");
   // the water inside, and the room of air it leaves as the pump runs
   const [x0, z0] = P(-W / 2, -D / 2), [x1, z1] = P(W / 2, D / 2);
-  const room = w.dryRoom(Math.min(x0, x1), y, Math.min(z0, z1), Math.max(x0, x1), y + H, Math.max(z0, z1), { wl: y + H + 2 });
+  // (in space it's air, not water: "full" is empty of air, and what fills the room is a faint mist)
+  const room = o.space ? { x0: Math.min(x0, x1), y0: y, z0: Math.min(z0, z1), x1: Math.max(x0, x1), y1: y + H, z1: Math.max(z0, z1), wl: 0 }
+    : w.dryRoom(Math.min(x0, x1), y, Math.min(z0, z1), Math.max(x0, x1), y + H, Math.max(z0, z1), { wl: y + H + 2 });
   const [wx, wz] = dims(W, D);
-  const water = new THREE.Mesh(new THREE.BoxGeometry(wx, 1, wz), new THREE.MeshStandardMaterial({ color: 0x2a8ab8, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }));
+  const water = new THREE.Mesh(new THREE.BoxGeometry(wx, 1, wz), new THREE.MeshStandardMaterial(o.space ? { color: 0xdff0ff, emissive: 0x6ab0ff, emissiveIntensity: 0.3, transparent: true, opacity: 0.14, depthWrite: false } : { color: 0x2a8ab8, transparent: true, opacity: 0.35, roughness: 0.1, depthWrite: false }));
   water.userData.dynamic = true; water.position.set(x, y, z); w.scene.add(water);
   // the levers, on the wall on the +x side: red (outer door), blue (pump), green (inner door)
   const levers = {};
@@ -61,7 +63,7 @@ export function airlock(w, x, y, z, q = 0, o = {}) {
   const lamp = new THREE.PointLight(0xfff0d0, 6, 9, 1.5); lamp.position.set(x, y + H - 0.4, z); w.scene.add(lamp);
   const DRY = { outer: 0, inner: 1, water: 0 }, SEA = { outer: 1, inner: 0, water: 1 };
   const A = {
-    S, V, room, levers, x, y, z, W, D, H, auto: true, busy: 0,
+    S, V, room, levers, x, y, z, W, D, H, auto: true, busy: 0, space: !!o.space,
     inside: p => p.x > room.x0 + 0.2 && p.x < room.x1 - 0.2 && p.z > room.z0 + 0.2 && p.z < room.z1 - 0.2 && p.y > y - 0.5 && p.y < y + H,
     // the sea side and the dry side, a step out from each door
     sea: [...P(0, -D / 2 - 1.6)], dry: [...P(0, D / 2 + 1.6)],
@@ -88,7 +90,8 @@ export function airlock(w, x, y, z, q = 0, o = {}) {
     for (const k of ["outer", "inner"]) V[k] += Math.sign(S[k] - V[k]) * Math.min(Math.abs(S[k] - V[k]), dt / 1.1);
     V.water += Math.sign(S.water - V.water) * Math.min(Math.abs(S.water - V.water), dt / 2.8);
     room.wl = V.water > 0.999 ? y + H + 2 : y + V.water * H;
-    water.scale.y = Math.max(0.01, V.water * H); water.position.y = y + water.scale.y / 2; water.visible = V.water > 0.01;
+    const fill = o.space ? 1 - V.water : V.water;
+    water.scale.y = Math.max(0.01, fill * H); water.position.y = y + water.scale.y / 2; water.visible = fill > 0.01;
     for (const [k, v] of [["outer", V.outer], ["pump", 1 - V.water], ["inner", V.inner]]) levers[k].arm.rotation.z = (v - 0.5) * 1.2;
     // running itself: step in and it cycles you through to the other side; walk up to a shut door
     // from outside and it gets that side ready for you

@@ -521,6 +521,17 @@ export class Drone extends Mission {
     const b = this.g.bolt;
     this.pos = b.pos.clone(); this.pos.y += 0.5; this.vel = new THREE.Vector3();
     this.g.droneMode = this;
+    // (on Mars it's Dr Amani's little helicopter that flies, not BOLT: two rotors, one over the other)
+    if (d.heli) {
+      const h = this.heli = new THREE.Group(), body = new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.5, metalness: 0.3 }), gold = new THREE.MeshStandardMaterial({ color: 0xd8a830, metalness: 0.8, roughness: 0.35 });
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), gold); h.add(box);
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 6), body); mast.position.y = 0.45; h.add(mast);
+      this.rotors = [0.55, 0.75].map(y => { const r = new THREE.Group(); r.position.y = y; for (const a of [0, Math.PI]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.02, 0.1), body); b.position.x = Math.cos(a) * 0.6; r.add(b); } h.add(r); return r; });
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), new THREE.MeshStandardMaterial({ color: 0x1a2a6a, roughness: 0.3 })); panel.position.y = 0.85; h.add(panel);
+      for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, leg = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 5), body); leg.position.set(Math.cos(a) * 0.25, -0.3, Math.sin(a) * 0.25); leg.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5); h.add(leg); }
+      h.traverse(n => { if (n.isMesh) { n.castShadow = true; n.userData.dynamic = true; } });
+      this.add(h); b.root.visible = false;
+    }
     this.jets = [0, 1].map(() => { const j = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.5, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(3), transparent: true, opacity: 0.8 })); j.rotation.x = Math.PI; this.add(j); return j; });
     this.paint();
   }
@@ -545,6 +556,13 @@ export class Drone extends Mission {
     b.root.rotation.x = Math.min(0.4, sp * 0.04);
     b.play("Jump");
     for (let i = 0; i < 2; i++) { const j = this.jets[i]; j.position.set(this.pos.x + Math.cos(b.root.rotation.y) * (i ? 0.2 : -0.2), this.pos.y - 0.15, this.pos.z - Math.sin(b.root.rotation.y) * (i ? 0.2 : -0.2)); j.scale.y = 0.8 + Math.random() * 0.5 + (inp.jumpHeld ? 0.6 : 0); }
+    if (this.heli) {
+      this.heli.position.copy(this.pos); this.heli.rotation.set(b.root.rotation.x * 0.5, b.root.rotation.y, 0, "YXZ");
+      this.rotors[0].rotation.y += dt * 40; this.rotors[1].rotation.y -= dt * 40;
+      b.root.visible = false; for (const j of this.jets) j.visible = false;
+      if (Math.random() < 0.3) this.g.fx.trail(this.pos.x, this.pos.y - 0.5, this.pos.z, 0xd8a070, 0.25);
+      return;
+    }
     if (Math.random() < 0.5) this.g.fx.trail(this.pos.x, this.pos.y - 0.3, this.pos.z, 0x7fe3ff, 0.2);
   }
   update(dt) {
@@ -564,8 +582,8 @@ export class Drone extends Mission {
     cam.position.lerp(want, 1 - Math.exp(-dt * 6)); cam.lookAt(this.pos.x, this.pos.y + 0.4, this.pos.z);
     this.g.world.followShadow(this.pos);
   }
-  cleanup() { this.g.droneMode = null; this.g.bolt.root.rotation.x = 0; this.g.input.forcedY = undefined; this.g.input.jumpHeld = false; super.cleanup(); }
-  hud() { return { ...super.hud(), text: `Fly BOLT through the rings  ${this.next}/${this.rings.length}`, progress: this.next / this.rings.length }; }
+  cleanup() { this.g.droneMode = null; this.g.bolt.root.rotation.x = 0; this.g.bolt.root.visible = true; this.g.input.forcedY = undefined; this.g.input.jumpHeld = false; super.cleanup(); }
+  hud() { return { ...super.hud(), text: `Fly ${this.heli ? "the helicopter" : "BOLT"} through the rings  ${this.next}/${this.rings.length}`, progress: this.next / this.rings.length }; }
   target() { const r = this.rings[this.next]; return r ? r.m.position : null; }
   solve() {
     const r = this.rings[this.next]; if (!r) return;

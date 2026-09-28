@@ -30,22 +30,22 @@ export class StarMap extends Panel {
     const pic = this.pic = this.pics[this.k];
     // where the picture sits, how big, and the decoy stars round it (more at higher levels)
     const s = 360 + Math.random() * 60, ox = 60 + Math.random() * (540 - s), oy = 60 + Math.random() * (540 - s);
-    this.stars = pic.pts.map(([x, y]) => ({ x: ox + x * s, y: oy + y * s, real: true, r: 5.5 }));
+    this.sky = pic.pts.map(([x, y]) => ({ x: ox + x * s, y: oy + y * s, real: true, r: 5.5 }));
     const decoys = 18 + this.lv * 10;
     for (let i = 0; i < decoys; i++) {
       let x, y, ok, tries = 0;
-      do { x = 20 + Math.random() * 560; y = 20 + Math.random() * 560; ok = this.stars.every(q => Math.hypot(q.x - x, q.y - y) > 34); } while (!ok && ++tries < 40);
-      if (ok) this.stars.push({ x, y, real: false, r: this.lv >= 3 ? 5.5 : 2 + Math.random() * 2.5 });
+      do { x = 20 + Math.random() * 560; y = 20 + Math.random() * 560; ok = this.sky.every(q => Math.hypot(q.x - x, q.y - y) > 34); } while (!ok && ++tries < 40);
+      if (ok) this.sky.push({ x, y, real: false, r: this.lv >= 3 ? 5.5 : 2 + Math.random() * 2.5 });
     }
     this.step = 0; this.lines = [];
     this.nm.textContent = `Draw ${pic.name}  (${this.k + 1} of ${this.need})`;
     this.text = `Tap the stars to draw ${pic.name}. Start at the flashing one.`;
     this.draw();
   }
-  target(i) { return this.stars[this.pic.order[i]]; }
+  target(i) { return this.sky[this.pic.order[i]]; }
   tap(px, py) {
     if (this.done || this.between) return;
-    let best = null, bd = 30; for (const s of this.stars) { const d = Math.hypot(s.x - px, s.y - py); if (d < bd) { bd = d; best = s; } }
+    let best = null, bd = 30; for (const s of this.sky) { const d = Math.hypot(s.x - px, s.y - py); if (d < bd) { bd = d; best = s; } }
     if (!best) return;
     this.hit(best);
   }
@@ -56,14 +56,14 @@ export class StarMap extends Panel {
     this.step++; this.g.sound("click");
     if (this.step >= this.pic.order.length) {
       this.g.sound("star"); this.glow = 1; this.between = true;
-      this.later = this.t + 0.9;
+      this.nextAt = this.t + 0.9;
     }
     this.draw();
   }
   update(dt) {
     if (this.flash > 0) { this.flash -= dt; this.draw(); }
     if (this.glow > 0) { this.glow = Math.max(0, this.glow - dt); }
-    if (this.between && this.t >= this.later) {
+    if (this.between && this.t >= this.nextAt) {
       this.between = false; this.k++;
       if (this.k >= this.need) { this.g.sound("win"); this.text = "The way is clear!"; this.win(); return; }
       this.newSky();
@@ -79,12 +79,12 @@ export class StarMap extends Panel {
     // the picture's outline, faint (fainter at higher levels)
     const hint = [0.22, 0.16, 0.1, 0.07, 0.05][this.lv - 1] ?? 0.05;
     g.strokeStyle = `rgba(160,200,255,${hint})`; g.lineWidth = 3; g.setLineDash([6, 8]); g.beginPath();
-    this.pic.order.forEach((i, n) => { const s = this.stars[i]; if (n) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke(); g.setLineDash([]);
+    this.pic.order.forEach((i, n) => { const s = this.sky[i]; if (n) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.stroke(); g.setLineDash([]);
     // the lines drawn so far
     g.strokeStyle = this.glow > 0 ? "#ffd166" : "#9fe0ff"; g.lineWidth = 4; g.lineCap = "round";
     for (const [a, b] of this.lines) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); }
     const next = this.step < this.pic.order.length ? this.target(this.step) : null, on = Math.floor((this.tw || 0) * 3) % 2 === 0;
-    for (const s of this.stars) {
+    for (const s of this.sky) {
       const r = s === next && on ? s.r + 4 : s.r;
       g.fillStyle = s === next && on ? "#ffd166" : s.real && this.lv < 3 ? "#ffffff" : "#c8d8ff";
       g.beginPath(); g.arc(s.x, s.y, r, 0, 7); g.fill();

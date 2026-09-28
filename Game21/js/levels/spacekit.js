@@ -60,3 +60,80 @@ export function gantry(w, x, y, z, o = {}) {
   w.box(9, 0.4, 2.4, grate, x - 7, Y + levels * step, z);
   return { top: Y + levels * step, step, climb };
 }
+
+// A solar wing: n panels in a row out from (x, y, z) in the direction ry, on a boom. Returns
+// the middle of each panel.
+export function solarWing(w, x, y, z, ry, n = 4) {
+  const cells = M("tiles", { args: [201, [30, 60, 140], [20, 40, 110], 8], repeat: [2, 1], rough: 0.25, metal: 0.4 });
+  const frame = M(0xd8dce4, { metal: 0.7, rough: 0.3 });
+  const panels = [];
+  for (let i = 0; i < n; i++) {
+    const d = 8 + i * 7.5, px = x + Math.sin(ry) * d, pz = z + Math.cos(ry) * d;
+    w.box(6.6, 0.2, 10, cells, px, y, pz, { ry: ry + Math.PI / 2 });
+    w.box(6.8, 0.25, 0.3, frame, px, y + 0.02, pz, { ry, collide: false });
+    panels.push([px, y, pz]);
+  }
+  w.box(0.5, 0.5, 8 + n * 7.5, frame, x + Math.sin(ry) * (4 + n * 3.75), y - 0.4, z + Math.cos(ry) * (4 + n * 3.75), { ry, collide: false });
+  return panels;
+}
+
+// A space-station module lying on its side: a cylinder len long along ry, with rings and portholes.
+export function module(w, x, y, z, ry, len, color, r = 2.6) {
+  const shell = M("metal", { args: [203, color], repeat: [3, 1], rough: 0.35, metal: 0.5 });
+  w.mesh(new THREE.CylinderGeometry(r, r, len, 24), shell, x, y, z, { rz: Math.PI / 2, ry });
+  w.phys.fixedBox(x, y, z, len / 2 * Math.abs(Math.cos(ry)) + (r - 0.2) * Math.abs(Math.sin(ry)), r - 0.2, len / 2 * Math.abs(Math.sin(ry)) + (r - 0.2) * Math.abs(Math.cos(ry)));
+  for (const s of [-1, 1]) w.mesh(new THREE.TorusGeometry(r + 0.05, 0.18, 8, 24), M(0x3a3f4a, { metal: 0.8 }), x + Math.cos(ry) * s * len * 0.35, y, z - Math.sin(ry) * s * len * 0.35, { ry: ry + Math.PI / 2 });
+  // portholes down one side (the side ry faces)
+  const ax = Math.cos(ry), az = -Math.sin(ry), nx = Math.sin(ry), nz = Math.cos(ry);
+  for (let i = 0; i < 4; i++) { const u = (i - 1.5) * len * 0.2; w.mesh(new THREE.CircleGeometry(0.4, 16), M(0x9ad8ff, { emissive: 0x9ad8ff, ei: 1.5 }), x + ax * u + nx * (r * 0.86 + 0.03), y + r * 0.5, z + az * u + nz * (r * 0.86 + 0.03), { cast: false, ry }); }
+}
+
+// A climber pod (Otis's, blue; Undertow's, dark) at (x, y, z), clamped on a tether at its back.
+export function climberPod(w, x, y, z, ry = 0, color = 0x2a6ad8, glow = 0x9fe0ff) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; w.scene.add(g);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 2.6, 16), new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.3 })); body.castShadow = true; g.add(body);
+  const win = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 0.2), new THREE.MeshStandardMaterial({ color: 0x0a1a2a, emissive: glow, emissiveIntensity: 0.8 })); win.position.set(0, 0.5, 1.15); g.add(win);
+  for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.8, 0.8), new THREE.MeshStandardMaterial({ color: 0x3a3f4a, metalness: 0.8, roughness: 0.3 })); c.position.set(s * 0.5, 0, -1.2); g.add(c); }
+  g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
+  return g;
+}
+
+// ------------------------------------------------------------ Mars
+// the red ground and its rocks
+export const marsGround = (seed = 301, base = [196, 112, 70], rep = 60) => M("sand", { args: [seed, base], repeat: [rep, rep] });
+export function marsRock(w, x, y, z, r, o = {}) {
+  const m = w.mesh(new THREE.DodecahedronGeometry(r, o.detail ?? 0), M("rock", { args: [o.seed ?? 311, o.base ?? [120, 62, 40]], repeat: [1, 1], rough: 1 }), x, y + r * 0.3, z, { ry: x * 0.7 + z });
+  m.scale.set(1, o.sy ?? 0.75, o.sz ?? 1.1);
+  if (o.collide !== false) w.phys.fixedBall(x, y + r * 0.2, z, r * 0.72);
+  return m;
+}
+// a glass dome with a metal ring round its foot (and, if a garden, rows of green inside)
+export function glassDome(w, x, y, z, r, o = {}) {
+  const glass = new THREE.MeshPhysicalMaterial({ color: o.color ?? 0xcfe8ff, roughness: 0.08, metalness: 0.1, clearcoat: 1, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide });
+  const d = w.mesh(new THREE.SphereGeometry(r, 36, 16, 0, Math.PI * 2, 0, Math.PI / 2), glass, x, y, z, { cast: false }); d.userData.dynamic = true;
+  for (let k = 0; k < 6; k++) w.mesh(new THREE.TorusGeometry(r, 0.06, 6, 40, Math.PI), M(0xd8dde4, { metal: 0.6 }), x, y, z, { ry: k * Math.PI / 6, cast: false });
+  w.mesh(new THREE.TorusGeometry(r, 0.3, 8, 48), M(0x5a6068, { metal: 0.7, rough: 0.4 }), x, y + 0.2, z, { rx: Math.PI / 2 });
+  if (o.garden) {
+    const soil = M(0x4a3020, { rough: 1 }), leaf = M(0x3aa84a, { rough: 0.7 }), tom = M(0xe83a2a, { rough: 0.5 });
+    for (let row = -2; row <= 2; row++) { w.box(r * 1.3 - Math.abs(row) * 1.2, 0.4, 0.9, soil, x, y + 0.2, z + row * r * 0.3, { collide: false }); for (let k = -3; k <= 3; k++) { if (Math.abs(k * 1.1) > r * 0.6 - Math.abs(row) * 0.6) continue; w.mesh(new THREE.IcosahedronGeometry(0.4, 1), leaf, x + k * 1.1, y + 0.75, z + row * r * 0.3, { cast: false }); if ((k + row) % 2 === 0) w.mesh(new THREE.SphereGeometry(0.12, 8, 6), tom, x + k * 1.1 + 0.2, y + 0.8, z + row * r * 0.3 + 0.25, { cast: false }); } }
+    const lamp = new THREE.PointLight(0xff80d0, 4, r * 2.2, 1.5); lamp.position.set(x, y + r * 0.7, z); w.scene.add(lamp);
+  }
+  w.phys.fixedBall(x, y, z, r * 0.97);
+  return d;
+}
+// the POLARIS lander (the supply rocket, landed on its legs), at (x, y, z)
+export function lander(w, x, y, z, o = {}) {
+  const g = new THREE.Group(); g.position.set(x, y, z); w.scene.add(g);
+  const white = M(0xf0f2f6, { rough: 0.35 }), gold = M(0xd8a830, { metal: 0.8, rough: 0.35 }), blue = M(0x1a3a8a, { rough: 0.4 });
+  const add = (geo, m, px, py, pz) => { const me = new THREE.Mesh(geo, m); me.position.set(px, py, pz); me.castShadow = true; g.add(me); return me; };
+  add(new THREE.CylinderGeometry(2.6, 3, 4, 16), gold, 0, 3.6, 0);
+  add(new THREE.CylinderGeometry(2.2, 2.6, 7, 16), white, 0, 9.1, 0);
+  add(new THREE.ConeGeometry(2.2, 3.4, 16), blue, 0, 14.3, 0);
+  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4; const leg = add(new THREE.CylinderGeometry(0.14, 0.14, 4.2, 6), M(0xc0c4cc, { metal: 0.8 }), Math.cos(a) * 3.3, 1.5, Math.sin(a) * 3.3); leg.rotation.set(Math.sin(a) * 0.45, 0, -Math.cos(a) * 0.45); add(new THREE.CylinderGeometry(0.5, 0.6, 0.15, 10), M(0xc0c4cc, { metal: 0.8 }), Math.cos(a) * 4.1, 0.08, Math.sin(a) * 4.1); }
+  add(new THREE.PlaneGeometry(1.6, 5), blue, 0, 9, 2.25);
+  const hatch = add(new THREE.BoxGeometry(1.4, 2, 0.1), M(0x3a4a5a, { metal: 0.6 }), 0, 3.2, 3.02); void hatch;
+  w.ramp(1.6, 3, 2.2, M(0xc0c4cc, { metal: 0.6 }), x, y, z + 6, Math.PI);
+  g.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
+  w.phys.fixedCyl(x, y + 7, z, 2.8, 7);
+  return g;
+}

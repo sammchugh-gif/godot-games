@@ -88,7 +88,7 @@ export const ACT3 = [
         outro: [["rory", "I'm in. Hiding behind a crate of frozen sea."], ["undertow", "All aboard. Next stop, Mars. My beautiful new ocean is waiting."]] },
     ] },
   // ------------------------------------------------------------ 24. phobos
-  { id: "phobos", ch: 3, name: "Phobos", country: "Mars orbit", flag: "zz", contact: "tycho", mars: "phobos", lat: 0, lon: 0, suit: "space", gravity: 0.06,
+  { id: "phobos", ch: 3, name: "Phobos", country: "Mars orbit", flag: "zz", contact: "tycho", mars: "phobos", lat: 0, lon: 0, suit: "space", gravity: 0.2,
     arrive: [["rory", "Her ship's stopped at a little moon. It looks like a potato."], ["tycho", "Hey! That's my home you're talking about. I'm Tycho. I was born on Phobos."], ["tycho", "Be careful. There's hardly any gravity here. Jump too hard and you'll float off."], ["bolt", "I am holding on to the ground with all my fingers."]],
     leave: [["tycho", "Her ship's gone down to Mars. Your friends just landed next to it."], ["vega", "Jump in, Agent Rory. We're going down to Jezero Crater."], ["torpedo", "I am out of the box! Mars smells funny."], ["pip", "You can't smell anything, TORPEDO. You're a submarine."]],
     missions: [
