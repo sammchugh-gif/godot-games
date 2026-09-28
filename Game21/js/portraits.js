@@ -2,7 +2,7 @@
 // picture with studio lights, so the faces in the dialogue box match the world.
 import * as THREE from "three";
 import { critter } from "./critters.js";
-import { makePerson, animatePerson, diveSuit } from "./people.js";
+import { makePerson, animatePerson, diveSuit, spaceSuit, marsSuit } from "./people.js";
 import { Robot } from "./robots.js";
 import { subModel } from "./craft.js";
 
@@ -45,6 +45,7 @@ export class Portraits {
     } else {
       const rig = makePerson(ch.look || {});
       if (ch.suit === "dive") diveSuit(rig, true);
+      else if (ch.suit) { spaceSuit(rig, true); if (ch.suit === "mars") marsSuit(rig, true); }
       animatePerson(rig, { dt: 1, speed: 0, grounded: true });
       for (const e of rig.eyes) e.scale.y = 1;
       obj = rig.root; obj.updateMatrixWorld(true);

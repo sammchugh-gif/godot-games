@@ -75,8 +75,15 @@ export class Cells extends Mission {
     if (this.padFly(c)) return;
     // somewhere only something that moves goes (the top of the cable car): ride it there
     if (this.rideFor(c)) return;
-    // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
-    if (this.data.climb && this.climb(c)) return;
+    // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb.
+    // (and if the walking map thinks it has a way but Rory hasn't moved for a few seconds, the way it
+    // found isn't one: take the climb instead)
+    if (this.data.climb) {
+      const k = Math.floor(this.t / 2);
+      if (k !== this.stuckK) { this.stuckK = k; this.stuckN = this.stuckP && this.stuckC === c && this.stuckP.distanceTo(pp) < 0.3 ? (this.stuckN || 0) + 1 : 0; this.stuckP = pp.clone(); this.stuckC = c; }
+      if (this.stuckN >= 2 && this.forceClimb !== c) { this.forceClimb = c; this.climbFor = null; }
+      if (this.climb(c)) return;
+    }
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
   }
@@ -202,7 +209,7 @@ export class Cells extends Mission {
       this.climbFor = c; this.climbAt = false;
       this.ensureNav(this.cells.map(c => c.position));
       // (from where Rory is now: if the walking map has a way, it walks it, up or down the stairs)
-      const need = !this.nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
+      const need = this.forceClimb === c || !this.nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
       this.climbGoal = 0; if (need) P.forEach((q, i) => { if (d3(q, cp.x, cp.y - 1.15, cp.z) < d3(P[this.climbGoal], cp.x, cp.y - 1.15, cp.z)) this.climbGoal = i; });
       this.climbNeed = need;
     }
@@ -521,6 +528,17 @@ export class Drone extends Mission {
     const b = this.g.bolt;
     this.pos = b.pos.clone(); this.pos.y += 0.5; this.vel = new THREE.Vector3();
     this.g.droneMode = this;
+    // (on Mars it's Dr Amani's little helicopter that flies, not BOLT: two rotors, one over the other)
+    if (d.heli) {
+      const h = this.heli = new THREE.Group(), body = new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.5, metalness: 0.3 }), gold = new THREE.MeshStandardMaterial({ color: 0xd8a830, metalness: 0.8, roughness: 0.35 });
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.4), gold); h.add(box);
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 6), body); mast.position.y = 0.45; h.add(mast);
+      this.rotors = [0.55, 0.75].map(y => { const r = new THREE.Group(); r.position.y = y; for (const a of [0, Math.PI]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.02, 0.1), body); b.position.x = Math.cos(a) * 0.6; r.add(b); } h.add(r); return r; });
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.3), new THREE.MeshStandardMaterial({ color: 0x1a2a6a, roughness: 0.3 })); panel.position.y = 0.85; h.add(panel);
+      for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + Math.PI / 4, leg = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 5), body); leg.position.set(Math.cos(a) * 0.25, -0.3, Math.sin(a) * 0.25); leg.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5); h.add(leg); }
+      h.traverse(n => { if (n.isMesh) { n.castShadow = true; n.userData.dynamic = true; } });
+      this.add(h); b.root.visible = false;
+    }
     this.jets = [0, 1].map(() => { const j = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.5, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(3), transparent: true, opacity: 0.8 })); j.rotation.x = Math.PI; this.add(j); return j; });
     this.paint();
   }
@@ -545,6 +563,13 @@ export class Drone extends Mission {
     b.root.rotation.x = Math.min(0.4, sp * 0.04);
     b.play("Jump");
     for (let i = 0; i < 2; i++) { const j = this.jets[i]; j.position.set(this.pos.x + Math.cos(b.root.rotation.y) * (i ? 0.2 : -0.2), this.pos.y - 0.15, this.pos.z - Math.sin(b.root.rotation.y) * (i ? 0.2 : -0.2)); j.scale.y = 0.8 + Math.random() * 0.5 + (inp.jumpHeld ? 0.6 : 0); }
+    if (this.heli) {
+      this.heli.position.copy(this.pos); this.heli.rotation.set(b.root.rotation.x * 0.5, b.root.rotation.y, 0, "YXZ");
+      this.rotors[0].rotation.y += dt * 40; this.rotors[1].rotation.y -= dt * 40;
+      b.root.visible = false; for (const j of this.jets) j.visible = false;
+      if (Math.random() < 0.3) this.g.fx.trail(this.pos.x, this.pos.y - 0.5, this.pos.z, 0xd8a070, 0.25);
+      return;
+    }
     if (Math.random() < 0.5) this.g.fx.trail(this.pos.x, this.pos.y - 0.3, this.pos.z, 0x7fe3ff, 0.2);
   }
   update(dt) {
@@ -564,8 +589,8 @@ export class Drone extends Mission {
     cam.position.lerp(want, 1 - Math.exp(-dt * 6)); cam.lookAt(this.pos.x, this.pos.y + 0.4, this.pos.z);
     this.g.world.followShadow(this.pos);
   }
-  cleanup() { this.g.droneMode = null; this.g.bolt.root.rotation.x = 0; this.g.input.forcedY = undefined; this.g.input.jumpHeld = false; super.cleanup(); }
-  hud() { return { ...super.hud(), text: `Fly BOLT through the rings  ${this.next}/${this.rings.length}`, progress: this.next / this.rings.length }; }
+  cleanup() { this.g.droneMode = null; this.g.bolt.root.rotation.x = 0; this.g.bolt.root.visible = true; this.g.input.forcedY = undefined; this.g.input.jumpHeld = false; super.cleanup(); }
+  hud() { return { ...super.hud(), text: `Fly ${this.heli ? "the helicopter" : "BOLT"} through the rings  ${this.next}/${this.rings.length}`, progress: this.next / this.rings.length }; }
   target() { const r = this.rings[this.next]; return r ? r.m.position : null; }
   solve() {
     const r = this.rings[this.next]; if (!r) return;
@@ -605,9 +630,9 @@ export class Lasers extends Mission {
     }
     this.case = this.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.35), new THREE.MeshStandardMaterial({ color: 0xc0c8d0, metalness: 0.8, roughness: 0.25, emissive: 0x7fe3ff, emissiveIntensity: 0.4 })));
     this.case.position.copy(this.goal).setY(this.goal.y + 0.9);
-    // in a space suit Rory could fly over the lot, so a laser net overhead keeps him low
-    // enough that the bars still catch him
-    if (this.w.jetpack) {
+    // in a space suit Rory could fly over the lot (and on Mars, jump over it), so a laser net
+    // overhead keeps him low enough that the bars still catch him
+    if (this.w.jetpack || (this.w.gravityScale ?? 1) < 0.7) {
       const mid = this.from.clone().lerp(this.goal, 0.5), ry = Math.atan2(dir.x, dir.z), L = this.len + 3, top = this.from.y + 2.25;
       const c = document.createElement("canvas"); c.width = c.height = 64;
       const g = c.getContext("2d"); g.strokeStyle = "#ff3040"; g.lineWidth = 3; g.strokeRect(0, 0, 64, 64);
@@ -1174,7 +1199,7 @@ export class Drive extends Mission {
     this.g.bolt.root.visible = true; this.g.bolt.pos.set(c.x + 3, c.y, c.z);
     super.cleanup();
   }
-  hud() { return { ...super.hud(), text: `Drive over the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
+  hud() { return { ...super.hud(), text: `Drive over the ${this.data.what || "Tide Pearls"}  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.car.pos) - b.position.distanceTo(this.car.pos))[0]; return c ? c.position : null; }
   debugState() { return { path: this.path ? this.path.length : null, blocked: this.blocked ? this.blocked.size : 0, freeFrac: this.grid ? +(this.grid.free.reduce((a, b) => a + b, 0) / this.grid.free.length).toFixed(2) : null }; }
   // The autopilot's map: a 2 m grid over the drive, each square free or blocked (walls, rocks,

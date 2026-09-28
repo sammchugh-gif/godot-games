@@ -2,8 +2,8 @@
 
 The fourth Agent Rory game and the biggest: twice as long as Meltdown (about
 180 missions across 30 places), in real 3D on the Zero Gravity engine, from the
-bottom of the sea to the top of Olympus Mons. It is released one act at a time,
-each act complete and tested before it goes live.
+bottom of the sea to the top of Olympus Mons. It was released one act at a time,
+each act complete and tested before it went live; all three acts are now out.
 
 ## The story in one breath
 
@@ -142,6 +142,53 @@ down, one ocean zone at a time, and gets darker, deeper and stranger as it goes.
 
 The act ends with the sea flowing back into the world's harbours, Undertow's cargo
 pod of frozen sea climbing a ribbon into the sky, and Frost calling Commander Vega.
+
+## Act Three in detail (the plan it is built to)
+
+Act Two ends with Undertow's cargo pod climbing the space elevator. Act Three follows it up
+the ribbon, across to Mars, and down to the dome where she has built her new sea. The last
+place brings the whole story home: under the dome there is water again, TORPEDO dives
+one last time, and the Engine is turned round to send the sea back to Earth as rain.
+
+**What the engine needs for it**
+
+- **Mars.** A butterscotch sky with a small, pale sun and a blue sunset; red rock and sand;
+  dust in the air, dust devils wandering across the plains, and a real dust storm (brown fog
+  close in, wind-blown sand streaming past). Mars gravity, a little over a third of Earth's,
+  for long, floaty jumps; Phobos far less. The orbit is weightless, with the jetpack.
+- **The Mars suit.** The space suit (bubble helmet and pack) in white and orange, with
+  magnetic boots; his portrait wears it too.
+- **The journey on the map.** From the Pacific up the elevator to orbit, across to Mars
+  with Phobos going round it, then from place to place on a red globe.
+- **Vehicles.** The rover (six wheels, a mast camera, grippy in low gravity) for driving
+  missions and the canyon-rim chase; the sand yacht (a rover with a sail, pushed by the
+  storm) for the storm chase; the POLARIS climber on the elevator ribbon.
+- **Three new mission kinds**: *Star map* (join the stars into the constellation that
+  points the way), *Greenhouse* (grow a Mars garden: each bed needs water and light at the
+  right moment), *Climb* (race Undertow's climber up the ribbon: dodge debris, grab boosts).
+  With Acts One and Two's 26, that makes 29. The rover drive and the sand-yacht chase are
+  the drive and chase missions on new wheels.
+- **Every mission autopiloted from its beacon, every beacon reachable, nothing buried**, as
+  in the other acts, and each place tested as it is built rather than all at the end.
+
+**The places** (six missions each; the contact is who Rory meets there)
+
+| # | Place | Contact | Missions |
+|---|---|---|---|
+| 21 | The Sea-Launch Platform (the equatorial Pacific) | Commander Vega, POLARIS astronaut | pre-flight checks round the rig; jet-ski after the Drips' stolen fuel pod; load the supply pod (stack); round up the Drips on deck; the launch-control circuit; the countdown code |
+| 22 | The Space Elevator (its anchor platform, and the ribbon into the sky) | Otis, the climber engineer Undertow tricked | sneak into the anchor station; the climber-bay lasers; cool the motors (valves); up the maintenance tower; Otis's morse message; race Undertow's climber up the ribbon |
+| 23 | The Orbital Dock (the top of the elevator) | Juno, the dock controller | spacewalk for the loose cells (jetpack); tractor-beam the drifting cargo; the airlock into the dock; plot the course to Mars (star map); the docking-ring rings (drone); stow away aboard Undertow's Mars ship (stealth) |
+| 24 | Phobos | Tycho, a boy who grew up on the Phobos mining station | boulder hopping in almost no gravity; the buggy across the crater (drive); round up the runaway mining bots; the station circuit; find Mars in the sky (star map); stack the ice bricks Undertow dropped |
+| 25 | Jezero Crater | Dr Amani, the rover scientist | first drive on Mars (rover); fly the little helicopter through the rings (drone); samples on the old river delta (cells); the greenhouse; lead the lost mini-rovers home (escort); decode Undertow's map |
+| 26 | Valles Marineris | Lucía, a canyon guide | the rim chase in the rover; down the canyon ledges (cells); the pipeline lasers; the pipeline valves; canyon rings with the helicopter; sneak into the pump station |
+| 27 | The Dust Storm | Sol, a sand-yacht racer | the sand-yacht chase through the storm; find the beacons in the dust (cells); round up the blown-away Drips; build the storm shelter (stack); fix the weather station (circuit); signals in the storm (morse) |
+| 28 | Olympus Mons (the jetpack works here) | Hana, a volcano climber | the great climb (jetpack cells); the caldera lasers; the summit radio (codes); falling rocks (tractor); the second greenhouse; Undertow's Dust Kraken (boss) |
+| 29 | The Polar Cap | Professor Silt | the ice-brick towers (cells); the rover on the ice (drive); sneak through the brick yard (stealth); the melt switch (circuit); stack the bricks for the bridge; Silt's star chart home |
+| 30 | Undertow's Dome (a stolen sea under glass) | Commander Vega and Undertow | the airlock into the dome; dive in the dome sea (dive); TORPEDO on Mars (sub rings); turn the Engine round (valves); Undertow's last stand (boss); the sea goes home (current) |
+
+The game ends with the Engine running backwards, the dome's sea rising up the ribbon as a
+cloud, and a week of rain on every harbour in the world. Undertow, who only ever wanted
+someone to listen to the sea, becomes POLARIS's new ocean scientist.
 
 ## Missions
 

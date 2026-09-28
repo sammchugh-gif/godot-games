@@ -2,8 +2,12 @@
 // bright trail arcing from where Rory was to where he's going, and his jet.
 import * as THREE from "three";
 import { landRings } from "./land.js";
+import { marsTexture } from "./tex.js";
 
 const toV = (lat, lon, r = 1) => { const a = lat * Math.PI / 180, b = lon * Math.PI / 180; return new THREE.Vector3(Math.cos(a) * Math.cos(b) * r, Math.sin(a) * r, -Math.cos(a) * Math.sin(b) * r); };
+
+// where Mars hangs when the flight goes from Earth out to it (it is drawn at half Earth's size)
+const MARS_AT = new THREE.Vector3(7, 1.4, -6);
 
 export function earthTexture() {
   const W = 2048, H = 1024, c = document.createElement("canvas"); c.width = W; c.height = H;
@@ -48,7 +52,18 @@ export class Travel {
       vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position,1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `varying vec3 vN; varying vec3 vV; void main(){ float f = pow(1.0 - abs(dot(vN, vV)), 3.0); gl_FragColor = vec4(vec3(0.35,0.7,1.6) * f * 2.2, f); }`,
       side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    s.add(atm);
+    s.add(atm); this.atm = atm;
+    // Mars (with a dusty pink rim) and Phobos going round it, for Act Three
+    const mars = this.marsG = new THREE.Group(); mars.visible = false; s.add(mars);
+    this.marsBall = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshStandardMaterial({ map: marsTexture(), roughness: 0.9 })); mars.add(this.marsBall);
+    mars.add(new THREE.Mesh(new THREE.SphereGeometry(1.06, 64, 48), new THREE.ShaderMaterial({
+      vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position,1.0); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `varying vec3 vN; varying vec3 vV; void main(){ float f = pow(1.0 - abs(dot(vN, vV)), 3.0); gl_FragColor = vec4(vec3(1.6,0.8,0.5) * f * 1.4, f); }`,
+      side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+    const pg = new THREE.IcosahedronGeometry(0.05, 2), pp = pg.attributes.position;
+    for (let i = 0; i < pp.count; i++) { const k = 0.8 + Math.random() * 0.3; pp.setXYZ(i, pp.getX(i) * k * 1.4, pp.getY(i) * k, pp.getZ(i) * k); }
+    pg.computeVertexNormals();
+    this.phobos = new THREE.Mesh(pg, new THREE.MeshStandardMaterial({ color: 0x8a7a70, roughness: 1 })); mars.add(this.phobos);
     const sun = new THREE.DirectionalLight(0xffffff, 2.6); sun.position.set(3, 1.5, 4); s.add(sun);
     s.add(new THREE.AmbientLight(0x6a80b0, 0.45));
     // stars
@@ -65,23 +80,44 @@ export class Travel {
     this.pinGeo = new THREE.SphereGeometry(0.012, 12, 8);
     this.built = true;
   }
-  pin(lat, lon, color) {
+  pin(lat, lon, color, globe = this.earth) {
     const m = new THREE.Mesh(this.pinGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(3) }));
-    m.position.copy(toV(lat, lon, 1.005)); this.earth.add(m); this.pins.push(m);
+    m.position.copy(toV(lat, lon, 1.005)); globe.add(m); this.pins.push(m);
     return m;
   }
   // fly from one place to another; cb when done
   play(from, to, allPlaces, cb) {
     if (!this.built) this.build();
     if (this.trail) { this.trail.parent && this.trail.parent.remove(this.trail); this.trail.geometry.dispose(); }
-    for (const p of this.pins || []) this.earth.remove(p);
+    for (const p of this.pins || []) p.parent && p.parent.remove(p);
     this.pins = [];
-    for (const p of allPlaces) if (p.lat !== undefined && !p.orbit && !p.moon) this.pin(p.lat, p.lon, p === to ? 0xffd166 : p === from ? 0x7fe3ff : 0x5a6a8a);
+    // on Mars (from Phobos down, or between places on the surface) the globe is Mars; from
+    // Earth's orbit to Mars it's a flight across space from one to the other
+    const onMars = !!(from.mars && to.mars), toMars = !!(to.mars && !from.mars);
+    this.earth.visible = this.clouds.visible = this.atm.visible = !onMars;
+    this.marsG.visible = onMars || toMars;
+    if (onMars) { this.marsG.position.set(0, 0, 0); this.marsG.scale.setScalar(1); } else { this.marsG.position.copy(MARS_AT); this.marsG.scale.setScalar(0.53); }
+    this.marsG.rotation.y = 0;
+    const globe = onMars ? this.marsBall : this.earth;
+    for (const p of allPlaces) if (p.lat !== undefined && !p.orbit && !p.moon && (onMars ? p.mars && p.mars !== "phobos" : !p.mars)) this.pin(p.lat, p.lon, p === to ? 0xffd166 : p === from ? 0x7fe3ff : 0x5a6a8a, globe);
     const a = toV(from.lat, from.lon), b = toV(to.lat, to.lon);
     const pts = [];
+    this.marsTrip = null;
     if (!this.moon) { this.moon = new THREE.Mesh(new THREE.SphereGeometry(0.27, 48, 32), new THREE.MeshStandardMaterial({ color: 0xc8c8cc, roughness: 1 })); this.scene.add(this.moon); }
-    this.moon.position.set(3.2, 0.9, -2.2); this.moon.visible = !!(to.moon || from.moon || to.orbit || from.orbit);
-    if (to.moon) {
+    this.moon.position.set(3.2, 0.9, -2.2); this.moon.visible = !onMars && !toMars && !!(to.moon || from.moon || to.orbit || from.orbit);
+    this.phobos.position.set(1.45, 0.2, 0.6);
+    if (toMars) {
+      // out of Earth's orbit, across to Mars, and into orbit round it beside Phobos
+      const s0 = toV(from.lat, from.lon, 1.35), end = MARS_AT.clone().add(this.phobos.position.clone().multiplyScalar(0.53)).add(new THREE.Vector3(0, 0.05, 0));
+      for (let i = 0; i <= 64; i++) { const f = i / 64; const p = s0.clone().lerp(end, f); p.add(new THREE.Vector3(0, Math.sin(f * Math.PI) * 1.6, 0)); pts.push(p); }
+      const out = s0.clone().normalize();
+      this.marsTrip = { camA: out.clone().multiplyScalar(3.4).add(new THREE.Vector3(0, 0.6, 0)), camB: end.clone().add(new THREE.Vector3(-1.2, 0.6, 1.6)), lookA: new THREE.Vector3(), lookB: MARS_AT.clone(), wide: MARS_AT.clone().multiplyScalar(0.5).add(new THREE.Vector3(0, 1.5, 7)) };
+    } else if (onMars && from.mars === "phobos") {
+      // down from Phobos's orbit to the landing site
+      const s0 = this.phobos.position.clone();
+      for (let i = 0; i <= 64; i++) { const f = i / 64; const v = s0.clone().normalize().lerp(b, Math.min(1, f * 1.3)).normalize(); pts.push(v.multiplyScalar(1.45 - Math.min(1, f) * 0.44)); }
+      a.copy(s0).normalize();
+    } else if (to.moon) {
       // from orbit out to the Moon
       const s0 = (from.orbit ? toV(from.lat, from.lon, 1.35) : a.clone().multiplyScalar(1.02));
       const m = this.moon.position.clone().add(new THREE.Vector3(-0.3, 0, 0.1));
@@ -94,8 +130,8 @@ export class Travel {
     this.curve = new THREE.CatmullRomCurve3(pts);
     this.trail = new THREE.Mesh(new THREE.TubeGeometry(this.curve, 96, 0.004, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd166).multiplyScalar(3) }));
     this.trail.geometry.setDrawRange(0, 0);
-    (to.moon ? this.scene : this.earth).add(this.trail);
-    (to.moon ? this.scene : this.earth).add(this.jet);
+    const holder = to.moon || toMars ? this.scene : globe;
+    holder.add(this.trail); holder.add(this.jet);
     this.t = 0; this.dur = 4.8; this.cb = cb; this.from = a; this.to = b;
     this.engine.setScene(this.scene, this.camera);
     this.update(0);
@@ -105,10 +141,17 @@ export class Travel {
     const f = Math.min(1, this.t / this.dur), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
     const fly = Math.min(1, Math.max(0, (f - 0.12) / 0.76));
     // the camera swings round from above the start to above the destination
-    const look = this.from.clone().lerp(this.to, e).normalize();
-    const dist = (this.moon && this.moon.visible ? 4.6 : 3.1) - Math.sin(f * Math.PI) * 0.5;
-    this.camera.position.copy(look.clone().multiplyScalar(dist).add(new THREE.Vector3(0, 0.35, 0)));
-    this.camera.lookAt(look.clone().multiplyScalar(0.2));
+    if (this.marsTrip) {
+      // pull back to see both worlds, then close in on Mars
+      const m = this.marsTrip, w = Math.sin(f * Math.PI);
+      const pos = m.camA.clone().lerp(m.camB, e).lerp(m.wide, w * 0.8), at = m.lookA.clone().lerp(m.lookB, e);
+      this.camera.position.copy(pos); this.camera.lookAt(at);
+    } else {
+      const look = this.from.clone().lerp(this.to, e).normalize();
+      const dist = (this.moon && this.moon.visible ? 4.6 : 3.1) - Math.sin(f * Math.PI) * 0.5;
+      this.camera.position.copy(look.clone().multiplyScalar(dist).add(new THREE.Vector3(0, 0.35, 0)));
+      this.camera.lookAt(look.clone().multiplyScalar(0.2));
+    }
     this.clouds.rotation.y += dt * 0.01;
     const idx = this.trail.geometry.index ? this.trail.geometry.index.count : 0;
     this.trail.geometry.setDrawRange(0, Math.floor(idx * fly));

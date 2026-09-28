@@ -124,6 +124,7 @@ export function thing(kind, color) {
       if (!zeb) for (const z of [-0.08, 0.08]) add(C(0.03, 0.2), M(0x6a3a1a), 0.85 + neckL * 0.36, legH + 0.7 + neckL, z);
       size = zeb ? 1.1 : 1.5; break;
     }
+    case "boulder": add(new THREE.DodecahedronGeometry(0.55, 0), M(color ?? 0x8a4a2a, { r: 1 }), 0, 0.5, 0).scale.set(1, 0.85, 1.1); size = 0.8; break;
     case "crate": default: add(B(1, 1, 1), M(color ?? 0xb08850), 0, 0.5, 0); size = 0.8; break;
   }
   g.userData.size = size;

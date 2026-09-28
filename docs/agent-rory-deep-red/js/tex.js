@@ -241,3 +241,32 @@ export function M(kind, o = {}) {
   mats.set(key, m);
   return m;
 }
+
+// a painted Mars for the sky over Phobos and the travel globe: rusty plains, the dark lands,
+// the great canyon along the equator, the big volcanoes, and white caps at the poles
+let _mars = null;
+export function marsTexture() {
+  if (_mars) return _mars;
+  const W = 1024, H = 512, c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  const base = g.createLinearGradient(0, 0, 0, H); base.addColorStop(0, "#c89070"); base.addColorStop(0.3, "#b8643a"); base.addColorStop(0.5, "#c47044"); base.addColorStop(0.7, "#b05a34"); base.addColorStop(1, "#c89070");
+  g.fillStyle = base; g.fillRect(0, 0, W, H);
+  const R = rng(11);
+  // light and dark patches
+  for (let i = 0; i < 90; i++) { const x = R() * W, y = H * 0.15 + R() * H * 0.7, r = 20 + R() * 70; g.fillStyle = R() < 0.55 ? "rgba(90,40,24,.28)" : "rgba(230,160,110,.22)"; g.beginPath(); g.ellipse(x, y, r * 1.6, r * 0.7, R(), 0, 7); g.fill(); }
+  // the dark lands of the south
+  g.fillStyle = "rgba(70,34,24,.45)";
+  for (let i = 0; i < 16; i++) { g.beginPath(); g.ellipse(W * (0.05 + i * 0.06 + R() * 0.03), H * (0.6 + R() * 0.08), 50 + R() * 40, 18 + R() * 12, 0, 0, 7); g.fill(); }
+  // Valles Marineris: a long dark scar along the equator
+  g.strokeStyle = "rgba(60,26,16,.8)"; g.lineWidth = 6; g.lineCap = "round";
+  g.beginPath(); g.moveTo(W * 0.22, H * 0.53); g.bezierCurveTo(W * 0.28, H * 0.5, W * 0.33, H * 0.55, W * 0.4, H * 0.54); g.stroke();
+  g.lineWidth = 2; g.beginPath(); g.moveTo(W * 0.24, H * 0.51); g.lineTo(W * 0.36, H * 0.52); g.stroke();
+  // Olympus Mons and its neighbours, pale rings with a dark heart
+  for (const [x, y, r] of [[0.12, 0.42, 26], [0.17, 0.47, 12], [0.19, 0.51, 11], [0.2, 0.55, 11]]) { g.fillStyle = "rgba(220,150,110,.6)"; g.beginPath(); g.arc(W * x, H * y, r, 0, 7); g.fill(); g.fillStyle = "rgba(90,40,24,.7)"; g.beginPath(); g.arc(W * x, H * y, r * 0.3, 0, 7); g.fill(); }
+  // craters
+  for (let i = 0; i < 160; i++) { const x = R() * W, y = H * 0.1 + R() * H * 0.8, r = 1.5 + R() ** 3 * 14; g.strokeStyle = "rgba(80,36,20,.35)"; g.lineWidth = 1; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); }
+  // the polar caps
+  g.fillStyle = "#f4eee8"; g.fillRect(0, 0, W, H * 0.05); g.fillRect(0, H * 0.96, W, H * 0.04);
+  for (let i = 0; i < 40; i++) { g.beginPath(); g.ellipse(R() * W, H * 0.05, 20 + R() * 30, 6 + R() * 10, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(R() * W, H * 0.96, 16 + R() * 20, 4 + R() * 6, 0, 0, 7); g.fill(); }
+  _mars = new THREE.CanvasTexture(c); _mars.colorSpace = THREE.SRGBColorSpace; _mars.anisotropy = 4;
+  return _mars;
+}

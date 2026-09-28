@@ -21,6 +21,7 @@ export const LOOKS = {
   guard:   { Main: 0xe8a020, Grey: 0x4a4a52, Black: 0x121216, glow: 0xffd23f },
   drip:    { Main: 0x2ac8c0, Grey: 0x1a5a8a, Black: 0x0a1a24, glow: 0x7fe3ff, helmet: true },
   kraken:  { Main: 0x5a2a8a, Grey: 0x2ac8c0, Black: 0x14081c, glow: 0xff3a6a },
+  dustkraken: { Main: 0xa8583a, Grey: 0x2ad0c0, Black: 0x2a140c, glow: 0xffb040 },
 };
 
 const matCache = new Map();

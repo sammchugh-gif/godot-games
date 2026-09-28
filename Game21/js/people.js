@@ -286,3 +286,24 @@ export function spaceSuit(rig, on) {
   }
   for (const p of rig.suit.parts) p.visible = on;
 }
+
+// the Mars suit: the space suit, plus orange shoulder bands and a patch, chunky boots against
+// the cold ground, and a gold sun visor on the helmet
+export function marsSuit(rig, on) {
+  if (!rig.mars) {
+    const r = rig.S.headR, orange = new THREE.MeshStandardMaterial({ color: 0xf07a1a, roughness: 0.5 }), bootM = new THREE.MeshStandardMaterial({ color: 0xe8e4de, roughness: 0.6 });
+    const visor = new THREE.Mesh(new THREE.SphereGeometry(r * 1.57, 28, 12, -Math.PI * 0.42, Math.PI * 0.84, Math.PI * 0.22, Math.PI * 0.2), new THREE.MeshPhysicalMaterial({ color: 0xf0b040, metalness: 1, roughness: 0.15, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }));
+    visor.position.y = r * 0.05; rig.head.add(visor);
+    const parts = [visor];
+    for (const s of [-1, 1]) {
+      const band = new THREE.Mesh(new THREE.TorusGeometry(rig.S.bodyR * 0.42, 0.03, 8, 20), orange); band.rotation.y = Math.PI / 2; band.position.set(s * rig.S.bodyR * 0.95, rig.S.torso * 0.92, 0); rig.spine.add(band); parts.push(band);
+    }
+    const patch = new THREE.Mesh(new THREE.CircleGeometry(rig.S.bodyR * 0.2, 16), orange); patch.position.set(rig.S.bodyR * 0.45, rig.S.torso * 0.75, rig.S.bodyR * 1.01); rig.spine.add(patch); parts.push(patch);
+    for (const k of [rig.kneeL, rig.kneeR]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(rig.S.legR * 2.5, rig.S.legR * 1.6, rig.S.legR * 3.2), bootM); b.position.set(0, -rig.S.leg * 0.47, rig.S.legR * 0.5); b.castShadow = true; k.add(b); parts.push(b);
+      const sole = new THREE.Mesh(new THREE.BoxGeometry(rig.S.legR * 2.6, rig.S.legR * 0.4, rig.S.legR * 3.3), orange); sole.position.set(0, -rig.S.leg * 0.47 - rig.S.legR * 0.8, rig.S.legR * 0.5); k.add(sole); parts.push(sole);
+    }
+    rig.mars = { parts };
+  }
+  for (const p of rig.mars.parts) p.visible = on;
+}

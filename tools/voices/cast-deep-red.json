@@ -154,5 +154,47 @@
   "lang": "en-us",
   "speed": 0.9,
   "pitch": 0.98
+ },
+ "otis": {
+  "voice": "am_michael",
+  "lang": "en-us",
+  "speed": 0.88,
+  "pitch": 0.94
+ },
+ "juno": {
+  "voice": "af_nicole:0.5,bf_alice:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.02
+ },
+ "tycho": {
+  "voice": "am_liam:0.5,am_echo:0.5",
+  "lang": "en-us",
+  "speed": 0.92,
+  "pitch": 1.22
+ },
+ "amani": {
+  "voice": "af_heart:0.5,bf_alice:0.5",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 0.98
+ },
+ "lucia": {
+  "voice": "ef_dora:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "sol": {
+  "voice": "am_eric:0.5,bm_daniel:0.5",
+  "lang": "en-gb",
+  "speed": 0.92,
+  "pitch": 1.2
+ },
+ "hana": {
+  "voice": "af_bella:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
  }
 }
