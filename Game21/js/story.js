@@ -3,6 +3,7 @@
 // submarine follow the stolen water from the coasts to the deep, and then to Mars.
 
 import { CHARS2, ACT2 } from "./story2.js";
+import { CHARS3, ACT3 } from "./story3.js";
 
 const V = (g, lang, pitch = 1, rate = 1) => ({ g, langs: [lang, "en-GB"], pitch, rate });
 export const CHARS = {
@@ -23,6 +24,7 @@ export const CHARS = {
   aisha:   { name: "Aisha", voice: V("f", "en-IN", 1.2, 1.0), look: { skin: 0x9a6a44, hair: 0x14100c, coat: 0xf4d020, trousers: 0x2a8a8a, kid: true, hairStyle: "long" } },
   nia:     { name: "Nia", voice: V("f", "en-US", 1.15, 1.0), look: { skin: 0x6a4028, hair: 0x14100c, coat: 0xe86a2a, trousers: 0x1a2a4a, kid: true, hairStyle: "curly", hat: "cap", hatColor: 0x1a2a4a } },
   ...CHARS2,
+  ...CHARS3,
 };
 
 // Mission kinds (missions.js, missions2.js, missions3.js). From Zero Gravity: cells (Tide
@@ -36,6 +38,8 @@ export const CHAPTERS = [
 
 // Act Two's places join as each is built (story2.js has them all)
 export const READY = ["sunlight", "kelp", "liner", "twilight", "midnight", "vents", "glass", "ice", "mariana", "engine"];
+// and Act Three's (story3.js), likewise
+export const READY3 = [];
 export const PLACES = [
   // ------------------------------------------------------------ 1. the sub pen
   { id: "pen", ch: 1, name: "POLARIS Sub Pen", country: "Scotland", flag: "sct", contact: "pip", lat: 57.1, lon: -5.6,
@@ -275,6 +279,7 @@ export const PLACES = [
         outro: [["torpedo", "She is gone. Down there. Where it is dark."], ["rory", "We'll find her, TORPEDO. Whatever the Tidal Engine is."]] },
     ] },
   ...ACT2.filter(p => READY.includes(p.id)),
+  ...ACT3.filter(p => READY3.includes(p.id)),
 ];
 
 export const CREDITS = [
