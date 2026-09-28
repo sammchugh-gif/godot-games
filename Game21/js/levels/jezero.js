@@ -5,7 +5,7 @@
 // the POLARIS supply rocket has landed just east of it.
 import * as THREE from "three";
 import { M } from "../tex.js";
-import { module, marsGround, marsRock, glassDome, lander } from "./spacekit.js";
+import { module, marsGround, marsRock, glassDome, lander, strataMat, strata } from "./spacekit.js";
 
 // the delta's mesas: [x, z, rx, rz, height]
 const MESAS = [[-46, -18, 16, 10, 2.6], [-62, 4, 14, 12, 4.2], [-40, 22, 12, 9, 2], [-78, -22, 12, 10, 3.4], [-82, 26, 10, 8, 2.8]];
@@ -25,6 +25,9 @@ export function buildJezero(w) {
   w.terrain(480, 140, G, marsGround(301, [196, 112, 70], 70));
   w.phys.fixedBox(0, -20, 0, 400, 1, 400);
   w.floorY = -30;
+  // the delta's mesas and the crater's rim show their layers where they're steep
+  const steep = (x, z) => Math.hypot(G(x + 0.5, z) - G(x - 0.5, z), G(x, z + 0.5) - G(x, z - 0.5));
+  strata(w.overlay(0, 0, 480, 480, strataMat(), (x, z) => steep(x, z) > 0.33, 0.05), 0.14);
 
   // ---- the drive round the crater floor (kept clear of rocks)
   const LOOP = [[44, -32], [74, -40], [98, -10], [92, 30], [62, 56], [22, 64], [-6, 46], [-12, -12]];

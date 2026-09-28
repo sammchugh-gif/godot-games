@@ -2,8 +2,8 @@
 
 The fourth Agent Rory game and the biggest: twice as long as Meltdown (about
 180 missions across 30 places), in real 3D on the Zero Gravity engine, from the
-bottom of the sea to the top of Olympus Mons. It is released one act at a time,
-each act complete and tested before it goes live.
+bottom of the sea to the top of Olympus Mons. It was released one act at a time,
+each act complete and tested before it went live; all three acts are now out.
 
 ## The story in one breath
 

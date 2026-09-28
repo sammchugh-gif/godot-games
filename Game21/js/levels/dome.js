@@ -110,10 +110,15 @@ export function buildDome(w) {
     dom5: { enter: [0, DECK + 0.1, -12, 0], center: [0, DECK, 2], radius: 13, robot: "kraken", height: 5.5, arms: true, rider: "undertow" },
     dom6: { rings: [[-28, SB + 10, -22, 2.8], [-18, SB + 16, -36, 2.8], [2, SB + 22, -40, 2.8], [22, SB + 27, -30, 2.8], [30, SB + 32, -10, 2.8], [26, SB + 36, 12, 2.8]], floor: SB - 6 },
   };
-  return {
+  const info = {
     stars: [bed(-50, 20, 0.3), [0, DECK + 0.3, 14], bed(40, -150, 0.3)],
     spawn: [4, PLAIN + 0.1, -114], yaw: 0, bolt: [2, PLAIN + 0.1, -115], contact: [-4, PLAIN, -111, Math.PI / 2],
-    apply: save => { w.reversed = save.done.includes("dom4"); },
+    // (once Rory has been through the airlock, he arrives inside, on the beach, and Vega with him)
+    apply: save => {
+      w.reversed = save.done.includes("dom4");
+      if (save.done.includes("dom1")) Object.assign(info, { spawn: [4, PLAIN + 0.1, -R + 10], yaw: 0, bolt: [2, PLAIN + 0.1, -R + 9], contact: [-4, PLAIN, -R + 12, Math.PI / 2] });
+    },
     at: { dom1: [6, -R - 8, 20], dom2: [-6, -R + 10, 20], dom3: [6, -R + 12, 20], dom4: [-10, -64, -1], dom5: [10, -64, -1], dom6: [-4, -R + 14, 20] },
   };
+  return info;
 }
