@@ -14,53 +14,100 @@ import { toast } from "./ui.js";
 
 const v3 = a => new THREE.Vector3(a[0], a[1], a[2]);
 const ringMesh = (r, color = 0xffd166) => new THREE.Mesh(new THREE.TorusGeometry(r, 0.14, 12, 48), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 1.5, roughness: 0.3 }));
-// the box a route has to stay in: round every point given, and down to the sea floor
+// the box a route has to stay in: round every point given, down to the sea floor, and high enough
+// to go up and over a ridge between them (a canyon's rim)
 function boxAround(pts, pad = 10, floor = -40, top = 0) {
   const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), zs = pts.map(p => p[2]);
-  return [Math.min(...xs) - pad, Math.max(floor, Math.min(...ys) - pad), Math.min(...zs) - pad, Math.max(...xs) + pad, Math.min(top, Math.max(...ys) + 4), Math.max(...zs) + pad];
+  return [Math.min(...xs) - pad, Math.max(floor, Math.min(...ys) - pad), Math.min(...zs) - pad, Math.max(...xs) + pad, Math.min(top, Math.max(...ys) + 12), Math.max(...zs) + pad];
 }
 
 // ------------------------------------------------------------ helpers the underwater autopilots share
-const swimMixin = {
+export const swimMixin = {
   // Rory swims to (x, y, z): along a planned route through open water, up for air when he needs it
   swimTo(x, y, z) {
     const g = this.g, p = this.p, inp = g.input, c = [p.pos.x, p.pos.y + 0.7, p.pos.z], sea = this.w.sea;
     // still on dry land (a pontoon, a ledge, the beach): walk the way the walking map says, off the
     // edge and into the water, and swim from there
     if (!p.swimming && !p.headUnder) {
-      const pts = (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q), r = this.walkTo(x, y, z, 1.0, pts);
-      if (this.navPath || !sea) return r;
+      const pts = (this.navPts || []).map(q => Array.isArray(q) ? v3(q) : q), pp = p.pos;
+      // (whether it can be walked to is asked again only every few seconds: a way that isn't there
+      // costs a search of the whole map to find out)
+      const key = `${x.toFixed(0)},${y.toFixed(0)},${z.toFixed(0)}`;
+      if (!sea || this.dryKey !== key || this.t > this.dryAt) { this.ensureNav([{ x, z }, ...pts]); this.dryKey = key; this.dryAt = this.t + 4; this.dryWalk = !sea || !!this.nav.route(pp.x, pp.y, pp.z, x, y, z, 1.0); }
+      if (this.dryWalk) return this.walkTo(x, y, z, 1.0, pts);
       // no way there on foot (it's out over deep water): into the water at the nearest spot
       // that's deep enough to swim, and swim from there
-      const nav = this.nav, pp = p.pos;
+      const nav = this.nav, dh = Math.hypot(x - pp.x, z - pp.z);
       if (!this.entry || this.entry.from !== nav) {
         const can = nav.reachable(pp.x, pp.y, pp.z); let best = null, bd = 1e9;
-        if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < sea.level - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
+        if (can) for (let k = 0; k < nav.h.length; k++) if (can[k] && nav.h[k] < this.waterLine(nav.xz(k)[0], nav.h[k] + 1, nav.xz(k)[1]) - 1.2) { const [nx, nz] = nav.xz(k), d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(nx - x, nz - z) * 0.25; if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz }; } }
+        // (none: the water is too deep to walk down into, off a dock or a ledge over the deep. The
+        // edge of the dry ground, with deep water just beyond it, and step off)
+        if (!best && can) for (let k = 0; k < nav.h.length; k++) {
+          if (!can[k]) continue;
+          const [nx, nz] = nav.xz(k);
+          for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const fx = nx + ox * nav.S, fz = nz + oz * nav.S, wl = this.waterLine(fx, nav.h[k], fz);
+            if (nav.h[k] < wl - 0.5 || nav.top(fx, fz, nav.h[k] + 0.2) > wl - 1.2) continue;
+            // (not over a railing: the boat's sides are railed, its stern is open)
+            if (this.w.phys.ray({ x: nx, y: nav.h[k] + 0.5, z: nz }, { x: ox, y: 0, z: oz }, nav.S + 0.8) !== null) continue;
+            const d = Math.hypot(nx - pp.x, nz - pp.z) + Math.hypot(fx - x, fz - z) * 0.25;
+            if (d < bd) { bd = d; best = { x: nx, y: nav.h[k], z: nz, off: [fx + ox, fz + oz] }; }
+          }
+        }
         this.entry = { from: nav, at: best };
       }
       const e = this.entry.at;
-      return e ? this.walkTo(e.x, e.y + 0.3, e.z, 1.0, pts) : r;
+      if (!e) { this.steer(x, z); return dh; }
+      // (once at the edge, step off and keep going: turning back to the square each time Rory is a
+      // step past it would leave him dithering on the brink)
+      const de = Math.hypot(e.x - pp.x, e.z - pp.z);
+      if (e.off && (de < 0.8 || (this.entry.go && de < 2.5))) { this.entry.go = true; this.steer(e.off[0], e.off[1]); return dh; }
+      this.entry.go = false;
+      this.walkTo(e.x, e.y + 0.3, e.z, e.off ? 0.5 : 1.0, pts); return dh;
     }
-    const lvl = sea ? sea.level : 0;
+    // (in the deep the surface is out of reach: the top of the water is where swimming stops)
+    const deep = this.w.swimTop !== undefined, lvl = deep ? this.w.swimTop - 0.4 : sea ? sea.level : 0;
     if (!this.nav3) {
       const pts = [c, [x, y, z], ...(this.navPts || [])];
-      this.nav3 = new Nav3(this.w, boxAround(pts, 8, (this.data.floor ?? -40), lvl - 0.6), 0.45, 1, lvl - 0.6);
+      this.nav3 = new Nav3(this.w, boxAround(pts, 8, (this.data.floor ?? -40), lvl - 0.6), 0.45, 1, lvl - 0.6, this.navBlock);
     }
     // air: come up (or to a bubble stream) with time to spare
-    const depth = lvl - c[1];
-    if (p.headUnder && p.air < depth / 3 + 7) {
-      let best = [c[0], lvl - 0.8, c[2]], bd = depth;
-      for (const v of this.w.airVents || []) { const d = Math.hypot(v.x - c[0], v.y + 1 - c[1], v.z - c[2]); if (d < bd) { bd = d; best = [v.x, Math.min(v.y + 1.5, lvl - 1), v.z]; } }
-      this.gasping = true;
-      return this.follow3(best, 0.7);
+    if (!deep) {
+      const depth = lvl - c[1];
+      if (p.headUnder && p.air < depth / 3 + 7) {
+        let best = [c[0], lvl - 0.8, c[2]], bd = depth;
+        for (const v of this.w.airVents || []) { const d = Math.hypot(v.x - c[0], v.y + 1 - c[1], v.z - c[2]); if (d < bd) { bd = d; best = [v.x, Math.min(v.y + 1.5, lvl - 1), v.z]; } }
+        this.gasping = true;
+        return this.follow3(best, 0.7);
+      }
+      if (this.gasping && p.air < p.airMax * 0.9) { this.follow3([c[0], lvl - 0.8, c[2]], 0.7); return 1; }
+      this.gasping = false;
+    } else {
+      // in the deep: to the nearest air station, bubble stream or air pocket, along a route, and
+      // wait there until the tank is nearly full
+      const a = this.airNear(c);
+      if (a && p.headUnder && !this.gasping && p.air < a.d / 2.4 + 10) this.gasping = a.pt;
+      if (this.gasping) {
+        const g = this.gasping;
+        if (p.air >= p.airMax * 0.92) this.gasping = false;
+        else if (Math.hypot(g[0] - c[0], g[1] - c[1], g[2] - c[2]) < 1.2 || !p.headUnder) { this.follow3(g, 0.7); return 1; }
+        else { x = g[0]; y = g[1]; z = g[2]; }
+      }
     }
-    if (this.gasping && p.air < p.airMax * 0.9) { this.follow3([c[0], lvl - 0.8, c[2]], 0.7); return 1; }
-    this.gasping = false;
     if (!this.swimGoal || Math.hypot(this.swimGoal[0] - x, this.swimGoal[1] - y, this.swimGoal[2] - z) > 0.5 || this.t > this.swimAt) {
       this.swimGoal = [x, y, z]; this.swimAt = this.t + 4;
       this.swimPath = this.nav3.route(c, [x, y, z]); this.swimI = 1;
     }
     return this.follow3(this.swimPath ? null : [x, y, z], 0.9);
+  },
+  // the nearest place to breathe in the deep, as the crow swims: { pt, d }
+  airNear(c) {
+    let best = null;
+    const put = (pt) => { const d = Math.hypot(pt[0] - c[0], pt[1] - c[1], pt[2] - c[2]); if (!best || d < best.d) best = { pt, d }; };
+    for (const v of this.w.airVents || []) put([v.x, v.y + Math.min(1.5, v.h / 2), v.z]);
+    for (const r of this.w.dry || []) if (r.below >= 2) put(r.air ? [r.air[0], r.wl - 0.7, r.air[1]] : [(r.x0 + r.x1) / 2, r.wl - 0.7, (r.z0 + r.z1) / 2]);
+    return best;
   },
   // steer along this.swimPath (or straight at pt): the stick across, JUMP up, DIVE down
   follow3(pt, reach) {
@@ -82,7 +129,7 @@ const swimMixin = {
   },
   // TORPEDO (or any craft) to (x, y, z) along a route through open water
   driveTo(x, y, z, slow = false) {
-    const cr = this.craft, inp = this.g.input, c = cr.pos.toArray(), sea = this.w.sea, lvl = sea ? sea.level : 0;
+    const cr = this.craft, inp = this.g.input, c = cr.pos.toArray(), sea = this.w.sea, lvl = this.w.swimTop !== undefined ? this.w.swimTop - 0.2 : sea ? sea.level : 0;
     if (!this.nav3) this.nav3 = new Nav3(this.w, boxAround([c, [x, y, z], ...(this.navPts || [])], 10, this.data.floor ?? -60, lvl - 0.8), cr.L.r + 0.15, 1.5, lvl - 0.8);
     if (!this.driveGoal || Math.hypot(this.driveGoal[0] - x, this.driveGoal[1] - y, this.driveGoal[2] - z) > 0.5 || this.t > this.driveAt) {
       this.driveGoal = [x, y, z]; this.driveAt = this.t + 3;
@@ -90,8 +137,16 @@ const swimMixin = {
     }
     let tgt = [x, y, z];
     const path = this.drivePath;
-    if (path) { while (this.driveI < path.length - 1 && Math.hypot(path[this.driveI][0] - c[0], path[this.driveI][1] - c[1], path[this.driveI][2] - c[2]) < 2) this.driveI++; tgt = path[Math.min(this.driveI, path.length - 1)]; }
+    if (path) {
+      while (this.driveI < path.length - 1 && Math.hypot(path[this.driveI][0] - c[0], path[this.driveI][1] - c[1], path[this.driveI][2] - c[2]) < 2) this.driveI++;
+      // (straight at the square ahead only if nothing's in the way: over a reef's crest the way on
+      // runs up and over, not through its edge)
+      let i = Math.min(this.driveI, path.length - 1);
+      while (i > 1 && !this.nav3.clear(c, path[i])) i--;
+      tgt = path[i];
+    }
     const dx = tgt[0] - c[0], dy = tgt[1] - c[1], dz = tgt[2] - c[2], dh = Math.hypot(dx, dz), d = Math.hypot(dx, dy, dz);
+    this.driveTgt = tgt;
     cr.camYaw = Math.atan2(-dx, -dz);
     // turn on the spot before going (a sub can't go sideways), and ease in to the end
     let face = Math.atan2(dx, dz) - cr.yaw; face = Math.abs(Math.atan2(Math.sin(face), Math.cos(face)));
@@ -110,21 +165,31 @@ export class Dive extends Cells {
   solve() {
     const c = this.aim && this.aim.visible ? this.aim : this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.p.pos) - b.position.distanceTo(this.p.pos))[0];
     if (!c) return;
-    if (c !== this.aim) { this.aim = c; this.aimT = this.t; }
-    // (coming up for air doesn't count against getting there)
-    if (this.gasping) this.aimT += 1 / 60;
-    if (this.t - this.aimT > 45) {
+    // (the time allowed grows with how far away it is, and coming up for air doesn't count against it)
+    const dt = this.t - (this.solveT ?? this.t); this.solveT = this.t;
+    if (c !== this.aim) { this.aim = c; this.aimT = this.t; this.aimFar = c.position.distanceTo(this.p.pos) / 3; }
+    if (this.gasping) this.aimT += dt;
+    if (this.t - this.aimT > 45 + (this.aimFar || 0)) {
       (this.g.teleports || (this.g.teleports = [])).push(`${this.def.id} pearl ${this.cells.indexOf(c)} at ${c.position.toArray().map(v => v.toFixed(1)).join(",")}`);
       this.p.teleport(c.position.x, c.position.y - 0.7, c.position.z); this.aimT = this.t; return;
     }
     const sea = this.w.sea;
     // a pearl above the water (on a rock, a jetty): walk to it the usual way, swimming the wet
     // parts of the route and climbing out where it comes ashore
-    if (!sea || c.position.y > sea.level + 0.3) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); if (this.navPath || !this.p.swimming) return; }
+    if (!sea || c.position.y > this.waterLine(c.position.x, c.position.y, c.position.z) + 0.3) { this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.navPts.map(v3)); if (this.navPath || !this.p.swimming) return; }
     this.swimTo(c.position.x, c.position.y, c.position.z);
   }
 }
 Object.assign(Dive.prototype, swimMixin);
+
+// things TORPEDO's claw lifts in Act Two: a tangled net with floats, a ship's safe, a crate, a block
+// of ice (with something inside it)
+const SALVAGE = {
+  net: () => { const g = new THREE.Group(); const n = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), new THREE.MeshStandardMaterial({ color: 0x3a5a4a, wireframe: true })); g.add(n); const b = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 0), new THREE.MeshStandardMaterial({ color: 0x2a3a30, roughness: 0.9, transparent: true, opacity: 0.6 })); g.add(b); for (let k = 0; k < 4; k++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 8), new THREE.MeshStandardMaterial({ color: 0xf07a1a })); const a = k * 1.7; f.position.set(Math.cos(a) * 0.6, 0.3 + (k % 2) * 0.2, Math.sin(a) * 0.6); g.add(f); } return g; },
+  safe: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.1, 0.9), new THREE.MeshStandardMaterial({ color: 0x2a3a2a, metalness: 0.7, roughness: 0.4 })); b.castShadow = true; g.add(b); const d = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.08, 16), new THREE.MeshStandardMaterial({ color: 0xd8b04a, metalness: 0.9, roughness: 0.3 })); d.rotation.x = Math.PI / 2; d.position.z = 0.47; g.add(d); return g; },
+  crate: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.9), new THREE.MeshStandardMaterial({ color: 0x5a1a2a, roughness: 0.5, emissive: 0x2a0a10, emissiveIntensity: 0.4 })); b.castShadow = true; g.add(b); const s = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.12, 0.3), new THREE.MeshStandardMaterial({ color: 0x2ad0c0, emissive: 0x2ad0c0, emissiveIntensity: 0.8 })); g.add(s); return g; },
+  ice: () => { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 1.3), new THREE.MeshStandardMaterial({ color: 0xcff4ff, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.7 })); g.add(b); return g; },
+};
 
 // ------------------------------------------------------------ piloting missions: in TORPEDO or on a jet-ski
 class Piloted extends Mission {
@@ -140,6 +205,7 @@ class Piloted extends Mission {
     super.cleanup();
   }
   post() { if (this.craft && this.craft.rig === null && this.g.craft === this.craft) { /* already aboard */ } }
+  debugState() { const f = v => +v.toFixed(1), c = this.craft, t = this.target && this.target(); return c ? { p: c.pos.toArray().map(f), yaw: f(c.yaw || 0), v: f(c.vel.length()), to: t ? [f(t.x), f(t.y), f(t.z)] : null, tgt: this.driveTgt ? this.driveTgt.map(f) : null, gnd: this.w.groundAt ? f(this.w.groundAt(c.pos.x, c.pos.z)) : null, inp: this.g.input.forced, route: this.drivePath ? [this.drivePath.length, this.driveI] : this.drivePath === null ? "none" : undefined } : {}; }
 }
 Object.assign(Piloted.prototype, swimMixin);
 
@@ -336,6 +402,7 @@ export class Salvage extends Piloted {
     const kind = d.thing || "part";
     this.items = (d.items || []).slice(0, this.def.n || 3).map(p => {
       const m = kind === "rock" ? new THREE.Mesh(new THREE.DodecahedronGeometry(0.7, 0), new THREE.MeshStandardMaterial({ color: 0x6a6a64, roughness: 0.95, flatShading: true }))
+        : SALVAGE[kind] ? SALVAGE[kind]()
         : new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 12), new THREE.MeshStandardMaterial({ color: 0x3a8ad8, metalness: 0.6, roughness: 0.4, emissive: 0x0a2a4a, emissiveIntensity: 0.5 }));
       m.position.set(p[0], p[1], p[2]); m.castShadow = true; this.add(m);
       return { m, state: "floor", home: p };
@@ -387,7 +454,7 @@ export class Escort extends Mission {
   start() {
     const d = this.data, kind = d.critter || "turtle";
     this.goal = v3(d.goal); this.goalR = d.goalR || 3;
-    this.water = kind === "clownfish";
+    this.water = d.water ?? kind === "clownfish";
     this.kids = (d.kids || []).slice(0, this.def.n || 3).map(k => { const c = critter(kind); c.position.set(k[0], k[1], k[2]); this.add(c); return { c, home: v3(k), state: "wait", t: 0 }; });
     const gm = this.add(ringMesh(this.goalR, 0x7bed9f)); gm.position.copy(this.goal); gm.rotation.x = Math.PI / 2;
     // crabs patrol back and forth; a crab scares a little one back to where it started

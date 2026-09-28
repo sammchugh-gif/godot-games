@@ -16,6 +16,8 @@ export const SKIES = {
   tropical: { top: "#1a78d8", mid: "#7cc8f0", bottom: "#c8f0f0", sun: [60, 140], sunColor: "#fff8e8", sunI: 2.45, hemi: ["#c8ecff", "#4a7a48", 0.66], fog: [120, 520], clouds: 22 },
   snow:     { top: "#6a8ab8", mid: "#c8d8e8", bottom: "#eef2f6", sun: [22, 160], sunColor: "#fff4e8", sunI: 1.73, hemi: ["#e0ecff", "#b8c4d0", 0.78], fog: [60, 300], clouds: 10 },
   storm:    { top: "#20283a", mid: "#4a5668", bottom: "#6a7280", sun: [30, 100], sunColor: "#c8d4e8", sunI: 0.86, hemi: ["#8a9ab0", "#2a2e34", 0.6], fog: [40, 240], clouds: 30, cloudTint: "#6a7486" },
+  // the deep sea: no sun to speak of, a dim blue from above; the level's fog and lamps do the rest
+  deep:     { top: "#02101c", mid: "#031a2a", bottom: "#010810", sun: [70, 30], sunColor: "#6ab0d8", sunI: 0.5, hemi: ["#3a7aa8", "#081018", 0.35], fog: null, clouds: 0 },
   space:    { top: "#000004", mid: "#02040c", bottom: "#000004", sun: [20, 60], sunColor: "#ffffff", sunI: 2.45, hemi: ["#6a7aa0", "#101018", 0.21], fog: null, clouds: 0, stars: 4000, earth: true },
   moon:     { top: "#000004", mid: "#03050c", bottom: "#101014", sun: [18, 120], sunColor: "#fffaf0", sunI: 2.74, hemi: ["#5a6480", "#202024", 0.24], fog: null, clouds: 0, stars: 4000, earth: true },
 };
@@ -265,6 +267,78 @@ export class World {
     for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; this.mesh(new THREE.DodecahedronGeometry(0.35 + (i % 2) * 0.15, 0), rock, x + Math.cos(a) * 0.6, y + 0.1, z + Math.sin(a) * 0.6); }
     this.updaters.push(dt => { if (this.fx && Math.random() < dt * 40) this.fx.bubble(x + (Math.random() - 0.5) * 0.7, y + 0.3, z + (Math.random() - 0.5) * 0.7, Math.min(this.sea ? this.sea.level : Infinity, y + h)); });
     return v;
+  }
+  // an air station on the sea bed: a POLARIS tank with a glowing hose; swimming up to it fills the air
+  airStation(x, y, z) {
+    const v = { x, y: y - 0.5, z, r: 1.8, h: 3.2 };
+    (this.airVents || (this.airVents = [])).push(v);
+    const tank = this.mesh(new THREE.CapsuleGeometry(0.45, 1.2, 6, 14), M(0xf2c418, { rough: 0.35, metal: 0.3 }), x, y + 0.9, z);
+    tank.castShadow = true;
+    const glow = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.06, 8, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7ff4e8).multiplyScalar(2.5) }));
+    glow.rotation.x = Math.PI / 2; glow.position.set(x, y + 0.08, z); glow.userData.dynamic = true; this.scene.add(glow);
+    this.updaters.push(dt => { glow.scale.setScalar(1 + Math.sin(this.t * 3) * 0.08); if (this.fx && Math.random() < dt * 6) this.fx.bubble(x + (Math.random() - 0.5) * 0.3, y + 1.8, z + (Math.random() - 0.5) * 0.3, y + 6); });
+    return v;
+  }
+  // a black smoker's plume of scalding water: a column r wide from y up h metres. Swimming into it
+  // pushes Rory back out (see player.js); it doesn't hurt TORPEDO
+  plume(x, y, z, r = 1.2, h = 12) { const p = { x, y, z, r, h }; (this.plumes || (this.plumes = [])).push(p); return p; }
+  plumeAt(x, y, z) { for (const p of this.plumes || []) { const d = Math.hypot(x - p.x, z - p.z); if (d < p.r && y > p.y - 0.5 && y < p.y + p.h) return { p, d }; } return null; }
+  // ------------------------------------------------------------ the deep (Act Two)
+  // a room of air under the sea (an air pocket in a wreck, a lab, an airlock): inside its walls the
+  // water only comes up to its water line wl, so Rory walks, breathes and climbs out there.
+  // below: how far under the room its water line still counts (an open-bottomed air pocket is
+  // reached by swimming up into it from below)
+  dryRoom(x0, y0, z0, x1, y1, z1, o = {}) {
+    // (air: where under it to come up and breathe, if not its middle: a moon pool)
+    const d = { x0, y0, z0, x1, y1, z1, wl: o.wl ?? y0, below: o.below ?? 1, air: o.air };
+    (this.dry || (this.dry = [])).push(d);
+    return d;
+  }
+  // the height of the water's surface over (x, z) for something at height y: the sea's waves, or
+  // the water line of the air pocket it's under
+  surfaceAt(x, y, z) {
+    for (const d of this.dry || []) if (x > d.x0 && x < d.x1 && z > d.z0 && z < d.z1 && y < d.y1 && y > d.y0 - d.below) return d.wl;
+    return this.sea ? this.sea.height(x, z) : -1e9;
+  }
+  // a current: a tube r metres wide along the points pts, carrying whatever swims into it along at
+  // speed m/s (fastest in the middle). Streaks of specks show where it runs.
+  current(pts, r = 3, speed = 5) {
+    const P = pts.map(p => new THREE.Vector3(...p)), seg = [];
+    let len = 0;
+    for (let i = 0; i < P.length - 1; i++) { const l = P[i].distanceTo(P[i + 1]); seg.push({ a: P[i], b: P[i + 1], l, s: len, d: P[i + 1].clone().sub(P[i]).normalize() }); len += l; }
+    const c = { pts: P, seg, len, r, speed };
+    (this.currents || (this.currents = [])).push(c);
+    // the specks: each rides along the tube at its own offset
+    const n = Math.min(900, Math.round(len * r * 2.2)), pos = new Float32Array(n * 3), st = [];
+    for (let i = 0; i < n; i++) st.push({ s: Math.random() * len, a: Math.random() * Math.PI * 2, q: Math.sqrt(Math.random()) * r * 0.9, v: 0.7 + Math.random() * 0.5 });
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const pts3 = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.12, color: new THREE.Color(0x9af0ff).multiplyScalar(1.6), transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pts3.frustumCulled = false; pts3.userData.dynamic = true; this.scene.add(pts3);
+    const up = new THREE.Vector3(0, 1, 0), side = new THREE.Vector3(), up2 = new THREE.Vector3();
+    this.updaters.push(dt => {
+      for (let i = 0; i < n; i++) {
+        const k = st[i]; k.s = (k.s + speed * k.v * dt) % len;
+        let sg = seg[0]; for (const q of seg) if (k.s >= q.s) sg = q;
+        const f = (k.s - sg.s) / sg.l;
+        side.crossVectors(sg.d, Math.abs(sg.d.y) > 0.9 ? side.set(1, 0, 0) : up).normalize(); up2.crossVectors(side, sg.d);
+        const ox = Math.cos(k.a + k.s * 0.2) * k.q, oy = Math.sin(k.a + k.s * 0.2) * k.q;
+        pos[i * 3] = sg.a.x + (sg.b.x - sg.a.x) * f + side.x * ox + up2.x * oy;
+        pos[i * 3 + 1] = sg.a.y + (sg.b.y - sg.a.y) * f + side.y * ox + up2.y * oy;
+        pos[i * 3 + 2] = sg.a.z + (sg.b.z - sg.a.z) * f + side.z * ox + up2.z * oy;
+      }
+      g.attributes.position.needsUpdate = true;
+    });
+    return c;
+  }
+  // the push of the currents at (x, y, z), or null outside them: {x, y, z} in m/s
+  currentAt(x, y, z) {
+    let best = null, bd = Infinity;
+    for (const c of this.currents || []) for (const q of c.seg) {
+      const t = Math.max(0, Math.min(q.l, (x - q.a.x) * q.d.x + (y - q.a.y) * q.d.y + (z - q.a.z) * q.d.z));
+      const d = Math.hypot(q.a.x + q.d.x * t - x, q.a.y + q.d.y * t - y, q.a.z + q.d.z * t - z);
+      if (d < c.r && d < bd) { bd = d; const k = c.speed * (1 - 0.5 * (d / c.r) ** 2); best = { x: q.d.x * k, y: q.d.y * k, z: q.d.z * k }; }
+    }
+    return best;
   }
   // glowing lava Rory mustn't stand on: a flow from (x0, z0) to (x1, z1), r wide, its surface at y
   lavaFlow(x0, z0, x1, z1, r, y) { (this.flows || (this.flows = [])).push({ x0, z0, x1, z1, r, y }); }

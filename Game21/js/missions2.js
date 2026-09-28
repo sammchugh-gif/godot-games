@@ -6,7 +6,7 @@ const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W as bits 1 2 4 8
 const rot = (m, r) => { r = ((r % 4) + 4) % 4; return ((m << r) | (m >> (4 - r))) & 15; };
 const opp = d => (d + 2) % 4;
 
-class Panel {
+export class Panel {
   constructor(g, def, data) { this.g = g; this.def = def; this.data = data || {}; this.lv = def.lv || 1; this.t = 0; this.done = false; this.failed = false; this.freeze = true; this.time = def.time ?? 0; this.left = this.time; }
   tick(dt) { if (this.winAt !== undefined && this.t >= this.winAt) { this.winAt = undefined; this.close(); this.g.onMissionWin(this); return; } if (this.done && this.winAt !== undefined) { this.t += dt; return; } if (this.done || this.failed) return; this.t += dt; if (this.time) { this.left -= dt; if (this.left <= 0) { this.failed = true; this.close(); this.g.onMissionLose(this, "OUT OF TIME"); return; } } this.update(dt); }
   update() {}

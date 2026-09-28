@@ -151,7 +151,10 @@ export class Craft {
       const vy = frozen ? 0 : input.jumpHeld ? 3.5 : input.diveHeld ? -3.5 : 0;
       this.vel.y += (vy - this.vel.y) * Math.min(1, dt * 3);
     }
-    const want = { x: this.vel.x * dt, y: this.vel.y * dt, z: this.vel.z * dt };
+    // (a current carries the sub along too, but half as much as a swimmer: her engine can push
+    // slowly across one, or even up it)
+    const cur = !L.surface && this.world.currents ? this.world.currentAt(this.pos.x, this.pos.y, this.pos.z) : null, ck = 0.5;
+    const want = { x: (this.vel.x + (cur ? cur.x * ck : 0)) * dt, y: (this.vel.y + (cur ? cur.y * ck : 0)) * dt, z: (this.vel.z + (cur ? cur.z * ck : 0)) * dt };
     this.cc.computeColliderMovement(this.col, want, R.QueryFilterFlags.EXCLUDE_SENSORS, undefined, this.pass);
     const m = this.cc.computedMovement();
     const lost = Math.hypot(want.x - m.x, want.z - m.z);
@@ -161,10 +164,12 @@ export class Craft {
     this.pos.x += m.x; this.pos.z += m.z; this.pos.y += m.y;
     // the sea's surface: the sub can come up until its dome breaks the surface; boats ride on it
     if (sea) {
-      const h = sea.height(this.pos.x, this.pos.z);
+      const h = Math.min(this.world.surfaceAt(this.pos.x, this.pos.y, this.pos.z), this.world.swimTop ?? Infinity);
       if (L.surface) this.pos.y = h + 0.05;
       else if (this.pos.y > h - 0.55) { this.pos.y = h - 0.55; this.vel.y = Math.min(0, this.vel.y); }
     }
+    // (never into the sea bed: driven hard down a steep canyon wall she could slip into the ground)
+    if (!L.surface && this.world.groundAt) { const gy = this.world.groundAt(this.pos.x, this.pos.z) + L.r * 0.9; if (this.pos.y < gy) { this.pos.y = gy; this.vel.y = Math.max(0, this.vel.y); } }
     this.body.setNextKinematicTranslation({ x: this.pos.x, y: this.pos.y, z: this.pos.z });
     this.speed = Math.hypot(this.vel.x, this.vel.z);
     this.pose(dt, sea);

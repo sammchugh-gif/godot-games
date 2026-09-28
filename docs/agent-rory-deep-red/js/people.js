@@ -234,6 +234,38 @@ function swimPose(rig, s, sp, set) {
   rig.hips.position.y = rig.S.leg;
 }
 
+// a diving suit for the deep sea: a fish-bowl helmet with a brass collar and a lamp, an air tank
+// on his back with a hose to the helmet, and flippers. The lamp is a real light, lit in the dark.
+export function diveSuit(rig, on) {
+  if (!rig.dive) {
+    const r = rig.S.headR, brass = new THREE.MeshStandardMaterial({ color: 0xc8963a, roughness: 0.3, metalness: 0.85 });
+    const helmet = new THREE.Mesh(new THREE.SphereGeometry(r * 1.6, 28, 20), new THREE.MeshPhysicalMaterial({ color: 0xe8fbff, transparent: true, opacity: 0.2, roughness: 0.02, metalness: 0.1, clearcoat: 1, depthWrite: false }));
+    helmet.position.y = r * 0.08; rig.head.add(helmet);
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(r * 1.0, r * 0.18, 10, 28), brass);
+    collar.rotation.x = Math.PI / 2; collar.position.y = -r * 0.98; rig.head.add(collar);
+    // the lamp on the helmet's brow, and its light (a spot, pointing where he looks)
+    const lampBody = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.2, r * 0.24, r * 0.3, 12), brass); lampBody.rotation.x = Math.PI / 2; lampBody.position.set(0, r * 1.2, r * 1.2); rig.head.add(lampBody);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(r * 0.18, 14), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4d0).multiplyScalar(2) })); lens.position.set(0, r * 1.2, r * 1.36); rig.head.add(lens);
+    const spot = new THREE.SpotLight(0xfff0d0, 0, 26, 0.55, 0.5, 1.2); spot.position.set(0, r * 1.2, r * 1.3); rig.head.add(spot);
+    const aim = new THREE.Object3D(); aim.position.set(0, -r * 1.5, r * 8); rig.head.add(aim); spot.target = aim;
+    // the tank, its valve and the hose over his shoulder to the collar
+    const pack = new THREE.Group(); rig.spine.add(pack); pack.position.set(0, rig.S.torso * 0.55, -rig.S.bodyR * 1.05);
+    const tank = new THREE.Mesh(new THREE.CapsuleGeometry(rig.S.bodyR * 0.55, rig.S.torso * 0.7, 6, 14), new THREE.MeshStandardMaterial({ color: 0xf2c418, roughness: 0.35, metalness: 0.3 })); tank.castShadow = true; pack.add(tank);
+    const valve = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.09, 8), new THREE.MeshStandardMaterial({ color: 0x2a2e36, metalness: 0.8, roughness: 0.3 })); valve.position.y = rig.S.torso * 0.62; pack.add(valve);
+    const hoseCurve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, rig.S.torso * 0.64, 0), new THREE.Vector3(rig.S.bodyR * 0.6, rig.S.torso * 0.95, 0.06), new THREE.Vector3(rig.S.bodyR * 0.55, rig.S.torso * 1.05, rig.S.bodyR * 0.9)]);
+    const hose = new THREE.Mesh(new THREE.TubeGeometry(hoseCurve, 12, 0.022, 6), new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.6 })); pack.add(hose);
+    // flippers on his feet
+    const fins = [];
+    for (const k of [rig.kneeL, rig.kneeR]) {
+      const f = new THREE.Mesh(new THREE.BoxGeometry(rig.S.legR * 2.6, rig.S.legR * 0.35, rig.S.legR * 5.2), new THREE.MeshStandardMaterial({ color: 0xf2c418, roughness: 0.5 }));
+      f.position.set(0, -rig.S.leg * 0.5, rig.S.legR * 2.4); f.castShadow = true; k.add(f); fins.push(f);
+    }
+    rig.dive = { parts: [helmet, collar, lampBody, lens, pack, ...fins], spot };
+  }
+  for (const p of rig.dive.parts) p.visible = on;
+  rig.dive.spot.visible = on;
+}
+
 // a space suit for the orbit and the Moon: a bubble helmet and a jetpack
 export function spaceSuit(rig, on) {
   if (!rig.suit) {

@@ -11,6 +11,9 @@ export class Mission {
     this.objs = []; this.done = false; this.failed = false;
   }
   get w() { return this.g.world; }
+  // the water's surface over a point: the sea's level, or (in the deep, or under an air pocket's
+  // water line) the local one
+  waterLine(x, y, z) { const w = this.w, sea = w.sea; if (!sea) return 0; return sea.deep || w.dry ? w.surfaceAt(x, y, z) : sea.level; }
   get p() { return this.g.player; }
   add(o) { this.w.scene.add(o); this.objs.push(o); return o; }
   start() {}
@@ -59,7 +62,7 @@ export class Mission {
     // where it comes ashore
     if (this.p.swimming) {
       for (let i = this.navI; i < Math.min(path.length, this.navI + 12); i++) { const q = path[i]; if (Math.hypot(q.x - pp.x, q.z - pp.z) < 1.3) this.navI = i; }
-      const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.w.sea ? this.w.sea.level : 0;
+      const q = path[Math.min(path.length - 1, this.navI + 2)], L = this.waterLine(pp.x, pp.y + 1, pp.z);
       // (a route that climbs straight out of the water onto something too high to reach from it, a
       // pier's end or a quay wall: swim to a way out, steps or a ledge, instead)
       if (q.h > L + 1.1 && Math.hypot(q.x - pp.x, q.z - pp.z) < 2.5) {
@@ -109,7 +112,14 @@ export class Mission {
     // (nor past one where the straight line to it runs off an edge: cutting the corner of a pier
     // walks into the sea)
     const floored = (q, d) => { const lo = Math.min(pp.y, q.h) - 0.6, hi = Math.max(pp.y, q.h) + 0.3; for (let t = 0.4; t < d; t += 0.4) { const f = this.nav.top(pp.x + (q.x - pp.x) * t / d, pp.z + (q.z - pp.z) * t / d, hi); if (f < lo) return false; } return true; };
-    const seen = q => { const d = Math.hypot(q.x - pp.x, q.z - pp.z); return d < 0.1 || (this.w.phys.ray({ x: pp.x, y: pp.y + 0.5, z: pp.z }, { x: (q.x - pp.x) / d, y: 0, z: (q.z - pp.z) / d }, d, w.col) === null && floored(q, d)); };
+    // (seen down both sides of Rory as well as the middle: a line that grazes the end of a banister
+    // snags her shoulder on it and turns her the wrong side of it)
+    const seen = q => {
+      const d = Math.hypot(q.x - pp.x, q.z - pp.z); if (d < 0.1) return true;
+      const ux = (q.x - pp.x) / d, uz = (q.z - pp.z) / d;
+      for (const s of [0, -0.28, 0.28]) if (this.w.phys.ray({ x: pp.x - uz * s, y: pp.y + 0.5, z: pp.z + ux * s }, { x: ux, y: 0, z: uz }, d, w.col) !== null) return false;
+      return floored(q, d);
+    };
     let j = this.navI + 1; while (j + 1 < path.length && j < this.navI + 3 && path[j].how !== "drop" && (path[j + 1].how === "walk" || path[j + 1].how === "drop") && seen(path[j + 1])) j++;
     // (and walk on past the foot of a drop: it can be only a hand's width beyond the edge)
     const q = path[j], o = path[j - 1], L = Math.hypot(q.x - o.x, q.z - o.z) || 1, on = q.how === "drop" ? 0.8 / L : 0;
@@ -120,7 +130,7 @@ export class Mission {
   // surface) from which the walking map can get to (tx, ty, tz); remembered for each target
   // (with no target, just the nearest way out of the water)
   exitFor(tx, ty, tz, reach) {
-    const nav = this.nav, L = this.w.sea.level, pp = this.p.pos, any = tx == null, key = any ? "any" : `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
+    const nav = this.nav, pp = this.p.pos, L = this.waterLine(pp.x, pp.y + 1, pp.z), any = tx == null, key = any ? "any" : `${tx.toFixed(0)},${ty.toFixed(0)},${tz.toFixed(0)}`;
     if (this.exitKey !== key || this.exitNav !== nav) {
       this.exitKey = key; this.exitNav = nav; this.exits = [];
       const cand = [];

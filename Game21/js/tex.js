@@ -132,7 +132,17 @@ export const TEX = {
       g.globalAlpha = 1;
     }, 1.5);
   },
-  snow(seed = 7) { return make("snow" + seed, 256, (g, w, h) => { noise(g, w, h, [236, 242, 250], 12, seed, 3); }, 1); },
+  // snow: a grain, and faint blue streaks where the wind has drifted it (drawn wrapped, so it tiles)
+  snow(seed = 7, base = [236, 242, 250]) {
+    return make("snow" + seed + base.join(), 256, (g, w, h) => {
+      noise(g, w, h, base, 16, seed, 3);
+      g.fillStyle = "rgba(110, 140, 185, 0.2)";
+      for (let k = 0; k < 16; k++) {
+        const x = hash(k * 7 + seed, 3) * w, y = hash(seed, k * 11 + 5) * h, rx = 26 + hash(k, k + seed) * 60, ry = 2 + hash(k + 1, k) * 5;
+        for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { g.beginPath(); g.ellipse(x + ox, y + oy, rx, ry, 0.35, 0, Math.PI * 2); g.fill(); }
+      }
+    }, 1);
+  },
   wood(seed = 8, base = [150, 100, 60]) {
     return make("wood" + seed + base, 256, (g, w, h) => {
       for (let y = 0; y < h; y += 32) { const k = (hash(seed, y) - 0.5) * 40; g.fillStyle = rgb(base, k); g.fillRect(0, y, w, 31); g.fillStyle = rgb(base, -60); g.fillRect(0, y + 31, w, 1); g.strokeStyle = `rgba(0,0,0,.18)`; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(0, y + 6 + i * 7); for (let x = 0; x < w; x += 16) g.lineTo(x, y + 6 + i * 7 + Math.sin(x * 0.03 + i + y) * 2); g.stroke(); } }

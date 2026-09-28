@@ -3,7 +3,7 @@
 // floating in low gravity).
 import * as THREE from "three";
 import { Walker } from "./physics.js";
-import { makePerson, animatePerson, RORY, spaceSuit } from "./people.js";
+import { makePerson, animatePerson, RORY, spaceSuit, diveSuit } from "./people.js";
 
 const up = new THREE.Vector3(0, 1, 0);
 
@@ -36,7 +36,10 @@ export class Player {
     this.airMax = world.airMax ?? 40; this.air = this.airMax;
   }
   get pos() { return this.walker.pos; }
-  suit(on) { spaceSuit(this.rig, on); this.suited = on; }
+  // (kind: "dive" for the deep sea, anything else true for space)
+  suit(kind) { diveSuit(this.rig, kind === "dive"); spaceSuit(this.rig, !!kind && kind !== "dive"); this.suited = kind; }
+  // the helmet lamp, in the dark places
+  lamp(i) { if (this.rig.dive) this.rig.dive.spot.intensity = i; }
   teleport(x, y, z, yaw) { this.walker.teleport(x, y, z); this.obj.position.set(x, y, z); if (yaw !== undefined) { this.yaw = yaw; this.camYaw = yaw + Math.PI; } this.snapCam = true; }
   update(dt, input, camera) {
     const w = this.walker;
@@ -55,7 +58,11 @@ export class Player {
     const target = (this.swimming ? this.swimSpeed : this.maxSpeed) * (input.boostHeld ? 1.35 : 1) * mag;
     const accel = this.swimming ? 8 : w.grounded ? 30 : 12;
     // horizontal velocity eases toward the stick
-    const tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
+    let tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
+    // a current carries him along on top of his own swimming
+    const cur = this.swimming && this.world.currents ? this.world.currentAt(w.pos.x, w.pos.y + 0.6, w.pos.z) : null;
+    this.inCurrent = cur;
+    if (cur) { tvx += cur.x; tvz += cur.z; }
     const k = Math.min(1, accel * dt / Math.max(1, this.maxSpeed));
     w.vel.x += (tvx - w.vel.x) * Math.min(1, k * 3);
     w.vel.z += (tvz - w.vel.z) * Math.min(1, k * 3);
@@ -67,7 +74,7 @@ export class Player {
     // in the sea: chest-deep water floats Rory (see swim())
     const sea = this.world.sea;
     if (sea) {
-      const L = sea.height(w.pos.x, w.pos.z), depth = L - w.pos.y;
+      const L = this.world.surfaceAt(w.pos.x, w.pos.y + 1, w.pos.z), depth = L - w.pos.y;
       this.surfaceY = L;
       const was = this.swimming, wasUnder = this.headUnder;
       this.swimming = this.swimming ? depth > 0.85 : depth > 1.05 && !(w.grounded && depth < 1.2);
@@ -156,6 +163,18 @@ export class Player {
     if (input.diveHeld && !this.frozen) vy = -3;
     else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
     else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
+    if (this.inCurrent) vy += this.inCurrent.y;
+    // a vent's scalding plume shoves him back out of it
+    const hot = this.world.plumes && this.world.plumeAt(w.pos.x, w.pos.y + 0.7, w.pos.z);
+    if (hot) {
+      const dx = w.pos.x - hot.p.x, dz = w.pos.z - hot.p.z, d = Math.hypot(dx, dz) || 1;
+      w.vel.x = dx / d * 5; w.vel.z = dz / d * 5;
+      if ((this.hotT || 0) <= 0 && this.onScald) this.onScald(); this.hotT = 1.5;
+    }
+    this.hotT = (this.hotT || 0) - dt;
+    // in the deep there's no swimming up to the surface: the sea is too deep
+    const top = this.world.swimTop;
+    if (top !== undefined && w.pos.y > top - 1) vy = Math.min(vy, (top - 1 - w.pos.y) * 2);
     w.vel.y += (vy - w.vel.y) * Math.min(1, dt * 4);
     w.grounded = false;
     void mag;

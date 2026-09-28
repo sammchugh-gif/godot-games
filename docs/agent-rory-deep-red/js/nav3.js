@@ -10,7 +10,8 @@ const FLAGS = () => R.QueryFilterFlags.EXCLUDE_DYNAMIC | R.QueryFilterFlags.EXCL
 export class Nav3 {
   // box: [x0, y0, z0, x1, y1, z1]; r: the swimmer's size; S: the grid spacing; top: the highest a
   // centre may be (under the surface)
-  constructor(world, box, r = 0.5, S = 1, top = Infinity) {
+  // (block: an extra test for cells to keep out of, (x, y, z) => true, such as a current's tube)
+  constructor(world, box, r = 0.5, S = 1, top = Infinity, block = null) {
     this.w = world; this.r = r; this.S = S;
     const [x0, y0, z0, x1, y1, z1] = box;
     this.x0 = x0; this.y0 = y0; this.z0 = z0;
@@ -23,9 +24,20 @@ export class Nav3 {
       if (y > top) continue;
       let free = true;
       W.intersectionsWithShape({ x, y, z }, rot, ball, () => { free = false; return false; }, f);
-      if (free && world.heightAt && world.heightAt(x, z) > y - r) free = false;
+      if (free && this.ground(x, z) > y - r) free = false;
+      if (free && block && block(x, y, z)) free = false;
+      // (and keep out of the vents' scalding plumes)
+      if (free && world.plumes) for (const p of world.plumes) if (Math.hypot(x - p.x, z - p.z) < p.r + r + 0.4 && y > p.y - 1 && y < p.y + p.h + 1) { free = false; break; }
       open[k] = free ? 1 : 0;
     }
+  }
+  // the highest ground within the swimmer's reach of (x, z): a reef's edge or a canyon's rim beside
+  // a square counts, not just the ground right under it (the drawn triangles, not the smooth hills)
+  ground(x, z) {
+    const w = this.w, g = w.groundAt || w.heightAt; if (!g) return -Infinity;
+    const d = this.r * 0.8; let m = g(x, z);
+    for (const [ox, oz] of [[d, 0], [-d, 0], [0, d], [0, -d]]) m = Math.max(m, g(x + ox, z + oz));
+    return m;
   }
   at(k) { const nx = this.nx, ny = this.ny, i = k % nx, j = ((k / nx) | 0) % ny, l = (k / (nx * ny)) | 0; return [this.x0 + i * this.S, this.y0 + j * this.S, this.z0 + l * this.S]; }
   idx(x, y, z) { const i = Math.round((x - this.x0) / this.S), j = Math.round((y - this.y0) / this.S), l = Math.round((z - this.z0) / this.S); return i < 0 || j < 0 || l < 0 || i >= this.nx || j >= this.ny || l >= this.nz ? -1 : i + this.nx * (j + this.ny * l); }
@@ -47,7 +59,7 @@ export class Nav3 {
     const W = this.w.phys.world;
     const hit = W.castShape({ x: a[0], y: a[1], z: a[2] }, { x: 0, y: 0, z: 0, w: 1 }, { x: dx / len, y: dy / len, z: dz / len }, new R.Ball(this.r * 0.9), 0, len, true, FLAGS());
     if (hit) return false;
-    if (this.w.heightAt) for (let t = 0.1; t < 1; t += 0.1) { const x = a[0] + dx * t, y = a[1] + dy * t, z = a[2] + dz * t; if (this.w.heightAt(x, z) > y - this.r * 0.9) return false; }
+    for (let t = 0.1; t < 1; t += 0.1) { const x = a[0] + dx * t, y = a[1] + dy * t, z = a[2] + dz * t; if (this.ground(x, z) > y - this.r * 0.9) return false; }
     return !(Math.max(a[1], b[1]) > this.top + 0.3);
   }
   route(from, to) {
@@ -62,7 +74,7 @@ export class Nav3 {
     while (heap.length) {
       const k = pop(); if (shut[k]) continue; shut[k] = 1;
       if (k === e) { found = true; break; }
-      if (++count > 150000) break;
+      if (++count > 400000) break;
       const i = k % nx, j = ((k / nx) | 0) % ny, l = (k / (nx * ny)) | 0;
       for (let dl = -1; dl <= 1; dl++) for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
         if (!di && !dj && !dl) continue;

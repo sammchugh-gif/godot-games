@@ -12,7 +12,8 @@ const page = await browser.newPage({ viewport: { width: 480, height: 300 } });
 page.on("pageerror", e => console.log("pageerror:", String(e).slice(0, 600)));
 await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType: "application/javascript", body: "" }));
 await page.addInitScript(() => { window.__test = true; localStorage.clear(); localStorage.setItem("rory21.quality", "0"); localStorage.setItem("rory21.voice", "false"); });
-await page.goto(`http://localhost:${port}/index.html`);
+// (the server can take a moment to start on a busy machine)
+for (let k = 0; ; k++) { try { await page.goto(`http://localhost:${port}/index.html`); break; } catch (e) { if (k > 10) throw e; await new Promise(r => setTimeout(r, 1500)); } }
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 240000 });
 const ev = (fn, a) => page.evaluate(fn, a);
 const frames = async n => { const f0 = await ev(() => __g.frames || 0); await page.waitForFunction(f => (__g.frames || 0) >= f, f0 + n, { timeout: 120000 }); };

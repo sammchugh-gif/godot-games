@@ -87,7 +87,26 @@ stolen sea home as rain.
 Act One ends with Undertow diving from the sinking Bermuda base. Act Two follows her
 down, one ocean zone at a time, and gets darker, deeper and stranger as it goes.
 
-**What the engine needs for it**
+**What the engine does for it** (as built)
+
+- **The dive suit** (`people.js` `diveSuit`): a glass fish-bowl helmet with a brass collar and a
+  lamp, a yellow tank and hose, yellow flippers. Ninety seconds of air. His dialogue portrait
+  wears the helmet too.
+- **The abyss** (`w.ocean({ abyss })`): for the places too deep to have a surface, the surface is
+  a kilometre up and out of reach (`swimTop` stops swimming at the top of the place), there are no
+  waves, caustics or light shafts, and the fog darkens with depth. The dark is lit by what's
+  alive: the helmet lamp, TORPEDO's headlights, lanternfish, jellies, anglerfish lures, plankton.
+- **Dry rooms** (`w.dryRoom`): a box of air under the sea with its own water line, which Rory
+  surfaces into, walks and breathes in: the POLARIS dive bell (every deep place's start, with a
+  moon pool), the liner's air pocket, the Glass Station, the ice factory, the Engine's arena.
+- **Airlocks** (`deepkit.js` `airlock`): a chamber, two sliding doors, a pump and three levers.
+  They refuse anything unsafe. Outside a mission they cycle themselves for whoever steps in.
+- **Currents** (`w.current`): tubes of drifting specks that carry swimmers and TORPEDO.
+- **Hot plumes** (`w.plume`): the vents' scalding water pushes Rory out.
+- **Air** comes from air stations (`w.airStation`), bubble vents and dry rooms; the autopilot
+  goes to the nearest in time.
+
+**What the engine needs for it** (the plan)
 
 - **The dive suit.** From the Sunlight Zone on Rory wears a diving suit with a
   fish-bowl helmet and a tank: a long air meter (a minute and a half), topped up at
