@@ -623,9 +623,9 @@ export class Lasers extends Mission {
     }
     this.case = this.add(new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 0.35), new THREE.MeshStandardMaterial({ color: 0xc0c8d0, metalness: 0.8, roughness: 0.25, emissive: 0x7fe3ff, emissiveIntensity: 0.4 })));
     this.case.position.copy(this.goal).setY(this.goal.y + 0.9);
-    // in a space suit Rory could fly over the lot, so a laser net overhead keeps him low
-    // enough that the bars still catch him
-    if (this.w.jetpack) {
+    // in a space suit Rory could fly over the lot (and on Mars, jump over it), so a laser net
+    // overhead keeps him low enough that the bars still catch him
+    if (this.w.jetpack || (this.w.gravityScale ?? 1) < 0.7) {
       const mid = this.from.clone().lerp(this.goal, 0.5), ry = Math.atan2(dir.x, dir.z), L = this.len + 3, top = this.from.y + 2.25;
       const c = document.createElement("canvas"); c.width = c.height = 64;
       const g = c.getContext("2d"); g.strokeStyle = "#ff3040"; g.lineWidth = 3; g.strokeRect(0, 0, 64, 64);
@@ -1192,7 +1192,7 @@ export class Drive extends Mission {
     this.g.bolt.root.visible = true; this.g.bolt.pos.set(c.x + 3, c.y, c.z);
     super.cleanup();
   }
-  hud() { return { ...super.hud(), text: `Drive over the Gravity Cells  ${this.got}/${this.need}`, progress: this.got / this.need }; }
+  hud() { return { ...super.hud(), text: `Drive over the ${this.data.what || "Tide Pearls"}  ${this.got}/${this.need}`, progress: this.got / this.need }; }
   target() { const c = this.cells.filter(c => c.visible).sort((a, b) => a.position.distanceTo(this.car.pos) - b.position.distanceTo(this.car.pos))[0]; return c ? c.position : null; }
   debugState() { return { path: this.path ? this.path.length : null, blocked: this.blocked ? this.blocked.size : 0, freeFrac: this.grid ? +(this.grid.free.reduce((a, b) => a + b, 0) / this.grid.free.length).toFixed(2) : null }; }
   // The autopilot's map: a 2 m grid over the drive, each square free or blocked (walls, rocks,

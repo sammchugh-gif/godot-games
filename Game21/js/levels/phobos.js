@@ -94,7 +94,7 @@ export function buildPhobos(w) {
   const loop = []; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + 0.3; loop.push([10 + Math.cos(a) * 24, -64 + Math.sin(a) * 24]); }
   w.missionData = {
     pho1: { cells: hopTops.map(([x, y, z]) => [x, y + 1.3, z]) },
-    pho2: { start: [...on(14, -22, 0.5), Math.PI], car: "buggy", carOpts: { color: 0xf0f2f6, trim: 0xffb040, grip: 2.2, awd: true }, cells: loop.map(([x, z]) => on(x, z)) },
+    pho2: { what: "glowing cells", start: [...on(14, -22, 0.5), Math.PI], car: "buggy", carOpts: { color: 0xf0f2f6, trim: 0xffb040, grip: 2.2, awd: true }, cells: loop.map(([x, z]) => on(x, z)) },
     pho3: { robot: "digger", area: [0, 4, 10], bots: [on(-4, 6, 0), on(6, 2, 0), on(2, 12, 0), on(-6, -2, 0), on(8, 10, 0), on(0, -4, 0)] },
     pho4: { title: "STATION LIGHTS" },
     pho5: { title: "FIND MARS" },

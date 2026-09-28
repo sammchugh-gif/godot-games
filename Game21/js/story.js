@@ -39,7 +39,7 @@ export const CHAPTERS = [
 // Act Two's places join as each is built (story2.js has them all)
 export const READY = ["sunlight", "kelp", "liner", "twilight", "midnight", "vents", "glass", "ice", "mariana", "engine"];
 // and Act Three's (story3.js), likewise
-export const READY3 = ["launch", "elevator", "dock", "phobos", "jezero"];
+export const READY3 = ["launch", "elevator", "dock", "phobos", "jezero", "valles", "storm", "olympus"];
 export const PLACES = [
   // ------------------------------------------------------------ 1. the sub pen
   { id: "pen", ch: 1, name: "POLARIS Sub Pen", country: "Scotland", flag: "sct", contact: "pip", lat: 57.1, lon: -5.6,

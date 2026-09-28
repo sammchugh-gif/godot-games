@@ -137,3 +137,66 @@ export function lander(w, x, y, z, o = {}) {
   w.phys.fixedCyl(x, y + 7, z, 2.8, 7);
   return g;
 }
+
+// layered rock for cliff faces: bands of reds and browns by height. Lay it with w.overlay over
+// the steep ground, then strata(mesh) to wrap its bands round by height.
+let _strata = null;
+export function strataMat() {
+  if (_strata) return _strata;
+  const c = document.createElement("canvas"); c.width = 64; c.height = 256; const g = c.getContext("2d");
+  let s = 9; const R = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  for (let y = 0; y < 256;) { const h = 4 + R() * 18, k = R(); g.fillStyle = `rgb(${130 + k * 70 | 0},${62 + k * 40 | 0},${40 + k * 26 | 0})`; g.fillRect(0, y, 64, h); y += h; }
+  for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${R() < 0.5 ? "40,20,10" : "240,190,150"},${0.05 + R() * 0.1})`; g.fillRect(R() * 64, R() * 256, 1 + R() * 3, 1); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  _strata = new THREE.MeshStandardMaterial({ map: t, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2 });
+  return _strata;
+}
+export function strata(mesh, k = 0.05) {
+  const pos = mesh.geometry.attributes.position, uv = mesh.geometry.attributes.uv, o = mesh.position;
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i) + o.x, y = pos.getY(i) + o.y, z = pos.getZ(i) + o.z; uv.setXY(i, (x + z) * 0.03, y * k); }
+  uv.needsUpdate = true;
+  return mesh;
+}
+
+// a dust devil: a whirling funnel of dust that wanders round a circle (cx, cz, r)
+let _devilTex = null;
+export function dustDevil(w, cx, cz, r, o = {}) {
+  if (!_devilTex) {
+    const c = document.createElement("canvas"); c.width = 64; c.height = 128; const g = c.getContext("2d");
+    for (let i = 0; i < 70; i++) { const y = Math.random() * 128, a = 0.05 + Math.random() * 0.12; g.fillStyle = `rgba(230,170,120,${a})`; g.fillRect(0, y, 64, 2 + Math.random() * 5); }
+    const fade = g.createLinearGradient(0, 0, 0, 128); fade.addColorStop(0, "rgba(0,0,0,1)"); fade.addColorStop(0.2, "rgba(0,0,0,0)"); g.globalCompositeOperation = "destination-out"; g.fillStyle = fade; g.fillRect(0, 0, 64, 128);
+    _devilTex = new THREE.CanvasTexture(c); _devilTex.wrapS = THREE.RepeatWrapping;
+  }
+  const H = o.h ?? 26, g = new THREE.Group(); w.scene.add(g);
+  const shells = [0, 1, 2].map(i => { const m = new THREE.Mesh(new THREE.CylinderGeometry(3 + i * 1.5, 0.6 + i * 0.3, H, 20, 1, true), new THREE.MeshBasicMaterial({ map: _devilTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, color: 0xe8b890 })); m.position.y = H / 2; m.userData.dynamic = true; g.add(m); return m; });
+  const ph = o.phase ?? Math.random() * 6;
+  w.updaters.push((dt, t) => {
+    const a = ph + t * (o.speed ?? 0.05); const x = cx + Math.cos(a) * r, z = cz + Math.sin(a * 1.3) * r;
+    g.position.set(x, w.heightAt ? w.heightAt(x, z) : 0, z);
+    shells.forEach((s, i) => { s.rotation.y = t * (2.5 - i * 0.6); s.material.map.offset.x = t * 0.1; });
+    g.visible = !w.calm;
+  });
+  return g;
+}
+// a vehicle standing parked (just its looks: no physics)
+export function parkedCar(w, Car, x, y, z, yaw, kind, opts = {}) {
+  const c = new Car(w, x, y, z, yaw, kind, opts);
+  c.sync(); c.mesh.position.set(x, y + 0.55, z);
+  w.phys.world.removeVehicleController(c.vc); w.phys.world.removeRigidBody(c.body);
+  w.phys.fixedBox(x, y + 0.6, z, c.L.w, 0.5, c.L.l, yaw);
+  return c.mesh;
+}
+// one of Undertow's storm fans: a tall tower with a great four-bladed rotor facing (dx, dz)
+export function stormFan(w, x, y, z, face, o = {}) {
+  const steel = M(0x3a4048, { metal: 0.7, rough: 0.4 }), teal = M(0x2ad0c0, { emissive: 0x2ad0c0, ei: 1 }).clone(), H = o.h ?? 30;
+  w.cyl(1.2, 2, H, steel, x, y + H / 2, z, { seg: 12 });
+  const hub = new THREE.Group(); hub.position.set(x, y + H, z); hub.rotation.y = face; w.scene.add(hub);
+  const nac = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 4, 16), steel); nac.rotation.x = Math.PI / 2; nac.castShadow = true; hub.add(nac);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(11, 0.4, 8, 40), teal); ring.position.z = 2.2; hub.add(ring);
+  const rotor = new THREE.Group(); rotor.position.z = 2.4; hub.add(rotor);
+  for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.8, 10.5, 0.2), steel); b.position.y = 5.4; const arm = new THREE.Group(); arm.rotation.z = k * Math.PI / 2; arm.add(b); b.rotation.y = 0.35; b.castShadow = true; rotor.add(arm); }
+  hub.traverse(n => { if (n.isMesh) n.userData.dynamic = true; });
+  let spin = 0;
+  w.updaters.push(dt => { const want = w.calm ? 0.15 : 5; spin += (want - spin) * Math.min(1, dt * 0.4); rotor.rotation.z += spin * dt; ring.material.emissiveIntensity = w.calm ? 0.1 : 1; });
+  return hub;
+}

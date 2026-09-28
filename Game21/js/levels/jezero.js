@@ -63,7 +63,7 @@ export function buildJezero(w) {
   // ---- the missions
   const on = (x, z, up = 1.2) => [x, G(x, z) + up, z];
   w.missionData = {
-    jez1: { start: [...on(BX + 12, BZ - 26, 0.5), Math.PI / 2], car: "rover", carOpts: { grip: 2.4, maxSpeed: 13 }, cells: LOOP.map(([x, z]) => on(x, z)) },
+    jez1: { what: "sample spots", start: [...on(BX + 12, BZ - 26, 0.5), Math.PI / 2], car: "rover", carOpts: { grip: 2.4, maxSpeed: 13 }, cells: LOOP.map(([x, z]) => on(x, z)) },
     jez2: { heli: true, ceiling: 40, rings: [[BX - 26, by + 5, BZ - 8, 2.4, Math.PI / 2], [-30, G(-30, -10) + 9, -10, 2.4, 1.2], [-52, G(-52, -2) + 12, -2, 2.4, Math.PI / 2], [-72, G(-72, 12) + 10, 12, 2.4, 0.6], [-62, G(-62, 34) + 13, 34, 2.4, -0.4], [-36, G(-36, 34) + 15, 34, 2.4, Math.PI / 2]] },
     jez3: { cells: [on(-46, -18), on(-54, -24), on(-62, 4), on(-66, 12), on(-40, 22), on(-78, -22), on(-82, 26), on(-28, 6)] },
     jez4: { title: "THE GREENHOUSE" },
