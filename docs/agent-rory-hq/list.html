@@ -50,9 +50,10 @@
 
   .files {
     width: 100%; max-width: 72rem; display: grid; gap: clamp(.9rem, 2vw, 1.4rem);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
-  @media (max-width: 1100px) { .files { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 46rem; } }
+  @media (max-width: 1300px) { .files { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 66rem; } }
+  @media (max-width: 1000px) { .files { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 46rem; } }
   @media (max-width: 820px) and (orientation: portrait) { .files { grid-template-columns: 1fr; max-width: 30rem; } }
   @media (max-width: 560px) { .files { grid-template-columns: 1fr; max-width: 30rem; } }
 
@@ -156,6 +157,16 @@
         <div class="title">Deep Red</div>
         <div class="blurb">Captain Undertow is draining the sea. Rory swims, dives and drives TORPEDO the little submarine round ten coasts, from Cornwall to the Bermuda Triangle, then down into the abyss to the Tidal Engine. Acts One and Two: a hundred and nineteen missions.</div>
         <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 119</span><span class="stars"></span></div>
+        <div class="go">PLAY ▶</div>
+      </div>
+    </a>
+    <a class="file" href="../agent-rory-spectrum/" data-save="rory22" data-total="60" style="--accent: #7bed9f">
+      <div class="pic" style="background-image:url('../shots/agent-rory-spectrum.jpg')"><span class="scan"></span><span class="num">FILE 005</span><span class="stamp new">NEW</span></div>
+      <div class="body">
+        <div class="kicker">THE COLOUR HEIST</div>
+        <div class="title">Spectrum</div>
+        <div class="blurb">Baroness Grisaille is draining the colour out of the world's brightest places. Rory and PALETTE, a chameleon robot, paint it back: Dingle, Lisbon, Guatapé, the salt flats, Lapland, Petra, Hội An, the baobabs, Samarkand, Plitvice, the red dunes and a flying grey gallery. Sixty missions.</div>
+        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 60</span><span class="stars"></span></div>
         <div class="go">PLAY ▶</div>
       </div>
     </a>
