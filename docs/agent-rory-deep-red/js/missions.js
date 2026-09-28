@@ -243,6 +243,8 @@ export class Roundup extends Mission {
       // (on jetties each Drip keeps to its own lane: a walkway from (x0, z0) to (x1, z1) at height y)
       const lane = d.lanes ? d.lanes[i % d.lanes.length] : null;
       if (lane) { const t = (i * 0.37) % 1; r.root.position.set(lane[0] + (lane[2] - lane[0]) * t, lane[4], lane[1] + (lane[3] - lane[1]) * t); }
+      // (in the dark, each wears a lamp on its helmet: that's how you see them)
+      if (d.lamps) { const l = new THREE.PointLight(0xffe0a0, 4, 8, 1.5); l.position.set(0, 1.5, 0.2); r.root.add(l); }
       const b = { r, state: "walk", goal: null, t: 0, bubble: null, speed: 1.2 + this.lv * 0.5, lane };
       b.goal = this.pickGoal(b); this.bots.push(b);
     }
