@@ -182,7 +182,7 @@ export const ACT2 = [
         intro: [["silt", "The alarms! She knows I've been talking to you. Get me out!"], ["pip", "Lasers across the corridor. Get Silt to the moon pool."]],
         outro: [["silt", "We're through. Oh, I haven't run like that in forty years."]] },
       { id: "gla6", kind: "subrings", lv: 4, title: "Out Through the Moon Pool", time: 200,
-        intro: [["torpedo", "Everyone in! Professor, you can sit next to Glim."], ["glim", "Hello!"], ["pip", "Out through the moon pool and away through the rings."]],
+        intro: [["torpedo", "Everyone in! Professor, you can sit next to Glim."], ["glim", "Hello, Professor! I'll glow for you."], ["pip", "Out through the moon pool and away through the rings."]],
         outro: [["silt", "Thank you, Agent Rory. Now let's stop her. Together."]] },
     ] },
   // ------------------------------------------------------------ 18. the ice trench
