@@ -25,7 +25,7 @@ export function buildLaunch(w) {
   w.box(X1 - X0, 1.2, Z1 - Z0, steel, 0, D - 0.6, 0);
   w.box(X1 - X0 + 0.4, 2.4, Z1 - Z0 + 0.4, dark, 0, D - 2.4, 0, { collide: false });
   const legM = M("metal", { args: [12, [200, 204, 210], 64], repeat: [2, 6], metal: 0.4, rough: 0.4 });
-  for (const x of [-26, 26]) for (const z of [-14, 14]) { w.cyl(4, 4.4, D + 14, legM, x, (D - 14) / 2, z, { seg: 20 }); w.mesh(new THREE.TorusGeometry(4.5, 0.3, 8, 24), yel, x, 0.2, z, { rx: Math.PI / 2, cast: false }); }
+  for (const x of [-26, 26]) for (const z of [-14, 14]) { w.cyl(4, 4.4, D + 12.8, legM, x, (D - 15.2) / 2, z, { seg: 20 }); w.mesh(new THREE.TorusGeometry(4.5, 0.3, 8, 24), yel, x, 0.2, z, { rx: Math.PI / 2, cast: false }); }
   for (const z of [-14, 14]) w.box(64, 5, 9, legM, 0, -12, z, { collide: false });
   // rails round the deck, with a gap at the top of the stair (south side, x -5..-1)
   const railM = M(0xf0c020, { metal: 0.3, rough: 0.5 });

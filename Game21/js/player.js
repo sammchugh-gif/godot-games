@@ -3,7 +3,7 @@
 // floating in low gravity).
 import * as THREE from "three";
 import { Walker } from "./physics.js";
-import { makePerson, animatePerson, RORY, spaceSuit, diveSuit } from "./people.js";
+import { makePerson, animatePerson, RORY, spaceSuit, diveSuit, marsSuit } from "./people.js";
 
 const up = new THREE.Vector3(0, 1, 0);
 
@@ -37,7 +37,7 @@ export class Player {
   }
   get pos() { return this.walker.pos; }
   // (kind: "dive" for the deep sea, anything else true for space)
-  suit(kind) { diveSuit(this.rig, kind === "dive"); spaceSuit(this.rig, !!kind && kind !== "dive"); this.suited = kind; }
+  suit(kind) { diveSuit(this.rig, kind === "dive"); spaceSuit(this.rig, !!kind && kind !== "dive"); marsSuit(this.rig, kind === "mars"); this.suited = kind; }
   // the helmet lamp, in the dark places
   lamp(i) { if (this.rig.dive) this.rig.dive.spot.intensity = i; }
   teleport(x, y, z, yaw) { this.walker.teleport(x, y, z); this.obj.position.set(x, y, z); if (yaw !== undefined) { this.yaw = yaw; this.camYaw = yaw + Math.PI; } this.snapCam = true; }

@@ -194,6 +194,7 @@ export class Climb extends Mission {
     this.got = 0;
     // Rory rides inside: his figure and BOLT are put away till the end
     this.g.driveMode = this; this.p.walker.col.setEnabled(false); this.p.obj.visible = false; this.g.bolt.root.visible = false;
+    if (this.w.climberProp) this.w.climberProp.visible = false;
     this.place(this.me); this.place(this.rival);
     this.camPos = null;
   }
@@ -232,6 +233,7 @@ export class Climb extends Mission {
   }
   cleanup() {
     this.g.driveMode = null; this.p.walker.col.setEnabled(true); this.p.obj.visible = true; this.g.bolt.root.visible = true;
+    if (this.w.climberProp) this.w.climberProp.visible = true;
     const e = this.data.exit; if (e) { this.p.teleport(e[0], e[1], e[2]); this.g.bolt.pos.set(e[0] + 1, e[1], e[2]); }
     super.cleanup();
   }
