@@ -6,9 +6,9 @@ back. POLARIS traces it to Captain Undertow, an ocean scientist who is pumping
 the sea away for a plan of her own. Rory, BOLT and a new partner, TORPEDO the
 little yellow submarine, follow the pumps round the world's coasts.
 
-Deep Red is released one act at a time. **Act One: The Sea Is Going Down** and **Act Two:
-Into the Abyss** are here: twenty places and a hundred and nineteen missions. Act Three
-(Mars) follows. The whole plan is in `STORY.md`.
+Deep Red is complete: **Act One: The Sea Is Going Down**, **Act Two: Into the Abyss** and
+**Act Three: Red Planet**, thirty places and a hundred and seventy-nine missions. The whole
+plan is in `STORY.md`.
 
 Play it at `docs/agent-rory-deep-red/`, or from Agent Rory HQ on the shelf.
 
@@ -69,6 +69,32 @@ New kinds of mission: **Current** (ride the currents through rings), **Valves** 
 valve wheels until every gauge sits in the green) and **Airlock** (outer door, pump, inner
 door, in the right order: the levers refuse anything unsafe, and each refusal costs a star).
 
+## Act Three
+
+Undertow's cargo of frozen sea goes up her space elevator, and Rory follows it: up the
+ribbon, across to Mars by way of its little moon Phobos, and down to the dome where she has
+made a sea of her own. Out in space Rory flies with a jetpack; on Mars gravity is a third of
+Earth's (Phobos a fifth), so the jumps are big and floaty. The Mars suit has a gold visor and
+moon boots, and for the last place it's back to the diving suit.
+
+| Place | Missions |
+|---|---|
+| The Sea-Launch Platform | pre-flight checks, fuel thieves (jet-ski chase), the supply pod, Drips on deck, launch control, the countdown (the rocket goes up) |
+| The Space Elevator | the anchor station, the climber bay, cool the motors, the maintenance tower, Otis's message, race up the ribbon |
+| The Orbital Dock | spacewalk, drifting cargo, into the dock (an airlock with air, not water), the way to Mars (star map), the docking rings, stowaway |
+| Phobos | boulder hopping, across the crater (buggy), runaway mining bots, the station lights, find Mars (star map), dropped bricks |
+| Jezero Crater | first drive on Mars (rover), the little helicopter, the river delta, the greenhouse, lost mini-rovers, Undertow's map |
+| Valles Marineris | the rim chase, down the canyon, pipeline lasers, pipeline valves, canyon rings, the pump station |
+| The Dust Storm | storm chase (sand yacht), beacons in the dust, blown-away Drips, the storm shelter, the weather station, signals in the storm |
+| Olympus Mons | the great climb (jetpack), the caldera gate, the summit radio, falling rocks, the high greenhouse, the Dust Kraken |
+| The Polar Cap | the ice-brick towers, rover on the ice, the brick yard, the melt switch, the brick bridge, Silt's star chart |
+| Undertow's Dome | into the dome, the dome sea, TORPEDO on Mars, turn the Engine round, Undertow's last stand, the sea goes home |
+
+New kinds of mission: **Star map** (join the stars to draw the pictures that point the way;
+wrong taps cost stars), **Greenhouse** (each bed asks for water or light in turn: give it the
+right one before it wilts) and **Climb** (race Undertow's climber up the elevator's ribbon:
+steer round the space junk, grab the boost cells).
+
 ## Files
 
 - `js/sea.js` the sea (surface, depth map, the light under water); `js/craft.js`
@@ -76,14 +102,17 @@ door, in the right order: the levers refuse anything unsafe, and each refusal co
   fish, sea lions, mantas, crabs, iguanas and tortoises; `js/nav.js` the walking
   map for the autopilots (several floors per spot) and `js/nav3.js` its
   open-water cousin.
-- `js/levels/deepkit.js` Act Two's pieces: airlocks, the dive bell, kelp, black smokers,
-  tube worms, station walls. Dry rooms, currents, hot plumes and air stations are in
+- `js/levels/deepkit.js` Act Two's pieces: airlocks (with water, or in space with air), the
+  dive bell, kelp, black smokers, tube worms, station walls. `js/levels/spacekit.js` Act
+  Three's: the rocket and its gantry, station modules and solar wings, climber pods, the
+  POLARIS lander, glass domes, Mars rocks, layered cliff rock, dust devils and storm fans.
+  The Mars skies, the blowing dust and Mars in the sky over Phobos are in `js/world.js`. Dry rooms, currents, hot plumes and air stations are in
   `js/world.js`; the abyss (a sea with no surface in reach) is `w.ocean({ abyss })`.
-- `js/missions.js`, `js/missions2.js`, `js/missions3.js`, `js/missions4.js` the mission kinds,
+- `js/missions.js`, `js/missions2.js`, `js/missions3.js`, `js/missions4.js`, `js/missions5.js` the mission kinds,
   listed by name in `js/kinds.js`; every kind has an autopilot (`solve`).
 - `js/levels/*.js` one file per place, built from `js/levels/kit.js` (boats,
   cottages, piers, rocks, cliffs, a lighthouse, roads, flowerpot rocks, coral).
-- `js/story.js` (Act One) and `js/story2.js` (Act Two) the cast, places, missions and every
+- `js/story.js` (Act One), `js/story2.js` (Act Two) and `js/story3.js` (Act Three) the cast, places, missions and every
   line; `STORY.md` is the
   plan for all three acts.
 - The engine underneath (renderer, Rapier physics, Rory, BOLT, the HUD, the

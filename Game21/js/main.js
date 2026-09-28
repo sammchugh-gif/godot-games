@@ -48,11 +48,13 @@ import { buildJezero } from "./levels/jezero.js";
 import { buildValles } from "./levels/valles.js";
 import { buildStorm } from "./levels/storm.js";
 import { buildOlympus } from "./levels/olympus.js";
+import { buildPolar } from "./levels/polar.js";
+import { buildDome } from "./levels/dome.js";
 
 // each place's level (a place not built yet borrows the sub pen); ?cove swaps in the test cove
 const LEVELS = { pen: buildPen, cornwall: buildCornwall, fundy: buildFundy, panama: buildPanama, galapagos: buildGalapagos, hawaii: buildHawaii, reef: buildReef, hongkong: buildHongKong, maldives: buildMaldives, bermuda: buildBermuda,
   sunlight: buildSunlight, kelp: buildKelp, liner: buildLiner, twilight: buildTwilight, midnight: buildMidnight, vents: buildVents, glass: buildGlass, ice: buildIce, mariana: buildMariana, engine: buildEngine,
-  launch: buildLaunch, elevator: buildElevator, dock: buildDock, phobos: buildPhobos, jezero: buildJezero, valles: buildValles, storm: buildStorm, olympus: buildOlympus };
+  launch: buildLaunch, elevator: buildElevator, dock: buildDock, phobos: buildPhobos, jezero: buildJezero, valles: buildValles, storm: buildStorm, olympus: buildOlympus, polar: buildPolar, dome: buildDome };
 const COVE = new URLSearchParams(location.search).has("cove");
 const G = window.__g = { state: "boot", t: 0, frames: 0, fps: 0 };
 const bar = document.querySelector(".boot-bar i");

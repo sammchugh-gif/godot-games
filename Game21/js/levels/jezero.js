@@ -67,7 +67,7 @@ export function buildJezero(w) {
     jez2: { heli: true, ceiling: 40, rings: [[BX - 26, by + 5, BZ - 8, 2.4, Math.PI / 2], [-30, G(-30, -10) + 9, -10, 2.4, 1.2], [-52, G(-52, -2) + 12, -2, 2.4, Math.PI / 2], [-72, G(-72, 12) + 10, 12, 2.4, 0.6], [-62, G(-62, 34) + 13, 34, 2.4, -0.4], [-36, G(-36, 34) + 15, 34, 2.4, Math.PI / 2]] },
     jez3: { cells: [on(-46, -18), on(-54, -24), on(-62, 4), on(-66, 12), on(-40, 22), on(-78, -22), on(-82, 26), on(-28, 6)] },
     jez4: { title: "THE GREENHOUSE" },
-    jez5: { critter: "minirover", kids: [on(46, -30, 0), on(56, 44, 0), on(-22, 50, 0)], goal: [GX, by, GZ], goalR: 3.5 },
+    jez5: { critter: "minirover", kids: [on(46, -30, 0.05), on(56, 44, 0.05), on(-22, 50, 0.05)], goal: [GX, by, GZ], goalR: 3.5 },
     jez6: { title: "UNDERTOW'S MAP" },
   };
   return {
