@@ -35,7 +35,7 @@ export const ACT3 = [
       { id: "lau5", kind: "circuit", lv: 3, title: "Launch Control", time: 200,
         intro: [["vega", "They crossed the wires in launch control. Nothing talks to the rocket."], ["pip", "Turn the tiles to join the power back up."]],
         outro: [["vega", "Launch control is online. Now for the countdown."]] },
-      { id: "lau6", kind: "codes", lv: 3, title: "The Countdown", time: 200,
+      { id: "lau6", kind: "codes", lv: 3, title: "The Countdown", time: 200, event: "launch",
         intro: [["vega", "The launch code is locked. The Drips changed it."], ["pip", "They left clues in their bubbles. Crack the code!"]],
         outro: [["vega", "Three, two, one... lift off!"], ["rory", "Wow. Look at it go."], ["vega", "And now, Agent Rory, you have an elevator to catch."]] },
     ] },
