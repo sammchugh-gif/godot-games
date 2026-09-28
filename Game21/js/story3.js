@@ -17,7 +17,7 @@ export const CHARS3 = {
 export const ACT3 = [
   // ------------------------------------------------------------ 21. the sea-launch platform
   { id: "launch", ch: 3, name: "The Sea-Launch Platform", country: "Pacific Ocean", flag: "zz", contact: "vega", lat: 0.5, lon: -154.0,
-    arrive: [["frost", "Agent Rory. Undertow's cargo pod went up her space elevator last night. Full of frozen sea."], ["vega", "Commander Vega, POLARIS space. Welcome to the Sea-Launch Platform."], ["vega", "My rocket can follow her. But somebody has been messing with it."], ["rory", "Drips?"], ["vega", "Drips. Dozens of them. They swam over from her elevator."], ["torpedo", "I am coming too. I do not know how yet. But I am coming."]],
+    arrive: [["frost", "Agent Rory. Undertow's cargo pod went up her space elevator last night. Full of frozen sea."], ["vega", "Commander Vega, POLARIS space. Welcome to the Sea-Launch Platform."], ["vega", "My rocket can follow her. But somebody has been messing with it."], ["rory", "Undertow's Drips? Here?"], ["vega", "Drips. Dozens of them. They swam over from her elevator."], ["torpedo", "I am coming too. I do not know how yet. But I am coming."]],
     leave: [["vega", "The rocket's ready. But it can only carry the supplies, not passengers."], ["pip", "Then Rory goes up the elevator! She'll never expect that."], ["rory", "Up a ribbon into space. Easy."], ["bolt", "I will hold your hand. It is not because I am scared."]],
     missions: [
       { id: "lau1", kind: "cells", lv: 2, title: "Pre-Flight Checks", n: 7, time: 180,
@@ -94,7 +94,7 @@ export const ACT3 = [
     missions: [
       { id: "pho1", kind: "cells", lv: 3, title: "Boulder Hopping", n: 8, time: 200,
         intro: [["tycho", "The station's cells are on top of the big boulders."], ["pip", "Tiny jumps, Rory. Tiny!"]],
-        outro: [["rory", "I jumped over a boulder the size of a house."], ["tycho", "Show-off."]] },
+        outro: [["rory", "I jumped over a boulder the size of a house."], ["tycho", "You're such a show-off."]] },
       { id: "pho2", kind: "drive", lv: 3, title: "Across the Crater", n: 8, time: 220,
         intro: [["tycho", "Take my buggy across Stickney Crater. Drive over the glowing cells."], ["pip", "Slowly! The wheels hardly touch the ground here."]],
         outro: [["tycho", "You only left the ground eleven times. That's a record."]] },

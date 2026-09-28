@@ -75,8 +75,15 @@ export class Cells extends Mission {
     if (this.padFly(c)) return;
     // somewhere only something that moves goes (the top of the cable car): ride it there
     if (this.rideFor(c)) return;
-    // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb
-    if (this.data.climb && this.climb(c)) return;
+    // stairs stacked over stairs (the launch gantry) that the walking map can't see: follow the climb.
+    // (and if the walking map thinks it has a way but Rory hasn't moved for a few seconds, the way it
+    // found isn't one: take the climb instead)
+    if (this.data.climb) {
+      const k = Math.floor(this.t / 2);
+      if (k !== this.stuckK) { this.stuckK = k; this.stuckN = this.stuckP && this.stuckC === c && this.stuckP.distanceTo(pp) < 0.3 ? (this.stuckN || 0) + 1 : 0; this.stuckP = pp.clone(); this.stuckC = c; }
+      if (this.stuckN >= 2 && this.forceClimb !== c) { this.forceClimb = c; this.climbFor = null; }
+      if (this.climb(c)) return;
+    }
     // everywhere else: plan a route over the level and follow it
     this.walkTo(c.position.x, c.position.y, c.position.z, 0.8, this.cells.map(c => c.position));
   }
@@ -202,7 +209,7 @@ export class Cells extends Mission {
       this.climbFor = c; this.climbAt = false;
       this.ensureNav(this.cells.map(c => c.position));
       // (from where Rory is now: if the walking map has a way, it walks it, up or down the stairs)
-      const need = !this.nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
+      const need = this.forceClimb === c || !this.nav.route(pp.x, pp.y, pp.z, cp.x, cp.y, cp.z, 0.8);
       this.climbGoal = 0; if (need) P.forEach((q, i) => { if (d3(q, cp.x, cp.y - 1.15, cp.z) < d3(P[this.climbGoal], cp.x, cp.y - 1.15, cp.z)) this.climbGoal = i; });
       this.climbNeed = need;
     }
