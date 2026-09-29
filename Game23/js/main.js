@@ -8,7 +8,7 @@ import { Input } from "./input.js";
 import { Player } from "./player.js";
 import { loadRobot } from "./robots.js";
 import { Pebble } from "./pebble.js";
-import { makePerson, animatePerson, spaceSuit, marsSuit, disguise } from "./people.js";
+import { makePerson, animatePerson, spaceSuit, marsSuit, disguise, RORY } from "./people.js";
 import { FX } from "./fx.js";
 import { Audio } from "./audio.js";
 import { Speech } from "./speech.js";
@@ -18,7 +18,7 @@ import { makeBeacon, animateBeacon, makeArrow, makeAmmonite } from "./props.js";
 import { makeMission } from "./kinds.js";
 import { Craft } from "./craft.js";
 import { critter } from "./critters.js";
-import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
+import { CHARS, PLACES, CHAPTERS, CREDITS, ALL, PROLOGUE } from "./story.js";
 import { Travel } from "./timetunnel.js";
 import { buildCove } from "./levels/cove.js";
 import { LEVELS } from "./levels/index.js";
@@ -32,7 +32,9 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem("rory23." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("rory23." + k, JSON.stringify(v)); } catch (e) { /* private mode */ } },
 };
-const newSave = () => ({ place: PLACES[0].id, done: [], stars: {}, cells: 0, arrived: {}, bolts: [] });
+// (a new game starts at POLARIS HQ, today, before the first era)
+const newSave = () => ({ place: PROLOGUE.id, done: [], stars: {}, cells: 0, arrived: {}, bolts: [] });
+const placeById = id => id === PROLOGUE.id ? PROLOGUE : PLACES.find(p => p.id === id) || PLACES[0];
 
 // ------------------------------------------------------------ boot
 async function boot() {
@@ -50,8 +52,10 @@ async function boot() {
   G.dialogue = new Dialogue(CHARS, G.portraits, Speech);
   // the yellow guide arrow over Rory's head is off unless it's switched on in the pause menu
   G.showArrow = store.get("arrow", false);
-  G.dialogue.onLine = (who, text) => {
+  G.dialogue.onLine = (who, text, line) => {
     G.talking = who;
+    // in a cutscene, a line can cut to a camera shot and set something off in the level
+    if (line && line[2] && G.state === "cut") cutTo(line[2]);
     // Pebble's lines are honks and purrs: one honk for each "honk" in the line (up to three)
     if (who === "pebble" && G.bolt) {
       const n = Math.min(3, (text.match(/honk/gi) || []).length);
@@ -63,6 +67,8 @@ async function boot() {
   G.hud = new HUD();
   G.travel = new Travel(engine);
   G.save = store.get("save", null) || newSave();
+  // (a save from before HQ's prologue that never got past the landing starts at HQ)
+  if (G.save.place === PLACES[0].id && !G.save.done.length && !G.save.arrived[PLACES[0].id]) G.save.place = PROLOGUE.id;
   buildTouch();
   progress(0.9);
   loadPlace(G.save.place);
@@ -85,8 +91,9 @@ function saveGame() { store.set("save", G.save); }
 
 // ------------------------------------------------------------ places
 function loadPlace(id) {
-  const place = G.place = PLACES.find(p => p.id === id) || PLACES[0];
+  const place = G.place = placeById(id);
   if (G.mission) { G.mission.cleanup(); G.mission = null; }
+  G.cut = null; G.pro = null; G.riders = null; skipButton(false);
   // let the last place go: its physics world and its geometry (materials and textures are shared)
   if (G.world) { G.world.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   if (G.phys) { try { G.phys.world.free(); } catch (e) { /* already gone */ } }
@@ -140,6 +147,13 @@ function loadPlace(id) {
     world.scene.add(rig.root);
     world.phys.fixedCyl(info.contact[0], info.contact[1] + 0.7, info.contact[2], 0.35, 0.7);
   } else G.contact = null;
+  // anyone else standing about (at HQ: Frost, Pip and Dr Flint), who turn to Rory and can talk
+  G.extras = Object.entries(info.people || {}).map(([who, [px, py, pz, ry]]) => {
+    const rig = makePerson(CHARS[who].look);
+    rig.root.position.set(px, py, pz); rig.root.rotation.y = ry; world.scene.add(rig.root);
+    world.phys.fixedCyl(px, py + 0.7, pz, 0.35, 0.7);
+    return { who, rig, home: ry };
+  });
   // beacons for every mission in this place (placed by casting rays at the new level, so let the
   // physics world see it first)
   world.phys.refresh();
@@ -160,7 +174,7 @@ function loadPlace(id) {
   }
   G.arrow = makeArrow(); world.scene.add(G.arrow);
   refreshBeacons();
-  hideBolts(place, info);
+  if (place.hq) G.bolts = []; else hideBolts(place, info);
 }
 // three golden ammonites per era, tucked away at ground level somewhere off the beaten
 // track; the spots are the same every time you visit
@@ -219,6 +233,8 @@ function refreshBeacons() {
 // ------------------------------------------------------------ title
 function showTitle() {
   G.state = "title";
+  // (a place can say where Rory stands for the title: at HQ, in front of the time-sled)
+  const tp = G.levelInfo && G.levelInfo.title; if (tp) G.player.teleport(tp[0], tp[1], tp[2], tp[3]);
   G.hud.hide(); setTouch(false);
   const started = G.save.done.length > 0;
   const s = screen("title", `
@@ -266,6 +282,7 @@ function titleCamera(dt) {
 // ------------------------------------------------------------ playing a place
 function startPlace() {
   const place = G.place;
+  if (place.hq) { prologue(); return; }
     G.state = "explore";
   G.hud.show({ onPause: pause });
   setTouch(true);
@@ -280,6 +297,164 @@ function startPlace() {
   updateObjective();
 }
 function talk(lines, cb) { G.dialogue.show(lines, cb); }
+
+// ------------------------------------------------------------ the prologue: POLARIS HQ, today
+// Frost's briefing in the Time Room, the camera cutting from shot to shot as they talk. Then Rory
+// walks to Dr Flint's bench for the Chrono-watch and gets on the time-sled, and it goes up through
+// the roof and into the time tunnel, to the first era. (Played once: after the briefing, a return
+// to HQ picks up at the watch.)
+function prologue() {
+  G.input.forced = null;
+  setMood("theme");
+  G.pro = { step: "brief", beacon: null };
+  const info = G.levelInfo; G.player.teleport(info.spawn[0], info.spawn[1], info.spawn[2], info.yaw);
+  if (G.save.arrived[PROLOGUE.id]) { proStep("watch"); return; }
+  cutscene("wide");
+  banner(PROLOGUE.when.toUpperCase(), PROLOGUE.name);
+  G.cut.wait = 1.8;
+  G.cut.then = () => talk(PROLOGUE.brief, () => { G.save.arrived[PROLOGUE.id] = true; saveGame(); proStep("watch"); });
+}
+// the next thing to do: a beacon to walk into
+function proStep(step) {
+  const pro = G.pro, info = G.levelInfo;
+  pro.step = step;
+  if (pro.beacon) { pro.beacon.removeFromParent(); pro.beacon = null; }
+  G.state = "explore"; G.cut = null; skipButton(false); G.player.snapCam = true;
+  G.hud.show({ onPause: pause }); setTouch(true); G.hud.set({ cells: G.save.cells, bolts: (G.save.bolts || []).length });
+  const at = step === "watch" ? info.watchAt : info.sledAt;
+  const b = pro.beacon = makeBeacon(0xffd166); b.position.set(at[0], at[1], at[2]); G.world.scene.add(b);
+  // (Rory turns to face it, so it's the first thing on screen)
+  const p = G.player.pos; G.player.teleport(p.x, p.y, p.z, Math.atan2(at[0] - p.x, at[2] - p.z));
+  G.hud.set({ label: "POLARIS HQ", text: step === "watch" ? "Collect the Chrono-watch from Dr Flint's bench" : "Get on the time-sled", progress: null, timer: null });
+}
+// Rory has walked into the beacon
+function proReach() {
+  const pro = G.pro, info = G.levelInfo;
+  pro.beacon.visible = false;
+  if (pro.step === "watch") {
+    pro.step = "watching";
+    const wp = info.watch.position; info.watch.visible = false;
+    sound("cell"); G.fx.burst(wp.x, wp.y, wp.z, 0x7fe3ff, 30);
+    cutscene("bench"); talk(PROLOGUE.watch, () => proStep("sled"));
+  } else if (pro.step === "sled") {
+    pro.step = "launch";
+    board(); cutscene("riders"); talk(PROLOGUE.launch, liftOff);
+  }
+}
+// who's near enough to talk to (and Biscuit, to pat)
+function proNear() {
+  const p = G.player.pos, chat = PROLOGUE.chat;
+  let best = null, bd = 2.2;
+  for (const e of G.extras) {
+    const d = e.rig.root.position.distanceTo(p);
+    if (d < bd) { bd = d; best = { label: "TALK", verb: "talk", fn: () => talk(e.who === "flint" && G.pro.step === "sled" ? chat.flint2 : chat[e.who], null) }; }
+  }
+  const dog = G.levelInfo.dog;
+  if (dog) { const d = Math.hypot(dog.pos.x - p.x, dog.pos.z - p.z); if (d < 1.9 && d < bd) best = { label: "PAT", verb: "pat Biscuit", fn: () => { dog.wag = 2.5; sound("woof"); toast("Agent Biscuit wags his tail.", 2); } }; }
+  G.hud.prompt(best ? (G.input.touchUI ? `Tap USE to ${best.verb}` : `Press E to ${best.verb}`) : null);
+  showAction(best ? best.label : null);
+  if (G.input.takeAction() && best) best.fn();
+}
+// Rory and Dr Flint take their seats (figures that sit in the sled; the real Rory and the standing
+// Dr Flint are hidden from here to the next era)
+function board() {
+  const L = G.levelInfo.launch;
+  G.player.obj.visible = false; G.player.blob.visible = false;
+  const fl = G.extras.find(e => e.who === "flint"); if (fl) fl.rig.root.visible = false;
+  const sit = (who, look, at) => { const rig = makePerson(look); rig.root.position.set(at[0], at[1], at[2]); L.sled.add(rig.root); return { who, rig }; };
+  G.riders = [sit("rory", RORY, L.seats.front), sit("flint", CHARS.flint.look, L.seats.back)];
+  sound("pad");
+}
+// up off the ring, a wobble, then away up through the hatch; a flash of white, and the tunnel
+function liftOff() {
+  const L = G.levelInfo.launch, sp = L.sled.position;
+  cutscene("launch"); sound("launch"); L.glow(1);
+  let t = 0, gone = false;
+  G.cut.track = new THREE.Vector3();
+  G.cut.run = dt => {
+    t += dt;
+    const y = t < 1.2 ? 1.4 * (t / 1.2) ** 2 : t < 1.8 ? 1.4 + Math.sin((t - 1.2) * 18) * 0.05 : 1.4 + (t - 1.8) ** 2 * 16;
+    L.lift(y);
+    if (t > 1.8) L.sled.rotation.y = (t - 1.8) ** 2 * 3;
+    if (Math.random() < dt * 40) G.fx.burst(sp.x + (Math.random() - 0.5) * 2, sp.y - 0.4, sp.z + (Math.random() - 0.5) * 4, Math.random() < 0.5 ? 0xc89aff : 0xffd166, 6, { speed: 2, up: -1, gravity: -2, life: 0.6, size: 0.2 });
+    // (the camera stays on the floor and looks up after it)
+    G.cut.track.set(sp.x, Math.max(2.2, sp.y + 0.6), sp.z);
+    if (t > 2.7 && !gone) { gone = true; skipButton(false); flash(() => { G.save.arrived[PROLOGUE.id] = true; nextPlace(); }); }
+  };
+}
+function flash(cb) {
+  const f = document.createElement("div");
+  f.style.cssText = "position:fixed;inset:0;background:#fff;opacity:0;transition:opacity .35s;pointer-events:none;z-index:60";
+  document.body.appendChild(f);
+  requestAnimationFrame(() => { f.style.opacity = "1"; });
+  setTimeout(() => { cb(); f.style.transition = "opacity .9s"; f.style.opacity = "0"; setTimeout(() => f.remove(), 1000); }, 400);
+}
+// straight to the first era, from a cutscene's SKIP button or the pause menu
+function skipPrologue() {
+  if (!G.place.hq || G.state === "travel") return;
+  G.dialogue.cb = null; G.dialogue.skipAll();
+  G.save.arrived[PROLOGUE.id] = true;
+  skipButton(false); sound("click");
+  nextPlace();
+}
+function skipButton(on) {
+  let b = document.getElementById("skipcut");
+  if (!on) { if (b) b.remove(); return; }
+  if (b) return;
+  b = document.createElement("button"); b.id = "skipcut"; b.className = "btn ghost small"; b.textContent = "SKIP ▸▸";
+  b.style.cssText = "position:fixed;top:max(12px,env(safe-area-inset-top));right:12px;z-index:40;margin:0";
+  b.addEventListener("pointerdown", e => { e.stopPropagation(); skipPrologue(); });
+  document.body.appendChild(b);
+}
+
+// ------------------------------------------------------------ cutscenes
+// The camera cuts to a shot ([x, y, z, look x, y, z] from the level) and eases in on it slowly;
+// the talking goes on as usual. At HQ there's a SKIP button.
+const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3();
+function cutscene(shot) {
+  G.state = "cut"; G.hud.hide(); setTouch(false); G.input.forced = null; G.input.clear();
+  G.hud.prompt(null); showAction(null);
+  G.cut = { pos: new THREE.Vector3(), look: new THREE.Vector3(), shot: null, t: 0 };
+  if (G.place.hq) skipButton(true);
+  cutTo(shot);
+}
+function cutTo(name) {
+  const info = G.levelInfo, s = info.shots && info.shots[name];
+  if (s && G.cut && G.cut.shot !== s) { G.cut.shot = s; G.cut.t = 0; }
+  if (info.cues && info.cues[name]) info.cues[name]();
+}
+function cutCamera(dt) {
+  const c = G.cut, s = c.shot, cam = G.engine.camera;
+  c.t += dt;
+  if (s) {
+    tmpA.set(s[0], s[1], s[2]); tmpB.set(s[3], s[4], s[5]);
+    c.look.copy(c.track || tmpB);
+    c.pos.copy(tmpA).lerp(tmpB, Math.min(0.12, c.t * 0.025));
+  }
+  cam.position.copy(c.pos); cam.lookAt(c.look);
+  G.world.followShadow(tmpB);
+}
+function tickCut(dt) {
+  const c = G.cut;
+  if (c.wait !== undefined) { c.wait -= dt; if (c.wait <= 0) { const f = c.then; c.wait = undefined; c.then = null; if (f) f(); } }
+  if (c.run) c.run(dt);
+  if (G.cut) cutCamera(dt);
+  animatePerson(G.player.rig, { dt, speed: 0, grounded: true, talk: G.talking === "rory" });
+  for (const r of G.riders || []) animatePerson(r.rig, { dt, speed: 0, grounded: true, sit: true, talk: G.talking === r.who });
+  people(dt);
+}
+// HQ's people breathe, talk, and turn to Rory when he's close or they're talking
+function people(dt) {
+  const p = G.player.pos;
+  for (const e of G.extras) {
+    const r = e.rig.root;
+    animatePerson(e.rig, { dt, speed: 0, grounded: true, talk: G.talking === e.who });
+    const near = Math.hypot(p.x - r.position.x, p.z - r.position.z) < 6 || G.talking === e.who;
+    const want = near ? Math.atan2(p.x - r.position.x, p.z - r.position.z) : e.home;
+    const d = Math.atan2(Math.sin(want - r.rotation.y), Math.cos(want - r.rotation.y));
+    r.rotation.y += d * Math.min(1, dt * 2.5);
+  }
+}
 function updateObjective() {
   const cur = currentMission();
   if (G.mission) return;
@@ -425,7 +600,8 @@ function pause() {
     <div class="row"><button class="btn gold" data-a="resume">RESUME</button></div>
     <div class="row"><button class="btn ghost small" data-a="music">MUSIC ${Audio.music ? "ON" : "OFF"}</button><button class="btn ghost small" data-a="voice">VOICES ${Speech.enabled ? "ON" : "OFF"}</button></div>
     <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button><button class="btn ghost small" data-a="arrow">ARROW ${G.showArrow ? "ON" : "OFF"}</button></div>
-    <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
+    <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>
+    ${G.place.hq ? `<div class="row"><button class="btn ghost small" data-a="skip">SKIP TO THE DINOSAURS ▸▸</button></div>` : ""}`, "screen dim");
   onTap(s, "[data-a]", b => {
     const a = b.dataset.a;
     if (a === "music") { Audio.setMusic(!Audio.music); b.textContent = "MUSIC " + (Audio.music ? "ON" : "OFF"); return; }
@@ -435,6 +611,7 @@ function pause() {
     clearLayer("pause");
     if (a === "missions") { missionList(); return; }
     if (a === "resume") { G.state = G.pausedFrom; return; }
+    if (a === "skip") { G.state = G.pausedFrom; skipPrologue(); return; }
     if (a === "title") { if (G.mission) { G.mission.cleanup(); G.mission = null; } G.dialogue.skipAll(); loadPlace(G.save.place); showTitle(); }
   });
 }
@@ -551,10 +728,11 @@ function tick(dt) {
   G.fpsAcc = (G.fpsAcc || 0) + dt; G.fpsN = (G.fpsN || 0) + 1;
   if (G.fpsAcc > 1) { G.fps = G.fpsN / G.fpsAcc; G.fpsAcc = 0; G.fpsN = 0; }
   const w = G.world;
-  if (G.state === "title") { titleCamera(dt); w.update(dt); G.phys.step(dt); G.fx.update(dt); draw(); return; }
+  if (G.state === "title") { titleCamera(dt); people(dt); w.update(dt); G.phys.step(dt); G.fx.update(dt); draw(); return; }
   if (G.state === "paused") { draw(); return; }
   if (G.state === "view") { const v = G.viewCam, cam = G.engine.camera; cam.position.set(v[0], v[1], v[2]); cam.lookAt(v[3], v[4], v[5]); w.followShadow(new THREE.Vector3(v[3], v[4], v[5])); w.update(dt); G.phys.step(dt); G.fx.update(dt); G.bolt.update(dt); draw(); return; }
   if (G.state === "travel") { G.travel.update(dt); draw(); return; }
+  if (G.state === "cut") { tickCut(dt); w.update(dt); G.phys.step(dt); G.fx.update(dt); Audio.duck(Speech.speaking); draw(); return; }
   if (G.fireworks && Math.random() < dt * 3) { const p = G.player.pos; G.fx.burst(p.x + Math.random() * 30 - 15, p.y + 12 + Math.random() * 8, p.z - 10 - Math.random() * 10, [0xff3a6a, 0xffd23f, 0x3ad0ff, 0x7bed9f, 0xff9ae8][Math.floor(Math.random() * 5)], 50, { speed: 9, life: 1.4, size: 1, gravity: -3, up: 0 }); sound("pop"); }
   const canMove = (G.state === "explore" || G.state === "mission") && !G.dialogue.active && !(G.mission && G.mission.freeze);
   G.player.waving = G.state === "end";
@@ -578,6 +756,7 @@ function tick(dt) {
     else p.stepD = 0.4;
   }
   if (drone || G.driveMode || G.craft) { G.bolt.update(dt); } else updateBolt(dt);
+  if (G.extras.length) people(dw);
   if (G.contact) { animatePerson(G.contact, { dt: dw, speed: 0, grounded: true, talk: G.talking === G.place.contact }); const c = G.contact.root.position; G.contact.root.rotation.y += (Math.atan2(G.player.pos.x - c.x, G.player.pos.z - c.z) - G.contact.root.rotation.y) * Math.min(1, dt * 2); }
   if (G.state === "mission" && G.mission && !G.dialogue.active) {
     if (G.autoSolve) G.mission.solve(dt);
@@ -592,6 +771,11 @@ function tick(dt) {
     const b = G.beacons[cur.id]; target = b.position;
     if (Math.hypot(G.player.pos.x - b.position.x, G.player.pos.z - b.position.z) < 1.6 && Math.abs(G.player.pos.y - b.position.y) < 2) beginMission(cur);
   } else if (G.state === "mission" && G.mission && G.mission.target) target = G.mission.target();
+  else if (G.state === "explore" && G.pro && G.pro.beacon && G.pro.beacon.visible && !G.dialogue.active) {
+    // (at HQ: the beacon for the next thing to do)
+    const b = G.pro.beacon; animateBeacon(b, G.t); target = b.position;
+    if (Math.hypot(G.player.pos.x - b.position.x, G.player.pos.z - b.position.z) < 1.6) proReach();
+  }
   const a = G.arrow;
   if (G.showArrow && target && Math.hypot(target.x - G.player.pos.x, target.z - G.player.pos.z) > 3) {
     a.visible = true;
@@ -604,7 +788,8 @@ function tick(dt) {
     G.hud.prompt(d < 2.2 ? (G.input.touchUI ? "Tap USE to talk" : "Press E to talk") : null);
     showAction(d < 2.2 ? "TALK" : null);
     if (G.input.takeAction() && d < 2.2) talk(chatLines(), null);
-  } else if (G.state === "mission" && G.mission && G.mission.actionLabel) showAction(G.mission.actionLabel());
+  } else if (G.pro && G.state === "explore" && !G.dialogue.active) proNear();
+  else if (G.state === "mission" && G.mission && G.mission.actionLabel) showAction(G.mission.actionLabel());
   else if (G.state !== "mission") { G.hud.prompt(null); showAction(null); }
   if (G.droneMode) G.droneMode.camera(G.engine.camera, dt);
   w.camTarget = G.player.pos;
@@ -692,6 +877,7 @@ function drawTouch() {
 // ------------------------------------------------------------ test hooks
 G.debug = {
   play() { clearLayer("title"); startPlace(); },
+  pro: () => G.pro && G.pro.step,
   skipDialogue() { if (G.dialogue.active) G.dialogue.skipAll(); },
   tapResult() { const b = document.querySelector('[data-layer="result"] [data-a]'); if (b) b.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); },
   goBeacon() { const c = currentMission(); if (!c) return null; const b = G.beacons[c.id]; G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z); return c.id; },

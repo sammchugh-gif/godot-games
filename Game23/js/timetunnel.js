@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { makePerson, animatePerson, RORY } from "./people.js";
 import { Pebble } from "./pebble.js";
+import { CHARS } from "./story.js";
 
 // a year as the game writes it: 66 MILLION BC, 20,000 BC, AD 20, 1903
 export function yearText(y) {
@@ -81,6 +82,8 @@ export class Travel {
     const dialRing = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 6, 24), brass); dialRing.position.copy(dial.position); dialRing.rotation.copy(dial.rotation); sled.add(dialRing);
     const rory = this.rory = makePerson(RORY); rory.root.scale.setScalar(0.5); rory.root.position.set(0, 0.08, 0.2); sled.add(rory.root);
     this.pebble = new Pebble(1); this.pebble.root.position.set(0, 0.08, -0.4); sled.add(this.pebble.root);
+    // (on the first trip, from HQ, Pebble hasn't hatched yet: Dr Flint rides behind Rory instead)
+    const flint = this.flint = makePerson(CHARS.flint.look); flint.root.scale.setScalar(0.5); flint.root.position.set(0.1, 0.005, -0.42); flint.root.rotation.y = 0.25; sled.add(flint.root);
     s.add(sled);
     s.add(new THREE.AmbientLight(0xc8b8ff, 1.2)); const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(2, 4, 3); s.add(key);
     // the year, counting between eras
@@ -94,6 +97,7 @@ export class Travel {
     this.y0 = from.year ?? 0; this.y1 = to.year ?? 0;
     // (Pebble rides at the size she is now, scaled down to the sled's size)
     this.pebble.grow((from.pebble || 1) * 0.5, true); this.pebble.play("Sitting");
+    this.pebble.root.visible = !from.hq; this.flint.root.visible = !!from.hq;
     this.t = 0; this.dur = 4.8; this.cb = cb;
     this.label.style.display = "block";
     this.engine.setScene(this.scene, this.camera);
@@ -107,6 +111,7 @@ export class Travel {
     this.tex.offset.y += dt * speed * 0.02; this.tex.offset.x += dt * 0.15;
     for (const b of this.bits) { b.position.z += dt * speed; if (b.position.z > 6) b.position.z -= 116; if (b.userData.spin) { b.rotation.z += dt * b.userData.spin; b.rotation.x += dt * b.userData.spin * 0.5; } }
     animatePerson(this.rory, { dt, speed: 0, grounded: true, sit: true }); this.pebble.update(dt);
+    if (this.flint.root.visible) animatePerson(this.flint, { dt, speed: 0, grounded: true, sit: true });
     // the sled wobbles along, the camera just behind it
     const s = this.sled; s.position.set(Math.sin(this.t * 1.7) * 0.5, -1.2 + Math.sin(this.t * 2.3) * 0.25, -4);
     s.rotation.set(0, Math.PI, Math.sin(this.t * 1.7) * 0.25);

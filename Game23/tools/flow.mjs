@@ -1,4 +1,4 @@
-// Plays the game start to finish on autopilot: title, every place, every
+// Plays the game start to finish on autopilot: title, the prologue at HQ, every place, every
 // mission solved by its own autopilot, the trips between eras and the end of the act, with
 // screenshots. FROM=<place> starts part-way, counting the places before it as done. node tools/flow.mjs [outdir]
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
@@ -30,8 +30,28 @@ await waitT(1.2); await shot("00_title");
 const FROM = process.env.FROM;
 if (FROM) await ev(id => { const P = __g.debug.PLACES, i = P.findIndex(p => p.id === id); __g.save.done = P.slice(0, i).flatMap(p => p.missions.map(m => m.id)); __g.save.place = id; __g.debug.load(id); }, FROM);
 await ev(() => __g.debug.play());
-await waitT(2.2); await shot("01_arrive");
-await skip();
+if (!FROM) {
+  // the prologue at POLARIS HQ: the briefing, the Chrono-watch from Dr Flint's bench, the time-sled
+  // and the launch up through the roof (Rory walks into each beacon)
+  check(await ev(() => __g.place.id === "hq" && __g.state === "cut"), "a new game starts at HQ, in the briefing");
+  await page.waitForFunction(() => __g.dialogue.active, null, { timeout: 60000 }).catch(() => {});
+  await waitT(0.8); await shot("01_hq_brief"); await skip();
+  check(await ev(() => __g.state === "explore" && __g.debug.pro() === "watch"), "after the briefing: go to the bench");
+  const walkIn = () => ev(() => { const b = __g.pro.beacon.position; __g.player.teleport(b.x, b.y + 0.1, b.z); });
+  await waitT(0.5); await shot("02_hq_watch"); await walkIn();
+  await page.waitForFunction(() => __g.dialogue.active, null, { timeout: 30000 }).catch(() => {});
+  await skip();
+  check(await ev(() => !__g.levelInfo.watch.visible && __g.state === "explore" && __g.debug.pro() === "sled"), "the watch is Rory's: now the sled");
+  await walkIn();
+  await page.waitForFunction(() => __g.dialogue.active, null, { timeout: 30000 }).catch(() => {});
+  await waitT(0.6); await shot("03_hq_aboard"); await skip();
+  check(await ev(() => __g.state === "cut" && __g.debug.pro() === "launch"), "lift-off");
+  await waitT(1.6); await shot("04_hq_liftoff");
+  await page.waitForFunction(() => __g.state === "travel", null, { timeout: 60000 }).catch(() => {});
+  check(await ev(() => __g.state === "travel" && __g.save.place === "dino" && !!__g.save.arrived.hq), "into the time tunnel, the prologue saved as done");
+  check(await ev(() => __g.travel.flint.root.visible && !__g.travel.pebble.root.visible), "Dr Flint rides the first trip; Pebble hasn't hatched yet");
+  await waitT(2.5); await shot("05_hq_tunnel");
+} else { await waitT(2.2); await shot("01_arrive"); await skip(); }
 const places = await ev(() => __g.debug.PLACES.map(p => ({ id: p.id, missions: p.missions.map(m => m.id) })));
 // TO=<place> stops after that place (the end of the act is only checked by a run that reaches it)
 const TO = process.env.TO, last = TO ? places.findIndex(p => p.id === TO) : places.length - 1;

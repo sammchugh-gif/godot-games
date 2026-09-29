@@ -906,33 +906,21 @@
   "from": "story"
  },
  {
-  "key": "1hkb91p",
-  "who": "frost",
-  "text": "Agent Rory. History is leaking.",
-  "from": "story"
- },
- {
-  "key": "127jd51",
-  "who": "rory",
-  "text": "Leaking?",
-  "from": "story"
- },
- {
-  "key": "18toqr2",
-  "who": "frost",
-  "text": "Great moments are vanishing. Somebody is taking them. And every time one goes, the present goes a bit wobbly.",
-  "from": "story"
- },
- {
-  "key": "0rse2rp",
-  "who": "pip",
-  "text": "This morning my tea turned back into tea leaves. In the cup!",
-  "from": "story"
- },
- {
-  "key": "0hziysr",
+  "key": "00t5tz1",
   "who": "flint",
-  "text": "I'm Dr Flint. I built the time-sled you just rode in. The leak starts here: sixty-six million years ago.",
+  "text": "Sixty-six million years ago. Welcome to the age of the dinosaurs.",
+  "from": "story"
+ },
+ {
+  "key": "0sykukp",
+  "who": "rory",
+  "text": "It's so warm. And everything is enormous!",
+  "from": "story"
+ },
+ {
+  "key": "0u4ea3i",
+  "who": "frost",
+  "text": "We can hear you, Rory. The leak is strongest right where you've landed.",
   "from": "story"
  },
  {
@@ -1179,6 +1167,144 @@
   "key": "1mzrll5",
   "who": "flint",
   "text": "Every era, a little bit bigger. Like everybody.",
+  "from": "story"
+ },
+ {
+  "key": "0s4d11o",
+  "who": "frost",
+  "text": "Agent Rory. Thank you for coming so quickly. History is leaking.",
+  "from": "story"
+ },
+ {
+  "key": "127jd51",
+  "who": "rory",
+  "text": "Leaking?",
+  "from": "story"
+ },
+ {
+  "key": "0oxfvx7",
+  "who": "frost",
+  "text": "Great moments are going missing. A cave painting. The top stone of the Great Pyramid. The Olympic flame. One after another.",
+  "from": "story"
+ },
+ {
+  "key": "0sh95ya",
+  "who": "pip",
+  "text": "And every time one goes, the present goes a bit wobbly. Look at my tea! It turned back into tea leaves. In the cup!",
+  "from": "story"
+ },
+ {
+  "key": "00f7lhq",
+  "who": "pip",
+  "text": "And the clock's been going backwards all day.",
+  "from": "story"
+ },
+ {
+  "key": "0bp2xe9",
+  "who": "frost",
+  "text": "The one taking them is Doctor Hourglass. She's bottling history's great moments to power a machine that skips the whole world straight into the future.",
+  "from": "story"
+ },
+ {
+  "key": "191ort8",
+  "who": "rory",
+  "text": "Why would anyone want to skip everything?",
+  "from": "story"
+ },
+ {
+  "key": "1w6m63z",
+  "who": "frost",
+  "text": "She can't bear to wait for anything. Not even the kettle.",
+  "from": "story"
+ },
+ {
+  "key": "0vudjvr",
+  "who": "flint",
+  "text": "Which is where I come in. I'm Dr Flint, and this is my time-sled.",
+  "from": "story"
+ },
+ {
+  "key": "1iqay85",
+  "who": "flint",
+  "text": "The leak starts a very long way back: sixty-six million years. Collect your Chrono-watch from my bench, and we'll follow it.",
+  "from": "story"
+ },
+ {
+  "key": "0qnthx6",
+  "who": "flint",
+  "text": "That's the Chrono-watch. At the moment it only tells the time.",
+  "from": "story"
+ },
+ {
+  "key": "1q6z4xi",
+  "who": "rory",
+  "text": "Only?",
+  "from": "story"
+ },
+ {
+  "key": "0t7e2cz",
+  "who": "flint",
+  "text": "It learns. Every few eras it'll pick up a new trick. You'll see.",
+  "from": "story"
+ },
+ {
+  "key": "05l2r2a",
+  "who": "flint",
+  "text": "Now, the time-sled. The front seat's yours.",
+  "from": "story"
+ },
+ {
+  "key": "01dgxmp",
+  "who": "flint",
+  "text": "Strapped in? Good. Pip, open the roof!",
+  "from": "story"
+ },
+ {
+  "key": "02badxd",
+  "who": "pip",
+  "text": "Opening the roof!",
+  "from": "story"
+ },
+ {
+  "key": "1j2c3iq",
+  "who": "frost",
+  "text": "Bring history back, Agent Rory. All of it.",
+  "from": "story"
+ },
+ {
+  "key": "02a0rf3",
+  "who": "rory",
+  "text": "See you soon. Or a very long time ago.",
+  "from": "story"
+ },
+ {
+  "key": "11nxugf",
+  "who": "pip",
+  "text": "Time-sled launching in three... two... one!",
+  "from": "story"
+ },
+ {
+  "key": "0x72ags",
+  "who": "frost",
+  "text": "The whole of history is counting on you, Agent Rory. No pressure.",
+  "from": "story"
+ },
+ {
+  "key": "0p82mnj",
+  "who": "pip",
+  "text": "I'll be watching you on the time map. You'll be the little flashing dot.",
+  "from": "story"
+ },
+ {
+  "key": "1tl6hwd",
+  "who": "flint",
+  "text": "The Chrono-watch is on my bench. Over by the blackboard.",
+  "from": "story"
+ },
+ {
+  "key": "1bosq4p",
+  "who": "flint",
+  "text": "Hop on the front seat. I'll sit behind and hold on tight.",
   "from": "story"
  },
  {

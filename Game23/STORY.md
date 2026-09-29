@@ -16,6 +16,12 @@ wait for anything. She is bottling history's great moments to power her
 she has designed, where nobody ever waits, practises or grows up slowly again. Rory
 takes the POLARIS **time-sled** after her.
 
+It starts in the present, in the **Time Room at POLARIS HQ**. Frost briefs Rory in front of
+the history wall, where the great moments flicker and go out one by one. Pip's tea has turned
+back into leaves and the clock on the wall runs backwards. Dr Flint gives Rory the
+Chrono-watch, which only tells the time so far. Rory and Dr Flint climb onto the time-sled,
+Pip opens the roof, and the sled goes up through it into the time tunnel.
+
 On the first jump, into Dinosaur Valley, Rory saves a nest of eggs from Hourglass's
 Sandbots. The last egg hatches in his hands. The baby triceratops decides he is her
 mum, and when the time-sled leaves she jumps in after him. She is **Pebble**, and

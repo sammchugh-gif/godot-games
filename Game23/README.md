@@ -6,6 +6,12 @@ traces it to Doctor Hourglass, an inventor who can't bear to wait for anything. 
 history's great moments to run her Fast-Forward Engine. Rory follows her back through time on the
 POLARIS time-sled with Dr Flint, the time scientist who built it.
 
+The game starts in the present, in the Time Room at POLARIS HQ. Frost briefs Rory in front of the
+history wall, whose screens show the great moments going missing. Pip's tea has turned back into
+leaves, and the clock on the wall is running backwards. Rory collects the Chrono-watch from Dr Flint's
+bench and climbs onto the time-sled. The roof opens and the sled flies up through it into the time
+tunnel. A SKIP button, and the pause menu, go straight to the first era.
+
 In the very first era, Dinosaur Valley, the last egg in a triceratops nest hatches in Rory's
 hands. The baby decides he's her mum and jumps on the time-sled after him. She is **Pebble**,
 his partner from then on, and she grows a little in every era.
@@ -51,6 +57,7 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 
 | Era | Missions |
 |---|---|
+| POLARIS HQ, today | the briefing, the Chrono-watch, the launch (the prologue: no missions) |
 | Dinosaur Valley, 66 million years ago | time sparks in the ferns, the egg thieves, eggs back to the nest, Pebble hatches (lead the babies home), tiptoe past the T. rex, the egg cart |
 | The Ice Age, 20,000 years ago | the lost mammoth calf, falling icicles (SLOW), the painted cave, the snow wall, the mammoth ride, the handprints |
 | Ancient Egypt, 4,500 years ago | down the Nile, the picture lock, sunbeam traps (BACK), the buried stone, the ramp, up the pyramid |
@@ -66,6 +73,9 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 - `js/timetunnel.js` the trip between eras. The watch powers are in `js/main.js`.
 - `js/missions6.js` Dig, Timeline, Echo and Ride. Deep Red's kinds are in `js/missions.js` to
   `js/missions5.js`, listed by name in `js/kinds.js`; every kind has an autopilot (`solve`).
+- `js/levels/hq.js` the Time Room at POLARIS HQ, with its camera shots for the prologue; the
+  prologue itself (the briefing, the watch, boarding, the launch, SKIP) is in `js/main.js`, and its
+  lines are `PROLOGUE` in `js/story.js`.
 - `js/levels/timekit.js` the dinosaurs' and the Ice Age's pieces, and the time-sled;
   `js/levels/antiquekit.js` Egypt's, Greece's, Rome's and the Vikings'. One file per era in
   `js/levels/`.
@@ -76,6 +86,10 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 
 ## Tests
 
+- `node tools/flow.mjs [outdir]` plays the story from the title: the prologue, then every era on
+  its autopilot, to the end of the act. `FROM=<era>` and `TO=<era>` play a stretch of it.
+- `node tools/prologue.mjs` tests the prologue's other paths: SKIP, the pause menu's skip, coming
+  back after the briefing, old saves, and talking and patting the dog at HQ.
 - `node tools/missions.mjs [id,id]` starts each mission and lets its autopilot play it,
   reporting any place it had to teleport.
 - `node tools/levelcheck.mjs [place,place]` builds places and checks nothing that has to be
