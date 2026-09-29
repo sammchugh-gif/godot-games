@@ -36,6 +36,9 @@ export const FILES = [
   { id: "spectrum", n: "FILE 005", kicker: "THE COLOUR HEIST", title: "Spectrum", href: "../agent-rory-spectrum/", shot: "../shots/agent-rory-spectrum.jpg", accent: "#7bed9f", saves: ["rory22.save"], total: 60,
     blurb: "Baroness Grisaille is draining the colour out of the world. Rory and PALETTE the chameleon paint it back, from Dingle to the salt flats and the red dunes. Sixty missions.",
     frost: "Spectrum. Baroness Grisaille, a world gone grey, and a chameleon who can't decide what colour to be." },
+  { id: "timeslip", n: "FILE 006", kicker: "BACK IN TIME", title: "Timeslip", href: "../agent-rory-timeslip/", shot: "../shots/agent-rory-timeslip.jpg", accent: "#c89aff", saves: ["rory23.save"], total: 36,
+    blurb: "Doctor Hourglass is bottling history. Follow her back in time with Pebble, a baby triceratops who grows with every era, from the dinosaurs to the Vikings. Act One: thirty-six missions.",
+    frost: "Timeslip. Doctor Hourglass, a stolen piece of history in every era, and a dinosaur who honks." },
 ];
 // how far Rory has got in a file, from its saves
 export function progress(f) {
@@ -61,7 +64,7 @@ const canvasTex = c => { const t = new THREE.CanvasTexture(c); t.colorSpace = TH
 // a corkboard with the mission files pinned to it, red string between the
 // pins, and a few sticky notes. It redraws when Rory walks up to a file.
 const BW = 24, BH = 5.6, CW = 2816, CH = Math.round(2816 * BH / BW);
-const CARD_U = [0.1, 0.3, 0.5, 0.7, 0.9];
+const CARD_U = [1, 3, 5, 7, 9, 11].map(k => k / 12);
 function boardTexture() {
   const c = document.createElement("canvas"); c.width = CW; c.height = CH;
   const g = c.getContext("2d"), tex = canvasTex(c);
@@ -78,7 +81,7 @@ function boardTexture() {
     g.save(); g.translate(CW / 2 + 470, 74); g.rotate(-0.18); g.strokeStyle = "#d8283a"; g.lineWidth = 7; g.strokeRect(-150, -34, 300, 68); g.fillStyle = "#d8283a"; g.font = "900 44px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("TOP SECRET", 0, 2); g.restore();
     const pins = [];
     FILES.forEach((f, i) => {
-      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 440, h = 470, rot = [-0.035, 0.02, -0.025, 0.03, -0.02][i];
+      const p = progress(f), cx = CARD_U[i] * CW, cy = CH * 0.56, w = 420, h = 470, rot = [-0.035, 0.02, -0.025, 0.03, -0.02, 0.025][i];
       g.save(); g.translate(cx, cy); g.rotate(rot);
       if (hi === i) { g.shadowColor = "#ffd166"; g.shadowBlur = 60; g.fillStyle = "#ffd166"; g.fillRect(-w / 2 - 16, -h / 2 - 16, w + 32, h + 32); g.shadowBlur = 0; }
       g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-w / 2 + 10, -h / 2 + 12, w, h);
@@ -94,7 +97,7 @@ function boardTexture() {
       const by = -h / 2 + 390; g.fillStyle = "#dde2ea"; g.fillRect(-pw / 2, by, pw - 150, 18); g.fillStyle = f.accent; g.fillRect(-pw / 2, by, (pw - 150) * p.done / f.total, 18);
       g.fillStyle = "#141c2c"; g.font = "800 26px system-ui"; g.fillText(`${p.done}/${f.total}`, pw / 2 - 138, by - 5);
       if (p.stars) { g.fillStyle = "#c88a10"; g.fillText("★ " + p.stars, -pw / 2, by + 30); }
-      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "deep" || f.id === "spectrum" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
+      const stamp = p.finished ? ["COMPLETE", "#1f9a4a"] : p.done ? ["IN PROGRESS", "#2a7ad8"] : f.id === "spectrum" || f.id === "timeslip" ? ["NEW!", "#d8283a"] : ["NOT STARTED", "#8a93a6"];
       g.save(); g.translate(pw / 2 - 110, -h / 2 + 220); g.rotate(-0.22); g.strokeStyle = stamp[1]; g.lineWidth = 6; g.font = "900 34px system-ui"; g.textAlign = "center"; g.textBaseline = "middle";
       const sw = g.measureText(stamp[0]).width + 36; g.globalAlpha = 0.9; g.strokeRect(-sw / 2, -28, sw, 56); g.fillStyle = stamp[1]; g.fillText(stamp[0], 0, 2); g.restore();
       g.restore();
@@ -337,13 +340,14 @@ function buildRoom(w) {
   w.box(3, 4.2, 0.3, M(0x2a3040, { metal: 0.7, rough: 0.3 }), 0, 2.1, RD / 2 - 0.3, { collide: false });
   const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshStandardMaterial({ map: TEX.sign("TOP SECRET", { bg: "#2a0a10", fg: "#ff5a5a", border: "#ff5a5a" }), emissive: 0xff3a3a, emissiveIntensity: 0.5 }));
   doorSign.position.set(0, 4.6, RD / 2 - 0.47); doorSign.rotation.y = Math.PI; doorSign.userData.dynamic = true; w.scene.add(doorSign);
-  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 5 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 5 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
+  const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 6 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 6 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
   terminal.position.set(-RW / 2 + 0.28, 2.3, 2.5); terminal.rotation.y = Math.PI / 2; terminal.userData.dynamic = true; w.scene.add(terminal);
   const posters = buildPosters(w, RW, RD);
   const tea = teaTrolley(w, 9.4, 6.6);
   const button = bigRedButton(w, -9.4, 6.6);
   const chair = officeChair(w, -8.6, -2.4);
-  const dog = officeDog(w, 10.6, -6.6);
+  // (the dog's bed is under the world map: the board's sixth pad is where it used to be)
+  const dog = officeDog(w, 10.8, 1.8);
   const phone = bananaPhone(w, -RW / 2 + 0.9, 1.0, -0.4);
   w.floorY = -10;
   return { screens, board, posters, lights, tea, button, chair, dog, phone, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
@@ -365,7 +369,7 @@ function things() {
     { id: "tea", x: 9.4, z: 5.6, r: 1.6, label: G.cup ? "BISCUIT" : "TEA", prompt: G.cup ? "have a biscuit" : "make a cup of tea", act: G.cup ? biscuit : makeTea, off: !!G.pouring },
     { id: "button", x: -9.4, z: 5.9, r: 1.5, label: "PRESS", prompt: "the big red button", act: pressButton, off: busy },
     { id: "chair", x: R.chair.seat.x, z: R.chair.seat.z, r: 1.3, label: "SPIN", prompt: "have a spin on the chair", act: spinChair, off: busy },
-    { id: "dog", x: 10.6, z: -5.9, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
+    { id: "dog", x: 10.8, z: 2.5, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
     { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
   ].filter(t => !t.off);
@@ -416,7 +420,7 @@ function spinChair() {
 function patDog() {
   const d = G.room.dog, n = count("roryhq.dog");
   d.wag = 2.5; Audio.play("pant");
-  G.fx.burst(10.6, 0.9, -6.6, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
+  G.fx.burst(10.8, 0.9, 1.8, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
   if (n === 1) G.dialogue.show([["pip", "That's Agent Biscuit. He's been at POLARIS longer than any of us."], ["bolt", "He outranks me."]], null);
   else if (Math.random() < 0.5) { d.woof = 0.7; setTimeout(() => Audio.play("woof"), 250); if (Math.random() < 0.5) G.dialogue.show([pick([["bolt", "The dog says: woof. I have translated it. It means: more patting."], ["frost", "Agent Biscuit has sniffed out forty-two spies. And one sausage roll."], ["pip", "He sat on the self-destruct button once. Luckily it's also the kettle."]])], null); }
 }
@@ -562,7 +566,7 @@ function updateRoom(dt) {
   const dog = R.dog, happy = dog.wag > 0;
   dog.body.scale.y = 1.15 + Math.sin(t * (happy ? 7 : 2.2)) * (happy ? 0.04 : 0.02);
   dog.tail.rotation.y = Math.sin(t * (happy ? 16 : 2.5)) * (happy ? 0.8 : 0.3);
-  const toRory = Math.atan2(p.pos.x - 10.6, p.pos.z + 6.6); dog.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - dog.head.rotation.y) * Math.min(1, dt * 2);
+  const toRory = Math.atan2(p.pos.x - 10.8, p.pos.z - 1.8); dog.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - dog.head.rotation.y) * Math.min(1, dt * 2);
   dog.eyes.forEach(e => { e.scale.y = happy ? 0.35 : 1; });
   dog.tongue.visible = happy;
   dog.ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (0.15 + (happy ? Math.sin(t * 9) * 0.12 : 0)); });
@@ -587,7 +591,7 @@ function updateBolt(dt) {
 }
 function talk(who) {
   const lines = who === "frost"
-    ? [["frost", pick(["Four mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
+    ? [["frost", pick(["Six mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
     : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun."])]];
   G.dialogue.show(lines, null);
 }
