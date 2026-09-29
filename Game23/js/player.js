@@ -1,0 +1,230 @@
+// Rory in third person: the Rapier walker, the rig, the camera that follows
+// him round, and the feel of the moves (coyote time, jump buffering, pads,
+// floating in low gravity).
+import * as THREE from "three";
+import { Walker } from "./physics.js";
+import { makePerson, animatePerson, RORY, spaceSuit, diveSuit, marsSuit } from "./people.js";
+
+const up = new THREE.Vector3(0, 1, 0);
+
+// the camera looks through colliders tagged "camthru" (a laser net Rory mustn't fly through)
+const seeThrough = c => c.userTag !== "camthru";
+
+export class Player {
+  constructor(world, x = 0, y = 0, z = 0, yaw = 0) {
+    this.world = world;
+    this.walker = new Walker(world.phys, x, y, z);
+    this.rig = makePerson(RORY);
+    this.obj = this.rig.root;
+    this.obj.position.set(x, y, z);
+    world.scene.add(this.obj);
+    // a soft blob shadow helps judge jumps even where the sun's shadow is off
+    this.blob = new THREE.Mesh(new THREE.CircleGeometry(0.34, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false }));
+    this.blob.rotation.x = -Math.PI / 2; world.scene.add(this.blob);
+    this.yaw = yaw;           // which way Rory faces
+    this.camYaw = yaw + Math.PI; this.camPitch = 0.32; this.camDist = 5.2;
+    this.coyote = 0; this.buffer = 0; this.jumps = 0;
+    this.speed = 0;
+    this.maxSpeed = 5.6;
+    this.swimSpeed = 3.4;
+    this.frozen = false;
+    this.camPos = new THREE.Vector3(); this.camLook = new THREE.Vector3();
+    this.lastSafe = new THREE.Vector3(x, y, z);
+    this.gravityScale = 1;
+    this.spawn = new THREE.Vector3(x, y, z);
+    this.swimming = false; this.headUnder = false;
+    this.airMax = world.airMax ?? 40; this.air = this.airMax;
+  }
+  get pos() { return this.walker.pos; }
+  // (kind: "dive" for the deep sea, anything else true for space)
+  suit(kind) { diveSuit(this.rig, kind === "dive"); spaceSuit(this.rig, !!kind && kind !== "dive"); marsSuit(this.rig, kind === "mars"); this.suited = kind; }
+  // the helmet lamp, in the dark places
+  lamp(i) { if (this.rig.dive) this.rig.dive.spot.intensity = i; }
+  teleport(x, y, z, yaw) { this.walker.teleport(x, y, z); this.obj.position.set(x, y, z); if (yaw !== undefined) { this.yaw = yaw; this.camYaw = yaw + Math.PI; } this.snapCam = true; }
+  update(dt, input, camera) {
+    const w = this.walker;
+    // camera drag
+    const [lx, ly] = input.takeLook();
+    this.camYaw -= lx * 0.006; this.camPitch = THREE.MathUtils.clamp(this.camPitch + ly * 0.004, -0.15, 1.1);
+    // movement relative to the camera
+    let mx = 0, mz = 0;
+    if (!this.frozen) {
+      const fx = -Math.sin(this.camYaw), fz = -Math.cos(this.camYaw);
+      // forward is away from the camera, right is forward turned a quarter
+      mx = input.my * fx - input.mx * fz;
+      mz = input.my * fz + input.mx * fx;
+    }
+    const mag = Math.min(1, Math.hypot(mx, mz));
+    const target = (this.swimming ? this.swimSpeed : this.maxSpeed) * (input.boostHeld ? 1.35 : 1) * mag;
+    const accel = this.swimming ? 8 : w.grounded ? 30 : 12;
+    // horizontal velocity eases toward the stick
+    let tvx = mag > 0.01 ? mx / Math.max(mag, 1e-3) * target : 0, tvz = mag > 0.01 ? mz / Math.max(mag, 1e-3) * target : 0;
+    // a current carries him along on top of his own swimming
+    const cur = this.swimming && this.world.currents ? this.world.currentAt(w.pos.x, w.pos.y + 0.6, w.pos.z) : null;
+    this.inCurrent = cur;
+    if (cur) { tvx += cur.x; tvz += cur.z; }
+    const k = Math.min(1, accel * dt / Math.max(1, this.maxSpeed));
+    w.vel.x += (tvx - w.vel.x) * Math.min(1, k * 3);
+    w.vel.z += (tvz - w.vel.z) * Math.min(1, k * 3);
+    if (mag > 0.05) {
+      const want = Math.atan2(w.vel.x, w.vel.z);
+      let d = want - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+      this.yaw += d * Math.min(1, dt * 12);
+    }
+    // in the sea: chest-deep water floats Rory (see swim())
+    const sea = this.world.sea;
+    if (sea) {
+      const L = this.world.surfaceAt(w.pos.x, w.pos.y + 1, w.pos.z), depth = L - w.pos.y;
+      this.surfaceY = L;
+      const was = this.swimming, wasUnder = this.headUnder;
+      this.swimming = this.swimming ? depth > 0.85 : depth > 1.05 && !(w.grounded && depth < 1.2);
+      this.headUnder = L > w.pos.y + (this.swimming ? 1.25 : 1.2);
+      // the moments the game makes a noise about: in with a splash, up for a gasp of air, a stroke
+      // now and then while swimming
+      if (this.swimming && !was && w.vel.y < -1.5 && this.onSplash) this.onSplash(-w.vel.y, L);
+      this.underT = this.headUnder ? (this.underT || 0) + dt : this.underT;
+      if (wasUnder && !this.headUnder) { if (this.underT > 2.5 && this.onSurface) this.onSurface(L); this.underT = 0; }
+      if (this.swimming && Math.hypot(w.vel.x, w.vel.z) > 1.2 && (this.strokeT = (this.strokeT || 0) - dt) <= 0) { this.strokeT = 0.75; if (this.onStroke) this.onStroke(!this.headUnder, L); }
+    } else { this.swimming = false; this.headUnder = false; }
+    let floating = false, jumped = false;
+    if (this.swimming) { this.swim(dt, input, mag); w.move(dt, 0); }
+    else {
+      // gravity: low-gravity bubbles
+      let gs = 1;
+      for (const z of this.world.zones) {
+        const d = Math.hypot(w.pos.x - z.x, w.pos.y + 0.7 - z.y, w.pos.z - z.z);
+        if (d < z.r) { gs = Math.min(gs, z.g); floating = true; }
+      }
+      this.gravityScale = gs;
+      // spacewalks: hold JUMP to fire the jetpack, let go to drift slowly down
+      if (this.world.jetpack) {
+        gs *= 0.12; floating = true;
+        if (input.jumpHeld && !this.frozen) { w.vel.y = Math.min(5, w.vel.y + 16 * dt); w.grounded = false; this.jetting = true; if (this.onJet) this.onJet(dt); } else this.jetting = false;
+      }
+      // jumping, with a little grace before and after the ledge
+      if (w.grounded) { this.coyote = 0.12; this.jumps = 0; } else this.coyote -= dt;
+      if (input.takeJump() && !this.frozen) this.buffer = 0.14; else this.buffer -= dt;
+      if (this.buffer > 0 && !this.world.jetpack && (this.coyote > 0 || (floating && this.jumps < 3))) {
+        w.vel.y = floating ? 5.5 : 8.6; this.buffer = 0; this.coyote = 0; this.jumps++; jumped = true; w.grounded = false;
+        if (this.onJump) this.onJump();
+      }
+      // a little extra float while the button is held on the way up
+      const hold = input.jumpHeld && w.vel.y > 0 ? 0.62 : 1;
+      // bounce pads
+      for (const p of this.world.pads) {
+        if (Math.hypot(w.pos.x - p.x, w.pos.z - p.z) < p.r && Math.abs(w.pos.y - p.y) < 0.35 && w.vel.y <= 0.5) {
+          w.vel.y = p.power; w.grounded = false; p.t = 0.4; jumped = true; if (this.onPad) this.onPad(p);
+        }
+      }
+      w.move(dt, gs * hold);
+    }
+    if (w.justLanded && this.onLand) this.onLand(-w.vel.y);
+    // fell off the world: back to the last safe ground
+    // remember the last firm ground: only ground that can't move away (never a ferry deck or a cable car)
+    this.breathe(dt);
+    // hot lava underfoot: back to the last safe ground
+    const hot = w.grounded && this.world.flows && this.world.hotAt(w.pos.x, w.pos.z, w.pos.y);
+    if (hot) { const s = this.lastSafe; this.teleport(s.x, s.y + 0.3, s.z); if (this.onBurn) this.onBurn(); }
+    else if (w.grounded && w.onMover === null && !this.headUnder && !this.swimming) {
+      const h = this.world.phys.rayHit({ x: w.pos.x, y: w.pos.y + 0.3, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 1.0, w.col);
+      const body = h && h.collider.parent();
+      if (h && (!body || body.isFixed())) this.lastSafe.copy(w.pos);
+    }
+    if (w.pos.y < (this.world.floorY ?? -20)) { const s = this.lastSafe; this.teleport(s.x, s.y + 0.5, s.z); if (this.onFall) this.onFall(); }
+    // pose the body
+    this.obj.position.copy(w.pos);
+    this.obj.rotation.y = this.yaw;
+    this.speed = Math.hypot(w.vel.x, w.vel.z);
+    if (this.rig.suit) for (const f of this.rig.suit.flames) { f.visible = !!this.jetting; if (this.jetting) f.scale.y = 0.8 + Math.random() * 0.6; }
+    animatePerson(this.rig, { dt, speed: this.speed, grounded: w.grounded, vy: w.vel.y, float: floating && !w.grounded && !this.swimming, talk: this.talking, wave: this.waving, swim: this.swimming });
+    // swimming along he lies flat in the water with his head up at the surface
+    this.swimLift = THREE.MathUtils.lerp(this.swimLift || 0, this.swimming ? 0.25 + Math.min(1, this.speed / 3) * 0.2 : 0, Math.min(1, dt * 5));
+    this.obj.position.y += this.swimLift;
+    // blob shadow on whatever is below
+    const below = this.world.phys.ray({ x: w.pos.x, y: w.pos.y + 0.5, z: w.pos.z }, { x: 0, y: -1, z: 0 }, 30, w.col);
+    if (below !== null) { this.blob.visible = true; this.blob.position.set(w.pos.x, w.pos.y + 0.5 - below + 0.02, w.pos.z); const h = below - 0.5; this.blob.material.opacity = 0.3 * Math.max(0, 1 - h / 8); this.blob.scale.setScalar(1 + h * 0.05); }
+    else this.blob.visible = false;
+    this.updateCamera(dt, camera, mag);
+    return jumped;
+  }
+  // swimming: JUMP swims up (and at the surface, hops out onto a ledge), DIVE swims down, and
+  // otherwise he floats at the surface or hangs where he is under it
+  swim(dt, input, mag) {
+    const w = this.walker, L = this.surfaceY, atTop = L - w.pos.y < 1.25;
+    const jump = input.takeJump() && !this.frozen;
+    this.buffer = 0; this.coyote = 0;
+    let vy;
+    // (hard enough to get his feet well clear of the water, and a push the way he's swimming, so a
+    // step or a low ledge at the edge can be climbed out onto)
+    if (atTop && jump && !input.diveHeld) {
+      w.vel.y = 9; const h = Math.hypot(w.vel.x, w.vel.z); if (h > 0.3) { w.vel.x += w.vel.x / h * 1.5; w.vel.z += w.vel.z / h * 1.5; }
+      this.swimming = false; if (this.onJump) this.onJump(); return;
+    }
+    if (input.diveHeld && !this.frozen) vy = -3;
+    else if (input.jumpHeld && !this.frozen) vy = atTop ? (L - 0.95 - w.pos.y) * 3 : 3;
+    else vy = atTop ? THREE.MathUtils.clamp((L - 0.95 - w.pos.y) * 3, -1.5, 1.5) : 0.15;
+    if (this.inCurrent) vy += this.inCurrent.y;
+    // a vent's scalding plume shoves him back out of it
+    const hot = this.world.plumes && this.world.plumeAt(w.pos.x, w.pos.y + 0.7, w.pos.z);
+    if (hot) {
+      const dx = w.pos.x - hot.p.x, dz = w.pos.z - hot.p.z, d = Math.hypot(dx, dz) || 1;
+      w.vel.x = dx / d * 5; w.vel.z = dz / d * 5;
+      if ((this.hotT || 0) <= 0 && this.onScald) this.onScald(); this.hotT = 1.5;
+    }
+    this.hotT = (this.hotT || 0) - dt;
+    // in the deep there's no swimming up to the surface: the sea is too deep
+    const top = this.world.swimTop;
+    if (top !== undefined && w.pos.y > top - 1) vy = Math.min(vy, (top - 1 - w.pos.y) * 2);
+    w.vel.y += (vy - w.vel.y) * Math.min(1, dt * 4);
+    w.grounded = false;
+    void mag;
+  }
+  // the air meter: it runs down with his head under water and fills up at the surface or in a
+  // stream of bubbles; running out takes him back to the last dry ground
+  breathe(dt) {
+    const w = this.walker, p = w.pos;
+    let bubbles = false;
+    for (const b of this.world.airVents || []) if (Math.hypot(p.x - b.x, p.z - b.z) < b.r && p.y > b.y - 1 && p.y < b.y + b.h) bubbles = true;
+    if (!this.headUnder || bubbles) { this.air = Math.min(this.airMax, this.air + dt * (bubbles ? 12 : 25)); this.lowT = 0; }
+    else {
+      this.air -= dt;
+      // running low: a warning beep every second or so
+      if (this.air < this.airMax * 0.25 && (this.lowT = (this.lowT || 0) - dt) <= 0) { this.lowT = 1.1; if (this.onLowAir) this.onLowAir(this.air / this.airMax); }
+    }
+    if (this.air <= 0) { this.air = this.airMax; const s = this.lastSafe; this.teleport(s.x, s.y + 0.3, s.z); if (this.onOutOfAir) this.onOutOfAir(); }
+    // a trail of bubbles from his helmet
+    if (this.headUnder && this.world.fx && Math.random() < dt * 4) this.world.fx.bubble(p.x, p.y + 1.25 + (this.swimLift || 0), p.z, this.surfaceY, 2);
+  }
+  updateCamera(dt, camera, moving) {
+    const p = this.walker.pos;
+    // drift the camera round behind Rory while he runs
+    if (moving > 0.3 && !this.camLock) {
+      const behind = this.yaw + Math.PI;
+      let d = behind - this.camYaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+      this.camYaw += d * Math.min(1, dt * 0.9 * moving);
+    }
+    const look = new THREE.Vector3(p.x, p.y + 1.25, p.z);
+    const dir = new THREE.Vector3(Math.sin(this.camYaw) * Math.cos(this.camPitch), Math.sin(this.camPitch), Math.cos(this.camYaw) * Math.cos(this.camPitch));
+    let dist = this.camDist;
+    const hit = this.world.phys.ray({ x: look.x, y: look.y, z: look.z }, { x: dir.x, y: dir.y, z: dir.z }, dist, this.walker.col, seeThrough);
+    if (hit !== null) dist = Math.max(0.8, hit - 0.25);
+    // boulders on the cliffs are only for looking at (no colliders): don't put the camera in one
+    let inRock = false;
+    for (const [bx, by, bz, br] of this.world.camBlocks || []) {
+      const ox = look.x - bx, oy = look.y - by, oz = look.z - bz, b = ox * dir.x + oy * dir.y + oz * dir.z, c = ox * ox + oy * oy + oz * oz - br * br, disc = b * b - c;
+      if (disc < 0) continue;
+      const t = -b - Math.sqrt(disc);
+      if (t > 0 && t < dist) { dist = Math.max(0.8, t - 0.3); inRock = true; }
+    }
+    const want = look.clone().addScaledVector(dir, dist);
+    if (this.snapCam) { this.camPos.copy(want); this.camLook.copy(look); this.snapCam = false; }
+    const k = 1 - Math.exp(-dt * 10);
+    this.camPos.lerp(want, hit !== null || inRock ? 1 : k);
+    this.camLook.lerp(look, 1 - Math.exp(-dt * 14));
+    if (this.camOverride) return;
+    camera.position.copy(this.camPos);
+    camera.lookAt(this.camLook);
+    this.world.followShadow(p);
+    void up;
+  }
+}
