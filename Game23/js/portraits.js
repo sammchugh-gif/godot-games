@@ -24,7 +24,10 @@ export class Portraits {
   get(id) {
     // (in the dive suit's places Rory's portrait wears the helmet too)
     if (id === "rory" && this.suit) id = "rory_" + this.suit;
-    const ch = this.chars[id] || (id.startsWith("rory_") && { ...this.chars.rory, suit: id.slice(5) });
+    // (and in an era's disguise, the portrait wears it: this.disguise is { name, look })
+    else if (id === "rory" && this.disguise) id = "rory@" + this.disguise.name;
+    const ch = this.chars[id] || (id.startsWith("rory_") && { ...this.chars.rory, suit: id.slice(5) }) ||
+      (id.startsWith("rory@") && { ...this.chars.rory, look: { ...this.chars.rory.look, ...this.disguise.look } });
     if (!ch) return null;
     if (!this.cache.has(id)) this.cache.set(id, this.render(ch));
     const src = this.cache.get(id);

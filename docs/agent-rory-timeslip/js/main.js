@@ -103,7 +103,7 @@ function loadPlace(id) {
   G.spawn = info;
   G.player = new Player(world, x, y, z, info.yaw || 0);
   world.player = G.player;
-  G.player.suit(place.suit || false); disguise(G.player.rig, place.disguise || null); G.player.lamp(info.lamp || 0); G.portraits.suit = place.suit || null;
+  G.player.suit(place.suit || false); disguise(G.player.rig, place.disguise || null); G.player.lamp(info.lamp || 0); G.portraits.suit = place.suit || null; G.portraits.disguise = place.disguise ? { name: place.id, look: place.disguise } : null;
   // the dive suit's tank holds a minute and a half of air
   if (place.suit === "dive") G.player.airMax = G.player.air = 90;
   world.swimTop = info.swimTop;
