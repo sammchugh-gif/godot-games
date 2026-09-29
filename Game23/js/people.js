@@ -307,3 +307,11 @@ export function marsSuit(rig, on) {
   }
   for (const p of rig.mars.parts) p.visible = on;
 }
+
+// an era's disguise over the spy suit: the suit's colours swapped for the era's (a fur cloak,
+// linen, a tunic). Rory gets his own copies of the materials first: they are shared by everyone.
+export function disguise(rig, look) {
+  if (!rig.own) { rig.own = []; rig.root.traverse(n => { if (n.isMesh && n.material && n.material.color && !n.material.transparent) { const base = n.material.color.getHex(); n.material = n.material.clone(); rig.own.push([n.material, base]); } }); }
+  const swap = new Map(look ? [[RORY.coat, look.coat], [RORY.trousers, look.trousers], [RORY.shirt, look.shirt], [RORY.tie, look.tie]].filter(([, v]) => v !== undefined) : []);
+  for (const [m, base] of rig.own) m.color.setHex(swap.get(base) ?? base);
+}

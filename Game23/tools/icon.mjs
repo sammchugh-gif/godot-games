@@ -1,5 +1,5 @@
-// Renders the home-screen icon: Rory's own 3D head, from the portrait system,
-// under water, in a diving helmet. node tools/icon.mjs  (writes icon.png)
+// Renders the home-screen icon: Rory's and Pebble's own 3D heads, from the portrait system,
+// in the time tunnel. node tools/icon.mjs  (writes icon.png)
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -15,17 +15,16 @@ await page.addInitScript(() => { localStorage.setItem("rory23.quality", "0"); })
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__g && window.__g.state === "title", null, { timeout: 180000 });
 const url = await page.evaluate(() => {
-  const face = __g.portraits.get("rory"), S = 180, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
-  // deep water: bright near the top where the light comes down, dark blue below
-  const bg = g.createLinearGradient(0, 0, 0, S); bg.addColorStop(0, "#1aa8b8"); bg.addColorStop(0.45, "#0a4a78"); bg.addColorStop(1, "#03101c"); g.fillStyle = bg; g.fillRect(0, 0, S, S);
-  for (let i = 0; i < 4; i++) { const r = g.createLinearGradient(0, 0, 0, S); r.addColorStop(0, "rgba(220,250,255,.22)"); r.addColorStop(1, "rgba(220,250,255,0)"); g.fillStyle = r; g.beginPath(); const x = 20 + i * 46; g.moveTo(x, 0); g.lineTo(x + 16, 0); g.lineTo(x + 34, S); g.lineTo(x + 6, S); g.fill(); }
-  // bubbles rising
-  for (let i = 0; i < 16; i++) { const x = (i * 61) % S, y = (i * 97) % S, r = 1.5 + (i % 4) * 1.2; g.strokeStyle = "rgba(230,250,255,.7)"; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, 7); g.fill(); }
-  g.save(); g.beginPath(); g.arc(90, 86, 62, 0, Math.PI * 2); g.clip(); g.drawImage(face, 90 - 78, 86 - 80, 156, 156); g.restore();
-  // the fish-bowl diving helmet: a glass rim with a shine
-  g.strokeStyle = "rgba(200,245,255,.9)"; g.lineWidth = 5; g.shadowColor = "#9ff0ff"; g.shadowBlur = 14; g.beginPath(); g.arc(90, 86, 66, 0, Math.PI * 2); g.stroke(); g.shadowBlur = 0;
-  g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 4; g.lineCap = "round"; g.beginPath(); g.arc(90, 86, 56, Math.PI * 1.1, Math.PI * 1.4); g.stroke();
-  g.fillStyle = "#ff5a4a"; g.font = "900 26px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 6; g.fillText("DR", 150, 156);
+  const rory = __g.portraits.get("rory"), peb = __g.portraits.get("pebble"), S = 180, c = document.createElement("canvas"); c.width = c.height = S; const g = c.getContext("2d");
+  // the time tunnel: a violet swirl with bands of gold and cyan, a clock's ticks round the edge
+  const bg = g.createRadialGradient(S / 2, S / 2, 8, S / 2, S / 2, S * 0.75); bg.addColorStop(0, "#fff1c8"); bg.addColorStop(0.25, "#b070ff"); bg.addColorStop(0.7, "#3a1680"); bg.addColorStop(1, "#12062a"); g.fillStyle = bg; g.fillRect(0, 0, S, S);
+  g.lineWidth = 5; for (let i = 0; i < 9; i++) { g.strokeStyle = ["rgba(255,209,102,.55)", "rgba(42,208,232,.45)", "rgba(200,74,232,.45)"][i % 3]; g.beginPath(); for (let a = 0; a < 5; a += 0.1) { const r = 10 + a * 22 + i * 3, x = S / 2 + Math.cos(a + i * 0.7) * r, y = S / 2 + Math.sin(a + i * 0.7) * r; a ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+  g.fillStyle = "rgba(255,240,200,.85)"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.fillRect(S / 2 + Math.sin(a) * 82 - 2, S / 2 - Math.cos(a) * 82 - 2, 4, 4); }
+  // Rory, and Pebble peeking in beside him
+  const face = (img, x, y, r, k) => { g.save(); g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.clip(); g.fillStyle = "rgba(255,255,255,.18)"; g.fill(); g.drawImage(img, x - r * k, y - r * k * 1.02, r * k * 2, r * k * 2); g.restore();
+    g.strokeStyle = "#ffd166"; g.lineWidth = 4; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.stroke(); };
+  face(rory, 70, 84, 52, 1.25); face(peb, 128, 118, 40, 1.25);
+  g.fillStyle = "#ffd166"; g.font = "900 24px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.shadowColor = "rgba(0,0,0,.7)"; g.shadowBlur = 6; g.fillText("TS", 146, 30);
   return c.toDataURL("image/png");
 });
 fs.writeFileSync("icon.png", Buffer.from(url.split(",")[1], "base64"));

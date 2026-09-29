@@ -31,7 +31,7 @@ export class Valves extends Panel {
     while (this.read(this.v).every((x, j) => x === this.read(this.goal)[j]));
     this.want = this.read(this.goal); this.max = A.map(r => r.reduce((s, x) => s + x * 3, 0));
     this.shown = this.read(this.v).slice(); this.turns = 0; this.still = 0;
-    this.text = "Tap a valve to turn it. Get every needle into the green!";
+    this.text = this.data.text || "Tap a valve to turn it. Get every needle into the green!";
     const el = screen("puzzle", `<div class="card puzzle" style="padding:14px 16px"><div class="title-sub" style="font-size:15px;letter-spacing:.3em">${this.data.title || "PRESSURE VALVES"}</div><canvas width="800" height="480" style="width:min(92vw,110vh);height:auto;display:block;margin:8px auto;touch-action:none"></canvas><div class="msg" style="font-weight:800;font-size:16px;text-align:center">${this.text}</div></div>`, "screen dim");
     this.cv = el.querySelector("canvas"); this.gx = this.cv.getContext("2d"); this.msg = el.querySelector(".msg");
     this.cv.addEventListener("pointerdown", e => { e.stopPropagation(); const r = this.cv.getBoundingClientRect(); this.tap((e.clientX - r.left) / r.width * 800, (e.clientY - r.top) / r.height * 480); });

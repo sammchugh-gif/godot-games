@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { rocks } from "./kit.js";
-import { timeSled, landFrame } from "./timekit.js";
+import { timeSled, landFrame, tufts } from "./timekit.js";
 import { temple, column, cypress, olive, villa, fountain, aqueduct } from "./antiquekit.js";
 
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
@@ -16,6 +16,10 @@ const AQ = [[-126, 112], [-80, 90], [-30, 70], [20, 52], [58, 38]];
 // the pool sits exactly on the terrain's grid (a vertex every 420/170 m), so the slope between
 // the last deep vertex and the first high one is hidden inside its thick stone walls
 const CELL = 420 / 170, gx = i => -210 + i * CELL, POOL = [gx(98), gx(79), gx(104), gx(83)], YARD = [-40, 20], LAND = [-84, -16], FORUM = [0, 0];
+// the Roman road: a long loop, two straights joined by wide bends; off(x, z) is how far a point
+// is from the road's middle line
+const RX0 = -25, RX1 = 65, RZ = -60, RR = 24;
+const off = (x, z) => Math.abs(Math.hypot(x - Math.max(RX0, Math.min(RX1, x)), z - RZ) - RR);
 // flat ground under the buildings: [x0, z0, x1, z1]
 const FLAT = [[-18, -14, 18, 24], [26, -20, 64, 0], [-50, 6, -30, 30], [52, 14, 64, 42]];
 export function ground(x, z) {
@@ -27,7 +31,7 @@ export function ground(x, z) {
   for (const [x0, z0, x1, z1] of FLAT) f = Math.max(f, S(6, 0, Math.max(x0 - x, x - x1, z0 - z, z - z1, 0)));
   f = Math.max(f, S(12, 6, Math.hypot(x - LAND[0], z - LAND[1])));
   // the road's line is levelled too
-  const e = Math.hypot((x - 20) / 70, (z + 52) / 26); f = Math.max(f, S(0.16, 0.08, Math.abs(e - 1)));
+  f = Math.max(f, S(8, 4, off(x, z)));
   h = h * (1 - f) + 0.6 * f;
   // the pool: deep all the way to its walls
   const [px0, pz0, px1, pz1] = POOL;
@@ -45,7 +49,7 @@ export function buildAqueduct(w) {
   const paving = M("paving", { args: [503, [206, 196, 176]], repeat: [20, 20] });
   w.overlay(0, 0, 60, 60, paving, (x, z) => x > -18 && x < 18 && z > -14 && z < 24, 0.04);
   w.overlay(45, -10, 40, 24, paving, (x, z) => x > 26 && x < 64 && z > -20 && z < 0 && !(x > POOL[0] - 0.2 && x < POOL[2] + 0.2 && z > POOL[1] - 0.2 && z < POOL[3] + 0.2), 0.04);
-  w.overlay(20, -52, 160, 70, M("cobble", { args: [505, [150, 144, 132]], repeat: [40, 16] }), (x, z) => Math.abs(Math.hypot((x - 20) / 70, (z + 52) / 26) - 1) < 0.07, 0.05);
+  w.overlay((RX0 + RX1) / 2, RZ, RX1 - RX0 + 2 * RR + 12, 2 * RR + 12, M("cobble", { args: [505, [150, 144, 132]], repeat: [40, 16] }), (x, z) => off(x, z) < 2.8, 0.05);
   w.mountains(10, 262, 55, { color: 0x6a7a58, snow: false });
   const st = M("stone", { args: [507, [214, 196, 160]], repeat: [3, 2] }), marble = M("stone", { args: [509, [236, 230, 216]], repeat: [4, 4] });
 
@@ -68,7 +72,7 @@ export function buildAqueduct(w) {
   fountain(w, 0, fy, 0, 1.8);
   fountain(w, -24, G(-24, -8), -8, 1.2); fountain(w, 26, G(26, 8), 8, 1.2);
   // ---- houses round the forum, along the streets
-  for (const [x, z, r, sx, sz] of [[-26, -24, 0, 8, 6], [-8, -24, 0, 7, 5], [10, -26, 0.1, 8, 6], [-30, 6, Math.PI / 2, 7, 5], [-28, -8, Math.PI / 2, 6, 5], [26, 22, -0.2, 8, 6], [34, 10, Math.PI, 7, 5], [-10, 34, 0.3, 8, 6], [8, 36, -0.2, 7, 5], [70, 4, Math.PI / 2, 8, 6], [72, -24, 0, 7, 5]]) villa(w, x, G(x, z), z, sx, sz, 3.2, r);
+  for (const [x, z, r, sx, sz] of [[-26, -24, 0, 8, 6], [-8, -24, 0, 7, 5], [10, -26, 0.1, 8, 6], [-26, 32, Math.PI / 2, 7, 5], [-28, -8, Math.PI / 2, 6, 5], [26, 22, -0.2, 8, 6], [34, 10, Math.PI, 7, 5], [-10, 34, 0.3, 8, 6], [8, 36, -0.2, 7, 5], [70, 4, Math.PI / 2, 8, 6], [72, -24, 0, 7, 5]]) villa(w, x, G(x, z), z, sx, sz, 3.2, r);
 
   // ---- the bathhouse: the pool with its stone edge and columns, and the bath hall beside it
   const [px0, pz0, px1, pz1] = POOL, pcx = (px0 + px1) / 2, pcz = (pz0 + pz1) / 2;
@@ -90,11 +94,18 @@ export function buildAqueduct(w) {
   for (const s of [-1, 1]) { w.cyl(0.15, 0.2, 1.1, st, yx + s * 10, yy + 0.55, yz - 12, { seg: 8 }); w.box(0.12, 0.9, 0.12, M(0x6a4a2a), yx + s * 10, yy + 1.4, yz - 12, { rz: 0.5, collide: false }); }
 
   // ---- trees: cypresses along the road, olives on the slopes, pines on the far hills
-  for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2 + 0.16, x = 20 + Math.cos(a) * 70 * 1.12, z = -52 + Math.sin(a) * 26 * 1.3; if (Math.hypot(x - LAND[0], z - LAND[1]) < 14) continue; cypress(w, x, G(x, z), z, 8 + (i % 3)); }
-  const clear = (x, z) => Math.hypot(x - LAND[0], z - LAND[1]) > 14 && Math.abs(Math.hypot((x - 20) / 70, (z + 52) / 26) - 1) > 0.2 && !FLAT.some(([x0, z0, x1, z1]) => x > x0 - 8 && x < x1 + 8 && z > z0 - 8 && z < z1 + 8) && Math.hypot(x - SPRING[0], z - SPRING[1]) > 34;
+  for (let i = 0; i < 12; i++) { const x = RX0 + i * (RX1 - RX0) / 11, z = RZ - RR - 7; cypress(w, x, G(x, z), z, 8 + (i % 3)); }
+  for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { const a = (k - 1) * 0.6, x = (sx < 0 ? RX0 : RX1) + sx * Math.cos(a) * (RR + 7), z = RZ + Math.sin(a) * (RR + 7); cypress(w, x, G(x, z), z, 9); }
+  const clear = (x, z) => Math.hypot(x - LAND[0], z - LAND[1]) > 14 && off(x, z) > 9 && !FLAT.some(([x0, z0, x1, z1]) => x > x0 - 8 && x < x1 + 8 && z > z0 - 8 && z < z1 + 8) && Math.hypot(x - SPRING[0], z - SPRING[1]) > 34;
   for (let i = 0; i < 60; i++) { const x = -150 + (i % 12) * 26 + ((i * 7) % 5), z = 40 + Math.floor(i / 12) * 24 + ((i * 3) % 6) - 150 * (i % 2); if (!clear(x, z) || G(x, z) > 6) continue; olive(w, x, G(x, z), z, 4 + (i % 3) * 0.5); }
   for (let i = 0; i < 30; i++) { const a = i * 2.39996, d = 150 + (i * 13) % 40, x = Math.cos(a) * d, z = Math.sin(a) * d; if (Math.abs(x) > 195 || Math.abs(z) > 195 || !clear(x, z)) continue; w.pine(x, z, 9 + (i % 3) * 2, { y: G(x, z) }); }
   for (const [x, z] of [[-100, -60], [120, -90], [140, 60], [-120, 40]]) rocks(w, x, z, 4, 5, 1.3, { y: G(x, z), color: [170, 160, 140] });
+
+  // grass tufts on the fields and slopes (not on the paving, the pool or the road)
+  const tuftSpots = [];
+  for (let i = 0; i < 1400; i++) { const a = i * 2.39996, d = 6 + Math.sqrt(i / 1400) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9; 
+    if (off(x, z) < 3.5 || FLAT.some(([x0, z0, x1, z1]) => x > x0 - 3 && x < x1 + 3 && z > z0 - 3 && z < z1 + 3) || G(x, z) > 10) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.12]); }
+  tufts(w, tuftSpots, 0x7a9448);
 
   // ---- where Rory lands
   const ly = G(LAND[0], LAND[1]);
@@ -103,7 +114,11 @@ export function buildAqueduct(w) {
   // ---- the missions
   const on = (x, z, up = 1.2) => [x, G(x, z) + up, z];
   const along = (u) => { const segs = AQ.slice(1).map((p, i) => Math.hypot(p[0] - AQ[i][0], p[1] - AQ[i][1])), L = segs.reduce((a, b) => a + b, 0); let s = u * L, i = 0; while (i < segs.length - 1 && s > segs[i]) s -= segs[i++]; const f = s / segs[i]; return [AQ[i][0] + (AQ[i + 1][0] - AQ[i][0]) * f, TOP + 1.1, AQ[i][1] + (AQ[i + 1][1] - AQ[i][1]) * f]; };
-  const ROAD = []; for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2; ROAD.push([20 + Math.cos(a) * 70, -52 + Math.sin(a) * 26]); }
+  const ROAD = []; { const L = RX1 - RX0, T = 2 * L + 2 * Math.PI * RR;
+    for (let i = 0; i < 28; i++) { let s = i / 28 * T; let p;
+      if (s < L) p = [RX0 + s, RZ - RR]; else if ((s -= L) < Math.PI * RR) { const a = -Math.PI / 2 + s / RR; p = [RX1 + Math.cos(a) * RR, RZ + Math.sin(a) * RR]; }
+      else if ((s -= Math.PI * RR) < L) p = [RX1 - s, RZ + RR]; else { s -= L; const a = Math.PI / 2 + s / RR; p = [RX0 + Math.cos(a) * RR, RZ + Math.sin(a) * RR]; }
+      ROAD.push(p); } }
   w.missionData = {
     aq1: { cells: [0.04, 0.16, 0.3, 0.42, 0.55, 0.68, 0.82, 0.97].map(along) },
     aq2: { title: "THE SLUICE GATES" },
@@ -116,6 +131,6 @@ export function buildAqueduct(w) {
     spawn: on(LAND[0], LAND[1] + 4, 0.1), yaw: 0, pebble: on(LAND[0] + 2, LAND[1] + 5, 0), contact: [...on(LAND[0] + 6, LAND[1] + 7, 0), Math.PI],
     // the golden ammonites: by the spring on the hill, at the bottom of the pool, on a fallen stone under the arches
     stars: [[SPRING[0] - 6, TOP + 0.3, SPRING[1] + 7], [45.8, -3.8, -6.2], [-55, G(-55, 80) + 1.9, 80]],
-    at: { aq1: [AQ[4][0], AQ[4][1] - 26], aq2: [AQ[0][0] - 6, AQ[0][1] - 4, 40], aq3: [4, -4], aq4: [px0 - WT - 2, pcz], aq5: [yx, yz - 18], aq6: [ROAD[0][0] + 4, ROAD[0][1]] },
+    at: { aq1: [AQ[4][0], AQ[4][1] - 26], aq2: [AQ[0][0] - 6, AQ[0][1] - 4, 40], aq3: [4, -4], aq4: [px0 - WT - 2, pcz], aq5: [yx, yz - 18], aq6: [ROAD[0][0] - 3, ROAD[0][1] - 5] },
   };
 }

@@ -8,7 +8,7 @@ import { Input } from "./input.js";
 import { Player } from "./player.js";
 import { loadRobot } from "./robots.js";
 import { Pebble } from "./pebble.js";
-import { makePerson, animatePerson, spaceSuit, marsSuit } from "./people.js";
+import { makePerson, animatePerson, spaceSuit, marsSuit, disguise } from "./people.js";
 import { FX } from "./fx.js";
 import { Audio } from "./audio.js";
 import { Speech } from "./speech.js";
@@ -94,7 +94,7 @@ function loadPlace(id) {
   G.spawn = info;
   G.player = new Player(world, x, y, z, info.yaw || 0);
   world.player = G.player;
-  G.player.suit(place.suit || false); G.player.lamp(info.lamp || 0); G.portraits.suit = place.suit || null;
+  G.player.suit(place.suit || false); disguise(G.player.rig, place.disguise || null); G.player.lamp(info.lamp || 0); G.portraits.suit = place.suit || null;
   // the dive suit's tank holds a minute and a half of air
   if (place.suit === "dive") G.player.airMax = G.player.air = 90;
   world.swimTop = info.swimTop;
@@ -511,6 +511,16 @@ G.addCells = n => { G.save.cells += n; G.hud.set({ cells: G.save.cells }); };
 
 function updateBolt(dt) {
   const b = G.bolt, p = G.player;
+  // a mission can send Pebble after something (a Sandbot to charge): she runs at it, horns first
+  const job = !G.world.noPebble && G.mission && G.mission.pebbleGoal && G.mission.pebbleGoal(b, dt);
+  if (job) {
+    const d = b.walkTo(job.x, job.z, 7.5, dt);
+    const g = G.phys.ray({ x: b.pos.x, y: b.pos.y + 2, z: b.pos.z }, { x: 0, y: -1, z: 0 }, 12, G.player.walker.col);
+    if (g !== null) b.pos.y += (b.pos.y + 2 - g - b.pos.y) * Math.min(1, dt * 10);
+    b.play("Charge"); b.talking = G.talking === "pebble"; b.update(dt);
+    if (d < 1.3) G.mission.pebbleHit(b);
+    return;
+  }
   const k = 0.8 + b.size * 0.4, sx = Math.cos(p.yaw) * 1.5 * k, sz = -Math.sin(p.yaw) * 1.5 * k;
   const tx = p.pos.x - Math.sin(p.yaw) * 1.3 * k + sx, tz = p.pos.z - Math.cos(p.yaw) * 1.3 * k + sz;
   const d = Math.hypot(tx - b.pos.x, tz - b.pos.z);
@@ -750,7 +760,7 @@ G.debug = {
       if (d.path) for (const p of d.path) { if (p.length >= 3) { solid(p[0], p[1], p[2], `${m.id} route`); continue; } const [x, z] = p, y = (w.heightAt ? w.heightAt(x, z) : 0) + (d.y ?? 0.2) + 0.8; solid(x, y, z, `${m.id} road`); }
       // Drips stand on the terrain wherever they walk, whatever height they're listed at
       if (d.bots) for (const b of d.bots) solid(b[0], Math.max(b[1], w.heightAt ? w.heightAt(b[0], b[2]) : b[1]) + 0.7, b[2], `${m.id} bot`);
-      if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (d.start ? d.start[1] : 0) + 0.7, z, `${m.id} guard path`);
+      if (d.guards) for (const g of d.guards) for (const [x, z] of g.path) solid(x, (g.y ?? (d.start ? d.start[1] : 0)) + 0.7, z, `${m.id} guard path`);
     }
     return out;
   },

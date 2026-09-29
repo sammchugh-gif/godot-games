@@ -327,6 +327,25 @@ export class Roundup extends Mission {
     this.shots.push({ m, v: dir.multiplyScalar(14), t: 0 });
     this.g.sound("zap");
   }
+  // Pebble joins in: now and then she picks the nearest Sandbot to her and charges it, and it
+  // goes up in a bubble just as if Rory had caught it (main.js runs her there)
+  pebbleGoal(peb, dt) {
+    if (this.finishing || this.data.noPebble) return null;
+    this.pebCool = (this.pebCool ?? 3) - dt;
+    if (this.pebBot && (this.pebBot.state !== "walk" || this.t - this.pebT > 5)) { this.pebBot = null; this.pebCool = 6 - this.lv; }
+    if (!this.pebBot && this.pebCool <= 0) {
+      const b = this.bots.filter(q => q.state === "walk").sort((a, c) => a.r.pos.distanceTo(peb.pos) - c.r.pos.distanceTo(peb.pos))[0];
+      if (b && b.r.pos.distanceTo(peb.pos) < 14) { this.pebBot = b; this.pebT = this.t; peb.honk(); }
+      else this.pebCool = 1;
+    }
+    return this.pebBot ? this.pebBot.r.pos : null;
+  }
+  pebbleHit(peb) {
+    const b = this.pebBot; if (!b || b.state !== "walk") return;
+    this.pebBot = null; this.pebCool = 7 - this.lv; peb.cheer(2); peb.honk();
+    this.g.sound("hit"); this.g.fx.puff(b.r.pos.x, b.r.pos.y + 0.3, b.r.pos.z, 0xd8c8a8, 16);
+    this.bubbleUp(b);
+  }
   bubbleUp(b) {
     b.state = "float"; b.t = 0; b.r.play("No");
     b.bubble = this.add(makeBubble(0.95));
@@ -335,7 +354,7 @@ export class Roundup extends Mission {
     if (this.popped >= this.need) { this.finishing = true; this.later(1.6, () => this.win()); }
   }
   actionLabel() { return "ZAP"; }
-  hud() { return { ...super.hud(), text: `Zap the ${this.data.what || "Sandbots"}  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
+  hud() { return { ...super.hud(), text: `Bubble the ${this.data.what || "Sandbots"}  ${this.popped}/${this.need}`, progress: this.popped / this.need }; }
   target() { const b = this.bots.find(b => b.state === "walk"); return b ? b.r.pos : null; }
   // autopilot: run after the nearest Floater and zap it; teleports (and notes it) only if one can't be caught in 25 s
   solve() {

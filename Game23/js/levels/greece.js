@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { rocks } from "./kit.js";
-import { timeSled } from "./timekit.js";
+import { timeSled, tufts } from "./timekit.js";
 import { temple, column, olive, cypress } from "./antiquekit.js";
 
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
@@ -90,6 +90,12 @@ export function buildGreece(w) {
   for (let i = 0; i < 40; i++) { const a = i * 2.39996, d = 12 + (i * 37) % 48, x = 10 + Math.cos(a) * d, z = 150 + Math.sin(a) * d * 0.8; if (z < 110) continue; w.pine(x, z, 8 + (i % 4) * 2, { y: G(x, z) }); }
   for (const [x, z] of [[-110, 40], [130, 40], [140, -60], [-90, 110]]) rocks(w, x, z, 5, 6, 1.4, { y: G(x, z), color: [176, 170, 156] });
 
+  // grass tufts over the valley floor (not on the paving, the track or the hippodrome's sand)
+  const tuftSpots = [];
+  for (let i = 0; i < 1400; i++) { const a = i * 2.39996, d = 4 + Math.sqrt(i / 1400) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9 - 10; const r = segD(x, z), e = Math.hypot((x - 40) / 72, (z + 90) / 24);
+    if ((r > SR - 4 && r < SR + 4) || (e > 0.8 && e < 1.2) || (x > -66 && x < 16 && z > 28 && z < 76) || G(x, z) > 8) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.12]); }
+  tufts(w, tuftSpots, 0x6a9040);
+
   // ---- where Rory lands
   const ly = G(LAND[0], LAND[1]);
   timeSled(w, LAND[0] - 5, ly, LAND[1] - 3, 0.3);
@@ -109,7 +115,7 @@ export function buildGreece(w) {
     gre2: { plates: [[cx + HW + 4.5, G(cx + HW + 4.5, cz - 4), cz - 4]], doors: [{ at: [cx + HW, gy + 1.7, cz], size: [0.7, 3.4, GH * 2 + 0.1], need: [0] }], goal: [cx + 2, cy, cz] },
     gre3: { title: "THE GAMES IN ORDER", events: [["🔥", "The flame is lit"], ["🚶", "The march in"], ["🏃", "The races"], ["🌿", "Crowns of olive leaves"]] },
     gre4: { what: "chariot", path: HLOOP, y: 0.3, car: "chariot", quarry: "chariot", quarryOpts: { color: 0x3a2a4a, trim: 0xe8c070, horse: 0x2a2a2a }, lead: 24 },
-    gre5: { title: "THE SUN MIRROR" },
+    gre5: { title: "THE SUN MIRROR", text: "Tap the mirrors to turn them. Send the sunbeam to the altar!", from: "☀️", to: "🔥" },
     gre6: { area: [(SX0 + SX1) / 2, SZ, 14], bots: [bot(58, SZ), bot(70, SZ + 6), bot(86, SZ - 2), bot(64, SZ - 6), bot(80, SZ + 8), bot(94, SZ - 4)] },
   };
   return {

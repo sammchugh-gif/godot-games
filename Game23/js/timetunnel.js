@@ -2,6 +2,8 @@
 // era to the next. Same little API as the globe it replaces: play(from, to, allPlaces, cb) and
 // update(dt), with its own scene and camera handed to the engine while it runs.
 import * as THREE from "three";
+import { makePerson, animatePerson, RORY } from "./people.js";
+import { Pebble } from "./pebble.js";
 
 // a year as the game writes it: 66 MILLION BC, 20,000 BC, AD 20, 1903
 export function yearText(y) {
@@ -68,14 +70,17 @@ export class Travel {
       const a = Math.random() * Math.PI * 2, r = 1.8 + Math.random() * 2.4;
       g.position.set(Math.cos(a) * r, Math.sin(a) * r, -Math.random() * 110); g.userData.spin = 0.5 + Math.random() * 2; s.add(g); this.bits.push(g);
     }
-    // the time-sled: a hovering sled with a glowing rim, Rory and Pebble aboard
+    // the time-sled: a long white pod on brass runners, the gold dial on its back, Rory in the
+    // front seat and Pebble behind him (the real Pebble, at the size she is now)
     const sled = this.sled = new THREE.Group();
-    const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 1.2, 6, 12), new THREE.MeshStandardMaterial({ color: 0xf2f5fa, roughness: 0.3, metalness: 0.5 })); hull.rotation.x = Math.PI / 2; hull.scale.set(1.3, 0.5, 1); sled.add(hull);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.05, 8, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 2.2, 3) })); rim.rotation.x = Math.PI / 2; rim.scale.set(1, 1.6, 1); rim.position.y = -0.15; sled.add(rim);
-    const rider = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.36, 4, 8), new THREE.MeshStandardMaterial({ color: 0x16324f, roughness: 0.6 })); rider.position.set(0, 0.42, 0.1); sled.add(rider);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), new THREE.MeshStandardMaterial({ color: 0xf3cfae, roughness: 0.6 })); head.position.set(0, 0.78, 0.1); sled.add(head);
-    const dino = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), new THREE.MeshStandardMaterial({ color: 0x7cc47a, roughness: 0.6 })); dino.scale.set(0.9, 0.8, 1.2); dino.position.set(0, 0.28, -0.45); sled.add(dino);
-    const frill = new THREE.Mesh(new THREE.CircleGeometry(0.17, 16, -1, 2.1), new THREE.MeshStandardMaterial({ color: 0x5aa86a, side: THREE.DoubleSide })); frill.position.set(0, 0.45, -0.3); sled.add(frill);
+    const white = new THREE.MeshStandardMaterial({ color: 0xf2f5fa, roughness: 0.3, metalness: 0.5 }), brass = new THREE.MeshStandardMaterial({ color: 0xd8a848, roughness: 0.3, metalness: 0.9 });
+    const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 1.3, 6, 14), white); hull.rotation.x = Math.PI / 2; hull.scale.set(1.3, 1, 0.42); sled.add(hull);
+    for (const sx of [-1, 1]) { const c = new THREE.CatmullRomCurve3([[sx * 0.48, -0.21, -1.0], [sx * 0.48, -0.24, 0], [sx * 0.48, -0.21, 0.8], [sx * 0.48, -0.02, 1.12], [sx * 0.48, 0.12, 1.05]].map(p => new THREE.Vector3(...p))); sled.add(new THREE.Mesh(new THREE.TubeGeometry(c, 16, 0.03, 6), brass)); }
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 8, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 0.5, 3) })); rim.rotation.x = Math.PI / 2; rim.scale.set(1.05, 2.3, 1); rim.position.y = -0.26; sled.add(rim);
+    const dial = new THREE.Mesh(new THREE.CircleGeometry(0.25, 24), new THREE.MeshBasicMaterial({ map: clockFace(), transparent: true })); dial.position.set(0, 0.42, -0.72); dial.rotation.y = Math.PI; sled.add(dial);
+    const dialRing = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.03, 6, 24), brass); dialRing.position.copy(dial.position); sled.add(dialRing);
+    const rory = this.rory = makePerson(RORY); rory.root.scale.setScalar(0.5); rory.root.position.set(0, 0.08, 0.2); sled.add(rory.root);
+    this.pebble = new Pebble(1); this.pebble.root.position.set(0, 0.08, -0.4); sled.add(this.pebble.root);
     s.add(sled);
     s.add(new THREE.AmbientLight(0xc8b8ff, 1.2)); const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(2, 4, 3); s.add(key);
     // the year, counting between eras
@@ -87,6 +92,8 @@ export class Travel {
   play(from, to, allPlaces, cb) {
     if (!this.built) this.build();
     this.y0 = from.year ?? 0; this.y1 = to.year ?? 0;
+    // (Pebble rides at the size she is now, scaled down to the sled's size)
+    this.pebble.grow((from.pebble || 1) * 0.5, true); this.pebble.play("Sitting");
     this.t = 0; this.dur = 4.8; this.cb = cb;
     this.label.style.display = "block";
     this.engine.setScene(this.scene, this.camera);
@@ -99,6 +106,7 @@ export class Travel {
     const speed = 12 + Math.sin(f * Math.PI) * 60;
     this.tex.offset.y += dt * speed * 0.02; this.tex.offset.x += dt * 0.15;
     for (const b of this.bits) { b.position.z += dt * speed; if (b.position.z > 6) b.position.z -= 116; if (b.userData.spin) { b.rotation.z += dt * b.userData.spin; b.rotation.x += dt * b.userData.spin * 0.5; } }
+    animatePerson(this.rory, { dt, speed: 0, grounded: true, sit: true }); this.pebble.update(dt);
     // the sled wobbles along, the camera just behind it
     const s = this.sled; s.position.set(Math.sin(this.t * 1.7) * 0.5, -1.2 + Math.sin(this.t * 2.3) * 0.25, -4);
     s.rotation.set(0, Math.PI, Math.sin(this.t * 1.7) * 0.25);

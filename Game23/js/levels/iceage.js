@@ -19,6 +19,8 @@ export function ground(x, z) {
   let h = Math.sin(x * 0.04) * 0.6 + Math.cos(z * 0.045 + 0.4) * 0.5 + Math.sin((x - z) * 0.09) * 0.15;
   // the cliff to the east (the cave is cut into it), the glacier to the north, hills round the rest
   h += S(CLIFF - 4, CLIFF + 1, x) * 16;
+  // a flat notch cut into the cliff in front of the cave's mouth, where the icicles hang
+  h *= 1 - S(9, 6, Math.abs(z)) * S(CLIFF - 18, CLIFF - 14, x) * S(CLIFF + 0.5, CLIFF - 1.5, x);
   h += S(120, 170, z) * 28 + S(-100, -150, z) * 24 + S(-110, -160, x) * 26;
   // flat round the camp and where the sled lands
   const f = Math.max(S(14, 8, Math.hypot(x - CAMP[0], z - CAMP[1])), S(12, 6, Math.hypot(x, z + 58)));
@@ -80,7 +82,7 @@ export function buildIceAge(w) {
   // ---- the missions
   const on = (x, z, up = 1.2) => [x, G(x, z) + up, z];
   w.missionData = {
-    ice1: { critter: "calf", kids: [on(46, 46, 0.05)], goal: [HERD[0], G(HERD[0], HERD[1]), HERD[1]], goalR: 6, crabs: [[20, 40, 20, 60, 1.3], [0, 70, 12, 50, 1.1]] },
+    ice1: { critter: "calf", hazard: "fox", kids: [on(46, 46, 0.05)], goal: [HERD[0], G(HERD[0], HERD[1]), HERD[1]], goalR: 6, crabs: [[20, 40, 20, 60, 1.3], [0, 70, 12, 50, 1.1]] },
     ice2: { fall: 5.2, things: [["icicle", CLIFF - 5, 0, -4], ["icicle", CLIFF - 3, 0, 3], ["icicle", CLIFF - 6, 0, 1], ["icicle", CLIFF - 2, 0, -2], ["icicle", CLIFF - 4.5, 0, 4.5], ["icicle", CLIFF - 3, 0, -5], ["icicle", CLIFF - 6, 0, -1]] },
     ice3: { cells: [[CLIFF + 4, 1.2, 0], [CLIFF + 14, 1.2, 1.8], [CLIFF + 22, 2.4, -1.8], [CLIFF + 30, 1.2, 0], [98, 1.2, -6], [110, 1.2, -7], [110, 2.4, 7], [100, 1.2, 7]] },
     ice4: { look: "snow", size: 1.0, pad: WALL, padR: 2.2, blocks: [on(-18, -30, 0.6), on(-48, -34, 0.6), on(-54, 4, 0.6), on(-16, 2, 0.6)] },

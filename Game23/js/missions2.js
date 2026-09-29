@@ -21,7 +21,7 @@ export class Panel {
 export class Circuit extends Panel {
   start() {
     const N = this.N = [4, 5, 5, 6][this.lv - 1] || 5;
-    this.text = "Tap the tiles to turn them. Connect the power to the lock!";
+    this.text = this.data.text || "Tap the tiles to turn them. Connect the power to the lock!";
     // a random path from the left edge to the right edge
     const r0 = Math.floor(Math.random() * N), r1 = Math.floor(Math.random() * N);
     let path = null;
@@ -78,10 +78,10 @@ export class Circuit extends Panel {
     // the battery on the left and the lock on the right
     const by = (this.r0 + 1.5) * c, ly = (this.r1 + 1.5) * c;
     g.fillStyle = "#ffd166"; g.beginPath(); g.roundRect(c * 0.1, by - c * 0.3, c * 0.5, c * 0.6, 6); g.fill();
-    g.fillStyle = "#1a1a1a"; g.font = `900 ${Math.round(c * 0.36)}px system-ui`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⚡", c * 0.35, by + 2);
+    g.fillStyle = "#1a1a1a"; g.font = `900 ${Math.round(c * 0.36)}px system-ui`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(this.data.from || "⚡", c * 0.35, by + 2);
     const ok = this.solved();
     g.fillStyle = ok ? "#7bed9f" : "#ff5ad8"; g.beginPath(); g.arc(600 - c * 0.35, ly, c * 0.28, 0, 7); g.fill();
-    g.fillStyle = "#1a1a1a"; g.fillText(ok ? "✓" : "🔒", 600 - c * 0.35, ly + 2);
+    g.fillStyle = "#1a1a1a"; g.fillText(ok ? "✓" : this.data.to || "🔒", 600 - c * 0.35, ly + 2);
   }
   stars() { const need = this.onPath.filter(Boolean).length * 1.6 + 2; return this.turns <= need ? 3 : this.turns <= need * 2 ? 2 : 1; }
   // autopilot: turn a wrong path tile towards its answer
@@ -159,7 +159,7 @@ export class Tide extends Panel {
     const cfg = this.data.tide || TIDES[Math.min(3, this.lv)];
     this.B = cfg.basins.map(b => ({ ...b })); this.G = cfg.gates.map(([a, b]) => ({ a, b, open: false }));
     this.moves = 0; this.still = 0;
-    this.text = "Tap a gate to open it. Shut it when the water reaches the yellow line!";
+    this.text = this.data.text || "Tap a gate to open it. Shut it when the water reaches the yellow line!";
     const el = screen("puzzle", `<div class="card puzzle" style="padding:14px 16px"><div class="title-sub" style="font-size:15px;letter-spacing:.3em">${this.data.title || "SLUICE GATES"}</div><canvas width="800" height="480" style="width:min(92vw,110vh);height:auto;display:block;margin:8px auto;touch-action:none"></canvas><div class="msg" style="font-weight:800;font-size:16px;text-align:center">${this.text}</div></div>`, "screen dim");
     this.cv = el.querySelector("canvas"); this.gx = this.cv.getContext("2d"); this.msg = el.querySelector(".msg");
     this.cv.addEventListener("pointerdown", e => { e.stopPropagation(); const r = this.cv.getBoundingClientRect(); this.tap((e.clientX - r.left) / r.width * 800, (e.clientY - r.top) / r.height * 480); });

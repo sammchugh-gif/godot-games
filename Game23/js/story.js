@@ -55,7 +55,7 @@ export const PLACES = [
         outro: [["rory", "Tagged! The eggs are safe. But the Sandbots jumped into a glowing hole in the air."], ["flint", "A time tunnel. We follow it."]] },
     ] },
   // ------------------------------------------------------------ 2. the Ice Age
-  { id: "iceage", ch: 1, name: "The Ice Age", when: "20,000 years ago", year: -20000, contact: "tuva", pebble: 1.15,
+  { id: "iceage", ch: 1, name: "The Ice Age", when: "20,000 years ago", year: -20000, contact: "tuva", pebble: 1.15, disguise: { coat: 0x8a6a4a, trousers: 0x5a4030, shirt: 0xd8c8a8, tie: 0x6a4a2a },
     arrive: [["rory", "It's freezing! Pebble, stay close."], ["pebble", "Honk. Brrr."], ["tuva", "Who are you? And what is that?"], ["rory", "I'm Rory. This is Pebble. She's a dinosaur."], ["tuva", "I'm Tuva. My family paints the cave. And this morning our best painting was gone. Just gone, off the wall."], ["pip", "A great moment: the first painting of the great horse. Hourglass has taken it."]],
     leave: [["tuva", "The horse is back on the wall! Thank you, Rory. And thank you, Pebble."], ["pebble", "Honk!"], ["flint", "The Sandbots left something behind: a chip of gold stone. From Egypt."], ["frost", "Next stop, the pyramids. Four and a half thousand years ago."]],
     missions: [
@@ -79,7 +79,7 @@ export const PLACES = [
         outro: [["tuva", "It's back! Exactly where it was. The great horse."], ["flint", "And the present stops wobbling. Pip, how's your tea?"], ["pip", "It's tea again! Hot and everything."]] },
     ] },
   // ------------------------------------------------------------ 3. ancient Egypt
-  { id: "egypt", ch: 1, name: "Ancient Egypt", when: "4,500 years ago", year: -2500, contact: "nefi", pebble: 1.3,
+  { id: "egypt", ch: 1, name: "Ancient Egypt", when: "4,500 years ago", year: -2500, contact: "nefi", pebble: 1.3, disguise: { coat: 0xf0e8d4, trousers: 0xe8dcc0, shirt: 0xf8f4e8, tie: 0x2a8ad8 },
     arrive: [["nefi", "Stop! Who goes there? And why is your lizard so big?"], ["rory", "She's a dinosaur. I'm Rory. We're looking for some very small robots."], ["nefi", "I'm Nefi. I'm learning to be a scribe. The robots came at dawn. They took the golden capstone!"], ["pip", "The gold stone that goes on the very top of the Great Pyramid. Today's the day they put it there."], ["nefi", "Was the day."]],
     leave: [["nefi", "The capstone is on top! It shines like the sun."], ["pebble", "Honk!"], ["flint", "The Sandbots' tunnel goes to Greece. To Olympia, and the very first games."], ["rory", "Pebble's getting bigger. She was up to my knee. Now she's up to my middle."]],
     missions: [
@@ -103,7 +103,7 @@ export const PLACES = [
         outro: [["rory", "Top of the world! The Sandbots ran off into a tunnel."], ["nefi", "Here it comes, on the workers' ropes. The capstone!"], ["frost", "Well done, Agent. Another moment saved."]] },
     ] },
   // ------------------------------------------------------------ 4. ancient Greece
-  { id: "greece", ch: 1, name: "Olympia, Ancient Greece", when: "2,700 years ago", year: -700, contact: "theo", pebble: 1.45,
+  { id: "greece", ch: 1, name: "Olympia, Ancient Greece", when: "2,700 years ago", year: -700, contact: "theo", pebble: 1.45, disguise: { coat: 0xf4f0e8, trousers: 0xf0ece0, shirt: 0xf4f0e8, tie: 0x3a6ad8 },
     arrive: [["theo", "Are you here for the games? You're too late. The flame's gone out. It's never gone out."], ["rory", "I'm Rory. This is Pebble. We're after the robots that did it."], ["theo", "I'm Theo. I'm running in the boys' race. If there's a race. Without the flame, there are no games."], ["flint", "Hourglass has bottled the lighting of the flame. Get the moment back, and the games begin."]],
     leave: [["theo", "The flame is burning! And I came second. Second! Next time, first."], ["pebble", "Honk!"], ["flint", "The trail goes west, to Rome. To a brand-new aqueduct."], ["pip", "An aqueduct is a bridge for water. The Romans built them everywhere."]],
     missions: [
@@ -127,7 +127,7 @@ export const PLACES = [
         outro: [["sandbot", "Upside down again. This is the worst day of my life. And I've had a lot of days. In a lot of years."], ["rory", "Where's Hourglass?"], ["sandbot", "Rome. She likes Rome. Very punctual, the Romans."]] },
     ] },
   // ------------------------------------------------------------ 5. the Roman aqueduct
-  { id: "aqueduct", ch: 1, name: "The Roman Aqueduct", when: "2,000 years ago", year: 20, contact: "livia", pebble: 1.6,
+  { id: "aqueduct", ch: 1, name: "The Roman Aqueduct", when: "2,000 years ago", year: 20, contact: "livia", pebble: 1.6, disguise: { coat: 0xc03a2a, trousers: 0xe8dcc0, shirt: 0xf0e8d8, tie: 0xe8c070 },
     arrive: [["livia", "Oi! Dinosaurs aren't allowed on the aqueduct. Or anywhere. I've never seen one before."], ["rory", "She's with me. I'm Rory."], ["livia", "I'm Livia. My dad built this aqueduct. Today the water was meant to reach the town for the first time. And it's dry!"], ["flint", "Hourglass has bottled the moment the water arrives. The whole town's waiting in the square with cups."]],
     leave: [["livia", "The water's here! Listen to the fountains. Dad's crying. Happy crying."], ["pebble", "Honk!"], ["flint", "One more tunnel. It goes north, a thousand years on. To the Vikings."], ["frost", "And Hourglass herself has gone through it. This time we might catch her."]],
     missions: [
@@ -151,7 +151,7 @@ export const PLACES = [
         outro: [["hourglass", "Tagged? Me? Oh, you are annoying. Do you know how long it took me to get here?"], ["rory", "Two thousand years?"], ["hourglass", "Exactly! And I hate waiting. Goodbye, Agent Rory."], ["flint", "She's dropped the bottle! The water's free. But she's gone to the Vikings."]] },
     ] },
   // ------------------------------------------------------------ 6. Viking seas
-  { id: "fjord", ch: 1, name: "The Viking Fjord", when: "1,000 years ago", year: 1000, contact: "sigrid", pebble: 1.8,
+  { id: "fjord", ch: 1, name: "The Viking Fjord", when: "1,000 years ago", year: 1000, contact: "sigrid", pebble: 1.8, disguise: { coat: 0x3a5a8a, trousers: 0x5a4a3a, shirt: 0xd8ccb0, tie: 0x8a5a2a },
     arrive: [["sigrid", "A dragon! No. A very small dragon. With horns."], ["rory", "She's a dinosaur. Pebble. I'm Rory."], ["sigrid", "I'm Sigrid. I build ships. Our biggest longship sails for Iceland today, but her sail is gone. A woman in a coat of glass buttons took it!"], ["pip", "That's her. Hourglass. And she's still here."]],
     leave: [["sigrid", "The sail is up! She's away, all the way to Iceland!"], ["pebble", "Honk honk!"], ["rory", "Pebble's almost as tall as me. When did that happen?"], ["flint", "Every era, a little bit bigger. Like everybody."]],
     missions: [

@@ -6,7 +6,7 @@
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { rocks } from "./kit.js";
-import { timeSled } from "./timekit.js";
+import { timeSled, tufts } from "./timekit.js";
 import { longhouse, runeStone, birch } from "./antiquekit.js";
 
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
@@ -20,8 +20,8 @@ export function ground(x, z) {
   // the beach at the head: flat sand just above the water
   const b = S(24, 16, Math.hypot(x - BEACH[0], z - BEACH[1]));
   h = h * (1 - b) + 1.2 * b;
-  // flat where the sled lands and where the boathouse stands
-  const f = Math.max(S(12, 6, Math.hypot(x - LAND[0], z - LAND[1])), S(4, 0, Math.max(Math.abs(x - BH[0]) - 9, Math.abs(z - BH[1]) - 6, 0)));
+  // flat where the sled lands, and round the boathouse and its yard
+  const f = Math.max(S(12, 6, Math.hypot(x - LAND[0], z - LAND[1])), S(4, 0, Math.max(16 - x, x - 66, 28 - z, z - 64, 0)));
   h = h * (1 - f) + 1.6 * f;
   // the fjord itself: a deep channel of sea from the south up to the beach
   const df = S(FW + 4, FW - 14, Math.abs(x - FX)) * S(128, 112, z);
@@ -74,6 +74,11 @@ export function buildFjord(w) {
   for (let i = 0; i < 3; i++) w.box(4 - i * 1.2, 1.1, 4 - i * 1.2, stoneM, CAIRN[0], cy + 0.55 + i * 1.1, CAIRN[1], { ry: i * 0.4 });
   w.cyl(0.08, 0.08, 2.4, M(0x5a3a20), CAIRN[0], cy + 4.5, CAIRN[1], { collide: false, seg: 6 });
 
+  // grass tufts along the shore meadows (not on the sand or the mountainsides)
+  const tuftSpots = [];
+  for (let i = 0; i < 1200; i++) { const x = 12 + ((i * 37) % 97), z = -150 + ((i * 53) % 290); const hh = G(x, z); if (hh < 1.3 || hh > 5 || steep(x, z) > 0.4 || (x > 16 && x < 36 && z > 36 && z < 52)) continue; tuftSpots.push([x, hh, z, 0.8 + (i % 5) * 0.12]); }
+  tufts(w, tuftSpots, 0x5a8040);
+
   // ---- where Rory lands
   const ly = G(LAND[0], LAND[1]);
   timeSled(w, LAND[0] - 5, ly, LAND[1] - 3, 0.3);
@@ -87,7 +92,7 @@ export function buildFjord(w) {
     vik2: { title: "THE RUNE STONES", symbols: ["🐉", "⚓", "🛡️", "🌙"] },
     vik3: { title: "THE NIGHT SKY" },
     vik4: { what: "sail loft", robot: "sandbot", start: bot(62, 60), goal: bot(BH[0] - 2, BH[1]),
-      guards: [{ path: [[42, 34], [42, 54]], speed: 1.3, y: G(42, 44) }, { path: [[52, 48], [38, 48]], speed: 1.1, phase: 0.5, y: G(45, 48) }, { path: [[48, 38], [36, 38]], speed: 1.2, phase: 3, y: G(42, 38) }] },
+      guards: [{ path: [[42, 34], [42, 54]], speed: 1.3, y: 1.6 }, { path: [[52, 48], [38, 48]], speed: 1.1, phase: 0.5, y: 1.6 }, { path: [[48, 38], [36, 38]], speed: 1.2, phase: 3, y: 1.6 }] },
     vik5: { what: "sail pieces", cells: [[-10, -9.3, 24], [-16, -9.3, 34], [-24, -9.3, 18], [-14, -9.3, 48], [-28, -9.3, 40], [-20, -9.3, 60]], floor: -10 },
     vik6: { center: [BEACH[0], 1.2, BEACH[1]], radius: 14, robot: "serpent", height: 5, serpent: true },
   };

@@ -4,6 +4,7 @@
 // circling; and the POLARIS time-sled, parked where Rory lands.
 import * as THREE from "three";
 import { M } from "../tex.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const leafM = (c) => M(c, { rough: 0.75, side: THREE.DoubleSide });
 // a frond: a long, curved, tapering leaf
@@ -105,15 +106,38 @@ export function pterosaurs(w, cx, cy, cz, n = 5, r = 40) {
   w.updaters.push((dt, t) => { for (const p of list) { p.a += dt * p.sp; p.g.position.set(cx + Math.cos(p.a) * p.rr, p.y + Math.sin(t + p.a) * 1.5, cz + Math.sin(p.a) * p.rr); p.g.rotation.y = -p.a; const f = Math.sin(t * 3 + p.a * 5) * 0.35; p.wings[0].rotation.z = f; p.wings[1].rotation.z = -f; } });
   return list;
 }
-// the POLARIS time-sled, parked: white, with its violet skirt glowing
+// the POLARIS time-sled, parked: a long white pod on brass runners that curl up at the front, two
+// seats behind a curved windscreen, the big gold time dial on its back, and its violet glow
 export function timeSled(w, x, y, z, yaw = 0) {
-  const g = new THREE.Group(); g.position.set(x, y + 0.5, z); g.rotation.y = yaw; w.scene.add(g);
-  const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 2.2, 6, 14), M(0xf2f5fa, { rough: 0.3, metal: 0.5 })); hull.rotation.x = Math.PI / 2; hull.scale.set(1.2, 0.55, 1); hull.castShadow = true; g.add(hull);
-  const skirt = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.09, 8, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xa070ff).multiplyScalar(2.5) })); skirt.rotation.x = Math.PI / 2; skirt.scale.set(1, 1.7, 1); skirt.position.y = -0.35; g.add(skirt);
-  const screen = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 8, 0, Math.PI * 2, 0, Math.PI / 3), new THREE.MeshPhysicalMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0.4, roughness: 0.05, clearcoat: 1 })); screen.position.set(0, 0.3, 0.9); screen.scale.set(1.1, 0.7, 0.8); g.add(screen);
-  const dial = new THREE.Mesh(new THREE.CircleGeometry(0.28, 20), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffd166).multiplyScalar(2) })); dial.position.set(0, 0.55, -0.9); dial.rotation.y = Math.PI; g.add(dial);
-  w.phys.fixedBox(x, y + 0.5, z, 1.2, 0.5, 1.9, yaw);
-  w.updaters.push((dt, t) => { g.position.y = y + 0.5 + Math.sin(t * 1.6) * 0.06; });
+  const g = new THREE.Group(); g.position.set(x, y + 0.55, z); g.rotation.y = yaw; w.scene.add(g);
+  const white = M(0xf2f5fa, { rough: 0.3, metal: 0.5 }), brass = M(0xd8a848, { rough: 0.3, metal: 0.9 }), dark = M(0x2a2438, { rough: 0.6 });
+  const add = (geo, m, px, py, pz) => { const me = new THREE.Mesh(geo, m); me.position.set(px, py, pz); me.castShadow = true; me.userData.dynamic = true; g.add(me); return me; };
+  const hull = add(new THREE.CapsuleGeometry(0.75, 2.6, 8, 18), white, 0, 0, 0); hull.rotation.x = Math.PI / 2; hull.scale.set(1.3, 1, 0.42);
+  const stripe = add(new THREE.TorusGeometry(0.98, 0.04, 6, 32), M(0xa070ff, { emissive: 0x8050e0, ei: 1.2 }), 0, 0.05, 0); stripe.rotation.x = Math.PI / 2; stripe.scale.set(1, 2.2, 1);
+  // the runners, and the struts that hold them
+  for (const sx of [-1, 1]) {
+    const c = new THREE.CatmullRomCurve3([[sx * 0.95, -0.42, -2.0], [sx * 0.95, -0.48, 0], [sx * 0.95, -0.42, 1.6], [sx * 0.95, -0.05, 2.25], [sx * 0.95, 0.25, 2.1]].map(p => new THREE.Vector3(...p)));
+    add(new THREE.TubeGeometry(c, 24, 0.06, 8), brass, 0, 0, 0);
+    for (const zz of [-1.2, 0.2, 1.3]) { const st = add(new THREE.CylinderGeometry(0.035, 0.035, 0.36, 6), brass, sx * 0.85, -0.27, zz); st.rotation.z = sx * 0.4; }
+  }
+  // the seats, one behind the other, and the windscreen
+  for (const zz of [0.35, -0.55]) { add(new THREE.BoxGeometry(0.62, 0.14, 0.55), dark, 0, 0.3, zz); add(new THREE.BoxGeometry(0.62, 0.45, 0.1), dark, 0, 0.5, zz - 0.28); }
+  const screen = add(new THREE.SphereGeometry(0.75, 16, 8, -Math.PI / 2, Math.PI, 0, Math.PI / 2.6), new THREE.MeshPhysicalMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0.35, roughness: 0.05, clearcoat: 1, depthWrite: false, side: THREE.DoubleSide }), 0, 0.22, 0.95);
+  screen.scale.set(0.9, 0.9, 0.6); screen.castShadow = false;
+  // the time dial on the back: a gold ring round a clock face, its hand going round
+  const c = document.createElement("canvas"); c.width = c.height = 128; const cg = c.getContext("2d");
+  cg.fillStyle = "#fff4d8"; cg.beginPath(); cg.arc(64, 64, 60, 0, 7); cg.fill(); cg.fillStyle = "#3a2a1a"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; cg.fillRect(64 + Math.sin(a) * 48 - 3, 64 - Math.cos(a) * 48 - 3, 6, 6); }
+  const ft = new THREE.CanvasTexture(c); ft.colorSpace = THREE.SRGBColorSpace;
+  const dial = new THREE.Group(); dial.position.set(0, 0.85, -1.45); dial.rotation.x = -0.25; g.add(dial);
+  const face = new THREE.Mesh(new THREE.CircleGeometry(0.5, 28), new THREE.MeshStandardMaterial({ map: ft, emissive: 0xffe0a0, emissiveMap: ft, emissiveIntensity: 0.5, side: THREE.DoubleSide })); face.userData.dynamic = true; dial.add(face);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.06, 8, 32), brass); ring.userData.dynamic = true; dial.add(ring);
+  const hand = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.4, 0.02), dark); hand.geometry.translate(0, 0.18, 0.02); hand.userData.dynamic = true; dial.add(hand);
+  for (const sx of [-1, 1]) { const post = add(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 6), brass, sx * 0.45, 0.45, -1.4); post.rotation.x = -0.25; }
+  // the glow it hovers on
+  const skirt = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.08, 8, 36), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xa070ff).multiplyScalar(2.5) }));
+  skirt.rotation.x = Math.PI / 2; skirt.scale.set(1.05, 2.3, 1); skirt.position.y = -0.52; skirt.userData.dynamic = true; g.add(skirt);
+  w.phys.fixedBox(x, y + 0.5, z, 1.2, 0.5, 2.1, yaw);
+  w.updaters.push((dt, t) => { g.position.y = y + 0.55 + Math.sin(t * 1.6) * 0.06; hand.rotation.z = -t * 1.2; });
   return g;
 }
 // snow falling round the camera (a box of flakes that follows it)
@@ -195,4 +219,26 @@ export function landFrame(w, half, y, color) {
   for (const [sx, sz, cx, cz] of [[2 * F, F - half, 0, -(half + (F - half) / 2)], [2 * F, F - half, 0, half + (F - half) / 2], [F - half, 2 * half, -(half + (F - half) / 2), 0], [F - half, 2 * half, half + (F - half) / 2, 0]]) {
     const m = w.mesh(new THREE.PlaneGeometry(sx, sz), mat, cx, y, cz, { rx: -Math.PI / 2, cast: false }); m.userData.dynamic = true;
   }
+}
+// grass tufts: three crossed blades each, thousands of them in one draw call (they cast no
+// shadow). spots [[x, y, z, size]]
+export function tufts(w, spots, color = 0x5a8a3a) {
+  const blade = () => { const g = new THREE.PlaneGeometry(0.5, 0.6, 1, 2), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + 0.3) / 0.6; p.setX(i, p.getX(i) * (1 - t * 0.8)); p.setY(i, p.getY(i) + 0.3); p.setZ(i, t * t * 0.12); } return g; };
+  const parts = [0, 1, 2].map(k => { const g = blade(); g.rotateY(k * Math.PI / 3); return g; });
+  const geo = mergeGeometries(parts); geo.computeVertexNormals();
+  const im = new THREE.InstancedMesh(geo, M(color, { rough: 0.9, side: THREE.DoubleSide }), spots.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  spots.forEach(([x, y, z, s = 1], i) => { e.set(0, x * 1.7 + z, 0); q.setFromEuler(e); m.compose(new THREE.Vector3(x, y - 0.02, z), q, new THREE.Vector3(s, s * (0.8 + ((i * 7) % 5) * 0.1), s)); im.setMatrixAt(i, m); });
+  im.receiveShadow = true; w.scene.add(im); return im;
+}
+// little flowering shrubs (the first flowers were blooming by the end of the dinosaurs): a
+// green dome with pale blossoms, instanced
+export function blossoms(w, spots, bloom = 0xf4e8f0) {
+  const bush = new THREE.IcosahedronGeometry(0.5, 1), flower = new THREE.IcosahedronGeometry(0.09, 0);
+  const a = new THREE.InstancedMesh(bush, M(0x3a7a34, { rough: 0.85 }), spots.length), b = new THREE.InstancedMesh(flower, M(bloom, { rough: 0.6, emissive: bloom, ei: 0.1 }), spots.length * 6);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion();
+  spots.forEach(([x, y, z, s = 1], i) => {
+    m.compose(new THREE.Vector3(x, y + 0.3 * s, z), q, new THREE.Vector3(s, s * 0.7, s)); a.setMatrixAt(i, m);
+    for (let k = 0; k < 6; k++) { const an = k * 1.05 + i, r = 0.42 * s; m.compose(new THREE.Vector3(x + Math.cos(an) * r, y + (0.45 + (k % 2) * 0.15) * s, z + Math.sin(an) * r), q, new THREE.Vector3(s, s, s)); b.setMatrixAt(i * 6 + k, m); }
+  });
+  a.castShadow = true; a.receiveShadow = true; w.scene.add(a); w.scene.add(b);
 }

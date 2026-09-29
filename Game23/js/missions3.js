@@ -457,8 +457,9 @@ export class Escort extends Mission {
     this.water = d.water ?? kind === "clownfish";
     this.kids = (d.kids || []).slice(0, this.def.n || 3).map(k => { const c = critter(kind); c.position.set(k[0], k[1], k[2]); this.add(c); return { c, home: v3(k), state: "wait", t: 0 }; });
     const gm = this.add(ringMesh(this.goalR, 0x7bed9f)); gm.position.copy(this.goal); gm.rotation.x = Math.PI / 2;
-    // crabs patrol back and forth; a crab scares a little one back to where it started
-    this.crabs = (d.crabs || []).map(([ax, az, bx, bz, sp = 1.6]) => { const c = critter("crab"); this.add(c); return { c, a: [ax, az], b: [bx, bz], sp, u: Math.random() }; });
+    // crabs (or whatever the level says: little dinosaurs, a fox) patrol back and forth, and scare
+    // a little one back to where it started
+    this.crabs = (d.crabs || []).map(([ax, az, bx, bz, sp = 1.6]) => { const c = critter(d.hazard || "crab"); this.add(c); return { c, a: [ax, az], b: [bx, bz], sp, u: Math.random() }; });
     this.saved = 0;
     this.navPts = [...d.kids, d.goal];
   }
@@ -489,8 +490,10 @@ export class Escort extends Mission {
     for (const cr of this.crabs) {
       cr.u += dt * cr.sp / Math.max(1, Math.hypot(cr.b[0] - cr.a[0], cr.b[1] - cr.a[1]));
       const f = (Math.sin(cr.u * Math.PI) + 1) / 2, x = cr.a[0] + (cr.b[0] - cr.a[0]) * f, z = cr.a[1] + (cr.b[1] - cr.a[1]) * f;
-      cr.c.position.set(x, this.ground(x, z, pp.y + 2), z); cr.c.rotation.y = Math.PI / 2; animateCritter(cr.c, dt, 1);
-      for (const k of this.kids) if (k.state === "follow" && k.c.position.distanceTo(cr.c.position) < 1.0) { k.state = "home"; this.g.sound("fail"); toast("A crab scared it! It ran back.", 2); }
+      cr.c.position.set(x, this.ground(x, z, pp.y + 2), z);
+      // (a crab scuttles sideways; anything else faces the way it's going)
+      cr.c.rotation.y = this.data.hazard ? Math.atan2(cr.b[0] - cr.a[0], cr.b[1] - cr.a[1]) + (Math.cos(cr.u * Math.PI) < 0 ? Math.PI : 0) : Math.PI / 2; animateCritter(cr.c, dt, 1);
+      for (const k of this.kids) if (k.state === "follow" && k.c.position.distanceTo(cr.c.position) < 1.0) { k.state = "home"; this.g.sound("fail"); toast(`${{ compy: "A little dinosaur", fox: "A fox" }[this.data.hazard] || "A crab"} scared it! It ran back.`, 2); }
     }
   }
   hud() { return { ...super.hud(), text: `Lead them home  ${this.saved}/${this.kids.length}`, progress: this.saved / this.kids.length }; }
@@ -562,6 +565,8 @@ export class Surf extends Piloted {
 
 // ------------------------------------------------------------ Divers: Drips swimming round a pump; bubble them under water
 export class Divers extends Roundup {
+  // (Pebble can't dive: she stays on the shore)
+  pebbleGoal() { return null; }
   start() {
     super.start();
     for (const b of this.bots) { b.swimY = 1.4 + Math.random() * 2; b.ph = Math.random() * 6; }

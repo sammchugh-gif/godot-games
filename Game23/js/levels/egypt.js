@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { rocks } from "./kit.js";
-import { timeSled, landFrame } from "./timekit.js";
+import { timeSled, landFrame, tufts } from "./timekit.js";
 import { reeds, pyramid, farPyramid, obelisk, mudHouse, sphinx, hippo, glyphPanel } from "./antiquekit.js";
 
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
@@ -92,6 +92,11 @@ export function buildEgypt(w) {
   for (const [x, z] of [[-11, -17], [-5, -17], [-5, -11], [-11, -11]]) w.cyl(0.05, 0.05, 1, M(0x6a4a2a), DIG[0] + (x - DIG[0]), dy + 0.5, z, { collide: false, seg: 5 });
   w.cyl(0.5, 0.4, 0.5, M(0xb89a5a, { rough: 1 }), DIG[0] + 4, dy + 0.25, DIG[1] + 2, { seg: 10 });
   for (let i = 0; i < 6; i++) { const a = i * 1.1; w.palm(DIG[0] + 30 + Math.cos(a) * 20, DIG[1] - 20 + Math.sin(a) * 12, 7, { y: G(DIG[0] + 30 + Math.cos(a) * 20, DIG[1] - 20 + Math.sin(a) * 12) }); }
+
+  // green tufts in the fields along the east bank
+  const tuftSpots = [];
+  for (let i = 0; i < 700; i++) { const z = -150 + (i * 0.43) % 300, d = 21.5 + ((i * 37) % 20), x = NX(z) + d; tuftSpots.push([x, G(x, z), z, 0.9 + (i % 4) * 0.15]); }
+  tufts(w, tuftSpots, 0x6a9a3a);
 
   // ---- where Rory lands
   const sy = G(0, -60);
