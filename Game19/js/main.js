@@ -228,7 +228,7 @@ function refreshStations() {
 }
 function objective() {
   const m = currentMission();
-  if (m) return `Mission ${missionNumber(m)}: ${m.title}. Find ${m.stationLabel}.`;
+  if (m) return `Mission ${missionNumber(m)}: ${m.title}. Find ${lowerFirst(m.stationLabel)}.`;
   return "Chapter complete. Head to the plane.";
 }
 function missionNumber(m) { return ALL_MISSIONS.findIndex(q => q.id === m.id) + 1; }

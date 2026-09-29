@@ -29,7 +29,7 @@ for (const r of runs) {
   await waitGame(0.6);
   const cityScene = await ev(() => __spy.mg && __spy.mg.saved && __spy.mg.saved.scene.uuid);
   ck(await ev(() => __spy.mg && __spy.mg.constructor.name === "Run" && __spy.world.scene !== __spy.mg.saved.scene), `${r.id} builds its own world`);
-  await page.screenshot({ path: `${out}/${r.id}_intro.png` });
+  await page.screenshot({ path: `${out}/${r.id}_intro.png`, timeout: 120000 });
   await waitGame(2.6);
   const a = await ev(() => ({ d: __spy.mg.d, o: __spy.mg.o, phase: __spy.mg.phase }));
   ck(a.phase === "run", `${r.id} the countdown ends`);
@@ -41,7 +41,7 @@ for (const r of runs) {
   ck(b.o > a.o + 1, `${r.id} steering moves it across (${a.o.toFixed(1)} -> ${b.o.toFixed(1)})`);
   await ev(() => __spy.mg.boost());
   await waitGame(0.5);
-  await page.screenshot({ path: `${out}/${r.id}_run.png` });
+  await page.screenshot({ path: `${out}/${r.id}_run.png`, timeout: 120000 });
   if (quick) { await ev(() => { __spy.mg.onDone = null; __spy.mg.stop(); __spy.mg = null; __spy.state = "world"; }); continue; }
   await ev(() => __spy.mg.solve());
   // drawing the 3D world is what is slow without a GPU: stop drawing it while the autopilot drives

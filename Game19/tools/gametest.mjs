@@ -29,7 +29,7 @@ for (const m of list) {
   const r = await ev(m => { try { __spy.debug.startMission(m.ci, m.mi); return { ok: __spy.state === "minigame" && !!__spy.mg, state: __spy.state, needsWorld: !!(__spy.mg && __spy.mg.needsWorld) }; } catch (e) { return { ok: false, err: e.stack }; } }, m);
   if (!r.ok) { fails++; console.log("FAIL start", m.id, m.game, JSON.stringify(r).slice(0, 300)); continue; }
   await waitGame(0.6);
-  if (!seen.has(m.game + m.level)) { await page.screenshot({ path: `${out}/${m.id}_${m.game}_L${m.level}.png` }); seen.add(m.game + m.level); }
+  if (!seen.has(m.game + m.level)) { await page.screenshot({ path: `${out}/${m.id}_${m.game}_L${m.level}.png`, timeout: 120000 }); seen.add(m.game + m.level); }
   let steps = 0, st = "minigame";
   while (st === "minigame" && steps < 60) { const e = await ev(() => { try { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); return null; } catch (x) { return x.stack; } }); if (e) { console.log("solve threw", m.id, e.slice(0, 300)); fails++; break; } steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); st = await ev(() => __spy.state); }
   await page.waitForFunction(() => __spy.state === "intel", null, { timeout: 8000 }).catch(() => {});

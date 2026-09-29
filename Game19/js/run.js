@@ -55,12 +55,12 @@ export const QUARRY = {
   courierbike: ["motorbike", "hench", 0x16161c, 0xe05a10, "THE COURIER"], ship: ["ship", null, 0x3a1a1a, 0xe05a10, "THE ENGINE SHIP"], scorchboat: ["jetboat", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"],
   scorchsled: ["snowmobile", "scorch", 0xc0202a, 0xff9a2a, "SCORCH"], baronsub: ["baronsub", null, 0xe05a10, 0x1a1a1a, "KALDERA'S SUB"], baronsled: ["bobsled", "kaldera", 0xd4a017, 0xe05a10, "BARON KALDERA"],
 };
-export // how much a ride leans into a turn, and how far back the camera sits
+// how much a ride leans into a turn, and how far back the camera sits
 export const ROLL = { motorbike: 1.6, wingsuit: 1.6, skis: 1.6, snowboard: 1.6, hovercraft: 0.3, minisub: 0.3 };
 export const CAM_BACK = { sportscar: 6.4, jeep: 6.4, hovercraft: 6.4 };
 // quarries too big to be a ride: built by their own function, and tagged from further away
 export const BIG = { ship: (run, a, b) => run.buildShip(a, b), baronsub: (run, a) => run.buildSub(a) };
-const PURSUER_NAME = { crack: "THE CRACK", wave: "THE WAVE", avalanche: "THE AVALANCHE", trucks: "THE TRUCKS", convoy: "THE CONVOY" };
+export const PURSUER_NAME = { crack: "THE CRACK", wave: "THE WAVE", avalanche: "THE AVALANCHE", trucks: "THE TRUCKS", convoy: "THE CONVOY" };
 
 // ---------------------------------------------------------------- the track
 class Track {

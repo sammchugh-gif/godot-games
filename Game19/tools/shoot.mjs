@@ -20,9 +20,9 @@ await page.route("**/{menu,fresh}.js", r => r.fulfill({ status: 200, contentType
 await page.goto(`http://localhost:${port}/index.html`);
 await page.waitForFunction(() => window.__spy && window.__spy.state === "title", null, { timeout: 60000 });
 // OP=2 or OP=3 checks another operation
-if (process.env.OP) await page.evaluate(i => __spy.debug.useOp(i), +process.env.OP - 1);
+if (process.env.OP) await page.evaluate(i => { __spy.debug.useOp(i); window.__OPI = i; }, +process.env.OP - 1);
 await page.waitForTimeout(600);
-const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); console.log("shot", name); };
+const shot = async name => { await page.screenshot({ path: `${out}/${name}.png`, timeout: 120000 }); console.log("shot", name); };
 await shot("title");
 if (what === "scenes" || what === "all") {
   await page.evaluate(() => { __spy.debug.press("start"); });

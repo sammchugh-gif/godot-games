@@ -26,8 +26,8 @@ const ev = (fn, arg) => page.evaluate(fn, arg);
 const state = () => ev(() => __spy.state);
 const wait = ms => page.waitForTimeout(ms);
 // game time runs slower than wall time under software rendering, so wait on __spy.t
-const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 60000 }); };
-const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); };
+const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 300000 }); };
+const shot = async name => { await page.screenshot({ path: `${out}/${name}.png`, timeout: 120000 }); };
 const waitState = async (s, ms) => { await page.waitForFunction(s => __spy.state === s, s, { timeout: ms || 15000 }); };
 const skipDialogue = async () => { for (let i = 0; i < 40; i++) { const active = await ev(() => __spy.dialogue.active); if (!active) break; await ev(() => __spy.debug.skipDialogue()); await wait(60); } };
 const finishFade = async () => { await ev(() => __spy.debug.finishFade()); await wait(80); };
@@ -76,6 +76,8 @@ for (let ci = startCi; ci <= endCi; ci++) {
     await wait(900); await shot(`30_${m.id}_${m.game}`);
     // solve step by step
     let steps = 0;
+    // FASTRUNS=1 wins each chase outright (tools/runtest.mjs drives every chase to the end already)
+    if (m.game === "run" && process.env.FASTRUNS) { await waitGame(1.0); await ev(() => __spy.mg.win()); }
     while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
     await page.waitForFunction(() => __spy.state === "intel", null, { timeout: 8000 }).catch(() => {});
     check(await state() === "intel", `${m.id} won after ${steps} solve steps`);
@@ -107,7 +109,7 @@ for (let ci = startCi; ci <= endCi; ci++) {
 if (endCi === COUNTRIES.length - 1) {
   await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
   check(await state() === "credits", "credits");
-  const save = await ev(() => JSON.parse(localStorage.getItem("rorymeltdown.save")));
+  const save = await ev(k => JSON.parse(localStorage.getItem("rorymeltdown." + k)), ["save", "save2", "save3"][+(process.env.OP || 1) - 1]);
   check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
 }
 console.log("errors:", errors.length, "fails:", fail);

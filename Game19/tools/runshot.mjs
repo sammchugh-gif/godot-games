@@ -27,7 +27,7 @@ for (const r of runs) {
   await ev(r => __spy.debug.startMission(r.ci, r.mi), r);
   await ev(() => __spy.mg.solve());
   await waitGame(secs);
-  await page.screenshot({ path: `${out}/${r.id}.png` });
+  await page.screenshot({ path: `${out}/${r.id}.png`, timeout: 120000 });
   const info = await ev(() => ({ d: Math.round(__spy.mg.d), v: Math.round(__spy.mg.v), gap: Math.round(__spy.mg.gap()), phase: __spy.mg.phase }));
   console.log(r.id, JSON.stringify(info), ((Date.now() - t0) / 1000).toFixed(0) + "s real");
   await ev(() => { __spy.mg.onDone = null; __spy.mg.stop(); __spy.mg = null; __spy.state = "world"; });

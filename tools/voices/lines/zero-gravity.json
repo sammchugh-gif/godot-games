@@ -2682,9 +2682,9 @@
   "from": "room.js"
  },
  {
-  "key": "051rkf1",
+  "key": "1idtylf",
   "who": "frost",
-  "text": "Meltdown. Baron Kaldera, a volcano, and a great deal of melting ice.",
+  "text": "Meltdown. Baron Kaldera, Madame Minuit and Doctor Tempest. Ice, clocks, and a very big storm.",
   "from": "room.js"
  },
  {
@@ -2697,6 +2697,12 @@
   "key": "0m2f7g2",
   "who": "frost",
   "text": "Deep Red. Captain Undertow, the vanishing sea, and a very talkative submarine.",
+  "from": "room.js"
+ },
+ {
+  "key": "1rtyi7m",
+  "who": "frost",
+  "text": "Spectrum. Baroness Grisaille, a world gone grey, and a chameleon who can't decide what colour to be.",
   "from": "room.js"
  }
 ]

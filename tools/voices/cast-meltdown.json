@@ -148,5 +148,167 @@
   "lang": "en-gb",
   "speed": 0.9,
   "pitch": 1.0
+ },
+ "minuit": {
+  "voice": "ff_siwis",
+  "lang": "en-gb",
+  "speed": 0.86,
+  "pitch": 0.95
+ },
+ "tick": {
+  "voice": "am_onyx",
+  "lang": "en-gb",
+  "speed": 0.88,
+  "pitch": 0.86
+ },
+ "tock": {
+  "voice": "bm_george:0.6,am_onyx:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 0.9
+ },
+ "coucou": {
+  "voice": "ff_siwis:0.5,af_sky:0.5",
+  "lang": "en-gb",
+  "speed": 0.95,
+  "pitch": 1.3
+ },
+ "king": {
+  "voice": "bm_daniel:0.6,bm_george:0.4",
+  "lang": "en-gb",
+  "speed": 0.84,
+  "pitch": 0.9
+ },
+ "camille": {
+  "voice": "ff_siwis:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "yann": {
+  "voice": "am_puck:0.6,ff_siwis:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "giulia": {
+  "voice": "if_sara",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "marco": {
+  "voice": "im_nicola",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "tomas": {
+  "voice": "bm_lewis:0.5,am_echo:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "lena": {
+  "voice": "af_bella:0.5,bf_isabella:0.5",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "isla": {
+  "voice": "bf_lily",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "priya": {
+  "voice": "hf_alpha:0.6,bf_alice:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "alfie": {
+  "voice": "bm_fable:0.6,am_puck:0.4",
+  "lang": "en-gb",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "tempest": {
+  "voice": "af_nicole:0.5,af_bella:0.5",
+  "lang": "en-us",
+  "speed": 0.88,
+  "pitch": 0.98
+ },
+ "drizzle": {
+  "voice": "am_puck:0.6,bm_lewis:0.4",
+  "lang": "en-gb",
+  "speed": 0.95,
+  "pitch": 1.24
+ },
+ "thunder": {
+  "voice": "am_onyx",
+  "lang": "en-us",
+  "speed": 0.82,
+  "pitch": 0.8
+ },
+ "president": {
+  "voice": "am_michael:0.6,am_adam:0.4",
+  "lang": "en-us",
+  "speed": 0.86,
+  "pitch": 0.92
+ },
+ "kai": {
+  "voice": "am_liam",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "maya": {
+  "voice": "af_sky:0.6,af_nova:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "ruby": {
+  "voice": "af_sarah:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.12
+ },
+ "dusty": {
+  "voice": "am_echo:0.6,am_puck:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.16
+ },
+ "chloe": {
+  "voice": "af_nova:0.6,af_sky:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "leo": {
+  "voice": "am_adam:0.5,am_puck:0.5",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "elena": {
+  "voice": "ef_dora",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.1
+ },
+ "mateo": {
+  "voice": "em_alex",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.14
+ },
+ "nia": {
+  "voice": "af_kore:0.6,af_heart:0.4",
+  "lang": "en-us",
+  "speed": 0.9,
+  "pitch": 1.08
  }
 }
