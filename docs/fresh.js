@@ -71,3 +71,16 @@
       .catch(function () {});
   }, 1500);
 })();
+
+/* Playing without the internet lives in offline.js, beside this file; every
+   page already loads this one, so this one brings that one along. */
+(function () {
+  try {
+    var me = document.currentScript;
+    if (!me || !me.src || !("serviceWorker" in navigator)) return;
+    var s = document.createElement("script");
+    s.src = new URL("offline.js", me.src).href;
+    s.defer = true;
+    document.head.appendChild(s);
+  } catch (e) {}
+})();

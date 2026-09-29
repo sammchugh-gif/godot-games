@@ -1,0 +1,169 @@
+{
+ "v": 1,
+ "games": {
+  "agent-rory": {
+   "bytes": 25270167,
+   "n": 989,
+   "hash": "706e6760c0a3"
+  },
+  "agent-rory-deep-red": {
+   "bytes": 26757592,
+   "n": 1156,
+   "hash": "2ee438977709"
+  },
+  "agent-rory-hq": {
+   "bytes": 267536,
+   "n": 5,
+   "hash": "7a05b193ffd0",
+   "with": [
+    "agent-rory",
+    "agent-rory-deep-red",
+    "agent-rory-meltdown",
+    "agent-rory-spectrum",
+    "agent-rory-timeslip",
+    "agent-rory-zero-gravity",
+    "shelf"
+   ]
+  },
+  "agent-rory-meltdown": {
+   "bytes": 40871146,
+   "n": 2019,
+   "hash": "798e6aad7274"
+  },
+  "agent-rory-spectrum": {
+   "bytes": 6434817,
+   "n": 70,
+   "hash": "ebb11bd9d7a3"
+  },
+  "agent-rory-timeslip": {
+   "bytes": 11725395,
+   "n": 316,
+   "hash": "bed5314d72cf"
+  },
+  "agent-rory-zero-gravity": {
+   "bytes": 15783758,
+   "n": 517,
+   "hash": "2e8707ee4fae"
+  },
+  "blockfort": {
+   "bytes": 40185305,
+   "n": 9,
+   "hash": "41ecdaf74126"
+  },
+  "dungeon-dash": {
+   "bytes": 145702,
+   "n": 1,
+   "hash": "05153e6accce"
+  },
+  "dylans-bones-park": {
+   "bytes": 160831,
+   "n": 1,
+   "hash": "b3b4d0354194"
+  },
+  "dylans-odyssey": {
+   "bytes": 40163079,
+   "n": 9,
+   "hash": "b2af55768af9"
+  },
+  "genesis": {
+   "bytes": 9253270,
+   "n": 30,
+   "hash": "84e9c94e7c24"
+  },
+  "lizard-rocket": {
+   "bytes": 39914383,
+   "n": 9,
+   "hash": "c70a53966544"
+  },
+  "mahjong-club": {
+   "bytes": 1103888,
+   "n": 3,
+   "hash": "aa328d067b45"
+  },
+  "marble-mayhem": {
+   "bytes": 69262,
+   "n": 1,
+   "hash": "5b36daf2fce1"
+  },
+  "paws-of-fury": {
+   "bytes": 158874,
+   "n": 1,
+   "hash": "cdf337ce70ea"
+  },
+  "pinball-quest": {
+   "bytes": 1658164,
+   "n": 7,
+   "hash": "dbc62e906c3b"
+  },
+  "riddle-rumble": {
+   "bytes": 80109,
+   "n": 1,
+   "hash": "95de1b899505"
+  },
+  "rorys-bones-park": {
+   "bytes": 160838,
+   "n": 1,
+   "hash": "9c2df809852f"
+  },
+  "shared": {
+   "bytes": 27650,
+   "n": 3,
+   "hash": "ad5793b9b0fd"
+  },
+  "shelf": {
+   "bytes": 2982398,
+   "n": 30,
+   "hash": "3d2a5e7d5655"
+  },
+  "slime-storm": {
+   "bytes": 74304,
+   "n": 1,
+   "hash": "adda0a21ba17"
+  },
+  "sonic-spin": {
+   "bytes": 40478890,
+   "n": 9,
+   "hash": "7851f69eb6a2"
+  },
+  "sophias-bones-park": {
+   "bytes": 160824,
+   "n": 1,
+   "hash": "dcd082c270c8"
+  },
+  "star-digger": {
+   "bytes": 40185181,
+   "n": 9,
+   "hash": "036296e2e7c8"
+  },
+  "star-swarm": {
+   "bytes": 260620,
+   "n": 1,
+   "hash": "61b906807dd0"
+  },
+  "super-strikers": {
+   "bytes": 63758,
+   "n": 1,
+   "hash": "7c05cbf9e7f0"
+  },
+  "tank-tussle": {
+   "bytes": 35862,
+   "n": 1,
+   "hash": "63ab39cf9441"
+  },
+  "turbo-karts": {
+   "bytes": 113287,
+   "n": 1,
+   "hash": "d2e4d80c094e"
+  },
+  "velocity-zero": {
+   "bytes": 47975114,
+   "n": 9,
+   "hash": "b18043069887"
+  },
+  "vine-swing": {
+   "bytes": 176745,
+   "n": 1,
+   "hash": "b2346215ed55"
+  }
+ }
+}
