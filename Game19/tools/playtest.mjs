@@ -1,5 +1,5 @@
 // Automated playthrough: title -> briefing -> every country, both missions,
-// every mini-game solved by its own solver -> ending -> credits. Screenshots
+// every mini-game solved by its own solver (stormgrid clears one square a step, so it gets more) -> ending -> credits. Screenshots
 // every mini-game. Usage: node tools/playtest.mjs [outdir] [fromCountry] [toCountry]
 // The country range lets a long playthrough be run in segments.
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
@@ -46,7 +46,8 @@ check(await state() === "world", "the cold open starts in the world");
 const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
 const startCi = +(process.argv[3] || 0);
 const endCi = Math.min(COUNTRIES.length - 1, +(process.argv[4] || COUNTRIES.length - 1));
-if (startCi > 0) { await ev(ci => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; }, startCi); await wait(300); }
+// (a later segment counts the countries before it as done, so the final save check still holds)
+if (startCi > 0) { await ev(([ci, ids]) => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; for (const id of ids) if (!__spy.save.done.includes(id)) __spy.save.done.push(id); }, [startCi, COUNTRIES.slice(0, startCi).flatMap(c => c.missions.map(m => m.id))]); await wait(300); }
 for (let ci = startCi; ci <= endCi; ci++) {
   const c = COUNTRIES[ci];
   // fly (Greenland is already under our feet after the cold open)
@@ -78,7 +79,7 @@ for (let ci = startCi; ci <= endCi; ci++) {
     let steps = 0;
     // FASTRUNS=1 wins each chase outright (tools/runtest.mjs drives every chase to the end already)
     if (m.game === "run" && process.env.FASTRUNS) { await waitGame(1.0); await ev(() => __spy.mg.win()); }
-    while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
+    while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : m.game === "stormgrid" ? 120 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
     await page.waitForFunction(() => __spy.state === "intel", null, { timeout: 8000 }).catch(() => {});
     check(await state() === "intel", `${m.id} won after ${steps} solve steps`);
     await waitGame(1.0); await shot(`40_${m.id}_intel`);
