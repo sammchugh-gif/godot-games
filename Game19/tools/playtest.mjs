@@ -1,5 +1,5 @@
 // Automated playthrough: title -> briefing -> every country, both missions,
-// every mini-game solved by its own solver -> ending -> credits. Screenshots
+// every mini-game solved by its own solver (stormgrid clears one square a step, so it gets more) -> ending -> credits. Screenshots
 // every mini-game. Usage: node tools/playtest.mjs [outdir] [fromCountry] [toCountry]
 // The country range lets a long playthrough be run in segments.
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
@@ -26,8 +26,8 @@ const ev = (fn, arg) => page.evaluate(fn, arg);
 const state = () => ev(() => __spy.state);
 const wait = ms => page.waitForTimeout(ms);
 // game time runs slower than wall time under software rendering, so wait on __spy.t
-const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 60000 }); };
-const shot = async name => { await page.screenshot({ path: `${out}/${name}.png` }); };
+const waitGame = async sec => { const t0 = await ev(() => __spy.t); await page.waitForFunction(t => __spy.t >= t, t0 + sec, { timeout: 300000 }); };
+const shot = async name => { await page.screenshot({ path: `${out}/${name}.png`, timeout: 120000 }); };
 const waitState = async (s, ms) => { await page.waitForFunction(s => __spy.state === s, s, { timeout: ms || 15000 }); };
 const skipDialogue = async () => { for (let i = 0; i < 40; i++) { const active = await ev(() => __spy.dialogue.active); if (!active) break; await ev(() => __spy.debug.skipDialogue()); await wait(60); } };
 const finishFade = async () => { await ev(() => __spy.debug.finishFade()); await wait(80); };
@@ -46,7 +46,8 @@ check(await state() === "world", "the cold open starts in the world");
 const COUNTRIES = await ev(() => __spy.debug.COUNTRIES.map(c => ({ id: c.id, act: c.act, missions: c.missions.map(m => ({ id: m.id, station: m.station, game: m.game })) })));
 const startCi = +(process.argv[3] || 0);
 const endCi = Math.min(COUNTRIES.length - 1, +(process.argv[4] || COUNTRIES.length - 1));
-if (startCi > 0) { await ev(ci => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; }, startCi); await wait(300); }
+// (a later segment counts the countries before it as done, so the final save check still holds)
+if (startCi > 0) { await ev(([ci, ids]) => { __spy.debug.goto(ci, 0); __spy.state = "map"; __spy.save.arrived = {}; __spy.save.country = ci; for (const id of ids) if (!__spy.save.done.includes(id)) __spy.save.done.push(id); }, [startCi, COUNTRIES.slice(0, startCi).flatMap(c => c.missions.map(m => m.id))]); await wait(300); }
 for (let ci = startCi; ci <= endCi; ci++) {
   const c = COUNTRIES[ci];
   // fly (Greenland is already under our feet after the cold open)
@@ -76,7 +77,9 @@ for (let ci = startCi; ci <= endCi; ci++) {
     await wait(900); await shot(`30_${m.id}_${m.game}`);
     // solve step by step
     let steps = 0;
-    while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
+    // FASTRUNS=1 wins each chase outright (tools/runtest.mjs drives every chase to the end already)
+    if (m.game === "run" && process.env.FASTRUNS) { await waitGame(1.0); await ev(() => __spy.mg.win()); }
+    while ((await state()) === "minigame" && steps < (m.game === "run" ? 80 : m.game === "stormgrid" ? 120 : 40)) { await ev(() => { if (__spy.mg && !__spy.mg.done) __spy.mg.solve(); }); steps++; await waitGame(m.game === "lie" || m.game === "keypad" ? 1.6 : 1.3); await wait(200); if (steps === 1) await shot(`31_${m.id}_${m.game}_mid`); }
     await page.waitForFunction(() => __spy.state === "intel", null, { timeout: 8000 }).catch(() => {});
     check(await state() === "intel", `${m.id} won after ${steps} solve steps`);
     await waitGame(1.0); await shot(`40_${m.id}_intel`);
@@ -107,7 +110,7 @@ for (let ci = startCi; ci <= endCi; ci++) {
 if (endCi === COUNTRIES.length - 1) {
   await ev(() => __spy.debug.press("credits")); await finishFade(); await wait(2500); await shot("64_credits");
   check(await state() === "credits", "credits");
-  const save = await ev(() => JSON.parse(localStorage.getItem("rorymeltdown.save")));
+  const save = await ev(k => JSON.parse(localStorage.getItem("rorymeltdown." + k)), ["save", "save2", "save3"][+(process.env.OP || 1) - 1]);
   check(save.done.length === COUNTRIES.reduce((a, c) => a + c.missions.length, 0) && save.finished, `save has every mission and finished`);
 }
 console.log("errors:", errors.length, "fails:", fail);

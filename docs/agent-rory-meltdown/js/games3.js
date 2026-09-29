@@ -13,8 +13,8 @@ const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N E S W, matching bits 1 2 4
 class Pipes extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "volcano"; this.icon = "snowflake";
-    this.instr = "Tap a pipe to turn it. Join the coolant tank to the engine!";
+    const wp = (m.id || "").slice(0, 3); this.theme = { gca: "desert", cos: "jungle" }[wp] || "volcano"; this.icon = "snowflake";
+    this.instr = { gca: "Tap a pipe to turn it. Send the rain machine's water back down to the river!", cos: "Tap a pipe to turn it. Send the steam back down into the volcano!" }[wp] || "Tap a pipe to turn it. Join the coolant tank to the engine!";
     [this.cols, this.rows] = L(this, [5, 4], [6, 5], [7, 5], [8, 6]);
     this.taps = 0; this.make(); this.flow = this.flowCells(); this.fill = new Map();
   }
@@ -116,7 +116,7 @@ class Pipes extends MG {
 class Sokoban extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "vault"; this.icon = "lock";
+    this.theme = { msm: "museum", sco: "meadow" }[(m.id || "").slice(0, 3)] || "vault"; this.icon = "lock";
     this.instr = "Tap next to Rory to step, or tap anywhere to walk there. Push every crate onto a glowing square.";
     this.hist = []; this.walkQ = []; this.stepT = 0; this.pushes = 0; this.slipAllow = 1;
     this.make();
@@ -255,7 +255,7 @@ class Sokoban extends MG {
 class Gates extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "lab"; this.icon = "lock";
+    this.theme = (m.id || "").startsWith("ven") ? "sea" : "lab"; this.icon = "lock";
     this.instr = "Flip the switches. AND needs both ON. OR needs one ON. NOT flips it. Light the lamp!";
     this.rounds = L(this, 3, 3, 2, 2); this.round = 0; this.next();
   }
@@ -351,7 +351,7 @@ class Railway extends MG {
   constructor(G, m) {
     super(G, m);
     this.theme = "desert"; this.icon = "bolt"; this.slipAllow = 1;
-    if (m.id && m.id.startsWith("saf")) this.theme = "sea"; if (m.id && m.id.startsWith("arg")) this.theme = "snow";
+    if (m.id && m.id.startsWith("saf")) this.theme = "sea"; if (m.id && m.id.startsWith("arg")) this.theme = "snow"; if (m.id && m.id.startsWith("bav")) this.theme = "meadow";
     this.instr = "Tap a junction to switch it. Send each train to the platform of its colour!";
     this.need = L(this, 4, 6, 8, 10); this.got = 0; this.trains = []; this.spawnT = 1; this.auto = false;
     this.speed = L(this, 105, 125, 145, 165); this.every = L(this, 5.2, 4.6, 3.9, 3.2);
@@ -452,7 +452,7 @@ class Railway extends MG {
 class Gears extends MG {
   constructor(G, m) {
     super(G, m);
-    this.theme = "vault"; this.icon = "gear";
+    this.theme = { pra: "clock", wst: "clock", nia: "storm" }[(m.id || "").slice(0, 3)] || "vault"; this.icon = "gear";
     this.instr = "Tap a peg to add a gear, tap a gear to take it off. Gears that touch turn opposite ways!";
     this.make(); this.placed = new Set(); this.spin = 0; this.state = this.check();
   }

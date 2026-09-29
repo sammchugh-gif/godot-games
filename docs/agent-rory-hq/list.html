@@ -130,13 +130,13 @@
         <div class="go">PLAY ▶</div>
       </div>
     </a>
-    <a class="file" href="../agent-rory-meltdown/" data-save="rorymeltdown" data-keys="save,save2,save3" data-total="90" style="--accent: #7fdcff">
+    <a class="file" href="../agent-rory-meltdown/" data-save="rorymeltdown" data-keys="save,save2,save3" data-total="190" style="--accent: #7fdcff">
       <div class="pic" style="background-image:url('../shots/agent-rory-meltdown.jpg')"><span class="scan"></span><span class="num">FILE 002</span><span class="stamp" hidden></span></div>
       <div class="body">
         <div class="kicker">A SPY MOVIE</div>
         <div class="title">Meltdown</div>
-        <div class="blurb">Baron Kaldera is melting Antarctica from underneath. Eighteen new places, ninety missions and a chase in every one: snowmobiles, jet skis, a wingsuit and a bobsled.</div>
-        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 90</span><span class="stars"></span></div>
+        <div class="blurb">Three operations. Baron Kaldera melts Antarctica, Madame Minuit stops every clock in Europe at midnight, and Doctor Tempest sends a hurricane at Washington. Thirty-eight places, 190 missions and a chase in every one.</div>
+        <div class="meter"><span class="bar"><i></i></span><span class="count">0 / 190</span><span class="stars"></span></div>
         <div class="go">PLAY ▶</div>
       </div>
     </a>
@@ -189,7 +189,7 @@ document.querySelectorAll(".file[data-save]").forEach(function (el) {
     if (one.stars) for (var k in one.stars) stars += +one.stars[k] || 0;
     if (one.finished) finished++;
   });
-  if (sv) sv.finished = finished > 0;
+  if (sv) sv.finished = finished >= keys.length; // done only once every operation is finished
   el.querySelector(".count").textContent = Math.min(done, total) + " / " + total;
   if (stars) el.querySelector(".stars").textContent = "★ " + stars;
   requestAnimationFrame(function () { el.querySelector(".bar i").style.width = Math.min(100, done / total * 100) + "%"; });

@@ -104,7 +104,11 @@ Checks, all headless (Playwright with SwiftShader), run from this folder. Set
 - `node tools/gametest.mjs /tmp/out [kinds]`: every mission's mini-game, won by its solver.
 - `node tools/runtest.mjs /tmp/out [ids]`: every chase, driven and finished, and the city restored.
 - `node tools/runshot.mjs /tmp/out [ids] [seconds]`: pictures of chases in motion.
-- `node tools/playtest.mjs`: plays the story through, dialogue and all.
+- `node tools/playtest.mjs`: plays the story through, dialogue and all. `FASTRUNS=1`
+  wins each chase outright, since `runtest.mjs` drives every chase to the end already.
+- `node tools/starstest.mjs`: star ratings, the saved best, and replays from the dossier.
+- `node tools/savecheck.mjs` (from the repository root, serving `docs/`): progress
+  survives a reopen and fresh.js's cache-busting reload, and older saves still load.
 - `node tools/stationcheck.mjs`, `bugcheck.mjs`, `lifecheck.mjs`: every
   station reachable, every bug inside the map and away from the stations,
   crowds that never walk through walls.

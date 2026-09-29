@@ -140,9 +140,11 @@ P.ship = function (x, z, ry, hullColor, o) {
 };
 // a vehicle waiting at a chase station, borrowed from the chase engine
 P.ride = function (kind, x, z, ry, body, trim) {
-  const g = Run.prototype.buildRide.call({ w: this }, kind, body || 0x16324f, trim || 0x7fe3ff, null);
-  g.position.set(x, kind === "speedboat" || kind === "jetboat" || kind === "jetski" ? 0.1 : 0, z); g.rotation.y = ry || 0; this.scene.add(g);
-  if (kind === "speedboat" || kind === "jetboat" || kind === "jetski") this.updaters.push(() => { g.position.y = 0.1 + Math.sin(this.t * 1.4) * 0.06; });
+  // built by the chase engine itself (with run2.js's rides as well), parked here
+  const kit = Object.assign(Object.create(Run.prototype), { w: this }), floats = ["speedboat", "jetboat", "jetski", "watertaxi", "airboat", "raft", "surfboard"].includes(kind);
+  const g = Run.prototype.buildRide.call(kit, kind, body || 0x16324f, trim || 0x7fe3ff, null);
+  g.position.set(x, floats ? 0.1 : 0, z); g.rotation.y = ry || 0; this.scene.add(g);
+  if (floats) this.updaters.push(() => { g.position.y = 0.1 + Math.sin(this.t * 1.4) * 0.06; });
   this.circle(x, z, 1.4); return g;
 };
 // a market stall with a striped awning and goods on the counter

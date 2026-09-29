@@ -73,7 +73,9 @@ export const PT = {
     return canvasTex(w || 512, h || 128, (g, W, H) => {
       g.fillStyle = bg; g.fillRect(0, 0, W, H);
       g.fillStyle = fg; g.font = `${font || "900 64px sans-serif"}`; g.textAlign = "center"; g.textBaseline = "middle";
-      g.fillText(txt, W / 2, H / 2 + 2);
+      // (a long name is squeezed across rather than cut off at the edges)
+      const tw = g.measureText(txt).width, k = Math.min(1, W * 0.92 / tw);
+      g.save(); g.translate(W / 2, H / 2 + 2); g.scale(k, 1); g.fillText(txt, 0, 0); g.restore();
     });
   },
   neon(color, seed, count) {

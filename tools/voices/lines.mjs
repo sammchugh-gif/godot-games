@@ -53,7 +53,9 @@ for (const f of files) {
 
 // lines the games put together from the story's data (Operation Eclipse and Meltdown)
 const main = fs.existsSync(path.join(js, "main.js")) ? fs.readFileSync(path.join(js, "main.js"), "utf8") : "";
-const countries = story.COUNTRIES || [];
+// (Meltdown has three operations, each with its own countries: gather them all)
+const countries = story.OPS && story.useOp ? story.OPS.flatMap((op, i) => { story.useOp(i); return [...story.COUNTRIES]; }) : story.COUNTRIES || [];
+if (story.OPS && story.useOp) story.useOp(0);
 const lowerFirst = t => t.replace(/^The /, "the ");
 for (const c of countries) {
   if (!c.contact) continue;
@@ -73,6 +75,9 @@ for (const c of countries) {
 // finding the listening bugs
 const bug = main.match(/`That is every bug in \$\{c\.city\}\. Nicely spotted\.` : "([^"]+)", CHARS\.(\w+)\.voice/);
 if (bug) { add(bug[2], bug[1], "main.js"); for (const c of countries) if (c.city) add(bug[2], `That is every bug in ${c.city}. Nicely spotted.`, "main.js"); }
+// (and with operations, each has its own line for a single bug)
+const opBug = main.match(/`That is every bug in \$\{c\.city\}\. Nicely spotted\.` : CUR\.op\.bugLine, CHARS\.(\w+)\.voice/);
+if (opBug) { for (const op of story.OPS || []) if (op.bugLine) add(opBug[1], op.bugLine, "main.js"); for (const c of countries) if (c.city) add(opBug[1], `That is every bug in ${c.city}. Nicely spotted.`, "main.js"); }
 
 // Zero Gravity: BOLT's nudges, the contacts pointing at the next beacon, and in the HQ, Frost
 // reading out each file

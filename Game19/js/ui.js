@@ -818,7 +818,7 @@ export function drawOpPoster(g, x, y, w, h, s, t, op, p) {
   g.save(); g.font = `900 ${Math.min(34 * s, w * 0.13)}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
   const tg = g.createLinearGradient(0, y + h * 0.6, 0, y + h * 0.68); tg.addColorStop(0, col[0]); tg.addColorStop(1, col[1]); g.fillStyle = tg; g.shadowColor = "rgba(0,0,0,.7)"; g.shadowBlur = 8 * s;
   g.fillText(op.title, x + w / 2, y + h * 0.645); g.restore();
-  paragraph(g, op.blurb, x + 16 * s, y + h * 0.72, w - 32 * s, 13 * s, "#dde6f4", 17 * s, "center", 600);
+  paragraph(g, op.blurb, x + w / 2, y + h * 0.72, w - 32 * s, 13 * s, "#dde6f4", 17 * s, "center", 600);
   // progress
   const by = y + h - 40 * s, bx = x + 18 * s, bw2 = w - 36 * s;
   g.fillStyle = "rgba(255,255,255,.1)"; rrect(g, bx, by, bw2, 8 * s, 4 * s); g.fill();
@@ -831,6 +831,8 @@ export function drawOpPoster(g, x, y, w, h, s, t, op, p) {
 }
 export function drawSpyWatch(g, x, y, w, h, s, objective, intelCount, total, t, bugs) {
   g.save();
+  // (a long objective wraps onto a third line: the panel grows to fit it above the bug count)
+  h = Math.max(h, 87 * s + (wrap(g, objective, w - 28 * s, 17 * s, 600).length - 1) * 21 * s);
   g.fillStyle = "rgba(6,10,16,.78)"; rrect(g, x, y, w, h, 14 * s); g.fill();
   g.strokeStyle = "rgba(127,221,204,.5)"; g.lineWidth = 2; g.stroke();
   g.fillStyle = "#7fd"; g.beginPath(); g.arc(x + 18 * s, y + 18 * s, 5 * s + Math.sin(t * 4) * 1.5 * s, 0, TAU); g.fill();

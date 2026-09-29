@@ -24,9 +24,9 @@ export const FILES = [
   { id: "eclipse", n: "FILE 001", kicker: "THE FIRST MISSION", title: "Operation Eclipse", href: "../agent-rory/", shot: "../shots/agent-rory.jpg", accent: "#ffd166", saves: ["agentrory.save"], total: 90,
     blurb: "UMBRA is stealing the sun. Twenty-one countries from London to the Antarctic ice, ninety missions and six chases.",
     frost: "Operation Eclipse. Where it all began, Agent Rory. UMBRA and the stolen sun." },
-  { id: "meltdown", n: "FILE 002", kicker: "A SPY MOVIE", title: "Meltdown", href: "../agent-rory-meltdown/", shot: "../shots/agent-rory-meltdown.jpg", accent: "#7fdcff", saves: ["rorymeltdown.save", "rorymeltdown.save2", "rorymeltdown.save3"], total: 90,
-    blurb: "Baron Kaldera is melting Antarctica from underneath. Eighteen places, ninety missions, and a chase in every one.",
-    frost: "Meltdown. Baron Kaldera, a volcano, and a great deal of melting ice." },
+  { id: "meltdown", n: "FILE 002", kicker: "A SPY MOVIE", title: "Meltdown", href: "../agent-rory-meltdown/", shot: "../shots/agent-rory-meltdown.jpg", accent: "#7fdcff", saves: ["rorymeltdown.save", "rorymeltdown.save2", "rorymeltdown.save3"], total: 190,
+    blurb: "Three operations: Baron Kaldera's melting ice, Madame Minuit's stopped clocks and Doctor Tempest's hurricane. Thirty-eight places and 190 missions.",
+    frost: "Meltdown. Baron Kaldera, Madame Minuit and Doctor Tempest. Ice, clocks, and a very big storm." },
   { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 60,
     blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon. Sixty missions.",
     frost: "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon." },
@@ -49,7 +49,7 @@ export function progress(f) {
     if (sv.stars) for (const k in sv.stars) stars += +sv.stars[k] || 0;
     if (sv.finished) finished++;
   }
-  return { done: Math.min(done, f.total), stars, any, finished: finished > 0 && finished >= f.saves.filter(k => localStorage.getItem(k)).length };
+  return { done: Math.min(done, f.total), stars, any, finished: finished >= f.saves.length }; // (done only once every operation is finished)
 }
 
 const G = window.__hq = { state: "boot", t: 0 };
