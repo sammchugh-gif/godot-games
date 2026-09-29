@@ -137,7 +137,8 @@ export function timeSled(w, x, y, z, yaw = 0) {
   const skirt = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.08, 8, 36), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xa070ff).multiplyScalar(2.5) }));
   skirt.rotation.x = Math.PI / 2; skirt.scale.set(1.05, 2.3, 1); skirt.position.y = -0.52; skirt.userData.dynamic = true; g.add(skirt);
   w.phys.fixedBox(x, y + 0.5, z, 1.2, 0.5, 2.1, yaw);
-  w.updaters.push((dt, t) => { g.position.y = y + 0.55 + Math.sin(t * 1.6) * 0.06; hand.rotation.z = -t * 1.2; });
+  // (a level can lift it off the ground: userData.lift, in metres, for a launch)
+  w.updaters.push((dt, t) => { g.position.y = y + 0.55 + Math.sin(t * 1.6) * 0.06 + (g.userData.lift || 0); hand.rotation.z = -t * 1.2; });
   return g;
 }
 // snow falling round the camera (a box of flakes that follows it)

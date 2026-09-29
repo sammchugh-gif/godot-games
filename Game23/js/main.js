@@ -439,6 +439,8 @@ function tickCut(dt) {
   if (c.wait !== undefined) { c.wait -= dt; if (c.wait <= 0) { const f = c.then; c.wait = undefined; c.then = null; if (f) f(); } }
   if (c.run) c.run(dt);
   if (G.cut) cutCamera(dt);
+  // (Rory stands where the prologue put him, facing the way it turned him)
+  G.player.obj.position.copy(G.player.pos); G.player.obj.rotation.y = G.player.yaw;
   animatePerson(G.player.rig, { dt, speed: 0, grounded: true, talk: G.talking === "rory" });
   for (const r of G.riders || []) animatePerson(r.rig, { dt, speed: 0, grounded: true, sit: true, talk: G.talking === r.who });
   people(dt);

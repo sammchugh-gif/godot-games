@@ -29,10 +29,49 @@ export const CHAPTERS = [
 ];
 
 // Each era: when is shown where a place would show its country. Pebble grows in each one.
+// Before the first era: POLARIS HQ, today, in the Time Room. Not a stop on the tour (no missions,
+// no golden ammonites): Frost's briefing, the Chrono-watch from Dr Flint's bench, and the launch.
+// A line's third word is the camera shot for it (the level's shots), and a cue if the level has
+// one of that name (the roof opening, the ring powering up).
+export const PROLOGUE = { id: "hq", ch: 0, hq: true, name: "POLARIS HQ", when: "Today", year: 2026, contact: null, missions: [],
+  brief: [
+    ["frost", "Agent Rory. Thank you for coming so quickly. History is leaking.", "frost"],
+    ["rory", "Leaking?", "room"],
+    ["frost", "Great moments are going missing. A cave painting. The top stone of the Great Pyramid. The Olympic flame. One after another.", "screens"],
+    ["pip", "And every time one goes, the present goes a bit wobbly. Look at my tea! It turned back into tea leaves. In the cup!", "tea"],
+    ["pip", "And the clock's been going backwards all day.", "clock"],
+    ["frost", "The one taking them is Doctor Hourglass. She's bottling history's great moments to power a machine that skips the whole world straight into the future.", "hourglass"],
+    ["rory", "Why would anyone want to skip everything?", "room"],
+    ["frost", "She can't bear to wait for anything. Not even the kettle.", "frost"],
+    ["flint", "Which is where I come in. I'm Dr Flint, and this is my time-sled.", "sled"],
+    ["flint", "The leak starts a very long way back: sixty-six million years. Collect your Chrono-watch from my bench, and we'll follow it.", "bench"],
+  ],
+  watch: [
+    ["flint", "That's the Chrono-watch. At the moment it only tells the time.", "bench"],
+    ["rory", "Only?", "bench"],
+    ["flint", "It learns. Every few eras it'll pick up a new trick. You'll see.", "flint"],
+    ["flint", "Now, the time-sled. The front seat's yours.", "sled"],
+  ],
+  launch: [
+    ["flint", "Strapped in? Good. Pip, open the roof!", "riders"],
+    ["pip", "Opening the roof!", "roof"],
+    ["frost", "Bring history back, Agent Rory. All of it.", "frost"],
+    ["rory", "See you soon. Or a very long time ago.", "riders"],
+    ["pip", "Time-sled launching in three... two... one!", "launch"],
+  ],
+  // what they say if Rory goes and talks to them (Dr Flint: before the watch, and after)
+  chat: {
+    frost: [["frost", "The whole of history is counting on you, Agent Rory. No pressure."]],
+    pip: [["pip", "I'll be watching you on the time map. You'll be the little flashing dot."]],
+    flint: [["flint", "The Chrono-watch is on my bench. Over by the blackboard."]],
+    flint2: [["flint", "Hop on the front seat. I'll sit behind and hold on tight."]],
+  },
+};
+
 export const PLACES = [
   // ------------------------------------------------------------ 1. Dinosaur Valley
   { id: "dino", ch: 1, name: "Dinosaur Valley", when: "66 million years ago", year: -66000000, contact: "flint", pebble: 1.0,
-    arrive: [["frost", "Agent Rory. History is leaking."], ["rory", "Leaking?"], ["frost", "Great moments are vanishing. Somebody is taking them. And every time one goes, the present goes a bit wobbly."], ["pip", "This morning my tea turned back into tea leaves. In the cup!"], ["flint", "I'm Dr Flint. I built the time-sled you just rode in. The leak starts here: sixty-six million years ago."], ["flint", "Those glowing sparks are bits of broken time. Grab them and we can follow the trail."]],
+    arrive: [["flint", "Sixty-six million years ago. Welcome to the age of the dinosaurs."], ["rory", "It's so warm. And everything is enormous!"], ["frost", "We can hear you, Rory. The leak is strongest right where you've landed."], ["flint", "Those glowing sparks are bits of broken time. Grab them and we can follow the trail."]],
     leave: [["flint", "The Sandbots' cart went back into the time tunnel. The trail leads to the Ice Age."], ["rory", "Pebble, you can't come. It's cold there. And you're a dinosaur."], ["pebble", "Honk!"], ["flint", "She's already on the sled. I don't think she's asking."]],
     missions: [
       { id: "dino1", kind: "cells", lv: 1, title: "Time Sparks", n: 6, time: 100,
