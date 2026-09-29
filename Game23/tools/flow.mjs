@@ -1,6 +1,6 @@
 // Plays the game start to finish on autopilot: title, every place, every
 // mission solved by its own autopilot, the trips between eras and the end of the act, with
-// screenshots. node tools/flow.mjs [outdir]
+// screenshots. FROM=<place> starts part-way, counting the places before it as done. node tools/flow.mjs [outdir]
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -26,11 +26,16 @@ const check = (c, msg) => { if (!c) { fail++; console.log("FAIL:", msg); } else 
 const shot = n => page.screenshot({ path: `${out}/${n}.png` });
 const skip = async () => { for (let i = 0; i < 30; i++) { if (!(await ev(() => __g.dialogue.active))) break; await ev(() => __g.debug.skipDialogue()); await waitT(0.05); } };
 await waitT(1.2); await shot("00_title");
+// FROM=<place> starts there instead, with every place before it counted as done
+const FROM = process.env.FROM;
+if (FROM) await ev(id => { const P = __g.debug.PLACES, i = P.findIndex(p => p.id === id); __g.save.done = P.slice(0, i).flatMap(p => p.missions.map(m => m.id)); __g.save.place = id; __g.debug.load(id); }, FROM);
 await ev(() => __g.debug.play());
 await waitT(2.2); await shot("01_arrive");
 await skip();
 const places = await ev(() => __g.debug.PLACES.map(p => ({ id: p.id, missions: p.missions.map(m => m.id) })));
-for (const p of places) {
+// TO=<place> stops after that place (the end of the act is only checked by a run that reaches it)
+const TO = process.env.TO, last = TO ? places.findIndex(p => p.id === TO) : places.length - 1;
+for (const p of places.slice(FROM ? places.findIndex(p => p.id === FROM) : 0, last + 1)) {
   await page.waitForFunction(id => __g.place.id === id && __g.state === "explore", p.id, { timeout: 600000 }).catch(() => {});
   check(await ev(() => __g.place.id) === p.id, `in ${p.id}`);
   await waitT(2.2); await shot(`05_${p.id}_arrive`); await skip();
@@ -71,11 +76,13 @@ for (const p of places) {
 }
 await waitT(1); await skip(); await waitT(1);
 await shot("90_end");
-const total = places.reduce((n, p) => n + p.missions.length, 0);
-check(await ev(() => __g.state) === "end", "the end of the act");
-const sv = await ev(() => ({ done: __g.save.done.length, finished: !!__g.save.finished, powers: ["slow", "back", "echo"].map(p => __g.powerOK(p)) }));
-check(sv.done === total && sv.finished, `save has all ${total} missions (${sv.done}) and is finished`);
-check(sv.powers.every(Boolean), `all three watch powers learnt (${sv.powers})`);
+if (last === places.length - 1) {
+  const total = places.reduce((n, p) => n + p.missions.length, 0);
+  check(await ev(() => __g.state) === "end", "the end of the act");
+  const sv = await ev(() => ({ done: __g.save.done.length, finished: !!__g.save.finished, powers: ["slow", "back", "echo"].map(p => __g.powerOK(p)) }));
+  check(sv.done === total && sv.finished, `save has all ${total} missions (${sv.done}) and is finished`);
+  check(sv.powers.every(Boolean), `all three watch powers learnt (${sv.powers})`);
+}
 console.log("state", await ev(() => __g.state), "fps", await ev(() => __g.fps.toFixed(1)));
 console.log("errors:", errors.length, "fails:", fail);
 await browser.close(); killServer(); process.exit(fail || errors.length ? 1 : 0);

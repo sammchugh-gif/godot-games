@@ -81,7 +81,8 @@ export function buildEgypt(w) {
   const QB = [[82, -2, 2.2, 1.4, 1.8], [96, -10, 1.8, 1.2, 2.4], [104, 2, 2.4, 1.6, 2], [78, -12, 1.6, 1, 1.6]];
   for (const [x, z, a, b, c] of QB) w.box(a, b, c, stone, x, G(x, z) + b / 2, z, { ry: x * 0.3 });
   rocks(w, 108, -12, 6, 6, 1.6, { y: G(108, -12), color: [200, 176, 130] });
-  for (const [x, z, r] of [[62, 12, 0.3], [66, 9, -0.5], [76, 10, 0.8], [80, 13, 0.2]]) w.box(1.6, 0.8, 1.2, stone, x, PLAT + 0.4, z, { ry: r, rz: 0.15 });
+  // (the knocked-down ramp's stones lie off to the west, clear of where the new one is built)
+  for (const [x, z, r] of [[52, 4, 0.3], [55, 0, -0.5], [50, -2, 0.8], [57, -4, 0.2]]) w.box(1.6, 0.8, 1.2, stone, x, G(x, z) + 0.4, z, { ry: r, rz: 0.15 });
 
   // ---- the workers' village and the dig
   const houses = [[18, -30, 0.1], [30, -38, -0.2], [40, -24, 0.3], [26, -16, 0], [52, -36, 0.2], [8, -42, -0.1]];

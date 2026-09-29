@@ -461,6 +461,12 @@ export class Stack extends Mission {
           if (score > bs) { bs = score; best = { L, S, far: this.padR + 0.5 - r }; }
         }
         this.plan = best || { L: this.pad.clone(), S: this.pad.clone().add(new THREE.Vector3(pp.x - this.pad.x, 0, pp.z - this.pad.z).setLength(this.padR + 0.5)), far: this.padR + 0.5 };
+        this.planT = this.t;
+      }
+      // (if the planned spot can't be reached for a while, drop it from here, facing the pad's middle:
+      // from anywhere near the edge it lands inside)
+      if (this.t - this.planT > 8 && Math.hypot(this.pad.x - pp.x, this.pad.z - pp.z) < this.padR + 1.6) {
+        this.p.yaw = Math.atan2(this.pad.x - pp.x, this.pad.z - pp.z); this.g.input.forced = { mx: 0, my: 0 }; this.g.input.actionPressed = true; this.plan = null; return;
       }
       const { L, S, far } = this.plan, d = this.walkTo(S.x, this.pad.y + 0.5, S.z, 0.3, pts);
       // (from its spot, a block lands ~0.95 m ahead: step in until it's that far from the target)
