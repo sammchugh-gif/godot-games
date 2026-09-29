@@ -37,7 +37,7 @@ export class Dialogue {
     this.shownAt = performance.now();
     // (a dinosaur doesn't talk: whoever voices a line from Pebble honks and purrs instead)
     if (this.speech && !ch.dino) this.speech.say(text, ch.voice);
-    if (this.onLine) this.onLine(who, text);
+    if (this.onLine) this.onLine(who, text, this.lines[this.i]);
   }
   tap() {
     if (!this.active) return;

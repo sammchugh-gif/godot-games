@@ -64,6 +64,9 @@ export const Audio = {
     // Pebble: a little nasal honk (a square wave through a soft filter, sliding up) and a purr
     inst.honk = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.06 }, volume: -12 }).connect(new Tone.Filter(1300, "lowpass").connect(sfxBus));
     inst.woof = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -2 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
+    // the time-sled's hum (it climbs as it takes off) and the rush of air behind it
+    inst.hum = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.3, decay: 0.3, sustain: 0.8, release: 0.6 }, volume: -10 }).connect(new Tone.Filter(2400, "lowpass").connect(sfxBus));
+    inst.rush = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.6, decay: 0.4, sustain: 0.7, release: 0.8 }, volume: -16 }).connect(sfxBus);
     Tone.getTransport().bpm.value = 104;
     Tone.getTransport().start("+0.05");
     this.setMusic(this.music); this.setSfx(this.sfx);
@@ -111,6 +114,8 @@ export const Audio = {
         case "star": inst.tri.triggerAttackRelease(["G6", "D7"], 0.25, now); break;
         case "click": inst.blip.triggerAttackRelease("G5", 0.03, now); break;
         case "whoosh": inst.noise.triggerAttackRelease(0.4, now); break;
+        // the time-sled taking off: a hum that climbs, and a rush of air
+        case "launch": inst.hum.triggerAttackRelease("A2", 2.6, now); inst.hum.frequency.setValueAtTime(110, now); inst.hum.frequency.exponentialRampToValueAtTime(880, now + 2.6); inst.rush.triggerAttackRelease(2.2, now + 0.8); break;
         case "splash": inst.water.triggerAttackRelease(0.4, now); inst.thud.triggerAttackRelease("E2", 0.12, now); break;
         case "swish": inst.water.triggerAttackRelease(0.07, now, 0.22); break;
         case "gasp": inst.blip.triggerAttackRelease("C5", 0.12, now); inst.blip.frequency.rampTo("G5", 0.1, now); inst.water.triggerAttackRelease(0.1, now, 0.3); break;
