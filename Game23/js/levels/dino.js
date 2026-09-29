@@ -1,12 +1,12 @@
 // Dinosaur Valley, 66 million years ago: a warm green valley between wooded hills, with a
-// smoking volcano to the north and long-necked sauropods grazing far off. A shallow river runs down
+// smoking volcano to the north and long-necked sauropods walking the hills. A shallow river runs down
 // the west side (a fallen log crosses it); the mother triceratops's nest is in the meadow to the
 // east; a T. rex sleeps among the boulders in the south-west; and the POLARIS time-sled has landed
 // in the south, where Dr Flint is waiting. Pebble isn't here yet: she hatches in the fourth mission.
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { rocks } from "./kit.js";
-import { ferns, cycad, treeFern, monkeyPuzzle, nest, volcano, sauropod, pterosaurs, timeSled, tufts, blossoms } from "./timekit.js";
+import { ferns, cycad, treeFern, monkeyPuzzle, nest, volcano, sauropodRig, duckbillRig, wander, compys, pterosaurs, timeSled, tufts, blossoms } from "./timekit.js";
 
 const S = (e0, e1, x) => { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
 const RIVER = -34, NEST = [42, 12];
@@ -57,11 +57,18 @@ export function buildDino(w) {
   for (let i = 0; i < 12; i++) { const a = i * 2.1 + 0.4, d = 40 + (i * 29) % 60, x = Math.cos(a) * d, z = Math.sin(a) * d; if (!clear(x, z)) continue; treeFern(w, x, G(x, z), z, 4 + (i % 3)); }
   for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, x = Math.cos(a) * 100, z = 10 + Math.sin(a) * 92; monkeyPuzzle(w, x, G(x, z), z, 12 + (i % 4) * 2); }
   for (const [x, z] of [[-70, -60], [80, -70], [-60, 90], [90, 80], [-95, 20], [95, -10]]) rocks(w, x, z, 5, 6, 1.6, { y: G(x, z) });
-  // on the skyline: the volcano, the sauropods, and pterosaurs overhead
+  // on the skyline: the volcano; sauropods walking the hills all the way round the valley
   volcano(w, 30, 300, 110, 150, -10);
   w.mountains(10, 260, 60, { color: 0x5a6a48, snow: false });
-  sauropod(w, -120, G(-120, 150) - 1, 150, 1.4, 0.8); sauropod(w, -150, G(-150, 120) - 1, 120, 1.2, 2.4); sauropod(w, 130, G(130, 170) - 1, 170, 1.5, -0.5);
-  pterosaurs(w, 10, 45, 20, 6, 55);
+  const RIM = []; for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2; RIM.push([Math.cos(a) * 150, 20 + Math.sin(a) * 135]); }
+  [[1.4, 0], [1.2, 330], [1.5, 610]].forEach(([s, at], i) => wander(w, sauropodRig(s), G, { path: RIM, loop: true, at, speed: 1.7, rhythm: 70, walk: 0.6, phase: i * 23 }));
+  // a herd of duckbills on the move round the edge of the valley floor, between the chase track and
+  // the trees (and across the river), stopping together now and then to graze
+  const ARC = []; for (let i = 0; i <= 16; i++) { const a = (-55 + i * 200 / 16) * Math.PI / 180; ARC.push([8 + Math.cos(a) * 78, 6 + Math.sin(a) * 72]); }
+  [[0, -2.5, 0x8a7a48], [11, 3, 0x7a6a3e], [20, -1, 0x94845a], [30, 3.5, 0x847046]].forEach(([at, side, hue], i) => wander(w, duckbillRig(0.9 + (i % 2) * 0.12, hue), G, { path: ARC, at, side, speed: 2.2, rhythm: 36, walk: 0.62 }));
+  // compys darting about in the ferns near the camp, and pterosaurs circling overhead
+  compys(w, G, [[16, -46, 7], [-16, -46, 6], [30, -28, 7]]);
+  pterosaurs(w, 10, 30, 10, 6, 48, 1.4);
 
   // ---- the mother's nest, and the T. rex's boulders
   const ny = G(NEST[0], NEST[1]);

@@ -81,6 +81,15 @@ const fresh = { place: "dino", done: [], stars: {}, cells: 0, arrived: {}, bolts
   await page.close();
 }
 {
+  // (through the prologue, but closed before the landing's talk was over: stays in the valley)
+  const { page, ev } = await open({ ...fresh, arrived: { hq: true } });
+  check(await ev(() => __g.place.id === "dino"), "through the prologue, not yet landed: Dinosaur Valley, not back to HQ");
+  await ev(() => __g.debug.play());
+  await page.waitForFunction(() => __g.state === "explore", null, { timeout: 30000 }).catch(() => {});
+  check(await ev(() => __g.beacons.dino1.visible), "from the title into the valley: the first beacon is showing");
+  await page.close();
+}
+{
   const { page, ev } = await open({ ...fresh, arrived: { dino: true }, done: ["dino1"] });
   check(await ev(() => __g.place.id === "dino"), "an old save under way: still in Dinosaur Valley");
   await page.close();

@@ -59,6 +59,8 @@ for (const p of places.slice(FROM ? places.findIndex(p => p.id === FROM) : 0, la
   await page.waitForFunction(id => __g.place.id === id && __g.state === "explore", p.id, { timeout: 600000 }).catch(() => {});
   check(await ev(() => __g.place.id) === p.id, `in ${p.id}`);
   await waitT(2.2); await shot(`05_${p.id}_arrive`); await skip();
+  // (the beacon for the next mission can be seen, not just walked into)
+  check(await ev(() => { const c = __g.debug.current(); return !!c && __g.beacons[c].visible; }), `${p.id}: the next beacon is showing`);
   for (const mid of p.missions) {
     await skip();
     check(await ev(() => __g.debug.current()) === mid, `current is ${mid}`);

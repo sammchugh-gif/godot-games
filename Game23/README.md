@@ -40,8 +40,10 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
   it (Pebble's nose shows where a piece is). **Timeline**: tap the pictures in the order they
   happened. **Echo**: doors and gates that need two of you. **Ride**: gallop after the Sandbots'
   sled on a woolly mammoth, jumping the cracks in the ice.
-- **Eras built from new kits.** Ferns, cycads, sauropods, pterosaurs, a smoking volcano and a
-  T. rex who sleeps with one eye open. Hide tents, a painted cave and a mammoth herd. A stepped
+- **Eras built from new kits.** Ferns, cycads and a smoking volcano; dinosaurs that move (sauropods
+  walking the hills and stopping to browse, a herd of duckbills wandering the valley's edge, compys
+  darting about in the ferns, pterosaurs circling overhead), and a T. rex who sleeps with one eye
+  open. Hide tents, a painted cave and a mammoth herd. A stepped
   pyramid, the Sphinx, obelisks, reed beds and hippos in the Nile. Greek temples, a stadium and a
   hippodrome. An aqueduct on tall arches, a Roman forum and a bathhouse pool. Turf-roofed
   longhouses, rune stones and a fjord between mountains.
