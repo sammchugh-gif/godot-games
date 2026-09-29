@@ -95,7 +95,7 @@ export function buildEgypt(w) {
 
   // green tufts in the fields along the east bank
   const tuftSpots = [];
-  for (let i = 0; i < 700; i++) { const z = -150 + (i * 0.43) % 300, d = 21.5 + ((i * 37) % 20), x = NX(z) + d; tuftSpots.push([x, G(x, z), z, 0.9 + (i % 4) * 0.15]); }
+  for (let i = 0; i < 1500; i++) { const z = -150 + (i * 0.2) % 300, d = 21.5 + ((i * 37) % 20), x = NX(z) + d; tuftSpots.push([x, G(x, z), z, 0.9 + (i % 4) * 0.15]); }
   tufts(w, tuftSpots, 0x6a9a3a);
 
   // ---- where Rory lands

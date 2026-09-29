@@ -44,6 +44,8 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 - **The Sand Serpent**, Hourglass's giant snake of sand, which rears, slams the beach and falls
   apart into a beach itself.
 - **A disguise in every era**: a fur cloak, linen, a tunic, a red Roman tunic, Viking wool.
+- **Music**: a new theme that ticks like a clock. Pebble honks and purrs (sound effects, not a
+  voice); everyone else's lines are recorded, as in the other games.
 
 ## Act One
 

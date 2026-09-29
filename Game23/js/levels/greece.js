@@ -92,7 +92,7 @@ export function buildGreece(w) {
 
   // grass tufts over the valley floor (not on the paving, the track or the hippodrome's sand)
   const tuftSpots = [];
-  for (let i = 0; i < 1400; i++) { const a = i * 2.39996, d = 4 + Math.sqrt(i / 1400) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9 - 10; const r = segD(x, z), e = Math.hypot((x - 40) / 72, (z + 90) / 24);
+  for (let i = 0; i < 3000; i++) { const a = i * 2.39996, d = 4 + Math.sqrt(i / 3000) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9 - 10; const r = segD(x, z), e = Math.hypot((x - 40) / 72, (z + 90) / 24);
     if ((r > SR - 4 && r < SR + 4) || (e > 0.8 && e < 1.2) || (x > -66 && x < 16 && z > 28 && z < 76) || G(x, z) > 8) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.12]); }
   tufts(w, tuftSpots, 0x6a9040);
 

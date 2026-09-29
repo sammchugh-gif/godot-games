@@ -1,5 +1,6 @@
 // Plays the game start to finish on autopilot: title, every place, every
-// mission solved by its own autopilot, with screenshots. node tools/flow.mjs [outdir]
+// mission solved by its own autopilot, the trips between eras and the end of the act, with
+// screenshots. node tools/flow.mjs [outdir]
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
@@ -64,10 +65,17 @@ for (const p of places) {
     // the leaving lines and the flight to the next place
     await waitT(0.3); await skip();
     if (await ev(() => __g.state) === "travel") { await waitT(2.5); await shot(`20_${p.id}_travel`); }
+    // Pebble hatches in the fourth mission of the first era, and from then on she's there
+    if (mid === "dino4") check(await ev(() => !__g.world.noPebble && __g.bolt.root.visible), "Pebble has hatched");
   }
 }
 await waitT(1); await skip(); await waitT(1);
 await shot("90_end");
+const total = places.reduce((n, p) => n + p.missions.length, 0);
+check(await ev(() => __g.state) === "end", "the end of the act");
+const sv = await ev(() => ({ done: __g.save.done.length, finished: !!__g.save.finished, powers: ["slow", "back", "echo"].map(p => __g.powerOK(p)) }));
+check(sv.done === total && sv.finished, `save has all ${total} missions (${sv.done}) and is finished`);
+check(sv.powers.every(Boolean), `all three watch powers learnt (${sv.powers})`);
 console.log("state", await ev(() => __g.state), "fps", await ev(() => __g.fps.toFixed(1)));
 console.log("errors:", errors.length, "fails:", fail);
 await browser.close(); killServer(); process.exit(fail || errors.length ? 1 : 0);

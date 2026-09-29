@@ -223,7 +223,7 @@ export function landFrame(w, half, y, color) {
 // grass tufts: three crossed blades each, thousands of them in one draw call (they cast no
 // shadow). spots [[x, y, z, size]]
 export function tufts(w, spots, color = 0x5a8a3a) {
-  const blade = () => { const g = new THREE.PlaneGeometry(0.5, 0.6, 1, 2), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + 0.3) / 0.6; p.setX(i, p.getX(i) * (1 - t * 0.8)); p.setY(i, p.getY(i) + 0.3); p.setZ(i, t * t * 0.12); } return g; };
+  const blade = () => { const g = new THREE.PlaneGeometry(0.26, 0.5, 1, 2), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + 0.25) / 0.5; p.setX(i, p.getX(i) * (1 - t * 0.85)); p.setY(i, p.getY(i) + 0.25); p.setZ(i, t * t * 0.1); } return g; };
   const parts = [0, 1, 2].map(k => { const g = blade(); g.rotateY(k * Math.PI / 3); return g; });
   const geo = mergeGeometries(parts); geo.computeVertexNormals();
   const im = new THREE.InstancedMesh(geo, M(color, { rough: 0.9, side: THREE.DoubleSide }), spots.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();

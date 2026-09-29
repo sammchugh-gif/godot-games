@@ -77,8 +77,8 @@ export class Travel {
     const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 1.3, 6, 14), white); hull.rotation.x = Math.PI / 2; hull.scale.set(1.3, 1, 0.42); sled.add(hull);
     for (const sx of [-1, 1]) { const c = new THREE.CatmullRomCurve3([[sx * 0.48, -0.21, -1.0], [sx * 0.48, -0.24, 0], [sx * 0.48, -0.21, 0.8], [sx * 0.48, -0.02, 1.12], [sx * 0.48, 0.12, 1.05]].map(p => new THREE.Vector3(...p))); sled.add(new THREE.Mesh(new THREE.TubeGeometry(c, 16, 0.03, 6), brass)); }
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 8, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 0.5, 3) })); rim.rotation.x = Math.PI / 2; rim.scale.set(1.05, 2.3, 1); rim.position.y = -0.26; sled.add(rim);
-    const dial = new THREE.Mesh(new THREE.CircleGeometry(0.25, 24), new THREE.MeshBasicMaterial({ map: clockFace(), transparent: true })); dial.position.set(0, 0.42, -0.72); dial.rotation.y = Math.PI; sled.add(dial);
-    const dialRing = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.03, 6, 24), brass); dialRing.position.copy(dial.position); sled.add(dialRing);
+    const dial = new THREE.Mesh(new THREE.CircleGeometry(0.15, 24), new THREE.MeshBasicMaterial({ map: clockFace(), transparent: true })); dial.position.set(0, 0.2, -0.78); dial.rotation.set(-1.0, Math.PI, 0, "YXZ"); sled.add(dial);
+    const dialRing = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 6, 24), brass); dialRing.position.copy(dial.position); dialRing.rotation.copy(dial.rotation); sled.add(dialRing);
     const rory = this.rory = makePerson(RORY); rory.root.scale.setScalar(0.5); rory.root.position.set(0, 0.08, 0.2); sled.add(rory.root);
     this.pebble = new Pebble(1); this.pebble.root.position.set(0, 0.08, -0.4); sled.add(this.pebble.root);
     s.add(sled);
@@ -110,7 +110,7 @@ export class Travel {
     // the sled wobbles along, the camera just behind it
     const s = this.sled; s.position.set(Math.sin(this.t * 1.7) * 0.5, -1.2 + Math.sin(this.t * 2.3) * 0.25, -4);
     s.rotation.set(0, Math.PI, Math.sin(this.t * 1.7) * 0.25);
-    this.camera.position.set(Math.sin(this.t * 1.7) * 0.25, 0.2, 0); this.camera.lookAt(0, -0.8, -12);
+    this.camera.position.set(Math.sin(this.t * 1.7) * 0.25, 0.45, 0); this.camera.lookAt(0, -0.8, -12);
     this.camera.fov = 62 + Math.sin(f * Math.PI) * 18; this.camera.updateProjectionMatrix();
     // the year: logarithmic across the huge gaps, so it doesn't sit at millions for the whole trip
     const lg = y => Math.sign(y) * Math.log10(1 + Math.abs(y));

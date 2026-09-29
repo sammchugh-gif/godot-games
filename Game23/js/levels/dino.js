@@ -29,7 +29,7 @@ export function buildDino(w) {
   const G = ground;
   w.terrain(420, 160, G, M("grass", { args: [231, [84, 124, 50]], repeat: [70, 70] }));
   w.phys.fixedBox(0, -12, 0, 300, 1, 300); w.floorY = -20;
-  w.overlay(RIVER, 0, 12, 300, M("sand", { args: [233, [150, 128, 90]], repeat: [2, 40] }), (x, z) => Math.abs(x - RIVER) < 5.5, 0.03);
+  w.overlay(RIVER, 0, 12, 300, M("sand", { args: [233, [150, 128, 90]], repeat: [2, 40] }), (x, z) => Math.abs(x - RIVER) < 5.5 && G(x, z) < 0.6, 0.03);
   w.water(8, 300, RIVER, -0.55, 0, 0x3a8a8a, { opacity: 0.85 });
   // a fallen log across the river, and stepping stones
   w.cyl(0.45, 0.5, 11, M("wood", { args: [235, [110, 80, 50]], repeat: [1, 3] }), RIVER, -0.55, 22, { rz: Math.PI / 2, collide: false });
@@ -48,7 +48,7 @@ export function buildDino(w) {
   ferns(w, fernSpots);
   // grass tufts all over the valley floor, and the first flowers on low shrubs
   const tuftSpots = [];
-  for (let i = 0; i < 1500; i++) { const a = i * 2.39996, d = 3 + Math.sqrt(i / 1500) * 118, x = Math.cos(a) * d * 1.05, z = Math.sin(a) * d + 6; if (Math.abs(x - RIVER) < 6 || Math.hypot(x - NEST[0], z - NEST[1]) < 4.5) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.15]); }
+  for (let i = 0; i < 3500; i++) { const a = i * 2.39996, d = 3 + Math.sqrt(i / 3500) * 118, x = Math.cos(a) * d * 1.05, z = Math.sin(a) * d + 6; if (Math.abs(x - RIVER) < 6 || Math.hypot(x - NEST[0], z - NEST[1]) < 4.5) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.15]); }
   tufts(w, tuftSpots, 0x5a8a36);
   const bushSpots = [];
   for (let i = 0; i < 40; i++) { const a = i * 2.1 + 0.3, d = 14 + (i * 31) % 90, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9; if (!clear(x, z)) continue; bushSpots.push([x, G(x, z), z, 0.8 + (i % 3) * 0.3]); }

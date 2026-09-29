@@ -35,7 +35,8 @@ export class Dialogue {
     step();
     box.addEventListener("pointerdown", e => { e.stopPropagation(); this.tap(); });
     this.shownAt = performance.now();
-    if (this.speech) this.speech.say(text, ch.voice);
+    // (a dinosaur doesn't talk: whoever voices a line from Pebble honks and purrs instead)
+    if (this.speech && !ch.dino) this.speech.say(text, ch.voice);
     if (this.onLine) this.onLine(who, text);
   }
   tap() {

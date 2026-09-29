@@ -14,7 +14,10 @@ const FX = -20, FW = 30, BEACH = [-20, 138], LAND = [70, -30], BH = [26, 44], RU
 export function ground(x, z) {
   let h = 1.6 + Math.sin(x * 0.06) * 0.3 + Math.cos(z * 0.05) * 0.3 + Math.sin((x + z) * 0.13) * 0.1;
   // the mountains: straight up from the west shore, behind the village, and behind the beach
-  h += S(-54, -84, x) * 58 + S(104, 140, x) * 52 + S(166, 200, z) * 46;
+  // (with ridges and gullies running down them, so they read as mountains and not as walls)
+  const rid = 1 + 0.22 * Math.sin(z * 0.05 + 0.4) + 0.12 * Math.sin(z * 0.17 + x * 0.09) + 0.08 * Math.sin(x * 0.21);
+  h += (S(-54, -84, x) * 58 + S(104, 140, x) * 52) * rid + S(166, 200, z) * 46 * (1 + 0.2 * Math.sin(x * 0.06) + 0.1 * Math.sin(x * 0.19 + 1));
+  h += S(-58, -76, x) * (5 * Math.sin(z * 0.11) + 3 * Math.sin(z * 0.29 + 1)) + S(108, 126, x) * (4 * Math.sin(z * 0.13 + 2) + 3 * Math.sin(z * 0.31));
   // the rune stones' knoll
   h += 1.4 * S(9, 3, Math.hypot(x - RUNES[0], z - RUNES[1]));
   // the beach at the head: flat sand just above the water
@@ -76,7 +79,7 @@ export function buildFjord(w) {
 
   // grass tufts along the shore meadows (not on the sand or the mountainsides)
   const tuftSpots = [];
-  for (let i = 0; i < 1200; i++) { const x = 12 + ((i * 37) % 97), z = -150 + ((i * 53) % 290); const hh = G(x, z); if (hh < 1.3 || hh > 5 || steep(x, z) > 0.4 || (x > 16 && x < 36 && z > 36 && z < 52)) continue; tuftSpots.push([x, hh, z, 0.8 + (i % 5) * 0.12]); }
+  for (let i = 0; i < 2600; i++) { const x = 12 + ((i * 37) % 97) + (i % 7) * 0.13, z = -150 + ((i * 53) % 290) + (i % 5) * 0.21; const hh = G(x, z); if (hh < 1.3 || hh > 5 || steep(x, z) > 0.4 || (x > 16 && x < 36 && z > 36 && z < 52)) continue; tuftSpots.push([x, hh, z, 0.8 + (i % 5) * 0.12]); }
   tufts(w, tuftSpots, 0x5a8040);
 
   // ---- where Rory lands

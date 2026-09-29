@@ -177,6 +177,16 @@ export function aqueduct(w, pts, top, groundAt, o = {}) {
     }
     // the arch band above the piers (its underside curved by a row of half-discs in shadow) and the
     // channel on top: a floor between two low walls
+    // the arches: between each pair of piers, a panel with a half-circle cut out of it, its crown
+    // just under the band
+    { const sp = L / n, r = (sp - pw) / 2, H = r + 0.35, shape = new THREE.Shape();
+      shape.moveTo(-sp / 2, 0); shape.lineTo(-r, 0); shape.absarc(0, 0, r, Math.PI, 0, true); shape.lineTo(sp / 2, 0); shape.lineTo(sp / 2, H); shape.lineTo(-sp / 2, H); shape.lineTo(-sp / 2, 0);
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: W * 0.92, bevelEnabled: false, curveSegments: 10 }); geo.translate(0, 0, -W * 0.46);
+      for (let k = 0; k < n; k++) {
+        const x = ax + (bx - ax) * (k + 0.5) / n, z = az + (bz - az) * (k + 0.5) / n;
+        if (top - 1.6 - H - groundAt(x, z) < 0.8) continue;
+        const m = w.mesh(geo, st, x, top - 1.6 - H, z, { ry: ry - Math.PI / 2 }); m.castShadow = true;
+      } }
     // (a broken span starts o.gap metres late: a gap to jump)
     const g0 = (o.gaps || []).includes(i) ? (o.gap || 3) : 0, ux = (bx - ax) / L, uz = (bz - az) / L;
     const LL = L + pw - g0, mx = (ax + bx) / 2 + ux * g0 / 2, mz = (az + bz) / 2 + uz * g0 / 2;

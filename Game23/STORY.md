@@ -14,11 +14,11 @@ backwards. POLARIS traces it to **Doctor Hourglass**, an inventor who cannot bea
 wait for anything. She is bottling history's great moments to power her
 **Fast-Forward Engine**, which will skip the whole world straight to the shiny future
 she has designed, where nobody ever waits, practises or grows up slowly again. Rory
-takes POLARIS's time-sled, the **Slipstream**, after her.
+takes the POLARIS **time-sled** after her.
 
 On the first jump, into Dinosaur Valley, Rory saves a nest of eggs from Hourglass's
 Sandbots. The last egg hatches in his hands. The baby triceratops decides he is her
-mum, and when the Slipstream leaves she jumps in after him. She is **Pebble**, and
+mum, and when the time-sled leaves she jumps in after him. She is **Pebble**, and
 she is his partner for the rest of the game. She grows a little in every era, and by
 the second act she is big enough to ride.
 
@@ -36,7 +36,7 @@ rushed, and she is the best thing that happens to Rory in the whole game.
   pointing her nose and snuffling. She charges crates and Sandbots, and she honks,
   squeaks and purrs rather than talking. She grows each era, and from Act Two Rory
   can ride her, which is how the new chases work.
-- **Dr Juniper Flint**: POLARIS's time scientist, who built the Slipstream. She comes
+- **Dr Juniper Flint**: POLARIS's time scientist, who built the time-sled. She comes
   on the first jump and runs the Time Room after that.
 - **Admiral Frost** and **Pip**: POLARIS, in the Time Room at HQ.
 - **Doctor Hourglass**: the villain. Fast-talking and brilliant, and she hates queues,

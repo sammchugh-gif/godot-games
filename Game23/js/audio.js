@@ -61,6 +61,8 @@ export const Audio = {
     // footsteps: a short soft thud of brown noise, a touch different each time
     inst.step = new Tone.NoiseSynth({ noise: { type: "brown" }, envelope: { attack: 0.002, decay: 0.07, sustain: 0 }, volume: -12 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     inst.ping = new Tone.Synth({ oscillator: { type: "sine" }, envelope: { attack: 0.002, decay: 0.9, sustain: 0, release: 0.6 }, volume: -6 }).connect(sfxBus);
+    // Pebble: a little nasal honk (a square wave through a soft filter, sliding up) and a purr
+    inst.honk = new Tone.Synth({ oscillator: { type: "square" }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.06 }, volume: -12 }).connect(new Tone.Filter(1300, "lowpass").connect(sfxBus));
     inst.woof = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -2 }).connect(new Tone.Filter(900, "lowpass").connect(sfxBus));
     Tone.getTransport().bpm.value = 104;
     Tone.getTransport().start("+0.05");
@@ -121,6 +123,8 @@ export const Audio = {
         case "alarm": ["A5", "E5", "A5", "E5"].forEach((n, i) => inst.tri.triggerAttackRelease(n, 0.2, now + i * 0.22)); break;
         case "ring": for (let i = 0; i < 6; i++) inst.tri.triggerAttackRelease(i % 2 ? "E6" : "G6", 0.05, now + i * 0.07); break;
         case "woof": for (const d of [0, 0.22]) { inst.woof.triggerAttackRelease("A3", 0.09, now + d); inst.woof.frequency.setValueAtTime(440, now + d); inst.woof.frequency.exponentialRampToValueAtTime(180, now + d + 0.09); } break;
+        case "honk": inst.honk.triggerAttackRelease("C4", 0.16, now); inst.honk.frequency.setValueAtTime(240, now); inst.honk.frequency.exponentialRampToValueAtTime(420, now + 0.12); break;
+        case "purr": for (let i = 0; i < 6; i++) inst.thud.triggerAttackRelease("E2", 0.04, now + i * 0.06, 0.25); break;
         case "pant": for (let i = 0; i < 4; i++) inst.noise.triggerAttackRelease(0.05, now + i * 0.16); break;
       }
     } catch (e) { /* a busy synth is not worth a crash */ }
@@ -130,12 +134,14 @@ export const Audio = {
 // sixteen-step patterns (bass, drums) and eighth-note patterns (stabs, lead)
 const X = "x", o = "o", _ = null;
 const SONGS = {
-  // a sea shanty in D: bouncy bass, off-beat chords, a tune you could sing on a deck
-  theme: { bpm: 100,
-    kick: [X, _, _, _, _, _, X, _, X, _, _, _, _, _, _, _], snare: [_, _, _, _, X, _, _, _, _, _, _, _, X, _, _, _], hat: [X, _, o, _, X, _, o, _, X, _, o, _, X, _, o, o],
-    bass: ["D2", _, "A2", _, "D2", _, "F#2", _, "G2", _, "D2", _, "A2", _, "C#3", _, "B1", _, "F#2", _, "B1", _, "D2", _, "G2", _, "A2", _, "D2", _, _, _],
-    stab: [_, "D4 F#4 A4", _, "D4 F#4 A4", _, "G4 B4 D5", _, "A4 C#5 E5"],
-    lead: ["A4", "D5", "D5", "D5", "F#5", "E5", "D5", _, "E5", "E5", "E5", _, "C#5", "A4", _, _, "A4", "D5", "D5", "D5", "F#5", "A5", "G5", "F#5", "E5", "F#5", "E5", "C#5", "D5", _, _, _] },
+  // Timeslip's theme, an adventure in G: the hi-hat goes tick-tock like a clock, the bass walks,
+  // a chime on the bar, and a tune that climbs like a fanfare
+  theme: { bpm: 108,
+    kick: [X, _, _, _, _, _, _, _, X, _, _, _, _, _, _, _], snare: [_, _, _, _, X, _, _, _, _, _, _, _, X, _, _, _], hat: [X, _, o, _, X, _, o, _, X, _, o, _, X, _, o, _],
+    bass: ["G2", _, "D3", _, "G2", _, "B2", _, "C3", _, "G2", _, "E2", _, "D2", _, "G2", _, "D3", _, "B2", _, "G2", _, "A2", _, "D3", _, "D2", _, _, _],
+    stab: [_, "G4 B4 D5", _, "G4 B4 D5", _, "C5 E5 G5", _, "D5 F#5 A5"],
+    lead: ["D5", _, "G5", "A5", "B5", _, "A5", "G5", "E5", _, "G5", _, "D5", _, _, _, "D5", _, "G5", "A5", "B5", _, "D6", "B5", "A5", "G5", "A5", "B5", "G5", _, _, _],
+    bell: ["G6", _, _, _, _, _, _, _, "D6", _, _, _, _, _, _, _] },
   tense: { bpm: 122,
     kick: [X, _, _, X, _, _, X, _, X, _, _, X, _, _, X, _], snare: [_, _, _, _, X, _, _, _, _, _, _, _, X, _, _, X], hat: [X, X, o, X, X, o, X, X, o, X, X, o, X, X, o, X],
     bass: ["D2", "D2", _, "D3", "D2", _, "F2", _, "D2", "D2", _, "D3", "C2", _, "C3", _],

@@ -40,7 +40,16 @@ export function buildIceAge(w) {
 
   // ---- the glacier: a long blue wall of ice across the north
   const iceM = new THREE.MeshPhysicalMaterial({ color: 0xbfe0f4, roughness: 0.2, clearcoat: 0.6, emissive: 0x2a5a8a, emissiveIntensity: 0.15 });
-  for (let i = 0; i < 9; i++) { const x = -160 + i * 40, h = 22 + (i % 3) * 6; w.box(40, h, 14, iceM, x, G(x, 150) + h / 2 - 4, 150 + (i % 2) * 6, { collide: false }); }
+  // (one long slab, its faces pushed in and out by noise so it reads as ice, not as blocks, with
+  // blue crevasses down its face)
+  { const geo = new THREE.BoxGeometry(380, 30, 24, 96, 10, 6), p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), n = Math.sin(x * 0.07) * 2.2 + Math.sin(x * 0.23 + y * 0.4) * 1.1 + Math.cos(x * 0.5 + 1) * 0.5;
+      if (y > 14) p.setY(i, y + Math.sin(x * 0.05) * 5 + Math.sin(x * 0.17) * 2.5); if (z < -11) p.setZ(i, z + n); }
+    geo.computeVertexNormals();
+    const gl = w.mesh(geo, iceM, 0, G(0, 152) + 11, 156, { collide: false });
+    const creM = new THREE.MeshStandardMaterial({ color: 0x3a7ab8, emissive: 0x2a6ab0, emissiveIntensity: 0.35, roughness: 0.3 });
+    for (let i = 0; i < 14; i++) { const x = -170 + i * 26 + (i % 3) * 5; w.box(0.8, 12 + (i % 4) * 4, 0.6, creM, x, G(x, 152) + 8, 143.4 + Math.sin(x * 0.07) * 2.2, { collide: false }); }
+    void gl; }
 
   // ---- the ride's route across the tundra, kept clear
   const RIDE = [[-46, -2], [-70, 36], [-58, 88], [-14, 110], [40, 100], [48, 60], [30, 26]];
@@ -63,10 +72,10 @@ export function buildIceAge(w) {
 
   // ---- the painted cave: its roof, the torches down the corridor, the paintings in the hall
   const roofM = M("rock", { args: [265, [96, 92, 88]], repeat: [6, 2] });
-  w.box(98 - CLIFF + 4, 12, 8.4, roofM, (CLIFF - 4 + 98) / 2, 4.6 + 6, 0);
+  w.box(98 - CLIFF, 12, 8.4, roofM, (CLIFF + 98) / 2, 4.6 + 6, 0);
   w.box(22, 12, 22, roofM, 104, 5.2 + 6, 0);
   // (the cave's mouth: an overhang the icicles hang from)
-  w.box(6, 1.2, 12, roofM, CLIFF - 3.5, 6.2, 0);
+  w.box(7.5, 1.2, 12, roofM, CLIFF - 2.75, 6.2, 0);
   for (let i = 0; i < 5; i++) torch(w, CLIFF + 6 + i * 8, 0, i % 2 ? 2.6 : -2.6, i % 2 === 0);
   torch(w, 100, 0, -8, true); torch(w, 108, 0, 8, true);
   cavePainting(w, 113.6, 2.2, 0, 8, 3.6, -Math.PI / 2, ["horse", "mammoth", "deer", "hands"]);

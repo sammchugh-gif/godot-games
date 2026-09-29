@@ -17,6 +17,8 @@ const CH = story.CHARS;
 const lines = new Map();
 const add = (who, text, from) => {
   if (!CH[who] || typeof text !== "string" || !text.trim() || text.includes("${")) return;
+  // (a dinosaur partner honks rather than talks: the game plays sounds for her lines)
+  if (CH[who].dino) return;
   // nothing to say ("..."), or a character's name in a list of them, not a line
   if (!/[\p{L}\p{N}]/u.test(text) || CH[text]) return;
   const key = lineKey(text, CH[who].voice);

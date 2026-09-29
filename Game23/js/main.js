@@ -50,7 +50,16 @@ async function boot() {
   G.dialogue = new Dialogue(CHARS, G.portraits, Speech);
   // the yellow guide arrow over Rory's head is off unless it's switched on in the pause menu
   G.showArrow = store.get("arrow", false);
-  G.dialogue.onLine = who => { G.talking = who; };
+  G.dialogue.onLine = (who, text) => {
+    G.talking = who;
+    // Pebble's lines are honks and purrs: one honk for each "honk" in the line (up to three)
+    if (who === "pebble" && G.bolt) {
+      const n = Math.min(3, (text.match(/honk/gi) || []).length);
+      for (let i = 0; i < n; i++) setTimeout(() => { sound("honk"); G.bolt.honk(); }, i * 260);
+      if (/mrrp/i.test(text)) sound("purr");
+      G.bolt.cheer(1.5);
+    }
+  };
   G.hud = new HUD();
   G.travel = new Travel(engine);
   G.save = store.get("save", null) || newSave();

@@ -103,7 +103,7 @@ export function buildAqueduct(w) {
 
   // grass tufts on the fields and slopes (not on the paving, the pool or the road)
   const tuftSpots = [];
-  for (let i = 0; i < 1400; i++) { const a = i * 2.39996, d = 6 + Math.sqrt(i / 1400) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9; 
+  for (let i = 0; i < 3000; i++) { const a = i * 2.39996, d = 6 + Math.sqrt(i / 3000) * 150, x = Math.cos(a) * d, z = Math.sin(a) * d * 0.9; 
     if (off(x, z) < 3.5 || FLAT.some(([x0, z0, x1, z1]) => x > x0 - 3 && x < x1 + 3 && z > z0 - 3 && z < z1 + 3) || G(x, z) > 10) continue; tuftSpots.push([x, G(x, z), z, 0.8 + (i % 5) * 0.12]); }
   tufts(w, tuftSpots, 0x7a9448);
 

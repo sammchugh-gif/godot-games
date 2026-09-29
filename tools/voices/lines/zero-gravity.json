@@ -2304,15 +2304,21 @@
   "from": "hq/room.js"
  },
  {
-  "key": "0k94280",
+  "key": "093m96y",
   "who": "frost",
-  "text": "Four mission files, Agent Rory. Each one a different adventure.",
+  "text": "Six mission files, Agent Rory. Each one a different adventure.",
   "from": "hq/room.js"
  },
  {
   "key": "0yjnaoq",
   "who": "frost",
   "text": "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1357wgt",
+  "who": "frost",
+  "text": "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.",
   "from": "hq/room.js"
  },
  {
@@ -2703,6 +2709,12 @@
   "key": "1rtyi7m",
   "who": "frost",
   "text": "Spectrum. Baroness Grisaille, a world gone grey, and a chameleon who can't decide what colour to be.",
+  "from": "room.js"
+ },
+ {
+  "key": "190adqm",
+  "who": "frost",
+  "text": "Timeslip. Doctor Hourglass, a stolen piece of history in every era, and a dinosaur who honks.",
   "from": "room.js"
  }
 ]
