@@ -16,6 +16,8 @@ import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "./ui.js
 import { makeBeacon, animateBeacon, makeArrow, makeGoldBolt } from "./props.js";
 import { makeMission } from "./missions.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
+import { installClues } from "./clues.js";
+import { CLUES, THEME } from "./cluemap.js";
 import { buildHQ } from "./levels/hq.js";
 import { buildTokyo } from "./levels/tokyo.js";
 import { buildEgypt } from "./levels/egypt.js";
@@ -308,6 +310,8 @@ G.onMissionLose = (m, why) => {
     else { G.state = "explore"; refreshBeacons(); updateObjective(); Audio.mood("theme"); }
   });
 };
+// the spy clues: most missions end with a puzzle to crack before MISSION COMPLETE (cluemap.js)
+installClues(G, CLUES, { voice: CHARS.pip.voice, theme: THEME });
 function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); }
 function m_id() { const c = currentMission(); return c ? c.id : null; }
 function nextPlace() {

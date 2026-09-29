@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clue test</title>
+<link rel="stylesheet" href="../css/game.css">
+<style>html, body { margin: 0; height: 100%; background: #243a5a; } #ui { position: fixed; inset: 0; }</style>
+<div id="ui"></div>
+<script type="module">
+// Every clue at every level: tools/clues.mjs opens them here, checks each puzzle it
+// makes has exactly one answer, and has the autopilot solve them through the buttons.
+import { KINDS, openClue } from "../js/clues.js";
+const sounds = [];
+const G = { sound: n => sounds.push(n), hud: { set() {} }, dialogue: { show: (l, cb) => cb() } };
+const THEME = { things: ["Blotters", "paint pots"], boxes: ["crates", "vans"], words: ["GREY", "PAINT", "TRAM", "COLOUR", "BARONESS"] };
+const sum = a => a.reduce((x, y) => x + y, 0);
+// what must be true of every puzzle each kind makes
+const CHECK = {
+  keypad: q => Number.isInteger(q.ans) && q.ans >= 0 && q.ans < 1000 || "answer not a whole number",
+  count(q, c) { const ws = [...q.text.matchAll(/(\w+) (star|circle|square|triangle|heart|diamond)s/g)].map(m => ({ c: m[1], s: m[2] })); if (!ws.length) return "count text"; const n = c.grid.filter(g => ws.some(w => w.c === g.c && w.s === g.s)).length; return n === q.ans || `grid has ${n}, answer ${q.ans}`; },
+  order: q => new Set(q.nums).size === q.nums.length && q.sorted.length === q.nums.length || "repeated numbers",
+  next: q => q.opts.some(o => o.v === q.ans) && new Set(q.opts.map(o => o.v)).size === q.opts.length && q.opts.length >= 3 || "options wrong",
+  clock: q => q.opts.length === 4 && q.opts.filter(o => o.h * 60 + o.m === q.want).length === 1 && new Set(q.opts.map(o => `${(o.h % 12) * 60 + o.m}`)).size === 4 || "clock options wrong",
+  coins: q => q.amt > 0 && q.set.length >= 3 || "coins wrong",
+  map: (q, c) => q.ex >= 0 && q.ey >= 0 && q.ex < c.n && q.ey < c.n && !(q.ex === q.sx && q.ey === q.sy) || "map out of bounds",
+  cipher: q => [...q.word].every(ch => q.tiles.includes(ch)) && (!q.symbols || [...q.word].every(ch => q.code[ch])) && q.word.length >= 2 || "cipher missing letters",
+  suspect: q => { const fit = q.people.map((p, i) => q.clues.every(cl => cl.ok(p)) ? i : -1).filter(i => i >= 0); return (fit.length === 1 && fit[0] === q.spy) || `suspects fitting: ${fit}`; },
+};
+const kindCheck = { sum: "keypad", minus: "keypad", times: "keypad", story: "keypad", scale: "keypad", count: "keypad" };
+window.__kinds = Object.keys(KINDS);
+// make n puzzles of a kind and level without showing them; return the problems found
+window.__check = (kind, lv, n) => {
+  const bad = []; const K = KINDS[kind];
+  for (let i = 0; i < n; i++) {
+    const c = new K(G, { p: kind }, lv); c.theme = THEME; if (c.setup) c.setup();
+    for (c.round = 0; c.round < c.rounds; c.round++) {
+      const q = c.make();
+      let r = CHECK[kind] ? CHECK[kind](q, c) : true;
+      if (r === true && kindCheck[kind]) r = CHECK.keypad(q, c);
+      if (r !== true) bad.push(`${kind} lv${lv}: ${r} :: ${JSON.stringify(q).slice(0, 200)}`);
+    }
+  }
+  return bad;
+};
+// open one on screen; with auto, solve it and report how it went
+window.__open = (kind, lv, auto) => new Promise(res => {
+  sounds.length = 0;
+  const c = openClue(G, { p: kind, lv }, lv, { theme: THEME }, r => res({ ...r, sounds: sounds.slice() }));
+  window.__clue = c;
+  if (auto) c.solve(); else setTimeout(() => res({ open: true }), 300);
+});
+window.__ready = true;
+</script>

@@ -1308,6 +1308,192 @@
   "from": "story"
  },
  {
+  "key": "0nik4oz",
+  "who": "flint",
+  "text": "The Sandbots dropped a list of the eggs they took. In shapes! Robots can't spell.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0efvyg1",
+  "who": "pip",
+  "text": "Count the ones it asks for, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1i92054",
+  "who": "flint",
+  "text": "The eggs have numbers on them. The Sandbots were sorting them!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "05ufqkg",
+  "who": "pip",
+  "text": "Put them in order, Rory, smallest first, so we know none are missing.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "009mus6",
+  "who": "flint",
+  "text": "Let's count the babies, to be sure they're all home.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1k76p1j",
+  "who": "flint",
+  "text": "The T. rex wakes up at the same time every day. I wrote it down.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "04xtdyj",
+  "who": "pip",
+  "text": "Which clock says it, Rory? Then we'll know how long we've got.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0yyttvt",
+  "who": "tuva",
+  "text": "The herd went over the hills. Here's my map. I drew it on bark.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1dtk7xv",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where's the herd?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0sqgx6s",
+  "who": "tuva",
+  "text": "Those icicles are heavy! Our old scale says how heavy.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1t5iy8c",
+  "who": "pip",
+  "text": "Work out what the box weighs, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ui3my4",
+  "who": "rory",
+  "text": "Someone has scratched numbers on the cave wall. That wasn't a caveman.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0eg6dqc",
+  "who": "pip",
+  "text": "Number code, Rory. A is 1, B is 2.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1y1toir",
+  "who": "rory",
+  "text": "SAND. The Sandbots got here first.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0616j31",
+  "who": "tuva",
+  "text": "The wall needs the same number of blocks in every row. How many altogether?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "101wmw1",
+  "who": "pip",
+  "text": "Times tables, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0p8ekq6",
+  "who": "nefi",
+  "text": "The builders mark every block with a number. Add them up, and we'll know the ramp is strong enough.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "11s706q",
+  "who": "flint",
+  "text": "The tunnel doors are numbered in a pattern. Which one did the Sandbots take?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0nkzpak",
+  "who": "pip",
+  "text": "What comes next, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0pr8ayf",
+  "who": "theo",
+  "text": "The big race starts when the sundial says. Your watch can tell us the time.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1f6wxni",
+  "who": "pip",
+  "text": "Which clock says it, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0pxrq9l",
+  "who": "theo",
+  "text": "The crown maker will make new crowns for the winners. But he wants paying.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1cs1owg",
+  "who": "pip",
+  "text": "Pay him exactly, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0aevw2v",
+  "who": "theo",
+  "text": "Olive crowns for everyone!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1oi9w39",
+  "who": "livia",
+  "text": "The aqueduct is losing water. The gauge says how much.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "10rj6oa",
+  "who": "pip",
+  "text": "Take away, Rory. How much is still flowing?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0b6ibc1",
+  "who": "livia",
+  "text": "Four bathers were here when the Sandbots came. One of them is Doctor Hourglass's lookout!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qyg6ab",
+  "who": "pip",
+  "text": "Read the clues, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1jjx2cz",
+  "who": "sigrid",
+  "text": "There's a chest in the loft with a number lock.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1arigah",
+  "who": "pip",
+  "text": "Put the numbers in order, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wah7nz",
+  "who": "sigrid",
+  "text": "We have to sew the sail back together. How many stitches? Work it out, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
   "key": "0plnsdv",
   "who": "pip",
   "text": "All three golden ammonites here! Pebble is very pleased.",

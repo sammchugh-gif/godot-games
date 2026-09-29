@@ -41,6 +41,29 @@ fly BOLT through rings, cross laser halls, car chases, sneak past searchlights,
 boss fights, a power-circuit puzzle, a code-lock tune, and buggy collecting.
 Every kind has an autopilot (`solve`) used by the tests.
 
+## Spy clues
+
+Rory is a spy, so 45 of the 60 missions have something to work out. Some are puzzles
+of their own (the code locks, circuits and the rest above); the other 36 end in a
+**clue**: after the action, Rory finds a coded note, a locked case, a line of
+suspects or a map, and cracks it before MISSION COMPLETE. The clues make a trail
+through the story: the machine label that spells EGYPT, the cells going to RIO, the relay's orders for INDIA and the message on the Pump that says MOON.
+
+There are thirteen kinds, all for a seven-year-old: adding, taking away, the 2, 3,
+4, 5 and 10 times tables, story sums, balance scales, paying in coins, counting,
+numbers in order, what comes next, telling the time, a spy map, a number or symbol
+code, and "who is the spy?" (pick the suspect who fits every clue). Each is made
+fresh every time with exactly one answer, at four levels that rise through the
+game. A wrong answer never fails the mission: it gives a hint, and a stronger one
+after the second try, and three slips or more cost one star. 🔊 reads the question
+out.
+
+`js/clues.js` is the puzzles (the same file in all four newer Agent Rory games) and
+`js/cluemap.js` says which missions end in which clue, with the lines around it.
+`node tools/cluecheck.mjs` (from the top of the repository) checks every clue map,
+and `node tools/clues.mjs` (run in Game22) makes hundreds of each kind at each level, checks
+each has one answer, and has the autopilot solve them at phone and tablet size.
+
 ## Files
 
 - `js/engine.js` renderer and post-processing; `js/physics.js` Rapier world and

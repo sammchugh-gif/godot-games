@@ -7,9 +7,9 @@
    "hash": "706e6760c0a3"
   },
   "agent-rory-deep-red": {
-   "bytes": 26757696,
-   "n": 1156,
-   "hash": "cb7fb16c77db"
+   "bytes": 29224451,
+   "n": 1296,
+   "hash": "9ac8f7a10111"
   },
   "agent-rory-hq": {
    "bytes": 267536,
@@ -31,19 +31,19 @@
    "hash": "798e6aad7274"
   },
   "agent-rory-spectrum": {
-   "bytes": 6434817,
-   "n": 70,
-   "hash": "ebb11bd9d7a3"
+   "bytes": 6495070,
+   "n": 72,
+   "hash": "b262697a83e8"
   },
   "agent-rory-timeslip": {
-   "bytes": 12176140,
-   "n": 338,
-   "hash": "89af3354d1b1"
+   "bytes": 12742142,
+   "n": 371,
+   "hash": "9a8b79c3c01c"
   },
   "agent-rory-zero-gravity": {
-   "bytes": 15783758,
-   "n": 517,
-   "hash": "2e8707ee4fae"
+   "bytes": 17174282,
+   "n": 595,
+   "hash": "d64126f69e9b"
   },
   "blockfort": {
    "bytes": 40185305,

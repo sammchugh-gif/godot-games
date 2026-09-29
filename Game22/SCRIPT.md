@@ -59,6 +59,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Saoirse:** One door on the street is still red. Only one! Everything else went grey.
 > **Pip:** Find the things that still have colour, Rory. Touch them and the colour spreads. Three of them!
 
+*Clue: WHO GREYED THE DOORS? (who is the spy?, level 1)*
+
+> **Saoirse:** I saw who painted the doors grey! Well, I saw three people, and one of them had a mop.
+> **Pip:** Grisaille has a lookout in Dingle. Read the clues, Rory. Which one is it?
+
+> **Rory:** Got you. And there's grey paint on your shoes.
+
 *After:*
 
 > **Saoirse:** The whole terrace is coming back! That's my auntie's shop, the yellow one!
@@ -100,6 +107,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Tiago:** The drops rolled down the steps of Alfama and into every doorway.
 > **Pip:** Climb the staircases, jump the walls. Eight drops!
 
+*Clue: THE TILE LOCK (counting, level 1)*
+
+> **Tiago:** The Blotters locked the tile shop! There are shapes painted on the lock.
+> **Pip:** Count the ones it asks for, Rory. That's the code.
+
+> **Tiago:** It's open! All the blue tiles are still inside.
+
 *After:*
 
 > **Rory:** The tiles are coming back! Blue and white!
@@ -110,6 +124,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Tiago:** Dad's tram still runs. The drops are riding on its roof!
 > **Pip:** Jump on from the stop as it comes past, grab the drops on the roof, and hop off at the next stop.
 
+*Clue: THE TRAM NOTE (code, level 1, spells LOT)*
+
+> **Rory:** There's a note tucked under the drops. It's all numbers.
+> **Pip:** Number code! A is 1, B is 2, C is 3. Crack it, Rory.
+
+> **Rory:** LOT. Like at an auction. Somebody's collecting colour.
+
 *After:*
 
 > **Rory:** These drops are labelled. GRISAILLE COLLECTION, LOT 4.
@@ -119,6 +140,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Tiago:** Blotters! In the square! They're mopping the colour off the fountain!
 > **Pip:** These ones drift away when you get close. Corner them and SPLAT.
+
+*Clue: THE FOUNTAIN LOCK (adding, level 1)*
+
+> **Tiago:** They've locked the fountain! There's a sum on the lock.
+> **Pip:** Add them up, Rory, and the water runs again.
+
+> **Tiago:** It's on! Blue water!
 
 *After:*
 
@@ -164,6 +192,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Camila:** Four of Grandpa's paintings are still coloured. Just four. The Blotters missed them.
 > **Pip:** Find them. Touch them and the colour spreads to the houses next door.
 
+*Clue: GRANDPA'S SAFE (numbers in order, level 1)*
+
+> **Camila:** Grandpa keeps his best paint in a safe. The code is his numbers in order.
+> **Pip:** Smallest first, Rory.
+
+> **Camila:** Paint! Now we can fix the doors ourselves.
+
 *After:*
 
 > **Camila:** The whole street's back! That one's a horse. That one's a dog. That one's Grandpa.
@@ -172,6 +207,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Camila:** The drops rolled up the steps of the rock. All the way up.
 > **Pip:** Seven hundred steps. Well, quite a few. There are drops on the way and on the top. Climb!
+
+*Clue: THE LAKE MAP (spy map, level 1)*
+
+> **Camila:** From up here you can see the whole lake. Grandpa drew me a map of it.
+> **Pip:** Follow the steps on the map to where the grey boat is hiding.
+
+> **Rory:** The boat's heading across the lake. We'll need a speedboat.
 
 *After:*
 
@@ -193,6 +235,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Camila:** Grandpa says the colours have to go back on in order, or they argue.
 > **Pip:** Rainbow order, Rory. Through the gates. Faster than Dingle!
 
+*Clue: GRANDPA'S PATTERN (what comes next, level 1)*
+
+> **Camila:** Grandpa painted a pattern round the square, and the Blotters rubbed out the end of it.
+> **Pip:** What comes next, Rory? Finish his pattern.
+
+> **Camila:** Perfect. Grandpa says you've got a painter's eye.
+
 *After:*
 
 > **Camila:** They're not arguing. Grandpa's pleased.
@@ -201,6 +250,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Camila:** Blotters in the boat yard! They're mopping the boats!
 > **Pip:** Six of them, and they're quick. Corner them against the boats and SPLAT.
+
+*Clue: PAY THE BOATMAN (paying in coins, level 1)*
+
+> **Camila:** The boatman saw where the Blotters' truck went. He'll tell us, but he wants paying for his time.
+> **Pip:** Pay him exactly, Rory. A good spy never pays too much.
+
+> **Camila:** He says the truck went south. A long way south. To the salt.
 
 *After:*
 
@@ -225,6 +281,11 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Wara:** Four flamingos still have a little pink in them. Find them before it goes!
 > **Pip:** Touch them and the pink spreads to the flock.
 
+*Clue: THE TRACKING MARKERS (counting, level 2)*
+
+> **Wara:** The Blotters dropped tracking markers all over the salt. All shapes and colours.
+> **Pip:** Count the ones it asks for, Rory, and we'll know how many Blotters there are.
+
 *After:*
 
 > **Wara:** The whole flock! They're doing the flamingo dance!
@@ -244,6 +305,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Wara:** The salt workers stack blocks of salt to dry. The Blotters knocked them over.
 > **Pip:** GRAB a block, carry it to the green circle and DROP it. Four!
 
+*Clue: THE SALT TALLY (times tables, level 1)*
+
+> **Wara:** The salt workers count their blocks in twos and tens. The Blotters hid the tally.
+> **Pip:** Do the times tables, Rory, and we'll know how many blocks they stole.
+
+> **Wara:** That's exactly how many are missing. They took them for the machine.
+
 *After:*
 
 > **Wara:** Perfect. Now the workers can build the salt hotel again.
@@ -253,6 +321,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Wara:** The old trains! The Blotters' machine is pulling them up off the rails!
 > **Pip:** Get close to anything with a pink ring under it and press PIN. Your watch will hold it down.
+
+*Clue: THE LOOKOUT (who is the spy?, level 2)*
+
+> **Wara:** Someone was taking photos of the trains just before the machine switched on.
+> **Pip:** Four tourists by the old engine. One of them is Grisaille's lookout. Use the clues!
+
+> **Rory:** The lookout had a map. There's a red circle round Lapland.
 
 *After:*
 
@@ -286,6 +361,13 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Aino:** The drops fell in the snow round the cabins and up on the roofs.
 > **Pip:** Jump the woodpiles onto the roofs. Eight drops!
 
+*Clue: THE BLOTTER TIMETABLE (telling the time, level 1)*
+
+> **Aino:** The Blotters leave the ice hotel at the same time every night. It's on their timetable.
+> **Pip:** Which clock shows it? Then we'll know when to sneak in.
+
+> **Rory:** Then that's when we go.
+
 *After:*
 
 > **Aino:** The cabins are red again! Proper Finnish red!
@@ -303,6 +385,11 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Aino:** Grisaille's machine is in the ice hotel. Blotters with lamps walk the halls.
 > **Pip:** Keep to the ice walls and out of the lamp light. PALETTE can go invisible, but you can't!
+
+*Clue: THE MACHINE NOTE (code, level 2, spells JARS)*
+
+> **Rory:** There's a note pinned to the machine. Numbers again.
+> **Pip:** Crack it, Rory. What is she keeping in there?
 
 *After:*
 
@@ -322,6 +409,12 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 > **Aino:** Blotters are chasing the reindeer! They want their red noses. Well, one of them.
 > **Pip:** Six Blotters. They run in the snow. Splat!
+
+*Clue: THE HERDER'S COUNT (story sum, level 2)*
+
+> **Aino:** The herder needs to know how many reindeer are safe. Help him work it out!
+
+> **Aino:** All of them! Not one missing.
 
 *After:*
 
@@ -349,6 +442,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Layla:** Four carvings still have their red. Touch them and it spreads along the cliff.
 
+*Clue: THE STONE JARS (balance scale, level 2)*
+
+> **Layla:** The Blotters swapped the stone jars on the old scale. Only one has the real red in it.
+> **Pip:** Work out what the box weighs, Rory, and we'll know which jar is real.
+
+> **Layla:** That's the one! The heavy red one.
+
 *After:*
 
 > **Layla:** The cliffs! Red, and pink, and orange, in stripes!
@@ -368,6 +468,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Layla:** The drops went up the steps to the High Place of Sacrifice. It's a long climb.
 > **Pip:** Up the stairs and along the ledges. Eight drops!
 
+*Clue: THE GREY TENT (spy map, level 2)*
+
+> **Layla:** That grey tent down there. Here's my map of the valley.
+> **Pip:** Follow the steps, Rory. Where's the tent?
+
+> **Rory:** Right in front of the Treasury. She's keeping her collection inside.
+
 *After:*
 
 > **Rory:** You can see the whole city from up here. And a grey tent.
@@ -377,6 +484,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Layla:** Grisaille's collection is in the Treasury. Four Blotters with lamps.
 > **Pip:** Behind the columns, through the gaps. The key to her jars is on the altar.
+
+*Clue: THE ALTAR BOX (taking away, level 2)*
+
+> **Rory:** The key's in a box with a take-away lock.
+> **Pip:** Quick, before the lamps come back round!
 
 *After:*
 
@@ -411,6 +523,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Linh:** Four lanterns are still lit. Find them in the old town. Touch them and the street lights up.
 
+*Clue: THE LANTERN PATTERN (what comes next, level 2)*
+
+> **Linh:** The lanterns go on in a pattern, all down the street. The Blotters broke it.
+> **Pip:** What number comes next, Rory? Then the street lights up in order.
+
 *After:*
 
 > **Linh:** The whole street! Look at the colours on the water!
@@ -440,6 +557,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Linh:** The drops rolled onto the Japanese Bridge and the rooftops beside it.
 > **Pip:** Over the bridge, onto the roofs, nine drops!
 
+*Clue: LANTERN PAPER (paying in coins, level 2)*
+
+> **Linh:** The bridge keeper sells lantern paper. We need some to fix the broken ones.
+> **Pip:** Pay him exactly, Rory.
+
+> **Linh:** Red paper and yellow paper. We can make them all again!
+
 *After:*
 
 > **Rory:** The bridge is red again!
@@ -448,6 +572,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Linh:** Blotters in the market, mopping the fruit! The dragon fruit's gone grey!
 > **Pip:** Six of them, between the stalls. Splat!
+
+*Clue: THE MARKET SPY (who is the spy?, level 2)*
+
+> **Linh:** The fruit seller saw who told the Blotters where to go. Four shoppers were at her stall.
+> **Pip:** One of them is working for Grisaille. Read the clues.
+
+> **Rory:** Another map! This one has a circle round Madagascar.
 
 *After:*
 
@@ -472,6 +603,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** Five of my cousins still have a bit of colour. Find them. They're good at hiding. Family trait.
 > **Pip:** Touch each one and its colour comes back to the trees round it.
 
+*Clue: THE CHAMELEON MESSAGE (counting, level 2)*
+
+> **PALETTE:** My cousins left us a message in shapes. We chameleons are very artistic.
+> **Pip:** Count the ones they mean, Rory.
+
+> **PALETTE:** That's how many Blotters are in the camp. My cousins are excellent spies.
+
 *After:*
 
 > **PALETTE:** All five! Green, orange, blue, yellow, and that one's just showing off.
@@ -480,6 +618,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Fara:** The drops are in the baobabs: on the branches, and in the red dust between them.
 > **Pip:** Jump for the ones on the branches. Eight! And if you climb the branches to the top, the view is the best in Madagascar.
+
+*Clue: THE CHALK SUMS (times tables, level 2)*
+
+> **Fara:** The Blotters chalked sums on the baobabs. They're counting the trees!
+> **Pip:** Times tables, Rory. How many are they after?
+
+> **Fara:** That's every tree on the avenue. They want them all.
 
 *After:*
 
@@ -499,6 +644,12 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Fara:** The camp machine is pulling the lemurs up off the branches!
 > **Pip:** PIN them down, gently. They are very cross and very fluffy.
 
+*Clue: THE LEMUR COUNT (story sum, level 2)*
+
+> **Fara:** We need to count the lemurs, to be sure every one is safe.
+
+> **Fara:** Every lemur! Even the cross one.
+
 *After:*
 
 > **Fara:** The lemurs are down. One of them's sitting on your head.
@@ -508,6 +659,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Fara:** The sunset comes back in order: red, then orange, then yellow, up to violet at the top.
 > **Pip:** Rainbow gates, Rory. Along the avenue. Go!
+
+*Clue: THE TRUCK LEAVES AT... (telling the time, level 2)*
+
+> **Fara:** The Blotters' truck leaves the camp at a set time. Here's their note.
+> **Pip:** Which clock says it? We'll be there first.
+
+> **Rory:** And they're going to Samarkand.
 
 *After:*
 
@@ -532,6 +690,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Dilnoza:** The drops went up the minarets and onto the domes. Stairs inside, pads on the roofs.
 > **Pip:** Nine drops, high up. Careful on the domes!
 
+*Clue: THE DOME NUMBERS (adding, level 3)*
+
+> **Dilnoza:** The tilers paint numbers under the dome tiles, so they know where each one goes.
+> **Pip:** Add them up, Rory, and we'll know which dome she's hiding in.
+
+> **Dilnoza:** The bazaar side! I knew it.
+
 *After:*
 
 > **Rory:** The tiles are turning blue under my feet!
@@ -541,6 +706,13 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Dilnoza:** Five sacks in the bazaar still have their colour: saffron, paprika, turmeric, sumac, mint.
 > **Pip:** Find them among the grey ones. Touch them and the stalls come back.
 
+*Clue: THE SPICE SELLER (paying in coins, level 3)*
+
+> **Dilnoza:** The spice seller knows where the workshop is. He'll tell us, for a price.
+> **Pip:** Pay exactly, Rory. He counts every coin.
+
+> **Dilnoza:** Behind the silk stalls. Of course.
+
 *After:*
 
 > **Dilnoza:** Yellow, red, orange, purple, green! The bazaar!
@@ -549,6 +721,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Dilnoza:** The workshop's behind the silk stalls. Blotters with lamps between the carpets.
 > **Pip:** Silk hangs everywhere: hide behind it. Her jar key is on the loom.
+
+*Clue: HER SECRET PLANS (code, level 3, spells MONOCHROME)*
+
+> **Rory:** Her plans! But they're written in some kind of symbol code.
+> **Pip:** Use the key, Rory. What is she building?
 
 *After:*
 
@@ -569,6 +746,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Dilnoza:** Blotters all over the square! Seven! They're mopping the mosaics!
 > **Pip:** Corner them in the arches. Splat!
+
+*Clue: THE GATE NUMBERS (numbers in order, level 3)*
+
+> **Dilnoza:** The Registan gates have a number lock. Every Blotter was carrying one of the numbers.
+> **Pip:** Put them in order, Rory, and the gates will open.
 
 *After:*
 
@@ -593,6 +775,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Marta:** The drops sank to the bottom of the lower lake. Walk in and you swim: JUMP goes up, DIVE goes down.
 > **Pip:** Watch the air bar! Come up for a breath, or swim through a silver bubble.
 
+*Clue: THE RANGER MARKERS (what comes next, level 3)*
+
+> **Marta:** The rangers number the lakes in a pattern. Some of the markers are missing!
+> **Pip:** What comes next, Rory?
+
 *After:*
 
 > **Rory:** The water's going turquoise around me!
@@ -603,6 +790,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **Marta:** The boardwalks zigzag up past the waterfalls. The drops are along them and on the rocks.
 > **Pip:** Up the boardwalks, over the falls. Nine!
 
+*Clue: THE WATER GAUGE (taking away, level 3)*
+
+> **Marta:** The Blotters are draining the lakes into jars. The gauge says how much has gone.
+> **Pip:** Take away, Rory. How much is left?
+
 *After:*
 
 > **Marta:** The falls are green! Look at them!
@@ -611,6 +803,12 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Marta:** Her jars are in the deep lake, and the Blotters stirred up the mud. You can't see a thing.
 > **Pip:** Your watch has a colour pulse. Press PULSE and anything coloured lights up for a moment. Swim for it!
+
+*Clue: THE HEAVY JAR (balance scale, level 3)*
+
+> **Pip:** The jars are sitting on a scale. The full ones are heavier. Work out what each box weighs, and we'll find them.
+
+> **Marta:** Those two! The colour of the whole lake is in there.
 
 *After:*
 
@@ -630,6 +828,11 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **Marta:** Blotters on the boardwalk by the big falls! Seven!
 > **Pip:** They're the fastest yet. Splat them before they reach the sluice!
+
+*Clue: THE RANGER'S REPORT (story sum, level 3)*
+
+> **Marta:** The ranger wants a report for the park. Can you work it out?
+> **Pip:** Field report, Rory. Every spy writes one.
 
 *After:*
 
@@ -659,6 +862,13 @@ The Monochrome is over the sea. Time to give the world its colours back.
 > **Tuli:** The drops are all over the dunes. Take the buggy. It climbs.
 > **Pip:** Up the dunes, down the other side. Eight drops. Try not to roll.
 
+*Clue: THE DUNE MAP (spy map, level 3)*
+
+> **Tuli:** The dunes all look the same. Good thing I've got a map.
+> **Pip:** Follow the steps, Rory. Where did the Blotters land?
+
+> **Tuli:** Deadvlei. The white pan with the black trees.
+
 *After:*
 
 > **Rory:** That was like driving on a wave.
@@ -669,6 +879,11 @@ The Monochrome is over the sea. Time to give the world its colours back.
 > **Tuli:** Five of the black trees still have their black. The rest went grey. Even black is a colour, Rory.
 > **Pip:** Find the five. Touch them and the pan goes white again round them.
 
+*Clue: THE DELIVERY LIST (times tables, level 3)*
+
+> **Tuli:** The Blotters left a delivery list. Crates and crates of grey.
+> **Pip:** Times tables, Rory. How much have they taken?
+
 *After:*
 
 > **Tuli:** Black trees, white pan, red dunes, blue sky. That's Deadvlei.
@@ -678,6 +893,11 @@ The Monochrome is over the sea. Time to give the world its colours back.
 > **Tuli:** That's Big Daddy, the tallest dune. The drops went up the ridge to the top.
 > **Pip:** Along the ridge. It's steep and it slides. Nine drops!
 
+*Clue: THE GANGWAY SIGN (telling the time, level 3)*
+
+> **Rory:** The gangway's coming down from the ship. There's a sign: it goes back up at a set time.
+> **Pip:** Which clock is it? Then we know how long we've got.
+
 *After:*
 
 > **Rory:** I can see the gangway from up here. It's coming down from the ship.
@@ -685,6 +905,13 @@ The Monochrome is over the sea. Time to give the world its colours back.
 **Mission 54: Dune Rainbow** (Rainbow gates, level 4)
 
 > **Pip:** The last rainbow run on the ground, Rory. Through the gates, in order, fast!
+
+*Clue: THE DISGUISE (who is the spy?, level 3)*
+
+> **Tuli:** The people by the gangway! One of them is Grisaille herself, in disguise!
+> **Pip:** Read the clues carefully, Rory. Some of them say NOT.
+
+> **Baroness Grisaille:** You have sharp eyes, Agent Rory. Come aboard, then. If you dare.
 
 *After:*
 
@@ -716,6 +943,11 @@ The Monochrome is over the sea. Time to give the world its colours back.
 > **Pip:** The jar room key is at the far end of the gallery. Four Blotters with lamps, between the pictures.
 > **Pip:** Behind the frames, through the gaps. Last sneak, Rory.
 
+*Clue: THE KEY TAG (code, level 4, spells VAULT)*
+
+> **Rory:** The key has a tag on it. More symbols!
+> **Pip:** Last code, Rory. Where does this key go?
+
 *After:*
 
 > **Rory:** Got the key!
@@ -725,6 +957,12 @@ The Monochrome is over the sea. Time to give the world its colours back.
 
 > **Pip:** The vault. Every drop she's collected. Ten of them are the big ones: a whole country's colour in each.
 > **Pip:** Climb the shelves, bounce the pads, ten drops!
+
+*Clue: THE VAULT DOOR (adding, level 4)*
+
+> **Pip:** Every jar has a number on it. Add them up and the vault door opens. Three sums!
+
+> **Rory:** It's open. Every colour in the world is in here.
 
 *After:*
 

@@ -95,6 +95,29 @@ wrong taps cost stars), **Greenhouse** (each bed asks for water or light in turn
 right one before it wilts) and **Climb** (race Undertow's climber up the elevator's ribbon:
 steer round the space junk, grab the boost cells).
 
+## Spy clues
+
+Rory is a spy, so 135 of the 179 missions (four or five in every place) have something to work out. Some are puzzles
+of their own (the code locks, circuits and the rest above); the other 92 end in a
+**clue**: after the action, Rory finds a coded note, a locked case, a line of
+suspects or a map, and cracks it before MISSION COMPLETE. The clues make a trail
+through the story: a mole inside POLARIS in Act Two, Undertow's logbook in symbol code, and at the very end the gate code she hands over herself.
+
+There are thirteen kinds, all for a seven-year-old: adding, taking away, the 2, 3,
+4, 5 and 10 times tables, story sums, balance scales, paying in coins, counting,
+numbers in order, what comes next, telling the time, a spy map, a number or symbol
+code, and "who is the spy?" (pick the suspect who fits every clue). Each is made
+fresh every time with exactly one answer, at four levels that rise through the
+game. A wrong answer never fails the mission: it gives a hint, and a stronger one
+after the second try, and three slips or more cost one star. 🔊 reads the question
+out.
+
+`js/clues.js` is the puzzles (the same file in all four newer Agent Rory games) and
+`js/cluemap.js` says which missions end in which clue, with the lines around it.
+`node tools/cluecheck.mjs` (from the top of the repository) checks every clue map,
+and `node tools/clues.mjs` (run in Game22) makes hundreds of each kind at each level, checks
+each has one answer, and has the autopilot solve them at phone and tablet size.
+
 ## Files
 
 - `js/sea.js` the sea (surface, depth map, the light under water); `js/craft.js`

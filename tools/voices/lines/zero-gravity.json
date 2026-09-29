@@ -1950,6 +1950,462 @@
   "from": "story"
  },
  {
+  "key": "1lig0ol",
+  "who": "pip",
+  "text": "One more thing. Every spy has to open locks. Here's my training safe.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0dx7kha",
+  "who": "pip",
+  "text": "Add up the numbers, Rory. Two sums and it opens.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1yass84",
+  "who": "bolt",
+  "text": "It opened! There was a biscuit inside. I cannot eat biscuits.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ye116q",
+  "who": "yuki",
+  "text": "Look at the arcade screen! The Floaters hacked it. It's full of shapes.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0aaexb8",
+  "who": "pip",
+  "text": "It's a counting lock. Count the ones it asks for.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0us9nzm",
+  "who": "yuki",
+  "text": "The screen's back to normal. Game over, Floaters!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1po0638",
+  "who": "yuki",
+  "text": "That machine is still on the ground. Buy a drink and it gives you a secret message too!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0mqb28u",
+  "who": "pip",
+  "text": "Pay exactly, Rory. Machines don't give spies any change.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "126daqd",
+  "who": "bolt",
+  "text": "A drink, and a note. It says: look at the big screens.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qhddwm",
+  "who": "yuki",
+  "text": "Someone in the park is helping the Floaters. I saw them hand over a leech!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "002wkq3",
+  "who": "pip",
+  "text": "Read the clues, Rory. Who's the spy?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ad1ocj",
+  "who": "rory",
+  "text": "Caught you. Now, who do you work for?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ec3xn0",
+  "who": "bolt",
+  "text": "The machine on the top has a label on the bottom. It is in number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "053r22n",
+  "who": "pip",
+  "text": "A is 1, B is 2. Crack it, Rory!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "09ng1r1",
+  "who": "amira",
+  "text": "There's a crate up here, and it's locked. The numbers are painted on the side, all jumbled up.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "10wsd15",
+  "who": "pip",
+  "text": "Smallest to biggest, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "17ls4i9",
+  "who": "amira",
+  "text": "The capstone has to weigh just right, or it wobbles. Grandad's old scale will tell us.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1t5iy8c",
+  "who": "pip",
+  "text": "Work out what the box weighs, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1b72vkq",
+  "who": "amira",
+  "text": "Perfect balance. Just the way the pyramid builders did it.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0iktvuh",
+  "who": "amira",
+  "text": "The tomb has lots of rooms. My grandad's map shows which one is the workshop.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "06tdnbi",
+  "who": "pip",
+  "text": "Follow the steps to the workshop, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0mnc4n0",
+  "who": "jack",
+  "text": "The lifeguard needs to know how many surfboards we saved. Can you work it out?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "021bvzw",
+  "who": "jack",
+  "text": "Spot on. That's all of them.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "13z7erj",
+  "who": "rory",
+  "text": "These cells have labels on them. In number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0m0srkk",
+  "who": "pip",
+  "text": "Crack it, Rory. Where are they going?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ac5k9z",
+  "who": "jack",
+  "text": "The Floater under the bridge had a timetable. There's a ship leaving tonight.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1fcgtb7",
+  "who": "pip",
+  "text": "Which clock says the right time, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1vdxwhu",
+  "who": "jack",
+  "text": "We've got time to look in Zero's warehouse first.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1u7hl3b",
+  "who": "rory",
+  "text": "The silver case has a take-away lock.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0s85oz0",
+  "who": "pip",
+  "text": "Quick, before the searchlights come round again!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "19wzf4i",
+  "who": "lucas",
+  "text": "Four dancers by the float, and one of them is helping the Floaters. You can tell. They can't samba.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ozmh6j",
+  "who": "pip",
+  "text": "Read the clues, Rory. Which one is it?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0a6kpcb",
+  "who": "lucas",
+  "text": "Every cable car carries the same number of cells. The station board has the sums.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1v59nlu",
+  "who": "pip",
+  "text": "Times tables, Rory. How many cells are going up the mountain?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0w556be",
+  "who": "marcus",
+  "text": "The hot dog man saw everything. He'll tell us, for the price of a hot dog.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1cs1owg",
+  "who": "pip",
+  "text": "Pay him exactly, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0jmzauu",
+  "who": "marcus",
+  "text": "He says they went up on the rooftops. Carrying lots of blue balls.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0g801dy",
+  "who": "marcus",
+  "text": "The window cleaner's lift is stuck at the top. There's a sum lock on the controls!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0w5ikci",
+  "who": "pip",
+  "text": "Add them up, Rory, and we can ride it down.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1q6bkc8",
+  "who": "wanjiru",
+  "text": "The ranger's chart shows every animal as a shape. We have to check none floated away.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0efvyg1",
+  "who": "pip",
+  "text": "Count the ones it asks for, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1iec277",
+  "who": "wanjiru",
+  "text": "That's all of them. Nobody floated off.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1x6g882",
+  "who": "wanjiru",
+  "text": "Mum needs a report for the park. Can you work it out?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "01d3sn1",
+  "who": "wanjiru",
+  "text": "Mum says you'd make a very good ranger.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1xfkf0p",
+  "who": "mei",
+  "text": "The watchtowers are numbered in a pattern, but some of the numbers have fallen off!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0nkzpak",
+  "who": "pip",
+  "text": "What comes next, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "02x8jkj",
+  "who": "mei",
+  "text": "The relay sends its signal at the same time every night. The monks wrote it down.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0how6ti",
+  "who": "pip",
+  "text": "Which clock shows it, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0kkns4h",
+  "who": "rory",
+  "text": "The relay is printing out orders. In number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "05w6ypy",
+  "who": "pip",
+  "text": "Crack it, Rory. Where are the orders going?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0opg3dn",
+  "who": "arjun",
+  "text": "Four gardeners, and one of them keeps looking at the hatch. That's Zero's spy!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1vrnm6y",
+  "who": "pip",
+  "text": "Use the clues, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1fzfljb",
+  "who": "arjun",
+  "text": "The fountain stones have to balance, or the water won't flow.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0y9k2dv",
+  "who": "arjun",
+  "text": "The signals were going out to sea. Here's a map of where they went.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1uaqfn1",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where's Zero's island?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "11oxuiz",
+  "who": "pip",
+  "text": "The case has a number lock. Put the numbers in order, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "10o6npp",
+  "who": "hale",
+  "text": "Every rocket has a launch check. Times tables, Agent. Get them all right, or we don't fly.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0f0qelm",
+  "who": "hale",
+  "text": "Launch check complete. You're a natural.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0z4fbz0",
+  "who": "hale",
+  "text": "We launch at the exact time on the board. Which clock is it, Agent?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0tjphrn",
+  "who": "hale",
+  "text": "Then we've got time to stop that buggy.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ptnwwg",
+  "who": "bolt",
+  "text": "I must write a report for Admiral Frost. How many Floaters? Please help. I lost count.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "12mbghg",
+  "who": "bolt",
+  "text": "Thank you. Report sent. I added a smiley face.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wx8klq",
+  "who": "pip",
+  "text": "The airlock door has a sum lock. Three sums, Rory, and it opens.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0c00bz9",
+  "who": "hale",
+  "text": "The cargo list says how many crates we had. Work out how many are left, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0zyua9z",
+  "who": "hale",
+  "text": "That matches. Nothing lost.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1gxaeip",
+  "who": "bolt",
+  "text": "The scan found a message painted on the Pump. It is in symbols.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1pyrvf5",
+  "who": "pip",
+  "text": "Use the key, Rory. Where's the battery?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1r9x4y4",
+  "who": "pip",
+  "text": "Zero has a spy in the station crew. He's got the codes for the console.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0e5nfza",
+  "who": "pip",
+  "text": "Read the clues, Rory. Some of them say NOT.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ubxscc",
+  "who": "hale",
+  "text": "Here's the crater map. The battery is in one of these craters.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1870y4j",
+  "who": "pip",
+  "text": "Follow the steps, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "027a156",
+  "who": "hale",
+  "text": "That's the one. Right next to his base.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "066wdw9",
+  "who": "pip",
+  "text": "The battery's lights are flashing a number pattern. Finish it and it loses power!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0glgg2n",
+  "who": "hale",
+  "text": "To tune the radio to Earth we need the right numbers. Times tables, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "020uewf",
+  "who": "hale",
+  "text": "The fuel barrels have to balance on the lander, or it tips over.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1wpriiz",
+  "who": "pip",
+  "text": "Work out what one box weighs, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
   "key": "0v88els",
   "who": "bolt",
   "text": "All three golden bolts here! BOLT is very pleased.",

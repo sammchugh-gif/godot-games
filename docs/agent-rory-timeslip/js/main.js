@@ -19,6 +19,8 @@ import { makeMission } from "./kinds.js";
 import { Craft } from "./craft.js";
 import { critter } from "./critters.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL, PROLOGUE } from "./story.js";
+import { installClues } from "./clues.js";
+import { CLUES, THEME } from "./cluemap.js";
 import { Travel } from "./timetunnel.js";
 import { buildCove } from "./levels/cove.js";
 import { LEVELS } from "./levels/index.js";
@@ -534,6 +536,8 @@ G.onMissionLose = (m, why) => {
     else { G.state = "explore"; refreshBeacons(); updateObjective(); setMood("theme"); }
   });
 };
+// the spy clues: most missions end with a puzzle to crack before MISSION COMPLETE (cluemap.js)
+installClues(G, CLUES, { voice: CHARS.pip.voice, theme: THEME, airFull: () => G.player.airMax });
 function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); }
 function m_id() { const c = currentMission(); return c ? c.id : null; }
 function nextPlace() {
