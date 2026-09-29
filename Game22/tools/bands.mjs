@@ -17,7 +17,7 @@ await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
 const bands = await page.evaluate(() => window.__bands);
 for (const id of bands.filter(b => !only || only.split(",").includes(b))) {
   await page.reload(); await page.waitForFunction(() => window.__ready, null, { timeout: 60000 });
-  const r = await page.evaluate(([id, mood, secs, colour]) => window.__render(id, mood, +secs, 22050, +colour), [id, mood, secs, colour]);
+  const r = await page.evaluate(([id, mood, secs, colour, rate]) => window.__render(id, mood, +secs, +rate, +colour), [id, mood, secs, colour, process.env.RATE || "22050"]);
   fs.writeFileSync(`${out}/${id}-${mood}${+colour < 1 ? "-c" + colour : ""}.wav`, Buffer.from(r.b64, "base64"));
   console.log(id, mood, "peak", r.peak.toFixed(3));
 }
