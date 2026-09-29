@@ -67,8 +67,9 @@ async function boot() {
   G.hud = new HUD();
   G.travel = new Travel(engine);
   G.save = store.get("save", null) || newSave();
-  // (a save from before HQ's prologue that never got past the landing starts at HQ)
-  if (G.save.place === PLACES[0].id && !G.save.done.length && !G.save.arrived[PLACES[0].id]) G.save.place = PROLOGUE.id;
+  // (a save from before HQ's prologue that never got past the landing starts at HQ; one that has
+  // been through the prologue stays put)
+  if (G.save.place === PLACES[0].id && !G.save.done.length && !G.save.arrived[PLACES[0].id] && !G.save.arrived[PROLOGUE.id]) G.save.place = PROLOGUE.id;
   buildTouch();
   progress(0.9);
   loadPlace(G.save.place);
@@ -290,6 +291,8 @@ function startPlace() {
   G.jumpBtn.textContent = G.world.jetpack ? "JET" : "JUMP";
   setMood("theme");
   G.player.snapCam = true;
+  // (the title screen hides the beacons: show the one for the mission that's next)
+  refreshBeacons();
   if (!G.save.arrived[place.id]) {
     banner(place.when.toUpperCase(), place.name);
     setTimeout(() => { if (G.place !== place || G.dialogue.active || G.state !== "explore") { G.save.arrived[place.id] = true; saveGame(); return; } talk(place.arrive, () => { G.save.arrived[place.id] = true; saveGame(); }); }, 1600);

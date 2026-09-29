@@ -293,6 +293,8 @@ function startPlace() {
   G.jumpBtn.textContent = G.world.jetpack ? "JET" : "JUMP";
   setMood(place.ch === 3 ? "space" : "theme");
   G.player.snapCam = true;
+  // (the title screen hides the beacons: show the one for the mission that's next)
+  refreshBeacons();
   if (!G.save.arrived[place.id]) {
     banner(place.country.toUpperCase(), place.name);
     setTimeout(() => { if (G.place !== place || G.dialogue.active || G.state !== "explore") { G.save.arrived[place.id] = true; saveGame(); return; } talk(place.arrive, () => { G.save.arrived[place.id] = true; saveGame(); }); }, 1600);

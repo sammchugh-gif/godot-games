@@ -1,10 +1,13 @@
 // Timeslip's kit for the eras, built from simple shapes: ferns (instanced, so a whole field is a
 // few draw calls), cycads, tree ferns and monkey-puzzle trees for the dinosaurs' valley; a nest of
-// eggs; a smoking volcano on the skyline; long-necked sauropods grazing far off and pterosaurs
-// circling; and the POLARIS time-sled, parked where Rory lands.
+// eggs; a smoking volcano on the skyline; dinosaurs that walk (long-necked sauropods on the hills,
+// a herd of duckbills, compys darting about) and pterosaurs circling; and the POLARIS time-sled,
+// parked where Rory lands.
 import * as THREE from "three";
 import { M } from "../tex.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { compact } from "../people.js";
+import { critter, animateCritter } from "../critters.js";
 
 const leafM = (c) => M(c, { rough: 0.75, side: THREE.DoubleSide });
 // a frond: a long, curved, tapering leaf
@@ -81,29 +84,127 @@ export function volcano(w, x, z, r = 90, h = 120, y = -10) {
   return g;
 }
 // a sauropod, grazing far off: a great body, a long neck and tail (it only sways, it's scenery)
-export function sauropod(w, x, y, z, s = 1, yaw = 0) {
-  const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = yaw; g.scale.setScalar(s); w.scene.add(g);
+// ---- dinosaurs that move. Each is a rig: { root, pose(dt, speed, t) }, feet at y = 0, facing +z,
+// its parts on joints that swing (legs, neck, tail). Their meshes are kept out of the level's
+// baking (userData.dynamic), or they'd be frozen where they were built. wander() walks one along a
+// path over the ground.
+const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+function rigPart(parent, geo, mat, x = 0, y = 0, z = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
+function joint(parent, x, y, z) { const j = new THREE.Group(); j.position.set(x, y, z); parent.add(j); return j; }
+// a long-necked sauropod, about 16 m tall at s = 1: it walks on four pillar legs, swings its tail,
+// and when it stops it lowers its neck to browse
+export function sauropodRig(s = 1) {
+  const root = new THREE.Group(); root.scale.setScalar(s); root.userData.dynamic = true;
   const skin = M(0x7a8a6a, { rough: 0.85 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 12), skin); body.scale.set(1, 0.8, 1.6); body.position.y = 7; g.add(body);
-  const neck = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 8, 4), new THREE.Vector3(0, 12, 8), new THREE.Vector3(0, 16, 10)]), 12, 0.7, 8), skin); g.add(neck);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.9, 10, 8), skin); head.scale.set(0.8, 0.7, 1.3); head.position.set(0, 16.2, 10.8); g.add(head);
-  const tail = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 7, -4), new THREE.Vector3(0, 5, -9), new THREE.Vector3(0, 2, -14)]), 12, 0.6, 8), skin); g.add(tail);
-  for (const [lx, lz] of [[-1.6, 2.5], [1.6, 2.5], [-1.6, -2.5], [1.6, -2.5]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.9, 6, 10), skin); l.position.set(lx, 3, lz); g.add(l); }
-  const ph = Math.random() * 6;
-  w.updaters.push((dt, t) => { neck.rotation.y = Math.sin(t * 0.25 + ph) * 0.12; head.position.x = Math.sin(t * 0.25 + ph) * 1.6; });
-  return g;
+  const torso = joint(root, 0, 7, 0);
+  rigPart(torso, new THREE.SphereGeometry(3, 16, 12), skin).scale.set(1, 0.8, 1.6);
+  const neck = joint(torso, 0, 1, 4);
+  rigPart(neck, new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(0, 4, 4), V3(0, 8, 6)]), 12, 0.7, 8), skin);
+  rigPart(neck, new THREE.SphereGeometry(0.9, 10, 8), skin, 0, 8.2, 6.8).scale.set(0.8, 0.7, 1.3);
+  const tail = joint(torso, 0, 0, -4);
+  rigPart(tail, new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(0, -2, -5), V3(0, -5, -10)]), 12, 0.6, 8), skin);
+  // (legs in diagonal pairs, the way four-legged animals walk)
+  const legs = [[-1.6, 2.5, 0], [1.6, 2.5, Math.PI], [-1.6, -2.5, Math.PI], [1.6, -2.5, 0]].map(([x, z, ph]) => { const l = joint(root, x, 6, z); rigPart(l, new THREE.CylinderGeometry(0.8, 0.9, 6, 10), skin, 0, -3, 0); l.userData.ph = ph; return l; });
+  compact(root, new Set());
+  let ph = Math.random() * 6, graze = 0;
+  return { root, pose(dt, v, t) {
+    ph += dt * v * Math.PI * 2 / (7 * s);
+    graze += ((v < 0.2 ? 1 : 0) - graze) * Math.min(1, dt * 0.5);
+    const k = Math.min(1, v / s);
+    for (const l of legs) l.rotation.x = Math.sin(ph + l.userData.ph) * 0.26 * k;
+    torso.position.y = 7 + Math.abs(Math.sin(ph)) * 0.12 * k + Math.sin(t * 0.7) * 0.04;
+    neck.rotation.x = graze * 1.05 + Math.sin(t * 0.5) * 0.03;
+    neck.rotation.y = Math.sin(t * 0.21 + ph * 0.05) * 0.18;
+    tail.rotation.y = Math.sin(ph * 0.5 + t * 0.4) * 0.2;
+  } };
 }
-// pterosaurs circling high over the valley
-export function pterosaurs(w, cx, cy, cz, n = 5, r = 40) {
+// a duckbill (a hadrosaur), about 10 m long: it walks on its hind legs, and to graze it tips forward
+// and puts its bill down among the ferns
+export function duckbillRig(s = 1, hue = 0x8a7a48) {
+  const root = new THREE.Group(); root.scale.setScalar(s); root.userData.dynamic = true;
+  const skin = M(hue, { rough: 0.85 }), pale = M(0xd8c89a, { rough: 0.8 });
+  const torso = joint(root, 0, 2.9, 0);
+  rigPart(torso, new THREE.SphereGeometry(1.2, 16, 12), skin).scale.set(0.85, 0.9, 1.9);
+  for (const sx of [-1, 1]) rigPart(torso, new THREE.CylinderGeometry(0.12, 0.1, 1.3, 6), skin, sx * 0.55, -0.7, 1.4).rotation.x = 0.5;
+  const neck = joint(torso, 0, 0.5, 2.0);
+  rigPart(neck, new THREE.CylinderGeometry(0.35, 0.5, 1.8, 10), skin, 0, 0.6, 0.5).rotation.x = 0.9;
+  rigPart(neck, new THREE.SphereGeometry(0.45, 12, 10), skin, 0, 1.25, 1.2).scale.set(0.8, 0.8, 1.4);
+  rigPart(neck, new THREE.SphereGeometry(0.3, 10, 8), pale, 0, 1.08, 1.85).scale.set(1.3, 0.45, 1.3);
+  const tail = joint(torso, 0, 0.1, -2.0);
+  rigPart(tail, new THREE.ConeGeometry(0.7, 4.8, 10), skin, 0, 0, -2.3).rotation.x = -Math.PI / 2;
+  const legs = [-1, 1].map((sx, i) => { const l = joint(root, sx * 0.65, 2.9, -0.2); rigPart(l, new THREE.CylinderGeometry(0.45, 0.25, 2.9, 8), skin, 0, -1.45, 0); rigPart(l, new THREE.BoxGeometry(0.5, 0.2, 0.9), skin, 0, -2.8, 0.2); l.userData.ph = i * Math.PI; return l; });
+  compact(root, new Set());
+  let ph = Math.random() * 6, graze = 0;
+  return { root, pose(dt, v, t) {
+    ph += dt * v * Math.PI * 2 / (3.4 * s);
+    graze += ((v < 0.2 ? 1 : 0) - graze) * Math.min(1, dt * 0.8);
+    const k = Math.min(1, v / s);
+    for (const l of legs) l.rotation.x = Math.sin(ph + l.userData.ph) * 0.5 * k;
+    torso.position.y = 2.9 + Math.abs(Math.sin(ph)) * 0.1 * k - graze * 0.5;
+    torso.rotation.x = graze * 0.32;
+    neck.rotation.x = graze * 0.8 + Math.sin(ph * 2) * 0.05 * k + Math.sin(t * 2.3) * graze * 0.06;
+    tail.rotation.y = Math.sin(ph) * 0.12 * k + Math.sin(t * 0.6) * 0.06;
+  } };
+}
+// walk a rig along a path of [x, z] points over the ground G: round and round (loop), or there and
+// back. It walks for a while, then stops to graze (rhythm: the seconds in one walk-and-graze; a
+// herd shares one, so they stop together); at: how far along it starts, side: how far off the path
+export function wander(w, a, G, o) {
+  w.scene.add(a.root);
+  const P = o.path, n = o.loop ? P.length : P.length - 1, lens = [];
+  let total = 0;
+  for (let i = 0; i < n; i++) { const [ax, az] = P[i], [bx, bz] = P[(i + 1) % P.length]; lens.push(Math.hypot(bx - ax, bz - az)); total += lens[i]; }
+  const at = u => { let i = 0; while (i < n - 1 && u > lens[i]) { u -= lens[i]; i++; } const [ax, az] = P[i], [bx, bz] = P[(i + 1) % P.length], f = Math.min(1, u / lens[i]); return [ax + (bx - ax) * f, az + (bz - az) * f, (bx - ax) / lens[i], (bz - az) / lens[i]]; };
+  let u = ((o.at || 0) % total + total) % total, dir = 1, v = 0, yaw = null;
+  w.updaters.push((dt, t) => {
+    const rhythm = o.rhythm || 40, walking = ((t + (o.phase || 0)) % rhythm) < rhythm * (o.walk ?? 0.65);
+    v += ((walking ? o.speed : 0) - v) * Math.min(1, dt * 0.6);
+    u += v * dt * dir;
+    if (o.loop) u = (u % total + total) % total;
+    else if (u > total) { u = total; dir = -1; } else if (u < 0) { u = 0; dir = 1; }
+    const [px, pz, tx, tz] = at(u), side = o.side || 0, x = px - tz * side, z = pz + tx * side;
+    const want = Math.atan2(tx * dir, tz * dir);
+    if (yaw === null) yaw = want;
+    yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * Math.min(1, dt * 0.8);
+    a.root.position.set(x, G(x, z), z); a.root.rotation.y = yaw;
+    a.pose(dt, v, t);
+  });
+  return a;
+}
+// a standing sauropod that browses where it is
+export function sauropod(w, x, y, z, s = 1, yaw = 0) {
+  const a = sauropodRig(s); a.root.position.set(x, y, z); a.root.rotation.y = yaw; w.scene.add(a.root);
+  w.updaters.push((dt, t) => a.pose(dt, 0, t));
+  return a;
+}
+// compys: little two-legged dinosaurs that dart about in the ferns, stop, look round, and dart off
+// again. spots: [[x, z, r]], one compy in each, staying within r of it
+export function compys(w, G, spots, scale = 1.3) {
+  for (const [cx, cz, r] of spots) {
+    const c = critter("compy", scale); w.scene.add(c);
+    c.traverse(m => { if (m.isMesh) m.castShadow = false; });
+    let x = cx, z = cz, tx = cx, tz = cz, wait = Math.random() * 2, yaw = 0;
+    w.updaters.push(dt => {
+      const dx = tx - x, dz = tz - z, d = Math.hypot(dx, dz);
+      if (wait > 0) { wait -= dt; animateCritter(c, dt, 0.05); if (wait <= 0) { const a = Math.random() * Math.PI * 2, rr = r * Math.sqrt(Math.random()); tx = cx + Math.cos(a) * rr; tz = cz + Math.sin(a) * rr; } }
+      else if (d < 0.2) wait = 0.8 + Math.random() * 2.5;
+      else { const step = Math.min(d, dt * 4.5); x += dx / d * step; z += dz / d * step; const want = Math.atan2(dx, dz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * Math.min(1, dt * 10); animateCritter(c, dt, 1); }
+      c.position.set(x, G(x, z), z); c.rotation.y = yaw;
+    });
+  }
+}
+// pterosaurs circling over the valley, flapping now and then
+export function pterosaurs(w, cx, cy, cz, n = 5, r = 40, s = 1) {
   const skin = M(0x8a6a4a, { rough: 0.7, side: THREE.DoubleSide }), list = [];
   for (let i = 0; i < n; i++) {
-    const g = new THREE.Group(); w.scene.add(g);
+    const g = new THREE.Group(); g.scale.setScalar(s); g.userData.dynamic = true; w.scene.add(g);
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.25, 1.1, 4, 8), skin); body.rotation.x = Math.PI / 2; g.add(body);
     const crest = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.1, 6), skin); crest.rotation.x = -Math.PI / 2 - 0.5; crest.position.set(0, 0.2, 0.8); g.add(crest);
-    const wings = [-1, 1].map(s => { const wg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.9), skin); wg.position.x = s * 1.3; const p = new THREE.Group(); p.add(wg); g.add(p); return p; });
+    const wings = [-1, 1].map(sx => { const wg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.9), skin); wg.position.x = sx * 1.3; const p = new THREE.Group(); p.add(wg); g.add(p); return p; });
+    compact(g, new Set());
     list.push({ g, wings, a: i / n * Math.PI * 2, rr: r * (0.7 + (i % 3) * 0.15), y: cy + (i % 4) * 5, sp: 0.12 + (i % 3) * 0.03 });
   }
-  w.updaters.push((dt, t) => { for (const p of list) { p.a += dt * p.sp; p.g.position.set(cx + Math.cos(p.a) * p.rr, p.y + Math.sin(t + p.a) * 1.5, cz + Math.sin(p.a) * p.rr); p.g.rotation.y = -p.a; const f = Math.sin(t * 3 + p.a * 5) * 0.35; p.wings[0].rotation.z = f; p.wings[1].rotation.z = -f; } });
+  w.updaters.push((dt, t) => { for (const p of list) { p.a += dt * p.sp; p.g.position.set(cx + Math.cos(p.a) * p.rr, p.y + Math.sin(t + p.a) * 1.5, cz + Math.sin(p.a) * p.rr); p.g.rotation.set(0, -p.a, 0.25); const flap = Math.sin(t * 0.4 + p.a * 3) > 0.3, f = flap ? Math.sin(t * 5 + p.a * 5) * 0.5 : 0.08; p.wings[0].rotation.z = f; p.wings[1].rotation.z = -f; } });
   return list;
 }
 // the POLARIS time-sled, parked: a long white pod on brass runners that curl up at the front, two
