@@ -79,7 +79,7 @@ export function buildFjord(w) {
 
   // grass tufts along the shore meadows (not on the sand or the mountainsides)
   const tuftSpots = [];
-  for (let i = 0; i < 2600; i++) { const x = 12 + ((i * 37) % 97) + (i % 7) * 0.13, z = -150 + ((i * 53) % 290) + (i % 5) * 0.21; const hh = G(x, z); if (hh < 1.3 || hh > 5 || steep(x, z) > 0.4 || (x > 16 && x < 36 && z > 36 && z < 52)) continue; tuftSpots.push([x, hh, z, 0.8 + (i % 5) * 0.12]); }
+  for (let i = 0; i < 1800; i++) { const x = 12 + ((i * 37) % 97) + (i % 7) * 0.13, z = -150 + ((i * 53) % 290) + (i % 5) * 0.21; const hh = G(x, z); if (hh < 1.3 || hh > 5 || steep(x, z) > 0.4 || (x > 16 && x < 36 && z > 36 && z < 52)) continue; tuftSpots.push([x, hh, z, 0.8 + (i % 5) * 0.12]); }
   tufts(w, tuftSpots, 0x5a8040);
 
   // ---- where Rory lands

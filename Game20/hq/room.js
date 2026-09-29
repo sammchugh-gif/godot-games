@@ -346,7 +346,8 @@ function buildRoom(w) {
   const tea = teaTrolley(w, 9.4, 6.6);
   const button = bigRedButton(w, -9.4, 6.6);
   const chair = officeChair(w, -8.6, -2.4);
-  const dog = officeDog(w, 10.6, -6.6);
+  // (the dog's bed is under the world map: the board's sixth pad is where it used to be)
+  const dog = officeDog(w, 10.8, 1.8);
   const phone = bananaPhone(w, -RW / 2 + 0.9, 1.0, -0.4);
   w.floorY = -10;
   return { screens, board, posters, lights, tea, button, chair, dog, phone, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
@@ -368,7 +369,7 @@ function things() {
     { id: "tea", x: 9.4, z: 5.6, r: 1.6, label: G.cup ? "BISCUIT" : "TEA", prompt: G.cup ? "have a biscuit" : "make a cup of tea", act: G.cup ? biscuit : makeTea, off: !!G.pouring },
     { id: "button", x: -9.4, z: 5.9, r: 1.5, label: "PRESS", prompt: "the big red button", act: pressButton, off: busy },
     { id: "chair", x: R.chair.seat.x, z: R.chair.seat.z, r: 1.3, label: "SPIN", prompt: "have a spin on the chair", act: spinChair, off: busy },
-    { id: "dog", x: 10.6, z: -5.9, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
+    { id: "dog", x: 10.8, z: 2.5, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
     { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
   ].filter(t => !t.off);
@@ -419,7 +420,7 @@ function spinChair() {
 function patDog() {
   const d = G.room.dog, n = count("roryhq.dog");
   d.wag = 2.5; Audio.play("pant");
-  G.fx.burst(10.6, 0.9, -6.6, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
+  G.fx.burst(10.8, 0.9, 1.8, 0xff6ab8, 12, { speed: 1.2, up: 1.5, life: 1.2, gravity: 0.5, size: 0.4 });
   if (n === 1) G.dialogue.show([["pip", "That's Agent Biscuit. He's been at POLARIS longer than any of us."], ["bolt", "He outranks me."]], null);
   else if (Math.random() < 0.5) { d.woof = 0.7; setTimeout(() => Audio.play("woof"), 250); if (Math.random() < 0.5) G.dialogue.show([pick([["bolt", "The dog says: woof. I have translated it. It means: more patting."], ["frost", "Agent Biscuit has sniffed out forty-two spies. And one sausage roll."], ["pip", "He sat on the self-destruct button once. Luckily it's also the kettle."]])], null); }
 }
@@ -565,7 +566,7 @@ function updateRoom(dt) {
   const dog = R.dog, happy = dog.wag > 0;
   dog.body.scale.y = 1.15 + Math.sin(t * (happy ? 7 : 2.2)) * (happy ? 0.04 : 0.02);
   dog.tail.rotation.y = Math.sin(t * (happy ? 16 : 2.5)) * (happy ? 0.8 : 0.3);
-  const toRory = Math.atan2(p.pos.x - 10.6, p.pos.z + 6.6); dog.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - dog.head.rotation.y) * Math.min(1, dt * 2);
+  const toRory = Math.atan2(p.pos.x - 10.8, p.pos.z - 1.8); dog.head.rotation.y += (Math.max(-0.8, Math.min(0.8, toRory)) - dog.head.rotation.y) * Math.min(1, dt * 2);
   dog.eyes.forEach(e => { e.scale.y = happy ? 0.35 : 1; });
   dog.tongue.visible = happy;
   dog.ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (0.15 + (happy ? Math.sin(t * 9) * 0.12 : 0)); });
