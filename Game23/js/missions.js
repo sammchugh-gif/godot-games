@@ -437,7 +437,7 @@ export class Stack extends Mission {
     super.cleanup();
   }
   actionLabel() { return this.carry ? "DROP" : "GRAB"; }
-  hud() { return { ...super.hud(), text: `Blocks on the pad  ${this.onPad}/${this.need}`, progress: this.onPad / this.need }; }
+  hud() { return { ...super.hud(), text: `${this.data.label || "Blocks on the pad"}  ${this.onPad}/${this.need}`, progress: this.onPad / this.need }; }
   target() { return this.carry ? this.pad : (this.blocks.find(b => Math.hypot(b.mesh.position.x - this.pad.x, b.mesh.position.z - this.pad.z) > this.padR) || {}).mesh?.position || this.pad; }
   // autopilot: walk (round hedges and walls, on the planned route) to a block, grab it, carry it
   // to the pad and drop it. It drops from the pad's edge onto a clear spot, facing it (a dropped

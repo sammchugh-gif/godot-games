@@ -87,7 +87,7 @@ export function buildDino(w) {
   w.missionData = {
     dino1: { cells: [on(-8, -22, 2.4), on(6, -34), on(14, 28, 2.6), on(-18, 40, 2.3), [RIVER, 0.85, 22], on(-20, 8)] },
     dino2: { area: [NEST[0], NEST[1], 16], bots: [bot(32, 22), bot(52, 4), bot(30, 2), bot(54, 22)] },
-    dino3: { look: "egg", size: 0.9, pad: [NEST[0], ny, NEST[1]], padR: 2.4, blocks: [on(24, 36, 0.6), on(60, 30, 0.6), on(62, -6, 0.6)] },
+    dino3: { label: "Eggs back in the nest", look: "egg", size: 0.9, pad: [NEST[0], ny, NEST[1]], padR: 2.4, blocks: [on(24, 36, 0.6), on(60, 30, 0.6), on(62, -6, 0.6)] },
     dino4: { critter: "babytri", hazard: "compy", kids: [on(18, -18, 0.05), on(66, 26, 0.05), on(28, 46, 0.05)], goal: [NEST[0], ny, NEST[1]], goalR: 3, crabs: [[48, -6, 62, -6, 1.4], [18, 30, 30, 38, 1.2]] },
     dino5: { what: "cart", robot: "trex", range: 9, angle: 34, start: bot(-44, -38), goal: bot(HIDE[0], HIDE[1] - 1.5),
       guards: [{ path: [[REX[0], REX[1]], [REX[0] + 0.5, REX[1] - 0.5]], speed: 0.3, pause: 3.5, y: G(REX[0], REX[1]) }] },

@@ -46,9 +46,9 @@ export function buildIceAge(w) {
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), n = Math.sin(x * 0.07) * 2.2 + Math.sin(x * 0.23 + y * 0.4) * 1.1 + Math.cos(x * 0.5 + 1) * 0.5;
       if (y > 14) p.setY(i, y + Math.sin(x * 0.05) * 5 + Math.sin(x * 0.17) * 2.5); if (z < -11) p.setZ(i, z + n); }
     geo.computeVertexNormals();
-    const gl = w.mesh(geo, iceM, 0, G(0, 152) + 11, 156, { collide: false });
+    const gy = G(0, 152) + 11, gl = w.mesh(geo, iceM, 0, gy, 156, { collide: false });
     const creM = new THREE.MeshStandardMaterial({ color: 0x3a7ab8, emissive: 0x2a6ab0, emissiveIntensity: 0.35, roughness: 0.3 });
-    for (let i = 0; i < 14; i++) { const x = -170 + i * 26 + (i % 3) * 5; w.box(0.8, 12 + (i % 4) * 4, 0.6, creM, x, G(x, 152) + 8, 143.4 + Math.sin(x * 0.07) * 2.2, { collide: false }); }
+    for (let i = 0; i < 14; i++) { const x = -170 + i * 26 + (i % 3) * 5, h = 8 + (i % 4) * 2; w.box(0.8, h, 0.6, creM, x, gy + 5 - h / 2, 143.4 + Math.sin(x * 0.07) * 2.2, { collide: false }); }
     void gl; }
 
   // ---- the ride's route across the tundra, kept clear
@@ -94,7 +94,7 @@ export function buildIceAge(w) {
     ice1: { critter: "calf", hazard: "fox", kids: [on(46, 46, 0.05)], goal: [HERD[0], G(HERD[0], HERD[1]), HERD[1]], goalR: 6, crabs: [[20, 40, 20, 60, 1.3], [0, 70, 12, 50, 1.1]] },
     ice2: { fall: 5.2, things: [["icicle", CLIFF - 5, 0, -4], ["icicle", CLIFF - 3, 0, 3], ["icicle", CLIFF - 6, 0, 1], ["icicle", CLIFF - 2, 0, -2], ["icicle", CLIFF - 4.5, 0, 4.5], ["icicle", CLIFF - 3, 0, -5], ["icicle", CLIFF - 6, 0, -1]] },
     ice3: { cells: [[CLIFF + 4, 1.2, 0], [CLIFF + 14, 1.2, 1.8], [CLIFF + 22, 2.4, -1.8], [CLIFF + 30, 1.2, 0], [98, 1.2, -6], [110, 1.2, -7], [110, 2.4, 7], [100, 1.2, 7]] },
-    ice4: { look: "snow", size: 1.0, pad: WALL, padR: 2.2, blocks: [on(-18, -30, 0.6), on(-48, -34, 0.6), on(-54, 4, 0.6), on(-16, 2, 0.6)] },
+    ice4: { label: "Snow blocks in the wall", look: "snow", size: 1.0, pad: WALL, padR: 2.2, blocks: [on(-18, -30, 0.6), on(-48, -34, 0.6), on(-54, 4, 0.6), on(-16, 2, 0.6)] },
     ice5: { path: RIDE, width: 3.5, exit: on(34, 22, 0.1), lead: 36 },
     ice6: { title: "THE HANDPRINTS", symbols: ["✋", "🖐", "🤚", "👋"] },
   };

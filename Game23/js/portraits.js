@@ -36,11 +36,13 @@ export class Portraits {
     const r = this.renderer, S = this.size;
     const bg = new THREE.Color(ch.bg || (ch.side === "villain" ? "#3a1030" : "#10284a"));
     this.scene.background = bg;
-    let obj, headY, dist;
+    let obj, headY, dist, focus = null;
     if (ch.craft) {
       obj = subModel(); obj.rotation.y = 0.35; headY = 0.25; dist = 3.6;
     } else if (ch.dino) {
-      const pb = new Pebble(1.5); pb.update(0.01); obj = pb.root; headY = 0.72; dist = 1.5;
+      // (her head is well forward of her middle: aim at it, from in front and a little to the side)
+      const pb = new Pebble(1.5); pb.update(0.01); obj = pb.root; obj.rotation.y = -0.35; obj.updateMatrixWorld(true);
+      focus = pb.head.getWorldPosition(new THREE.Vector3()); dist = 2.3;
     } else if (ch.critter) {
       obj = critter(ch.critter, 1.4); headY = 0.1; dist = 1.7;
     } else if (ch.robot) {
@@ -57,8 +59,8 @@ export class Portraits {
     }
     this.scene.add(obj);
     if (!ch.craft) obj.rotation.y = -0.35;
-    this.cam.position.set(dist * 0.28, headY + dist * 0.05, dist);
-    this.cam.lookAt(0, headY - dist * 0.04, 0);
+    if (focus) { this.cam.position.set(focus.x + dist * 0.3, focus.y + dist * 0.12, focus.z + dist); this.cam.lookAt(focus.x, focus.y - dist * 0.02, focus.z); }
+    else { this.cam.position.set(dist * 0.28, headY + dist * 0.05, dist); this.cam.lookAt(0, headY - dist * 0.04, 0); }
     r.setRenderTarget(this.rt); r.clear(); r.render(this.scene, this.cam); r.setRenderTarget(null);
     const px = new Uint8Array(S * S * 4);
     r.readRenderTargetPixels(this.rt, 0, 0, S, S, px);

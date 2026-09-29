@@ -94,7 +94,7 @@ export function buildFjord(w) {
     vik1: { ride: "longship", quarry: "longship", path: LOOP, lead: 28, exit: on(16, 4, 0.2) },
     vik2: { title: "THE RUNE STONES", symbols: ["🐉", "⚓", "🛡️", "🌙"] },
     vik3: { title: "THE NIGHT SKY" },
-    vik4: { what: "sail loft", robot: "sandbot", start: bot(62, 60), goal: bot(BH[0] - 2, BH[1]),
+    vik4: { what: "sail loft", robot: "sandbot", start: bot(64, 55), goal: bot(BH[0] - 2, BH[1]),
       guards: [{ path: [[42, 34], [42, 54]], speed: 1.3, y: 1.6 }, { path: [[52, 48], [38, 48]], speed: 1.1, phase: 0.5, y: 1.6 }, { path: [[48, 38], [36, 38]], speed: 1.2, phase: 3, y: 1.6 }] },
     vik5: { what: "sail pieces", cells: [[-10, -9.3, 24], [-16, -9.3, 34], [-24, -9.3, 18], [-14, -9.3, 48], [-28, -9.3, 40], [-20, -9.3, 60]], floor: -10 },
     vik6: { center: [BEACH[0], 1.2, BEACH[1]], radius: 14, robot: "serpent", height: 5, serpent: true },
@@ -103,6 +103,6 @@ export function buildFjord(w) {
     spawn: on(LAND[0], LAND[1] + 4, 0.1), yaw: Math.PI, pebble: on(LAND[0] + 2, LAND[1] + 5, 0), contact: [...on(LAND[0] - 6, LAND[1] + 6, 0), 0],
     // the golden ammonites: on top of the cairn, on the fjord bed, up among the pines behind the village
     stars: [[CAIRN[0], cy + 3.6, CAIRN[1]], [-30, -9.4, -30], on(108, 20, 0.3)],
-    at: { vik1: [15, 0], vik2: [RUNES[0] - 5, RUNES[1] - 5], vik3: [CAIRN[0] - 5, CAIRN[1] + 5], vik4: [62, 62], vik5: [15, 30], vik6: [-4, 132] },
+    at: { vik1: [15, 0], vik2: [RUNES[0] - 5, RUNES[1] - 5], vik3: [CAIRN[0] - 5, CAIRN[1] + 5], vik4: [66, 51], vik5: [15, 30], vik6: [-4, 132] },
   };
 }

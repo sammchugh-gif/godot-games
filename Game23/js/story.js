@@ -166,7 +166,7 @@ export const PLACES = [
         outro: [["sigrid", "She went to the island at the mouth of the fjord! Her ship's there."]] },
       { id: "vik4", kind: "stealth", lv: 2, title: "The Sail Loft", time: 150,
         intro: [["sigrid", "Her Sandbots are guarding the boathouse. The sail must be in there."], ["pip", "Sneak past them. Stay out of their lanterns!"]],
-        outro: [["rory", "The sail isn't here. But there's a note: 'Look under the water, slowcoach.'"], ["sigrid", "Rude."]] },
+        outro: [["rory", "The sail isn't here. But there's a note: 'Look under the water, slowcoach.'"], ["sigrid", "That's so rude."]] },
       { id: "vik5", kind: "dive", lv: 2, title: "Under the Fjord", n: 6, time: 180,
         intro: [["sigrid", "The sail sank in pieces. Six pieces, down on the fjord bed."], ["pip", "Hold DIVE to swim down. Watch your air!"]],
         outro: [["rory", "All six pieces. We can sew it back together."], ["sigrid", "My mum can sew a sail in an hour. She's the fastest in the fjord."]] },

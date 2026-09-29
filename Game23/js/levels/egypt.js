@@ -112,7 +112,7 @@ export function buildEgypt(w) {
     egy2: { title: "THE PICTURE LOCK", symbols: ["👁️", "🪲", "☀️", "🐍"] },
     egy3: { start: [CX0 + 2, PLAT, P[1]], goal: [CX1 - 3, PLAT, P[1]], width: 5.8, what: "tomb door" },
     egy4: { title: "THE BURIED STONE" },
-    egy5: { look: "stone", size: 1.0, pad: [P[0], PLAT, 12], padR: 2.4, blocks: [on(86, -2, 0.6), on(92, 4, 0.6), on(98, -4, 0.6), on(90, -8, 0.6), on(100, 6, 0.6), on(80, 4, 0.6)] },
+    egy5: { label: "Blocks on the ramp", look: "stone", size: 1.0, pad: [P[0], PLAT, 12], padR: 2.4, blocks: [on(86, -2, 0.6), on(92, 4, 0.6), on(98, -4, 0.6), on(90, -8, 0.6), on(100, 6, 0.6), on(80, 4, 0.6)] },
     egy6: { cells: [[P[0], ty(0), P[1] - dd(0)], [P[0] - 6, ty(2), P[1] - dd(2)], [P[0] + dd(3), ty(3), P[1] - 4], [P[0] + dd(5), ty(5), P[1] + 6], [P[0] + 4, ty(6), P[1] + dd(6)], [P[0] - 6, ty(8), P[1] + dd(8)], [P[0] - dd(9), ty(9), P[1]], [P[0], PLAT + 13.2 + 1.0, P[1]]] },
   };
   return {
