@@ -1308,6 +1308,192 @@
   "from": "story"
  },
  {
+  "key": "1cyvxty",
+  "who": "flint",
+  "text": "The Sandbots took eggs from two nests, the same number from each.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1qb0z03",
+  "who": "pip",
+  "text": "Double it, Rory. How many eggs did they take?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0n37df9",
+  "who": "flint",
+  "text": "Let's check the nest before the hourglass runs out and their mum comes back.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "03ft8cu",
+  "who": "pip",
+  "text": "Work it out, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0vm5l61",
+  "who": "flint",
+  "text": "The last baby wandered off. Her footprints go along the numbered stones.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0z8gi55",
+  "who": "pip",
+  "text": "Count her steps, Rory. Where did she end up?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1k76p1j",
+  "who": "flint",
+  "text": "The T. rex wakes up at the same time every day. I wrote it down.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "04xtdyj",
+  "who": "pip",
+  "text": "Which clock says it, Rory? Then we'll know how long we've got.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0yyttvt",
+  "who": "tuva",
+  "text": "The herd went over the hills. Here's my map. I drew it on bark.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1dtk7xv",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where's the herd?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "134yp9l",
+  "who": "tuva",
+  "text": "We scratch a mark on the cave wall every day. The icicles always fall on the same day of the week.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "088ct5k",
+  "who": "pip",
+  "text": "Your watch knows the days, Rory. Which day is it?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ui3my4",
+  "who": "rory",
+  "text": "Someone has scratched numbers on the cave wall. That wasn't a caveman.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0eg6dqc",
+  "who": "pip",
+  "text": "Number code, Rory. A is 1, B is 2.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1y1toir",
+  "who": "rory",
+  "text": "SAND. The Sandbots got here first.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0tlec4o",
+  "who": "tuva",
+  "text": "We need more snow blocks cut, and the block cutters want paying in trade.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0akrqhn",
+  "who": "pip",
+  "text": "Work out the swap, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1gtynlq",
+  "who": "nefi",
+  "text": "The builders mark the ramp blocks in a pyramid of numbers. Each block is the two under it, added.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1bt807q",
+  "who": "pip",
+  "text": "Fill in the missing ones, Rory, and we'll know the ramp is strong.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "15wig5j",
+  "who": "flint",
+  "text": "Hourglass wants to bottle the capstone ceremony. How long does it last? That's how long we've got.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0pr8ayf",
+  "who": "theo",
+  "text": "The big race starts when the sundial says. Your watch can tell us the time.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1f6wxni",
+  "who": "pip",
+  "text": "Which clock says it, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1epzgf9",
+  "who": "theo",
+  "text": "The crown maker will make new olive crowns, but he wants paying in trade. Figs, honey, that sort of thing.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0aevw2v",
+  "who": "theo",
+  "text": "Olive crowns for everyone!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qsdbpx",
+  "who": "livia",
+  "text": "The arches are numbered, the Roman way. The sparks are at one of them.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1wgoi6z",
+  "who": "pip",
+  "text": "Read the Roman numerals, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0b6ibc1",
+  "who": "livia",
+  "text": "Four bathers were here when the Sandbots came. One of them is Doctor Hourglass's lookout!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qyg6ab",
+  "who": "pip",
+  "text": "Read the clues, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ar1bin",
+  "who": "sigrid",
+  "text": "Grandad carved a number pyramid on the chest. Fill in the missing numbers and it opens.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "09r8olc",
+  "who": "pip",
+  "text": "Each block is the two under it, added.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1jh9348",
+  "who": "sigrid",
+  "text": "Each piece of the sail needs the same number of stitches. Help me work it out.",
+  "from": "js/cluemap.js"
+ },
+ {
   "key": "0plnsdv",
   "who": "pip",
   "text": "All three golden ammonites here! Pebble is very pleased.",

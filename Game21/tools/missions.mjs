@@ -30,10 +30,11 @@ for (const id of ids) {
   await waitT(0.5);
   await ev(s => { __g.autoSolve = true; __g.testSteps = s; }, +(process.env.STEPS || 4));
   const t0 = await ev(() => __g.t), limit = await ev(() => (__g.mission && __g.mission.time) || 200);
-  let shotMid = false, st;
+  let shotMid = false, clueShot = false, st;
   while (true) {
     st = await ev(() => __g.state);
-    if (st !== "mission") break;
+    if (st === "clue" && !clueShot) { await page.screenshot({ path: `${out}/${id}_clue.png` }); clueShot = true; }
+    if (st !== "mission" && st !== "clue") break;
     const t = await ev(() => __g.t);
     // (a picture is nice to have: on a busy machine it can be slow, and that mustn't stop the run)
     if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png`, timeout: 120000 }).catch(e => console.log("(no picture:", String(e).slice(0, 80) + ")")); shotMid = true; }

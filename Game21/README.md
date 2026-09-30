@@ -95,6 +95,32 @@ wrong taps cost stars), **Greenhouse** (each bed asks for water or light in turn
 right one before it wilts) and **Climb** (race Undertow's climber up the elevator's ribbon:
 steer round the space junk, grab the boost cells).
 
+## Spy clues
+
+Rory is a spy, so 135 of the 179 missions (four or five in every place) have something to work out. Some are puzzles
+of their own (the ones above); the other 92 end in a **clue**: after the action,
+Rory finds a coded note, a locked case, a line of suspects or a map, and cracks it
+before MISSION COMPLETE. The clues make a trail through the story: a mole inside POLARIS in Act Two, Undertow's logbook in symbol code, and at the very end the gate code she hands over herself.
+
+Each game's clues are its own, made from its story. Here they are pressure locks (add the gauges), the depth gauge (how deep now?), tide charts and other bar charts, tally marks (the fish survey), pearl necklaces (which pearl is missing from the pattern?), the depth line (a number line), air tanks and batteries (how much more to fill it: number bonds), measuring with a ruler, and porthole shapes (sides and corners). Only
+three kinds are in every Agent Rory game, because every spy needs them: the line-up
+(pick the suspect who fits every clue), the coded note (a number or symbol code, in
+this game's own symbols) and the spy map. So no two games share more than a quarter
+of their clues.
+
+All of it is for a seven-year-old. Each clue is made fresh every time with exactly
+one answer, at four levels that rise through the game. A wrong answer never fails
+the mission: it gives a hint, and a stronger one after the second try, and three
+slips or more cost one star. 🔊 reads the question out.
+
+`js/clues.js` is the frame every clue shares and the three spy clues (the same file
+in all four newer Agent Rory games); `js/puzzles.js` is this game's own; `js/cluemap.js`
+says which missions end in which clue, with the lines around it. From the top of
+the repository, `node tools/cluecheck.mjs` checks every game's clue map (and how much
+the games share), and `node tools/cluetest.mjs` makes hundreds of each clue at each
+level, checks each has one answer, and has the autopilot solve them at phone and
+tablet size.
+
 ## Files
 
 - `js/sea.js` the sea (surface, depth map, the light under water); `js/craft.js`

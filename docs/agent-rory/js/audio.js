@@ -30,7 +30,8 @@ export const Audio = {
       ambGain = AC.createGain(); ambGain.gain.value = 0.45; ambGain.connect(master);
     } catch (e) { AC = null; }
   },
-  resume() { mediaSession(); if (AC && AC.state === "suspended") AC.resume(); },
+  // (any state but running: iOS also stops the sound for a phone call or when the tablet sleeps)
+  resume() { mediaSession(); if (AC && AC.state !== "running" && AC.state !== "closed") { try { const p = AC.resume(); if (p && p.catch) p.catch(() => { /* the next tap tries again */ }); } catch (e) { /* the next tap tries again */ } } },
   get ctx() { return AC; },
   now() { return AC ? AC.currentTime : 0; },
   setMusic(on) { this.musicOn = on; if (musGain) musGain.gain.setTargetAtTime(on ? 0.55 : 0, AC.currentTime, 0.1); },

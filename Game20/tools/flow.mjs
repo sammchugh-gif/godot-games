@@ -45,10 +45,11 @@ for (const p of places) {
     await waitT(1.0); await shot(`11_${mid}_start`);
     await ev(() => { __g.autoSolve = true; });
     const t0 = await ev(() => __g.t);
-    let midShot = false;
+    let midShot = false, clueShot = false;
     while (true) {
       const st = await ev(() => __g.state);
-      if (st !== "mission") break;
+      if (st === "clue" && !clueShot) { await shot(`12_${mid}_clue`); clueShot = true; }
+      if (st !== "mission" && st !== "clue") break;
       const t = await ev(() => __g.t);
       if (!midShot && t - t0 > 4) { await shot(`12_${mid}_mid`); midShot = true; }
       if (t - t0 > 150) break;

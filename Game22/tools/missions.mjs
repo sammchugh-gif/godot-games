@@ -30,10 +30,11 @@ for (const id of ids) {
   await waitT(0.5);
   await ev(() => { __g.autoSolve = true; });
   const t0 = await ev(() => __g.t);
-  let shotMid = false, st;
+  let shotMid = false, clueShot = false, st;
   while (true) {
     st = await ev(() => __g.state);
-    if (st !== "mission") break;
+    if (st === "clue" && !clueShot) { await page.screenshot({ path: `${out}/${id}_clue.png` }); clueShot = true; }
+    if (st !== "mission" && st !== "clue") break;
     const t = await ev(() => __g.t);
     if (!shotMid && t - t0 > 3) { await page.screenshot({ path: `${out}/${id}_mid.png` }); shotMid = true; }
     if (t - t0 > (+process.env.LIMIT || 200)) break;

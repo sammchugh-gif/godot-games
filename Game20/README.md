@@ -41,6 +41,32 @@ fly BOLT through rings, cross laser halls, car chases, sneak past searchlights,
 boss fights, a power-circuit puzzle, a code-lock tune, and buggy collecting.
 Every kind has an autopilot (`solve`) used by the tests.
 
+## Spy clues
+
+Rory is a spy, so 45 of the 60 missions have something to work out. Some are puzzles
+of their own (the ones above); the other 36 end in a **clue**: after the action,
+Rory finds a coded note, a locked case, a line of suspects or a map, and cracks it
+before MISSION COMPLETE. The clues make a trail through the story: the machine label that spells EGYPT, the cells going to RIO, the relay's orders for INDIA and the message on the Pump that says MOON.
+
+Each game's clues are its own, made from its story. Here they are the gravity balance (what does the box weigh?), the launch countdown (what comes next?), Professor Zero's gold bars (times tables as stacks of bars), rocket stages (numbers in order), power cells (make exactly the power a door needs), the gravity lever (which side is heavier?), Floater sort (tap every Floater that fits a rule: even, bigger than 12, in the 5 times table), memory match (each sum and its answer) and sharing the cells equally between pods. Only
+three kinds are in every Agent Rory game, because every spy needs them: the line-up
+(pick the suspect who fits every clue), the coded note (a number or symbol code, in
+this game's own symbols) and the spy map. So no two games share more than a quarter
+of their clues.
+
+All of it is for a seven-year-old. Each clue is made fresh every time with exactly
+one answer, at four levels that rise through the game. A wrong answer never fails
+the mission: it gives a hint, and a stronger one after the second try, and three
+slips or more cost one star. 🔊 reads the question out.
+
+`js/clues.js` is the frame every clue shares and the three spy clues (the same file
+in all four newer Agent Rory games); `js/puzzles.js` is this game's own; `js/cluemap.js`
+says which missions end in which clue, with the lines around it. From the top of
+the repository, `node tools/cluecheck.mjs` checks every game's clue map (and how much
+the games share), and `node tools/cluetest.mjs` makes hundreds of each clue at each
+level, checks each has one answer, and has the autopilot solve them at phone and
+tablet size.
+
 ## Files
 
 - `js/engine.js` renderer and post-processing; `js/physics.js` Rapier world and

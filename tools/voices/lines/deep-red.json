@@ -5112,6 +5112,834 @@
   "from": "story"
  },
  {
+  "key": "1n40au3",
+  "who": "pip",
+  "text": "Good swimming! A spy has to notice things, too. The training pool has portholes of every shape.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ezy22f",
+  "who": "pip",
+  "text": "Find the one I ask for, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "08i3tzh",
+  "who": "pip",
+  "text": "Last test. Somebody here has been sending secrets to the Drips.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wsbdn4",
+  "who": "pip",
+  "text": "Three suspects. Read the clues and pick out the spy.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1gurzeu",
+  "who": "frost",
+  "text": "That was me, in a disguise. Well spotted, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0apqvcn",
+  "who": "frost",
+  "text": "The Narwhal's hatch has a pressure lock. Add up the gauges and it opens.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1sz57mj",
+  "who": "pip",
+  "text": "Every POLARIS agent can do it. Go on, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0azua2p",
+  "who": "morwenna",
+  "text": "Gran's old smugglers' map! It shows the way through the cave.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "10e4yu0",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where does it lead?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0n7647z",
+  "who": "morwenna",
+  "text": "The lighthouse keeper draws a chart of the tide every day. Since the pearls came, it's gone funny.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1lgnny5",
+  "who": "pip",
+  "text": "Read the chart, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1j1jssc",
+  "who": "rory",
+  "text": "The tide's lowest when the lamp flashes. That's the Drips' pump.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "12ol09o",
+  "who": "rory",
+  "text": "There's a label on the machine. It's in number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0fg40uf",
+  "who": "pip",
+  "text": "A is 1, B is 2. What does it say?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0znynfs",
+  "who": "emile",
+  "text": "The Flowerpot Rocks have tide marks painted up the side, like a ruler.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1yp6k1l",
+  "who": "pip",
+  "text": "Find the right mark on the line, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "09xqj7s",
+  "who": "emile",
+  "text": "The Drips dropped their pump plan in the mud. Every pump is drawn as a shape!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1n0sxb6",
+  "who": "pip",
+  "text": "Find the shape the plan asks for, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1rruymg",
+  "who": "emile",
+  "text": "The weir stones have to be the right length to fit back in the gaps.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1hozo1j",
+  "who": "pip",
+  "text": "Measure them with the ruler, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1yeohpt",
+  "who": "valeria",
+  "text": "The Drips kept a tally of what they hid on the ship. Little lines, in fives.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "02mjdoa",
+  "who": "pip",
+  "text": "Count the tally, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "13b5o28",
+  "who": "valeria",
+  "text": "The control desk has a chart of the water in the lake. Look how it's dropping!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1pcq9zl",
+  "who": "bolt",
+  "text": "I can see where the Drips are hiding. I drew a map. It is a good map.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "19t8yyi",
+  "who": "pip",
+  "text": "Follow BOLT's steps, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "119jmfl",
+  "who": "mateo",
+  "text": "The rangers keep a tally of every animal on the beach. Can you read it?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1x4czvp",
+  "who": "mateo",
+  "text": "Every one of them. Safe in the water.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1g91q4a",
+  "who": "mateo",
+  "text": "The sea lions have been playing with a string of Tide Pearls. Some fell off!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1qu329h",
+  "who": "pip",
+  "text": "The pearls go in a pattern, Rory. Which one comes next?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "195ht8y",
+  "who": "mateo",
+  "text": "Three boats were here when the Drips dropped that pump. One of the captains is working for them!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qyg6ab",
+  "who": "pip",
+  "text": "Read the clues, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1itkfqb",
+  "who": "kai",
+  "text": "The surf buoys are out on a line, with numbers on. The pearls are by one of them.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1bwbh7k",
+  "who": "pip",
+  "text": "Find it on the line, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0xdtvsi",
+  "who": "kai",
+  "text": "The lava tube is full of smoke. You'll need a full air tank to go in.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "05pok35",
+  "who": "pip",
+  "text": "How much more to fill it, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "03iewo7",
+  "who": "kai",
+  "text": "Full tank. Now we can go into the lava tube.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ltq58w",
+  "who": "rory",
+  "text": "There's writing on the machine. Number code again.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1yk6qbx",
+  "who": "pip",
+  "text": "Crack it, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1s2jxm8",
+  "who": "kai",
+  "text": "The turtles found a string of pearls on the reef, with gaps in it.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0jp4a91",
+  "who": "pip",
+  "text": "Which pearl is missing, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "18wnzco",
+  "who": "ruby",
+  "text": "My dive computer's locked! The Drips turned the code into pressure gauges.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ecbljs",
+  "who": "pip",
+  "text": "Add them up, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0er81eu",
+  "who": "torpedo",
+  "text": "The sonar made a map of the pipe. It is very twisty.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wcga54",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where does it go?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0fjhuo7",
+  "who": "torpedo",
+  "text": "The boulders must be big enough to block the pipe. Measure them, please.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1e04bgw",
+  "who": "pip",
+  "text": "Use the ruler, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1w6wrl6",
+  "who": "ruby",
+  "text": "Before we look for the last clownfish, top up your air tank.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0li99wc",
+  "who": "ming",
+  "text": "Grandpa measures the harbour every morning. It's getting shallower!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1c09amu",
+  "who": "pip",
+  "text": "Work it out, Rory. How deep now?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "00b033h",
+  "who": "rory",
+  "text": "The captain's chart of the tide, every day this week. And a note: pearls go aboard when it's lowest.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "198sua8",
+  "who": "ming",
+  "text": "Four people in the tower lobby. One of them let the Drip up onto the roof!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0kfrf1k",
+  "who": "aisha",
+  "text": "The lagoon gauge. It's dropping so fast! The new sandbanks are the sea floor showing.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0aygt9j",
+  "who": "pip",
+  "text": "How deep is it now, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0sdp0xq",
+  "who": "aisha",
+  "text": "The divers keep a tally of the mantas at the cleaning station. Fewer and fewer come.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1y5e3a5",
+  "who": "aisha",
+  "text": "The Drips' seaplane is fuelling up by the villas! Its tank gauge is right here.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0o28fmp",
+  "who": "pip",
+  "text": "How much more till it's full, Rory? That's how long we've got.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0q9tf57",
+  "who": "aisha",
+  "text": "Then we can still catch it!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qp3ly8",
+  "who": "nia",
+  "text": "The main hatch has a pressure lock. Undertow loves her locks.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "10t8skr",
+  "who": "pip",
+  "text": "Add up the gauges, Rory. Quickly!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0y9ynfq",
+  "who": "rory",
+  "text": "There's a message on the control panel. Number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wkp2b8",
+  "who": "torpedo",
+  "text": "The markers are on a line going down under the base. Each one is a depth.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1h4ucky",
+  "who": "pip",
+  "text": "Find the right one, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1dhvhyq",
+  "who": "lani",
+  "text": "The suit's scanner draws round everything on the wreck. Find the shape it's looking for, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "061vk64",
+  "who": "lani",
+  "text": "The Drips were laying pipe along the sea bed. Measure a section, and we'll know how far it goes.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0cd4mth",
+  "who": "rory",
+  "text": "Photos of Undertow's crew. And one of them still works at POLARIS!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "002wkq3",
+  "who": "pip",
+  "text": "Read the clues, Rory. Who's the spy?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "01rwkpk",
+  "who": "frost",
+  "text": "I'll have them picked up at once. Good work, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0pfzvfo",
+  "who": "torpedo",
+  "text": "I have made a map of the Drip sub's trail.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1870y4j",
+  "who": "pip",
+  "text": "Follow the steps, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0tmjo3b",
+  "who": "rosa",
+  "text": "The kelp posts are on a line, with the depths marked. The pearls are at one of them.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0n89zfw",
+  "who": "pip",
+  "text": "Find it, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1kzsv7c",
+  "who": "torpedo",
+  "text": "I lifted the nets up from the sea bed. Work out how deep I am now, please. My gauge is shy.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0un7m10",
+  "who": "torpedo",
+  "text": "The Drip sub dropped a note! It is in number code.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "00a6u0d",
+  "who": "rosa",
+  "text": "I chart how many otter pups I see every day. Can you read it?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0h9ubc8",
+  "who": "barnaby",
+  "text": "The grand staircase has an old pressure gate. The gauges still work.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0k2og16",
+  "who": "barnaby",
+  "text": "An old photo from the ballroom. Five passengers, and one of them was a spy, even back then!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0e5nfza",
+  "who": "pip",
+  "text": "Read the clues, Rory. Some of them say NOT.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0nnoq8y",
+  "who": "barnaby",
+  "text": "The captain's safe has a pearl lock. The pearls go in a pattern, and some are missing.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "163zifl",
+  "who": "pip",
+  "text": "Which pearl goes in the gap, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1di3lx3",
+  "who": "hiro",
+  "text": "The pipe has depth marks on it, all the way down. Find the one I say.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "13s0tki",
+  "who": "hiro",
+  "text": "Lanternfish glow in shapes when they're happy. Which shape is it, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1rmcrhw",
+  "who": "hiro",
+  "text": "Check the depth gauge. Work out how deep we are now.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1pmhltt",
+  "who": "pip",
+  "text": "Take away, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "15lgswl",
+  "who": "glim",
+  "text": "I keep track of how deep I am. But I got confused in all the lights. Work it out for me?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0tniey7",
+  "who": "glim",
+  "text": "I chart every Drip I see down here. Read it for me!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0h4g03u",
+  "who": "torpedo",
+  "text": "Glim's battery is nearly flat. How much more to fill it up, Rory?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1x45yrj",
+  "who": "ama",
+  "text": "My chart of the pearls I find on the chimneys every day. Read it, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1xwc8m7",
+  "who": "ama",
+  "text": "Here's my map of the worm forest. The lab is at the end of the steps.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0i25sey",
+  "who": "ama",
+  "text": "Each sensor keeps a tally of what swims past. Read them, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "14bf9k4",
+  "who": "pip",
+  "text": "One of the scientists up here is on our side. But one of these is Undertow's spy!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1jon5fw",
+  "who": "pip",
+  "text": "Read the clues, Rory, and keep away from the spy.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "15tvoq8",
+  "who": "silt",
+  "text": "The moon pool door! It's a pressure lock. Quickly, Rory!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0cpz270",
+  "who": "rory",
+  "text": "Her logbook's written in symbol code!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "05wzic8",
+  "who": "silt",
+  "text": "She always did love a code. Use the key, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0e59el1",
+  "who": "silt",
+  "text": "The markers show how deep the Engine sits. Work out the depth, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0qhhcn6",
+  "who": "glim",
+  "text": "I kept a tally of the whole army! Help me read it for the report.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0p2ytap",
+  "who": "torpedo",
+  "text": "The pod is heading for the elevator. I have mapped the way.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0tx6qai",
+  "who": "pip",
+  "text": "Follow the steps, Rory. Where does it come out?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "001kisp",
+  "who": "silt",
+  "text": "The shaft has depth marks all the way up. Find where she is, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "05z3vqj",
+  "who": "nuka",
+  "text": "There's no surface here, only ice. Fill your tank at the air hole before we go on.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1vzcqcf",
+  "who": "silt",
+  "text": "The control room door has a pressure lock. Three sets of gauges.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1q9rq4a",
+  "who": "nuka",
+  "text": "The biggest narwhal wants you to measure his tusk. He's very proud of it.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1oxgwh3",
+  "who": "nuka",
+  "text": "He's singing! I think he's pleased.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "026rk2o",
+  "who": "vega",
+  "text": "Last pre-flight check: the fuel pressure. Add up the gauges, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1j4dk95",
+  "who": "vega",
+  "text": "The supply crates have to fit in the pod. Measure them, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1v1kl5e",
+  "who": "vega",
+  "text": "One of the rig crew let the Drips on board. Five people were on shift.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0du0md7",
+  "who": "otis",
+  "text": "The control room shows the climber on a line, going up. Where is it now?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "01l5uhj",
+  "who": "otis",
+  "text": "The climber can't go up with a half-empty battery. How much more to fill it?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1n2m2zd",
+  "who": "otis",
+  "text": "Every hatch on the maintenance tower is a different shape. The power cells are behind one.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1l18lt3",
+  "who": "juno",
+  "text": "The airlock needs the pressure right to let you back in. Three sets of gauges!",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1rpf8m3",
+  "who": "juno",
+  "text": "Let's check the cargo tally. Read it for me, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0nizgbf",
+  "who": "juno",
+  "text": "The dock's chart shows her ship's cargo, day by day. Read it before you sneak aboard.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0to4s3p",
+  "who": "tycho",
+  "text": "The boulders are on a numbered line across the crater. Find the one I say.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "049nx6v",
+  "who": "tycho",
+  "text": "I chart how many bots come home each day. Read it, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0233tky",
+  "who": "tycho",
+  "text": "How big are her ice bricks? Measure one, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1m1f06i",
+  "who": "amani",
+  "text": "Here's the rover map. Undertow's ship landed somewhere in this crater.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1ukl6ai",
+  "who": "amani",
+  "text": "I keep a tally of every rock sample from the delta. Read it for me, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1hijtgy",
+  "who": "amani",
+  "text": "My little rovers ran their batteries down chasing her ship. How much more to fill one up?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1amoclg",
+  "who": "lucia",
+  "text": "Every valve has a different shaped handle. The real one is on my list.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1fx6os8",
+  "who": "lucia",
+  "text": "The helicopter's camera made a map of the canyon.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0ujydzr",
+  "who": "pip",
+  "text": "Start at the square it says, Rory. Where's the pump station?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0v0jifv",
+  "who": "rory",
+  "text": "Her plans! In symbol code again.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "16u76kh",
+  "who": "pip",
+  "text": "Use the key, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "099rvcd",
+  "who": "sol",
+  "text": "The beacons are on a line, all the way to the station. Find the one I say.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "086oid2",
+  "who": "sol",
+  "text": "My chart of the Drips we've caught each day of the storm. Read it, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0l7u376",
+  "who": "sol",
+  "text": "The shelter has its own air tank. How much more to fill it before the storm hits?",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "103bnua",
+  "who": "hana",
+  "text": "Measure the climbing rope. We need to know it'll reach.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "00nhg6s",
+  "who": "hana",
+  "text": "Six people in the climbers' photo, and one of them is Undertow's lookout.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "1b34vmq",
+  "who": "pip",
+  "text": "Read the clues, Rory. Watch out for NOT.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0pchvsi",
+  "who": "hana",
+  "text": "I keep a tally of the rocks that fall. Read it for me, Agent.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0j1cx7v",
+  "who": "silt",
+  "text": "Each ice-brick tower has a shaped top. The trackers are on the one she's melting.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "100ofsd",
+  "who": "silt",
+  "text": "The melt switch has a pressure lock. Three sets of gauges, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0y5zvhm",
+  "who": "silt",
+  "text": "How wide is the crack? Measure it, Rory, so the bridge is long enough.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0sc4z3x",
+  "who": "pip",
+  "text": "She strung the pearls from every sea into a necklace. They go in a pattern, with gaps.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0sowtp5",
+  "who": "torpedo",
+  "text": "I have a map of the dome sea. The Engine is at the end of it.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "01yltci",
+  "who": "pip",
+  "text": "Start at the square it says, Rory.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0q1azti",
+  "who": "undertow",
+  "text": "All right. The gate code is in my own symbols. Here is the key.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0wpqf72",
+  "who": "pip",
+  "text": "Last code, Rory. Open the gates and send the sea home.",
+  "from": "js/cluemap.js"
+ },
+ {
   "key": "0j2etrs",
   "who": "torpedo",
   "text": "All three golden starfish here! TORPEDO is very pleased.",

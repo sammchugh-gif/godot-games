@@ -67,6 +67,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Pip:** Last one. Your watch has a tractor beam too. Stand next to a block and press USE to pick it up.
 > **Pip:** Carry it onto the glowing pad and press USE again to drop it. Three blocks!
 
+*Clue: PIP'S MEMORY TEST (memory match, level 1)*
+
+> **Pip:** One last test. A spy has to remember things. Here are some cards, face down.
+> **Pip:** Turn them over two at a time, Rory. Find each sum and its answer.
+
+> **BOLT:** You remembered all of them. I remember nothing. I have to write it down.
+
 *After:*
 
 > **Admiral Frost:** Training complete. Now, I'm afraid, the real thing.
@@ -88,6 +95,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Pip:** The cells are up on the arcade roof and the tower next to it. Take the stairs, or bounce up on the pads.
 > **Yuki:** The pink pad on the arcade roof goes really high!
 
+*Clue: THE HACKED ARCADE (sorting by a rule, level 1)*
+
+> **Yuki:** Look at the arcade screen! The Floaters hacked it. It's full of Floaters with numbers!
+> **Pip:** It's a lock. Tap every Floater the screen asks for, and it switches off.
+
+> **Yuki:** The screen's back to normal. Game over, Floaters!
+
 *After:*
 
 > **Rory:** Eight cells. They were humming, like they wanted to go somewhere.
@@ -98,6 +112,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Yuki:** Oh no, it's happening again. The machines are lifting off!
 > **Pip:** Get close to anything with a pink ring under it and press PIN. Your watch will pull it back down.
 > **BOLT:** Do not let the drinks escape!
+
+*Clue: THE LAST MACHINE (making an amount, level 1)*
+
+> **Yuki:** That machine is still on the ground, but its power's gone. Power it up and it gives you a secret message!
+> **Pip:** Exactly the right power, Rory. Too much and it pops.
+
+> **BOLT:** A drink, and a note. It says: look at the big screens.
 
 *After:*
 
@@ -112,6 +133,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Yuki:** Zero's robots are in the cherry blossom park, sticking gravity leeches to the trees!
 > **Pip:** These ones run away. Sneak up on them and ZAP.
 
+*Clue: THE PARK HELPER (who is the spy?, level 1)*
+
+> **Yuki:** Someone in the park is helping the Floaters. I saw them hand over a leech!
+> **Pip:** Read the clues, Rory. Who's the spy?
+
+> **Rory:** Caught you. Now, who do you work for?
+
 *After:*
 
 > **BOLT:** They floated off going wheee. I think they enjoyed it.
@@ -122,6 +150,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Pip:** BOLT has rocket feet! BOLT, fly up the rings round the tower and scan the top.
 > **BOLT:** Rocket feet ready. Mostly ready.
 > **Pip:** Rory, you steer him. Hold JUMP to go up, let go to come down.
+
+*Clue: THE MACHINE LABEL (code, level 1, spells EGYPT)*
+
+> **BOLT:** The machine on the top has a label on the bottom. It is in number code.
+> **Pip:** A is 1, B is 2. Crack it, Rory!
 
 *After:*
 
@@ -147,6 +180,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Amira:** The cells are all over the step pyramid. Each step is one big jump.
 > **Pip:** Climb all the way to the top. The last one is up high, so jump!
 
+*Clue: THE CRATE OF GOLD (gold bars, times tables, level 1)*
+
+> **Rory:** This crate's full of gold bars. Zero's been collecting his payments already.
+> **Pip:** Count them, Rory. Stacks of bars: times tables.
+
+> **Amira:** All that gold. And it's stamped with a Floater.
+
 *After:*
 
 > **Rory:** There's a crate up here stamped ZERO INDUSTRIES. With a picture of a Floater on it.
@@ -157,6 +197,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Amira:** The Floaters knocked the capstone blocks off the plinth. Could you put them back, please?
 > **Pip:** GRAB a block, carry it to the green circle and DROP it. Four blocks!
 
+*Clue: THE CAPSTONE (gravity balance, level 1)*
+
+> **Amira:** The capstone has to weigh just right, or it floats off again. Grandad's old balance will tell us.
+> **Pip:** Work out what the box weighs, Rory.
+
+> **Amira:** Perfect balance. It'll stay put now.
+
 *After:*
 
 > **Amira:** Perfect. My grandad will be so pleased.
@@ -166,6 +213,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 > **Amira:** Zero's workshop is inside the old tomb. But it's full of lasers now.
 > **Pip:** Don't touch the red beams. Jump over the low ones, and wait for the moving ones to pass.
+
+*Clue: GRANDAD'S TOMB MAP (spy map, level 1)*
+
+> **Amira:** The tomb has lots of rooms. My grandad's map shows which one is the workshop.
+> **Pip:** Follow the steps to the workshop, Rory.
 
 *After:*
 
@@ -202,6 +254,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Jack:** Zero's machine is pointed at the beach. The umbrellas and surfboards are floating off!
 > **Pip:** PIN them down before they get too high.
 
+*Clue: BACK TO THE HUTS (sharing equally, level 1)*
+
+> **Jack:** We saved the surfboards! They go back in the lifeguard huts, the same number in each.
+> **Pip:** Share them out, Rory.
+
+> **Jack:** Spot on. Every hut's got its boards back.
+
 *After:*
 
 > **Jack:** Beach saved! You're a legend.
@@ -211,6 +270,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 > **Pip:** The cells are riding on the ferries! Jump from the end of a wharf onto a ferry as it goes past.
 > **Jack:** One on each deck and one on each roof. Try not to fall in, the water's freezing!
+
+*Clue: THE CELL LABELS (code, level 2, spells RIO)*
+
+> **Rory:** These cells have labels on them. In number code.
+> **Pip:** Crack it, Rory. Where are they going?
 
 *After:*
 
@@ -222,6 +286,13 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Jack:** Something is hanging under the Harbour Bridge. BOLT, can you fly out and have a look?
 > **BOLT:** Rocket feet: go.
 
+*Clue: THE SHIP'S COUNTDOWN (launch countdown, level 1)*
+
+> **Jack:** The Floater under the bridge had a countdown on it. There's a ship leaving when it ends!
+> **Pip:** What comes next in the countdown, Rory?
+
+> **Jack:** We've got time to look in Zero's warehouse first.
+
 *After:*
 
 > **BOLT:** It was a Floater. Stuck. I told it to have a nice day.
@@ -231,6 +302,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 > **Jack:** That's Zero's warehouse. Guard bots with searchlights walk round inside.
 > **Pip:** Stay behind the crates and out of the yellow light. The shipping list is in a silver case at the back.
+
+*Clue: THE SILVER CASE (making an amount, level 2)*
+
+> **Rory:** The silver case is locked, and its battery's flat.
+> **Pip:** Power it up with exactly the right cells, before the searchlights come back!
 
 *After:*
 
@@ -255,6 +331,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Lucas:** Some of the dancers in the parade are Floaters in disguise! You can tell. They can't samba.
 > **Pip:** Bubble six of them. They run fast here, so corner them.
 
+*Clue: THE DANCER WHO CAN'T SAMBA (who is the spy?, level 2)*
+
+> **Lucas:** Four dancers by the float, and one of them is helping the Floaters. You can tell. They can't samba.
+> **Pip:** Read the clues, Rory. Which one is it?
+
 *After:*
 
 > **Lucas:** The last one dropped a ticket. For the cable car up Sugarloaf Mountain.
@@ -263,6 +344,11 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 > **Pip:** The cells are going up the mountain in the cable cars. Climb the station stairs and ride up on a roof.
 > **Lucas:** Grab the ones on the cars and the ones on the stations!
+
+*Clue: THE CABLE CARS (sharing equally, level 2)*
+
+> **Lucas:** The cells are going up the mountain, the same number in every cable car.
+> **Pip:** Share them out, Rory. How many in each car?
 
 *After:*
 
@@ -312,6 +398,13 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Marcus:** Here we go again. The taxis in Times Square are lifting off!
 > **Pip:** PIN them down, Rory. The hot dog carts too. Especially the hot dog carts.
 
+*Clue: FLOATERS IN THE TRAFFIC (sorting by a rule, level 2)*
+
+> **Marcus:** The hot dog man says some of those taxis aren't taxis. They're Floaters in disguise!
+> **Pip:** Tap every Floater the rule asks for, Rory.
+
+> **Marcus:** He says the real ones went up on the rooftops.
+
 *After:*
 
 > **Marcus:** The drivers say thank you. Well, one of them shouted something. I think it was thank you.
@@ -320,6 +413,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Pip:** The cells are on the rooftops by the park. Ride the window cleaner's lift up, then the pink pads take you higher.
 > **Marcus:** Don't look down. Actually, look down a bit. So you don't fall.
+
+*Clue: THE LIFT'S BATTERY (making an amount, level 2)*
+
+> **Marcus:** The window cleaner's lift is stuck at the top. Its battery's flat!
+> **Pip:** Exactly the right power, Rory, and we can ride it down.
 
 *After:*
 
@@ -365,6 +463,13 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Wanjiru:** Oh no, here they go! The zebras, the giraffes, even the elephants!
 > **Pip:** PIN them down, gently. Very gently. They are very cross.
 
+*Clue: WEIGH THEM DOWN (gravity balance, level 2)*
+
+> **Wanjiru:** The ranger's balance! If it's level, the weights keep the animals on the ground.
+> **Pip:** Work out what the box weighs, Rory.
+
+> **Wanjiru:** That's all of them. Nobody floated off.
+
 *After:*
 
 > **Wanjiru:** One elephant is still sulking. But she's on the ground.
@@ -383,6 +488,13 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Wanjiru:** The Floaters are putting gravity leeches round the watering hole, where the animals drink.
 > **Pip:** Bubble all six. They're quick, so chase them into the water's edge.
+
+*Clue: THE LEECH CARRIERS (sorting by a rule, level 2)*
+
+> **Wanjiru:** Some of those Floaters are carrying gravity leeches. The ranger marked them.
+> **Pip:** Tap every one the rule asks for, Rory.
+
+> **Wanjiru:** Mum says you'd make a very good ranger.
 
 *After:*
 
@@ -416,6 +528,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Mei:** The cells are spread all along the wall. Run the whole way, up the hills and through the watchtowers!
 > **Pip:** Some are up high inside the towers, so jump for them.
 
+*Clue: THE GONG'S COUNTDOWN (launch countdown, level 2)*
+
+> **Mei:** The temple gong is ringing a countdown! When it gets to the end, the wall floats off.
+> **Pip:** What comes next, Rory? Quickly!
+
 *After:*
 
 > **Mei:** The wall's stopped wobbling! But listen. The temple gong is ringing all by itself.
@@ -435,6 +552,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Pip:** The relay's signal bounces off the lanterns along the wall. BOLT, fly through every one to scramble it.
 > **BOLT:** Scrambling. Like eggs.
 
+*Clue: SCRAMBLE THE SIGNAL (memory match, level 2)*
+
+> **BOLT:** The relay's signal is made of sums and answers. If we match them all, it scrambles.
+> **Pip:** Turn the cards over, Rory. Find the pairs.
+
 *After:*
 
 > **BOLT:** All scrambled. The relay is now very confused.
@@ -444,6 +566,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Mei:** The relay room is at the back of the fort. Zero filled it with lasers.
 > **Pip:** Same as Egypt, only faster. Jump the low ones, wait for the moving ones.
+
+*Clue: THE RELAY ORDERS (code, level 2, spells INDIA)*
+
+> **Rory:** The relay is printing out orders. In number code.
+> **Pip:** Crack it, Rory. Where are the orders going?
 
 *After:*
 
@@ -467,6 +594,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Arjun:** The hatch to the workshop is at the far end of the west garden. Three guard bots walk the paths between the hedges.
 > **Pip:** Hide behind the hedges. Wait for the lights to pass, then go through the gaps.
 
+*Clue: THE GARDENER (who is the spy?, level 2)*
+
+> **Arjun:** Four gardeners, and one of them keeps looking at the hatch. That's Zero's spy!
+> **Pip:** Use the clues, Rory.
+
 *After:*
 
 > **Rory:** The hatch! It's locked with a power lock.
@@ -476,6 +608,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Arjun:** The Floaters took the fountain stones and scattered them round the garden.
 > **Pip:** GRAB them and stack four back on the fountain. The fountain powers the hatch lock.
+
+*Clue: THE FOUNTAIN STONES (gravity balance, level 2)*
+
+> **Arjun:** The fountain stones have to balance, or the water won't flow.
+> **Pip:** Work out what the box weighs, Rory.
 
 *After:*
 
@@ -495,6 +632,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Arjun:** The robots left signal cells on the minaret balconies. The air round them is so floaty you can jump and jump.
 > **Pip:** Bounce up off the pink pads, then keep jumping in the bubbles. Get every cell!
+
+*Clue: WHERE THE SIGNALS WENT (spy map, level 2)*
+
+> **Arjun:** The signals were going out to sea. Here's a map of where they went.
+> **Pip:** Follow the steps, Rory. Where's Zero's island?
 
 *After:*
 
@@ -527,6 +669,11 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 > **Pip:** The silo codes are in a case at the back of the yard. Two guards with searchlights.
 > **Pip:** Keep to the walls and behind the crates. Wait for them to walk away.
+
+*Clue: THE SILO LEVER (which is more?, level 2)*
+
+> **Pip:** The silo codes are behind a gravity lever. It opens when you say which side is heavier.
+> **Pip:** Work out both sides, Rory.
 
 *After:*
 
@@ -587,6 +734,12 @@ The Pump is in orbit and its battery is on the Moon.
 > **Commander Hale:** The red tower beside the rocket is the gantry. Stairs zig-zag up the side, and the yellow lift goes all the way up.
 > **Pip:** There are cells on every level, and one on the stairs. Climb, or ride the lift and hop off.
 
+*Clue: STACK THE ROCKET (numbers in order, level 2)*
+
+> **Commander Hale:** The rocket's stages were knocked off the gantry. They go back in number order, Agent.
+
+> **Commander Hale:** Rocket stacked. You're a natural.
+
 *After:*
 
 > **Commander Hale:** Gantry's clear. Now let's check the rocket for any more surprises.
@@ -595,6 +748,12 @@ The Pump is in orbit and its battery is on the Moon.
 
 > **Commander Hale:** BOLT, can you fly up round the rocket and scan it on the way?
 > **BOLT:** Rocket feet, meet rocket. Rocket, meet rocket feet.
+
+*Clue: THE LAUNCH COUNTDOWN (launch countdown, level 2)*
+
+> **Commander Hale:** The countdown's started, but the Floaters scrambled the numbers. What comes next, Agent?
+
+> **Commander Hale:** Countdown fixed. Now, that buggy.
 
 *After:*
 
@@ -648,6 +807,13 @@ The Pump is in orbit and its battery is on the Moon.
 
 > **Pip:** Here they come. Bubble six Floaters before they reach the power box.
 
+*Clue: ZERO'S GOLD (gold bars, times tables, level 2)*
+
+> **BOLT:** The Floaters were carrying gold bars! Zero's payments. They are floating everywhere.
+> **Pip:** How many bars, Rory? Stacks, so it's times tables.
+
+> **BOLT:** I will write it in my report. I will add a smiley face.
+
 *After:*
 
 > **BOLT:** They floated away into space. They look happy out there.
@@ -655,6 +821,10 @@ The Pump is in orbit and its battery is on the Moon.
 **Mission 48: Airlock Lasers** (Laser hall, level 4)
 
 > **Pip:** The airlock to the Pump controls is full of lasers. Walk, don't fly. Jetpacks and lasers don't mix.
+
+*Clue: THE AIRLOCK LEVER (which is more?, level 3)*
+
+> **Pip:** The airlock has a gravity lever lock. Say which side is heavier, three times, and it opens.
 
 *After:*
 
@@ -664,6 +834,13 @@ The Pump is in orbit and its battery is on the Moon.
 
 > **Commander Hale:** The Pump is pulling loose things off the deck. If they float away we'll never get them back.
 > **Pip:** PIN them down, Rory!
+
+*Clue: THE CARGO LABELS (memory match, level 3)*
+
+> **Commander Hale:** The cargo labels got mixed up when they floated. Each sum goes with its answer.
+> **Pip:** Match the pairs, Rory.
+
+> **Commander Hale:** That matches. Nothing lost.
 
 *After:*
 
@@ -684,6 +861,11 @@ The Pump is in orbit and its battery is on the Moon.
 > **Pip:** BOLT, fly round the Pump's ring and scan it. We need to know where its battery is.
 > **BOLT:** Flying round a giant space doughnut. Best day.
 
+*Clue: THE PUMP MESSAGE (code, level 3, spells MOON)*
+
+> **BOLT:** The scan found a message painted on the Pump. It is in symbols.
+> **Pip:** Use the key, Rory. Where's the battery?
+
 *After:*
 
 > **BOLT:** The scan says: battery on the Moon. In a crater. Next to a sign that says ZERO'S MOON BASE, KEEP OUT.
@@ -692,6 +874,11 @@ The Pump is in orbit and its battery is on the Moon.
 **Mission 52: Core Sneak** (Sneak past the searchlights, level 3)
 
 > **Pip:** Zero's console has the Moon base codes. Two guards. Sneak between the crates.
+
+*Clue: ZERO'S MAN ON BOARD (who is the spy?, level 3)*
+
+> **Pip:** Zero has a spy in the station crew. He's got the codes for the console.
+> **Pip:** Read the clues, Rory. Some of them say NOT.
 
 *After:*
 
@@ -716,6 +903,13 @@ The Pump is in orbit and its battery is on the Moon.
 > **Commander Hale:** The lander carried a moon buggy. Cells from the Pump have rained down all over these craters.
 > **Pip:** Drive over every one. The buggy bounces a lot up here, so go easy on the bumps.
 
+*Clue: THE CRATER MAP (spy map, level 3)*
+
+> **Commander Hale:** Here's the crater map. The battery is in one of these craters.
+> **Pip:** Follow the steps, Rory.
+
+> **Commander Hale:** That's the one. Right next to his base.
+
 *After:*
 
 > **Rory:** That was the best drive of my entire life.
@@ -726,6 +920,10 @@ The Pump is in orbit and its battery is on the Moon.
 > **Pip:** More cells round the rim of that crater, and some up high. The gravity's so low you can jump really far.
 > **BOLT:** Jump like a kangaroo. A space kangaroo.
 
+*Clue: EMPTY THE BATTERY (sharing equally, level 3)*
+
+> **Pip:** The battery's slots each hold the same number of cells. How many in each? Then we know how to drain it.
+
 *After:*
 
 > **Pip:** Got them. The battery's losing power without its cells.
@@ -734,6 +932,10 @@ The Pump is in orbit and its battery is on the Moon.
 
 > **Commander Hale:** We need to talk to Earth, and Zero's jamming the radio. Stack four blocks on the pad to build a signal tower.
 > **Pip:** They're light up here, so they bounce. Drop them gently.
+
+*Clue: THE SIGNAL TOWER (numbers in order, level 3)*
+
+> **Commander Hale:** The tower blocks are numbered. They have to go in order, or the radio won't reach Earth.
 
 *After:*
 
@@ -744,6 +946,11 @@ The Pump is in orbit and its battery is on the Moon.
 
 > **Commander Hale:** The battery is pulling our kit off the ground. Crates, fuel barrels, everything.
 > **Pip:** PIN it down before it floats off into space!
+
+*Clue: THE GOLD ON THE MOON (gold bars, times tables, level 3)*
+
+> **Commander Hale:** Zero's gold bars are bouncing all over the crater! How many has he got up here?
+> **Pip:** Stacks of bars, Rory. Times tables.
 
 *After:*
 

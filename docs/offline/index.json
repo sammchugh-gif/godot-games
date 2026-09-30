@@ -2,14 +2,14 @@
  "v": 1,
  "games": {
   "agent-rory": {
-   "bytes": 25270167,
+   "bytes": 25270854,
    "n": 989,
-   "hash": "706e6760c0a3"
+   "hash": "237bb609cdde"
   },
   "agent-rory-deep-red": {
-   "bytes": 26757696,
-   "n": 1156,
-   "hash": "cb7fb16c77db"
+   "bytes": 29394975,
+   "n": 1297,
+   "hash": "f5b27f51aa06"
   },
   "agent-rory-hq": {
    "bytes": 267536,
@@ -26,24 +26,24 @@
    ]
   },
   "agent-rory-meltdown": {
-   "bytes": 40871146,
+   "bytes": 40871833,
    "n": 2019,
-   "hash": "798e6aad7274"
+   "hash": "6b2530b6817b"
   },
   "agent-rory-spectrum": {
-   "bytes": 6434817,
-   "n": 70,
-   "hash": "ebb11bd9d7a3"
+   "bytes": 6513015,
+   "n": 73,
+   "hash": "4fa1e51d37b2"
   },
   "agent-rory-timeslip": {
-   "bytes": 12176140,
-   "n": 338,
-   "hash": "89af3354d1b1"
+   "bytes": 12810583,
+   "n": 372,
+   "hash": "c7bce4bbf41e"
   },
   "agent-rory-zero-gravity": {
-   "bytes": 15783758,
-   "n": 517,
-   "hash": "2e8707ee4fae"
+   "bytes": 17335641,
+   "n": 601,
+   "hash": "a549bd1e41d2"
   },
   "blockfort": {
    "bytes": 40185305,
@@ -86,9 +86,9 @@
    "hash": "5b36daf2fce1"
   },
   "paws-of-fury": {
-   "bytes": 158874,
+   "bytes": 159259,
    "n": 1,
-   "hash": "cdf337ce70ea"
+   "hash": "1b381ee608c0"
   },
   "pinball-quest": {
    "bytes": 1658164,
