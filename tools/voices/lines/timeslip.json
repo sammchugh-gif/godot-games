@@ -1308,33 +1308,39 @@
   "from": "story"
  },
  {
-  "key": "0nik4oz",
+  "key": "1cyvxty",
   "who": "flint",
-  "text": "The Sandbots dropped a list of the eggs they took. In shapes! Robots can't spell.",
+  "text": "The Sandbots took eggs from two nests, the same number from each.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "0efvyg1",
+  "key": "1qb0z03",
   "who": "pip",
-  "text": "Count the ones it asks for, Rory.",
+  "text": "Double it, Rory. How many eggs did they take?",
   "from": "js/cluemap.js"
  },
  {
-  "key": "1i92054",
+  "key": "0n37df9",
   "who": "flint",
-  "text": "The eggs have numbers on them. The Sandbots were sorting them!",
+  "text": "Let's check the nest before the hourglass runs out and their mum comes back.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "05ufqkg",
+  "key": "03ft8cu",
   "who": "pip",
-  "text": "Put them in order, Rory, smallest first, so we know none are missing.",
+  "text": "Work it out, Rory.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "009mus6",
+  "key": "0vm5l61",
   "who": "flint",
-  "text": "Let's count the babies, to be sure they're all home.",
+  "text": "The last baby wandered off. Her footprints go along the numbered stones.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "0z8gi55",
+  "who": "pip",
+  "text": "Count her steps, Rory. Where did she end up?",
   "from": "js/cluemap.js"
  },
  {
@@ -1362,15 +1368,15 @@
   "from": "js/cluemap.js"
  },
  {
-  "key": "0sqgx6s",
+  "key": "134yp9l",
   "who": "tuva",
-  "text": "Those icicles are heavy! Our old scale says how heavy.",
+  "text": "We scratch a mark on the cave wall every day. The icicles always fall on the same day of the week.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "1t5iy8c",
+  "key": "088ct5k",
   "who": "pip",
-  "text": "Work out what the box weighs, Rory.",
+  "text": "Your watch knows the days, Rory. Which day is it?",
   "from": "js/cluemap.js"
  },
  {
@@ -1392,33 +1398,33 @@
   "from": "js/cluemap.js"
  },
  {
-  "key": "0616j31",
+  "key": "0tlec4o",
   "who": "tuva",
-  "text": "The wall needs the same number of blocks in every row. How many altogether?",
+  "text": "We need more snow blocks cut, and the block cutters want paying in trade.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "101wmw1",
+  "key": "0akrqhn",
   "who": "pip",
-  "text": "Times tables, Rory.",
+  "text": "Work out the swap, Rory.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "0p8ekq6",
+  "key": "1gtynlq",
   "who": "nefi",
-  "text": "The builders mark every block with a number. Add them up, and we'll know the ramp is strong enough.",
+  "text": "The builders mark the ramp blocks in a pyramid of numbers. Each block is the two under it, added.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "11s706q",
-  "who": "flint",
-  "text": "The tunnel doors are numbered in a pattern. Which one did the Sandbots take?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0nkzpak",
+  "key": "1bt807q",
   "who": "pip",
-  "text": "What comes next, Rory?",
+  "text": "Fill in the missing ones, Rory, and we'll know the ramp is strong.",
+  "from": "js/cluemap.js"
+ },
+ {
+  "key": "15wig5j",
+  "who": "flint",
+  "text": "Hourglass wants to bottle the capstone ceremony. How long does it last? That's how long we've got.",
   "from": "js/cluemap.js"
  },
  {
@@ -1434,15 +1440,9 @@
   "from": "js/cluemap.js"
  },
  {
-  "key": "0pxrq9l",
+  "key": "1epzgf9",
   "who": "theo",
-  "text": "The crown maker will make new crowns for the winners. But he wants paying.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1cs1owg",
-  "who": "pip",
-  "text": "Pay him exactly, Rory.",
+  "text": "The crown maker will make new olive crowns, but he wants paying in trade. Figs, honey, that sort of thing.",
   "from": "js/cluemap.js"
  },
  {
@@ -1452,15 +1452,15 @@
   "from": "js/cluemap.js"
  },
  {
-  "key": "1oi9w39",
+  "key": "0qsdbpx",
   "who": "livia",
-  "text": "The aqueduct is losing water. The gauge says how much.",
+  "text": "The arches are numbered, the Roman way. The sparks are at one of them.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "10rj6oa",
+  "key": "1wgoi6z",
   "who": "pip",
-  "text": "Take away, Rory. How much is still flowing?",
+  "text": "Read the Roman numerals, Rory.",
   "from": "js/cluemap.js"
  },
  {
@@ -1476,21 +1476,21 @@
   "from": "js/cluemap.js"
  },
  {
-  "key": "1jjx2cz",
+  "key": "0ar1bin",
   "who": "sigrid",
-  "text": "There's a chest in the loft with a number lock.",
+  "text": "Grandad carved a number pyramid on the chest. Fill in the missing numbers and it opens.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "1arigah",
+  "key": "09r8olc",
   "who": "pip",
-  "text": "Put the numbers in order, Rory.",
+  "text": "Each block is the two under it, added.",
   "from": "js/cluemap.js"
  },
  {
-  "key": "0wah7nz",
+  "key": "1jh9348",
   "who": "sigrid",
-  "text": "We have to sew the sail back together. How many stitches? Work it out, Rory.",
+  "text": "Each piece of the sail needs the same number of stitches. Help me work it out.",
   "from": "js/cluemap.js"
  },
  {

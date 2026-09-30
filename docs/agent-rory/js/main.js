@@ -50,6 +50,10 @@ function firstGesture() {
   if (!G.started) { G.started = true; }
   Audio.init(); Audio.resume(); Speech.unlock();
 }
+// iPhone and iPad Safari only let sound start from a finished tap (the finger lifting), not the
+// finger going down, which is all the game listened for: so the music and the sound effects could
+// stay silent. Ask again on every finished tap, click and key, until it's playing.
+for (const ev of ["touchend", "click", "keydown"]) addEventListener(ev, () => { Audio.init(); Audio.resume(); Speech.unlock(); }, { passive: true });
 ui.addEventListener("pointerdown", e => {
   firstGesture();
   const p = pointerPos(e); const id = e.pointerId;

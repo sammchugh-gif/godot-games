@@ -3,24 +3,30 @@
 // this is where Rory works it out. Each game's cluemap.js says which missions end in
 // a clue, which kind, and the lines around it.
 //
-// The puzzles are for a seven-year-old: adding and taking away, the 2, 3, 4, 5 and 10
-// times tables, story sums, coins, balance scales, counting, putting numbers in order,
-// what comes next, telling the time, a spy map, a number or symbol code, and picking
-// the spy out of a line-up from the clues. Every one is made fresh each time, has
-// exactly one answer, and has four levels. A wrong answer never fails the mission: it
-// gives a hint, and a stronger one after the second try. Three slips or more cost a star.
+// This file is the same in all four newer Agent Rory games: the frame every clue shares,
+// the keypad and the pick-one-of-these kinds build on, and the three spy clues every
+// game has (the line-up, the coded note, the spy map). Everything else is the game's
+// own, in its js/puzzles.js, made from its story: Zero Gravity's gold bars and launch
+// countdowns, Deep Red's tide charts and depth lines, Spectrum's paint-by-numbers and
+// colour squares, Timeslip's Roman numerals and number pyramids.
 //
-// installClues(G, CLUES, { voice, theme, airFull }) wraps G.onMissionWin (airFull: what a full
-// breath is, for the games with swimming, so the air holds while a clue is open). The autopilot sets
-// G.autoSolve and the clue solves itself; G.clue is the open puzzle.
+// Every clue is for a seven-year-old, made fresh each time, with exactly one answer
+// (verify() says so, and the tests check it hundreds of times) and four levels. A wrong
+// answer never fails the mission: it gives a hint, and a stronger one after the second
+// try. Three slips or more cost a star.
+//
+// installClues(G, CLUES, { voice, theme, kinds, airFull }) wraps G.onMissionWin: kinds
+// are the game's own (puzzles.js), airFull what a full breath is in the games with
+// swimming, so the air holds while a clue is open. The autopilot sets G.autoSolve and
+// the clue solves itself; G.clue is the open puzzle.
 import { screen, clearLayer, onTap } from "./ui.js";
 import { Speech } from "./speech.js";
 
-const R = n => Math.floor(Math.random() * n);
-const rnd = (a, b) => a + R(b - a + 1);
-const any = a => a[R(a.length)];
-const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = R(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+export const R = n => Math.floor(Math.random() * n);
+export const rnd = (a, b) => a + R(b - a + 1);
+export const any = a => a[R(a.length)];
+export const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = R(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+export const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 // ------------------------------------------------------------ the look (added once)
 const CSS = `
@@ -96,12 +102,18 @@ const CSS = `
 .cl-purse { min-height: 50px; min-width: 12em; border: 2px dashed rgba(255,255,255,.35); border-radius: 16px; padding: 6px; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; align-items: center; --s: 40px; }
 .cl-total { font-weight: 900; font-size: clamp(16px, 4vmin, 22px); color: #fff; }
 .cl-svg { width: min(78vw, 360px); max-height: 33vh; }
+.cl-pic { display: flex; flex-direction: column; align-items: center; justify-content: center; max-width: 100%; gap: 6px; }
+.cl-pic svg { max-width: min(80vw, 420px); max-height: 34vh; }
+.cl-pick { outline: 4px solid #7dffa8; outline-offset: -2px; }
+.cl-done-btn { margin-top: 6px; }
 `;
-function style() { if (document.getElementById("cl-style")) return; const s = document.createElement("style"); s.id = "cl-style"; s.textContent = CSS; document.head.appendChild(s); }
+function style() { addStyle("cl-style", CSS); }
+// a game's own clues bring their own look
+export function addStyle(id, css) { if (document.getElementById(id)) return; const s = document.createElement("style"); s.id = id; s.textContent = css; document.head.appendChild(s); }
 
 // ------------------------------------------------------------ pictures
-const COLOURS = { red: "#e03a3a", blue: "#2a6ad8", green: "#2aa84a", yellow: "#f0c020", purple: "#9a4ad8", orange: "#ff8a1a" };
-const SHAPES = {
+export const COLOURS = { red: "#e03a3a", blue: "#2a6ad8", green: "#2aa84a", yellow: "#f0c020", purple: "#9a4ad8", orange: "#ff8a1a" };
+export const SHAPES = {
   star: c => `<path d="M50 6 L62 38 L96 38 L68 58 L79 92 L50 71 L21 92 L32 58 L4 38 L38 38 Z" fill="${c}"/>`,
   circle: c => `<circle cx="50" cy="50" r="42" fill="${c}"/>`,
   square: c => `<rect x="10" y="10" width="80" height="80" rx="8" fill="${c}"/>`,
@@ -109,13 +121,13 @@ const SHAPES = {
   heart: c => `<path d="M50 88 C10 60 4 36 20 20 C34 8 48 16 50 28 C52 16 66 8 80 20 C96 36 90 60 50 88 Z" fill="${c}"/>`,
   diamond: c => `<path d="M50 4 L92 50 L50 96 L8 50 Z" fill="${c}"/>`,
 };
-const shape = (k, c, px) => `<svg viewBox="0 0 100 100" ${px ? `width="${px}" height="${px}"` : ""}>${SHAPES[k](COLOURS[c] || c)}</svg>`;
-const dots = (n, colour, crossed = 0) => `<div class="cl-dots">${Array.from({ length: n }, (_, i) => `<b class="${i >= n - crossed ? "x" : ""}" style="background:${colour}"></b>`).join("")}</div>`;
+export const shape = (k, c, px) => `<svg viewBox="0 0 100 100" ${px ? `width="${px}" height="${px}"` : ""}>${SHAPES[k](COLOURS[c] || c)}</svg>`;
+export const dots = (n, colour, crossed = 0) => `<div class="cl-dots">${Array.from({ length: n }, (_, i) => `<b class="${i >= n - crossed ? "x" : ""}" style="background:${colour}"></b>`).join("")}</div>`;
 
 const VOICE = { g: "f", langs: ["en-GB"], pitch: 1.2, rate: 1 };
 
 // ------------------------------------------------------------ the frame every clue shares
-class Clue {
+export class Clue {
   constructor(G, spec, lv, voice) { this.G = G; this.spec = spec; this.lv = Math.max(1, Math.min(4, lv | 0 || 1)); this.voice = voice; this.mistakes = 0; this.round = 0; this.rounds = 1; this.miss = 0; this.busy = false; }
   get eyebrow() { return "CLUE"; }
   get title() { return "CRACK THE CLUE"; }
@@ -133,6 +145,10 @@ class Clue {
     this.next();
   }
   setup() {}
+  // true, or what is wrong with a puzzle make() made (the tests call it hundreds of times)
+  verify() { return true; }
+  // each game's own words for its clues: this.theme (cluemap.js THEME)
+  get words() { return this.theme || {}; }
   next() { this.miss = 0; this.busy = false; this.q = this.make(); this.pips(); this.render(); this.say(this.q.prompt || ""); }
   pips() { this.pipEl.innerHTML = this.rounds > 1 ? Array.from({ length: this.rounds }, (_, i) => `<i class="${i < this.round ? "on" : ""}"></i>`).join("") : ""; }
   say(t, cls = "") { this.msgEl.textContent = t; this.msgEl.className = "cl-msg " + cls; }
@@ -155,7 +171,7 @@ class Clue {
 }
 
 // ------------------------------------------------------------ keypad clues: a number answer
-class Keypad extends Clue {
+export class Keypad extends Clue {
   get eyebrow() { return "SAFE LOCK"; }
   render() {
     const q = this.q; this.typed = "";
@@ -183,247 +199,30 @@ class Keypad extends Clue {
   }
   hint(n) { if (this.q.help) this.helpEl.innerHTML = this.q.help(n); }
   auto() { this.typed = ""; for (const d of String(this.q.ans)) this.press(d); }
+  verify(q) { return Number.isInteger(q.ans) && q.ans >= 0 && q.ans < 1000 || "the answer is not a whole number"; }
 }
 
-// adding up
-class Sum extends Keypad {
-  get title() { return "ADD TO UNLOCK"; }
-  setup() { this.rounds = [2, 3, 3, 3][this.lv - 1]; }
-  make() {
-    const lv = this.lv; let n;
-    if (lv === 1) { const a = rnd(1, 7); n = [a, rnd(1, 10 - a)]; }
-    else if (lv === 2) { const a = rnd(4, 12); n = [a, rnd(Math.max(1, 10 - a), 20 - a)]; }
-    else if (lv === 3) n = R(3) ? [rnd(2, 5) * 10 + rnd(1, 5), rnd(1, 4)] : [rnd(1, 4) * 10, rnd(1, 4) * 10];
-    else n = [rnd(1, 9), rnd(1, 9), rnd(1, 9)];
-    const ans = n.reduce((a, b) => a + b, 0);
-    return { text: `${n.join(" + ")} = ?`, read: `What is ${n.join(" add ")}?`, ans, help: m => ans <= 20 ? `${n.map((x, i) => dots(x, ["#7fe3ff", "#ffd166", "#ff8ac8"][i])).join("<b style='font-size:22px;color:#fff'>+</b>")}` + (m > 2 ? `<div class="cl-q small">Count all the dots!</div>` : "") : `<div class="cl-q small">Start at ${n[0]} and count on ${n.slice(1).join(", then ")}.</div>` };
-  }
-}
-// taking away
-class Minus extends Keypad {
-  get title() { return "TAKE AWAY TO UNLOCK"; }
-  setup() { this.rounds = [2, 3, 3, 3][this.lv - 1]; }
-  make() {
-    const lv = this.lv; let a, b;
-    if (lv === 1) { a = rnd(3, 10); b = rnd(1, a - 1); }
-    else if (lv === 2) { a = rnd(11, 20); b = rnd(2, 9); }
-    else if (lv === 3) { if (R(2)) { a = rnd(2, 9) * 10 + rnd(5, 9); b = rnd(1, 4); } else { a = rnd(4, 9) * 10; b = rnd(1, 3) * 10; } }
-    else { a = rnd(12, 30); b = rnd(a % 10 + 1, 9); }
-    const ans = a - b;
-    return { text: `${a} − ${b} = ?`, read: `What is ${a} take away ${b}?`, ans, help: () => a <= 20 ? dots(a, "#7fe3ff", b) + `<div class="cl-q small">Take away the crossed-out ones. How many are left?</div>` : `<div class="cl-q small">Start at ${a} and count back ${b}.</div>` };
-  }
-}
-// times tables
-class Times extends Keypad {
-  get eyebrow() { return "CODE BREAKER"; }
-  get title() { return "TIMES TABLES"; }
-  setup() { this.rounds = [2, 3, 3, 3][this.lv - 1]; }
-  make() {
-    const T = [[2, 10], [2, 5, 10], [2, 3, 4, 5, 10], [2, 3, 4, 5, 10]][this.lv - 1], top = [5, 10, 6, 10][this.lv - 1];
-    let a, b; do { a = rnd(1, top); b = any(T); } while (this.last === a * 100 + b);
-    this.last = a * 100 + b;
-    const ans = a * b;
-    const groups = () => `<div class="cl-help">${Array.from({ length: a }, () => dots(b, "#ffd166")).join("")}</div>`;
-    return { text: `${a} × ${b} = ?`, read: `What is ${a} times ${b}?`, html: `${a} × ${b} = ?<div class="cl-q small">${a} group${a > 1 ? "s" : ""} of ${b}</div>`, ans, help: m => ans <= 30 || m > 2 ? groups() : `<div class="cl-q small">Count in ${b}s, ${a} times: ${Array.from({ length: Math.min(a, 3) }, (_, i) => (i + 1) * b).join(", ")}...</div>` };
-  }
-}
-// story sums: the spy work in numbers
-class Story extends Keypad {
-  get eyebrow() { return "FIELD REPORT"; }
-  get title() { return "WORK IT OUT"; }
-  setup() { this.rounds = this.lv >= 3 ? 2 : 1; }
-  make() {
-    const t = this.spec.things || any(this.theme.things), bx = this.spec.boxes || any(this.theme.boxes), lv = this.lv;
-    const kinds = lv === 1 ? ["add", "take"] : lv === 2 ? ["add", "take", "times"] : ["add", "take", "times", "two"];
-    let k; do { k = any(kinds); } while (k === this.lastK && kinds.length > 1); this.lastK = k;
-    let text, ans, help;
-    if (k === "add") { const a = rnd(2, lv === 1 ? 6 : 12), b = rnd(1, lv === 1 ? 10 - a : 9); ans = a + b; text = any([`Rory spots ${a} ${t} on the left and ${b} ${t} on the right. How many ${t} is that?`, `There are ${a} ${t} by the door and ${b} more round the corner. How many ${t} altogether?`]); help = () => dots(a, "#7fe3ff") + "<b style='color:#fff'>+</b>" + dots(b, "#ffd166"); }
-    else if (k === "take") { const a = rnd(lv === 1 ? 4 : 8, lv === 1 ? 10 : 20), b = rnd(1, Math.min(9, a - 1)); ans = a - b; text = any([`There were ${a} ${t}. ${b} of them went away. How many ${t} are left?`, `Rory counted ${a} ${t}. Then ${b} disappeared! How many are still there?`]); help = () => dots(a, "#7fe3ff", b); }
-    else if (k === "times") { const a = rnd(2, 5), b = any(lv === 2 ? [2, 5, 10] : [2, 3, 4, 5, 10]); ans = a * b; text = `There are ${a} ${bx}. Each one has ${b} ${t}. How many ${t} altogether?`; help = () => Array.from({ length: a }, () => dots(b, "#ffd166")).join(""); }
-    else { const a = rnd(4, 10), b = rnd(2, 8), c = rnd(1, a + b - 1); ans = a + b - c; text = `Rory found ${a} ${t}, then ${b} more. Then ${c} got away. How many are left?`; help = () => dots(a + b, "#7fe3ff", c); }
-    return { text, read: text, small: true, ans, help };
-  }
-}
-// balance scales: what does the box weigh?
-class Scale extends Keypad {
-  get eyebrow() { return "THE BALANCE"; }
-  get title() { return "WHAT DOES THE BOX WEIGH?"; }
-  setup() { this.rounds = 2; }
-  make() {
-    const lv = this.lv; let L, Rt, boxes = 1, ans;
-    if (lv === 1) { ans = rnd(1, 6); const a = rnd(1, 9 - ans); L = [a]; Rt = [ans + a]; }
-    else if (lv === 2) { ans = rnd(2, 9); const a = rnd(1, 6), s = ans + a, b = rnd(1, s - 1); L = [a]; Rt = [b, s - b]; }
-    else if (lv === 3) { ans = rnd(2, 9); boxes = 2; L = []; Rt = [ans * 2]; }
-    else { ans = rnd(2, 8); boxes = 2; const a = rnd(1, 6); L = [a]; Rt = [ans * 2 + a]; }
-    const blk = (x, y, w, lbl, box) => `<rect x="${x - w / 2}" y="${y - 30}" width="${w}" height="30" rx="5" fill="${box ? "#ffd166" : "#b8c4d8"}" stroke="#1a2440" stroke-width="2"/><text x="${x}" y="${y - 9}" font-size="18" font-weight="900" text-anchor="middle" fill="#1a2440">${lbl}</text>`;
-    const pan = (cx, items) => { const w = 40, gap = 6, tot = items.length * w + (items.length - 1) * gap; return items.map((it, i) => blk(cx - tot / 2 + w / 2 + i * (w + gap), 96, w, it.l, it.b)).join(""); };
-    const left = [...Array.from({ length: boxes }, () => ({ l: "?", b: true })), ...L.map(l => ({ l }))], right = Rt.map(l => ({ l }));
-    const svg = `<svg class="cl-svg" viewBox="0 0 320 150"><path d="M160 104 L140 146 L180 146 Z" fill="#8ea4c4"/><rect x="30" y="100" width="260" height="6" rx="3" fill="#e0e8f4"/>
-      <rect x="30" y="96" width="100" height="8" rx="4" fill="#8ea4c4"/><rect x="190" y="96" width="100" height="8" rx="4" fill="#8ea4c4"/>${pan(80, left)}${pan(240, right)}</svg>`;
-    const text = boxes === 2 ? `The two boxes weigh the same. The scale is level. What does one box weigh?` : `The scale is level. What does the box weigh?`;
-    return { text, read: text, html: svg + `<div class="cl-q small">${text}</div>`, ans, help: m => `<div class="cl-q small">${boxes === 2 ? `Both boxes together weigh ${Rt.reduce((a, b) => a + b, 0) - L.reduce((a, b) => a + b, 0)}. Share that into two equal halves.` : `The right side weighs ${Rt.reduce((a, b) => a + b, 0)}. So the box and the ${L[0]} together must weigh ${Rt.reduce((a, b) => a + b, 0)} too.`}${m > 2 ? ` It's between ${Math.max(0, ans - 2)} and ${ans + 2}.` : ""}</div>` };
-  }
-}
-// counting: tap to tick them off
-class Count extends Keypad {
-  get eyebrow() { return "SURVEILLANCE"; }
-  get title() { return "COUNT THEM"; }
-  setup() { this.rounds = 2; }
-  make() {
-    const lv = this.lv, cols = [4, 5, 5, 6][lv - 1], rows = [3, 3, 4, 4][lv - 1], n = cols * rows;
-    const kinds = shuffle(Object.keys(SHAPES)), cols6 = shuffle(Object.keys(COLOURS));
-    const want = { s: kinds[0], c: cols6[0] }, want2 = lv === 4 ? { s: kinds[1], c: cols6[1] } : null;
-    const target = rnd(3, [6, 8, 10, 7][lv - 1]), target2 = want2 ? rnd(2, 5) : 0;
-    const cells = [];
-    for (let i = 0; i < target; i++) cells.push(want);
-    for (let i = 0; i < target2; i++) cells.push(want2);
-    while (cells.length < n) {
-      // lookalikes from level 2: the same shape in another colour, or another shape in the same colour
-      const s = lv >= 2 && R(2) ? want.s : any(kinds.slice(1)), c = s === want.s ? any(cols6.slice(1)) : lv >= 2 && R(2) ? want.c : any(cols6);
-      if ((s === want.s && c === want.c) || (want2 && s === want2.s && c === want2.c)) continue;
-      cells.push({ s, c });
-    }
-    const grid = shuffle(cells), ans = target + target2;
-    const name = w => `${w.c} ${w.s}s`;
-    const text = want2 ? `How many ${name(want)} and ${name(want2)} altogether?` : `How many ${name(want)} can you see?`;
-    this.grid = grid;
-    return { text, read: text + " Tap them to tick them off.", small: true, ans, html: `<div class="cl-count" style="--n:${cols}">${grid.map((g, i) => `<button data-c="${i}">${shape(g.s, g.c)}</button>`).join("")}</div><div class="cl-q small">${text}</div>`,
-      help: m => `<div class="cl-q small">${m > 2 ? `Look for the ${want.c} ones with ${want.s === "circle" ? "no corners" : "the " + want.s + " shape"}. ` : ""}Tap each one to tick it, then count the ticks.</div>` };
-  }
-  render() { super.render(); onTap(this.body, "[data-c]", b => b.classList.toggle("tick")); }
-}
-// putting numbers in order
-class Order extends Clue {
-  get eyebrow() { return "COMBINATION"; }
-  get title() { return "OPEN THE SAFE"; }
-  setup() { this.rounds = this.lv >= 2 ? 2 : 1; }
-  make() {
-    const lv = this.lv, n = [4, 5, 5, 6][lv - 1], top = [10, 20, 99, 99][lv - 1], down = lv === 4 && this.round === 1;
-    const set = new Set(); while (set.size < n) set.add(rnd(lv >= 3 ? 10 : 1, top));
-    let nums = [...set];
-    if (lv >= 3) { const a = rnd(1, 9), b = rnd(1, 9); if (a !== b && !set.has(a * 10 + b) && !set.has(b * 10 + a)) nums = [...nums.slice(0, n - 2), a * 10 + b, b * 10 + a]; }
-    const sorted = nums.slice().sort((a, b) => down ? b - a : a - b);
-    const text = down ? "Tap the numbers from the biggest to the smallest." : "Tap the numbers from the smallest to the biggest.";
-    return { text, nums: shuffle(nums), sorted, down };
-  }
+// ------------------------------------------------------------ pick-one clues: tap the right one of a few
+// make() gives { text, html (a picture above), opts: [{ v, html, pic }], ans, tip (the hint) }
+export class Choice extends Clue {
   render() {
-    const q = this.q; this.pos = 0;
-    this.body.innerHTML = `<div class="cl-main"><div class="cl-q small">${q.text}</div><div class="cl-slots">${q.sorted.map(() => "<span></span>").join("")}</div><div class="cl-opts" style="margin-top:8px">${q.nums.map(v => `<button class="cl-tile" data-v="${v}">${v}</button>`).join("")}</div></div>`;
-    this.slots = [...this.body.querySelectorAll(".cl-slots span")];
+    const q = this.q;
+    this.body.innerHTML = `<div class="cl-main">${q.html ? `<div class="cl-pic">${q.html}</div>` : ""}<div class="cl-q small">${esc(q.text)}</div><div class="cl-opts">${q.opts.map(o => `<button class="cl-opt ${o.pic ? "pic" : ""}" data-v="${esc(o.v)}"${o.w ? ` style="width:${o.w}"` : ""}>${o.html}</button>`).join("")}</div></div>`;
     onTap(this.body, "[data-v]", b => this.tap(b));
   }
   tap(b) {
     if (this.busy) return;
-    const v = +b.dataset.v;
-    if (v !== this.q.sorted[this.pos]) { this.wrong(this.q.down ? `Look for the biggest number left.` : `Look for the smallest number left.`, b); return; }
-    this.G.sound("click"); this.slots[this.pos].textContent = v; b.classList.add("gone"); this.pos++;
-    if (this.pos >= this.q.sorted.length) this.right("The safe clicks open!");
+    if (b.dataset.v === String(this.q.ans)) { this.right(this.q.yes); return; }
+    b.classList.add("gone"); this.wrong(this.q.no || null, b);
   }
-  hint() { const b = this.body.querySelector(`[data-v="${this.q.sorted[this.pos]}"]`); if (b) b.animate([{ transform: "scale(1.2)" }, { transform: "scale(1)" }], { duration: 500, iterations: 3 }); }
-  auto() { const b = this.body.querySelector(`[data-v="${this.q.sorted[this.pos]}"]:not(.gone)`); if (b) this.tap(b); }
+  hint() { if (this.q.tip) this.say(this.q.tip, "bad"); }
+  auto() { const b = [...this.body.querySelectorAll("[data-v]")].find(x => x.dataset.v === String(this.q.ans)); if (b) this.tap(b); }
+  verify(q) { const vs = q.opts.map(o => String(o.v)); return (vs.filter(v => v === String(q.ans)).length === 1 && new Set(vs).size === vs.length && vs.length >= 2) || `options ${vs} must hold ${q.ans} once, all different`; }
 }
-// what comes next
-class Next extends Clue {
-  get eyebrow() { return "PATTERN"; }
-  get title() { return "WHAT COMES NEXT?"; }
-  setup() { this.rounds = 3; }
-  make() {
-    const lv = this.lv, r = this.round;
-    // level 1 starts with shapes, then counting on
-    if (lv === 1 && r === 0) {
-      const ks = shuffle(Object.keys(SHAPES)).slice(0, 3), cs = shuffle(Object.keys(COLOURS)).slice(0, 3), pat = any([[0, 1], [0, 0, 1], [0, 1, 2]]);
-      const seq = Array.from({ length: 6 }, (_, i) => pat[i % pat.length]), ans = pat[6 % pat.length];
-      const opts = shuffle([0, 1, 2].slice(0, Math.max(3, pat.length)));
-      return { text: "Which shape comes next?", seq: seq.map(i => shape(ks[i], cs[i], 44)), opts: opts.map(i => ({ v: i, html: shape(ks[i], cs[i], 44) })), ans, pic: true };
-    }
-    const rules = [[1, 2], [2, 5, 10], [-1, -2, 3, 10, -10], [4, -5, "x2", 3, -3]][lv - 1];
-    const step = any(rules);
-    let a = step === "x2" ? any([1, 2, 3]) : step < 0 ? rnd(-step * 5, -step * 5 + 12) : rnd(0, lv >= 3 ? 20 : 10);
-    if (step === 10 || step === -10) a = step > 0 ? rnd(1, 9) : rnd(6, 9) * 10 + rnd(0, 9);
-    const seq = [a]; for (let i = 0; i < 4; i++) seq.push(step === "x2" ? seq[i] * 2 : seq[i] + step);
-    const ans = seq.pop();
-    const d = step === "x2" ? seq[3] : Math.abs(step);
-    const opts = new Set([ans]); for (const o of shuffle([ans + 1, ans - 1, ans + d, ans - d, ans + 2, ans + 10])) { if (opts.size >= 4) break; if (o >= 0 && o !== ans) opts.add(o); }
-    return { text: "What number comes next?", seq, opts: shuffle([...opts]).map(v => ({ v, html: v })), ans, step };
-  }
-  render() {
-    const q = this.q;
-    this.body.innerHTML = `<div class="cl-main"><div class="cl-seq">${q.seq.map(s => `<div>${s}</div>`).join("")}<div class="q">?</div></div><div class="cl-q small">${q.text}</div><div class="cl-opts">${q.opts.map(o => `<button class="cl-opt ${q.pic ? "pic" : ""}" data-v="${o.v}">${o.html}</button>`).join("")}</div></div>`;
-    onTap(this.body, "[data-v]", b => this.tap(b));
-  }
-  tap(b) { if (this.busy) return; if (+b.dataset.v === this.q.ans) this.right(); else { b.classList.add("gone"); this.wrong("Look at how it changes each time.", b); } }
-  hint() {
-    const q = this.q; if (q.pic) { this.say("Say the pattern out loud. Which one comes after?", "bad"); return; }
-    this.say(q.step === "x2" ? "Each number is double the one before." : q.step > 0 ? `Each number is ${q.step} more than the one before.` : `Each number is ${-q.step} less than the one before.`, "bad");
-  }
-  auto() { const b = this.body.querySelector(`[data-v="${this.q.ans}"]`); if (b) this.tap(b); }
-}
-// telling the time
-class Clock extends Clue {
-  get eyebrow() { return "RENDEZVOUS"; }
-  get title() { return "WHICH CLOCK?"; }
-  setup() { this.rounds = 2; }
-  make() {
-    const lv = this.lv, mins = [[0], [0, 30], [0, 30, 15], [0, 30, 15, 45]][lv - 1];
-    const h = rnd(1, 12), m = any(mins);
-    const say = m === 0 ? `${h} o'clock` : m === 30 ? `half past ${h}` : m === 15 ? `quarter past ${h}` : `quarter to ${h % 12 + 1}`;
-    const key = (hh, mm) => hh * 60 + mm, opts = new Map([[key(h, m), { h, m }]]);
-    const cand = shuffle([{ h: h % 12 + 1, m }, { h: (h + 10) % 12 + 1, m }, { h: m / 5 || 12, m: (h % 12) * 5 }, ...mins.filter(x => x !== m).map(x => ({ h, m: x })), { h: (h + 5) % 12 + 1, m }]);
-    for (const c of cand) { if (opts.size >= 4) break; const k = key(c.h, c.m); if (!opts.has(k)) opts.set(k, c); }
-    return { text: `The meeting is at ${say}. Which clock says ${say}?`, want: key(h, m), opts: shuffle([...opts.values()]), say, h, m };
-  }
-  face({ h, m }) {
-    const ha = ((h % 12) + m / 60) * 30 * Math.PI / 180, ma = m * 6 * Math.PI / 180;
-    const nums = Array.from({ length: 12 }, (_, i) => { const a = (i + 1) * 30 * Math.PI / 180; return `<text x="${50 + Math.sin(a) * 36}" y="${50 - Math.cos(a) * 36 + 4}" font-size="11" font-weight="900" text-anchor="middle" fill="#1a2440">${i + 1}</text>`; }).join("");
-    return `<svg viewBox="0 0 100 100" width="100%"><circle cx="50" cy="50" r="46" fill="#fff" stroke="#1a2440" stroke-width="4"/>${nums}
-      <line x1="50" y1="50" x2="${50 + Math.sin(ha) * 22}" y2="${50 - Math.cos(ha) * 22}" stroke="#1a2440" stroke-width="6" stroke-linecap="round"/>
-      <line x1="50" y1="50" x2="${50 + Math.sin(ma) * 34}" y2="${50 - Math.cos(ma) * 34}" stroke="#d83a3a" stroke-width="3.5" stroke-linecap="round"/><circle cx="50" cy="50" r="3.5" fill="#1a2440"/></svg>`;
-  }
-  render() {
-    const q = this.q;
-    this.body.innerHTML = `<div class="cl-main"><div class="cl-q small">${q.text}</div><div class="cl-opts">${q.opts.map(o => `<button class="cl-opt pic" style="width:clamp(78px,20vmin,130px)" data-v="${o.h * 60 + o.m}">${this.face(o)}</button>`).join("")}</div></div>`;
-    onTap(this.body, "[data-v]", b => this.tap(b));
-  }
-  tap(b) { if (this.busy) return; if (+b.dataset.v === this.q.want) this.right(); else { b.classList.add("gone"); this.wrong(null, b); this.say(this.miss >= 2 ? this.tip() : "Not that one. Look at both hands!", "bad"); } }
-  tip() { const { m, h } = this.q; return m === 0 ? `The long red hand points straight up at 12. The short hand points at ${h}.` : m === 30 ? `The long red hand points down at 6. The short hand is just past ${h}.` : m === 15 ? `The long red hand points at 3. The short hand is just past ${h}.` : `The long red hand points at 9. The short hand is nearly at ${h % 12 + 1}.`; }
-  auto() { const b = this.body.querySelector(`[data-v="${this.q.want}"]`); if (b) this.tap(b); }
-}
-// coins: pay exactly
-const COIN = { 1: "cu", 2: "cu", 5: "ag", 10: "ag", 20: "ag", 50: "au" };
-class Coins extends Clue {
-  get eyebrow() { return "PAY THE CONTACT"; }
-  get title() { return "EXACTLY RIGHT"; }
-  setup() { this.rounds = 2; }
-  make() {
-    const lv = this.lv, set = [[1, 2, 5], [1, 2, 5, 10], [1, 2, 5, 10, 20], [1, 2, 5, 10, 20, 50]][lv - 1], amt = rnd(...[[3, 10], [11, 20], [21, 50], [35, 99]][lv - 1]);
-    const text = `${any(["The ticket costs", "The map costs", "The boat ride costs", "The secret file costs"])} ${amt} coins. Tap coins to pay exactly ${amt}.`;
-    return { text, set, amt };
-  }
-  render() {
-    const q = this.q; this.paid = [];
-    this.body.innerHTML = `<div class="cl-main"><div class="cl-q small">${q.text}</div><div class="cl-coins">${q.set.map(v => `<button class="cl-coin ${COIN[v]}" data-v="${v}">${v}</button>`).join("")}</div>
-      <div class="cl-purse"></div><div class="cl-total"></div></div>`;
-    this.purse = this.body.querySelector(".cl-purse"); this.totEl = this.body.querySelector(".cl-total");
-    onTap(this.body, ".cl-coins [data-v]", b => this.add(+b.dataset.v));
-    this.draw();
-  }
-  get total() { return this.paid.reduce((a, b) => a + b, 0); }
-  draw() {
-    this.purse.innerHTML = this.paid.length ? this.paid.map((v, i) => `<button class="cl-coin ${COIN[v]}" data-i="${i}">${v}</button>`).join("") : `<span style="color:var(--dim,#8ea4c4);font-weight:800">Your coins go here</span>`;
-    onTap(this.purse, "[data-i]", b => { if (this.busy) return; this.paid.splice(+b.dataset.i, 1); this.G.sound("click"); this.draw(); });
-    this.totEl.textContent = `Paid ${this.total} of ${this.q.amt}`;
-  }
-  add(v) {
-    if (this.busy) return;
-    this.paid.push(v); this.G.sound("pop"); this.draw();
-    if (this.total === this.q.amt) this.right("Paid! Exactly right.");
-    else if (this.total > this.q.amt) this.wrong(`That's ${this.total}: too much! Tap a coin in the purse to take it back.`, this.purse);
-  }
-  hint() { const left = this.q.amt - this.total; if (left > 0) this.say(`You need ${left} more. Which coin is ${left} or less?`, "bad"); }
-  auto() { const left = this.q.amt - this.total; if (left < 0) { this.paid.pop(); this.draw(); return; } const v = this.q.set.filter(c => c <= left).pop(); if (v) this.add(v); }
-}
-// the spy map
-class MapClue extends Clue {
+
+// adding up
+export class MapClue extends Clue {
+  verify(q) { return (q.ex >= 0 && q.ey >= 0 && q.ex < this.n && q.ey < this.n && !(q.ex === q.sx && q.ey === q.sy)) || "the hideout is off the map"; }
   get eyebrow() { return "SPY MAP"; }
   get title() { return "FIND THE HIDEOUT"; }
   setup() { this.rounds = 2; this.n = this.lv >= 3 ? 6 : 5; }
@@ -447,9 +246,9 @@ class MapClue extends Clue {
     return this.make();
   }
   render() {
-    const q = this.q, n = this.n, L = "ABCDEF";
+    const q = this.q, n = this.n, L = "ABCDEF", m = this.words.map || {}, tile = m.tile ? ` style="background:${m.tile};color:${m.ink || "#fff"}"` : "";
     let g = `<i></i>${Array.from({ length: n }, (_, i) => `<i>${L[i]}</i>`).join("")}`;
-    for (let y = 0; y < n; y++) { g += `<i>${y + 1}</i>`; for (let x = 0; x < n; x++) g += `<button data-x="${x}" data-y="${y}">${this.lv < 4 && x === q.sx && y === q.sy ? "★" : ""}</button>`; }
+    for (let y = 0; y < n; y++) { g += `<i>${y + 1}</i>`; for (let x = 0; x < n; x++) g += `<button data-x="${x}" data-y="${y}"${tile}>${this.lv < 4 && x === q.sx && y === q.sy ? (m.start || "★") : ""}</button>`; }
     this.body.innerHTML = `<div class="cl-grid"><div class="cl-main" style="max-width:24em"><div class="cl-q small">${q.text}</div>${q.arrows ? `<div class="cl-q" style="color:var(--gold,#ffd166)">${q.arrows}</div>` : ""}</div><div class="cl-side"><div class="cl-map" style="--n:${n}">${g}</div></div></div>`;
     onTap(this.body, "[data-x]", b => this.tap(b));
   }
@@ -465,7 +264,8 @@ class MapClue extends Clue {
 }
 // the code: numbers (A=1) or symbols, and a key to read it with
 const SYM = [["▲", "#e03a3a"], ["●", "#2a6ad8"], ["■", "#2aa84a"], ["★", "#d8a020"], ["♥", "#d83a8a"], ["◆", "#9a4ad8"], ["✚", "#ff8a1a"], ["☾", "#2ab8c8"], ["▼", "#6a8a2a"], ["◐", "#8a5a2a"], ["✦", "#d84a2a"], ["⬟", "#4a6a9a"]];
-class Cipher extends Clue {
+export class Cipher extends Clue {
+  verify(q) { return ([...q.word].every(ch => q.tiles.includes(ch)) && (!q.symbols || [...q.word].every(ch => q.code[ch])) && (!q.symbols || new Set(Object.values(q.code).map(g => g[0])).size === Object.keys(q.code).length) && q.word.length >= 2) || "the code is missing letters or repeats a symbol"; }
   get eyebrow() { return "CODED NOTE"; }
   get title() { return "DECODE IT"; }
   make() {
@@ -475,7 +275,8 @@ class Cipher extends Clue {
     const letters = [...new Set(word)];
     const decoys = shuffle("ABCDEFGHIJKLMNOPRSTUVWY".split("").filter(c => !letters.includes(c))).slice(0, Math.max(2, 8 - letters.length));
     const keyLetters = symbols ? shuffle([...letters, ...decoys.slice(0, Math.max(0, 10 - letters.length))]) : null;
-    const code = symbols ? Object.fromEntries(keyLetters.map((c, i) => [c, SYM[i % SYM.length]])) : null;
+    const glyphs = this.words.glyphs || SYM;
+    const code = symbols ? Object.fromEntries(keyLetters.map((c, i) => [c, glyphs[i % glyphs.length]])) : null;
     const text = symbols ? "Use the key to swap each symbol for its letter." : "Each number is a letter: A is 1, B is 2, C is 3... Use the key to read the note.";
     return { text, word, symbols, code, tiles: shuffle([...letters, ...decoys]), keyLetters };
   }
@@ -505,7 +306,8 @@ const HAIR = { black: "#1e1a18", brown: "#6b4423", blonde: "#e8c46a", red: "#c85
 const COAT = { red: "#d83a3a", blue: "#2a6ad8", green: "#2aa84a", yellow: "#f0c020" };
 const SKIN = ["#f3cfae", "#e0b890", "#c89a70", "#8a5a3a", "#f0d8c0"];
 const NAMES = ["Max", "Ivy", "Sam", "Nell", "Otto", "Ruby", "Jay", "Mo", "Lena", "Finn", "Zara", "Theo", "Kit", "Ada", "Leo", "Bea"];
-class Suspect extends Clue {
+export class Suspect extends Clue {
+  verify(q) { const fit = q.people.map((p, i) => q.clues.every(cl => cl.ok(p)) ? i : -1).filter(i => i >= 0); return (fit.length === 1 && fit[0] === q.spy) || `suspects fitting every clue: ${fit}`; }
   get eyebrow() { return "LINE-UP"; }
   get title() { return "WHO IS THE SPY?"; }
   make() {
@@ -569,11 +371,12 @@ class Suspect extends Clue {
   auto() { const b = this.body.querySelector(`[data-p="${this.q.spy}"]`); if (b) this.tap(this.q.spy, b); }
 }
 
-export const KINDS = { sum: Sum, minus: Minus, times: Times, story: Story, scale: Scale, count: Count, order: Order, next: Next, clock: Clock, coins: Coins, map: MapClue, cipher: Cipher, suspect: Suspect };
+// the three every game has; each game adds its own (puzzles.js) through opts.kinds
+export const KINDS = { suspect: Suspect, cipher: Cipher, map: MapClue };
 
 // a clue on its own (the tests, and anything that wants a puzzle outside a mission)
-export function openClue(G, spec, lv, { voice, theme } = {}, done) {
-  const K = KINDS[spec.p]; if (!K) { done && done({ mistakes: 0 }); return null; }
+export function openClue(G, spec, lv, { voice, theme, kinds } = {}, done) {
+  const K = (kinds && kinds[spec.p]) || KINDS[spec.p]; if (!K) { done && done({ mistakes: 0 }); return null; }
   const c = new K(G, spec, spec.lv || lv, voice);
   c.theme = { things: ["guards", "drones", "cameras"], boxes: ["crates", "vans", "boxes"], words: ["SPY", "CODE", "MAP", "KEY", "SAFE"], ...(theme || {}) };
   c.open(done);

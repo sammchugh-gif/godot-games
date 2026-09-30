@@ -22,6 +22,7 @@ import "./missions4.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
 import { installClues } from "./clues.js";
 import { CLUES, THEME } from "./cluemap.js";
+import { KINDS as PUZZLES } from "./puzzles.js";
 import { build as buildDingle } from "./levels/dingle.js";
 import { build as buildLisbon } from "./levels/lisbon.js";
 import { build as buildGuatape } from "./levels/guatape.js";
@@ -343,7 +344,7 @@ G.onMissionLose = (m, why) => {
   });
 };
 // the spy clues: most missions end with a puzzle to crack before MISSION COMPLETE (cluemap.js)
-installClues(G, CLUES, { voice: CHARS.pip.voice, theme: THEME, airFull: () => 1 });
+installClues(G, CLUES, { voice: CHARS.pip.voice, theme: THEME, kinds: PUZZLES, airFull: () => 1 });
 function resetPlayer() { const b = G.beacons[m_id()]; if (b) G.player.teleport(b.position.x, b.position.y + 0.1, b.position.z + 2.5); G.player.air = 1; G.player.noAir = false; }
 function m_id() { const c = currentMission(); return c ? c.id : null; }
 function nextPlace() {

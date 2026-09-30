@@ -14,10 +14,14 @@ const inst = {};
 export const Audio = {
   music: localStorage.getItem("rory23.music") !== "0",
   sfx: localStorage.getItem("rory23.sfx") !== "0",
-  async start() {
+  // Called from every tap and key. iOS only lets sound start from a finished tap, and a start
+  // asked for too early (as the finger goes down) can be left hanging, never refused and never
+  // finished: every later tap used to wait for that one, so the music and the sound effects
+  // could stay silent until the game was reloaded. Now every tap asks again, straight away,
+  // and the band is built the moment the sound is running.
+  start() {
     const Tone = T();
-    if (!Tone || ready || this.starting) return;
-    this.starting = true;
+    if (!Tone) return;
     // iOS mutes Web Audio (the music and every sound effect) when the phone or tablet is on
     // silent, but not media like the recorded voices: so the voices played and nothing else did.
     // Asking for a media session plays it all the same way. (Before iOS 17 there's no asking, but
@@ -32,8 +36,16 @@ export const Audio = {
     // a roomier audio buffer than Tone's default, so the sound doesn't crackle when the 3D is busy
     // (made inside the tap, which iOS requires)
     if (!this.ctxMade) { this.ctxMade = true; try { Tone.setContext(new Tone.Context({ latencyHint: "balanced", lookAhead: 0.15 })); } catch (e) { /* keep Tone's own */ } }
-    try { await Tone.start(); } catch (e) { this.starting = false; return; }
-    if (Tone.getContext().state !== "running") { this.starting = false; return; }
+    const raw = Tone.getContext().rawContext;
+    if (!this.watching) { this.watching = true; try { raw.addEventListener("statechange", () => { if (raw.state === "running") this.build(); }); } catch (e) { /* the next tap builds it */ } }
+    // (also after a phone call or the tablet sleeping, when iOS has stopped the sound)
+    if (raw.state !== "running") { try { const p = raw.resume(); if (p && p.then) p.then(() => this.build(), () => { /* the next tap tries again */ }); } catch (e) { /* the next tap tries again */ } }
+    else this.build();
+  },
+  // the band and the effects, made once, as soon as the sound is running
+  build() {
+    const Tone = T();
+    if (ready || !Tone || Tone.getContext().rawContext.state !== "running") return;
     ready = true;
     // Tablet speakers can't play deep bass: they buzz. So nothing goes below about 60 Hz (a steep
     // filter on everything), the bass plucks rather than drones, there is no held sawtooth

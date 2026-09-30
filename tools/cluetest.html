@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clue test</title>
+<style>html, body { margin: 0; height: 100%; background: #243a5a; font-family: system-ui, sans-serif; } #ui { position: fixed; inset: 0; }</style>
+<div id="ui"></div>
+<script type="module">
+// Every clue of one Agent Rory game (?game=Game20), for tools/cluetest.mjs: it makes
+// hundreds of each kind at each level and asks verify() whether each has one answer,
+// then opens them and has the autopilot solve them through the buttons.
+const game = new URLSearchParams(location.search).get("game");
+const css = document.createElement("link"); css.rel = "stylesheet"; css.href = `../${game}/css/game.css`; document.head.appendChild(css);
+const core = await import(`../${game}/js/clues.js`), own = await import(`../${game}/js/puzzles.js`), map = await import(`../${game}/js/cluemap.js`);
+const KINDS = { ...core.KINDS, ...own.KINDS }, THEME = map.THEME || {};
+const sounds = [];
+const G = { sound: n => sounds.push(n), hud: { set() {} }, dialogue: { show: (l, cb) => cb() } };
+window.__kinds = Object.keys(KINDS);
+window.__used = Object.values(map.CLUES).map(c => c.p);
+window.__check = (kind, lv, n) => {
+  const bad = []; const K = KINDS[kind];
+  for (let i = 0; i < n; i++) {
+    const c = new K(G, { p: kind }, lv); c.theme = THEME; if (c.setup) c.setup();
+    for (c.round = 0; c.round < c.rounds; c.round++) {
+      let q, r;
+      try { q = c.make(); c.q = q; r = c.verify(q); } catch (e) { r = "threw " + e; }
+      if (r !== true) { bad.push(`${kind} lv${lv}: ${r} :: ${JSON.stringify(q || {}).slice(0, 220)}`); break; }
+    }
+  }
+  return bad;
+};
+window.__open = (kind, lv) => { sounds.length = 0; window.__clue = core.openClue(G, { p: kind, lv }, lv, { theme: THEME, kinds: own.KINDS }, () => {}); };
+window.__ready = true;
+</script>
