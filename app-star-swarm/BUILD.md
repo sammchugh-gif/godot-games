@@ -21,7 +21,7 @@ native projects, and `cap open` opens Xcode or Android Studio.
 
 1. **Signing & Capabilities:**
    - choose your team;
-   - check that the bundle id is `io.github.sammchugh.starswarm`, or your own.
+   - check that the bundle id is `io.github.sammchugh.shardswarm`, or your own.
      If you change it, change `appId` in `capacitor.config.json` to match.
 2. **+ Capability → Game Center.**
 3. **+ Capability → In-App Purchase.**
@@ -37,7 +37,7 @@ native projects, and `cap open` opens Xcode or Android Studio.
 2. **Achievements and leaderboards:** create them with the ids in
    `Game24/STORE.md`. Play Games generates its own ids, so map them in
    `BOARDS` and `ACH_PREFIX` in `index.html` if they differ from Apple's.
-3. **The one-time product:** create `io.github.sammchugh.starswarm.full`.
+3. **The one-time product:** create `io.github.sammchugh.shardswarm.full`.
 
 ## The plugins, and what the game calls
 

@@ -1,21 +1,19 @@
-# Star Swarm, store edition: getting it onto the App Store and Google Play
+# Shardswarm: getting it onto the App Store and Google Play
 
 Game24 is a copy of Star Swarm (Game10) prepared for sale. The family game is
 unchanged. This page lists what the stores need, what is already done, and
 what only a person can do.
 
-## Decisions still open
+## Decisions
 
-1. **The name.** "Star Swarm" is already taken:
-   - a Google Play game called Star Swarm (`com.Temenoi.StarSwarm`);
-   - Oxide Games' well-known *Star Swarm* engine benchmark on Steam.
-
-   A web search found no store listings under **Warpfall**, **Rockshadow**,
-   **Rockshade** or **Warpwake**. The research proxy blocked the stores and the
-   trademark office, so search both stores on a phone and check
-   <https://tmsearch.uspto.gov> before choosing. Changing the name takes two edits:
-   - `BRAND.game` near the top of `Game24/index.html`;
-   - `appName` in `app-star-swarm/capacitor.config.json`.
+1. **The name: Shardswarm (decided).** "Star Swarm" was taken (a Google Play
+   game, `com.Temenoi.StarSwarm`, and Oxide Games' Steam benchmark). A web
+   search found no game called Shardswarm; the nearest names are *Shard Squad*
+   (Xbox) and *Shardpunk*. **Before paying for anything, search the name by
+   hand in both stores and at <https://tmsearch.uspto.gov>.** Store listing
+   name: "Shardswarm: Space Survivor" (26 of Apple's 30 characters). The
+   name lives in `BRAND.game` in `Game24/index.html` and `appName` in
+   `app-star-swarm/capacitor.config.json`.
 
 2. **The age rating: 13+ (decided).** Apple now rates 4+, 9+, 13+, 16+ and
    18+. 9+ allows only *infrequent* cartoon or fantasy violence, and the ship
@@ -49,7 +47,7 @@ what only a person can do.
 - **No ads, no gem packs, no subscription.**
 - **Restore Purchase** is on both the unlock screen and the settings screen, as
   Apple guideline 3.1.1 expects.
-- **Product id:** `io.github.sammchugh.starswarm.full` (`BRAND.full`). Create it
+- **Product id:** `io.github.sammchugh.shardswarm.full` (`BRAND.full`). Create it
   in App Store Connect and in the Play Console as a non-consumable / one-time
   product with exactly this id.
 
@@ -57,8 +55,8 @@ what only a person can do.
 
 | Item | Value |
 | --- | --- |
-| Bundle id | `io.github.sammchugh.starswarm` |
-| In-app purchase | non-consumable, id `io.github.sammchugh.starswarm.full` |
+| Bundle id | `io.github.sammchugh.shardswarm` |
+| In-app purchase | non-consumable, id `io.github.sammchugh.shardswarm.full` |
 | Leaderboard | `ss.campaign`: campaign best score, high to low |
 | Leaderboard | `ss.quick`: quick run best score |
 | Leaderboard | `ss.endless.sector`: furthest endless sector |
@@ -186,7 +184,6 @@ the rest put together.
 ## What needs a person
 
 - Apple Developer ($99/yr) and Google Play Console ($25 once) accounts.
-- The name.
 - The App Store Connect and Play Console items in the table above.
 - Signing, building and uploading on a Mac: `app-star-swarm/BUILD.md`.
 - An app icon of its own. The one in `app/assets/` is the Arcade icon.

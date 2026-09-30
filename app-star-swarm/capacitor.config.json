@@ -1,6 +1,6 @@
 {
-  "appId": "io.github.sammchugh.starswarm",
-  "appName": "Star Swarm",
+  "appId": "io.github.sammchugh.shardswarm",
+  "appName": "Shardswarm",
   "webDir": "www",
   "ios": {
     "contentInset": "never",

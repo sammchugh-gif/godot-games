@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Star Swarm</string>
-    <string name="title_activity_main">Star Swarm</string>
-    <string name="package_name">io.github.sammchugh.starswarm</string>
-    <string name="custom_url_scheme">io.github.sammchugh.starswarm</string>
+    <string name="app_name">Shardswarm</string>
+    <string name="title_activity_main">Shardswarm</string>
+    <string name="package_name">io.github.sammchugh.shardswarm</string>
+    <string name="custom_url_scheme">io.github.sammchugh.shardswarm</string>
 </resources>

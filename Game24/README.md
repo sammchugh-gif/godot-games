@@ -1,7 +1,7 @@
-# Star Swarm, store edition
+# Shardswarm (Star Swarm, store edition)
 
 Game 24 is a copy of Star Swarm (Game 10) being prepared for the App Store and
-Google Play. **Game 10 is unchanged.** This copy is where the store work
+Google Play under the name **Shardswarm**. **Game 10 is unchanged.** This copy is where the store work
 happens:
 - `Game24/STORE.md`: the decisions still open, and the store checklist.
 - `app-star-swarm/BUILD.md`: building the app.

@@ -8,7 +8,7 @@
      shows at the bottom. The default style gives a viewport that matches
      the web view, and the status bar gets its own strip. -->
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Star Swarm</title>
+<title>Shardswarm</title>
 <style>
 html,body{margin:0;padding:0;height:100%;background:#050614;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
@@ -18,7 +18,7 @@ body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;tou
 </head><body><canvas id="c"></canvas>
 <script>
 "use strict";
-// ============================================================ Star Swarm
+// ============================================================ Shardswarm
 // A one-thumb space survivor. Fly, your weapons fire themselves, mine the
 // asteroids, level up, and fight through six five-minute sectors.
 // The store edition: a separate copy of the family game, refined for the
@@ -92,9 +92,9 @@ const BOSS_ORDER=["mother","kraken","warlord"];
 // for what each one is and how to roll it back entirely.
 const FEATURES={evolve:true,modes:true,shop:true};
 // ============================================================ store edition
-// The name on the box. The game's title is a working one until the store
-// search in Game24/STORE.md settles it; the studio is a placeholder too.
-const BRAND={game:"STAR SWARM",studio:"Much More Studios",full:"io.github.sammchugh.starswarm.full"};
+// The name on the box: Shardswarm, the store name for Star Swarm (which was
+// taken), by Much More Studios. See Game24/STORE.md.
+const BRAND={game:"SHARDSWARM",studio:"Much More Studios",full:"io.github.sammchugh.shardswarm.full"};
 // Inside the iOS or Android app, Capacitor is on the page and the store's
 // rules apply: the demo gate, the purchase, Game Center or Play Games. On the
 // web the family keeps the whole game, and ?demo=1 shows the store build.
