@@ -1444,7 +1444,8 @@ addEventListener('mousemove',e=>{ if(mouseDown){ mouseDX+=e.movementX||0; mouseD
 /* ----------------------------------------------------------------- audio -- */
 let actx=null, muted=false, mg=null;
 function audioInit(){
-  if(actx){ if(actx.state==='suspended') actx.resume(); return; }
+  // (any state but running: iOS stops the sound for a phone call, or when the phone sleeps)
+  if(actx){ if(actx.state!=='running'&&actx.state!=='closed'){ try{ const p=actx.resume(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} } return; }
   const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
   actx=new AC(); mg=actx.createGain(); mg.gain.value=.42; mg.connect(actx.destination);
 }
@@ -2061,6 +2062,9 @@ function onTouchMove(e){
   }
 }
 function onTouchEnd(e){
+  // iPhone and iPad Safari only let sound start from a finished tap (the finger lifting), and the
+  // touch handlers stop the tap turning into a click: so this is where the sound gets its start
+  audioInit();
   for(let i=0;i<e.changedTouches.length;i++){
     const id=e.changedTouches[i].identifier;
     if(id===STICK.id) stickRelease();
