@@ -1,0 +1,21 @@
+node_modules/
+
+# Built from docs/ by tools/build-app.mjs, so it is output, not source.
+# `npm run build` remakes it; never edit a game in here.
+www/
+ios/App/App/public/
+
+# Xcode's own scratch
+ios/App/build/
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+DerivedData/
+*.xcuserstate
+
+# Android build output
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/app/src/main/assets/public/

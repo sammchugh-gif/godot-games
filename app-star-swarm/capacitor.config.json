@@ -1,0 +1,17 @@
+{
+  "appId": "io.github.sammchugh.starswarm",
+  "appName": "Star Swarm",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#050614",
+    "scrollEnabled": false,
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "android": {
+    "backgroundColor": "#050614"
+  },
+  "server": {
+    "iosScheme": "capacitor"
+  }
+}

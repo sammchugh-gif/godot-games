@@ -14,7 +14,8 @@
      options: --dif easy|medium|hard  --mode campaign|endless|daily
               --twist gems|glass|noshield|tide|rush|turbo|loot (daily only)
               --runs N  --par N (pages at once, default 3)  --maxmin N (endless cap)
-              --policy weapons|balanced  --json out.jsonl                    */
+              --policy weapons|balanced  --json out.jsonl
+              --slug star-swarm|star-swarm-plus (the store edition)          */
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -34,6 +35,8 @@ const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/pn
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const DIF = arg('dif', 'easy'), MODE = arg('mode', 'campaign'), TWIST = arg('twist', ''), RUNS = +arg('runs', 4);
+const SLUG = arg('slug', 'star-swarm'), PLUS = SLUG === 'star-swarm-plus', NS = PLUS ? 'ssplus.' : 'starswarm.';
+const MODES = PLUS ? ['campaign', 'quick', 'endless', 'daily'] : ['campaign', 'endless', 'daily'];
 const PAR = +arg('par', 3), MAXMIN = +arg('maxmin', 45), POLICY = arg('policy', 'weapons'), JSONL = arg('json', '');
 
 const srv = await new Promise(r => {
@@ -108,11 +111,13 @@ const worker = async () => {
     const i = jobs.shift();
     const ctx = await browser.newContext({ viewport: { width: 430, height: 932 } });
     const pg = await ctx.newPage(); const errs = []; pg.on('pageerror', e => errs.push(e.message));
-    await pg.goto(`http://127.0.0.1:${PORT}/docs/star-swarm/`, { waitUntil: 'load', timeout: 20000 });
+    await pg.goto(`http://127.0.0.1:${PORT}/docs/${SLUG}/`, { waitUntil: 'load', timeout: 20000 });
     await sleep(800);
-    /* difficulty is a title choice; set it through the store the title reads */
-    await pg.evaluate(`window.__setDif = i => { localStorage.setItem('starswarm.diff', JSON.stringify(i)); }`);
-    await pg.evaluate(`localStorage.setItem('starswarm.diff', JSON.stringify(${['easy', 'medium', 'hard'].indexOf(DIF)})); localStorage.setItem('starswarm.mode', JSON.stringify(${['campaign', 'endless', 'daily'].indexOf(MODE)}));`);
+    /* difficulty is a title choice; set it through the store the title reads.
+       The store edition hides the choice until a run has been played, and
+       coaches the first one, so the bot arrives as a returning player. */
+    await pg.evaluate(`localStorage.setItem('${NS}diff', JSON.stringify(${['easy', 'medium', 'hard'].indexOf(DIF)})); localStorage.setItem('${NS}mode', JSON.stringify(${MODES.indexOf(MODE)}));`);
+    if (PLUS) await pg.evaluate(`localStorage.setItem('ssplus.stats', JSON.stringify({ runs: 1 })); localStorage.setItem('ssplus.coached', 'true');`);
     await pg.reload({ waitUntil: 'load' }); await sleep(800);
     const t0 = Date.now();
     let r;

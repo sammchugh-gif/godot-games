@@ -1,0 +1,24 @@
+{
+  "name": "star-swarm-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The store edition of Star Swarm as a standalone iOS and Android app.",
+  "scripts": {
+    "build": "node ../tools/build-app-plus.mjs",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "android": "npm run build && npx cap sync android && npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/preferences": "8.0.1",
+    "@capgo/native-purchases": "8.8.1",
+    "@idleflowgames/capacitor-play-games": "0.3.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "3.0.5",
+    "@capacitor/cli": "8.5.2"
+  }
+}

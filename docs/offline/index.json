@@ -111,9 +111,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 2982398,
+   "bytes": 2983051,
    "n": 30,
-   "hash": "3d2a5e7d5655"
+   "hash": "4efa6b783c98"
   },
   "slime-storm": {
    "bytes": 74304,
@@ -139,6 +139,11 @@
    "bytes": 260620,
    "n": 1,
    "hash": "61b906807dd0"
+  },
+  "star-swarm-plus": {
+   "bytes": 299447,
+   "n": 2,
+   "hash": "6efe7393aeed"
   },
   "super-strikers": {
    "bytes": 63758,
