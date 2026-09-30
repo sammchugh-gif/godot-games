@@ -101,7 +101,9 @@ const BRAND={game:"STAR SWARM",studio:"Much More Studios",full:"io.github.sammch
 const CAP=window.Capacitor||null;
 const NATIVE_APP=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
 const PLATFORM=CAP&&CAP.getPlatform?CAP.getPlatform():"web";
-const DEMO_BUILD=NATIVE_APP||/[?&]demo=1(&|$)/.test(location.search);
+// A preview page (the private test link) sets __STORE_PREVIEW, since it
+// cannot carry ?demo=1 on its address.
+const DEMO_BUILD=NATIVE_APP||/[?&]demo=1(&|$)/.test(location.search)||window.__STORE_PREVIEW===true;
 function capPlugin(n){try{return(CAP&&CAP.Plugins&&CAP.Plugins[n])||null}catch(e){return null}}
 const rnd=(a,b)=>a+Math.random()*(b-a),rint=(a,b)=>Math.floor(rnd(a,b+1)),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
 // The old mix never returned a value above 0.5, so anything gated behind a
@@ -837,8 +839,9 @@ const IAP={price:"",busy:false,said:"",saidT:0,
   try{const r=await P.getPurchases({productType:"inapp",onlyCurrentEntitlements:true});
    if(r&&(r.purchases||[]).some(t=>t.productIdentifier===BRAND.full))this.grant()}catch(e){}},
  async buy(){if(this.busy||fullGame)return;const P=this.plugin();
-  if(!P){// the web preview of the store build: a pretend purchase, clearly labelled
-   if(confirm("Test build: unlock the full game? (No payment is taken on the web.)"))this.grant();return}
+  if(!P){// the web preview of the store build: a pretend purchase, clearly
+   // labelled on the button and after it. (Some viewers never show confirm().)
+   this.grant();this.say("TEST BUILD - UNLOCKED, NO PAYMENT TAKEN");return}
   this.busy=true;this.say("TALKING TO THE STORE…");
   try{const t=await P.purchaseProduct({productIdentifier:BRAND.full,productType:"inapp"});
    if(t&&(t.productIdentifier===BRAND.full||t.transactionId)){this.grant();this.say("")}
@@ -3618,7 +3621,8 @@ function drawSettings(){cx.save();cx.scale(DPR,DPR);const f=menuFrame("SETTINGS"
   else btn(bx,by,cw,bh2,opts[SETTINGS[key]]||"NORMAL",()=>setSetting(key,(SETTINGS[key]+1)%opts.length),{size:fz})});
  // the small print: credits, privacy, and the purchase restore Apple asks for
  const extra=[["CREDITS",()=>{creditsT=0;scene="credits"}],["PRIVACY",()=>{scene="privacy"}]];
- if(DEMO_BUILD)extra.push([fullGame?"UNLOCKED ✓":"RESTORE",()=>{if(!fullGame)IAP.restore()}]);
+ // on the web preview a tester can lock it again, to play the demo through twice
+ if(DEMO_BUILD)extra.push(fullGame&&!IAP.plugin()?["RELOCK (TEST)",()=>{fullGame=false;store.set("full",false);IAP.say("LOCKED AGAIN - DEMO MODE")}]:[fullGame?"UNLOCKED ✓":"RESTORE",()=>{if(!fullGame)IAP.restore()}]);
  const ey=f.top+rows.length*rh+4,ew=Math.min(170,(f.rw-(extra.length-1)*8)/extra.length);
  extra.forEach(([l,cb],i)=>btn(W/2+(i-(extra.length-1)/2)*(ew+8)-ew/2,ey,ew,f.bh-6,l,cb,{size:Math.min(15,f.bh*0.34),color:"#ccd6e4"}));
  if(IAP.saidT>0)textFit(IAP.said,W/2,ey+f.bh+6,13,"#ffe060",W-40);
@@ -3667,7 +3671,7 @@ function drawUnlock(dt){cx.save();cx.scale(DPR,DPR);const fromRun=unlockFrom==="
   text("◆",x0+16,y+7+fz/2,fz,"#ffe060");let ly=y+7+fz/2;for(const s2 of ls){textFit(s2,x0+32,ly,fz,"#dde",f.rw-44,"left");ly+=fz+5}y+=ls.length*(fz+5)+20}
  const bw=Math.min(340,f.rw),bh=clamp(H*0.085,46,62);let by=Math.max(y+8,f.bot-bh*2-24);
  if(fullGame){btn(W/2-bw/2,by,bw,bh,fromRun?"FLY ON TO SECTOR "+(G.sector+1):"BACK TO THE HANGAR",()=>{if(fromRun){G.demoHold=false;scene="play";musicStart();startWarp()}else closeMenu()},{launch:true,size:Math.min(22,bh*0.4)})}
- else{btn(W/2-bw/2,by,bw,bh,IAP.busy?"PLEASE WAIT…":"UNLOCK FULL GAME"+(IAP.price?"  ·  "+IAP.price:""),()=>IAP.buy(),{launch:true,size:Math.min(22,bh*0.4)});
+ else{btn(W/2-bw/2,by,bw,bh,IAP.busy?"PLEASE WAIT…":"UNLOCK FULL GAME"+(IAP.price?"  ·  "+IAP.price:IAP.plugin()?"":"  (TEST)"),()=>IAP.buy(),{launch:true,size:Math.min(22,bh*0.4)});
   const sw=(bw-10)/2;by+=bh+10;
   btn(W/2-bw/2,by,sw,f.bh-4,"RESTORE PURCHASE",()=>IAP.restore(),{size:Math.min(14,f.bh*0.32),color:"#ccd6e4"});
   btn(W/2-bw/2+sw+10,by,sw,f.bh-4,"NOT NOW",()=>{if(fromRun)demoFinish();else closeMenu()},{size:Math.min(14,f.bh*0.32),color:"#ccd6e4"})}

@@ -125,7 +125,6 @@ const shot = async (pg, name) => { if (SHOTS) await pg.screenshot({ path: path.j
   });
   check('the sector 2 gate opens the unlock screen', r.scene === 'unlock' && r.hold, JSON.stringify(r));
   await sleep(100); await shot(pg, 'unlock-run');
-  pg.on('dialog', d => d.accept());
   await pg.evaluate(() => window.SW.IAP.buy());
   await sleep(100);
   const lab = await pg.evaluate(() => window.SW.buttonLabels);
