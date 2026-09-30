@@ -17,20 +17,17 @@ what only a person can do.
    - `BRAND.game` near the top of `Game24/index.html`;
    - `appName` in `app-star-swarm/capacitor.config.json`.
 
-2. **The age rating.** Apple now rates 4+, 9+, 13+, 16+ and 18+. 9+ allows
-   *infrequent* cartoon or fantasy violence; *frequent* moves it to 13+. The
-   ship fires constantly, so an honest answer to that question is probably
-   "frequent", which gives **13+**. Answer the questionnaire truthfully; a
-   rating found to be understated can get the app pulled. On Google Play the
-   IARC questionnaire should give about ESRB Everyone 10+ / PEGI 7.
+2. **The age rating: 13+ (decided).** Apple now rates 4+, 9+, 13+, 16+ and
+   18+. 9+ allows only *infrequent* cartoon or fantasy violence, and the ship
+   fires constantly, so answer "frequent cartoon or fantasy violence" and take
+   **13+**. On Google Play the IARC questionnaire should give about ESRB
+   Everyone 10+ / PEGI 7.
 
-3. **The price** of the full-game unlock. Suggested: **$3.99** (tier 4). That
-   is within the usual range for a premium arcade game, and cheap enough to
-   buy on impulse after two sectors.
+3. **The price: $3.99 (decided)** for the full-game unlock.
 
-4. **The studio name** in the credits: `BRAND.studio`, currently "Starlight
-   Arcade" as a placeholder. It must match the seller name on your developer
-   account, or at least not contradict it.
+4. **The studio name: Much More Studios (decided).** It is `BRAND.studio`, shown
+   in the credits. It should match the seller name on the developer
+   accounts, or at least not contradict it.
 
 ## The business model
 
@@ -189,7 +186,7 @@ the rest put together.
 ## What needs a person
 
 - Apple Developer ($99/yr) and Google Play Console ($25 once) accounts.
-- The name, the price, the rating answers and the studio name.
+- The name.
 - The App Store Connect and Play Console items in the table above.
 - Signing, building and uploading on a Mac: `app-star-swarm/BUILD.md`.
 - An app icon of its own. The one in `app/assets/` is the Arcade icon.

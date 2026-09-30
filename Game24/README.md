@@ -35,9 +35,9 @@ The two copies keep separate saves.
      and buying there carries the same run on.
    - Endless and Daily are locked in the demo.
    - Restore Purchase is on the unlock screen and in settings.
-6. **Rated for general audiences.** No ads, no analytics, no accounts. There is
+6. **Rated 13+ on the App Store** (frequent cartoon violence). No ads, no analytics, no accounts. There is
    a privacy screen, and a policy page at `docs/star-swarm-plus/privacy.html`.
-7. **No family names.** The credits carry a studio name (`BRAND.studio`), and
+7. **No family names.** The credits say Much More Studios (`BRAND.studio`), and
    the saves use their own `ssplus.` prefix.
 8. **Native features in the app:**
    - haptics;
