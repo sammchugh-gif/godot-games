@@ -67,10 +67,13 @@ await ev(() => { const b = document.querySelector('[data-layer="photo"] [data-a=
 await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.ring()); await waitT(0.5); check(await ev(() => __hq.ringing > 0), "the banana phone rings");
 await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing === 0), "and Rory answers it"); await page.screenshot({ path: `${out}/phone.png` }); await ev(() => __hq.debug.skip());
 // the puzzle arcade: Pip says what it is the first time, then it opens the arcade page
-{ await use("arcade"); await page.screenshot({ path: `${out}/arcade_cabinet.png` });
+{ await ev(() => __hq.debug.skip()); await ev(() => { __hq.player.teleport(-2.6, 0, 5.6, 0); });
+  for (const [k, yaw] of [["a", 0], ["b", Math.PI]]) { await ev(y => { __hq.player.camYaw = y; }, yaw); await waitT(0.6); await page.screenshot({ path: `${out}/arcade_front_${k}.png` }); }
+  await use("arcade"); await page.screenshot({ path: `${out}/arcade_cabinet.png` });
   check(await ev(() => __hq.dialogue.active), "Pip introduces the arcade");
   const nav = page.waitForURL(/arcade\.html/, { timeout: 20000 }).catch(() => null);
-  for (let i = 0; i < 6; i++) { await ev(() => { if (__hq.dialogue.active) __hq.dialogue.tap(); }); await waitT(0.4).catch(() => {}); if (page.url().includes("arcade")) break; }
+  // (tap through Pip's lines; the page goes to the arcade straight after the last one)
+  for (let i = 0; i < 12 && !page.url().includes("arcade"); i++) { try { await ev(() => { if (__hq.dialogue.active) __hq.dialogue.tap(); }); await page.waitForTimeout(500); } catch (e) { break; } }
   await nav;
   check(page.url().includes("/agent-rory-hq/arcade.html"), `PLAY on the cabinet opens the arcade (${page.url()})`);
   await page.waitForSelector("body.ready", { timeout: 30000 }); await page.screenshot({ path: `${out}/arcade_page.png` });
