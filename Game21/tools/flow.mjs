@@ -24,7 +24,7 @@ let fail = 0;
 const check = (c, msg) => { if (!c) { fail++; console.log("FAIL:", msg); } else console.log("ok:", msg); };
 const shot = n => page.screenshot({ path: `${out}/${n}.png` });
 // (the dialogue, and the INTEL WON card after a mission's outro lines)
-const intelCard = () => ev(() => { const b = document.querySelector('[data-layer="result"] .in-card [data-a="next"]'); if (b) b.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); return !!b; });
+const intelCard = () => ev(() => { const card = document.querySelector('[data-layer="result"] .in-card'), b = card && card.parentElement.querySelector('[data-a="next"]'); if (b) b.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); return !!b; });
 const skip = async () => { for (let i = 0; i < 30; i++) { if (await intelCard()) { await waitT(0.1); continue; } if (!(await ev(() => __g.dialogue.active))) break; await ev(() => __g.debug.skipDialogue()); await waitT(0.05); } };
 await waitT(1.2); await shot("00_title");
 await ev(() => __g.debug.play());
