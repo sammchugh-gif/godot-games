@@ -18,7 +18,7 @@ import { makeMission } from "./kinds.js";
 import { Craft, subModel } from "./craft.js";
 import { critter } from "./critters.js";
 import { CHARS, PLACES, CHAPTERS, CREDITS, ALL } from "./story.js";
-import { installClues } from "./clues.js";
+import { installClues, showIntel, showDossier } from "./clues.js";
 import { CLUES, THEME } from "./cluemap.js";
 import { KINDS as PUZZLES } from "./puzzles.js";
 import { Travel } from "./globe.js";
@@ -354,12 +354,12 @@ G.onMissionWin = m => {
     const last = !currentMission();
     if (def.event === "zeroScreen") G.world.zeroFace = G.portraits.get("zero");
     if (def.event === "launch") setTimeout(() => { G.world.launch = true; }, 1200);
-    talk(def.outro || [], () => {
+    talk(def.outro || [], () => showIntel(G, def, () => {
       G.world.zeroFace = null;
       refreshBeacons(); updateObjective();
       if (last && G.place.leaveEvent === "launch") setTimeout(() => { G.world.launch = true; }, 2500);
       if (last) talk(G.place.leave || [], () => nextPlace());
-    });
+    }));
   });
 };
 G.onMissionLose = (m, why) => {
@@ -449,7 +449,7 @@ function pause() {
     <div class="row"><button class="btn gold" data-a="resume">RESUME</button></div>
     <div class="row"><button class="btn ghost small" data-a="music">MUSIC ${Audio.music ? "ON" : "OFF"}</button><button class="btn ghost small" data-a="voice">VOICES ${Speech.enabled ? "ON" : "OFF"}</button></div>
     <div class="row"><button class="btn ghost small" data-a="gfx">PICTURE: ${["SIMPLE", "GOOD", "BEST"][G.engine.quality]}</button><button class="btn ghost small" data-a="arrow">ARROW ${G.showArrow ? "ON" : "OFF"}</button></div>
-    <div class="row"><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
+    <div class="row"><button class="btn ghost small" data-a="dossier">DOSSIER</button><button class="btn ghost small" data-a="missions">MISSIONS</button><button class="btn ghost small" data-a="title">QUIT TO TITLE</button></div>`, "screen dim");
   onTap(s, "[data-a]", b => {
     const a = b.dataset.a;
     if (a === "music") { Audio.setMusic(!Audio.music); b.textContent = "MUSIC " + (Audio.music ? "ON" : "OFF"); return; }
@@ -458,6 +458,7 @@ function pause() {
     if (a === "gfx") { const q = (G.engine.quality + 1) % 3; try { localStorage.setItem("rory21.quality", q); } catch (e) { /* private mode */ } b.textContent = "PICTURE: " + ["SIMPLE", "GOOD", "BEST"][q] + " (restarts)"; setTimeout(() => location.reload(), 700); return; }
     clearLayer("pause");
     if (a === "missions") { missionList(); return; }
+    if (a === "dossier") { showDossier(G, PLACES, () => pause()); return; }
     if (a === "resume") { G.state = G.pausedFrom; return; }
     if (a === "title") { if (G.mission) { G.mission.cleanup(); G.mission = null; } G.dialogue.skipAll(); loadPlace(G.save.place); showTitle(); }
   });

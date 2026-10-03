@@ -1,26 +1,26 @@
 [
  {
-  "key": "0wspfhu",
+  "key": "0tdb2s9",
   "who": "flint",
-  "text": "Six sparks, all over the valley. Run into them, and jump for the high ones.",
+  "text": "Look at the mud. Footprints! Little round ones, with sand in them. Not a dinosaur's.",
   "from": "story"
  },
  {
-  "key": "03mjzki",
+  "key": "0pzc2r3",
   "who": "pip",
-  "text": "Mind the ferns. Some of them are taller than you.",
+  "text": "Follow the track, Rory. Each step is the same size. Where does the next one land?",
   "from": "story"
  },
  {
-  "key": "12f7mj5",
+  "key": "1djrprw",
   "who": "rory",
-  "text": "Six sparks. They fizz!",
+  "text": "They go all the way to the nests.",
   "from": "story"
  },
  {
-  "key": "1jkmbh0",
+  "key": "0z9nyi7",
   "who": "flint",
-  "text": "And look: footprints. Little round ones, with sand in them.",
+  "text": "Something's stealing from the dinosaurs. Come on, quietly.",
   "from": "story"
  },
  {
@@ -30,9 +30,9 @@
   "from": "story"
  },
  {
-  "key": "1x581xq",
+  "key": "0n1ioh5",
   "who": "flint",
-  "text": "Press USE near one and your watch pops it in a bubble. It'll flip upside down.",
+  "text": "We need to know how many they took. Work out the sum, Rory.",
   "from": "story"
  },
  {
@@ -54,21 +54,21 @@
   "from": "story"
  },
  {
-  "key": "01ohbl9",
+  "key": "02o6euo",
   "who": "flint",
-  "text": "The eggs they dropped need to go back in the nest before their mum comes back.",
+  "text": "The eggs they dropped need to go back in the nests before their mums come back.",
   "from": "story"
  },
  {
-  "key": "04sld5d",
+  "key": "0j7gbhm",
   "who": "pip",
-  "text": "GRAB an egg with the tractor beam, carry it to the nest and DROP it. Gently!",
+  "text": "Every nest gets the same. Work it out, Rory, and we'll carry them over gently.",
   "from": "story"
  },
  {
-  "key": "0js2xmu",
+  "key": "01odcbd",
   "who": "rory",
-  "text": "Three eggs, safe and warm. Wait. That one's wobbling.",
+  "text": "All safe and warm. Wait. That one's wobbling.",
   "from": "story"
  },
  {
@@ -81,30 +81,6 @@
   "key": "0u6xbjr",
   "who": "rory",
   "text": "Hello. I'm Rory. I'm not your mum.",
-  "from": "story"
- },
- {
-  "key": "0bs30cv",
-  "who": "flint",
-  "text": "She thinks you are. A baby triceratops! And her brothers and sisters have wandered off.",
-  "from": "story"
- },
- {
-  "key": "04c5hin",
-  "who": "pip",
-  "text": "Walk near the babies and they'll follow you. Lead them all back to the nest!",
-  "from": "story"
- },
- {
-  "key": "1fquha7",
-  "who": "flint",
-  "text": "All home. Their mother is on her way back.",
-  "from": "story"
- },
- {
-  "key": "1bi1w1k",
-  "who": "rory",
-  "text": "She's still following me.",
   "from": "story"
  },
  {
@@ -126,15 +102,15 @@
   "from": "story"
  },
  {
-  "key": "0h6mi3x",
+  "key": "1belvpo",
   "who": "pip",
-  "text": "It sleeps with one eye open. Stay out of where it's looking, and don't wake it!",
+  "text": "We have to get past before it wakes. Which clock shows the time it wakes up?",
   "from": "story"
  },
  {
-  "key": "0ayl3cq",
+  "key": "19wjkvf",
   "who": "rory",
-  "text": "Past it. Pebble didn't make a sound.",
+  "text": "Past it, with time to spare. Pebble didn't make a sound.",
   "from": "story"
  },
  {
@@ -168,51 +144,27 @@
   "from": "story"
  },
  {
-  "key": "12n5rjq",
-  "who": "tuva",
-  "text": "A baby mammoth has lost its herd. The storm split them up.",
-  "from": "story"
- },
- {
-  "key": "05rt4y1",
-  "who": "pip",
-  "text": "Walk near the calf and it will follow. Lead it back to its mum!",
-  "from": "story"
- },
- {
-  "key": "0m2jz7b",
-  "who": "tuva",
-  "text": "Home! Its mum is so big. Look at the tusks.",
-  "from": "story"
- },
- {
-  "key": "0wz0bc4",
-  "who": "rory",
-  "text": "Pebble, you can't ride a mammoth. Not yet.",
-  "from": "story"
- },
- {
-  "key": "0uizja7",
+  "key": "0802w9v",
   "who": "flint",
-  "text": "Rory, your watch has a new power. Hold SLOW and the world slows right down. Everything but you.",
+  "text": "Your watch has a new power, Rory. Hold SLOW and the world slows right down. Everything but you.",
   "from": "story"
  },
  {
-  "key": "09mm4t2",
+  "key": "0rwokz6",
   "who": "tuva",
-  "text": "The cave mouth is full of icicles. They fall when you walk under them!",
+  "text": "The cave mouth is full of icicles, and they drip at the same times every day.",
   "from": "story"
  },
  {
-  "key": "0mcdes6",
+  "key": "1bruiu5",
   "who": "pip",
-  "text": "Use SLOW to catch them before they land. Catch them with the tractor beam!",
+  "text": "Work out how long the drip lasts. Then we'll know when it's safe to go in.",
   "from": "story"
  },
  {
-  "key": "09j1mvx",
+  "key": "0cwuvf1",
   "who": "rory",
-  "text": "That was so cool. Everything went slow, like syrup.",
+  "text": "And if one falls, I'll use SLOW.",
   "from": "story"
  },
  {
@@ -222,27 +174,27 @@
   "from": "story"
  },
  {
-  "key": "045cfd5",
+  "key": "16d2grh",
   "who": "tuva",
-  "text": "The cave is very dark. The sparks are in there, where the painting was.",
+  "text": "The cave painters marked the days on the wall. The Sandbots have been coming to the cave.",
   "from": "story"
  },
  {
-  "key": "0795e1n",
+  "key": "19j0ddr",
   "who": "pip",
-  "text": "Your watch has a lamp. Follow the sparks deep into the cave.",
+  "text": "Read the days, Rory. When will they come back?",
   "from": "story"
  },
  {
-  "key": "0sz9z7i",
+  "key": "1htp138",
   "who": "rory",
-  "text": "Eight sparks. And paintings everywhere! Horses, deer, handprints.",
+  "text": "Paintings everywhere! Horses, deer, handprints. But there's a gap where the big one was.",
   "from": "story"
  },
  {
-  "key": "0x6ccr9",
+  "key": "0koly1e",
   "who": "tuva",
-  "text": "My great-great-great-grandmother's hand. And mine, next to it.",
+  "text": "The great horse. My great-great-great-grandmother painted it. The Sandbots took it.",
   "from": "story"
  },
  {
@@ -252,9 +204,9 @@
   "from": "story"
  },
  {
-  "key": "0j9to6o",
+  "key": "0t2h2jb",
   "who": "pip",
-  "text": "GRAB the snow blocks and stack them on the glowing pads.",
+  "text": "Each block is the two under it added together. Fill in the missing numbers, Rory.",
   "from": "story"
  },
  {
@@ -264,9 +216,9 @@
   "from": "story"
  },
  {
-  "key": "1jqt2u8",
+  "key": "13silmw",
   "who": "rory",
-  "text": "She's asleep in the snow. Dinosaurs are allowed to nap.",
+  "text": "And look. Sandbots, out on the glacier, with something rolled up like a rug.",
   "from": "story"
  },
  {
@@ -366,27 +318,33 @@
   "from": "story"
  },
  {
-  "key": "1604uez",
+  "key": "0so33q9",
   "who": "flint",
-  "text": "Another new power, Rory. Press BACK and you jump back to where you were three seconds ago.",
+  "text": "Another power, Rory. Press BACK and you jump back to where you were three seconds ago.",
   "from": "story"
  },
  {
-  "key": "16pspr0",
+  "key": "0pp502s",
+  "who": "nefi",
+  "text": "Somebody let the Sandbots into the tunnel and set sunbeam traps. One of the workers!",
+  "from": "story"
+ },
+ {
+  "key": "1rgol32",
   "who": "pip",
-  "text": "Hourglass has put sunbeam traps in the tunnel. Touch a beam and you're back at the start. Unless you use BACK first!",
+  "text": "Read the clues, Rory. Which worker was it?",
   "from": "story"
  },
  {
-  "key": "0axq1tr",
+  "key": "1wl5jmd",
   "who": "rory",
-  "text": "I only needed BACK twice. Well, three times.",
+  "text": "Got you. You've got sand on your sandals.",
   "from": "story"
  },
  {
-  "key": "00ahkg5",
-  "who": "rory",
-  "text": "Pebble walked straight through the beams. They don't work on dinosaurs.",
+  "key": "0kt1ubm",
+  "who": "nefi",
+  "text": "They paid him in sand! What a terrible thing to be paid in.",
   "from": "story"
  },
  {
@@ -414,45 +372,15 @@
   "from": "story"
  },
  {
-  "key": "07ffx8h",
+  "key": "1sykgki",
   "who": "nefi",
-  "text": "The workers' ramp was knocked down. We need to build it again, block by block.",
+  "text": "The workers need more rope to haul the capstone up. The rope seller wants paying.",
   "from": "story"
  },
  {
-  "key": "1ylsm8z",
+  "key": "1gycdny",
   "who": "pip",
-  "text": "Stack the blocks on the pads to make steps. Big ones at the bottom!",
-  "from": "story"
- },
- {
-  "key": "0vc5hs1",
-  "who": "nefi",
-  "text": "A ramp! Now we can take the capstone up.",
-  "from": "story"
- },
- {
-  "key": "02zb3qs",
-  "who": "rory",
-  "text": "Or I can climb up there first and see what's waiting.",
-  "from": "story"
- },
- {
-  "key": "0zo84pw",
-  "who": "flint",
-  "text": "Hourglass's Sandbots are at the top, trying to bottle the moment the capstone goes on.",
-  "from": "story"
- },
- {
-  "key": "1log0kp",
-  "who": "pip",
-  "text": "Climb the pyramid's steps. Grab the sparks all the way up!",
-  "from": "story"
- },
- {
-  "key": "0sctrt9",
-  "who": "rory",
-  "text": "Top of the world! The Sandbots ran off into a tunnel.",
+  "text": "It's a market. Work out how many to trade, Rory.",
   "from": "story"
  },
  {
@@ -462,33 +390,15 @@
   "from": "story"
  },
  {
+  "key": "1xi6fkm",
+  "who": "rory",
+  "text": "And the Sandbots at the top are running off into a tunnel.",
+  "from": "story"
+ },
+ {
   "key": "1k63xyc",
   "who": "frost",
   "text": "Well done, Agent. Another moment saved.",
-  "from": "story"
- },
- {
-  "key": "0a0d6fy",
-  "who": "theo",
-  "text": "Race me round the stadium! There are sparks all the way round.",
-  "from": "story"
- },
- {
-  "key": "1bqd2ij",
-  "who": "pip",
-  "text": "Grab every spark before the time runs out. Go go go!",
-  "from": "story"
- },
- {
-  "key": "1wrupyw",
-  "who": "theo",
-  "text": "You're fast! For someone in funny clothes.",
-  "from": "story"
- },
- {
-  "key": "0x6anm2",
-  "who": "rory",
-  "text": "It's a spy suit.",
   "from": "story"
  },
  {
@@ -582,15 +492,15 @@
   "from": "story"
  },
  {
-  "key": "18qlzfq",
+  "key": "1srudra",
   "who": "theo",
-  "text": "The Sandbots are still running round the stadium, trying to steal the crowns!",
+  "text": "We caught the last Sandbot! It had a note in its sand. In code.",
   "from": "story"
  },
  {
-  "key": "1n6z7v3",
+  "key": "0haw8fa",
   "who": "pip",
-  "text": "Bubble all six. Pebble can charge them too!",
+  "text": "Use the key, Rory. Each symbol is one letter. Where's Hourglass?",
   "from": "story"
  },
  {
@@ -600,39 +510,39 @@
   "from": "story"
  },
  {
-  "key": "0gwx5x4",
+  "key": "0cuxutb",
   "who": "rory",
-  "text": "Where's Hourglass?",
+  "text": "ROME. She's gone to Rome.",
   "from": "story"
  },
  {
-  "key": "0erygnf",
+  "key": "1v1fq0a",
   "who": "sandbot",
-  "text": "Rome. She likes Rome. Very punctual, the Romans.",
+  "text": "She likes Rome. Very punctual, the Romans.",
   "from": "story"
  },
  {
-  "key": "0l9w73j",
+  "key": "15tjb6w",
   "who": "livia",
-  "text": "The sparks are all along the top of the aqueduct. It's high. Don't look down.",
+  "text": "The aqueduct's arches are numbered, Roman style. The Sandbots stopped the water at one of them.",
   "from": "story"
  },
  {
-  "key": "1fjtl6x",
+  "key": "1i7crqy",
   "who": "pip",
-  "text": "Jump between the arches. Pebble will wait at the bottom. She doesn't like heights.",
+  "text": "Roman numbers are letters. Read them, Rory.",
   "from": "story"
  },
  {
-  "key": "1rnp3ff",
+  "key": "0to9vdd",
   "who": "rory",
-  "text": "I looked down. Big mistake.",
+  "text": "That one! There's sand jammed in the channel.",
   "from": "story"
  },
  {
-  "key": "05j7uwh",
+  "key": "10pqsm2",
   "who": "livia",
-  "text": "Everyone looks down.",
+  "text": "And the sluice gates are shut. The water's stuck in the hills.",
   "from": "story"
  },
  {
@@ -669,30 +579,6 @@
   "key": "00j46yb",
   "who": "livia",
   "text": "Every fountain, just right! Dad will be so proud.",
-  "from": "story"
- },
- {
-  "key": "1imo1cm",
-  "who": "livia",
-  "text": "The Sandbots hid sparks at the bottom of the big bath. It's deep!",
-  "from": "story"
- },
- {
-  "key": "1b0dkmc",
-  "who": "pip",
-  "text": "Hold DIVE to swim down. The bubbles at the top of the screen are your air.",
-  "from": "story"
- },
- {
-  "key": "0ocdbwj",
-  "who": "rory",
-  "text": "I've never swum in a Roman bath before.",
-  "from": "story"
- },
- {
-  "key": "16yq1o4",
-  "who": "livia",
-  "text": "Nobody's ever swum in a Roman bath with a dinosaur before. Look at her paddle!",
   "from": "story"
  },
  {
@@ -756,30 +642,6 @@
   "from": "story"
  },
  {
-  "key": "05cocg1",
-  "who": "sigrid",
-  "text": "The Sandbots have a boat with our sail rolled up in it! Take my little longship.",
-  "from": "story"
- },
- {
-  "key": "0gy3z05",
-  "who": "pip",
-  "text": "Drag to steer through the fjord. Catch them and TAG them!",
-  "from": "story"
- },
- {
-  "key": "1335x8b",
-  "who": "rory",
-  "text": "Tagged! But they threw the sail over the side.",
-  "from": "story"
- },
- {
-  "key": "1aougys",
-  "who": "sigrid",
-  "text": "Into the fjord? It's so cold!",
-  "from": "story"
- },
- {
   "key": "0lendx7",
   "who": "sigrid",
   "text": "Hourglass left a message on the rune stones. The runes glow, one after another.",
@@ -822,15 +684,15 @@
   "from": "story"
  },
  {
-  "key": "1lm1q7m",
+  "key": "1ai5arw",
   "who": "sigrid",
-  "text": "Her Sandbots are guarding the boathouse. The sail must be in there.",
+  "text": "The Sandbots stole our sail. Her Sandbots are guarding the boathouse. It must be in there.",
   "from": "story"
  },
  {
-  "key": "1w8c5cv",
+  "key": "0w7fv6i",
   "who": "pip",
-  "text": "Sneak past them. Stay out of their lanterns!",
+  "text": "I've mapped the way past their lanterns. Follow the spy map, Rory, and tap where you end up.",
   "from": "story"
  },
  {
@@ -840,27 +702,27 @@
   "from": "story"
  },
  {
-  "key": "1alxu3q",
+  "key": "004205i",
   "who": "sigrid",
-  "text": "That's so rude.",
+  "text": "That's so rude. They threw it in the fjord!",
   "from": "story"
  },
  {
-  "key": "1uoivkc",
+  "key": "14wrbio",
   "who": "sigrid",
-  "text": "The sail sank in pieces. Six pieces, down on the fjord bed.",
+  "text": "The sail sank in pieces, down on the fjord bed. The divers are bringing them up.",
   "from": "story"
  },
  {
-  "key": "14odeuy",
+  "key": "1aso9t1",
   "who": "pip",
-  "text": "Hold DIVE to swim down. Watch your air!",
+  "text": "Count them up, Rory. We need every piece.",
   "from": "story"
  },
  {
-  "key": "0sizjuh",
+  "key": "0rlkety",
   "who": "rory",
-  "text": "All six pieces. We can sew it back together.",
+  "text": "Every piece. We can sew it back together.",
   "from": "story"
  },
  {
@@ -1308,201 +1170,15 @@
   "from": "story"
  },
  {
-  "key": "1cyvxty",
-  "who": "flint",
-  "text": "The Sandbots took eggs from two nests, the same number from each.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1qb0z03",
-  "who": "pip",
-  "text": "Double it, Rory. How many eggs did they take?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0n37df9",
-  "who": "flint",
-  "text": "Let's check the nest before the hourglass runs out and their mum comes back.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "03ft8cu",
-  "who": "pip",
-  "text": "Work it out, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0vm5l61",
-  "who": "flint",
-  "text": "The last baby wandered off. Her footprints go along the numbered stones.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0z8gi55",
-  "who": "pip",
-  "text": "Count her steps, Rory. Where did she end up?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1k76p1j",
-  "who": "flint",
-  "text": "The T. rex wakes up at the same time every day. I wrote it down.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "04xtdyj",
-  "who": "pip",
-  "text": "Which clock says it, Rory? Then we'll know how long we've got.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0yyttvt",
-  "who": "tuva",
-  "text": "The herd went over the hills. Here's my map. I drew it on bark.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1dtk7xv",
-  "who": "pip",
-  "text": "Follow the steps, Rory. Where's the herd?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "134yp9l",
-  "who": "tuva",
-  "text": "We scratch a mark on the cave wall every day. The icicles always fall on the same day of the week.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "088ct5k",
-  "who": "pip",
-  "text": "Your watch knows the days, Rory. Which day is it?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ui3my4",
-  "who": "rory",
-  "text": "Someone has scratched numbers on the cave wall. That wasn't a caveman.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0eg6dqc",
-  "who": "pip",
-  "text": "Number code, Rory. A is 1, B is 2.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1y1toir",
-  "who": "rory",
-  "text": "SAND. The Sandbots got here first.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0tlec4o",
-  "who": "tuva",
-  "text": "We need more snow blocks cut, and the block cutters want paying in trade.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0akrqhn",
-  "who": "pip",
-  "text": "Work out the swap, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1gtynlq",
-  "who": "nefi",
-  "text": "The builders mark the ramp blocks in a pyramid of numbers. Each block is the two under it, added.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1bt807q",
-  "who": "pip",
-  "text": "Fill in the missing ones, Rory, and we'll know the ramp is strong.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "15wig5j",
-  "who": "flint",
-  "text": "Hourglass wants to bottle the capstone ceremony. How long does it last? That's how long we've got.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0pr8ayf",
-  "who": "theo",
-  "text": "The big race starts when the sundial says. Your watch can tell us the time.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1f6wxni",
-  "who": "pip",
-  "text": "Which clock says it, Rory?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1epzgf9",
-  "who": "theo",
-  "text": "The crown maker will make new olive crowns, but he wants paying in trade. Figs, honey, that sort of thing.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0aevw2v",
-  "who": "theo",
-  "text": "Olive crowns for everyone!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0qsdbpx",
-  "who": "livia",
-  "text": "The arches are numbered, the Roman way. The sparks are at one of them.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1wgoi6z",
-  "who": "pip",
-  "text": "Read the Roman numerals, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0b6ibc1",
-  "who": "livia",
-  "text": "Four bathers were here when the Sandbots came. One of them is Doctor Hourglass's lookout!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0qyg6ab",
-  "who": "pip",
-  "text": "Read the clues, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ar1bin",
-  "who": "sigrid",
-  "text": "Grandad carved a number pyramid on the chest. Fill in the missing numbers and it opens.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "09r8olc",
-  "who": "pip",
-  "text": "Each block is the two under it, added.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1jh9348",
-  "who": "sigrid",
-  "text": "Each piece of the sail needs the same number of stitches. Help me work it out.",
-  "from": "js/cluemap.js"
- },
- {
   "key": "0plnsdv",
   "who": "pip",
   "text": "All three golden ammonites here! Pebble is very pleased.",
   "from": "js/main.js"
  },
  {
-  "key": "0w299vw",
+  "key": "1ahbghr",
   "who": "flint",
-  "text": "The beacon for Time Sparks is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Strange Footprints is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1515,12 +1191,6 @@
   "key": "065o0rm",
   "who": "flint",
   "text": "The beacon for Back to the Nest is glowing. Look for the tall beam of light!",
-  "from": "main.js"
- },
- {
-  "key": "0trqtjl",
-  "who": "flint",
-  "text": "The beacon for Hatchling is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1539,12 +1209,6 @@
   "key": "077gwhy",
   "who": "flint",
   "text": "That's everything here. Great work, Agent Rory!",
-  "from": "main.js"
- },
- {
-  "key": "1ofwjo9",
-  "who": "tuva",
-  "text": "The beacon for Lost Calf is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1596,9 +1260,9 @@
   "from": "main.js"
  },
  {
-  "key": "1au00xo",
+  "key": "1t2hn5j",
   "who": "nefi",
-  "text": "The beacon for Sunbeam Traps is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Who Let Them In? is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1608,27 +1272,15 @@
   "from": "main.js"
  },
  {
-  "key": "0mdu42o",
+  "key": "13tuavt",
   "who": "nefi",
-  "text": "The beacon for The Ramp is glowing. Look for the tall beam of light!",
-  "from": "main.js"
- },
- {
-  "key": "0gsvgol",
-  "who": "nefi",
-  "text": "The beacon for Up the Pyramid is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Ropes for the Capstone is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
   "key": "04fkh32",
   "who": "nefi",
   "text": "That's everything here. Great work, Agent Rory!",
-  "from": "main.js"
- },
- {
-  "key": "18kz552",
-  "who": "theo",
-  "text": "The beacon for The Boys' Race is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1686,12 +1338,6 @@
   "from": "main.js"
  },
  {
-  "key": "0zq6xdb",
-  "who": "livia",
-  "text": "The beacon for The Bathhouse Drain is glowing. Look for the tall beam of light!",
-  "from": "main.js"
- },
- {
   "key": "12qpez4",
   "who": "livia",
   "text": "The beacon for Two Levers is glowing. Look for the tall beam of light!",
@@ -1701,12 +1347,6 @@
   "key": "1hbm4x5",
   "who": "livia",
   "text": "The beacon for The Roman Road is glowing. Look for the tall beam of light!",
-  "from": "main.js"
- },
- {
-  "key": "02i3ici",
-  "who": "sigrid",
-  "text": "The beacon for Longship Race is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -1744,5 +1384,185 @@
   "who": "sigrid",
   "text": "That's everything here. Great work, Agent Rory!",
   "from": "main.js"
+ },
+ {
+  "key": "0r8wt2b",
+  "who": "pip",
+  "text": "Small round footprints with sand in them lead across the valley to the dinosaur nests.",
+  "from": "intel"
+ },
+ {
+  "key": "0on6rx3",
+  "who": "pip",
+  "text": "The egg-timer robots are Sandbots. They work for Doctor Hourglass, who hates waiting.",
+  "from": "intel"
+ },
+ {
+  "key": "140wj5k",
+  "who": "pip",
+  "text": "A baby triceratops hatched in Rory's hands. She's called Pebble, and she thinks Rory is her mum.",
+  "from": "intel"
+ },
+ {
+  "key": "0nnb3kc",
+  "who": "pip",
+  "text": "The Sandbots are getting away down the valley with a cart full of eggs.",
+  "from": "intel"
+ },
+ {
+  "key": "1cuitl5",
+  "who": "pip",
+  "text": "The Sandbots escaped through a time tunnel. It leads to the Ice Age.",
+  "from": "intel"
+ },
+ {
+  "key": "0b2yy6e",
+  "who": "pip",
+  "text": "Rory's watch can slow the world down. It needs time to charge after.",
+  "from": "intel"
+ },
+ {
+  "key": "1g7o4t7",
+  "who": "pip",
+  "text": "The Sandbots stole the great horse painting from the cave wall.",
+  "from": "intel"
+ },
+ {
+  "key": "0gjyy9i",
+  "who": "pip",
+  "text": "The Sandbots are escaping over the glacier with the painting. Only a mammoth is fast enough.",
+  "from": "intel"
+ },
+ {
+  "key": "12xatqp",
+  "who": "pip",
+  "text": "The Sandbots dropped the painting. It only stays on the wall if the handprints are touched in order.",
+  "from": "intel"
+ },
+ {
+  "key": "0tvy43u",
+  "who": "pip",
+  "text": "The Sandbots left a chip of gold stone from Ancient Egypt.",
+  "from": "intel"
+ },
+ {
+  "key": "0el5v7g",
+  "who": "pip",
+  "text": "The Sandbots jumped ashore by the pyramid. Its door has a picture lock.",
+  "from": "intel"
+ },
+ {
+  "key": "0o3xst8",
+  "who": "pip",
+  "text": "The picture lock says 'the stone is safe inside'. The Sandbots are after something in the pyramid.",
+  "from": "intel"
+ },
+ {
+  "key": "12p2v79",
+  "who": "pip",
+  "text": "Rory's watch can jump back three seconds. The Sandbots buried something in the sand outside.",
+  "from": "intel"
+ },
+ {
+  "key": "1db0hzz",
+  "who": "pip",
+  "text": "The Sandbots buried the golden capstone. It has to go on top of the pyramid.",
+  "from": "intel"
+ },
+ {
+  "key": "1q9xn94",
+  "who": "pip",
+  "text": "The Sandbots ran into a tunnel that goes to Olympia, in Ancient Greece.",
+  "from": "intel"
+ },
+ {
+  "key": "1makb0h",
+  "who": "pip",
+  "text": "Rory's watch can make an echo of him, which copies what he did.",
+  "from": "intel"
+ },
+ {
+  "key": "1ku52q7",
+  "who": "pip",
+  "text": "The games are ready to start. All they need is the flame.",
+  "from": "intel"
+ },
+ {
+  "key": "1qno75d",
+  "who": "pip",
+  "text": "The flame was in a jar with an hourglass on the lid. Doctor Hourglass signs her work.",
+  "from": "intel"
+ },
+ {
+  "key": "0m2zkk4",
+  "who": "pip",
+  "text": "The flame is lit. But the Sandbots are trying to steal the olive crowns.",
+  "from": "intel"
+ },
+ {
+  "key": "1afavkv",
+  "who": "pip",
+  "text": "Doctor Hourglass has gone to Rome, to a brand-new aqueduct.",
+  "from": "intel"
+ },
+ {
+  "key": "1dzbs6p",
+  "who": "pip",
+  "text": "The Sandbots shut the aqueduct's sluice gates, up in the hills.",
+  "from": "intel"
+ },
+ {
+  "key": "0cs99th",
+  "who": "pip",
+  "text": "The water flows again, but the town's fountains are all wrong.",
+  "from": "intel"
+ },
+ {
+  "key": "1ip9129",
+  "who": "pip",
+  "text": "The last gate needs two levers pulled at once, far apart.",
+  "from": "intel"
+ },
+ {
+  "key": "1g78pxk",
+  "who": "pip",
+  "text": "Doctor Hourglass is escaping down the Roman road with the last bottle of water.",
+  "from": "intel"
+ },
+ {
+  "key": "1n8b1p4",
+  "who": "pip",
+  "text": "Hourglass dropped the bottle and fled through a tunnel to the Vikings.",
+  "from": "intel"
+ },
+ {
+  "key": "11eupot",
+  "who": "pip",
+  "text": "Hourglass's rune message says 'Why wait? Love, H.'",
+  "from": "intel"
+ },
+ {
+  "key": "0q5y1a6",
+  "who": "pip",
+  "text": "Hourglass's ship is at the island at the mouth of the fjord.",
+  "from": "intel"
+ },
+ {
+  "key": "0tsmorp",
+  "who": "pip",
+  "text": "The Sandbots threw the sail into the fjord, in pieces.",
+  "from": "intel"
+ },
+ {
+  "key": "0mycky5",
+  "who": "pip",
+  "text": "Doctor Hourglass is waiting with her biggest machine yet: a Sand Serpent.",
+  "from": "intel"
+ },
+ {
+  "key": "009vtfy",
+  "who": "pip",
+  "text": "Hourglass has gone into the future. She dropped a drawing signed by someone called Wren.",
+  "from": "intel"
  }
 ]

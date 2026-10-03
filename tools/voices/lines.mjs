@@ -89,6 +89,9 @@ if (main.includes("is glowing. Look for the tall beam of light!")) for (const p 
   for (const m of p.missions || []) add(p.contact, `The beacon for ${m.title} is glowing. Look for the tall beam of light!`, "main.js");
   add(p.contact, "That's everything here. Great work, Agent Rory!", "main.js");
 }
+// the intel each mission wins (clues.js showIntel), read out in Pip's voice
+const clues = fs.existsSync(path.join(js, "clues.js")) ? fs.readFileSync(path.join(js, "clues.js"), "utf8") : "";
+if (clues.includes("Speech.say(def.intel.text, v)")) for (const p of story.PLACES || []) for (const m of p.missions || []) if (m.intel && m.intel.text) add("pip", m.intel.text, "intel");
 for (const f of files) if (f.endsWith("room.js")) for (const m of fs.readFileSync(f, "utf8").matchAll(new RegExp(`frost:\\s*${str}`, "g"))) add("frost", unq(m[1]), "room.js");
 
 const all = [...lines.values()];

@@ -1,44 +1,50 @@
 [
  {
-  "key": "1g59881",
+  "key": "1c5c1yb",
   "who": "pip",
-  "text": "These blue balls are Gravity Cells. Each one holds a little bit of stolen gravity.",
+  "text": "These blue things are Gravity Cells. Each one holds a little bit of stolen gravity, and each one has a number: how much power it gives.",
   "from": "story"
  },
  {
-  "key": "1skw0ao",
+  "key": "0i0bkkm",
   "who": "pip",
-  "text": "Run into them to collect them. Jump with the JUMP button. Grab all six!",
+  "text": "The training door needs exactly the right power. Tap cells to add them up. Not too much, not too little!",
   "from": "story"
  },
  {
-  "key": "13zf00t",
+  "key": "0mqixhg",
   "who": "bolt",
-  "text": "Six cells! I counted them. Twice.",
+  "text": "The door opened. I counted the power. Twice.",
   "from": "story"
  },
  {
-  "key": "0d98fr2",
+  "key": "0qbz1c0",
   "who": "pip",
-  "text": "Bounce pads throw you high into the air. Some of these cells are right up high.",
+  "text": "Zero's machine runs on these cells. If we can count them, we can follow them.",
   "from": "story"
  },
  {
-  "key": "0bpim1m",
+  "key": "0uzpi4c",
   "who": "pip",
-  "text": "And the bubble by the tower has hardly any gravity in it. Jump inside and float!",
+  "text": "This is a gravity balance. When both sides weigh the same, it stays level.",
   "from": "story"
  },
  {
-  "key": "04uxftn",
+  "key": "1ekkouc",
+  "who": "pip",
+  "text": "There's a mystery box on one side. Work out what it weighs. That's how we spot a cell that's lost its gravity.",
+  "from": "story"
+ },
+ {
+  "key": "0qdrpxd",
   "who": "rory",
-  "text": "That bubble was brilliant.",
+  "text": "The sides match, so the box weighs the same as the blocks.",
   "from": "story"
  },
  {
-  "key": "0pl0hbd",
+  "key": "07qxdz5",
   "who": "pip",
-  "text": "That's what Zero's machine does, but to whole cities.",
+  "text": "Exactly. Zero's cells are lighter than they should be. He's sucking the gravity out of things.",
   "from": "story"
  },
  {
@@ -60,15 +66,15 @@
   "from": "story"
  },
  {
-  "key": "0zwngua",
+  "key": "0v6q7m0",
   "who": "pip",
-  "text": "Last one. Your watch has a tractor beam too. Stand next to a block and press USE to pick it up.",
+  "text": "Last bit of training. A spy has to remember things. Turn the cards over two at a time.",
   "from": "story"
  },
  {
-  "key": "19bhzjt",
+  "key": "088msm4",
   "who": "pip",
-  "text": "Carry it onto the glowing pad and press USE again to drop it. Three blocks!",
+  "text": "Find each sum and its answer. If they don't match, they flip back, so remember where they were!",
   "from": "story"
  },
  {
@@ -78,27 +84,27 @@
   "from": "story"
  },
  {
-  "key": "0ogf6ft",
-  "who": "pip",
-  "text": "The cells are up on the arcade roof and the tower next to it. Take the stairs, or bounce up on the pads.",
-  "from": "story"
- },
- {
-  "key": "1m6wx5a",
+  "key": "1v5vld3",
   "who": "yuki",
-  "text": "The pink pad on the arcade roof goes really high!",
+  "text": "Look! Cells all over the arcade roof. They're humming.",
   "from": "story"
  },
  {
-  "key": "04faski",
-  "who": "rory",
-  "text": "Eight cells. They were humming, like they wanted to go somewhere.",
-  "from": "story"
- },
- {
-  "key": "1qksam5",
+  "key": "0sbdom7",
   "who": "pip",
-  "text": "They're tuned to a signal. Somebody is collecting them.",
+  "text": "I need to scan them, Rory. Share them out equally between my scanner pods, so each pod gets the same.",
+  "from": "story"
+ },
+ {
+  "key": "08zwz75",
+  "who": "pip",
+  "text": "Scanned. They're tuned to a signal. Somebody is collecting them.",
+  "from": "story"
+ },
+ {
+  "key": "0gasvjl",
+  "who": "yuki",
+  "text": "Somebody? The big screens are flickering...",
   "from": "story"
  },
  {
@@ -108,9 +114,9 @@
   "from": "story"
  },
  {
-  "key": "1yhwvj7",
+  "key": "1v0s92g",
   "who": "pip",
-  "text": "Get close to anything with a pink ring under it and press PIN. Your watch will pull it back down.",
+  "text": "Some of those aren't machines at all. They're Floaters hiding a gravity leech. Tap every one that fits the rule!",
   "from": "story"
  },
  {
@@ -174,9 +180,9 @@
   "from": "story"
  },
  {
-  "key": "1b5ceoa",
+  "key": "0vlhu7m",
   "who": "pip",
-  "text": "BOLT has rocket feet! BOLT, fly up the rings round the tower and scan the top.",
+  "text": "BOLT has rocket feet! He's going to fly up the tower to find the machine.",
   "from": "story"
  },
  {
@@ -186,9 +192,9 @@
   "from": "story"
  },
  {
-  "key": "008sg4d",
+  "key": "0utf85s",
   "who": "pip",
-  "text": "Rory, you steer him. Hold JUMP to go up, let go to come down.",
+  "text": "Rory, you're the navigator. Follow the directions on the spy map and tap where BOLT lands.",
   "from": "story"
  },
  {
@@ -204,39 +210,45 @@
   "from": "story"
  },
  {
-  "key": "18oe4kr",
+  "key": "0n966fc",
   "who": "amira",
-  "text": "The cells are all over the step pyramid. Each step is one big jump.",
+  "text": "Somebody from Zero Industries rented the old tomb last summer. They said they were making hats.",
   "from": "story"
  },
  {
-  "key": "1bwxh2r",
+  "key": "1rpsjis",
+  "who": "amira",
+  "text": "The guard wrote down what they looked like. Three people came that day.",
+  "from": "story"
+ },
+ {
+  "key": "1221mhv",
   "who": "pip",
-  "text": "Climb all the way to the top. The last one is up high, so jump!",
+  "text": "Read the clues, Rory. Which one is Zero's helper?",
   "from": "story"
  },
  {
-  "key": "042w5l2",
+  "key": "0wat00b",
   "who": "rory",
-  "text": "There's a crate up here stamped ZERO INDUSTRIES. With a picture of a Floater on it.",
+  "text": "It's them. Look, there's a Floater badge under the hat.",
   "from": "story"
  },
  {
-  "key": "1w3cdpi",
+  "key": "1acbv2g",
   "who": "amira",
-  "text": "Zero Industries? They rented the old tomb last summer. They said they were making hats.",
+  "text": "Hats! I knew nobody makes hats in a tomb.",
   "from": "story"
  },
  {
-  "key": "0myyxvp",
+  "key": "1qglbxi",
   "who": "amira",
-  "text": "The Floaters knocked the capstone blocks off the plinth. Could you put them back, please?",
+  "text": "The Floaters knocked the capstone blocks off the plinth. Every block has a number carved on it.",
   "from": "story"
  },
  {
-  "key": "08a00b0",
+  "key": "04uojn2",
   "who": "pip",
-  "text": "GRAB a block, carry it to the green circle and DROP it. Four blocks!",
+  "text": "They go back in order, Rory. Smallest number first.",
   "from": "story"
  },
  {
@@ -252,21 +264,27 @@
   "from": "story"
  },
  {
-  "key": "1qnk5o3",
+  "key": "17zy8e8",
   "who": "amira",
-  "text": "Zero's workshop is inside the old tomb. But it's full of lasers now.",
+  "text": "And look. Under the last block. A door into the tomb.",
   "from": "story"
  },
  {
-  "key": "02f8gab",
-  "who": "pip",
-  "text": "Don't touch the red beams. Jump over the low ones, and wait for the moving ones to pass.",
-  "from": "story"
- },
- {
-  "key": "1rm5oxz",
+  "key": "15ow6zr",
   "who": "rory",
-  "text": "Plans! For something called a Gravity Pump. It's enormous.",
+  "text": "Zero's workshop! Plans everywhere. But the biggest one is written in a code.",
+  "from": "story"
+ },
+ {
+  "key": "0s90bvc",
+  "who": "pip",
+  "text": "Use the key, Rory. Each symbol is one letter. What's the machine called?",
+  "from": "story"
+ },
+ {
+  "key": "1g65p8i",
+  "who": "rory",
+  "text": "A Gravity Pump. And it's enormous.",
   "from": "story"
  },
  {
@@ -318,9 +336,9 @@
   "from": "story"
  },
  {
-  "key": "1tug9vi",
+  "key": "0qm54qc",
   "who": "pip",
-  "text": "PIN them down before they get too high.",
+  "text": "The gravity lever pins the heavy side down first. Which side is heavier, Rory?",
   "from": "story"
  },
  {
@@ -336,21 +354,21 @@
   "from": "story"
  },
  {
-  "key": "0wpvfzt",
+  "key": "0mpfzd7",
   "who": "pip",
-  "text": "The cells are riding on the ferries! Jump from the end of a wharf onto a ferry as it goes past.",
+  "text": "The cells are riding on the ferries, and every crate has a label. But the labels are in Zero's code.",
   "from": "story"
  },
  {
-  "key": "08wullh",
+  "key": "1kakyoo",
   "who": "jack",
-  "text": "One on each deck and one on each roof. Try not to fall in, the water's freezing!",
+  "text": "Where's he sending them?",
   "from": "story"
  },
  {
-  "key": "1aes9cs",
+  "key": "1m3booq",
   "who": "rory",
-  "text": "These cells have labels on them. DESTINATION: RIO.",
+  "text": "DESTINATION: RIO.",
   "from": "story"
  },
  {
@@ -360,27 +378,33 @@
   "from": "story"
  },
  {
-  "key": "1a0h6nm",
+  "key": "0qkfc26",
   "who": "jack",
-  "text": "Something is hanging under the Harbour Bridge. BOLT, can you fly out and have a look?",
+  "text": "There's a Floater stuck under the Harbour Bridge. And it's holding a bag.",
   "from": "story"
  },
  {
-  "key": "1mh0p31",
+  "key": "0hka8gq",
   "who": "bolt",
-  "text": "Rocket feet: go.",
+  "text": "I flew out. The bag is full of gold bars. Zero's ransom!",
   "from": "story"
  },
  {
-  "key": "0s6y6yd",
-  "who": "bolt",
-  "text": "It was a Floater. Stuck. I told it to have a nice day.",
-  "from": "story"
- },
- {
-  "key": "06w0psw",
+  "key": "11k6gz2",
   "who": "pip",
-  "text": "It had a key card. ZERO SHIPPING, back gate. That's the warehouse by the quay.",
+  "text": "Count them, Rory. Stacks of bars, the same in each stack.",
+  "from": "story"
+ },
+ {
+  "key": "0m5n6d4",
+  "who": "bolt",
+  "text": "And it had a key card. ZERO SHIPPING, back gate.",
+  "from": "story"
+ },
+ {
+  "key": "12oppck",
+  "who": "pip",
+  "text": "That's the warehouse by the quay.",
   "from": "story"
  },
  {
@@ -414,27 +438,33 @@
   "from": "story"
  },
  {
-  "key": "0e7zwzb",
+  "key": "1jptr4x",
   "who": "pip",
-  "text": "Bubble six of them. They run fast here, so corner them.",
+  "text": "One of them's the boss of the Floaters here. Read the clues and pick them out.",
   "from": "story"
  },
  {
-  "key": "1x6p8q3",
+  "key": "1q9ezeq",
+  "who": "rory",
+  "text": "That's no dancer. That's a Floater in a feather hat.",
+  "from": "story"
+ },
+ {
+  "key": "1ex4xl7",
   "who": "lucas",
-  "text": "The last one dropped a ticket. For the cable car up Sugarloaf Mountain.",
+  "text": "It dropped a ticket. For the cable car up Sugarloaf Mountain.",
   "from": "story"
  },
  {
-  "key": "0o0r9b1",
+  "key": "1dz53or",
+  "who": "lucas",
+  "text": "The cable cars are numbered, but Zero's swapped the signs round so nobody can find the right one.",
+  "from": "story"
+ },
+ {
+  "key": "0oy14g2",
   "who": "pip",
-  "text": "The cells are going up the mountain in the cable cars. Climb the station stairs and ride up on a roof.",
-  "from": "story"
- },
- {
-  "key": "0r6whd9",
-  "who": "lucas",
-  "text": "Grab the ones on the cars and the ones on the stations!",
+  "text": "The numbers go in a pattern. Work out what comes next, Rory.",
   "from": "story"
  },
  {
@@ -450,21 +480,27 @@
   "from": "story"
  },
  {
-  "key": "1ye2jxe",
+  "key": "0u0cscv",
   "who": "lucas",
-  "text": "Wait! A Floater is driving off with the key to the stadium!",
+  "text": "The Big Floater locked everybody out of the stadium, and the key is hidden on a Floater in the parade!",
   "from": "story"
  },
  {
-  "key": "033xm9z",
+  "key": "0kwshzw",
   "who": "pip",
-  "text": "Chase it round the avenue in the kart. Three bumps!",
+  "text": "Tap every Floater that fits the rule, Rory. The key's on one of them.",
   "from": "story"
  },
  {
   "key": "1heoai1",
   "who": "lucas",
   "text": "Got it! Now the Big Floater can't lock us out of the stadium.",
+  "from": "story"
+ },
+ {
+  "key": "09iwod8",
+  "who": "zero",
+  "text": "My key! Never mind. You'll wish you'd stayed out.",
   "from": "story"
  },
  {
@@ -510,9 +546,9 @@
   "from": "story"
  },
  {
-  "key": "1xwt4js",
+  "key": "0j8by1f",
   "who": "pip",
-  "text": "PIN them down, Rory. The hot dog carts too. Especially the hot dog carts.",
+  "text": "I can pin them down, but I need their weight. Read the gravity balance, Rory.",
   "from": "story"
  },
  {
@@ -522,21 +558,21 @@
   "from": "story"
  },
  {
-  "key": "0ur71kv",
-  "who": "pip",
-  "text": "The cells are on the rooftops by the park. Ride the window cleaner's lift up, then the pink pads take you higher.",
-  "from": "story"
- },
- {
-  "key": "0f9yi4b",
+  "key": "0qp1f9a",
   "who": "marcus",
-  "text": "Don't look down. Actually, look down a bit. So you don't fall.",
+  "text": "From the rooftops you can see the whole square. Zero's factory is down there somewhere.",
   "from": "story"
  },
  {
-  "key": "18nliht",
+  "key": "1reyo23",
+  "who": "pip",
+  "text": "I've put it on the spy map. Follow the directions and tap the door, Rory.",
+  "from": "story"
+ },
+ {
+  "key": "1om4kkk",
   "who": "rory",
-  "text": "From up here I can see a door in the pavement with a Z on it.",
+  "text": "There. A door in the pavement with a Z on it.",
   "from": "story"
  },
  {
@@ -606,9 +642,9 @@
   "from": "story"
  },
  {
-  "key": "18deo4d",
+  "key": "1ce3pgu",
   "who": "pip",
-  "text": "PIN them down, gently. Very gently. They are very cross.",
+  "text": "The heavy ones first, Rory, before they get too high. Which side of the lever is heavier?",
   "from": "story"
  },
  {
@@ -642,21 +678,27 @@
   "from": "story"
  },
  {
-  "key": "1xtdiqy",
+  "key": "14pg4r6",
   "who": "wanjiru",
-  "text": "The Floaters are putting gravity leeches round the watering hole, where the animals drink.",
+  "text": "The Floaters stuck gravity leeches all round the watering hole, where the animals drink.",
   "from": "story"
  },
  {
-  "key": "0ggswhp",
+  "key": "0z45w6x",
   "who": "pip",
-  "text": "Bubble all six. They're quick, so chase them into the water's edge.",
+  "text": "The rangers will carry them away. Share them out equally between the ranger bags, Rory.",
   "from": "story"
  },
  {
   "key": "11ap0cb",
   "who": "wanjiru",
   "text": "The animals can drink in peace. Look, the zebras are coming already.",
+  "from": "story"
+ },
+ {
+  "key": "1b2gw9x",
+  "who": "wanjiru",
+  "text": "Now, the tower. Its control box is on the hill.",
   "from": "story"
  },
  {
@@ -690,15 +732,15 @@
   "from": "story"
  },
  {
-  "key": "0a8p2w3",
+  "key": "0pvwzs1",
   "who": "mei",
-  "text": "The cells are spread all along the wall. Run the whole way, up the hills and through the watchtowers!",
+  "text": "Zero's relay is in one of the watchtowers. The towers are numbered, but the wall wobbles so much they're all mixed up.",
   "from": "story"
  },
  {
-  "key": "0z8gs81",
+  "key": "17ug1tr",
   "who": "pip",
-  "text": "Some are up high inside the towers, so jump for them.",
+  "text": "Put the watchtowers back in order, Rory, smallest number first.",
   "from": "story"
  },
  {
@@ -732,9 +774,9 @@
   "from": "story"
  },
  {
-  "key": "1h2ws98",
+  "key": "187ardv",
   "who": "pip",
-  "text": "The relay's signal bounces off the lanterns along the wall. BOLT, fly through every one to scramble it.",
+  "text": "Every lantern has a sum or an answer on it. Match them all up and the signal is scrambled.",
   "from": "story"
  },
  {
@@ -804,15 +846,15 @@
   "from": "story"
  },
  {
-  "key": "17htuw9",
+  "key": "1dskry9",
   "who": "arjun",
-  "text": "The Floaters took the fountain stones and scattered them round the garden.",
+  "text": "The Floaters took the fountain apart. It used to power the hatch lock.",
   "from": "story"
  },
  {
-  "key": "17a3ybd",
+  "key": "0qfq2nq",
   "who": "pip",
-  "text": "GRAB them and stack four back on the fountain. The fountain powers the hatch lock.",
+  "text": "Put the power back, Rory. The fountain needs exactly the right amount. Tap the cells to add them.",
   "from": "story"
  },
  {
@@ -846,21 +888,27 @@
   "from": "story"
  },
  {
-  "key": "0ck3nso",
+  "key": "05qoj4x",
   "who": "arjun",
-  "text": "The robots left signal cells on the minaret balconies. The air round them is so floaty you can jump and jump.",
+  "text": "The robots are flashing signals from the minarets! In code.",
   "from": "story"
  },
  {
-  "key": "1hon67r",
+  "key": "0o6ipxs",
   "who": "pip",
-  "text": "Bounce up off the pink pads, then keep jumping in the bubbles. Get every cell!",
+  "text": "Decode it, Rory. If we know what they're saying, we can stop it.",
   "from": "story"
  },
  {
-  "key": "107o4gt",
+  "key": "1gcahvf",
   "who": "rory",
-  "text": "Signals stopped. Zero's island won't know we're coming.",
+  "text": "ISLAND. They were telling the island we're coming.",
+  "from": "story"
+ },
+ {
+  "key": "0jomiik",
+  "who": "arjun",
+  "text": "Not any more. I've switched the lights off.",
   "from": "story"
  },
  {
@@ -870,15 +918,15 @@
   "from": "story"
  },
  {
-  "key": "1b6borx",
+  "key": "0kis32f",
   "who": "pip",
-  "text": "The beach is fenced with lasers. The only way in is straight through.",
+  "text": "The beach is fenced with lasers, and they switch off in a pattern.",
   "from": "story"
  },
  {
-  "key": "0llws50",
+  "key": "16m638p",
   "who": "pip",
-  "text": "They're fast here. Watch the pattern, then go.",
+  "text": "Work out the pattern, Rory. What number comes next? Then we know when to run.",
   "from": "story"
  },
  {
@@ -894,15 +942,15 @@
   "from": "story"
  },
  {
-  "key": "1sge7qa",
+  "key": "03uwcno",
   "who": "pip",
-  "text": "The silo codes are in a case at the back of the yard. Two guards with searchlights.",
+  "text": "One of Zero's island crew carries the silo codes. My watch heard them talking.",
   "from": "story"
  },
  {
-  "key": "16hgdn6",
+  "key": "0oyby9o",
   "who": "pip",
-  "text": "Keep to the walls and behind the crates. Wait for them to walk away.",
+  "text": "Read the clues, Rory. Which one has them?",
   "from": "story"
  },
  {
@@ -1002,44 +1050,44 @@
   "from": "story"
  },
  {
-  "key": "1be8awg",
+  "key": "15zkm1r",
   "who": "hale",
-  "text": "The red tower beside the rocket is the gantry. Stairs zig-zag up the side, and the yellow lift goes all the way up.",
+  "text": "Zero's Floaters mixed up our rocket stages. They have to go on in order.",
   "from": "story"
  },
  {
-  "key": "1fqs657",
+  "key": "0wvx77c",
   "who": "pip",
-  "text": "There are cells on every level, and one on the stairs. Climb, or ride the lift and hop off.",
+  "text": "Tap the stages in order, Rory. If they go on wrong, we'll go sideways.",
   "from": "story"
  },
  {
-  "key": "0otgln4",
+  "key": "1thamvv",
   "who": "hale",
-  "text": "Gantry's clear. Now let's check the rocket for any more surprises.",
+  "text": "Rocket's stacked. Now let's check the fuel.",
   "from": "story"
  },
  {
-  "key": "0wdjuil",
+  "key": "0syuf1p",
   "who": "hale",
-  "text": "BOLT, can you fly up round the rocket and scan it on the way?",
+  "text": "The fuel tanks have to weigh just right, or we won't get up.",
   "from": "story"
  },
  {
-  "key": "0g4ue6r",
+  "key": "1m3ba58",
+  "who": "pip",
+  "text": "Read the balance, Rory. What does the mystery tank weigh?",
+  "from": "story"
+ },
+ {
+  "key": "192eq5g",
+  "who": "hale",
+  "text": "Fuel's good.",
+  "from": "story"
+ },
+ {
+  "key": "1e8ey4j",
   "who": "bolt",
-  "text": "Rocket feet, meet rocket. Rocket, meet rocket feet.",
-  "from": "story"
- },
- {
-  "key": "068umcz",
-  "who": "bolt",
-  "text": "The rocket is clean. Except for one Floater sticker. I took it off.",
-  "from": "story"
- },
- {
-  "key": "1ga1e3g",
-  "who": "hale",
   "text": "Wait. There's a Floater heading for the fuel line with a spanner!",
   "from": "story"
  },
@@ -1068,21 +1116,21 @@
   "from": "story"
  },
  {
-  "key": "11mej9k",
+  "key": "1kpr4jg",
   "who": "pip",
-  "text": "Zero's Floaters stuck cells on the solar wings, above the deck. Fly up with the jetpack and grab them.",
+  "text": "Zero's Floaters stuck cells all over the solar wings. They're draining the airlock.",
   "from": "story"
  },
  {
-  "key": "1s6gyu3",
+  "key": "1rbtpr5",
   "who": "hale",
-  "text": "Don't drift too far. Space is very big.",
+  "text": "Give the airlock exactly the power it needs, Rory, and we're inside.",
   "from": "story"
  },
  {
-  "key": "0nljevw",
+  "key": "0c3nplo",
   "who": "rory",
-  "text": "Flying is the best thing ever.",
+  "text": "We're in. Flying is the best thing ever.",
   "from": "story"
  },
  {
@@ -1110,48 +1158,6 @@
   "from": "story"
  },
  {
-  "key": "02clar1",
-  "who": "pip",
-  "text": "Here they come. Bubble six Floaters before they reach the power box.",
-  "from": "story"
- },
- {
-  "key": "1cla4jl",
-  "who": "bolt",
-  "text": "They floated away into space. They look happy out there.",
-  "from": "story"
- },
- {
-  "key": "0g3ujju",
-  "who": "pip",
-  "text": "The airlock to the Pump controls is full of lasers. Walk, don't fly. Jetpacks and lasers don't mix.",
-  "from": "story"
- },
- {
-  "key": "0pw41z8",
-  "who": "rory",
-  "text": "Through. And there's a crate of spare parts floating off the deck!",
-  "from": "story"
- },
- {
-  "key": "0ta7ute",
-  "who": "hale",
-  "text": "The Pump is pulling loose things off the deck. If they float away we'll never get them back.",
-  "from": "story"
- },
- {
-  "key": "1az21zf",
-  "who": "pip",
-  "text": "PIN them down, Rory!",
-  "from": "story"
- },
- {
-  "key": "11i2kr3",
-  "who": "hale",
-  "text": "Deck secure. Now the Pump controls.",
-  "from": "story"
- },
- {
   "key": "0mb27an",
   "who": "pip",
   "text": "The Pump's off switch has a code lock. It's a long one, Rory. Seven notes.",
@@ -1176,15 +1182,21 @@
   "from": "story"
  },
  {
-  "key": "01grtml",
+  "key": "0a6jq7w",
   "who": "pip",
-  "text": "BOLT, fly round the Pump's ring and scan it. We need to know where its battery is.",
+  "text": "The Pump still has a battery somewhere. BOLT, fly round the ring and scan it.",
   "from": "story"
  },
  {
   "key": "0pthzjq",
   "who": "bolt",
   "text": "Flying round a giant space doughnut. Best day.",
+  "from": "story"
+ },
+ {
+  "key": "1lnhh2u",
+  "who": "pip",
+  "text": "Rory, guide him on the spy map. Tap where he ends up.",
   "from": "story"
  },
  {
@@ -1218,57 +1230,39 @@
   "from": "story"
  },
  {
-  "key": "1cbreh8",
+  "key": "1l6yfu6",
   "who": "hale",
-  "text": "The lander carried a moon buggy. Cells from the Pump have rained down all over these craters.",
+  "text": "Look in that crater! Zero's gold. All the bars the countries paid him.",
   "from": "story"
  },
  {
-  "key": "0gx7mkz",
+  "key": "1sd4n5l",
   "who": "pip",
-  "text": "Drive over every one. The buggy bounces a lot up here, so go easy on the bumps.",
+  "text": "Count them, Rory, so every country gets theirs back.",
   "from": "story"
  },
  {
-  "key": "0814ezb",
+  "key": "1b4vkoc",
   "who": "rory",
-  "text": "That was the best drive of my entire life.",
+  "text": "Every single bar.",
   "from": "story"
  },
  {
-  "key": "0jkfy1x",
+  "key": "0kerg9n",
   "who": "bolt",
-  "text": "I was not in the buggy. I watched. It looked good.",
+  "text": "I would like one gold bar. For being brave.",
   "from": "story"
  },
  {
-  "key": "0lroyjx",
-  "who": "pip",
-  "text": "More cells round the rim of that crater, and some up high. The gravity's so low you can jump really far.",
-  "from": "story"
- },
- {
-  "key": "175f54u",
-  "who": "bolt",
-  "text": "Jump like a kangaroo. A space kangaroo.",
-  "from": "story"
- },
- {
-  "key": "1k5y38z",
-  "who": "pip",
-  "text": "Got them. The battery's losing power without its cells.",
-  "from": "story"
- },
- {
-  "key": "15b7039",
+  "key": "014mmtx",
   "who": "hale",
-  "text": "We need to talk to Earth, and Zero's jamming the radio. Stack four blocks on the pad to build a signal tower.",
+  "text": "We need to talk to Earth, and Zero's jamming the radio.",
   "from": "story"
  },
  {
-  "key": "1x84xeu",
+  "key": "1n1e680",
   "who": "pip",
-  "text": "They're light up here, so they bounce. Drop them gently.",
+  "text": "There's a coded message getting through. Crack it, Rory.",
   "from": "story"
  },
  {
@@ -1284,21 +1278,9 @@
   "from": "story"
  },
  {
-  "key": "02agqp2",
+  "key": "0mojyhc",
   "who": "hale",
-  "text": "The battery is pulling our kit off the ground. Crates, fuel barrels, everything.",
-  "from": "story"
- },
- {
-  "key": "1yvjw5g",
-  "who": "pip",
-  "text": "PIN it down before it floats off into space!",
-  "from": "story"
- },
- {
-  "key": "0uad3vm",
-  "who": "hale",
-  "text": "Kit's secure. Zero's rover just left his base. He's heading for the battery!",
+  "text": "Zero's rover just left his base. He's heading for the battery!",
   "from": "story"
  },
  {
@@ -1308,39 +1290,21 @@
   "from": "story"
  },
  {
-  "key": "0tzx87k",
+  "key": "03yp7xh",
   "who": "pip",
-  "text": "Buggy, Rory! Round the craters after him. Three bumps!",
+  "text": "His tracks are on the spy map. Follow them, Rory, and tap where he's hiding.",
   "from": "story"
  },
  {
-  "key": "1d4ovkm",
+  "key": "0p0fhbp",
   "who": "zero",
-  "text": "Stop bumping me! Fine. Fine! I'm going inside!",
+  "text": "Stop following me! Fine. Fine! I'm going inside!",
   "from": "story"
  },
  {
-  "key": "1j73ab6",
+  "key": "1ngp9n9",
   "who": "rory",
-  "text": "He's gone into his base.",
-  "from": "story"
- },
- {
-  "key": "1mfy5lf",
-  "who": "pip",
-  "text": "His base entrance is full of lasers. The fastest ones yet.",
-  "from": "story"
- },
- {
-  "key": "1i5mgb0",
-  "who": "bolt",
-  "text": "You have done this many times. You are a laser expert.",
-  "from": "story"
- },
- {
-  "key": "1a9aq9x",
-  "who": "rory",
-  "text": "I'm in. There's the battery control panel.",
+  "text": "He's gone into his base. And there's the battery control panel.",
   "from": "story"
  },
  {
@@ -1950,492 +1914,6 @@
   "from": "story"
  },
  {
-  "key": "12opwu8",
-  "who": "pip",
-  "text": "One last test. A spy has to remember things. Here are some cards, face down.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0s01oq8",
-  "who": "pip",
-  "text": "Turn them over two at a time, Rory. Find each sum and its answer.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0qd26vx",
-  "who": "bolt",
-  "text": "You remembered all of them. I remember nothing. I have to write it down.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1yxul7c",
-  "who": "yuki",
-  "text": "Look at the arcade screen! The Floaters hacked it. It's full of Floaters with numbers!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0iz319y",
-  "who": "pip",
-  "text": "It's a lock. Tap every Floater the screen asks for, and it switches off.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0us9nzm",
-  "who": "yuki",
-  "text": "The screen's back to normal. Game over, Floaters!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "004h13w",
-  "who": "yuki",
-  "text": "That machine is still on the ground, but its power's gone. Power it up and it gives you a secret message!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1wprgo9",
-  "who": "pip",
-  "text": "Exactly the right power, Rory. Too much and it pops.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "126daqd",
-  "who": "bolt",
-  "text": "A drink, and a note. It says: look at the big screens.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0qhddwm",
-  "who": "yuki",
-  "text": "Someone in the park is helping the Floaters. I saw them hand over a leech!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "002wkq3",
-  "who": "pip",
-  "text": "Read the clues, Rory. Who's the spy?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1ad1ocj",
-  "who": "rory",
-  "text": "Caught you. Now, who do you work for?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ec3xn0",
-  "who": "bolt",
-  "text": "The machine on the top has a label on the bottom. It is in number code.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "053r22n",
-  "who": "pip",
-  "text": "A is 1, B is 2. Crack it, Rory!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "10aygoy",
-  "who": "rory",
-  "text": "This crate's full of gold bars. Zero's been collecting his payments already.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0qv1aue",
-  "who": "pip",
-  "text": "Count them, Rory. Stacks of bars: times tables.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0vgnzih",
-  "who": "amira",
-  "text": "All that gold. And it's stamped with a Floater.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "11gn3pl",
-  "who": "amira",
-  "text": "The capstone has to weigh just right, or it floats off again. Grandad's old balance will tell us.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1t5iy8c",
-  "who": "pip",
-  "text": "Work out what the box weighs, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1wme7ck",
-  "who": "amira",
-  "text": "Perfect balance. It'll stay put now.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0iktvuh",
-  "who": "amira",
-  "text": "The tomb has lots of rooms. My grandad's map shows which one is the workshop.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "06tdnbi",
-  "who": "pip",
-  "text": "Follow the steps to the workshop, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ul7uai",
-  "who": "jack",
-  "text": "We saved the surfboards! They go back in the lifeguard huts, the same number in each.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "02t6xu9",
-  "who": "pip",
-  "text": "Share them out, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "097oy3l",
-  "who": "jack",
-  "text": "Spot on. Every hut's got its boards back.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "13z7erj",
-  "who": "rory",
-  "text": "These cells have labels on them. In number code.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0m0srkk",
-  "who": "pip",
-  "text": "Crack it, Rory. Where are they going?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "19lpur9",
-  "who": "jack",
-  "text": "The Floater under the bridge had a countdown on it. There's a ship leaving when it ends!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "111m2vp",
-  "who": "pip",
-  "text": "What comes next in the countdown, Rory?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1vdxwhu",
-  "who": "jack",
-  "text": "We've got time to look in Zero's warehouse first.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1dkig9g",
-  "who": "rory",
-  "text": "The silver case is locked, and its battery's flat.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1inmcxd",
-  "who": "pip",
-  "text": "Power it up with exactly the right cells, before the searchlights come back!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "19wzf4i",
-  "who": "lucas",
-  "text": "Four dancers by the float, and one of them is helping the Floaters. You can tell. They can't samba.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ozmh6j",
-  "who": "pip",
-  "text": "Read the clues, Rory. Which one is it?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1fdu6bi",
-  "who": "lucas",
-  "text": "The cells are going up the mountain, the same number in every cable car.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0d3a4cg",
-  "who": "pip",
-  "text": "Share them out, Rory. How many in each car?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "054ftbr",
-  "who": "marcus",
-  "text": "The hot dog man says some of those taxis aren't taxis. They're Floaters in disguise!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "16hgcdh",
-  "who": "pip",
-  "text": "Tap every Floater the rule asks for, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "15ty5hq",
-  "who": "marcus",
-  "text": "He says the real ones went up on the rooftops.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0efq2qp",
-  "who": "marcus",
-  "text": "The window cleaner's lift is stuck at the top. Its battery's flat!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "01ia496",
-  "who": "pip",
-  "text": "Exactly the right power, Rory, and we can ride it down.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ap0fpm",
-  "who": "wanjiru",
-  "text": "The ranger's balance! If it's level, the weights keep the animals on the ground.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1iec277",
-  "who": "wanjiru",
-  "text": "That's all of them. Nobody floated off.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0okicvg",
-  "who": "wanjiru",
-  "text": "Some of those Floaters are carrying gravity leeches. The ranger marked them.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0mvijma",
-  "who": "pip",
-  "text": "Tap every one the rule asks for, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "01d3sn1",
-  "who": "wanjiru",
-  "text": "Mum says you'd make a very good ranger.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0izgc0u",
-  "who": "mei",
-  "text": "The temple gong is ringing a countdown! When it gets to the end, the wall floats off.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0n5o0dg",
-  "who": "pip",
-  "text": "What comes next, Rory? Quickly!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0dsrz88",
-  "who": "bolt",
-  "text": "The relay's signal is made of sums and answers. If we match them all, it scrambles.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1v2tup2",
-  "who": "pip",
-  "text": "Turn the cards over, Rory. Find the pairs.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0kkns4h",
-  "who": "rory",
-  "text": "The relay is printing out orders. In number code.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "05w6ypy",
-  "who": "pip",
-  "text": "Crack it, Rory. Where are the orders going?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0opg3dn",
-  "who": "arjun",
-  "text": "Four gardeners, and one of them keeps looking at the hatch. That's Zero's spy!",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1vrnm6y",
-  "who": "pip",
-  "text": "Use the clues, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1fzfljb",
-  "who": "arjun",
-  "text": "The fountain stones have to balance, or the water won't flow.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0y9k2dv",
-  "who": "arjun",
-  "text": "The signals were going out to sea. Here's a map of where they went.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1uaqfn1",
-  "who": "pip",
-  "text": "Follow the steps, Rory. Where's Zero's island?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0a3uv07",
-  "who": "pip",
-  "text": "The silo codes are behind a gravity lever. It opens when you say which side is heavier.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1b49mt8",
-  "who": "pip",
-  "text": "Work out both sides, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0eda83i",
-  "who": "hale",
-  "text": "The rocket's stages were knocked off the gantry. They go back in number order, Agent.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1681a93",
-  "who": "hale",
-  "text": "Rocket stacked. You're a natural.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "15jydfx",
-  "who": "hale",
-  "text": "The countdown's started, but the Floaters scrambled the numbers. What comes next, Agent?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "05prkwy",
-  "who": "hale",
-  "text": "Countdown fixed. Now, that buggy.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0067ux0",
-  "who": "bolt",
-  "text": "The Floaters were carrying gold bars! Zero's payments. They are floating everywhere.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0ljc4rx",
-  "who": "pip",
-  "text": "How many bars, Rory? Stacks, so it's times tables.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0smr96m",
-  "who": "bolt",
-  "text": "I will write it in my report. I will add a smiley face.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0fd2vz6",
-  "who": "pip",
-  "text": "The airlock has a gravity lever lock. Say which side is heavier, three times, and it opens.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "02ejarb",
-  "who": "hale",
-  "text": "The cargo labels got mixed up when they floated. Each sum goes with its answer.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "00qb5dd",
-  "who": "pip",
-  "text": "Match the pairs, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0zyua9z",
-  "who": "hale",
-  "text": "That matches. Nothing lost.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1gxaeip",
-  "who": "bolt",
-  "text": "The scan found a message painted on the Pump. It is in symbols.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1pyrvf5",
-  "who": "pip",
-  "text": "Use the key, Rory. Where's the battery?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1r9x4y4",
-  "who": "pip",
-  "text": "Zero has a spy in the station crew. He's got the codes for the console.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0e5nfza",
-  "who": "pip",
-  "text": "Read the clues, Rory. Some of them say NOT.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1ubxscc",
-  "who": "hale",
-  "text": "Here's the crater map. The battery is in one of these craters.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1870y4j",
-  "who": "pip",
-  "text": "Follow the steps, Rory.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "027a156",
-  "who": "hale",
-  "text": "That's the one. Right next to his base.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1fefknf",
-  "who": "pip",
-  "text": "The battery's slots each hold the same number of cells. How many in each? Then we know how to drain it.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "1wi4fui",
-  "who": "hale",
-  "text": "The tower blocks are numbered. They have to go in order, or the radio won't reach Earth.",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "0w81h0q",
-  "who": "hale",
-  "text": "Zero's gold bars are bouncing all over the crater! How many has he got up here?",
-  "from": "js/cluemap.js"
- },
- {
-  "key": "06xwq9z",
-  "who": "pip",
-  "text": "Stacks of bars, Rory. Times tables.",
-  "from": "js/cluemap.js"
- },
- {
   "key": "0v88els",
   "who": "bolt",
   "text": "All three golden bolts here! BOLT is very pleased.",
@@ -2712,6 +2190,24 @@
   "from": "hq/room.js"
  },
  {
+  "key": "1yf1b0t",
+  "who": "pip",
+  "text": "My arcade! Every puzzle from every mission, all in one machine.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "15yi8px",
+  "who": "pip",
+  "text": "The ones you've found are lit up. Play them at any level, and win tickets.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1ijagri",
+  "who": "bolt",
+  "text": "I have played it four hundred times. I am still on level one.",
+  "from": "hq/room.js"
+ },
+ {
   "key": "1cb0gcf",
   "who": "bolt",
   "text": "It is a banana. It only rings when it wants to.",
@@ -2820,6 +2316,12 @@
   "from": "hq/room.js"
  },
  {
+  "key": "17om9nz",
+  "who": "frost",
+  "text": "Pip's arcade machine is by the door. Every puzzle you've cracked, all in one place.",
+  "from": "hq/room.js"
+ },
+ {
   "key": "1a85exh",
   "who": "pip",
   "text": "I built BOLT on this bench. He was supposed to be a toaster.",
@@ -2841,6 +2343,12 @@
   "key": "1i33z5p",
   "who": "pip",
   "text": "Whatever you do, don't press the big red button. Unless you want to. It's quite fun.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0bjxnuw",
+  "who": "pip",
+  "text": "I built the arcade machine out of an old fridge. Every puzzle you find goes in it.",
   "from": "hq/room.js"
  },
  {
@@ -2874,9 +2382,9 @@
   "from": "main.js"
  },
  {
-  "key": "1bu0wm7",
+  "key": "1jzztky",
   "who": "pip",
-  "text": "The beacon for Pad Practice is glowing. Look for the tall beam of light!",
+  "text": "The beacon for The Gravity Balance is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2886,9 +2394,9 @@
   "from": "main.js"
  },
  {
-  "key": "0p7cgp7",
+  "key": "1j6dah2",
   "who": "pip",
-  "text": "The beacon for Block Drop is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Spy Memory is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2928,9 +2436,9 @@
   "from": "main.js"
  },
  {
-  "key": "090w5h0",
+  "key": "0dul76q",
   "who": "amira",
-  "text": "The beacon for The Step Pyramid is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Who Rented the Tomb? is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2940,9 +2448,9 @@
   "from": "main.js"
  },
  {
-  "key": "0j6rjz6",
+  "key": "0rdi62m",
   "who": "amira",
-  "text": "The beacon for Tomb of Lasers is glowing. Look for the tall beam of light!",
+  "text": "The beacon for The Secret Plans is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2964,15 +2472,15 @@
   "from": "main.js"
  },
  {
-  "key": "15mjcu9",
+  "key": "0pzcmtz",
   "who": "jack",
-  "text": "The beacon for Ferry Hop is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Ferry Labels is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
-  "key": "06jpyx3",
+  "key": "126446k",
   "who": "jack",
-  "text": "The beacon for Bridge Flight is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Under the Bridge is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2994,15 +2502,15 @@
   "from": "main.js"
  },
  {
-  "key": "1rws0hx",
+  "key": "0sfsrb0",
   "who": "lucas",
-  "text": "The beacon for Cable Car Cells is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Cable Car Numbers is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
-  "key": "1dq4zgy",
+  "key": "038cmqm",
   "who": "lucas",
-  "text": "The beacon for Parade Chase is glowing. Look for the tall beam of light!",
+  "text": "The beacon for The Stadium Key is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -3090,9 +2598,9 @@
   "from": "main.js"
  },
  {
-  "key": "1rqpknm",
+  "key": "0azn2i1",
   "who": "mei",
-  "text": "The beacon for Lantern Flight is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Lantern Scramble is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -3144,15 +2652,15 @@
   "from": "main.js"
  },
  {
-  "key": "0wjqouz",
+  "key": "1xjyv3u",
   "who": "hale",
-  "text": "The beacon for Gantry Climb is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Stack the Rocket is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
-  "key": "1faa1ud",
+  "key": "1gitg15",
   "who": "hale",
-  "text": "The beacon for Rocket Check is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Fuel Check is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -3166,6 +2674,330 @@
   "who": "hale",
   "text": "That's everything here. Great work, Agent Rory!",
   "from": "main.js"
+ },
+ {
+  "key": "1uymp0l",
+  "who": "pip",
+  "text": "Stolen gravity is kept in blue Gravity Cells. Each cell has a number on it: how much power it holds.",
+  "from": "intel"
+ },
+ {
+  "key": "1t2fkoa",
+  "who": "pip",
+  "text": "Anything near Zero's machine gets lighter and lighter, until it floats away. Weighing things shows where he's been.",
+  "from": "intel"
+ },
+ {
+  "key": "0te3yih",
+  "who": "pip",
+  "text": "Professor Zero's robots are called Floaters. A Gravity Bubble from Rory's watch pops them up and away.",
+  "from": "intel"
+ },
+ {
+  "key": "0a6j4sn",
+  "who": "pip",
+  "text": "A whole building has started floating in Tokyo. Something there is stealing its gravity.",
+  "from": "intel"
+ },
+ {
+  "key": "1aab0p0",
+  "who": "pip",
+  "text": "The cells are tuned to a signal, like a radio. They are all being sent to the same place.",
+  "from": "intel"
+ },
+ {
+  "key": "1uw3ajl",
+  "who": "pip",
+  "text": "Professor Zero wants one gold bar from every country, or everything they own floats into space. He invented floating shoes.",
+  "from": "intel"
+ },
+ {
+  "key": "0f3jg3u",
+  "who": "pip",
+  "text": "A Floater in the park dropped a map of Tokyo Tower with rings drawn round the top.",
+  "from": "intel"
+ },
+ {
+  "key": "0jizdzs",
+  "who": "pip",
+  "text": "Zero's gravity machine is stamped MADE IN EGYPT. He has a workshop near the pyramids.",
+  "from": "intel"
+ },
+ {
+  "key": "18cam77",
+  "who": "pip",
+  "text": "Zero Industries rented the old tomb and pretended to make hats. It's really his workshop.",
+  "from": "intel"
+ },
+ {
+  "key": "1xzdrnz",
+  "who": "pip",
+  "text": "Under the capstone blocks was a secret door into the old tomb, where Zero's workshop is.",
+  "from": "intel"
+ },
+ {
+  "key": "1e9elgo",
+  "who": "pip",
+  "text": "Zero is building a Gravity Pump: a giant machine big enough to lift whole cities.",
+  "from": "intel"
+ },
+ {
+  "key": "0mmyx8c",
+  "who": "pip",
+  "text": "The Pump's parts are being shipped out of Sydney harbour.",
+  "from": "intel"
+ },
+ {
+  "key": "1b606jq",
+  "who": "pip",
+  "text": "Zero's machine in Sydney only takes the light things first. Heavy things hold on longer.",
+  "from": "intel"
+ },
+ {
+  "key": "0803rmt",
+  "who": "pip",
+  "text": "The cells on the ferries are labelled for Rio de Janeiro.",
+  "from": "intel"
+ },
+ {
+  "key": "1vnq78m",
+  "who": "pip",
+  "text": "Countries have started paying Zero in gold bars. A stuck Floater had a key card for the Zero Shipping warehouse.",
+  "from": "intel"
+ },
+ {
+  "key": "1ddovvi",
+  "who": "pip",
+  "text": "Zero's parts are being hidden in carnival floats, in the parade in Rio.",
+  "from": "intel"
+ },
+ {
+  "key": "0h4u4xf",
+  "who": "pip",
+  "text": "Zero's Floaters are hiding in the carnival in costumes. One had a ticket for the Sugarloaf cable car.",
+  "from": "intel"
+ },
+ {
+  "key": "16fxbfh",
+  "who": "pip",
+  "text": "There is a giant robot in Rio's stadium. Zero calls it the Big Floater.",
+  "from": "intel"
+ },
+ {
+  "key": "1dn4a7s",
+  "who": "pip",
+  "text": "The Big Floater is in the stadium. It has a pink battery on its back.",
+  "from": "intel"
+ },
+ {
+  "key": "1hud2cz",
+  "who": "pip",
+  "text": "The Big Floater had a delivery note inside it. The Pump is being built in New York.",
+  "from": "intel"
+ },
+ {
+  "key": "0j45ifx",
+  "who": "pip",
+  "text": "Zero's machine in New York is right under Times Square.",
+  "from": "intel"
+ },
+ {
+  "key": "08iinrx",
+  "who": "pip",
+  "text": "Zero's factory is under a door in the pavement with a Z on it. It needs power to open.",
+  "from": "intel"
+ },
+ {
+  "key": "1d3elhn",
+  "who": "pip",
+  "text": "When the power came back, Zero's van left the factory full of parts.",
+  "from": "intel"
+ },
+ {
+  "key": "070n0ss",
+  "who": "pip",
+  "text": "The van's parts are for the Pump's battery. They're labelled BATTERY TEST: KENYA.",
+  "from": "intel"
+ },
+ {
+  "key": "1x3zltt",
+  "who": "pip",
+  "text": "Zero has built a battery tower on the savanna. It's what's lifting the animals.",
+  "from": "intel"
+ },
+ {
+  "key": "12aoql0",
+  "who": "pip",
+  "text": "A Floater stole a ranger's radio and a map of the watering hole with crosses on it.",
+  "from": "intel"
+ },
+ {
+  "key": "0du3fi7",
+  "who": "pip",
+  "text": "The battery tower has a control box on the hill, with a code lock that plays a tune.",
+  "from": "intel"
+ },
+ {
+  "key": "1w1dzmh",
+  "who": "pip",
+  "text": "The tower's computer was talking to a relay on the Great Wall of China. Zero is controlling the Pump from there.",
+  "from": "intel"
+ },
+ {
+  "key": "0n8ji9s",
+  "who": "pip",
+  "text": "Zero's robots rigged the temple bells to send his signals along the wall.",
+  "from": "intel"
+ },
+ {
+  "key": "16m5cmh",
+  "who": "pip",
+  "text": "The relay's signal bounces off the lanterns along the wall. Scramble the lanterns and the relay goes deaf.",
+  "from": "intel"
+ },
+ {
+  "key": "0r6r79g",
+  "who": "pip",
+  "text": "The relay is in a room at the back of the fort. Zero filled it with lasers.",
+  "from": "intel"
+ },
+ {
+  "key": "00xcu32",
+  "who": "pip",
+  "text": "The relay was sending orders to a secret workshop under the gardens of the Taj Mahal.",
+  "from": "intel"
+ },
+ {
+  "key": "0vbi2rj",
+  "who": "pip",
+  "text": "The workshop hatch has a power lock. The power comes from the fountain in the east garden.",
+  "from": "intel"
+ },
+ {
+  "key": "0eu6j7x",
+  "who": "pip",
+  "text": "The fountain is running again, so there's power for the workshop hatch.",
+  "from": "intel"
+ },
+ {
+  "key": "0vn1cgx",
+  "who": "pip",
+  "text": "Zero's blueprints show the Pump on an island shaped like a Z. His robots are signalling it from the minarets.",
+  "from": "intel"
+ },
+ {
+  "key": "1rrup3o",
+  "who": "pip",
+  "text": "Zero's secret base is on his own island. The Pump is finished, and it's there.",
+  "from": "intel"
+ },
+ {
+  "key": "1gpsoz7",
+  "who": "pip",
+  "text": "The Pump is in a rocket silo in the middle of the island. The silo doors need codes.",
+  "from": "intel"
+ },
+ {
+  "key": "1737n9h",
+  "who": "pip",
+  "text": "Rory has the silo codes. The doors run on a power panel at the silo.",
+  "from": "intel"
+ },
+ {
+  "key": "0ev4p4x",
+  "who": "pip",
+  "text": "Zero's biggest robot, Floater Prime, guards the silo while he gets the rocket ready.",
+  "from": "intel"
+ },
+ {
+  "key": "0earfjb",
+  "who": "pip",
+  "text": "Zero's rocket took the Pump into space. From orbit, it can reach the whole world.",
+  "from": "intel"
+ },
+ {
+  "key": "0k5zrtl",
+  "who": "pip",
+  "text": "The launch computer is fixed. POLARIS's own rocket can follow Zero into space.",
+  "from": "intel"
+ },
+ {
+  "key": "13ypv4z",
+  "who": "pip",
+  "text": "POLARIS's rocket is stacked and ready to fuel.",
+  "from": "intel"
+ },
+ {
+  "key": "0pacfwt",
+  "who": "pip",
+  "text": "One last Floater is trying to stop the launch. It's heading for the fuel line.",
+  "from": "intel"
+ },
+ {
+  "key": "03ilvst",
+  "who": "pip",
+  "text": "Zero's Pump is on a space station, high above the Earth.",
+  "from": "intel"
+ },
+ {
+  "key": "0i8q5b3",
+  "who": "pip",
+  "text": "The whole station's power runs through one box. It can be sent away from the Pump.",
+  "from": "intel"
+ },
+ {
+  "key": "083hekm",
+  "who": "pip",
+  "text": "The Pump's off switch is behind a code lock, seven notes long.",
+  "from": "intel"
+ },
+ {
+  "key": "0vgskg0",
+  "who": "pip",
+  "text": "The Pump is switched off. Everything on Earth is floating back down.",
+  "from": "intel"
+ },
+ {
+  "key": "1n3gli0",
+  "who": "pip",
+  "text": "The Pump's battery is on the Moon, in Zero's Moon base. The base codes are on his console.",
+  "from": "intel"
+ },
+ {
+  "key": "17plg4e",
+  "who": "pip",
+  "text": "Zero has escaped to his Moon base in an escape pod. The battery is there.",
+  "from": "intel"
+ },
+ {
+  "key": "1wivwuc",
+  "who": "pip",
+  "text": "All Zero's ransom gold was hidden in a Moon crater. It's going back to every country.",
+  "from": "intel"
+ },
+ {
+  "key": "1qzlnli",
+  "who": "pip",
+  "text": "POLARIS can hear Rory again. Zero has left his base in a rover.",
+  "from": "intel"
+ },
+ {
+  "key": "17ugj7n",
+  "who": "pip",
+  "text": "The battery control panel has a breaker. Connect the power and the battery shuts off for good.",
+  "from": "intel"
+ },
+ {
+  "key": "1ss3gyu",
+  "who": "pip",
+  "text": "Zero is driving his last robot himself: the Mega Floater, with his face on it.",
+  "from": "intel"
+ },
+ {
+  "key": "1bzsyq4",
+  "who": "pip",
+  "text": "The world has its gravity back. Professor Zero is going to make floating shoes for POLARIS, as toys.",
+  "from": "intel"
  },
  {
   "key": "0qyqnro",

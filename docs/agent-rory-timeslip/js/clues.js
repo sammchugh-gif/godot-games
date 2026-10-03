@@ -38,6 +38,7 @@ const CSS = `
 .cl-pips { display: flex; gap: 6px; }
 .cl-pips i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,.15); border: 2px solid rgba(255,255,255,.35); }
 .cl-pips i.on { background: var(--gold, #ffd166); border-color: var(--gold, #ffd166); }
+.cl-btn { border: 0; border-radius: 999px; padding: 8px 12px; font: inherit; font-weight: 900; font-size: 13px; letter-spacing: .06em; background: rgba(255,255,255,.12); color: #fff; flex: none; }
 .cl-say { border: 0; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; background: rgba(255,255,255,.12); color: #fff; flex: none; }
 .cl-grid { display: flex; gap: 14px; align-items: center; justify-content: center; margin-top: 8px; }
 .cl-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
@@ -135,10 +136,12 @@ export class Clue {
     style();
     this.finished = done;
     this.el = screen("clue", `<div class="cl-card"><div class="cl-top"><div><div class="cl-eyebrow">🕵️ ${esc(this.spec.eyebrow || this.eyebrow)}</div><div class="cl-title">${esc(this.spec.title || this.title)}</div></div>
-      <div class="cl-pips"></div><button class="cl-say" data-say aria-label="Read it to me">🔊</button></div>
+      <div class="cl-pips"></div>${this.mission ? `<button class="cl-btn" data-hint>💡 HINT</button><button class="cl-btn" data-leave>LEAVE</button>` : ""}<button class="cl-say" data-say aria-label="Read it to me">🔊</button></div>
       <div class="cl-body"></div><div class="cl-msg"></div></div>`, "screen dim cl-screen");
     this.body = this.el.querySelector(".cl-body"); this.msgEl = this.el.querySelector(".cl-msg"); this.pipEl = this.el.querySelector(".cl-pips");
     onTap(this.el, "[data-say]", () => this.read());
+    onTap(this.el, "[data-hint]", () => this.askHint());
+    onTap(this.el, "[data-leave]", () => { const m = this.mission; this.dismiss(); if (m) m.leave(); });
     this.keyFn = e => this.key && this.key(e.key);
     window.addEventListener("keydown", this.keyFn);
     this.setup();
@@ -165,7 +168,17 @@ export class Clue {
     const t = el || this.body; t.classList.remove("cl-shake"); void t.offsetWidth; t.classList.add("cl-shake");
     if (this.miss >= 2 && this.hint) this.hint(this.miss);
   }
-  close() { window.removeEventListener("keydown", this.keyFn); clearLayer("clue"); const f = this.finished; this.finished = null; if (f) f({ mistakes: this.mistakes }); }
+  close() { window.removeEventListener("keydown", this.keyFn); clearLayer("clue"); const f = this.finished; this.finished = null; if (f) f({ mistakes: this.mistakes, hints: this.hints || 0 }); }
+  // put away without finishing (leaving the mission, or the mission being tidied up)
+  dismiss() { window.removeEventListener("keydown", this.keyFn); clearLayer("clue"); this.finished = null; }
+  // HINT: the strongest help the clue has, read out; a hint costs the third star
+  askHint() {
+    if (this.busy) return;
+    this.hints = (this.hints || 0) + 1;
+    if (this.hint) this.hint(3);
+    const t = this.msgEl.textContent && this.msgEl.className.includes("bad") ? this.msgEl.textContent : (this.q && this.q.tip) || "Take it one step at a time. Read the question again, slowly.";
+    this.say(t, "bad"); Speech.say(t, this.voice || VOICE);
+  }
   // the autopilot: answer each round the right way, through the same buttons a player taps
   solve() { const step = () => { if (!this.finished) return; if (!this.busy) this.auto(); setTimeout(step, 250); }; step(); }
 }
@@ -369,15 +382,23 @@ export class Suspect extends Clue {
     this.wrong(`Not ${this.q.names[i]}! Look at the yellow clue.`, b);
   }
   auto() { const b = this.body.querySelector(`[data-p="${this.q.spy}"]`); if (b) this.tap(this.q.spy, b); }
+  // which clue rules the most people out, lit up
+  hint() {
+    const q = this.q, left = q.people.map((p, i) => i).filter(i => !this.body.querySelector(`[data-p="${i}"]`).classList.contains("no"));
+    let best = 0, most = -1; q.clues.forEach((c, k) => { const out = left.filter(i => !c.ok(q.people[i])).length; if (out > most) { most = out; best = k; } });
+    this.body.querySelectorAll("[data-cl]").forEach(e => e.classList.toggle("hl", +e.dataset.cl === best));
+    this.say(`Start with the yellow clue: "${q.clues[best].text}" Who doesn't fit it? They're not the spy.`, "bad");
+  }
 }
 
 // the three every game has; each game adds its own (puzzles.js) through opts.kinds
 export const KINDS = { suspect: Suspect, cipher: Cipher, map: MapClue };
 
 // a clue on its own (the tests, and anything that wants a puzzle outside a mission)
-export function openClue(G, spec, lv, { voice, theme, kinds } = {}, done) {
+export function openClue(G, spec, lv, { voice, theme, kinds, mission } = {}, done) {
   const K = (kinds && kinds[spec.p]) || KINDS[spec.p]; if (!K) { done && done({ mistakes: 0 }); return null; }
   const c = new K(G, spec, spec.lv || lv, voice);
+  c.mission = mission || null;
   c.theme = { things: ["guards", "drones", "cameras"], boxes: ["crates", "vans", "boxes"], words: ["SPY", "CODE", "MAP", "KEY", "SAFE"], ...(theme || {}) };
   c.open(done);
   return c;
@@ -386,10 +407,10 @@ export function openClue(G, spec, lv, { voice, theme, kinds } = {}, done) {
 // every mission in CLUES ends with its clue: the lines, the puzzle, the line after, then MISSION COMPLETE
 export function installClues(G, CLUES, opts = {}) {
   const win = G.onMissionWin;
-  G.clues = CLUES;
+  G.clues = CLUES; G.puzzleOpts = opts;
   G.onMissionWin = m => {
     const spec = CLUES[m.def.id];
-    if (!spec || m.clued) return win(m);
+    if (!spec || m.clued || m.isPuzzle) return win(m);
     m.clued = true;
     G.state = "clue"; G.input.forced = null;
     // (under water, the air holds while Rory thinks: nobody should run out of breath doing a sum)
@@ -403,4 +424,74 @@ export function installClues(G, CLUES, opts = {}) {
     const go = () => { G.clue = openClue(G, spec, m.def.lv || 1, opts, finish); if (G.autoSolve && G.clue) G.clue.solve(); };
     if (spec.say && spec.say.length && !G.autoSolve) G.dialogue.show(spec.say, go); else go();
   };
+}
+
+// ------------------------------------------------------------ missions that are a puzzle
+// A mission whose whole job is one of the game's puzzles, at its station, like the missions
+// in Operation Eclipse and Meltdown: walk up, hear the briefing, crack it, win the intel.
+// The mission's own fields are the puzzle's (p, lv, word, things...). HINT and LEAVE are on
+// the puzzle; a hint costs the third star, and so do more than a couple of slips.
+export class PuzzleMission {
+  constructor(g, def, data) { this.g = g; this.def = def; this.data = data || {}; this.lv = def.lv || 1; this.done = false; this.failed = false; this.freeze = true; this.isPuzzle = true; this.t = 0; this.mistakes = 0; this.hints = 0; this.time = 0; }
+  start() {
+    const o = this.g.puzzleOpts || {};
+    this.clue = openClue(this.g, this.def, this.lv, { ...o, mission: this }, r => { this.mistakes = r.mistakes; this.hints = r.hints || 0; this.clue = null; this.win(); });
+    if (!this.clue) this.win();
+  }
+  tick(dt) { if (!this.done && !this.failed) this.t += dt; }
+  win() { if (this.done) return; this.done = true; this.g.onMissionWin(this); }
+  leave() { if (this.done || this.failed) return; this.failed = true; this.clue = null; this.g.onMissionLose(this, "COME BACK LATER"); }
+  stars() { return this.hints === 0 && this.mistakes <= 1 ? 3 : this.hints <= 1 && this.mistakes <= 4 ? 2 : 1; }
+  hud() { return { label: this.def.title.toUpperCase(), text: "Crack it!", progress: null, timer: null }; }
+  solve() { if (this.clue && !this.solving) { this.solving = true; this.clue.solve(); } }
+  target() { return null; }
+  cleanup() { if (this.clue) { this.clue.dismiss(); this.clue = null; } }
+}
+
+// ------------------------------------------------------------ intel and the dossier
+// Every mission wins a piece of intel, and the intel is the thread: it says where to go
+// next. It is stamped on a card after the mission, read out, and kept in the dossier.
+const INTEL_CSS = `
+.in-card { background: #f4ecd8; color: #2a2018; border-radius: 10px; padding: 18px 22px 16px; width: min(92vw, 560px); box-shadow: 0 18px 50px rgba(0,0,0,.55); position: relative; text-align: left; font-family: "Courier New", Courier, monospace; transform: rotate(-1.2deg); }
+.in-card .in-top { font-weight: 900; letter-spacing: .3em; font-size: 13px; color: #8a2a1a; }
+.in-card h3 { margin: 6px 0 8px; font-size: clamp(19px, 4.4vmin, 26px); font-family: inherit; }
+.in-card p { margin: 0; font-size: clamp(15px, 3.8vmin, 20px); line-height: 1.4; font-weight: 700; }
+.in-stamp { position: absolute; right: 16px; top: 10px; border: 4px solid #c8241a; color: #c8241a; font-weight: 900; letter-spacing: .12em; padding: 2px 10px; border-radius: 6px; font-family: Impact, "Arial Black", sans-serif; font-size: clamp(16px, 4vmin, 22px); transform: rotate(12deg) scale(2.4); opacity: 0; transition: transform .22s cubic-bezier(.3,1.6,.6,1), opacity .15s; }
+.in-stamp.on { transform: rotate(12deg) scale(1); opacity: .9; }
+.in-doss { background: var(--panel, rgba(8,16,34,.92)); border: 1px solid var(--edge, rgba(127,227,255,.35)); border-radius: 22px; padding: 14px 16px; width: min(96vw, 860px); max-height: 92%; display: flex; flex-direction: column; gap: 8px; }
+.in-doss .in-list { overflow: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; -webkit-overflow-scrolling: touch; }
+.in-place { text-align: left; }
+.in-place h4 { margin: 4px 0; color: var(--gold, #ffd166); letter-spacing: .12em; font-size: 15px; }
+.in-item { background: #f4ecd8; color: #2a2018; border-radius: 8px; padding: 8px 12px; font-family: "Courier New", Courier, monospace; margin-bottom: 6px; }
+.in-item b { display: block; font-size: 15px; }
+.in-item span { font-size: 14px; font-weight: 700; }
+.in-item.lock { background: rgba(255,255,255,.08); color: var(--dim, #8ea4c4); font-family: inherit; }
+.in-item i { float: right; font-style: normal; color: #d8a020; letter-spacing: .1em; }
+`;
+export function showIntel(G, def, cb) {
+  if (!def || !def.intel) { cb && cb(); return; }
+  addStyle("in-style", INTEL_CSS);
+  const prev = G.state; G.state = "result";
+  const s = screen("result", `<div class="in-card"><div class="in-top">INTEL WON</div><div class="in-stamp">${esc(G.agency || "POLARIS")}</div>
+    <h3>${esc(def.intel.title)}</h3><p>${esc(def.intel.text)}</p></div>
+    <div class="row" style="margin-top:14px"><button class="btn gold" data-a="next">INTO THE DOSSIER ▸</button></div>`, "screen dim");
+  setTimeout(() => { const st = s.querySelector(".in-stamp"); if (st) { st.classList.add("on"); G.sound && G.sound("click"); } }, 450);
+  const v = G.puzzleOpts && G.puzzleOpts.voice;
+  setTimeout(() => { if (s.isConnected && v) Speech.say(def.intel.text, v); }, 700);
+  onTap(s, "[data-a]", () => { clearLayer("result"); Speech.stop && Speech.stop(); G.state = prev; cb && cb(); });
+}
+// the dossier: every place so far, and the intel each mission won (stars too)
+export function showDossier(G, places, back) {
+  addStyle("in-style", INTEL_CSS);
+  const done = new Set(G.save.done || []), stars = G.save.stars || {};
+  const seen = places.filter(p => p.missions.some(m => done.has(m.id)) || (G.save.arrived || {})[p.id]);
+  const total = places.reduce((n, p) => n + p.missions.filter(m => done.has(m.id) && m.intel).length, 0);
+  const html = seen.length ? seen.map(p => `<div class="in-place"><h4>${esc((p.name || "").toUpperCase())}${p.country ? " · " + esc(p.country.toUpperCase()) : ""}</h4>${p.missions.map(m => done.has(m.id)
+    ? `<div class="in-item"><i>${"★".repeat(stars[m.id] || 0)}</i><b>${esc(m.intel ? m.intel.title : m.title)}</b><span>${esc(m.intel ? m.intel.text : "Mission complete.")}</span></div>`
+    : `<div class="in-item lock">${esc(m.title)}: not cracked yet</div>`).join("")}</div>`).join("") : `<div class="in-item lock">No intel yet. Every mission wins some.</div>`;
+  const s = screen("dossier", `<div class="in-doss"><div class="cl-top"><div><div class="cl-eyebrow">🕵️ TOP SECRET</div><div class="cl-title">THE DOSSIER · ${total} PIECES OF INTEL</div></div><button class="btn gold small" data-a="back">BACK</button></div>
+    <div class="in-list">${html}</div></div>`, "screen dim");
+  style();
+  onTap(s, "[data-a]", () => { clearLayer("dossier"); back && back(); });
+  const list = s.querySelector(".in-list"); if (list) list.scrollTop = list.scrollHeight;
 }

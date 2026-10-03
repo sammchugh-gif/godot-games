@@ -270,6 +270,8 @@ function startReplay(m) {
 }
 function endReplay() {
   const r = G.replay; G.replay = null;
+  // a mini-game opened from the HQ's Puzzle Arcade goes back to the arcade
+  if (G.arcade) { Speech.stop(); location.href = "../agent-rory-hq/arcade.html"; return; }
   Speech.stop();
   fadeOut(() => {
     if (r.swapped) { G.country = r.city; loadScene(COUNTRIES[r.city].id); refreshStations(); }
@@ -580,6 +582,10 @@ async function boot() {
   document.getElementById("boot").style.display = "none";
   Audio.musicOn = G.settings.music;
   setState("title"); G.fade = 1; G.fadeTo = 0;
+  // the HQ's Puzzle Arcade opens a mini-game straight away (#arcade-<mission id>)
+  const arcade = /^#arcade-([\w-]+)$/.exec(location.hash);
+  const am = arcade && ALL_MISSIONS.find(q => q.id === arcade[1]);
+  if (am && !NEEDS_WORLD.includes(am.game)) { G.arcade = true; history.replaceState(null, "", location.pathname); G.country = COUNTRIES.findIndex(c => c.missions.includes(am)); loadScene(COUNTRIES[G.country].id); refreshStations(); startReplay(am); }
   requestAnimationFrame(frame);
 }
 boot();

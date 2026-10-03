@@ -2,19 +2,22 @@
  "v": 1,
  "games": {
   "agent-rory": {
-   "bytes": 25270854,
+   "bytes": 25271481,
    "n": 989,
-   "hash": "237bb609cdde"
+   "hash": "8e2fe1fa61cd",
+   "with": [
+    "agent-rory-hq"
+   ]
   },
   "agent-rory-deep-red": {
-   "bytes": 29394975,
+   "bytes": 29403497,
    "n": 1297,
-   "hash": "f5b27f51aa06"
+   "hash": "dc9844f63adf"
   },
   "agent-rory-hq": {
-   "bytes": 267536,
-   "n": 5,
-   "hash": "7a05b193ffd0",
+   "bytes": 299126,
+   "n": 7,
+   "hash": "effac8aa1dfc",
    "with": [
     "agent-rory",
     "agent-rory-deep-red",
@@ -26,24 +29,27 @@
    ]
   },
   "agent-rory-meltdown": {
-   "bytes": 40871833,
+   "bytes": 40872578,
    "n": 2019,
-   "hash": "6b2530b6817b"
+   "hash": "bb7f950b8bf5",
+   "with": [
+    "agent-rory-hq"
+   ]
   },
   "agent-rory-spectrum": {
-   "bytes": 6513015,
+   "bytes": 6519425,
    "n": 73,
-   "hash": "4fa1e51d37b2"
+   "hash": "96192aa9ea9f"
   },
   "agent-rory-timeslip": {
-   "bytes": 12810583,
+   "bytes": 12816742,
    "n": 372,
-   "hash": "c7bce4bbf41e"
+   "hash": "c8eee8e0e4f3"
   },
   "agent-rory-zero-gravity": {
-   "bytes": 17335641,
-   "n": 601,
-   "hash": "a549bd1e41d2"
+   "bytes": 17796238,
+   "n": 619,
+   "hash": "e02b3f3d42c9"
   },
   "blockfort": {
    "bytes": 40185305,
