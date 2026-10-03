@@ -41,10 +41,11 @@ colour. The music does the same: a grey place hums, a coloured place plays.
   to nearly nothing for a sneak.
 - **The Blotters**, Grisaille's robots: grey blobs with a mop in the top. Splat
   one and it goes the colour of the paint, swells, and pops into confetti.
-- **New mission kinds**: search (find the things that still have colour and
-  touch them to spread it), rainbow runs (six gates in spectrum order), the
-  mixing desk (mix red, yellow, blue and white to match a swatch), the colour
-  lock, a sky-lantern flight, and rides on the roof of a moving tram.
+- **New mission kinds**: the mixing desk (mix red, yellow, blue and white to
+  match a swatch) and the colour lock. Search (find the things that still have
+  colour), rainbow runs (six gates in spectrum order), a sky-lantern flight and
+  rides on the roof of a moving tram are still in the code, but those missions
+  are puzzles now.
 - **New rides**: the number 28 tram, a husky sled, a camel and a zebu cart,
   all on the same real suspension as the karts, with legs that trot.
 - **A band for every country.** The music is written by a small composer
@@ -57,27 +58,65 @@ colour. The music does the same: a grey place hums, a coloured place plays.
 
 ## Spy clues
 
-Rory is a spy, so 45 of the 60 missions have something to work out. Some are puzzles
-of their own (the ones above); the other 38 end in a **clue**: after the action,
-Rory finds a coded note, a locked case, a line of suspects or a map, and cracks it
-before MISSION COMPLETE. The clues make a trail through the story: the lookout in Dingle, the boatman's tip that sends Rory to the salt, the lookout's map with a circle round Lapland, and the symbol code on Grisaille's plans that spells MONOCHROME.
+Every place is a few **puzzle missions** and **one action mission** (a chase, a
+sneak, a boss and so on), like Operation Eclipse and Meltdown. Spectrum has 60
+missions, five in each of its 12 places. Of those, 41 are puzzle missions, 7 are
+the older panel puzzles (4 mixing desks and 3 colour locks) and 12 are action. So
+48 missions in 60 are something to work out.
 
-Each game's clues are its own, made from its story. Here they are colour count, paint by numbers (each square's sum picks its paint, and a picture appears), mirror painting (paint the other half), fractions (paint a half, a quarter, a third; which one shows it?), Lisbon's and Samarkand's tiles (which tile fills the gap?), the paint shop (two pots for exactly the money), grey shadows (which shape made it?), the colour square (every colour once in each row and column) and the drop chart (a pictogram, each picture worth 2, 5 or 10). Only
-three kinds are in every Agent Rory game, because every spy needs them: the line-up
-(pick the suspect who fits every clue), the coded note (a number or symbol code, in
-this game's own symbols) and the spy map. So no two games share more than a quarter
-of their clues.
+A puzzle mission starts at a beacon like any other. Rory walks up, hears the
+briefing, and the puzzle opens. Each one has a level from 1 to 4, and the levels
+rise through the game. The line-ups catch Grisaille's lookouts: one in Dingle,
+and one on the salt with a map that has a red circle round Lapland. The coded
+notes spell out the rest of the trail: LOT on the stolen drops in Lisbon, the
+TENT at Petra, MONOCHROME on Grisaille's plans, and the VAULT at the very end.
 
-All of it is for a seven-year-old. Each clue is made fresh every time with exactly
-one answer, at four levels that rise through the game. A wrong answer never fails
-the mission: it gives a hint, and a stronger one after the second try, and three
-slips or more cost one star. 🔊 reads the question out.
+**Intel.** Every mission wins a piece of intel. After the last lines of the
+mission, a card says INTEL WON and the intel is read aloud. Put together, the
+intel is the story: what Baroness Grisaille is up to, and where to go next.
+**DOSSIER** in the pause menu lists all the intel won so far, place by place,
+with the stars for each mission.
 
-`js/clues.js` is the frame every clue shares and the three spy clues (the same file
-in all four newer Agent Rory games); `js/puzzles.js` is this game's own; `js/cluemap.js`
-says which missions end in which clue, with the lines around it. From the top of
-the repository, `node tools/cluecheck.mjs` checks every game's clue map (and how much
-the games share), and `node tools/cluetest.mjs` makes hundreds of each clue at each
+**HINT and LEAVE.** A puzzle mission has two buttons at the top. HINT gives the
+strongest help the puzzle has, and reads it out. LEAVE walks away, and the
+mission waits to be tried again. A wrong answer never fails the mission: it
+gives a hint, and a stronger one after the second try. Three stars means no hint
+and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
+the question out.
+
+The puzzles are made from the story. Spectrum's own nine are colour count, paint
+by numbers (each square's sum picks its paint, and a picture appears), mirror
+painting (paint the other half), fractions (paint a half, a quarter, a third;
+which one shows it?), Lisbon's and Samarkand's tiles (which tile fills the gap?),
+the paint shop (two pots for exactly the money), grey shadows (which shape made
+it?), the colour square (every colour once in each row and column) and the drop
+chart (a pictogram, each picture worth 2, 5 or 10). They make 29 of the puzzle
+missions. Only three kinds are in every Agent Rory game, because every spy needs
+them: the line-up (pick the suspect who fits every clue), the coded note (a
+number or symbol code, in this game's own symbols) and the spy map. Here there
+are 4 of each. So no two games share more than a quarter of their puzzles.
+
+All of it is for a seven-year-old. Each puzzle is made fresh every time, with
+exactly one answer.
+
+- `js/clues.js` is the same file in all four newer Agent Rory games. It has the
+  frame every puzzle shares, the three spy clues, the `PuzzleMission` class that
+  makes a puzzle into a mission (with HINT, LEAVE and the stars), and the intel
+  card and the dossier.
+- `js/puzzles.js` is this game's own puzzles.
+- In `js/story.js` a puzzle mission is `kind: "puzzle"`, with `p` the kind of
+  puzzle, `lv` its level and, for a code, `word`. Every mission has
+  `intel: { title, text }`.
+- `js/cluemap.js` now only keeps `THEME`: this game's words, names and code
+  symbols for the puzzles. Its `CLUES` is empty, so no mission ends in an extra
+  clue any more.
+
+From the top of the repository, `node tools/cluecheck.mjs` checks every game. Each
+puzzle mission must name a real kind, a level from 1 to 4 and real speakers.
+Every mission must win intel. Each place must have at most five missions and
+exactly one action. At least three missions in four must be puzzles, every one of
+a game's own kinds must be used, and no two games may share more than a quarter
+of their kinds. `node tools/cluetest.mjs` makes hundreds of each puzzle at each
 level, checks each has one answer, and has the autopilot solve them at phone and
 tablet size.
 
@@ -98,5 +137,5 @@ boosts. In the sky lantern, hold JUMP to rise.
 - `node tools/flow.mjs`: the whole game from the title, with screenshots.
 - `node tools/look.mjs out place x,y,z,lx,ly,lz`: a screenshot from a fixed
   camera; `node tools/icon.mjs` draws the icon; `node tools/storydoc.mjs`
-  writes SCRIPT.md.
+  writes SCRIPT.md (every line, each puzzle's kind and level, and the intel).
 - `./publish.sh` copies the game into `docs/agent-rory-spectrum/`.
