@@ -613,7 +613,8 @@ class WordSearch extends Clue {
     const dirs = lv >= 4 ? [[1, 0], [0, 1], [1, 1]] : [[1, 0], [0, 1]];
     const own = this.spec.words && this.spec.words.map(w => [String(w).toUpperCase(), picFor(String(w).toUpperCase())]).filter(([w]) => w.length <= Math.max(Cn, Rn));
     for (let tries = 0; tries < 500; tries++) {
-      const pool = own && own.length >= nw ? own : WORDS.filter(([w]) => w.length >= 3 && w.length <= maxLen);
+      // (a mission's own words first; if they won't fit this grid, the sea words instead)
+      const pool = own && own.length >= nw && tries < 250 ? own : WORDS.filter(([w]) => w.length >= 3 && w.length <= maxLen);
       const words = [];
       for (const w of shuffle(pool)) if (words.length < nw && !words.some(([x]) => x.includes(w[0]) || w[0].includes(x))) words.push(w);
       if (words.length < nw) continue;
@@ -632,7 +633,7 @@ class WordSearch extends Clue {
       }
       if (!ok) continue;
       for (let i = 0; i < grid.length; i++) if (!grid[i]) grid[i] = FILL[R(FILL.length)];
-      const q = { Cn, Rn, grid, places: shuffle(places), dirs, text: "Captain Undertow hid sea words in the wreck's logbook! Tap the first letter of a word, then the last." };
+      const q = { Cn, Rn, grid, places: shuffle(places), dirs, text: `Captain Undertow hid words in ${this.spec.where || "the wreck's logbook"}! Tap the first letter of a word, then the last.` };
       if (this.count(q).every(c => c === 1)) return { ...q, tip: `Look for the first letter of ${q.places[0].w}: ${q.places[0].w[0]}. Then look across${lv >= 4 ? ", down or slanting" : " or down"} for the next letters.` };
     }
     return this.make();
