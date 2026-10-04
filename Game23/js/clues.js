@@ -1,16 +1,15 @@
-// Spy clues: a puzzle Rory cracks at the end of a mission, before MISSION COMPLETE.
-// The action finds the clue (a coded note, a locked case, a line of suspects, a map);
-// this is where Rory works it out. Each game's cluemap.js says which missions end in
-// a clue, which kind, and the lines around it.
+// Spy puzzles: the puzzle missions of the four newer Agent Rory games (PuzzleMission,
+// below), each one a puzzle Rory cracks at a station to win a piece of intel.
 //
-// This file is the same in all four newer Agent Rory games: the frame every clue shares,
-// the keypad and the pick-one-of-these kinds build on, and the three spy clues every
-// game has (the line-up, the coded note, the spy map). Everything else is the game's
-// own, in its js/puzzles.js, made from its story: Zero Gravity's gold bars and launch
-// countdowns, Deep Red's tide charts and depth lines, Spectrum's paint-by-numbers and
-// colour squares, Timeslip's Roman numerals and number pyramids.
+// This file is the same in all four games: the frame every puzzle shares, the
+// pick-one-of-these kind some build on, the three spy clues every game has (the line-up,
+// the coded note, the spy map), the puzzle mission, the intel card and the dossier.
+// Everything else is the game's own, in its js/puzzles.js, made from its story: Zero
+// Gravity's mazes and laser mirrors, Deep Red's tangled lines and sonar hunts,
+// Spectrum's colour floods and stained glass, Timeslip's fossils and river crossings.
+// None of them is maths: Rory asked for puzzles, not sums.
 //
-// Every clue is for a seven-year-old, made fresh each time, with exactly one answer
+// Every puzzle is for a seven-year-old, made fresh each time, with exactly one answer
 // (verify() says so, and the tests check it hundreds of times) and four levels. A wrong
 // answer never fails the mission: it gives a hint, and a stronger one after the second
 // try. Three slips or more cost a star.
