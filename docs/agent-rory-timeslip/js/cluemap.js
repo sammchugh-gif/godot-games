@@ -1,8 +1,8 @@
 // Timeslip's clues (clues.js, puzzles.js): the missions that end with a puzzle for Rory
 // to crack. p is the kind of puzzle, lv its level (1 is the gentlest), say the lines
-// before it, after the line once it's solved. The kinds are Timeslip's own (time-tunnel
-// clocks, hourglass sums, how long, Roman numerals, the calendar, number pyramids, market
-// trading, doubling and halving, footprint tracks), plus the three spy clues every game
+// before it, after the line once it's solved. The kinds are Timeslip's own (whose
+// footprints, the fossil puzzle, wrong time, the rune path, shape fit, the Roman mosaic,
+// cave dot-to-dot, the river crossing, lost in time), plus the three spy clues every game
 // has (the line-up, the coded note, the spy map). Pebble honks rather than talks, so she
 // has no lines.
 export const THEME = {
