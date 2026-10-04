@@ -1,9 +1,10 @@
 // Deep Red's clues (clues.js, puzzles.js): the missions that end with a puzzle for Rory
 // to crack. p is the kind of puzzle, lv its level (1 is the gentlest), say the lines
-// before it, after the line once it's solved. The kinds are Deep Red's own (pressure
-// locks, depth gauges, tide charts, fish tallies, pearl necklaces, the depth line, air
-// tanks, measuring, porthole shapes), plus the three spy clues every game has (the
-// line-up, the coded note, the spy map). Every place has four or five puzzles out of six.
+// before it, after the line once it's solved. The kinds are Deep Red's own (pearl
+// necklaces, tangled lines, sea words, two halves, the coral path, what's missing,
+// free the sub, the wreck word search, the sonar hunt), plus the three spy clues every
+// game has (the line-up, the coded note, the spy map). Every place has four or five
+// puzzles out of six.
 export const THEME = {
   things: ["Drips", "Tide Pearls", "pumps", "crates"],
   boxes: ["crates", "boats", "nets"],
