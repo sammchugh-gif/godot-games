@@ -17,7 +17,7 @@ const GAMES = [
   NEW("zero", "Zero Gravity", "../agent-rory-zero-gravity/", "#ff9ae8", ["rory20.save"],
     { maze: ["🤖", "BOLT's Maze"], slide: ["🌀", "Gravity Slide"], slider: ["🚀", "Rocket Jigsaw"], spot: ["🔍", "Spot the Difference"], lights: ["💡", "Power Grid"], stars: ["⭐", "Star Link"], robot: ["🦾", "Robot Builder"], memory: ["🃏", "Picture Memory"], mirrors: ["🔴", "Laser Mirrors"], ...SPY }),
   NEW("deep", "Deep Red", "../agent-rory-deep-red/", "#39d8c8", ["rory21.save"],
-    { pressure: ["🧭", "Pressure Lock"], depth: ["⚓", "Depth Gauge"], chart: ["📊", "Tide Chart"], tally: ["🐟", "Fish Survey"], beads: ["🦪", "Pearl Necklace"], numberline: ["📏", "Depth Line"], bonds: ["🫧", "Air Tank"], measure: ["📐", "Ruler"], sides: ["🔷", "Porthole Shapes"], ...SPY }),
+    { lines: ["🎣", "Tangled Lines"], anagram: ["🦀", "Sea Words"], halves: ["🐙", "Two Halves"], beads: ["🦪", "Pearl Necklace"], coral: ["🪸", "Coral Path"], missing: ["👀", "What's Missing?"], rush: ["🚢", "Free the Sub"], wordsearch: ["🔤", "Wreck Word Search"], sonar: ["📡", "Sonar Hunt"], ...SPY }),
   NEW("spectrum", "Spectrum", "../agent-rory-spectrum/", "#7bed9f", ["rory22.save"],
     { flood: ["🌊", "Colour Flood"], jigsaw: ["🧩", "Painting Jigsaw"], mirror: ["🦋", "Mirror Painting"], rainbow: ["🌈", "Rainbow Order"], tiles: ["🟦", "Azulejo Tiles"], hidden: ["🦎", "Hidden Picture"], shadow: ["🌫️", "Grey Shadows"], square: ["🟥", "Colour Squares"], glass: ["⛪", "Stained Glass"], ...SPY }),
   NEW("timeslip", "Timeslip", "../agent-rory-timeslip/", "#c89aff", ["rory23.save"],
