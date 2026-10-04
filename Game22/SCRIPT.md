@@ -36,14 +36,14 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **PALETTE:** Only when nobody's looking.
 > **Pip:** Your watch fires paint now. Training first. Follow the glowing beacons!
 
-**Mission 1: Colour School** (Puzzle, level 1: counting)
+**Mission 1: Colour School** (Puzzle, level 1: rainbow order)
 
 > **Pip:** Your watch can see colour, Rory, even when it's nearly gone. That's how we'll track the Baroness.
-> **Pip:** Count the shapes the watch asks for. Tap them to tick them off, then type how many.
+> **Pip:** First lesson: the rainbow. Somebody mopped some stripes grey. Tap the drops to paint them back, from the outside in.
 
 *After:*
 
-> **PALETTE:** You counted every one! I've gone green with happiness. Literally. Look.
+> **PALETTE:** A whole rainbow! I've gone green with happiness. Literally. Look.
 
 *Intel: Colour drops.* The colour was drained out of the paint and rolled up into drops. Somebody took them on purpose.
 
@@ -106,7 +106,7 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **PALETTE:** A city-sized eraser. I don't like the sound of that. Or the look. There isn't a look.
 > **Pip:** The colour went into something, Rory. Find out what.
 
-**Mission 6: The Tile Shop** (Puzzle, level 1: pattern)
+**Mission 6: The Tile Shop** (Puzzle, level 1: azulejo tiles, pattern)
 
 > **Tiago:** Olá! The Blotters mopped a tile right off the tile shop wall. The pattern's got a gap!
 > **Pip:** Lisbon's tiles always make a pattern, Rory. Which tile goes back?
@@ -118,10 +118,10 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: The tram wires.* Lisbon's colour was sucked out through the tram wires. The drops are riding the number 28 tram.
 
-**Mission 7: Tram 28** (Puzzle, level 1: code, spells LOT)
+**Mission 7: Tram 28** (Puzzle, level 1: symbol code, spells LOT)
 
 > **Tiago:** Dad's tram still runs. The drops are on its roof, and there's a note tucked under them.
-> **Pip:** Number code! A is 1, B is 2, C is 3. Crack it, Rory.
+> **Pip:** A code in coloured symbols! Use the key to swap each symbol for its letter. Crack it, Rory.
 
 *After:*
 
@@ -130,10 +130,10 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: Lot 4.* The drops are labelled GRISAILLE COLLECTION, LOT 4. Somebody is collecting colour, the way people collect stamps.
 
-**Mission 8: Paint for the Fountain** (Puzzle, level 1: adding money)
+**Mission 8: Paint for the Fountain** (Puzzle, level 1: colour flood)
 
-> **Tiago:** Blotters mopped the colour off the fountain! The kiosk sells paint, if we can afford it.
-> **Pip:** Buy two pots for exactly the money, Rory. A good spy never pays too much.
+> **Tiago:** Blotters mopped the fountain into grey and patchy bits! The kiosk lady lent us her paint pots.
+> **Pip:** PALETTE sits in the corner. Each pot you tap spreads his colour. Make the fountain one colour before the paint runs out.
 
 *After:*
 
@@ -181,14 +181,14 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **Camila:** El Peñol! Seven hundred steps to the top. You can see the whole lake from up there. When there's colour to see.
 > **PALETTE:** Seven hundred steps. I'll wait at the bottom. I'll be the colour of waiting.
 
-**Mission 11: Grandpa's Picture** (Puzzle, level 1: paint by numbers)
+**Mission 11: Grandpa's Picture** (Puzzle, level 1: painting jigsaw)
 
-> **Camila:** Grandpa left a picture to paint by numbers, from before the Blotters came. Every square has a sum.
-> **Pip:** Work out each sum and paint it the colour with that number.
+> **Camila:** Grandpa painted a jigsaw of Guatapé, from before the Blotters came. They missed it, but it got knocked off the table!
+> **Pip:** Put it back together, Rory. Tap a piece, then tap the grey spot where it goes.
 
 *After:*
 
-> **Camila:** That's what our street looked like! A horse, a dog, and that one's Grandpa.
+> **Camila:** That's what our town looked like! El Peñol, the lake, and every house a different colour.
 
 *Intel: Grandpa's picture.* The Blotters missed Grandpa's picture. It shows the colours they took, and the lake behind the town.
 
@@ -216,7 +216,7 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: The boat's cargo.* The boat was full of drops, and a boat log that names a river to Bolivia.
 
-**Mission 14: Grandpa's Wall** (Puzzle, level 1: symmetry)
+**Mission 14: Grandpa's Wall** (Puzzle, level 1: mirror painting)
 
 > **Camila:** Grandpa's wall pattern is the same on both sides, like a mirror. The Blotters mopped half of it!
 > **Pip:** Paint the other half so it matches, Rory.
@@ -227,10 +227,10 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: The zócalos.* Every house in Guatapé has painted panels, the zócalos. They go back the way they were, side for side.
 
-**Mission 15: The Boat Yard** (Puzzle, level 2: counting)
+**Mission 15: The Boat Yard** (Puzzle, level 2: hidden picture)
 
-> **Camila:** The Blotters were mopping the boats in the yard. How many still have their colour?
-> **Pip:** Count the ones it asks for, Rory.
+> **Camila:** The Blotters are hiding in the boat yard, in among all the painted things. So is PALETTE. He thinks it's a game.
+> **Pip:** Find everything in the yellow boxes, Rory, and tap it. Check the shape and the colour.
 
 *After:*
 
@@ -252,7 +252,7 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **PALETTE:** Grey flamingos. That's just a big pigeon. I'm sorry, flamingos.
 > **Pip:** Grisaille's Blotters have a machine out on the salt, Rory. Find it.
 
-**Mission 16: Pink Feathers** (Puzzle, level 1: matching shapes)
+**Mission 16: Pink Feathers** (Puzzle, level 1: grey shadows, matching shapes)
 
 > **Wara:** The flamingos have gone grey! Only their shadows are left on the salt.
 > **Pip:** Which shape made each shadow, Rory? Then we'll know which flamingo is which.
@@ -275,17 +275,17 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: The drops on the salt.* The drops were spread right across the salt, all rolling towards the old train graveyard.
 
-**Mission 18: Wara's Drop Chart** (Puzzle, level 1: pictogram)
+**Mission 18: The Salt Hotel Window** (Puzzle, level 1: stained glass)
 
-> **Wara:** The salt workers made a chart of the drops the Blotters spilled. One picture for every drop.
-> **Pip:** Read the chart, Rory.
+> **Wara:** The salt hotel has a stained glass window, and the Blotters greyed it. When the sun shines through, it lights up the salt.
+> **Pip:** Colour the pale panes, Rory. Two panes that touch can never be the same colour.
 
 *After:*
 
-> **Wara:** That's how much they took. Now the workers can build the salt hotel again.
+> **Wara:** Look at the light on the salt! And there's a trail of spilled drops, all the way to the old trains.
 > **PALETTE:** A hotel made of salt. I'd like a room. I'd be the colour of salt. That's easy.
 
-*Intel: The spill chart.* The Blotters spilled drops all the way to the train graveyard. That's where the machine is.
+*Intel: The spill trail.* The Blotters spilled drops all the way to the train graveyard. That's where the machine is.
 
 **Mission 19: The Lookout** (Puzzle, level 2: who is the spy?)
 
@@ -324,14 +324,14 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 > **PALETTE:** Draining the aurora. That's not vulgar, that's just greedy.
 > **Pip:** The reindeer herders saw Blotters by the frozen lake, Rory. Start there.
 
-**Mission 21: Finnish Red** (Puzzle, level 1: fractions)
+**Mission 21: Finnish Red** (Puzzle, level 1: painting jigsaw)
 
-> **Aino:** The cabins have gone grey. Grandad always painted the doors half red, half white.
-> **Pip:** Paint the right part, Rory. Equal parts!
+> **Aino:** The cabins have gone grey. Grandad's painting of our red cabin is the last red left, and the Blotters cut it up!
+> **Pip:** Put the pieces back, Rory. Tap a piece, then the grey spot where it goes.
 
 *After:*
 
-> **Aino:** Proper Finnish red!
+> **Aino:** Proper Finnish red! And look, the real cabins are going red too.
 
 *Intel: The cabins.* The cabins are red again. Aino saw Blotters carrying lamps towards the ice hotel.
 
@@ -369,14 +369,14 @@ The most colourful places on Earth are turning grey overnight. Somebody is steal
 
 *Intel: The lights.* The aurora is back in the sky. But the reindeer have Blotters after them.
 
-**Mission 25: Reindeer Rescue** (Puzzle, level 2: counting)
+**Mission 25: Reindeer Rescue** (Puzzle, level 2: hidden picture)
 
-> **Aino:** The Blotters want the reindeer's red noses! The herder needs to know how many still have their colour.
-> **Pip:** Count the ones it asks for, Rory.
+> **Aino:** The Blotters are after the reindeer's red noses! They're hiding in the herders' camp, mixed in with all the painted things.
+> **Pip:** Spot each thing in the yellow boxes before they reach the herd, Rory. Shape and colour both matter.
 
 *After:*
 
-> **Aino:** All of them! Not one gone grey.
+> **Aino:** Found them all! The reindeer are safe. Not one red nose gone grey.
 > **Baroness Grisaille:** Enough games. Come to Petra, Agent Rory. I have a whole city carved out of red, and I want it grey.
 
 *Intel: Petra.* Grisaille is in Petra, in Jordan: the rose-red city carved into the cliffs. Chapter two.
@@ -398,7 +398,7 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** A grey canyon. That's just a corridor.
 > **Pip:** Grisaille's here herself, Rory. Her Blotters have camels.
 
-**Mission 26: Rose Red** (Puzzle, level 2: matching shapes)
+**Mission 26: Rose Red** (Puzzle, level 2: grey shadows, matching shapes)
 
 > **Layla:** The Blotters left grey shadows on the carvings where they mopped the red off.
 > **Pip:** Match each shadow to the shape that made it, Rory.
@@ -409,10 +409,10 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The carvings.* The colour came back to the cliffs. A Blotter on a camel was seen heading down the Siq.
 
-**Mission 27: The Camel's Note** (Puzzle, level 2: code, spells TENT)
+**Mission 27: The Camel's Note** (Puzzle, level 2: symbol code, spells TENT)
 
 > **Layla:** The Blotter's camel came back without him! There's a note in its saddlebag.
-> **Pip:** Number code again, Rory. Where is he?
+> **Pip:** Symbol code again, Rory. Where is he?
 
 *After:*
 
@@ -471,7 +471,7 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** I'll be a lantern. There. Am I helping?
 > **Pip:** The Blotters are on the river, Rory. Start with the lanterns.
 
-**Mission 31: One Lit Lantern** (Puzzle, level 2: symmetry)
+**Mission 31: One Lit Lantern** (Puzzle, level 2: mirror painting)
 
 > **Linh:** Every lantern is the same on both sides. This one's been half mopped!
 > **Pip:** Paint the other half, Rory, and the street lights up.
@@ -494,10 +494,10 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The sampan.* The sampan carried sky lanterns too, stuck on the roofs of the old town.
 
-**Mission 33: Sky Lanterns** (Puzzle, level 2: paint by numbers)
+**Mission 33: The Glass Lantern** (Puzzle, level 2: stained glass)
 
-> **Linh:** The sky lanterns are stuck on the roofs, grey. Each one has a sum painted on the paper.
-> **Pip:** Paint them by numbers, Rory, and they'll light and float up.
+> **Linh:** The sky lanterns are stuck on the roofs, grey. The biggest has coloured glass panes. When it lights, the others follow.
+> **Pip:** Colour its panes, Rory. Two panes that touch can't be the same colour.
 
 *After:*
 
@@ -506,14 +506,14 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The bridge.* The Japanese Bridge is still grey. The Blotters went that way with their mops.
 
-**Mission 34: Lantern Paint** (Puzzle, level 2: adding money)
+**Mission 34: Paint the Bridge** (Puzzle, level 2: colour flood)
 
-> **Linh:** The bridge keeper sells lantern paint. We need two pots for the bridge.
-> **Pip:** Exactly the money, Rory.
+> **Linh:** The bridge keeper lent us his paint pots. The Blotters left the Japanese Bridge in grey and patchy bits.
+> **Pip:** Spread PALETTE's colour from his corner till the whole bridge is one colour. Don't run out of paint!
 
 *After:*
 
-> **Rory:** The bridge is red again!
+> **Rory:** The bridge is shining again!
 > **Linh:** And the keeper says the Blotters went to the market.
 
 *Intel: The market.* The Blotters went from the bridge to the market, and somebody there told them where to go.
@@ -543,7 +543,7 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** Cousins! Hello! ...They're grey. Grisaille took their colours. That's personal.
 > **Pip:** The Blotters have a camp behind the avenue, Rory. And the lemurs are furious.
 
-**Mission 36: Chameleon Colours** (Puzzle, level 2: matching shapes)
+**Mission 36: Chameleon Colours** (Puzzle, level 2: grey shadows, matching shapes)
 
 > **PALETTE:** My cousins are hiding. All you can see is their shadows. We chameleons are very good at hiding.
 > **Pip:** Which one made the shadow, Rory?
@@ -552,19 +552,19 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 > **PALETTE:** Found them! Green, orange, blue, yellow, and that one's just showing off.
 
-*Intel: The cousins.* PALETTE's cousins saw the Blotters chalking sums on the baobabs. They're counting the trees.
+*Intel: The cousins.* PALETTE's cousins saw the Blotters cut up a painting of the sunset and hide the pieces under the baobabs.
 
-**Mission 37: The Chalk Sums** (Puzzle, level 2: paint by numbers)
+**Mission 37: The Sunset Painting** (Puzzle, level 2: painting jigsaw)
 
-> **Fara:** The Blotters chalked sums on the baobab bark! Grandma says it's a paint-by-numbers.
-> **Pip:** Work out each sum and paint it, Rory.
+> **Fara:** The Blotters took Grandma's painting of the sunset and cut it into pieces! They dropped them under the baobabs.
+> **Pip:** Put the pieces back, Rory. Tap a piece, then the grey spot where it goes.
 
 *After:*
 
 > **Fara:** It's a picture of the sunset! Just like it should be.
 > **Rory:** The sky's going orange!
 
-*Intel: The chalk picture.* The chalk sums made a picture of the sunset: what Grisaille plans to take next.
+*Intel: The sunset painting.* Grandma's painting shows the sunset: what Grisaille plans to take next.
 
 **Mission 38: Zebu Cart Chase** (Chase, level 3)
 
@@ -577,10 +577,10 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The zebu cart.* The stolen zebu cart was carrying lemurs' colours, for the camp machine.
 
-**Mission 39: Lemur Rescue** (Puzzle, level 2: counting)
+**Mission 39: Lemur Rescue** (Puzzle, level 2: hidden picture)
 
-> **Fara:** The camp machine has been draining the lemurs! We need to know how many still have their colours.
-> **Pip:** Count the ones it asks for, Rory.
+> **Fara:** The lemurs have hidden from the camp machine, and so have the Blotters! Everything in the camp is jumbled up.
+> **Pip:** Find each thing in the yellow boxes, Rory. Look at the shape, then the colour.
 
 *After:*
 
@@ -589,17 +589,17 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The camp.* The lemurs are safe. The camp's papers show the Blotters' deliveries.
 
-**Mission 40: The Delivery Chart** (Puzzle, level 2: pictogram)
+**Mission 40: The Delivery Board** (Puzzle, level 2: rainbow order)
 
-> **Fara:** The Blotters' delivery chart! Every picture is some drops taken away in the trucks.
-> **Pip:** Read it carefully, Rory. Look at the key.
+> **Fara:** The Blotters' delivery board! Every truck has a stripe of the rainbow, and they've wiped most of them off.
+> **Pip:** Paint the stripes back in rainbow order, Rory, from the outside in. One drop is a trick!
 
 *After:*
 
-> **Fara:** That's the sunset. That's the proper one.
+> **Fara:** The stripes are back, and the sky's caught up. That's the sunset. That's the proper one.
 > **Baroness Grisaille:** A sunset. How very ordinary. Samarkand has blue that took four hundred years. Mine now.
 
-*Intel: Samarkand.* Every truck on the chart goes to Samarkand: the blue city. She's after the tiles.
+*Intel: Samarkand.* Every truck on the board goes to Samarkand: the blue city. She's after the tiles.
 
 *Leaving:*
 
@@ -614,7 +614,7 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** Grey spice. It's just dust. Angry dust.
 > **Pip:** The Baroness has a workshop in the bazaar, Rory. Her jars are there.
 
-**Mission 41: Dome Tiles** (Puzzle, level 3: pattern)
+**Mission 41: Dome Tiles** (Puzzle, level 3: azulejo tiles, pattern)
 
 > **Dilnoza:** The dome tiles go in a pattern that turns as it goes. The Blotters mopped one right out!
 > **Pip:** Which tile fits the gap, Rory?
@@ -625,10 +625,10 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: The domes.* The domes are blue again. The spice seller in the bazaar knows where the Blotters' workshop is.
 
-**Mission 42: The Spice Seller** (Puzzle, level 3: adding money)
+**Mission 42: The Spice Seller** (Puzzle, level 3: stained glass)
 
-> **Dilnoza:** The spice seller sells paint too. Buy two pots, and he'll tell us where the workshop is.
-> **Pip:** Exactly the money, Rory.
+> **Dilnoza:** The spice seller's window is coloured glass, and the Blotters greyed it. Fix it, and he'll tell us where their workshop is.
+> **Pip:** Colour the panes, Rory. No two panes that touch can be the same colour.
 
 *After:*
 
@@ -661,7 +661,7 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 
 *Intel: Four hundred blues.* The jars are open and the tiles are going back. Grisaille's plans are still in code.
 
-**Mission 45: Her Secret Plans** (Puzzle, level 3: code, spells MONOCHROME)
+**Mission 45: Her Secret Plans** (Puzzle, level 3: symbol code, spells MONOCHROME)
 
 > **Dilnoza:** Her plans! The Registan's lights are on now, so we can read them.
 > **Pip:** Use the key, Rory. What is she building?
@@ -686,31 +686,32 @@ Baroness Grisaille is hanging the world's colours in a gallery only she can see.
 > **PALETTE:** Grey trout. Sad trout. I can't do anything about it, I'm a chameleon, not a fish.
 > **Pip:** Her jars are on the lake bed, Rory. You'll need to swim.
 
-**Mission 46: The Rangers' Chart** (Puzzle, level 3: pictogram)
+**Mission 46: The Double Rainbow** (Puzzle, level 3: rainbow order)
 
-> **Marta:** The rangers chart the drops in each lake. Every picture stands for more than one!
-> **Pip:** Look at the key, Rory.
-
-*After:*
-
-> **Marta:** The lower lake's lost the most. That's where the jars went in.
-
-*Intel: The lower lake.* The rangers' chart shows the lower lake lost the most colour. The jars were sunk there.
-
-**Mission 47: How Much Is Left?** (Puzzle, level 3: fractions)
-
-> **Marta:** The Blotters are draining the lakes into jars. The ranger's gauge shows how much is gone.
-> **Pip:** Paint the right fraction, Rory.
+> **Marta:** The spray from the falls always makes a double rainbow. The Blotters mopped the big one right out of the air!
+> **Pip:** The big rainbow is the little one back to front, Rory. Paint it from the outside in.
 
 *After:*
 
-> **Marta:** The falls are green! Look at them!
+> **Marta:** Both rainbows! And the big one ends in the lower lake. That's where the jars went in.
 
-*Intel: The gauge.* The top lake is draining fast. Grisaille shut the sluice at the big falls.
+*Intel: The lower lake.* The rainbow ends in the lower lake, the lake that lost the most colour. The jars were sunk there.
 
-**Mission 48: The Jars** (Puzzle, level 3: paint by numbers)
+**Mission 47: Fill the Lake** (Puzzle, level 3: colour flood)
 
-> **Marta:** Her jars are in the lake, and they have labels with sums on. Paint them in, and we'll see which jar holds the lake's colour.
+> **Marta:** The Blotters drained the middle lake into grey and patchy bits. PALETTE can spread one colour back over it.
+> **Pip:** Tap the pots, Rory. Make the whole lake one colour before the paint runs out.
+
+*After:*
+
+> **Marta:** The lake's one colour again, and the falls are green! Look at them!
+
+*Intel: The top lake.* The top lake is draining fast. Grisaille shut the sluice at the big falls.
+
+**Mission 48: The Jars** (Puzzle, level 3: hidden picture)
+
+> **Marta:** Her jars are on the lake bed, jumbled up with Blotter junk. PALETTE dived down to help, and now he's hiding too.
+> **Pip:** Spot each thing in the yellow boxes, Rory. Check the shape and the colour.
 
 *After:*
 
@@ -771,7 +772,7 @@ The Monochrome is over the sea. Time to give the world its colours back.
 
 *Intel: Deadvlei.* The Blotters landed at Deadvlei, where the black trees stand on a white pan.
 
-**Mission 52: Deadvlei** (Puzzle, level 3: matching shapes)
+**Mission 52: Deadvlei** (Puzzle, level 3: grey shadows, matching shapes)
 
 > **Tuli:** The trees here throw long shadows. Which shadow goes with which shape? Look which way it's pointing.
 
@@ -827,7 +828,7 @@ The Monochrome is over the sea. Time to give the world its colours back.
 > **Admiral Frost:** Open the jars, Agent Rory. Every one. And find the Baroness.
 > **PALETTE:** It's so grey in here I've gone grey myself. This is the worst I've ever felt. Let's fix it.
 
-**Mission 56: The Key Tag** (Puzzle, level 4: code, spells VAULT)
+**Mission 56: The Key Tag** (Puzzle, level 4: symbol code, spells VAULT)
 
 > **Pip:** The jar room key is at the far end of the gallery. You've got it! And it has a tag on it. More symbols!
 > **Pip:** Last code, Rory. Where does this key go?
@@ -839,9 +840,10 @@ The Monochrome is over the sea. Time to give the world its colours back.
 
 *Intel: The vault.* The key opens the Colour Vault, where every drop she's collected is kept.
 
-**Mission 57: The Colour Vault** (Puzzle, level 4: paint by numbers)
+**Mission 57: The Colour Vault** (Puzzle, level 4: painting jigsaw)
 
-> **Pip:** The vault door is a paint-by-numbers lock, with times tables. Paint every square the right colour and it opens.
+> **Pip:** The vault door is a jigsaw lock: a painting of somewhere she drained, in pieces. Put it back together and it opens.
+> **Pip:** No grey picture to help this time, Rory. Look at the edges. What joins up?
 
 *After:*
 
@@ -861,7 +863,7 @@ The Monochrome is over the sea. Time to give the world its colours back.
 
 *Intel: The engine.* The engine is stalling, turning orange. The ship's rainbow emblem is half wiped.
 
-**Mission 59: The Ship's Rainbow** (Puzzle, level 4: symmetry)
+**Mission 59: The Ship's Rainbow** (Puzzle, level 4: mirror painting)
 
 > **Pip:** The ship's rainbow emblem has been half wiped grey. Paint the other half, and the whole ship gets its colour back!
 

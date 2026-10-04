@@ -62,7 +62,7 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 | POLARIS HQ, today | the briefing, the Chrono-watch, the launch (the prologue: no missions) |
 | Dinosaur Valley, 66 million years ago | strange footprints, the egg thieves, eggs back to the nest (Pebble hatches), tiptoe past the T. rex, the egg cart |
 | The Ice Age, 20,000 years ago | falling icicles (SLOW), the painted cave, the snow wall, the mammoth ride, the handprints |
-| Ancient Egypt, 4,500 years ago | down the Nile, the picture lock, who let them in? (BACK), the buried stone, ropes for the capstone |
+| Ancient Egypt, 4,500 years ago | down the Nile, the picture lock, who let them in? (BACK), the buried stone, mend the ramp |
 | Olympia, 2,700 years ago | the temple doors (ECHO), the games in order, the chariot race, the sun mirror, Sandbots in the stadium |
 | The Roman aqueduct, 2,000 years ago | along the arches, the sluice gates, the fountains, two levers at once, the Roman road |
 | The Viking fjord, 1,000 years ago | the rune stones, steer by the stars, the sail loft, under the fjord, the Sand Serpent |
@@ -96,16 +96,23 @@ gives a hint, and a stronger one after the second try. Three stars means no hint
 and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
 the question out.
 
-The puzzles are made from the story. Timeslip's own nine are time-tunnel clocks,
-hourglass story sums, how long (from one clock to another), Roman numerals (the
-aqueduct's arches), the calendar (days and months), number pyramids (the snow
-wall), market trading (ropes for the pyramid's capstone), doubling and halving
-(eggs in nests) and footprint tracks (counting in steps). They make 10 of the
-puzzle missions, and each is used at least once in Act One. Only three kinds are
-in every Agent Rory game, because every spy needs them: the line-up (pick the
-suspect who fits every clue), the coded note (a number or symbol code, in this
-game's own symbols) and the spy map. Here there is one of each. So no two games
-share more than a quarter of their puzzles.
+None of the puzzles is maths. Rory, who is seven, said there was too much of it,
+so at his request they are all looking, logic and picture puzzles now. They are
+made from the eras. Timeslip's own nine are whose footprints? (which animal,
+Sandbot or Viking made each track), the fossil puzzle (turn the stones until the
+dinosaur skeleton is whole), wrong time! (tap the things that don't belong in
+this era), lost in time (put each thing back in its own era), cave dot-to-dot
+(join the dots in ABC order, letters not numbers, to see the picture), shape fit
+(fit the blocks into the gap in the snow wall or the pyramid ramp), the Roman
+mosaic (copy the little pattern, colour by colour), the river crossing (the raft
+holds Rory and one more: don't leave the wrong pair together) and the rune path
+(step on every stone once, in one go, from the glowing one). They make 10 of the
+puzzle missions: shape fit twice, and each of the others once, so each is used
+at least once in Act One. Only three kinds are in every Agent Rory game, because
+every spy needs them: the line-up (pick the suspect who fits every clue), the
+coded note (a note in symbols, not numbers: use the key to swap each symbol for
+its letter) and the spy map (follow the steps to the hideout). Here there is one
+of each. So no two games share more than a quarter of their puzzles.
 
 All of it is for a seven-year-old. Each puzzle is made fresh every time, with
 exactly one answer.

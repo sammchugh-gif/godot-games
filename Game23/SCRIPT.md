@@ -59,39 +59,41 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 > **Admiral Frost:** We can hear you, Rory. The leak is strongest right where you've landed.
 > **Dr Flint:** Those glowing sparks are bits of broken time. Grab them and we can follow the trail.
 
-**Mission 1: Strange Footprints** (Puzzle, level 1: counting in steps)
+**Mission 1: Strange Footprints** (Puzzle, level 1: whose footprints?)
 
-> **Dr Flint:** Look at the mud. Footprints! Little round ones, with sand in them. Not a dinosaur's.
-> **Pip:** Follow the track, Rory. Each step is the same size. Where does the next one land?
+> **Dr Flint:** Look at the mud. Footprints! All sorts of creatures have walked through here.
+> **Pip:** Whose tracks are they, Rory? Look at the toes, then tap who made them.
 
 *After:*
 
-> **Rory:** They go all the way to the nests.
+> **Rory:** Little round ones with sand in them. Not a dinosaur's. And they go all the way to the nests.
 > **Dr Flint:** Something's stealing from the dinosaurs. Come on, quietly.
 
 *Intel: Sandy footprints.* Small round footprints with sand in them lead across the valley to the dinosaur nests.
 
-**Mission 2: Egg Thieves** (Puzzle, level 1: story sum)
+**Mission 2: Egg Thieves** (Puzzle, level 1: wrong time!)
 
 > **Pip:** Robots! Shaped like egg timers. They're stealing dinosaur eggs!
-> **Dr Flint:** We need to know how many they took. Work out the sum, Rory.
+> **Dr Flint:** And dropping things from our time all over the valley. Tap whatever doesn't belong here, Rory, and we'll find the robot.
 
 *After:*
 
+> **Rory:** Got one! Upside down you go.
 > **Sandbot:** Upside down! Now I have to wait for my sand. I hate waiting!
 > **Rory:** Who sent you?
 > **Sandbot:** Doctor Hourglass. She'll be very cross. She's cross about most things.
 
 *Intel: Doctor Hourglass.* The egg-timer robots are Sandbots. They work for Doctor Hourglass, who hates waiting.
 
-**Mission 3: Back to the Nest** (Puzzle, level 1: doubles and halves)
+**Mission 3: Back to the Nest** (Puzzle, level 1: fossil puzzle)
 
-> **Dr Flint:** The eggs they dropped need to go back in the nests before their mums come back.
-> **Pip:** Every nest gets the same. Work it out, Rory, and we'll carry them over gently.
+> **Dr Flint:** The Sandbots dug up the nests, looking for eggs. And they've jumbled up an old fossil underneath.
+> **Dr Flint:** Even in the age of the dinosaurs, there are fossils. Of much older dinosaurs!
+> **Pip:** Tap the stones to turn them until the skeleton is whole, Rory. Then the eggs can go back on top.
 
 *After:*
 
-> **Rory:** All safe and warm. Wait. That one's wobbling.
+> **Rory:** The fossil's fixed, and the eggs are back in the nest, all safe and warm. Wait. That one's wobbling.
 > **Dr Flint:** Rory. It's hatching. Right now. In your hands.
 > **Pebble:** Honk?
 > **Rory:** Hello. I'm Rory. I'm not your mum.
@@ -100,10 +102,10 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: Pebble.* A baby triceratops hatched in Rory's hands. She's called Pebble, and she thinks Rory is her mum.
 
-**Mission 4: Tiptoe Past the T. rex** (Puzzle, level 1: telling the time)
+**Mission 4: Tiptoe Past the T. rex** (Puzzle, level 1: river crossing)
 
-> **Dr Flint:** The Sandbots' cart went down the valley, past a sleeping T. rex.
-> **Pip:** We have to get past before it wakes. Which clock shows the time it wakes up?
+> **Dr Flint:** The Sandbots' cart went over the river, right past a sleeping T. rex.
+> **Pip:** The raft holds Rory and one more. Get everyone across, quietly, before it wakes!
 > **Pebble:** Mrrp.
 
 *After:*
@@ -141,11 +143,11 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 > **Tuva:** I'm Tuva. My family paints the cave. And this morning our best painting was gone. Just gone, off the wall.
 > **Pip:** A great moment: the first painting of the great horse. Hourglass has taken it.
 
-**Mission 6: Falling Icicles** (Puzzle, level 1: how long)
+**Mission 6: Falling Icicles** (Puzzle, level 1: lost in time)
 
 > **Dr Flint:** Your watch has a new power, Rory. Hold SLOW and the world slows right down. Everything but you.
-> **Tuva:** The cave mouth is full of icicles, and they drip at the same times every day.
-> **Pip:** Work out how long the drip lasts. Then we'll know when it's safe to go in.
+> **Tuva:** The Sandbots dropped their stolen things under the icicles at the cave mouth. Strange things!
+> **Pip:** They're from all through history. Put each one back in its own time, Rory.
 
 *After:*
 
@@ -154,10 +156,10 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: SLOW.* Rory's watch can slow the world down. It needs time to charge after.
 
-**Mission 7: The Painted Cave** (Puzzle, level 1: days and months)
+**Mission 7: The Painted Cave** (Puzzle, level 1: cave dot-to-dot, in ABC order)
 
-> **Tuva:** The cave painters marked the days on the wall. The Sandbots have been coming to the cave.
-> **Pip:** Read the days, Rory. When will they come back?
+> **Tuva:** Our painters mark out every picture in dots first. Here's one they never finished.
+> **Pip:** Join the dots in ABC order, Rory, and see what it is. Then we'll go deeper in.
 
 *After:*
 
@@ -166,10 +168,10 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: The missing horse.* The Sandbots stole the great horse painting from the cave wall.
 
-**Mission 8: Snow Wall** (Puzzle, level 1: number pyramid)
+**Mission 8: Snow Wall** (Puzzle, level 1: shape fit)
 
-> **Tuva:** The storm is coming back. Our camp needs a wall of snow blocks, fast.
-> **Pip:** Each block is the two under it added together. Fill in the missing numbers, Rory.
+> **Tuva:** The storm is coming back, and there's a hole in our snow wall.
+> **Pip:** Tap a snow block, Rory, then tap the gap where it fits. Fill it up before the wind gets in!
 
 *After:*
 
@@ -267,10 +269,10 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: The capstone.* The Sandbots buried the golden capstone. It has to go on top of the pyramid.
 
-**Mission 15: Ropes for the Capstone** (Puzzle, level 2: trading, times tables)
+**Mission 15: Mend the Ramp** (Puzzle, level 2: shape fit)
 
-> **Nefi:** The workers need more rope to haul the capstone up. The rope seller wants paying.
-> **Pip:** It's a market. Work out how many to trade, Rory.
+> **Nefi:** The Sandbots pulled stones out of the ramp up the pyramid. The workers can't haul the capstone over a hole!
+> **Pip:** Fit the blocks into the gap, Rory. Tap a block, then tap where it goes.
 
 *After:*
 
@@ -343,7 +345,7 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: Crowns.* The flame is lit. But the Sandbots are trying to steal the olive crowns.
 
-**Mission 20: Sandbots in the Stadium** (Puzzle, level 2: code, spells ROME)
+**Mission 20: Sandbots in the Stadium** (Puzzle, level 2: symbol code, spells ROME)
 
 > **Theo:** We caught the last Sandbot! It had a note in its sand. In code.
 > **Pip:** Use the key, Rory. Each symbol is one letter. Where's Hourglass?
@@ -370,14 +372,14 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 > **Livia:** I'm Livia. My dad built this aqueduct. Today the water was meant to reach the town for the first time. And it's dry!
 > **Dr Flint:** Hourglass has bottled the moment the water arrives. The whole town's waiting in the square with cups.
 
-**Mission 21: Along the Arches** (Puzzle, level 3: Roman numerals)
+**Mission 21: Along the Arches** (Puzzle, level 3: Roman mosaic)
 
-> **Livia:** The aqueduct's arches are numbered, Roman style. The Sandbots stopped the water at one of them.
-> **Pip:** Roman numbers are letters. Read them, Rory.
+> **Livia:** Every arch has a mosaic sign. The Sandbots smashed one, so nobody could find where they stopped the water.
+> **Pip:** Copy the little pattern, Rory. Tap a colour, then tap the squares that need it.
 
 *After:*
 
-> **Rory:** That one! There's sand jammed in the channel.
+> **Rory:** The sign's mended. And look, under that arch! There's sand jammed in the channel.
 > **Livia:** And the sluice gates are shut. The water's stuck in the hills.
 
 *Intel: Shut gates.* The Sandbots shut the aqueduct's sluice gates, up in the hills.
@@ -479,10 +481,10 @@ Somebody is stealing history. Follow them back to the dinosaurs.
 
 *Intel: Under the water.* The Sandbots threw the sail into the fjord, in pieces.
 
-**Mission 29: Under the Fjord** (Puzzle, level 3: story sum)
+**Mission 29: Under the Fjord** (Puzzle, level 3: rune path)
 
-> **Sigrid:** The sail sank in pieces, down on the fjord bed. The divers are bringing them up.
-> **Pip:** Count them up, Rory. We need every piece.
+> **Sigrid:** The sail sank in pieces, down on the fjord bed. Grandad's rune path on the shore shows the divers where.
+> **Pip:** Start on the glowing stone and step on every stone just once, Rory. Then the runes light the way.
 
 *After:*
 

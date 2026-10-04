@@ -44,7 +44,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **BOLT:** The cell went clunk. I like clunk.
 > **Pip:** Zero's machine runs on these cells. If we can follow the cells, we can follow him.
 
-*Intel: Gravity Cells.* Stolen gravity is kept in blue Gravity Cells. Each cell has a number on it: how much power it holds.
+*Intel: Gravity Cells.* Stolen gravity is kept in blue Gravity Cells. They hum, and they roll wherever the gravity pulls them.
 
 **Mission 2: Before and After** (Puzzle, level 1: spot the difference)
 
@@ -56,7 +56,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **Rory:** Things moved all by themselves. Just from his machine going past!
 > **Pip:** Exactly. Zero sucks the gravity out of things. They get lighter and lighter, then off they float.
 
-*Intel: Light as a feather.* Anything near Zero's machine gets lighter and lighter, until it floats away. Weighing things shows where he's been.
+*Intel: Light as a feather.* Anything near Zero's machine gets lighter and lighter, until it floats away. Things that float show where he's been.
 
 **Mission 3: Practice Bots** (Floater round-up, level 1)
 
@@ -69,7 +69,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Floaters.* Professor Zero's robots are called Floaters. A Gravity Bubble from Rory's watch pops them up and away.
 
-**Mission 4: Spy Memory** (Puzzle, level 1: picture memory)
+**Mission 4: Spy Memory** (Puzzle, level 1: picture memory, find the pairs)
 
 > **Pip:** Last bit of training. A spy has to remember things. Turn the cards over two at a time.
 > **Pip:** Find the pictures that match. If they don't match, they flip back, so remember where they were!
@@ -172,7 +172,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Zero Industries.* Zero Industries rented the old tomb and pretended to make hats. It's really his workshop.
 
-**Mission 10: Capstone Puzzle** (Puzzle, level 1: picture slide puzzle)
+**Mission 10: Capstone Puzzle** (Puzzle, level 1: rocket jigsaw, slide the pieces)
 
 > **Amira:** The Floaters knocked the capstone blocks about, and jumbled up the old picture tiles on the plinth.
 > **Pip:** Slide the pieces back to make the pyramid picture, Rory. Tap a piece next to the gap.
@@ -185,7 +185,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: The tomb door.* Under the capstone blocks was a secret door into the old tomb, where Zero's workshop is.
 
-**Mission 11: The Secret Plans** (Puzzle, level 1: code, spells PUMP)
+**Mission 11: The Secret Plans** (Puzzle, level 1: symbol code, spells PUMP)
 
 > **Rory:** Zero's workshop! Plans everywhere. But the biggest one is written in a code.
 > **Pip:** Use the key, Rory. Each symbol is one letter. What's the machine called?
@@ -236,7 +236,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: The beach machine.* Zero's machine in Sydney only takes the light things first. Heavy things hold on longer.
 
-**Mission 14: Ferry Labels** (Puzzle, level 1: code, spells RIO)
+**Mission 14: Ferry Labels** (Puzzle, level 1: symbol code, spells RIO)
 
 > **Pip:** The cells are riding on the ferries, and every crate has a label. But the labels are in Zero's code.
 > **Jack:** Where's he sending them?
@@ -299,7 +299,7 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Floaters in costume.* Zero's Floaters are hiding in the carnival in costumes. One had a ticket for the Sugarloaf cable car.
 
-**Mission 18: Cable Car Lines** (Puzzle, level 2: join the stars)
+**Mission 18: Cable Car Lines** (Puzzle, level 2: star link, join the matching stars)
 
 > **Lucas:** Zero's tangled up the cable car lines, so nobody can get up Sugarloaf Mountain.
 > **Pip:** Join each pair of matching stars to fix the lines, Rory. The lines can't cross, or the cars will bump.
@@ -547,7 +547,7 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 *Intel: The hatch.* The workshop hatch has a power lock. The power comes from the fountain in the east garden.
 
-**Mission 34: Fountain Fix** (Puzzle, level 2: join the stars)
+**Mission 34: Fountain Fix** (Puzzle, level 2: star link, join the matching stars)
 
 > **Arjun:** The Floaters took the fountain apart. It used to power the hatch lock.
 > **Pip:** Join up the fountain's pipes, Rory. Link each pair of matching stars, and don't let the pipes cross.
@@ -570,7 +570,7 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 *Intel: An island shaped like a Z.* Zero's blueprints show the Pump on an island shaped like a Z. His robots are signalling it from the minarets.
 
-**Mission 36: Minaret Signals** (Puzzle, level 2: code, spells ISLAND)
+**Mission 36: Minaret Signals** (Puzzle, level 2: symbol code, spells ISLAND)
 
 > **Arjun:** The robots are flashing signals from the minarets! In code.
 > **Pip:** Decode it, Rory. If we know what they're saying, we can stop it.
@@ -674,7 +674,7 @@ The Pump is in orbit and its battery is on the Moon.
 
 *Intel: The launch computer.* The launch computer is fixed. POLARIS's own rocket can follow Zero into space.
 
-**Mission 42: Stack the Rocket** (Puzzle, level 3: picture slide puzzle)
+**Mission 42: Stack the Rocket** (Puzzle, level 3: rocket jigsaw, slide the pieces)
 
 > **Commander Hale:** Zero's Floaters mixed up our rocket plans. The picture of how it all fits together is in bits.
 > **Pip:** Slide the pieces back to make the rocket picture, Rory. Then we'll know how to stack it.
@@ -795,7 +795,7 @@ The Pump is in orbit and its battery is on the Moon.
 > **BOLT:** I am the first robot called BOLT on the Moon. I checked.
 > **Pip:** Zero's base is over by the purple domes, and the Pump's battery is in the big crater. Let's end this.
 
-**Mission 50: Zero's Gold** (Puzzle, level 3: picture memory)
+**Mission 50: Zero's Gold** (Puzzle, level 3: picture memory, find the pairs)
 
 > **Commander Hale:** Look in that crater! Zero's gold. All the bars the countries paid him.
 > **Pip:** It's behind a memory lock. Match all the picture pairs, Rory, and the vault opens.
@@ -807,7 +807,7 @@ The Pump is in orbit and its battery is on the Moon.
 
 *Intel: The gold.* All Zero's ransom gold was hidden in a Moon crater. It's going back to every country.
 
-**Mission 51: Signal Tower** (Puzzle, level 3: code, spells EARTH)
+**Mission 51: Signal Tower** (Puzzle, level 3: symbol code, spells EARTH)
 
 > **Commander Hale:** We need to talk to Earth, and Zero's jamming the radio.
 > **Pip:** There's a coded message getting through. Crack it, Rory.

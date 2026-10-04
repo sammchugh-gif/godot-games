@@ -52,7 +52,7 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **TORPEDO:** Land is just the bottom of the sea with the water missing.
 > **Pip:** You two will get on brilliantly. Training first. Follow the beams of light!
 
-**Mission 1: Pearl School** (Puzzle, level 1: pattern)
+**Mission 1: Pearl School** (Puzzle, level 1: pearl necklace pattern)
 
 > **Pip:** These glowing balls are Tide Pearls. Somebody is squeezing the tide into them, a little bit at a time.
 > **Pip:** Our spies found them on a necklace, in a pattern. Say the pattern out loud, then tap the pearl that's missing!
@@ -64,27 +64,27 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Tide Pearls.* Somebody is squeezing the sea into glowing Tide Pearls. That's why harbours are drying out.
 
-**Mission 2: First Dive** (Puzzle, level 1: number bonds)
+**Mission 2: First Dive** (Puzzle, level 1: tangled lines)
 
-> **Pip:** Into the training pool, Rory. First rule of diving: fill your air tank before you go down.
-> **Pip:** Look how much air the tank has. How much more fills it right up?
+> **Pip:** Into the training pool, Rory. Air tank on, mask on. A spy diver can follow a line without getting tangled.
+> **Pip:** I've hung a Tide Pearl on one of the fishing lines. Follow its line up from the pearl, and tap the boat it hangs from.
 > **TORPEDO:** Or you could just be a submarine. I am just saying.
 
 *After:*
 
-> **Rory:** Full tank, and down I went. It's so quiet down there.
+> **Rory:** Down I went, and up the line again. It's so quiet down there.
 > **BOLT:** I stayed dry. I watched. It was very good swimming.
 
 *Intel: Under the sea.* This mission happens under the water. A spy diver always fills the air tank before going down.
 
-**Mission 3: TORPEDO's Test Drive** (Puzzle, level 1: number line)
+**Mission 3: TORPEDO's Test Drive** (Puzzle, level 1: coral path)
 
 > **TORPEDO:** Climb in, Rory! You steer. I do the engine noises.
-> **Pip:** The depth line shows how far down TORPEDO is. Read where he's going and tap that spot on the line.
+> **Pip:** The bottom of the pool has coloured coral stones. Hop TORPEDO from stone to stone, following the colours, all the way to the arrow.
 
 *After:*
 
-> **TORPEDO:** Wheee! Down and up and down again. You are a natural. BOLT, did you see?
+> **TORPEDO:** Wheee! Hop, hop, hop, and not one wrong stone. You are a natural. BOLT, did you see?
 > **BOLT:** I saw. It was adequate.
 
 *Intel: TORPEDO.* TORPEDO is a yellow robot submarine. He can carry Rory deep down, where a diver on their own can't go.
@@ -101,14 +101,14 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Drips.* The sea thief's diving robots are called Drips. A bubble from Rory's watch pops them away. All they ever say is blub.
 
-**Mission 5: Load the Narwhal** (Puzzle, level 1: shapes)
+**Mission 5: Load the Narwhal** (Puzzle, level 1: sea words, jumbled letters, spells FISH)
 
 > **Admiral Frost:** The submarine Narwhal is our base for this mission. It needs its supplies.
-> **Pip:** Every crate goes in through a hatch with its own shape. Count the sides, and tap the hatch I ask for.
+> **Pip:** Oh no. My practice Drips jumbled the letters on the crate labels! Look at each picture, and tap the letters in order to spell it.
 
 *After:*
 
-> **TORPEDO:** All loaded! One crate is snacks. For you. Not for me. I run on batteries.
+> **TORPEDO:** All loaded! The last crate is fish fingers. For you. Not for me. I run on batteries.
 > **Admiral Frost:** Good. The first harbour to dry out was Porthcarrow, in Cornwall. The Narwhal sails tonight.
 
 *Intel: First stop: Cornwall.* The first harbour to dry out was Porthcarrow, in Cornwall. The Narwhal is sailing there.
@@ -127,14 +127,14 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **Morwenna:** Gran saw lights in the smugglers' cave last night. Little round lights. Blowing bubbles.
 > **Pip:** Drips! Start in the harbour, Rory.
 
-**Mission 6: Harbour on the Mud** (Puzzle, level 1: taking away)
+**Mission 6: Harbour on the Mud** (Puzzle, level 1: what's missing?)
 
-> **Morwenna:** Our harbour's on the mud! Gran checks the water every morning, and today it's nearly gone.
-> **Pip:** Read the depth gauge, Rory. Take away what the Drips pumped out. How deep is it now?
+> **Morwenna:** Our harbour's on the mud! And Gran says things keep vanishing from it in the night.
+> **Pip:** Look through TORPEDO's porthole, Rory, and remember everything you see. Then tap the thing that's gone missing.
 
 *After:*
 
-> **Rory:** Hardly any water left. And look, footprints in the mud. Little round ones.
+> **Rory:** Something is sneaking off with things. And look, footprints in the mud. Little round ones.
 > **Morwenna:** Drip prints! They go towards the cave.
 
 *Intel: Drip prints.* Little round Drip footprints lead from the harbour to the smugglers' cave round the point.
@@ -164,15 +164,15 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: PUMP ONE FULL.* The boat's lamp flashed: PUMP ONE FULL. SEND TO FUNDY. Somebody is sending the sea away.
 
-**Mission 9: The Sea Cave** (Puzzle, level 2: number bonds)
+**Mission 9: The Sea Cave** (Puzzle, level 2: free the sub, sliding blocks)
 
-> **Pip:** The pump's switch is at the bottom of the flooded part of the cave. That's a long dive.
-> **TORPEDO:** It is too narrow for me. I will wait here and be brave.
-> **Pip:** Top up your air tank first, Rory. How much more does it need to be full?
+> **Pip:** The pump's switch is right at the back of the flooded part of the cave.
+> **TORPEDO:** I am small and slippery. I will squeeze in. Oh. The Drips have stacked crates and rocks all round me. I am stuck.
+> **Pip:** Slide them out of the way one square at a time, Rory, until TORPEDO can get out of the gap!
 
 *After:*
 
-> **Rory:** Pump off! The water's stopped going down the pipe.
+> **Rory:** TORPEDO's free, and there's the switch. Pump off! The water's stopped going down the pipe.
 > **Captain Undertow:** Who switched off my pump?
 > **Rory:** Who said that?
 > **Captain Undertow:** Captain Undertow. Remember the name, little diver. The tide is turning.
@@ -218,10 +218,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Pumped from the mud.* The tide gauge says the bay's water is being pumped out from somewhere on the mudflats.
 
-**Mission 12: Mudflat Drips** (Puzzle, level 2: tally marks)
+**Mission 12: Mudflat Drips** (Puzzle, level 2: sonar hunt)
 
-> **Émile:** There they are! Drips, digging holes in the mudflats. They're planting pumps!
-> **Pip:** Émile kept a tally of everything out on the mud. Count the marks, Rory. Each gate of five is five.
+> **Émile:** There they are! Drips, digging holes in the mudflats. They're burying pumps!
+> **Pip:** Ping the mud with TORPEDO's sonar, Rory. Red is hot and right next to it, blue is cold and far away. Find the pump!
 
 *After:*
 
@@ -254,14 +254,14 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The crank.* Rory got the crank handle back. With it, the barge pump can be switched off.
 
-**Mission 15: The Barge Pump** (Puzzle, level 2: adding)
+**Mission 15: The Barge Pump** (Puzzle, level 2: sea words, jumbled letters, spells PEARL)
 
-> **Émile:** We've got the crank! But the barge pump's switch is behind a pressure lock.
-> **Pip:** Add up the gauges, Rory. Get the number right and the lock pops open.
+> **Émile:** We've got the crank! But the barge pump's switch has a word lock, and the Drips have jumbled the letters.
+> **Pip:** Look at each picture and tap the letters in order to spell it, Rory. The last word opens the lock.
 
 *After:*
 
-> **Rory:** Crank in, switch off. Listen! The barge pump's stopped.
+> **Rory:** PEARL! Of course it is. Crank in, switch off. Listen! The barge pump's stopped.
 > **Émile:** The bay is ready for its tide. Here it comes!
 > **Pip:** But the barge radio is still crackling. Somebody's heading south.
 
@@ -292,10 +292,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Steps for ships.* The canal's locks are steps of water for ships. Somebody has been letting the water out, and the ships got stuck.
 
-**Mission 17: Ship in the Lock** (Puzzle, level 1: code, spells MINE)
+**Mission 17: Ship in the Lock** (Puzzle, level 1: symbol code, spells MINE)
 
 > **Valeria:** The Drips hid pearls on the cargo ship in the lock. Every crate has a label, but it's in code!
-> **Pip:** Each number is a letter: A is 1, B is 2. Use the key and tap the letters to spell the label.
+> **Pip:** Each symbol is a letter. Find it in the key, then tap the letters to spell the label.
 
 *After:*
 
@@ -304,26 +304,26 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: MINE.* Undertow labels every pearl crate MINE. She thinks the sea belongs to her.
 
-**Mission 18: The Control House** (Puzzle, level 2: bar chart)
+**Mission 18: The Control House** (Puzzle, level 2: word search)
 
-> **Valeria:** The Drips took over the lock control house. They ran off when they saw you coming!
-> **Pip:** The control desk has a chart of how many barges filled up each night. Read the bars, Rory.
+> **Valeria:** The Drips took over the lock control house. They ran off when they saw you coming, and left Undertow's logbook behind!
+> **Pip:** She hides her secret words in a jumble of letters. Tap the first letter of each word, then the last.
 
 *After:*
 
-> **Rory:** Barges every night, all filled from the lake. Somebody's draining it.
-> **Pip:** With valves under the lock gates. And Undertow likes to guard things with lasers.
+> **Rory:** Ship, boat, pearl. It says barges come every night, and they all fill up from the lake. Somebody's draining it.
+> **Pip:** With valves under the lock gates. And the Drips are guarding the tunnel down there.
 
 *Intel: Barges by night.* Every night the Drips open valves under the lock gates and drain the lake into barges.
 
-**Mission 19: Gate Machinery** (Puzzle, level 2: taking away)
+**Mission 19: Gate Machinery** (Puzzle, level 2: what's missing?)
 
-> **Valeria:** The tunnel under the gates is full of red beams, but the valve wheel is just past them.
-> **Pip:** Before we shut it, read the lake gauge. Take away what the Drips pumped out. How deep is the lake now?
+> **Valeria:** The valve wheel is in a flooded tunnel under the gates. TORPEDO can get in, but there are Drips sneaking about.
+> **Pip:** Look through TORPEDO's porthole, Rory, and remember everything. When a Drip squirts ink, tap the thing that's gone.
 
 *After:*
 
-> **Rory:** Valves shut! The lake stays in the lake.
+> **Rory:** Caught it! The Drip dropped what it took and swam off. Valves shut! The lake stays in the lake.
 > **Valeria:** A barge is racing away down the canal!
 
 *Intel: Valves shut.* The valves are shut and the lake is safe. But one last barge full of pearls is escaping down the canal.
@@ -378,7 +378,7 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Drips in disguise.* The bubbly iguanas were Drips in costumes. They had been hiding pearls up on the old lava fields.
 
-**Mission 23: Lava Fields** (Puzzle, level 2: pattern)
+**Mission 23: Lava Fields** (Puzzle, level 2: pearl necklace pattern)
 
 > **Mateo:** The Drips left a line of pearls across the old lava fields. It's like a trail!
 > **Pip:** The pearls go in a pattern. Find the missing one each time and we can follow the trail.
@@ -400,10 +400,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The salvage boat.* The mast's last message went to a salvage boat in the bay. It's hiding parts of a pump.
 
-**Mission 25: Raise the Pump** (Puzzle, level 2: measuring)
+**Mission 25: Raise the Pump** (Puzzle, level 2: sonar hunt)
 
-> **TORPEDO:** My turn! The Drips dropped pump parts on the sea bed. I have grabbed them with my claw.
-> **Pip:** Measure each part with the ruler, Rory, so we know where it goes. Look where the end lines up.
+> **TORPEDO:** My turn! The Drips dropped pump parts on the sea bed, and they have sunk into the sand.
+> **Pip:** Ping the sand with TORPEDO's sonar, Rory. The hotter the colour, the closer you are. Find it, and TORPEDO will grab it with his claw.
 
 *After:*
 
@@ -427,23 +427,23 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **TORPEDO:** I will stay well away from the lava. I have a yellow paint job to think about.
 > **Pip:** Undertow's pumps are using the volcano's heat. Let's find them.
 
-**Mission 26: Surf's Up** (Puzzle, level 2: bar chart)
+**Mission 26: Surf's Up** (Puzzle, level 2: two halves)
 
-> **Kai:** Something's wrong with the surf. I write down the big waves every day, and there are fewer and fewer.
-> **Pip:** Read Kai's chart, Rory. Put your finger on the top of a bar and go across to the numbers.
+> **Kai:** Something's wrong with the surf. The big waves are getting smaller every day. And somebody cut up my sea creature pictures at the surf hut!
+> **Pip:** Drips. Put the pictures back together, Rory. Tap a half on the top row, then its other half below.
 
 *After:*
 
-> **Kai:** You read that like a pro! Totally shredded it.
+> **Kai:** You fixed them like a pro! Totally shredded it.
 > **Rory:** I don't know what that means but thank you.
-> **Kai:** Something along the lava coast is drinking the sea.
+> **Kai:** Look, wet Drip prints, going back along the lava coast. Something along there is drinking the sea.
 
 *Intel: Shrinking waves.* Hawaii's waves get smaller every day. Something on the lava coast is pumping the sea away.
 
-**Mission 27: Lava Coast** (Puzzle, level 2: measuring)
+**Mission 27: Lava Coast** (Puzzle, level 2: coral path)
 
-> **Kai:** Look! A pipe going into a tunnel in the black lava rock.
-> **Pip:** A bigger pipe means a bigger pump. Line the ruler up, Rory. How long is the pipe?
+> **Kai:** Look! A pipe going into a tunnel in the black lava rock. The only way there is across the coral.
+> **Pip:** Don't break any coral, Rory. Hop TORPEDO across the stones in the colour pattern, all the way to the arrow.
 
 *After:*
 
@@ -452,7 +452,7 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The lava tube.* A big pipe runs into an old lava tube, a cave the lava made. Undertow has filled it with lasers.
 
-**Mission 28: The Lava Tube** (Puzzle, level 3: code, spells DIGGER)
+**Mission 28: The Lava Tube** (Puzzle, level 3: symbol code, spells DIGGER)
 
 > **Pip:** I've switched the lasers off. At the end of the tube there's a huge machine with a name plate.
 > **Kai:** Be careful, Rory. It's hot in there. And the name is in code!
@@ -465,10 +465,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The Drip Digger.* Undertow's Drip Digger drills through lava rock. It's at the end of the lava tube.
 
-**Mission 29: The Pearl Net** (Puzzle, level 3: number line)
+**Mission 29: The Pearl Net** (Puzzle, level 3: tangled lines)
 
-> **Kai:** A Drip boat is towing a pearl net along the cliffs!
-> **Pip:** I'm tracking it on the number line. Tap where the Drip boat is, and the coastguard will cut its net.
+> **Kai:** A Drip boat is towing a pearl net along the cliffs! But there are fishing lines everywhere, all tangled up.
+> **Pip:** Follow the line up from the pearl net and tap the boat it's tied to, Rory. Then the coastguard can cut the net.
 
 *After:*
 
@@ -485,17 +485,17 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 *After:*
 
 > **Rory:** It's popped into a bubble!
-> **Captain Undertow:** Oh, very clever. You've stopped one little pump. My Engine is a hundred times bigger, and you'll never reach it.
+> **Captain Undertow:** Oh, very clever. You've stopped one little pump. My Engine is bigger than a mountain, and you'll never reach it.
 > **TORPEDO:** Engine? What engine?
 > **Pip:** I don't know. But I don't like the sound of it.
 
-*Intel: The Engine.* Undertow has an Engine a hundred times bigger than the Digger. The Digger's memory shows a pipe on the Great Barrier Reef.
+*Intel: The Engine.* Undertow has an Engine far, far bigger than the Digger. The Digger's memory shows a pipe on the Great Barrier Reef.
 
 *Leaving:*
 
 > **Kai:** The waves are back! Look at those sets rolling in. Mahalo, Rory!
 > **Admiral Frost:** The Drip Digger's memory shows a pipe on the Great Barrier Reef, in Australia. The biggest pump yet.
-> **BOLT:** The reef is alive. It is made of tiny animals. Billions. I cannot count that high. I tried.
+> **BOLT:** The reef is alive. It is made of tiny animals. More than all the stars. I tried to say hello to each one.
 
 ### Great Barrier Reef, Australia
 
@@ -506,10 +506,11 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **TORPEDO:** This is what I was built for. Coral! Fish! Proper sea!
 > **Pip:** The Digger pointed at a pipe on the outer reef. Suit up, Rory.
 
-**Mission 31: The Reef Wall** (Puzzle, level 3: number bonds)
+**Mission 31: The Reef Wall** (Puzzle, level 3: coral path)
 
-> **Ruby:** The outer reef drops off like a cliff, down and down into the blue.
-> **Pip:** That's a deep dive, so you need a really full tank. How much more air fills it up?
+> **Ruby:** The outer reef drops off like a cliff, down and down into the blue. The way down is all coral.
+> **Ruby:** Mum marks a safe path in a colour pattern, so nobody breaks the coral.
+> **Pip:** Hop TORPEDO along the coral, following the colours, to the arrow.
 
 *After:*
 
@@ -531,14 +532,14 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The biggest pump.* Inside the pipe is a pump bigger than a house. Blocking its mouth will stop it.
 
-**Mission 33: Block the Pipe** (Puzzle, level 2: shapes)
+**Mission 33: Block the Pipe** (Puzzle, level 2: free the sub, sliding blocks)
 
-> **TORPEDO:** Rocks! Big ones. I will carry them. You choose, I strain.
-> **Pip:** Only the right shape will plug the pipe. Count the sides, and tap the boulder I ask for.
+> **TORPEDO:** Help! The pump sucked me in among the boulders. I am wedged. I am not enjoying it.
+> **Pip:** Slide the rocks one square at a time, Rory, until TORPEDO can get out of the gap. Then we'll roll them into the pipe.
 
 *After:*
 
-> **Rory:** Blocked! The water's stopped going down the pipe.
+> **Rory:** TORPEDO's out, and the rocks rolled right into the pipe. Blocked! The water's stopped going down.
 > **Ruby:** Some Drips are still guarding the pump though.
 
 *Intel: Pipe blocked.* The big pump's mouth is plugged with boulders. Only its Drip guards are left.
@@ -554,14 +555,14 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Guards popped.* The pump's Drip guards are bubbled. But the pump scared the reef fish out of their homes.
 
-**Mission 35: Lost Clownfish** (Puzzle, level 3: tally marks)
+**Mission 35: Lost Clownfish** (Puzzle, level 3: two halves)
 
-> **Ruby:** The pump scared the fish out of their homes. Mum's done a fish survey to see who's back.
-> **Pip:** Count the tally marks, Rory. Each gate of five is five. Then add them together.
+> **Ruby:** The pump scared the fish out of their homes. And the Drips cut up Mum's fish survey cards!
+> **Pip:** Put the cards back together, Rory, so Mum can see who's back. Tap a half on the top row, then its other half below.
 
 *After:*
 
-> **Ruby:** Everybody's home. Mum's going to be so pleased.
+> **Ruby:** All the cards are mended, and everybody's home. Mum's going to be so pleased.
 > **Pip:** And I've found the pump's records. A whole fleet of cargo ships, in Hong Kong.
 
 *Intel: Ships in Hong Kong.* The reef pump's records show a fleet of cargo ships in Hong Kong. Undertow is shipping pearls somewhere.
@@ -580,10 +581,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **TORPEDO:** I will scrape nothing. I am very careful.
 > **Pip:** Undertow's cargo ships are here. Let's find out where they're going.
 
-**Mission 36: Junk Hop** (Puzzle, level 2: tally marks)
+**Mission 36: Junk Hop** (Puzzle, level 2: tangled lines)
 
-> **Ming:** Grandpa watches every junk in the harbour. He's kept a tally of all the funny things on board.
-> **Pip:** Count Grandpa's tally marks, Rory. Each gate of five is five.
+> **Ming:** Grandpa watches every boat in the harbour. He says Drips are lowering crates over the side on long lines!
+> **Pip:** Follow the line up from the pearl crate, Rory, and tap the boat it hangs from.
 
 *After:*
 
@@ -653,10 +654,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **TORPEDO:** The lagoon is so shallow. I can feel my tummy on the sand.
 > **Pip:** Undertow said the islands were ready. Ready for what?
 
-**Mission 41: New Islands** (Puzzle, level 3: taking away)
+**Mission 41: New Islands** (Puzzle, level 3: sonar hunt)
 
 > **Aisha:** New sandbanks keep popping up in our lagoon. The water's going down and down!
-> **Pip:** Read the lagoon gauge, Rory. Take away what the Drips pumped out. How deep is it now?
+> **Pip:** Something's hidden in that sandbank. Ping it with TORPEDO's sonar, Rory. Hot or cold, find it!
 
 *After:*
 
@@ -726,10 +727,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 > **Captain Undertow:** Welcome aboard, Agent Rory. Do wipe your flippers.
 > **Pip:** This is it, Rory. Find out what the Tidal Engine is, and stop it.
 
-**Mission 46: Deck Patrol** (Puzzle, level 3: adding)
+**Mission 46: Deck Patrol** (Puzzle, level 3: word search)
 
 > **Nia:** That's her base, right in the middle of the Triangle. The deck is crawling with Drip guards.
-> **Pip:** They're all looking the other way. Quick, the main hatch has a pressure lock. Add up the gauges!
+> **Pip:** They're all looking the other way. Quick, the main hatch has a word lock. Find every word hidden in its letters!
 
 *After:*
 
@@ -738,7 +739,7 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: The pump hall.* Under the main hatch is a huge hall full of pipes, guarded by lasers.
 
-**Mission 47: Pump Hall** (Puzzle, level 2: pattern)
+**Mission 47: Pump Hall** (Puzzle, level 2: pearl necklace pattern)
 
 > **Pip:** The laser switch is a necklace of Tide Pearls. Find the missing pearl in the pattern and the beams go off.
 > **TORPEDO:** I would help but I am a submarine and this is a corridor.
@@ -774,10 +775,10 @@ Harbours are drying up all over the world. Somebody is stealing the sea.
 
 *Intel: Going under.* The Kraken is beaten. But Undertow is diving, and she's taking her whole base down with her.
 
-**Mission 50: Follow Her Down** (Puzzle, level 3: number line)
+**Mission 50: Follow Her Down** (Puzzle, level 3: free the sub, sliding blocks)
 
-> **TORPEDO:** In you get, Rory! We are not losing her now.
-> **Pip:** Watch the line. Tap where Undertow's sub is, so TORPEDO can follow it down through the sinking base.
+> **TORPEDO:** In you get, Rory! We are not losing her now. Oh no. The sinking base is dropping crates all round us!
+> **Pip:** Slide the crates and rocks out of the way, Rory, until TORPEDO can get out and follow Undertow's sub down.
 
 *After:*
 
@@ -806,33 +807,33 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 > **Dr Lani:** Welcome aboard the Albatross! I'm Dr Lani. I study everything that lives in the sunlit water.
 > **Dr Lani:** And something strange is going on down there. Come and see.
 
-**Mission 51: Fill the Suit** (Puzzle, level 2: number bonds)
+**Mission 51: The Lost Camera** (Puzzle, level 2: tangled lines)
 
-> **Dr Lani:** Before your first dive, Rory, the suit's air tank needs filling right up.
-> **Pip:** The tank shows how much air is in it. Work out how much more fills it to the top.
-
-*After:*
-
-> **Rory:** Full! I can breathe for ages in this suit.
-> **TORPEDO:** Show-off.
-> **Dr Lani:** Good. Something's scaring the animals in the warm current. Let's go and see.
-
-*Intel: Something's wrong.* Rory's suit is full of air. Something is scaring the sea animals near Lani's boat.
-
-**Mission 52: The Warm Current** (Puzzle, level 2: tally marks)
-
-> **Dr Lani:** The turtles ride the warm current like a road. I count everything that swims along it.
-> **Pip:** Read Lani's tally, Rory. Count the marks. Four lines with one across is a gate of five.
+> **Dr Lani:** Oh no! My underwater camera fell over the side, and it's caught on a fishing line.
+> **Pip:** Lots of boats, lots of lines, all crossed over. Follow the line from the camera up to its boat, Rory.
 
 *After:*
 
-> **Dr Lani:** Far fewer than last week. And they're all swimming away from the same spot.
+> **Rory:** Got it! Here's your camera, Dr Lani.
+> **TORPEDO:** I could have fetched that. Show-off.
+> **Dr Lani:** Thank you! Something's scaring the animals in the warm current. Let's go and see.
+
+*Intel: Something's wrong.* Rory saved Dr Lani's camera. Something is scaring the sea animals near Lani's boat.
+
+**Mission 52: The Warm Current** (Puzzle, level 2: two halves)
+
+> **Dr Lani:** The turtles ride the warm current like a road. I keep a picture card of everything that swims along it.
+> **Pip:** But the Drips have cut Lani's cards in half! Tap a top half, Rory, then its other half.
+
+*After:*
+
+> **Dr Lani:** All mended. But hardly anyone's on the current today. They're all swimming away from the same spot.
 > **Rory:** The spot where that humming noise is coming from?
 > **Pip:** Let's take a look.
 
 *Intel: The humming spot.* The fish and turtles are all swimming away from a humming noise on the sea bed.
 
-**Mission 53: Drips in the Blue** (Puzzle, level 2: pattern)
+**Mission 53: Drips in the Blue** (Puzzle, level 2: pearl necklace pattern)
 
 > **Dr Lani:** Drip divers! They're laying a pipe along the sea bed.
 > **Pip:** They've marked the way with a string of Tide Pearls, in a pattern. Which pearl comes next, Rory?
@@ -904,10 +905,11 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: An old ship.* The Drip sub dropped a picture of an old ship as it got away.
 
-**Mission 58: The Kelp Cutter** (Puzzle, level 2: adding)
+**Mission 58: The Kelp Cutter** (Puzzle, level 2: free the sub, sliding blocks)
 
 > **Rosa:** The Drips have a big machine cutting down the kelp, to make room for the pipe.
-> **Pip:** Its off switch has a pressure lock. Add up the numbers on the gauges, Rory.
+> **TORPEDO:** And they have boxed me in with crates and rocks! I cannot reach its off switch.
+> **Pip:** Slide them out of the way, Rory, one square at a time, until TORPEDO can get out of the gap.
 
 *After:*
 
@@ -916,7 +918,7 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: The kelp cutter.* The Drips were cutting the kelp to make room for their pipe. They left markers deep in the forest.
 
-**Mission 59: The Kelp Maze** (Puzzle, level 3: code, spells WRECK)
+**Mission 59: The Kelp Maze** (Puzzle, level 3: symbol code, spells WRECK)
 
 > **Pip:** The kelp's so thick you can't see a thing. But the sonar found a Drip marker with a coded note on it.
 > **Rosa:** Use the key, Rory. Swap each symbol for its letter.
@@ -928,14 +930,14 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: Towards the wreck.* The Drip markers point out to sea, towards the old shipwreck in the picture.
 
-**Mission 60: Otter Pups** (Puzzle, level 2: number line)
+**Mission 60: Otter Pups** (Puzzle, level 2: tangled lines)
 
-> **Rosa:** Three pups got lost in all the fuss. My tracker shows how far each one is from its mum.
-> **Pip:** Find each pup on the line, Rory, and TORPEDO will fetch it home.
+> **Rosa:** A pup got lost in all the fuss, and now it's caught on a fishing line!
+> **Pip:** The lines are all tangled. Follow the pup's line up to its boat, Rory, and TORPEDO will snip it free.
 
 *After:*
 
-> **Rosa:** All home! Look, they're holding hands.
+> **Rosa:** Free, and back with its mum! Look, they're holding hands.
 > **TORPEDO:** That is the best thing I have ever seen.
 
 *Intel: Out to sea.* The otters are safe. The pipe goes out to sea, towards a famous shipwreck.
@@ -967,11 +969,11 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: Inside the Neptune.* Rory is inside the sunken liner, in a room that still has air in it.
 
-**Mission 62: The Ballroom** (Puzzle, level 3: shapes)
+**Mission 62: The Ballroom** (Puzzle, level 3: word search)
 
-> **Pip:** Drip guards in the ballroom. They're guarding a door with a porthole lock.
+> **Pip:** Drip guards in the ballroom. They're guarding a door with a word lock.
 > **Captain Barnaby:** The ballroom. Marina used to dance here with her grandfather.
-> **Pip:** Tap the porthole the lock asks for, Rory. Count the sides carefully.
+> **Pip:** The lock words are hidden in the ship's old logbook. Find them all, Rory.
 
 *After:*
 
@@ -992,11 +994,11 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: A hundred pipes.* One pipe has stopped, but Undertow says she has a hundred more. The captain's safe may say where.
 
-**Mission 64: The Captain's Safe** (Puzzle, level 3: taking away)
+**Mission 64: The Captain's Safe** (Puzzle, level 3: sonar hunt)
 
-> **Captain Barnaby:** The captain's safe fell through three decks when she sank. It's on the sea bed.
-> **TORPEDO:** It is in my claw! I will bring it up, a bit at a time.
-> **Pip:** Read TORPEDO's depth gauge, Rory. Each time he comes up, work out how deep he is now.
+> **Captain Barnaby:** The captain's safe fell out of the ship when she sank. Someone has buried it in the sand.
+> **TORPEDO:** Find it, and I will pull it out with my claw.
+> **Pip:** Ping the sand with TORPEDO's sonar, Rory. The hotter the colour, the closer you are.
 
 *After:*
 
@@ -1028,14 +1030,14 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 > **Dr Hiro:** Hello! I'm Dr Hiro, and this is my deep submarine, the Kaiko.
 > **TORPEDO:** It is very big. Is it friendly?
-> **Dr Hiro:** Very. We're two hundred metres down. The sunlight is almost gone.
+> **Dr Hiro:** Very. We're a long way down now. The sunlight is almost gone.
 > **Rory:** It's all blue and dim, like the evening.
 > **Dr Hiro:** That's why it's called the Twilight Zone. And everything here makes its own light.
 
-**Mission 66: Where's the Pipe?** (Puzzle, level 3: number line)
+**Mission 66: Where's the Pipe?** (Puzzle, level 3: sonar hunt)
 
 > **Dr Hiro:** The pipe comes in here somewhere, but it's too dim to see.
-> **Pip:** The sonar is pinging the Drip markers along it. Find each marker on the line, Rory.
+> **Pip:** The Drips bury a marker next to their pipe. Ping the sand, Rory. The hotter the colour, the closer you are.
 
 *After:*
 
@@ -1044,10 +1046,10 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: The humming pipe.* Undertow's pipe runs through the Twilight Zone. Its hum is scaring the animals.
 
-**Mission 67: Lanternfish** (Puzzle, level 3: tally marks)
+**Mission 67: Lanternfish** (Puzzle, level 3: what's missing?)
 
-> **Dr Hiro:** The lanternfish scattered. I've been counting who comes back to the shoal.
-> **Pip:** Read Dr Hiro's tally, Rory. Count the marks and add them up.
+> **Dr Hiro:** The lanternfish want to come home, but a Drip keeps squirting ink and snatching things off the sea bed.
+> **Pip:** Look out of TORPEDO's porthole, Rory, and remember everything. When the ink clears, spot what the Drip took.
 
 *After:*
 
@@ -1104,15 +1106,16 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 > **Glim:** Me! Glim! POLARIS probe number nine. I got lost two years ago and nobody came to find me.
 > **Pip:** Probe nine! We thought you were gone forever!
 
-**Mission 71: The Jelly Drift** (Puzzle, level 3: measuring)
+**Mission 71: Glim's Creature Book** (Puzzle, level 3: two halves)
 
-> **Glim:** The jellyfish drift through the canyon on a current. I measure them for my jelly book!
-> **Pip:** Help Glim, Rory. Read the jelly against the ruler. Careful, it doesn't always start at zero.
+> **Glim:** I draw every creature that drifts through the canyon, for my creature book!
+> **Glim:** But the Drips tore all my pictures in half.
+> **Pip:** Help Glim, Rory. Tap a top half, then the half that matches it.
 
 *After:*
 
-> **Glim:** Lovely. Now Gerald. He's bigger than a bus.
-> **Rory:** We'll need a bigger ruler.
+> **Glim:** Lovely. Now I'll draw Gerald. He's bigger than a bus.
+> **Rory:** You'll need a bigger page.
 > **Glim:** Oh! Drips! With lamps on their heads!
 
 *Intel: Lamps in the dark.* Glim spotted Drip divers in the canyon. They wear lamps on their heads, so you can see them.
@@ -1151,11 +1154,11 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: Who is S?* Somebody called S flashes the same message every night: I think I have made a terrible mistake.
 
-**Mission 75: Charge Glim Up** (Puzzle, level 3: number bonds)
+**Mission 75: Charge Glim Up** (Puzzle, level 3: sea words, jumbled letters, spells CHARGE)
 
-> **Glim:** My battery's nearly flat. Can TORPEDO charge me up?
+> **Glim:** My battery's so flat, my words are coming out all jumbled!
 > **TORPEDO:** A little probe! I have plenty of charge.
-> **Pip:** Work out how much more charge fills Glim's battery, Rory.
+> **Pip:** Unjumble Glim's words, Rory. Tap the letters in the right order.
 
 *After:*
 
@@ -1178,7 +1181,7 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 > **TORPEDO:** Giant worms! There are giant red worms!
 > **Dr Ama:** Tube worms. They're lovely. And Undertow is using the vents' heat to power her Engine.
 
-**Mission 76: Black Smokers** (Puzzle, level 3: pattern)
+**Mission 76: Black Smokers** (Puzzle, level 3: pearl necklace pattern)
 
 > **Dr Ama:** The Drips have stuck Tide Pearls round the chimneys, in a pattern. Keep out of the hot water!
 > **Pip:** Some pearls have fallen off. Say the pattern out loud, Rory, and work out which pearl is missing.
@@ -1212,17 +1215,17 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: The glass lights.* The Drip sub escaped through the chimneys towards some glowing glass lights.
 
-**Mission 79: The Sensor Sled** (Puzzle, level 4: bar chart)
+**Mission 79: The Sensor Sled** (Puzzle, level 4: coral path)
 
-> **Dr Ama:** The Drips knocked my sensors over, but TORPEDO brought them back to the lab.
-> **Pip:** They counted every Drip sub that went past. Read the chart, Rory.
+> **Dr Ama:** The Drips knocked my sensor sled over, right out in the vent field.
+> **Pip:** Hop TORPEDO across the coral to fetch it, Rory. Follow the colours, and keep away from the hot chimneys!
 
 *After:*
 
-> **Dr Ama:** Now I can watch the vents again. And look how many Drip subs went by!
+> **Dr Ama:** Now I can watch the vents again. And look at all the Drip subs it saw going by!
 > **Rory:** All heading for the glass lights.
 
-*Intel: Drip traffic.* Dr Ama's sensors counted Drip subs going past every day, all heading for the glass lights.
+*Intel: Drip traffic.* Dr Ama's sensors saw lots of Drip subs going past, all heading for the glass lights.
 
 **Mission 80: The Heat Exchanger** (Valve wheels, level 3)
 
@@ -1319,10 +1322,10 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 > **Nuka:** The unicorns of the sea! The factory has trapped some of them.
 > **TORPEDO:** It is very cold. My headlights are shivering.
 
-**Mission 86: Under the Pack Ice** (Puzzle, level 3: shapes)
+**Mission 86: Under the Pack Ice** (Puzzle, level 3: coral path)
 
 > **Nuka:** There's no surface here, just ice. You breathe at the air holes.
-> **Nuka:** My dad marks the safe ones by their shape. Count the sides, Rory, and pick the hole I ask for.
+> **Nuka:** My dad found a safe way to the next air hole, across the coloured coral. Follow the colours, Rory, and hop TORPEDO over.
 
 *After:*
 
@@ -1331,14 +1334,14 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: The brick factory.* Undertow's ice brick factory is hidden under the Arctic ice. Its noise scares the narwhals.
 
-**Mission 87: The Brick Factory** (Puzzle, level 4: bar chart)
+**Mission 87: The Brick Factory** (Puzzle, level 4: word search)
 
-> **Professor Silt:** The factory floor. Drip guards everywhere, and a chart on the wall.
-> **Professor Silt:** It shows how many cargo pods of ice bricks she sends off each day. Read it, Rory.
+> **Professor Silt:** The factory floor. Drip guards everywhere, and her logbook on the desk.
+> **Professor Silt:** It lists what she freezes into the cargo pods. Find the hidden words, Rory.
 
 *After:*
 
-> **Rory:** Millions of ice bricks. All the sea she's stolen.
+> **Rory:** Fish, crabs, shells, even whole waves. All the sea she's stolen, frozen into bricks.
 > **Professor Silt:** The freezer controls are past the conveyor belts. Follow me.
 
 *Intel: Cargo pods.* The factory freezes the sea into ice bricks and sends them off in cargo pods, every day.
@@ -1363,14 +1366,14 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: The bricks are back.* The last Drip sub dropped its bricks. Now only the trapped narwhals are left to free.
 
-**Mission 90: Free the Narwhals** (Puzzle, level 3: measuring)
+**Mission 90: Free the Narwhals** (Puzzle, level 3: free the sub, sliding blocks)
 
-> **Nuka:** The narwhals are trapped behind ice blocks. We'll cut them a hole, but it has to fit their tusks!
-> **Pip:** Measure each tusk with the ruler, Rory. Careful, it doesn't always start at zero.
+> **Nuka:** The narwhals are trapped behind the factory's crates and rocks. And now TORPEDO's stuck in there too!
+> **TORPEDO:** Slide them out of the way, Rory. Get me out of the gap, and the narwhals can follow me.
 
 *After:*
 
-> **Nuka:** The hole fits! They're out, and they're singing! Can you hear them?
+> **Nuka:** You did it! They're out, and they're singing! Can you hear them?
 > **Glim:** I recorded it. I'm keeping it forever.
 
 *Intel: Only the Engine left.* The narwhals are free and the bricks are gone. Now there's only the Tidal Engine, in the Mariana Trench.
@@ -1383,7 +1386,7 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 ### The Mariana Trench, Pacific Ocean
 
-> **Professor Silt:** The deepest place on Earth. Eleven kilometres down.
+> **Professor Silt:** The deepest place on Earth. Deeper than the tallest mountain is tall.
 > **Rory:** It's like looking into space.
 > **TORPEDO:** My hull is creaking. That is normal. Probably.
 > **Professor Silt:** Undertow's pressure doors are the only way down. I'll help you through them.
@@ -1394,9 +1397,9 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *After:*
 
-> **Professor Silt:** Perfect. Only three thousand metres to go.
+> **Professor Silt:** Perfect. Now down, and down, and down.
 
-*Intel: The first door.* Rory is through the first pressure door. The Engine is still three thousand metres further down.
+*Intel: The first door.* Rory is through the first pressure door. The Engine is still a long way further down.
 
 **Mission 92: Down the Trench** (Ride the currents, level 4)
 
@@ -1419,7 +1422,7 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: Harbours filling.* The Great Pipe has slowed down. Harbours all over the world are filling up again.
 
-**Mission 94: Undertow's Logbook** (Puzzle, level 4: code, spells MARS)
+**Mission 94: Undertow's Logbook** (Puzzle, level 4: symbol code, spells MARS)
 
 > **Professor Silt:** Her supply sled crashed on the trench floor. Her new logbook's in it.
 > **Pip:** She writes it in code. Use the key, Rory. Swap each symbol for its letter.
@@ -1491,22 +1494,25 @@ The stolen water goes down, not away. Follow it to the bottom of the ocean.
 
 *Intel: Into the pod.* The Kraken is beaten. Undertow is escaping in a cargo pod full of ice bricks, heading for the space elevator.
 
-**Mission 99: The Cargo Pod** (Puzzle, level 4: adding)
+**Mission 99: The Cargo Pod** (Puzzle, level 4: what's missing?)
 
 > **Rory:** She's in a cargo pod full of ice bricks, heading for the elevator!
-> **TORPEDO:** She has locked the pressure doors behind her. Add up all the gauges, Rory, quickly!
+> **TORPEDO:** Her Drips are grabbing the last things to take with her. Look through my porthole, Rory, and remember everything.
+> **Pip:** When the Drip squirts ink, spot what's been taken!
 
 *After:*
 
-> **TORPEDO:** Doors open! Hold on to something, everybody!
+> **Rory:** She's taken it with her! And the pod's moving.
+> **TORPEDO:** After her! Hold on to something, everybody!
 > **TORPEDO:** We are too late. She is at the lift.
 
 *Intel: The lift.* Undertow's cargo pod has reached the space elevator. It goes straight up through the sea.
 
-**Mission 100: Up the Lift Shaft** (Puzzle, level 4: taking away)
+**Mission 100: Up the Lift Shaft** (Puzzle, level 4: sea words, jumbled letters, spells SEAWATER)
 
-> **Professor Silt:** The elevator goes up through the sea. Follow her as far as you can!
-> **Pip:** Watch TORPEDO's depth gauge, Rory. Each time he climbs, work out how deep he is now.
+> **Professor Silt:** The elevator goes up through the sea, and its doors have word locks. Her Drips jumbled the letters!
+> **Professor Silt:** She always used the same last word. The thing she loves most.
+> **Pip:** Tap the letters in the right order, Rory, and follow her as far as you can!
 
 *After:*
 
@@ -1538,14 +1544,15 @@ The sea is on its way to Mars. So are you.
 > **Commander Vega:** Drips. Dozens of them. They swam over from her elevator.
 > **TORPEDO:** I am coming too. I do not know how yet. But I am coming.
 
-**Mission 101: Pre-Flight Checks** (Puzzle, level 2: number bonds)
+**Mission 101: Pre-Flight Checks** (Puzzle, level 2: what's missing?)
 
-> **Commander Vega:** The Drips have been at my rocket. First check: the fuel tank.
-> **Pip:** Some fuel is in already. Work out how much more fills it right up, and type the number in.
+> **Commander Vega:** The Drips have been at my rocket. Before it flies, I need to know if they've taken anything.
+> **TORPEDO:** Look through my porthole, Rory. Remember everything you can see.
+> **Pip:** Then a Drip will squirt ink. When it clears, tap the thing that's gone.
 
 *After:*
 
-> **Commander Vega:** Full. But hang on. We had a spare fuel pod on the deck. Where's it gone?
+> **Commander Vega:** Good spotting. But hang on. My spare fuel pod was on the deck. Where's it gone?
 > **Pip:** There! A Drip boat, zooming off with it!
 
 *Intel: A missing fuel pod.* The Drips stole a rocket fuel pod. One of their boats is racing off across the sea with it.
@@ -1562,11 +1569,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Drips still aboard.* The fuel pod is back. The wet Drip says lots of its friends are still hiding on the platform.
 
-**Mission 103: Drips on Deck** (Puzzle, level 2: tally marks)
+**Mission 103: Drips on Deck** (Puzzle, level 2: tangled lines)
 
-> **Pip:** There are still Drips hiding all over the deck! My scanner has counted them.
-> **Commander Vega:** Read the tally, Rory. Each line is one Drip, and a gate of lines is five.
-> **Pip:** Then we'll know how many to fish out.
+> **Pip:** There are still Drips hiding all over the platform! One is dangling under the deck on a fishing line.
+> **Commander Vega:** The lines are all tangled. Follow the line from the Drip up to its boat, and tap the boat.
+> **Pip:** Then we can reel them in.
 
 *After:*
 
@@ -1661,11 +1668,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: RACE.* The message said RACE. Undertow's climber is already on its way up the ribbon!
 
-**Mission 110: Race Up the Ribbon** (Puzzle, level 3: number line)
+**Mission 110: Race Up the Ribbon** (Puzzle, level 3: sea words, jumbled letters, spells RIBBON)
 
-> **Otis:** Her climber has a head start. But mine is faster!
-> **Pip:** You're the navigator, Rory. The line shows how far up the ribbon we are.
-> **Pip:** Read where the climber is, then tap that spot on the line.
+> **Otis:** Her climber has a head start. But mine is faster, once it gets going!
+> **Otis:** Her Drips jumbled the words on my start screen. Unjumble them, Rory.
+> **Pip:** Tap the letters in the right order. The last word is the thing we're climbing!
 
 *After:*
 
@@ -1688,7 +1695,7 @@ The sea is on its way to Mars. So are you.
 > **BOLT:** I am floating. I did not agree to this.
 > **Juno:** And that big ugly ship at the end? That's Undertow's. It's loading her ice for Mars.
 
-**Mission 111: Spacewalk** (Puzzle, level 3: code, spells JEZERO)
+**Mission 111: Spacewalk** (Puzzle, level 3: symbol code, spells JEZERO)
 
 > **Juno:** Her ship bumped us when it docked. Look, the crates on its side have labels. In her code.
 > **Pip:** Jetpack over, Rory. Use the key to swap each symbol for its letter.
@@ -1725,10 +1732,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Course to Mars.* Juno plotted the way to Mars by the stars. Now to find out what's inside Undertow's ship.
 
-**Mission 114: The Cargo Camera** (Puzzle, level 2: bar chart)
+**Mission 114: The Cargo Camera** (Puzzle, level 2: word search)
 
-> **Juno:** My little camera drone has watched her ship all week. It saw what she loaded.
-> **Pip:** The chart shows the crates of ice loaded each day. Read the bars, Rory, and answer the question.
+> **Juno:** My little camera drone has watched her ship all week. It snapped her cargo list.
+> **Pip:** But her Drips hid the words in a jumble of letters. Find them all, Rory.
+> **Pip:** Tap the first letter of a word, then the last.
 
 *After:*
 
@@ -1763,11 +1771,10 @@ The sea is on its way to Mars. So are you.
 > **Tycho:** Be careful. There's hardly any gravity here. Jump too hard and you'll float off.
 > **BOLT:** I am holding on to the ground with all my fingers.
 
-**Mission 116: Across the Crater** (Puzzle, level 2: adding)
+**Mission 116: Across the Crater** (Puzzle, level 2: sonar hunt)
 
-> **Tycho:** My buggy will get you across Stickney Crater. But the tyres need exactly the right pressure.
-> **Tycho:** Too much, and you bounce off into space!
-> **Pip:** Add up the gauges, Rory, and type in the total.
+> **Tycho:** My buggy will get you across Stickney Crater. But her ship landed with such a bump, it buried my buggy keys in the dust!
+> **Pip:** Tap the dust to ping it, Rory. Red is hot and close. Blue is cold and far away.
 
 *After:*
 
@@ -1810,10 +1817,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Mars in sight.* The stars point straight at Mars. Undertow's ship dropped some of its cargo before heading there.
 
-**Mission 120: Dropped Bricks** (Puzzle, level 3: measuring)
+**Mission 120: Dropped Bricks** (Puzzle, level 3: two halves)
 
-> **Tycho:** Her ship dropped some little ice bricks when it landed. They're floating about.
-> **Pip:** Let's measure one. Careful, it doesn't start at nought! Look where each end is on the ruler.
+> **Tycho:** Her ship dropped some little ice bricks when it landed. Look, there are sea creatures frozen inside!
+> **Tycho:** But the bricks cracked in two, and the creatures are all mixed up.
+> **Pip:** Put them back together, Rory. Tap a half on the top row, then its other half below.
 
 *After:*
 
@@ -1848,10 +1856,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: An old lake.* Jezero Crater was a lake long ago. Undertow's Drips have been seen up on the crater rim.
 
-**Mission 122: The Little Helicopter** (Puzzle, level 3: number line)
+**Mission 122: The Little Helicopter** (Puzzle, level 3: free the sub, sliding blocks)
 
 > **Dr Amani:** This is our helicopter. Let's send it up to look over the crater rim.
-> **Pip:** Watch how high it flies, Rory. Find the number on the line and tap it.
+> **TORPEDO:** Rory! The Drips have boxed me in, right on the helicopter pad. Crates and rocks everywhere!
+> **Pip:** Tap the end of a crate or rock to slide it. Get TORPEDO out, so the helicopter can take off.
 
 *After:*
 
@@ -1942,10 +1951,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: A slow pipe.* The pipe has slowed right down. A pump station somewhere down the canyon pushes the water along.
 
-**Mission 129: Down the Canyon** (Puzzle, level 4: taking away)
+**Mission 129: Down the Canyon** (Puzzle, level 4: coral path)
 
-> **Lucía:** Let's fly the helicopter down the canyon. The pump station is down there somewhere.
-> **Pip:** The gauge says how deep the helicopter is. When it comes up, take away to find how deep it is now.
+> **Lucía:** The pump station is down in the canyon somewhere. The only way down is a path of coloured stepping stones.
+> **TORPEDO:** I will go first. I am very good at hopping. I think.
+> **Pip:** Hop TORPEDO from stone to stone, Rory. Follow the colour rule, all the way to the arrow.
 
 *After:*
 
@@ -1954,7 +1964,7 @@ The sea is on its way to Mars. So are you.
 
 *Intel: The pump station.* Undertow's pump station is halfway down the canyon cliff. Her plans are kept inside.
 
-**Mission 130: The Pump Station** (Puzzle, level 4: code, spells NORTH)
+**Mission 130: The Pump Station** (Puzzle, level 4: symbol code, spells NORTH)
 
 > **Pip:** The guards are all busy with the slow pipe. Quick, Rory, her plans are on the desk!
 > **Lucía:** They're in her code. Use the key to swap each symbol for a letter. Where is the ice?
@@ -1990,10 +2000,10 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Storm fans.* The Drip yacht had one of her giant storm fans. The fans make the storm, and it hides the path north.
 
-**Mission 132: Beacons in the Dust** (Puzzle, level 3: shapes)
+**Mission 132: Beacons in the Dust** (Puzzle, level 3: sonar hunt)
 
-> **Sol:** The storm has buried the path beacons. Each kind of beacon has its own shape.
-> **Pip:** Count the sides of each beacon, Rory. Then tap the right one, or the right number.
+> **Sol:** The storm has buried the path beacons in the dust. Without them, everybody gets lost.
+> **Pip:** Ping the dust, Rory. Hot colours mean close, cold colours mean far away. Find the beacon!
 
 *After:*
 
@@ -2002,14 +2012,16 @@ The sea is on its way to Mars. So are you.
 
 *Intel: The path is lit.* The beacons light the path through the storm. Undertow's own Drips are being blown about in it.
 
-**Mission 133: Blown-Away Drips** (Puzzle, level 4: tally marks)
+**Mission 133: Blown-Away Drips** (Puzzle, level 4: free the sub, sliding blocks)
 
-> **Sol:** Even her Drips got blown away. I've been keeping a tally of everything rolling past.
-> **Pip:** Count each row, Rory. Then work out how many more there are in one row than the other.
+> **Sol:** Even her Drips got blown away. Their boats have piled up round TORPEDO, with crates and rocks!
+> **TORPEDO:** I am stuck. Again. I would like to be not stuck.
+> **Pip:** Slide them out of the way, one at a time, Rory. Get TORPEDO out of the gap!
 
 *After:*
 
-> **Rory:** Look at all those storm fans. And the Drips are blowing dusty bubbles. That's new.
+> **TORPEDO:** Free! Sand is much worse than water.
+> **Rory:** Look, those crates are full of storm fan parts. And the Drips are blowing dusty bubbles. That's new.
 > **Sol:** Every fan is worked from one place. The weather station!
 
 *Intel: The weather station.* All of Undertow's storm fans are worked from one weather station. Switch it off, and the storm stops.
@@ -2048,10 +2060,10 @@ The sea is on its way to Mars. So are you.
 > **Hana:** So I brought a jetpack. And one for you!
 > **Pip:** Hold JUMP to fly, Rory. The jetpack works here, the air is so thin.
 
-**Mission 136: The Great Climb** (Puzzle, level 4: number bonds)
+**Mission 136: The Great Climb** (Puzzle, level 4: sea words, jumbled letters, spells VOLCANO)
 
-> **Hana:** It's a long, long way up. Fill your jetpack before we go.
-> **Pip:** There's some fuel in it already. Count on in tens to find how much more fills it, and type it in.
+> **Hana:** It's a long, long way up. But the Drips have jumbled the words on your jetpack screen!
+> **Pip:** Unjumble them to start it, Rory. The last word is where we're going.
 
 *After:*
 
@@ -2060,10 +2072,10 @@ The sea is on its way to Mars. So are you.
 
 *Intel: The caldera gate.* At the top of Olympus Mons, her Drips have fenced off the crater with a locked laser gate.
 
-**Mission 137: The Caldera Gate** (Puzzle, level 4: adding)
+**Mission 137: The Caldera Gate** (Puzzle, level 4: word search)
 
-> **Hana:** The laser gate has a pressure lock. Three gauges this time.
-> **Pip:** Add up all three gauges, Rory, and type the total. Then the lasers switch off.
+> **Hana:** The laser gate has a word lock. Her secret words are hidden in the letters on the door.
+> **Pip:** Find every word, Rory. Tap the first letter, then the last. Then the lasers switch off.
 
 *After:*
 
@@ -2118,14 +2130,14 @@ The sea is on its way to Mars. So are you.
 > **Professor Silt:** The stolen sea. Frozen into bricks and stacked into towers. Miles of them.
 > **Professor Silt:** She's melting them into her dome, one tower at a time.
 
-**Mission 141: The Ice-Brick Towers** (Puzzle, level 4: bar chart)
+**Mission 141: The Ice-Brick Towers** (Puzzle, level 4: what's missing?)
 
-> **Professor Silt:** I've been tracking her towers. My chart shows how many she melted each day.
-> **Pip:** Read the bars, Rory. Put your finger on the top of a bar and go across to the numbers.
+> **Professor Silt:** Look through the porthole of my ice hut. There are sea things frozen in her towers. Remember them all.
+> **Pip:** A Drip will squirt ink on the glass. When it clears, tap the thing she melted away.
 
 *After:*
 
-> **Professor Silt:** Every tower tracked. Clever you.
+> **Professor Silt:** Sharp eyes. Clever you.
 > **Professor Silt:** She melts more every day. The melt switch is in her brick yard, past the guards.
 
 *Intel: Melting faster.* Undertow is melting more towers every day. The melt switch is on the far side of her brick yard.
@@ -2151,10 +2163,11 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Melting stopped.* The towers have stopped melting. But there's a crack in the ice between us and Undertow's dome.
 
-**Mission 144: The Brick Bridge** (Puzzle, level 4: shapes)
+**Mission 144: The Brick Bridge** (Puzzle, level 4: coral path)
 
-> **Professor Silt:** There's a crack in the ice between us and the dome. We'll build a bridge of ice bricks.
-> **Professor Silt:** But each brick has to fit. Read the question, count the sides, and tap the right brick.
+> **Professor Silt:** There's a crack in the ice between us and the dome. We'll make a bridge of coloured ice bricks.
+> **Professor Silt:** TORPEDO can hop across them. But only by the colour rule, or they'll tip him in!
+> **Pip:** Tap the next brick for TORPEDO, Rory. Follow the colours, all the way to the arrow.
 
 *After:*
 
@@ -2197,7 +2210,7 @@ The sea is on its way to Mars. So are you.
 
 *Intel: Inside the dome.* Rory is inside the dome. Undertow has filled its sea with Tide Pearls from all over Earth.
 
-**Mission 147: The Dome Sea** (Puzzle, level 3: pattern)
+**Mission 147: The Dome Sea** (Puzzle, level 3: pearl necklace pattern)
 
 > **Pip:** She's strung Tide Pearls from all over Earth on chains, all the way down to the Engine.
 > **TORPEDO:** In you get, Rory. I will dive. You fix the chains.
@@ -2235,10 +2248,10 @@ The sea is on its way to Mars. So are you.
 
 *Intel: No more fighting.* Undertow has stopped fighting. She is going to help send the sea home.
 
-**Mission 150: The Sea Goes Home** (Puzzle, level 3: taking away)
+**Mission 150: The Sea Goes Home** (Puzzle, level 3: two halves)
 
-> **Captain Undertow:** The Engine is pushing the water up the pipe. My Drips will help pump it out.
-> **Pip:** Watch the depth gauge, Rory. Take away what's pumped out, and type how deep the sea is now.
+> **Captain Undertow:** The Engine is pushing my sea up the pipe. Every creature in it must go home whole.
+> **Pip:** But her Drips cut the sea creatures in half, to muddle the Engine! Tap a half on top, then its other half below.
 
 *After:*
 
