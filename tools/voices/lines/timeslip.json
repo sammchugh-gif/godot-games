@@ -1,20 +1,20 @@
 [
  {
-  "key": "0tdb2s9",
+  "key": "1mcxwgv",
   "who": "flint",
-  "text": "Look at the mud. Footprints! Little round ones, with sand in them. Not a dinosaur's.",
+  "text": "Look at the mud. Footprints! All sorts of creatures have walked through here.",
   "from": "story"
  },
  {
-  "key": "0pzc2r3",
+  "key": "0gly06r",
   "who": "pip",
-  "text": "Follow the track, Rory. Each step is the same size. Where does the next one land?",
+  "text": "Whose tracks are they, Rory? Look at the toes, then tap who made them.",
   "from": "story"
  },
  {
-  "key": "1djrprw",
+  "key": "0gs5i0j",
   "who": "rory",
-  "text": "They go all the way to the nests.",
+  "text": "Little round ones with sand in them. Not a dinosaur's. And they go all the way to the nests.",
   "from": "story"
  },
  {
@@ -30,9 +30,15 @@
   "from": "story"
  },
  {
-  "key": "0n1ioh5",
+  "key": "0j19jbj",
   "who": "flint",
-  "text": "We need to know how many they took. Work out the sum, Rory.",
+  "text": "And dropping things from our time all over the valley. Tap whatever doesn't belong here, Rory, and we'll find the robot.",
+  "from": "story"
+ },
+ {
+  "key": "1b0cwtb",
+  "who": "rory",
+  "text": "Got one! Upside down you go.",
   "from": "story"
  },
  {
@@ -54,21 +60,27 @@
   "from": "story"
  },
  {
-  "key": "02o6euo",
+  "key": "19ghaxk",
   "who": "flint",
-  "text": "The eggs they dropped need to go back in the nests before their mums come back.",
+  "text": "The Sandbots dug up the nests, looking for eggs. And they've jumbled up an old fossil underneath.",
   "from": "story"
  },
  {
-  "key": "0j7gbhm",
+  "key": "0j8zqw2",
+  "who": "flint",
+  "text": "Even in the age of the dinosaurs, there are fossils. Of much older dinosaurs!",
+  "from": "story"
+ },
+ {
+  "key": "0seg8he",
   "who": "pip",
-  "text": "Every nest gets the same. Work it out, Rory, and we'll carry them over gently.",
+  "text": "Tap the stones to turn them until the skeleton is whole, Rory. Then the eggs can go back on top.",
   "from": "story"
  },
  {
-  "key": "01odcbd",
+  "key": "0hkhxsa",
   "who": "rory",
-  "text": "All safe and warm. Wait. That one's wobbling.",
+  "text": "The fossil's fixed, and the eggs are back in the nest, all safe and warm. Wait. That one's wobbling.",
   "from": "story"
  },
  {
@@ -96,15 +108,15 @@
   "from": "story"
  },
  {
-  "key": "1kzmhpc",
+  "key": "0otiw4x",
   "who": "flint",
-  "text": "The Sandbots' cart went down the valley, past a sleeping T. rex.",
+  "text": "The Sandbots' cart went over the river, right past a sleeping T. rex.",
   "from": "story"
  },
  {
-  "key": "1belvpo",
+  "key": "1yc25le",
   "who": "pip",
-  "text": "We have to get past before it wakes. Which clock shows the time it wakes up?",
+  "text": "The raft holds Rory and one more. Get everyone across, quietly, before it wakes!",
   "from": "story"
  },
  {
@@ -150,15 +162,15 @@
   "from": "story"
  },
  {
-  "key": "0rwokz6",
+  "key": "1x8z3sd",
   "who": "tuva",
-  "text": "The cave mouth is full of icicles, and they drip at the same times every day.",
+  "text": "The Sandbots dropped their stolen things under the icicles at the cave mouth. Strange things!",
   "from": "story"
  },
  {
-  "key": "1bruiu5",
+  "key": "0yzr1tw",
   "who": "pip",
-  "text": "Work out how long the drip lasts. Then we'll know when it's safe to go in.",
+  "text": "They're from all through history. Put each one back in its own time, Rory.",
   "from": "story"
  },
  {
@@ -174,15 +186,15 @@
   "from": "story"
  },
  {
-  "key": "16d2grh",
+  "key": "1on3yt0",
   "who": "tuva",
-  "text": "The cave painters marked the days on the wall. The Sandbots have been coming to the cave.",
+  "text": "Our painters mark out every picture in dots first. Here's one they never finished.",
   "from": "story"
  },
  {
-  "key": "19j0ddr",
+  "key": "1l33f8c",
   "who": "pip",
-  "text": "Read the days, Rory. When will they come back?",
+  "text": "Join the dots in ABC order, Rory, and see what it is. Then we'll go deeper in.",
   "from": "story"
  },
  {
@@ -198,15 +210,15 @@
   "from": "story"
  },
  {
-  "key": "0ap3051",
+  "key": "1aiehuh",
   "who": "tuva",
-  "text": "The storm is coming back. Our camp needs a wall of snow blocks, fast.",
+  "text": "The storm is coming back, and there's a hole in our snow wall.",
   "from": "story"
  },
  {
-  "key": "0t2h2jb",
+  "key": "0lxe0qi",
   "who": "pip",
-  "text": "Each block is the two under it added together. Fill in the missing numbers, Rory.",
+  "text": "Tap a snow block, Rory, then tap the gap where it fits. Fill it up before the wind gets in!",
   "from": "story"
  },
  {
@@ -372,15 +384,15 @@
   "from": "story"
  },
  {
-  "key": "1sykgki",
+  "key": "1vkey7q",
   "who": "nefi",
-  "text": "The workers need more rope to haul the capstone up. The rope seller wants paying.",
+  "text": "The Sandbots pulled stones out of the ramp up the pyramid. The workers can't haul the capstone over a hole!",
   "from": "story"
  },
  {
-  "key": "1gycdny",
+  "key": "0cj0lly",
   "who": "pip",
-  "text": "It's a market. Work out how many to trade, Rory.",
+  "text": "Fit the blocks into the gap, Rory. Tap a block, then tap where it goes.",
   "from": "story"
  },
  {
@@ -522,21 +534,21 @@
   "from": "story"
  },
  {
-  "key": "15tjb6w",
+  "key": "1fjrgzo",
   "who": "livia",
-  "text": "The aqueduct's arches are numbered, Roman style. The Sandbots stopped the water at one of them.",
+  "text": "Every arch has a mosaic sign. The Sandbots smashed one, so nobody could find where they stopped the water.",
   "from": "story"
  },
  {
-  "key": "1i7crqy",
+  "key": "09m5y21",
   "who": "pip",
-  "text": "Roman numbers are letters. Read them, Rory.",
+  "text": "Copy the little pattern, Rory. Tap a colour, then tap the squares that need it.",
   "from": "story"
  },
  {
-  "key": "0to9vdd",
+  "key": "16j1bwn",
   "who": "rory",
-  "text": "That one! There's sand jammed in the channel.",
+  "text": "The sign's mended. And look, under that arch! There's sand jammed in the channel.",
   "from": "story"
  },
  {
@@ -708,15 +720,15 @@
   "from": "story"
  },
  {
-  "key": "14wrbio",
+  "key": "0syy1ys",
   "who": "sigrid",
-  "text": "The sail sank in pieces, down on the fjord bed. The divers are bringing them up.",
+  "text": "The sail sank in pieces, down on the fjord bed. Grandad's rune path on the shore shows the divers where.",
   "from": "story"
  },
  {
-  "key": "1aso9t1",
+  "key": "0rb8r1u",
   "who": "pip",
-  "text": "Count them up, Rory. We need every piece.",
+  "text": "Start on the glowing stone and step on every stone just once, Rory. Then the runes light the way.",
   "from": "story"
  },
  {
@@ -1176,6 +1188,18 @@
   "from": "js/main.js"
  },
  {
+  "key": "16zkmq3",
+  "who": "sandbot",
+  "text": "egg",
+  "from": "js/puzzles.js"
+ },
+ {
+  "key": "0j2nyac",
+  "who": "sandbot",
+  "text": "map",
+  "from": "js/puzzles.js"
+ },
+ {
   "key": "1ahbghr",
   "who": "flint",
   "text": "The beacon for Strange Footprints is glowing. Look for the tall beam of light!",
@@ -1272,9 +1296,9 @@
   "from": "main.js"
  },
  {
-  "key": "13tuavt",
+  "key": "1371yac",
   "who": "nefi",
-  "text": "The beacon for Ropes for the Capstone is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Mend the Ramp is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {

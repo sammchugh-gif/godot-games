@@ -124,16 +124,24 @@ gives a hint, and a stronger one after the second try. Three stars means no hint
 and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
 the question out.
 
-The puzzles are made from the story. Deep Red's own nine are pressure locks (add
-the gauges), the depth gauge (how deep now?), tide charts and other bar charts,
-tally marks (the fish survey), pearl necklaces (which pearl is missing from the
-pattern?), the depth line (a number line), air tanks and batteries (how much more
-to fill it: number bonds), measuring with a ruler, and porthole shapes (sides and
-corners). They make 57 of the puzzle missions. Only three kinds are in every
+None of the puzzles is maths. Rory, who is seven, said there was too much of it,
+so at his request they are all looking, spotting, word and thinking puzzles now.
+They are made from the story. Deep Red's own nine are tangled lines (follow the
+fishing line from the catch up to its boat), sea words (tap the jumbled letters
+in order to spell the word), two halves (match each sea creature's half to its
+other half), the pearl necklace (which pearl is missing from the pattern?), the
+coral path (hop across, following the colour rule), what's missing? (look in
+TORPEDO's porthole, then spot what the Drips took), free the sub (slide the
+crates and Drip boats out of the way so TORPEDO can get out), the wreck word
+search, and the sonar hunt (ping the sand, hot or cold, and find what's buried).
+They make 57 of the puzzle missions: 7 each of coral paths, free the sub and
+sonar hunts, and 6 of each of the others. The sea words are from the story too:
+FISH, PEARL, CHARGE, SEAWATER, RIBBON and VOLCANO. Only three kinds are in every
 Agent Rory game, because every spy needs them: the line-up (pick the suspect who
-fits every clue), the coded note (a number or symbol code, in this game's own
-symbols) and the spy map. Here there are 5 line-ups, 6 coded notes and 7 maps.
-So no two games share more than a quarter of their puzzles.
+fits every clue), the coded note (a note in symbols, not numbers: use the key to
+swap each symbol for its letter) and the spy map (follow the steps to the
+hideout). Here there are 5 line-ups, 6 coded notes and 7 maps. So no two games
+share more than a quarter of their puzzles.
 
 All of it is for a seven-year-old. Each puzzle is made fresh every time, with
 exactly one answer.

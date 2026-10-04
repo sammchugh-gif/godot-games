@@ -69,18 +69,23 @@ gives a hint, and a stronger one after the second try. Three stars means no hint
 and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
 the question out.
 
-The puzzles are made from the story. Zero Gravity's own nine are the gravity
-balance (what does the box weigh?), the launch countdown (what comes next?),
-Professor Zero's gold bars (times tables as stacks of bars), rocket stages
-(numbers in order), power cells (make exactly the power a door needs), the
-gravity lever (which side is heavier?), Floater sort (tap every Floater that fits
-a rule: even, bigger than 12, in the 5 times table), memory match (each sum and
-its answer) and sharing the cells equally between pods. They make 21 of the
-puzzle missions. Only three kinds are in every Agent Rory game, because every spy
-needs them: the line-up (pick the suspect who fits every clue), the coded note (a
-number or symbol code, in this game's own symbols) and the spy map. Here there
-are 3 line-ups, 4 coded notes and 4 maps. So no two games share more than a
-quarter of their puzzles.
+None of the puzzles is maths. Rory, who is seven, said there was too much of it,
+so at his request they are all logic, maze, picture and memory puzzles now. They
+are made from the story. Zero Gravity's own nine are BOLT's maze (steer BOLT
+through the station corridors to the exit), the gravity slide (tilt the gravity,
+and the cell slides until it hits something), the rocket jigsaw (slide the
+pieces round until the picture is whole), spot the difference, the power grid
+(each panel switches itself and its neighbours: turn every one on), star link
+(join each pair of matching stars without the lines crossing), the robot builder
+(build the robot on the blueprint, part by part), picture memory (turn two cards
+at a time and find the pairs) and laser mirrors (turn the mirrors so the laser
+hits the target). They make 21 of the puzzle missions: 3 each of spot the
+difference, power grids and laser mirrors, and 2 of each of the others. Only
+three kinds are in every Agent Rory game, because every spy needs them: the
+line-up (pick the suspect who fits every clue), the coded note (a note in
+symbols, not numbers: use the key to swap each symbol for its letter) and the
+spy map (follow the steps to the hideout). Here there are 3 line-ups, 4 coded
+notes and 4 maps. So no two games share more than a quarter of their puzzles.
 
 All of it is for a seven-year-old. Each puzzle is made fresh every time, with
 exactly one answer.
@@ -152,9 +157,11 @@ WebGL.
 **The Puzzle Arcade.** An old arcade cabinet stands on the south wall, opposite
 the mission board. PLAY opens `hq/arcade.html`, where every kind of puzzle from
 Zero Gravity, Deep Red, Spectrum and Timeslip can be played again at levels 1 to
-4, for tickets (the stars times the level). A puzzle lights up once Rory has
-finished a mission with it in; `arcade.html?all` shows them all. These puzzles
-play right there, through each game's own `clues.js` and `puzzles.js`. Operation
+4, for tickets (more for more stars, and more at a higher level). A puzzle lights
+up once Rory has finished a mission with it in; `arcade.html?all` shows them all.
+These puzzles play right there, through each game's own `clues.js` and
+`puzzles.js`: mazes, jigsaws, spot the difference, sea words, colour floods,
+fossils, river crossings and the rest. None of them is maths. Operation
 Eclipse's and Meltdown's mini-games are on the cabinet too: they open their own
 game at `#arcade-<mission id>`, and come back to the arcade afterwards.
 

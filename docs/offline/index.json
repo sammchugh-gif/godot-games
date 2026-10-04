@@ -10,14 +10,14 @@
    ]
   },
   "agent-rory-deep-red": {
-   "bytes": 30993475,
-   "n": 1254,
-   "hash": "9997014340b6"
+   "bytes": 31759912,
+   "n": 1267,
+   "hash": "06cb3c741485"
   },
   "agent-rory-hq": {
-   "bytes": 299126,
+   "bytes": 299086,
    "n": 7,
-   "hash": "effac8aa1dfc",
+   "hash": "e30619036b77",
    "with": [
     "agent-rory",
     "agent-rory-deep-red",
@@ -37,19 +37,19 @@
    ]
   },
   "agent-rory-spectrum": {
-   "bytes": 6519425,
+   "bytes": 6556750,
    "n": 73,
-   "hash": "96192aa9ea9f"
+   "hash": "0f1171ab747d"
   },
   "agent-rory-timeslip": {
-   "bytes": 12459010,
-   "n": 342,
-   "hash": "ec3c8bffd1af"
+   "bytes": 12678645,
+   "n": 346,
+   "hash": "1cf953d39133"
   },
   "agent-rory-zero-gravity": {
-   "bytes": 17205510,
-   "n": 573,
-   "hash": "338d37792d50"
+   "bytes": 17425803,
+   "n": 575,
+   "hash": "c3747f4d8634"
   },
   "blockfort": {
    "bytes": 40185305,

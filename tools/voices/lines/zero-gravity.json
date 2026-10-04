@@ -1,50 +1,50 @@
 [
  {
-  "key": "1c5c1yb",
+  "key": "1ek53i8",
   "who": "pip",
-  "text": "These blue things are Gravity Cells. Each one holds a little bit of stolen gravity, and each one has a number: how much power it gives.",
+  "text": "These blue things are Gravity Cells. Each one holds a little bit of stolen gravity.",
   "from": "story"
  },
  {
-  "key": "0i0bkkm",
+  "key": "0d1hkr1",
   "who": "pip",
-  "text": "The training door needs exactly the right power. Tap cells to add them up. Not too much, not too little!",
+  "text": "Watch. When I tilt the gravity, a cell slides until it bumps into something. Tilt it into the green ring, Rory.",
   "from": "story"
  },
  {
-  "key": "0mqixhg",
+  "key": "0qwh3rs",
   "who": "bolt",
-  "text": "The door opened. I counted the power. Twice.",
+  "text": "The cell went clunk. I like clunk.",
   "from": "story"
  },
  {
-  "key": "0qbz1c0",
+  "key": "13j9w7g",
   "who": "pip",
-  "text": "Zero's machine runs on these cells. If we can count them, we can follow them.",
+  "text": "Zero's machine runs on these cells. If we can follow the cells, we can follow him.",
   "from": "story"
  },
  {
-  "key": "0uzpi4c",
+  "key": "0sfgh2g",
   "who": "pip",
-  "text": "This is a gravity balance. When both sides weigh the same, it stays level.",
+  "text": "Here's my lab this morning, and here it is now. Zero's machine flew past the window in between.",
   "from": "story"
  },
  {
-  "key": "1ekkouc",
+  "key": "1gto9yj",
   "who": "pip",
-  "text": "There's a mystery box on one side. Work out what it weighs. That's how we spot a cell that's lost its gravity.",
+  "text": "Something has floated off or swapped round. Spot what's different, Rory.",
   "from": "story"
  },
  {
-  "key": "0qdrpxd",
+  "key": "1edxpzh",
   "who": "rory",
-  "text": "The sides match, so the box weighs the same as the blocks.",
+  "text": "Things moved all by themselves. Just from his machine going past!",
   "from": "story"
  },
  {
-  "key": "07qxdz5",
+  "key": "17csl09",
   "who": "pip",
-  "text": "Exactly. Zero's cells are lighter than they should be. He's sucking the gravity out of things.",
+  "text": "Exactly. Zero sucks the gravity out of things. They get lighter and lighter, then off they float.",
   "from": "story"
  },
  {
@@ -72,9 +72,9 @@
   "from": "story"
  },
  {
-  "key": "088msm4",
+  "key": "0howjf9",
   "who": "pip",
-  "text": "Find each sum and its answer. If they don't match, they flip back, so remember where they were!",
+  "text": "Find the pictures that match. If they don't match, they flip back, so remember where they were!",
   "from": "story"
  },
  {
@@ -90,9 +90,9 @@
   "from": "story"
  },
  {
-  "key": "0sbdom7",
+  "key": "0lsg7xy",
   "who": "pip",
-  "text": "I need to scan them, Rory. Share them out equally between my scanner pods, so each pod gets the same.",
+  "text": "My scanner panels are up there too, Rory. Switch every panel on. Careful: each one flips the ones next to it.",
   "from": "story"
  },
  {
@@ -114,9 +114,9 @@
   "from": "story"
  },
  {
-  "key": "1v0s92g",
+  "key": "0adr8ek",
   "who": "pip",
-  "text": "Some of those aren't machines at all. They're Floaters hiding a gravity leech. Tap every one that fits the rule!",
+  "text": "There's a gravity leech on the biggest one. Turn the mirrors, Rory, and bounce my laser onto the target to zap it off!",
   "from": "story"
  },
  {
@@ -240,15 +240,15 @@
   "from": "story"
  },
  {
-  "key": "1qglbxi",
+  "key": "1ahmhoy",
   "who": "amira",
-  "text": "The Floaters knocked the capstone blocks off the plinth. Every block has a number carved on it.",
+  "text": "The Floaters knocked the capstone blocks about, and jumbled up the old picture tiles on the plinth.",
   "from": "story"
  },
  {
-  "key": "04uojn2",
+  "key": "19v1igl",
   "who": "pip",
-  "text": "They go back in order, Rory. Smallest number first.",
+  "text": "Slide the pieces back to make the pyramid picture, Rory. Tap a piece next to the gap.",
   "from": "story"
  },
  {
@@ -264,9 +264,9 @@
   "from": "story"
  },
  {
-  "key": "17zy8e8",
+  "key": "10lqj7m",
   "who": "amira",
-  "text": "And look. Under the last block. A door into the tomb.",
+  "text": "And look. Under the capstone blocks. A door into the tomb.",
   "from": "story"
  },
  {
@@ -336,9 +336,9 @@
   "from": "story"
  },
  {
-  "key": "0qm54qc",
+  "key": "1ixkn5w",
   "who": "pip",
-  "text": "The gravity lever pins the heavy side down first. Which side is heavier, Rory?",
+  "text": "The machine is hidden behind the beach huts, and they're like a maze. Steer BOLT through to it, Rory.",
   "from": "story"
  },
  {
@@ -384,21 +384,27 @@
   "from": "story"
  },
  {
-  "key": "0hka8gq",
-  "who": "bolt",
-  "text": "I flew out. The bag is full of gold bars. Zero's ransom!",
-  "from": "story"
- },
- {
-  "key": "11k6gz2",
+  "key": "0ww1wsr",
   "who": "pip",
-  "text": "Count them, Rory. Stacks of bars, the same in each stack.",
+  "text": "We need a helper robot to fetch it. I've got a box of spare parts right here.",
   "from": "story"
  },
  {
-  "key": "0m5n6d4",
+  "key": "0qy9bdz",
+  "who": "pip",
+  "text": "Build the robot on the blueprint, Rory. Pick the right part each time.",
+  "from": "story"
+ },
+ {
+  "key": "1ep2ffr",
   "who": "bolt",
-  "text": "And it had a key card. ZERO SHIPPING, back gate.",
+  "text": "Our helper fetched the bag. It is full of gold bars. Zero's ransom!",
+  "from": "story"
+ },
+ {
+  "key": "1o5eg5k",
+  "who": "bolt",
+  "text": "And a key card. ZERO SHIPPING, back gate.",
   "from": "story"
  },
  {
@@ -456,15 +462,15 @@
   "from": "story"
  },
  {
-  "key": "1dz53or",
+  "key": "1a6wmjv",
   "who": "lucas",
-  "text": "The cable cars are numbered, but Zero's swapped the signs round so nobody can find the right one.",
+  "text": "Zero's tangled up the cable car lines, so nobody can get up Sugarloaf Mountain.",
   "from": "story"
  },
  {
-  "key": "0oy14g2",
+  "key": "17w8wcb",
   "who": "pip",
-  "text": "The numbers go in a pattern. Work out what comes next, Rory.",
+  "text": "Join each pair of matching stars to fix the lines, Rory. The lines can't cross, or the cars will bump.",
   "from": "story"
  },
  {
@@ -480,15 +486,15 @@
   "from": "story"
  },
  {
-  "key": "0u0cscv",
+  "key": "1setl9l",
   "who": "lucas",
-  "text": "The Big Floater locked everybody out of the stadium, and the key is hidden on a Floater in the parade!",
+  "text": "The Big Floater locked everybody out of the stadium, and the key is hidden somewhere in the parade!",
   "from": "story"
  },
  {
-  "key": "0kwshzw",
+  "key": "1khv85c",
   "who": "pip",
-  "text": "Tap every Floater that fits the rule, Rory. The key's on one of them.",
+  "text": "I took a photo of the parade an hour ago. The Floaters have moved things to hide the key. Spot what's different, Rory.",
   "from": "story"
  },
  {
@@ -546,9 +552,9 @@
   "from": "story"
  },
  {
-  "key": "0j8by1f",
+  "key": "0orzcwb",
   "who": "pip",
-  "text": "I can pin them down, but I need their weight. Read the gravity balance, Rory.",
+  "text": "My gravity laser can pin them down. Turn the mirrors so the beam bounces onto the target, Rory.",
   "from": "story"
  },
  {
@@ -642,9 +648,9 @@
   "from": "story"
  },
  {
-  "key": "1ce3pgu",
+  "key": "0u6c575",
   "who": "pip",
-  "text": "The heavy ones first, Rory, before they get too high. Which side of the lever is heavier?",
+  "text": "I can tilt the gravity round them. Slide the elephant into the green ring, Rory, where it's safe. It slides until it bumps into something.",
   "from": "story"
  },
  {
@@ -684,9 +690,9 @@
   "from": "story"
  },
  {
-  "key": "0z45w6x",
+  "key": "0hecfco",
   "who": "pip",
-  "text": "The rangers will carry them away. Share them out equally between the ranger bags, Rory.",
+  "text": "Here's my photo from yesterday, and here's today. Spot what's different, Rory, and the rangers will know where to look.",
   "from": "story"
  },
  {
@@ -732,15 +738,15 @@
   "from": "story"
  },
  {
-  "key": "0pvwzs1",
+  "key": "09nf297",
   "who": "mei",
-  "text": "Zero's relay is in one of the watchtowers. The towers are numbered, but the wall wobbles so much they're all mixed up.",
+  "text": "Zero's relay is in one of the watchtowers. But the wall wobbles so much, the paths have all got muddled.",
   "from": "story"
  },
  {
-  "key": "17ug1tr",
+  "key": "0jd1pe0",
   "who": "pip",
-  "text": "Put the watchtowers back in order, Rory, smallest number first.",
+  "text": "Steer BOLT along the wall to the watchtower, Rory. Watch out for dead ends.",
   "from": "story"
  },
  {
@@ -774,9 +780,15 @@
   "from": "story"
  },
  {
-  "key": "187ardv",
+  "key": "0gl83gg",
   "who": "pip",
-  "text": "Every lantern has a sum or an answer on it. Match them all up and the signal is scrambled.",
+  "text": "The relay's signal bounces off the lanterns. Light every lantern and the signal gets scrambled.",
+  "from": "story"
+ },
+ {
+  "key": "1sy51qi",
+  "who": "pip",
+  "text": "But they're wired up funny. Each lantern flips the ones next to it too.",
   "from": "story"
  },
  {
@@ -852,9 +864,9 @@
   "from": "story"
  },
  {
-  "key": "0qfq2nq",
+  "key": "0m30avr",
   "who": "pip",
-  "text": "Put the power back, Rory. The fountain needs exactly the right amount. Tap the cells to add them.",
+  "text": "Join up the fountain's pipes, Rory. Link each pair of matching stars, and don't let the pipes cross.",
   "from": "story"
  },
  {
@@ -918,15 +930,15 @@
   "from": "story"
  },
  {
-  "key": "0kis32f",
+  "key": "11vxa38",
   "who": "pip",
-  "text": "The beach is fenced with lasers, and they switch off in a pattern.",
+  "text": "The beach is fenced with lasers, and the off switch is a target on the far side.",
   "from": "story"
  },
  {
-  "key": "16m638p",
+  "key": "1so1xym",
   "who": "pip",
-  "text": "Work out the pattern, Rory. What number comes next? Then we know when to run.",
+  "text": "Turn the mirrors and bounce our own laser onto the target, Rory. Then the fence switches off and we run.",
   "from": "story"
  },
  {
@@ -1050,39 +1062,39 @@
   "from": "story"
  },
  {
-  "key": "15zkm1r",
+  "key": "0ow7cvw",
   "who": "hale",
-  "text": "Zero's Floaters mixed up our rocket stages. They have to go on in order.",
+  "text": "Zero's Floaters mixed up our rocket plans. The picture of how it all fits together is in bits.",
   "from": "story"
  },
  {
-  "key": "0wvx77c",
+  "key": "02s4v7e",
   "who": "pip",
-  "text": "Tap the stages in order, Rory. If they go on wrong, we'll go sideways.",
+  "text": "Slide the pieces back to make the rocket picture, Rory. Then we'll know how to stack it.",
   "from": "story"
  },
  {
-  "key": "1thamvv",
+  "key": "021u0vq",
   "who": "hale",
-  "text": "Rocket's stacked. Now let's check the fuel.",
+  "text": "Rocket's stacked. Now the fuelling robot. The Floaters took that apart too.",
   "from": "story"
  },
  {
-  "key": "0syuf1p",
+  "key": "1tvloox",
   "who": "hale",
-  "text": "The fuel tanks have to weigh just right, or we won't get up.",
+  "text": "Our fuelling robot is in bits all over the floor. We can't fuel the rocket without it.",
   "from": "story"
  },
  {
-  "key": "1m3ba58",
+  "key": "1j8ix6a",
   "who": "pip",
-  "text": "Read the balance, Rory. What does the mystery tank weigh?",
+  "text": "Build it just like the blueprint, Rory. Look closely: some parts nearly match.",
   "from": "story"
  },
  {
-  "key": "192eq5g",
+  "key": "10g68p9",
   "who": "hale",
-  "text": "Fuel's good.",
+  "text": "It's fuelling the rocket already. Fuel's good.",
   "from": "story"
  },
  {
@@ -1116,15 +1128,15 @@
   "from": "story"
  },
  {
-  "key": "1kpr4jg",
+  "key": "01l1rtd",
   "who": "pip",
-  "text": "Zero's Floaters stuck cells all over the solar wings. They're draining the airlock.",
+  "text": "Zero's Floaters switched off the solar panels on the station's wings. That's draining the airlock.",
   "from": "story"
  },
  {
-  "key": "1rbtpr5",
+  "key": "06515r4",
   "who": "hale",
-  "text": "Give the airlock exactly the power it needs, Rory, and we're inside.",
+  "text": "Switch every panel back on, Rory, and we're inside. Each one flips its neighbours, so think first.",
   "from": "story"
  },
  {
@@ -1236,9 +1248,9 @@
   "from": "story"
  },
  {
-  "key": "1sd4n5l",
+  "key": "1c67446",
   "who": "pip",
-  "text": "Count them, Rory, so every country gets theirs back.",
+  "text": "It's behind a memory lock. Match all the picture pairs, Rory, and the vault opens.",
   "from": "story"
  },
  {
@@ -2382,9 +2394,9 @@
   "from": "main.js"
  },
  {
-  "key": "1jzztky",
+  "key": "1a62zy1",
   "who": "pip",
-  "text": "The beacon for The Gravity Balance is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Before and After is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2442,9 +2454,9 @@
   "from": "main.js"
  },
  {
-  "key": "0b9kf7i",
+  "key": "0uvy2o8",
   "who": "amira",
-  "text": "The beacon for Capstone Blocks is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Capstone Puzzle is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2502,9 +2514,9 @@
   "from": "main.js"
  },
  {
-  "key": "0sfsrb0",
+  "key": "15tu88z",
   "who": "lucas",
-  "text": "The beacon for Cable Car Numbers is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Cable Car Lines is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2658,9 +2670,9 @@
   "from": "main.js"
  },
  {
-  "key": "1gitg15",
+  "key": "0co4e89",
   "who": "hale",
-  "text": "The beacon for Fuel Check is glowing. Look for the tall beam of light!",
+  "text": "The beacon for Fuel Robot is glowing. Look for the tall beam of light!",
   "from": "main.js"
  },
  {
@@ -2676,15 +2688,15 @@
   "from": "main.js"
  },
  {
-  "key": "1uymp0l",
+  "key": "0w8oewq",
   "who": "pip",
-  "text": "Stolen gravity is kept in blue Gravity Cells. Each cell has a number on it: how much power it holds.",
+  "text": "Stolen gravity is kept in blue Gravity Cells. They hum, and they roll wherever the gravity pulls them.",
   "from": "intel"
  },
  {
-  "key": "1t2fkoa",
+  "key": "065pd9k",
   "who": "pip",
-  "text": "Anything near Zero's machine gets lighter and lighter, until it floats away. Weighing things shows where he's been.",
+  "text": "Anything near Zero's machine gets lighter and lighter, until it floats away. Things that float show where he's been.",
   "from": "intel"
  },
  {

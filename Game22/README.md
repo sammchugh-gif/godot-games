@@ -84,17 +84,24 @@ gives a hint, and a stronger one after the second try. Three stars means no hint
 and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
 the question out.
 
-The puzzles are made from the story. Spectrum's own nine are colour count, paint
-by numbers (each square's sum picks its paint, and a picture appears), mirror
-painting (paint the other half), fractions (paint a half, a quarter, a third;
-which one shows it?), Lisbon's and Samarkand's tiles (which tile fills the gap?),
-the paint shop (two pots for exactly the money), grey shadows (which shape made
-it?), the colour square (every colour once in each row and column) and the drop
-chart (a pictogram, each picture worth 2, 5 or 10). They make 29 of the puzzle
-missions. Only three kinds are in every Agent Rory game, because every spy needs
-them: the line-up (pick the suspect who fits every clue), the coded note (a
-number or symbol code, in this game's own symbols) and the spy map. Here there
-are 4 of each. So no two games share more than a quarter of their puzzles.
+None of the puzzles is maths. Rory, who is seven, said there was too much of it,
+so at his request they are all colour, picture and logic puzzles now. They are
+made from the story. Spectrum's own nine are the colour flood (pour pots from
+PALETTE's corner until the wall is one colour), the painting jigsaw (tap a loose
+piece, then the gap where it goes), mirror painting (paint the other half, so
+both sides match), rainbow order (put the drops back on the arc, or the wheel,
+in order), Lisbon's and Samarkand's azulejo tiles (which tile is missing from
+the pattern?), the hidden picture (find PALETTE, a Blotter, a paint pot and more
+in a busy picture), grey shadows (whose shadow is it? match the grey shape), the
+colour square (every colour once in each row and column) and stained glass
+(colour the window so no two touching panes match). They make 29 of the puzzle
+missions: 4 each of jigsaws, hidden pictures and grey shadows, 3 each of colour
+floods, mirror paintings, rainbows, colour squares and stained glass, and 2 of
+the tiles. Only three kinds are in every Agent Rory game, because every spy
+needs them: the line-up (pick the suspect who fits every clue), the coded note
+(a note in symbols, not numbers: use the key to swap each symbol for its letter)
+and the spy map (follow the steps to the hideout). Here there are 4 of each. So
+no two games share more than a quarter of their puzzles.
 
 All of it is for a seven-year-old. Each puzzle is made fresh every time, with
 exactly one answer.

@@ -1,9 +1,9 @@
 // Spectrum's clues (clues.js, puzzles.js): the missions that end with a puzzle for Rory
 // to crack. p is the kind of puzzle, lv its level (1 is the gentlest), say the lines
-// before it, after the line once it's solved. The kinds are Spectrum's own (colour
-// count, paint by numbers, mirror painting, fractions, azulejo tiles, the paint shop,
-// grey shadows, colour squares, the drop chart), plus the three spy clues every game has
-// (the line-up, the coded note, the spy map). The clues are a trail: the lookout in
+// before it, after the line once it's solved. The kinds are Spectrum's own (mirror
+// painting, azulejo tiles, grey shadows, colour squares, colour flood, the painting
+// jigsaw, rainbow order, hidden pictures, stained glass), plus the three spy clues every
+// game has (the line-up, the coded note, the spy map). The clues are a trail: the lookout in
 // Dingle, the boatman's tip, the lookout's map to Lapland, the plans that spell MONOCHROME.
 export const THEME = {
   things: ["Blotters", "paint pots", "colour drops", "grey jars"],
