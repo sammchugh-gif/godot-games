@@ -129,7 +129,7 @@ export const PLACES = [
         outro: [["valeria", "The ship's floating again! Look at it rise!"]],
         intel: { title: "Steps for ships", text: "The canal's locks are steps of water for ships. Somebody has been letting the water out, and the ships got stuck." } },
       { id: "pan2", kind: "puzzle", p: "cipher", lv: 1, word: "MINE", title: "Ship in the Lock",
-        intro: [["valeria", "The Drips hid pearls on the cargo ship in the lock. Every crate has a label, but it's in code!"], ["pip", "Each number is a letter: A is 1, B is 2. Use the key and tap the letters to spell the label."]],
+        intro: [["valeria", "The Drips hid pearls on the cargo ship in the lock. Every crate has a label, but it's in code!"], ["pip", "Each symbol is a letter. Find it in the key, then tap the letters to spell the label."]],
         outro: [["rory", "It says MINE. And under it, a little wave and a U."], ["valeria", "Captain Undertow? She's labelling the sea? That's so rude."]],
         intel: { title: "MINE", text: "Undertow labels every pearl crate MINE. She thinks the sea belongs to her." } },
       { id: "pan3", kind: "puzzle", p: "chart", lv: 2, what: "barges", title: "The Control House",
