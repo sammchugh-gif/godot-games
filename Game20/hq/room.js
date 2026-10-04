@@ -27,17 +27,17 @@ export const FILES = [
   { id: "meltdown", n: "FILE 002", kicker: "A SPY MOVIE", title: "Meltdown", href: "../agent-rory-meltdown/", shot: "../shots/agent-rory-meltdown.jpg", accent: "#7fdcff", saves: ["rorymeltdown.save", "rorymeltdown.save2", "rorymeltdown.save3"], total: 190,
     blurb: "Three operations: Baron Kaldera's melting ice, Madame Minuit's stopped clocks and Doctor Tempest's hurricane. Thirty-eight places and 190 missions.",
     frost: "Meltdown. Baron Kaldera, Madame Minuit and Doctor Tempest. Ice, clocks, and a very big storm." },
-  { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 60,
-    blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon. Sixty missions.",
+  { id: "zero", n: "FILE 003", kicker: "MOONSHOT", title: "Zero Gravity", href: "../agent-rory-zero-gravity/", shot: "../shots/agent-rory-zero-gravity.jpg", accent: "#ff9ae8", saves: ["rory20.save"], total: 54,
+    blurb: "Professor Zero is stealing the world's gravity. Rory and BOLT run, jump, drive and fly from Tokyo to the Moon, cracking puzzles and winning intel. Fifty-four missions.",
     frost: "Zero Gravity. Professor Zero, his floating shoes, and a trip to the Moon." },
-  { id: "deep", n: "FILE 004", kicker: "UNDER THE SEA", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#39d8c8", saves: ["rory21.save"], total: 179,
-    blurb: "Captain Undertow is draining the sea. Swim, dive and drive TORPEDO the submarine round ten coasts, down into the abyss, then up the space elevator to Mars. All three acts: a hundred and seventy-nine missions.",
+  { id: "deep", n: "FILE 004", kicker: "UNDER THE SEA", title: "Deep Red", href: "../agent-rory-deep-red/", shot: "../shots/agent-rory-deep-red.jpg", accent: "#39d8c8", saves: ["rory21.save"], total: 150,
+    blurb: "Captain Undertow is draining the sea. Swim, dive and drive TORPEDO the submarine round ten coasts, down into the abyss, then up the space elevator to Mars. All three acts: a hundred and fifty missions.",
     frost: "Deep Red. Captain Undertow, the vanishing sea, and a very talkative submarine." },
   { id: "spectrum", n: "FILE 005", kicker: "THE COLOUR HEIST", title: "Spectrum", href: "../agent-rory-spectrum/", shot: "../shots/agent-rory-spectrum.jpg", accent: "#7bed9f", saves: ["rory22.save"], total: 60,
     blurb: "Baroness Grisaille is draining the colour out of the world. Rory and PALETTE the chameleon paint it back, from Dingle to the salt flats and the red dunes. Sixty missions.",
     frost: "Spectrum. Baroness Grisaille, a world gone grey, and a chameleon who can't decide what colour to be." },
-  { id: "timeslip", n: "FILE 006", kicker: "BACK IN TIME", title: "Timeslip", href: "../agent-rory-timeslip/", shot: "../shots/agent-rory-timeslip.jpg", accent: "#c89aff", saves: ["rory23.save"], total: 36,
-    blurb: "Doctor Hourglass is bottling history. Follow her back in time with Pebble, a baby triceratops who grows with every era, from the dinosaurs to the Vikings. Act One: thirty-six missions.",
+  { id: "timeslip", n: "FILE 006", kicker: "BACK IN TIME", title: "Timeslip", href: "../agent-rory-timeslip/", shot: "../shots/agent-rory-timeslip.jpg", accent: "#c89aff", saves: ["rory23.save"], total: 30,
+    blurb: "Doctor Hourglass is bottling history. Follow her back in time with Pebble, a baby triceratops who grows with every era, from the dinosaurs to the Vikings. Act One: thirty missions.",
     frost: "Timeslip. Doctor Hourglass, a stolen piece of history in every era, and a dinosaur who honks." },
 ];
 // how far Rory has got in a file, from its saves
@@ -288,6 +288,58 @@ function bananaPhone(w, x, y, z) {
   return { g, banana };
 }
 
+// ------------------------------------------------------------ the puzzle arcade
+// an old arcade cabinet on the south wall, opposite the mission board. Its screen plays an
+// attract loop; walk up and PLAY opens the Puzzle Arcade (arcade.html), every puzzle from
+// every game.
+function arcadeScreen() {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 400;
+  const g = c.getContext("2d"), tex = canvasTex(c);
+  const icons = ["⚖️", "🚀", "🦪", "🫧", "🎨", "🦋", "⏳", "🏛️", "🕵️", "🗺️", "✉️", "🔐"];
+  const draw = t => {
+    g.fillStyle = "#0b0420"; g.fillRect(0, 0, 512, 400);
+    for (let i = 0; i < 12; i++) { const a = t * 0.6 + i / 12 * Math.PI * 2, r = 150; g.font = "40px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.globalAlpha = 0.55; g.fillText(icons[i], 256 + Math.cos(a) * r * 1.25, 205 + Math.sin(a) * r * 0.85); }
+    g.globalAlpha = 1;
+    g.shadowColor = "#ff4fd8"; g.shadowBlur = 24; g.fillStyle = "#ffffff"; g.font = "900 64px system-ui"; g.fillText("PUZZLE", 256, 170); g.fillText("ARCADE", 256, 236); g.shadowBlur = 0;
+    if (Math.floor(t * 2) % 2 === 0) { g.fillStyle = "#ffd166"; g.font = "800 26px ui-monospace, monospace"; g.fillText("PRESS PLAY", 256, 312); }
+    for (let y = 0; y < 400; y += 4) { g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(0, y, 512, 2); }
+    tex.needsUpdate = true;
+  };
+  draw(0);
+  return { tex, draw };
+}
+function arcadeCabinet(w, x, z) {
+  const cab = new THREE.Group(); cab.position.set(x, 0, z); cab.rotation.y = Math.PI; w.scene.add(cab);
+  const body = M(0x2a0d50, { rough: 0.5, metal: 0.2 }), trim = M(0x0b0420, { rough: 0.6 }), neon = M(0xff4fd8, { emissive: 0xff4fd8, ei: 2.2 }), cyan = M(0x4ff0ff, { emissive: 0x4ff0ff, ei: 2 });
+  const o = { parent: cab };
+  w.box(1.2, 1.0, 0.8, body, 0, 0.5, 0, o);                       // the base
+  w.box(1.2, 1.1, 0.55, body, 0, 1.6, -0.12, o);                  // the screen housing
+  w.box(1.26, 0.36, 0.62, trim, 0, 2.3, -0.06, o);                // the marquee box
+  w.box(1.24, 0.12, 0.5, M(0x1a0836), 0, 1.06, 0.3, { ...o, rx: 0.28 }); // the control panel
+  for (const s of [-1, 1]) { w.box(0.04, 2.45, 0.86, trim, s * 0.62, 1.22, -0.02, o); w.box(0.02, 2.3, 0.03, s < 0 ? neon : cyan, s * 0.645, 1.22, 0.4, o); }
+  // the joystick and the buttons
+  w.cyl(0.015, 0.015, 0.16, M(0x1a1a1a), -0.3, 1.18, 0.34, o);
+  w.sphere(0.05, M(0xe83a3a, { rough: 0.3 }), -0.3, 1.27, 0.34, o);
+  [[0.05, 0xffd166], [0.2, 0x4ff0ff], [0.35, 0xff4fd8]].forEach(([bx, c]) => w.cyl(0.04, 0.04, 0.04, M(c, { emissive: c, ei: 0.8 }), bx, 1.15, 0.33, { ...o, rx: 0.28 }));
+  // the coin door
+  w.box(0.4, 0.34, 0.02, M(0x3a3a46, { metal: 0.8, rough: 0.3 }), 0, 0.55, 0.41, o);
+  for (const s of [-1, 1]) w.box(0.04, 0.1, 0.02, M(0xff8a1a, { emissive: 0xff8a1a, ei: 1.6 }), s * 0.08, 0.6, 0.425, o);
+  // the screen and the marquee
+  const scr = arcadeScreen();
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.77), new THREE.MeshStandardMaterial({ map: scr.tex, emissiveMap: scr.tex, emissive: 0xffffff, emissiveIntensity: 0.9, roughness: 0.2 }));
+  screenMesh.position.set(0, 1.62, 0.16); screenMesh.rotation.x = -0.1; screenMesh.userData.dynamic = true; cab.add(screenMesh);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 0.3), new THREE.MeshStandardMaterial({ map: TEX.sign("PUZZLE ARCADE", { bg: "#2a0d50", fg: "#ffd166", border: "#ff4fd8" }), emissive: 0xffc0f0, emissiveIntensity: 0.7 }));
+  sign.position.set(0, 2.3, 0.26); sign.userData.dynamic = true; cab.add(sign);
+  const glow = new THREE.PointLight(0xff4fd8, 4, 5, 1.6); glow.position.set(0, 1.7, 0.9); cab.add(glow);
+  // a pad on the floor, like the files'
+  const pad = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.86, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xff4fd8).multiplyScalar(1.3), transparent: true, opacity: 0.85 }));
+  pad.rotation.x = -Math.PI / 2; pad.position.set(x, 0.03, z - 1.15); pad.userData.dynamic = true; w.scene.add(pad);
+  w.phys.fixedBox(x, 1.25, z, 0.62, 1.25, 0.45);
+  let last = -1;
+  w.updaters.push((dt, t) => { pad.scale.setScalar(1 + Math.sin(t * 3) * 0.05); glow.intensity = 3.4 + Math.sin(t * 5) * 0.8; if (t - last > 0.12) { last = t; scr.draw(t); } });
+  return { x, z: z - 1.15 };
+}
+
 // ------------------------------------------------------------ the room
 function buildRoom(w) {
   // indoors: a dim light from above, and the room's own lights do the rest
@@ -349,8 +401,10 @@ function buildRoom(w) {
   // (the dog's bed is under the world map: the board's sixth pad is where it used to be)
   const dog = officeDog(w, 10.8, 1.8);
   const phone = bananaPhone(w, -RW / 2 + 0.9, 1.0, -0.4);
+  // the puzzle arcade, between the door and the POLARIS NEEDS YOU poster
+  const arcade = arcadeCabinet(w, -2.6, RD / 2 - 0.75);
   w.floorY = -10;
-  return { screens, board, posters, lights, tea, button, chair, dog, phone, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
+  return { screens, board, posters, lights, tea, button, chair, dog, phone, arcade, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
 }
 function panelTex(lines, color) {
   const c = document.createElement("canvas"); c.width = 512; c.height = 320; const g = c.getContext("2d");
@@ -371,6 +425,7 @@ function things() {
     { id: "chair", x: R.chair.seat.x, z: R.chair.seat.z, r: 1.3, label: "SPIN", prompt: "have a spin on the chair", act: spinChair, off: busy },
     { id: "dog", x: 10.8, z: 2.5, r: 1.5, label: "PAT", prompt: "pat Agent Biscuit", act: patDog },
     { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
+    { id: "arcade", x: R.arcade.x, z: R.arcade.z, r: 1.3, label: "PLAY", prompt: "the Puzzle Arcade", act: playArcade },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
   ].filter(t => !t.off);
 }
@@ -440,6 +495,13 @@ const CALLS = [
   [["rory", "Hello?"], ["bolt", "Hello, Rory. This is BOLT. I am calling you from over here. Look. I am waving."]],
   [["rory", "POLARIS, Agent Rory."], ["zero", "Rory! Quick question. How do you get a floating shoe down from the ceiling?"], ["rory", "Turn the gravity back on?"], ["zero", "...Hmm. Good point. Goodbye!"]],
 ];
+function playArcade() {
+  G.open = true; Audio.play("beep");
+  const n = count("roryhq.arcade.visits");
+  const go = () => { Audio.play("win"); screen("flash", `<div class="granted">INSERT COIN<small>LOADING THE PUZZLE ARCADE</small></div>`, "screen"); setTimeout(() => { location.href = "arcade.html"; }, 900); };
+  if (n === 1) G.dialogue.show([["pip", "My arcade! Every puzzle from every mission, all in one machine."], ["pip", "The ones you've found are lit up. Play them at any level, and win tickets."], ["bolt", "I have played it four hundred times. I am still on level one."]], go);
+  else go();
+}
 function phone() {
   if (G.ringing) { G.ringing = 0; G.phoneAt = G.t + 60 + Math.random() * 40; Audio.play("click"); G.callN = (G.callN ?? Math.floor(Math.random() * CALLS.length)) + 1; G.dialogue.show(CALLS[G.callN % CALLS.length], null); }
   else G.dialogue.show([pick([["bolt", "It is a banana. It only rings when it wants to."], ["pip", "It's a phone. It's also a banana. Don't eat it."], ["rory", "Hello? ...Nobody there. Just a lot of monkeys."]])], null);
@@ -591,8 +653,8 @@ function updateBolt(dt) {
 }
 function talk(who) {
   const lines = who === "frost"
-    ? [["frost", pick(["Six mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong."])]]
-    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun."])]];
+    ? [["frost", pick(["Six mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong.", "Pip's arcade machine is by the door. Every puzzle you've cracked, all in one place."])]]
+    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun.", "I built the arcade machine out of an old fridge. Every puzzle you find goes in it."])]];
   G.dialogue.show(lines, null);
 }
 function openFile(s) {

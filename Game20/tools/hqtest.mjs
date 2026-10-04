@@ -13,6 +13,7 @@ fs.symlinkSync(here, path.join(site, "agent-rory-zero-gravity"));
 fs.symlinkSync(path.join(here, "hq"), path.join(site, "agent-rory-hq"));
 fs.symlinkSync(path.resolve(here, "../Game22"), path.join(site, "agent-rory-spectrum"));
 fs.symlinkSync(path.resolve(here, "../docs/shots"), path.join(site, "shots"));
+for (const d of ["agent-rory", "agent-rory-meltdown", "agent-rory-deep-red", "agent-rory-timeslip"]) fs.symlinkSync(path.resolve(here, "../docs", d), path.join(site, d));
 const port = +(process.env.PORT || 8946);
 const server = spawn("npx", ["http-server", site, "-p", String(port), "-s", "-c-1"], { stdio: "ignore", detached: true });
 // npx starts the real server as a child: take the whole group down at the end
@@ -54,7 +55,7 @@ check(z < 0, `Rory walks up the room (z ${z.toFixed(1)})`);
 await ev(() => { __hq.input.forced = null; });
 // the things to do in the room
 const thingIds = await ev(() => __hq.debug.things().map(t => t.id));
-check(["tea", "button", "chair", "dog", "photo", "phone"].every(id => thingIds.includes(id)), `six things to do (${thingIds.join(",")})`);
+check(["tea", "button", "chair", "dog", "photo", "phone", "arcade"].every(id => thingIds.includes(id)), `seven things to do (${thingIds.join(",")})`);
 const use = async id => { await ev(() => __hq.debug.skip()); await ev(id => __hq.debug.goToThing(id), id); await waitT(0.5); const near = await ev(() => __hq.debug.near()); check(near === id, `standing at the ${id} (near: ${near})`); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3); };
 await use("tea"); await waitT(1.8); check(await ev(() => !!__hq.cup), "a cup of tea in Rory's hand"); await page.screenshot({ path: `${out}/tea.png` });
 await use("tea"); check(await ev(() => +localStorage.getItem("roryhq.biscuit") === 1), "then a biscuit");
@@ -65,6 +66,19 @@ await use("photo"); check(await ev(() => __hq.dialogue.active && !!document.quer
 await ev(() => { const b = document.querySelector('[data-layer="photo"] [data-a="close"]'); b.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); }); await waitT(0.2);
 await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.ring()); await waitT(0.5); check(await ev(() => __hq.ringing > 0), "the banana phone rings");
 await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing === 0), "and Rory answers it"); await page.screenshot({ path: `${out}/phone.png` }); await ev(() => __hq.debug.skip());
+// the puzzle arcade: Pip says what it is the first time, then it opens the arcade page
+{ await ev(() => __hq.debug.skip()); await ev(() => { __hq.player.teleport(-2.6, 0, 5.6, 0); });
+  for (const [k, yaw] of [["a", 0], ["b", Math.PI]]) { await ev(y => { __hq.player.camYaw = y; }, yaw); await waitT(0.6); await page.screenshot({ path: `${out}/arcade_front_${k}.png` }); }
+  await use("arcade"); await page.screenshot({ path: `${out}/arcade_cabinet.png` });
+  check(await ev(() => __hq.dialogue.active), "Pip introduces the arcade");
+  const nav = page.waitForURL(/arcade\.html/, { timeout: 20000 }).catch(() => null);
+  // (tap through Pip's lines; the page goes to the arcade straight after the last one)
+  for (let i = 0; i < 12 && !page.url().includes("arcade"); i++) { try { await ev(() => { if (__hq.dialogue.active) __hq.dialogue.tap(); }); await page.waitForTimeout(500); } catch (e) { break; } }
+  await nav;
+  check(page.url().includes("/agent-rory-hq/arcade.html"), `PLAY on the cabinet opens the arcade (${page.url()})`);
+  await page.waitForSelector("body.ready", { timeout: 30000 }); await page.screenshot({ path: `${out}/arcade_page.png` });
+  await page.goto(`http://localhost:${port}/agent-rory-hq/index.html`);
+  await page.waitForFunction(() => window.__hq && window.__hq.state === "room", null, { timeout: 180000 }); await waitT(1.5); await ev(() => __hq.debug.skip()); }
 // the play button goes to the game
 await ev(() => __hq.debug.goTo("zero")); await waitT(0.3); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3);
 const nav = page.waitForNavigation({ timeout: 15000 }).catch(() => null);

@@ -11,6 +11,7 @@ import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing } from "./props.js";
 import { toast } from "./ui.js";
+import { PuzzleMission } from "./clues.js";
 
 const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -1331,5 +1332,5 @@ class Drive extends Mission {
   }
 }
 
-export const KINDS = { cells: Cells, roundup: Roundup, stack: Stack, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, circuit: Circuit, codes: Codes, drive: Drive };
+export const KINDS = { puzzle: PuzzleMission, cells: Cells, roundup: Roundup, stack: Stack, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, circuit: Circuit, codes: Codes, drive: Drive };
 export function makeMission(g, def, data) { const K = KINDS[def.kind]; return K ? new K(g, def, data) : null; }

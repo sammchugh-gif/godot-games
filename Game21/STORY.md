@@ -1,7 +1,7 @@
 # Agent Rory: Deep Red — the story bible
 
 The fourth Agent Rory game and the biggest: twice as long as Meltdown (about
-180 missions across 30 places), in real 3D on the Zero Gravity engine, from the
+150 missions across 30 places), in real 3D on the Zero Gravity engine, from the
 bottom of the sea to the top of Olympus Mons. It was released one act at a time,
 each act complete and tested before it went live; all three acts are now out.
 
@@ -192,7 +192,7 @@ someone to listen to the sea, becomes POLARIS's new ocean scientist.
 
 ## Missions
 
-About six per place, 180 in all, on at least twenty-four mission kinds, each
+Five per place, 150 in all (puzzle missions that win intel, and one action), from at least twenty-four mission kinds, each
 used several times at rising difficulty. From Zero Gravity (upgraded): cells,
 stealth, lasers, codes, circuit, stack, drone rings, pin-down, round-up, drive,
 chase, boss. New:

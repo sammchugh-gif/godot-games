@@ -16,7 +16,7 @@ In the very first era, Dinosaur Valley, the last egg in a triceratops nest hatch
 hands. The baby decides he's her mum and jumps on the time-sled after him. She is **Pebble**,
 his partner from then on, and she grows a little in every era.
 
-This is **Act One: Deep Time**, six eras and thirty-six missions. The plan for both acts is in
+This is **Act One: Deep Time**, six eras and thirty missions. The plan for both acts is in
 `STORY.md`.
 
 Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
@@ -25,8 +25,8 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 
 - **Pebble**, a baby triceratops built from simple shapes. She follows Rory, honks, purrs,
   blushes pink when she's pleased and dances when all three golden ammonites in an era are found.
-  She sniffs out what's buried on a dig, and charges Sandbots over in a round-up. She hatches in
-  the fourth mission of Dinosaur Valley, and from then on she grows each era.
+  She sniffs out what's buried on a dig. She hatches at the end of the third mission in Dinosaur
+  Valley, and from then on she grows each era.
 - **The Chrono-watch.** Three powers, each learnt in its own era:
   - **SLOW** (Ice Age): hold it and the world slows to a crawl while Rory keeps full speed. It
     runs down in four seconds and charges back up.
@@ -47,8 +47,8 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
   pyramid, the Sphinx, obelisks, reed beds and hippos in the Nile. Greek temples, a stadium and a
   hippodrome. An aqueduct on tall arches, a Roman forum and a bathhouse pool. Turf-roofed
   longhouses, rune stones and a fjord between mountains.
-- **New things to drive**: the POLARIS time-sled (it hovers), a reed boat, a chariot, a Roman
-  cart and a Viking longship.
+- **New things to drive**: the POLARIS time-sled (it hovers), a reed boat, a chariot and a Roman
+  cart. (The Viking longship is still in the code, but its race is gone.)
 - **The Sand Serpent**, Hourglass's giant snake of sand, which rears, slams the beach and falls
   apart into a beach itself.
 - **A disguise in every era**: a fur cloak, linen, a tunic, a red Roman tunic, Viking wool.
@@ -60,42 +60,82 @@ Play it at `docs/agent-rory-timeslip/`, or from Agent Rory HQ on the shelf.
 | Era | Missions |
 |---|---|
 | POLARIS HQ, today | the briefing, the Chrono-watch, the launch (the prologue: no missions) |
-| Dinosaur Valley, 66 million years ago | time sparks in the ferns, the egg thieves, eggs back to the nest, Pebble hatches (lead the babies home), tiptoe past the T. rex, the egg cart |
-| The Ice Age, 20,000 years ago | the lost mammoth calf, falling icicles (SLOW), the painted cave, the snow wall, the mammoth ride, the handprints |
-| Ancient Egypt, 4,500 years ago | down the Nile, the picture lock, sunbeam traps (BACK), the buried stone, the ramp, up the pyramid |
-| Olympia, 2,700 years ago | the boys' race, the temple doors (ECHO), the games in order, the chariot race, the sun mirror, Sandbots in the stadium |
-| The Roman aqueduct, 2,000 years ago | along the arches, the sluice gates, the fountains, the bathhouse pool, two levers at once, the Roman road |
-| The Viking fjord, 1,000 years ago | the longship race, the rune stones, steer by the stars, the sail loft, under the fjord, the Sand Serpent |
+| Dinosaur Valley, 66 million years ago | strange footprints, the egg thieves, eggs back to the nest (Pebble hatches), tiptoe past the T. rex, the egg cart |
+| The Ice Age, 20,000 years ago | falling icicles (SLOW), the painted cave, the snow wall, the mammoth ride, the handprints |
+| Ancient Egypt, 4,500 years ago | down the Nile, the picture lock, who let them in? (BACK), the buried stone, ropes for the capstone |
+| Olympia, 2,700 years ago | the temple doors (ECHO), the games in order, the chariot race, the sun mirror, Sandbots in the stadium |
+| The Roman aqueduct, 2,000 years ago | along the arches, the sluice gates, the fountains, two levers at once, the Roman road |
+| The Viking fjord, 1,000 years ago | the rune stones, steer by the stars, the sail loft, under the fjord, the Sand Serpent |
 
 ## Spy clues
 
-Rory is a spy, so 27 of the 36 missions in Act One have something to work out. Some are puzzles
-of their own (the ones above); the other 16 end in a **clue**: after the action,
-Rory finds a coded note, a locked case, a line of suspects or a map, and cracks it
-before MISSION COMPLETE. The clues make a trail through the story: the numbers scratched on the Ice Age cave wall that spell SAND, the T. rex's waking time, and Doctor Hourglass's lookout in the Roman baths.
+Every era is a few **puzzle missions** and **one action mission** (a chase, a
+ride, a boss and so on), like Operation Eclipse and Meltdown. Act One has 30
+missions, five in each of its 6 eras. Of those, 13 are puzzle missions, 11 are
+the older panel puzzles (3 code locks, 2 echo doors, a dig, a timeline, a sun
+mirror circuit, the sluice gates, the fountain valves and a star map) and 6 are
+action. So 24 missions in 30 are something to work out.
 
-Each game's clues are its own, made from its story. Here they are time-tunnel clocks, hourglass story sums, how long (from one clock to another), Roman numerals (the aqueduct's arches), the calendar (days and months), number pyramids (the Egyptian builders' marks), market trading (1 amphora is worth 5 figs), doubling and halving (eggs in nests, stitches in a sail) and footprint tracks (counting in steps). Only
-three kinds are in every Agent Rory game, because every spy needs them: the line-up
-(pick the suspect who fits every clue), the coded note (a number or symbol code, in
-this game's own symbols) and the spy map. So no two games share more than a quarter
-of their clues.
+A puzzle mission starts at a beacon like any other. Rory walks up, hears the
+briefing, and the puzzle opens. Each one has a level from 1 to 4; in Act One
+they go from 1 to 3, rising era by era. The trail runs through the intel: the
+sandy footprints that lead to the nests, the chip of gold stone that points to
+Egypt, the coded note in the stadium that spells ROME, and Doctor Hourglass's
+rune message: "Why wait? Love, H."
 
-All of it is for a seven-year-old. Each clue is made fresh every time with exactly
-one answer, at four levels that rise through the game. A wrong answer never fails
-the mission: it gives a hint, and a stronger one after the second try, and three
-slips or more cost one star. 🔊 reads the question out.
+**Intel.** Every mission wins a piece of intel. After the last lines of the
+mission, a card says INTEL WON and the intel is read aloud. Put together, the
+intel is the story: what Doctor Hourglass is up to, and which era is next.
+**DOSSIER** in the pause menu lists all the intel won so far, era by era, with
+the stars for each mission.
 
-`js/clues.js` is the frame every clue shares and the three spy clues (the same file
-in all four newer Agent Rory games); `js/puzzles.js` is this game's own; `js/cluemap.js`
-says which missions end in which clue, with the lines around it. From the top of
-the repository, `node tools/cluecheck.mjs` checks every game's clue map (and how much
-the games share), and `node tools/cluetest.mjs` makes hundreds of each clue at each
+**HINT and LEAVE.** A puzzle mission has two buttons at the top. HINT gives the
+strongest help the puzzle has, and reads it out. LEAVE walks away, and the
+mission waits to be tried again. A wrong answer never fails the mission: it
+gives a hint, and a stronger one after the second try. Three stars means no hint
+and at most one slip. Two stars allows one hint and up to four slips. 🔊 reads
+the question out.
+
+The puzzles are made from the story. Timeslip's own nine are time-tunnel clocks,
+hourglass story sums, how long (from one clock to another), Roman numerals (the
+aqueduct's arches), the calendar (days and months), number pyramids (the snow
+wall), market trading (ropes for the pyramid's capstone), doubling and halving
+(eggs in nests) and footprint tracks (counting in steps). They make 10 of the
+puzzle missions, and each is used at least once in Act One. Only three kinds are
+in every Agent Rory game, because every spy needs them: the line-up (pick the
+suspect who fits every clue), the coded note (a number or symbol code, in this
+game's own symbols) and the spy map. Here there is one of each. So no two games
+share more than a quarter of their puzzles.
+
+All of it is for a seven-year-old. Each puzzle is made fresh every time, with
+exactly one answer.
+
+- `js/clues.js` is the same file in all four newer Agent Rory games. It has the
+  frame every puzzle shares, the three spy clues, the `PuzzleMission` class that
+  makes a puzzle into a mission (with HINT, LEAVE and the stars), and the intel
+  card and the dossier.
+- `js/puzzles.js` is this game's own puzzles.
+- In `js/story.js` a puzzle mission is `kind: "puzzle"`, with `p` the kind of
+  puzzle, `lv` its level and, for a code, `word`. Every mission has
+  `intel: { title, text }`.
+- `js/cluemap.js` now only keeps `THEME`: this game's words, names and code
+  symbols for the puzzles. Its `CLUES` is empty, so no mission ends in an extra
+  clue any more.
+
+From the top of the repository, `node tools/cluecheck.mjs` checks every game. Each
+puzzle mission must name a real kind, a level from 1 to 4 and real speakers.
+Every mission must win intel. Each era must have at most five missions and
+exactly one action. At least three missions in four must be puzzles, every one of
+a game's own kinds must be used, and no two games may share more than a quarter
+of their kinds. `node tools/cluetest.mjs` makes hundreds of each puzzle at each
 level, checks each has one answer, and has the autopilot solve them at phone and
 tablet size.
 
 ## Files
 
 - `js/story.js` the cast, the eras and every line; `STORY.md` the plan for both acts.
+  `SCRIPT.md` is every line, with each puzzle's kind and level and the intel each mission wins,
+  written from `js/story.js` by `node tools/storydoc.mjs`.
 - `js/pebble.js` Pebble; `js/dinos.js` the T. rex; `js/critters.js` baby triceratops,
   compsognathus, mammoths and their calves, foxes (and Deep Red's sea life).
 - `js/timetunnel.js` the trip between eras. The watch powers are in `js/main.js`.

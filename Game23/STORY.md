@@ -1,8 +1,8 @@
 # Agent Rory: Timeslip — the story bible
 
 FILE 006, Game23. A time-travel caper on the Deep Red engine: twelve eras, from the
-dinosaurs to a city in the year 2150, and a baby dinosaur who comes along. Seventy-two
-missions in two acts of thirty-six, released an act at a time, each act complete and
+dinosaurs to a city in the year 2150, and a baby dinosaur who comes along. Sixty
+missions in two acts of thirty (five an era: puzzle missions and one action), released an act at a time, each act complete and
 tested before it goes live.
 
 ## The story in one breath

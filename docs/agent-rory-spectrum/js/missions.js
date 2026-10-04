@@ -11,6 +11,7 @@ import { makePerson, animatePerson } from "./people.js";
 import { CHARS } from "./story.js";
 import { makeCell, spinCell, makeBubble, makeBeam, aimBeam, thing, makePaintBall, confetti } from "./props.js";
 import { toast } from "./ui.js";
+import { PuzzleMission } from "./clues.js";
 
 export const v3 = (a) => new THREE.Vector3(a[0], a[1], a[2]);
 
@@ -1335,6 +1336,6 @@ export class Drive extends Mission {
   }
 }
 
-export const KINDS = { drops: Cells, ride: Cells, cells: Cells, splat: Roundup, stack: Stack, pin: Tractor, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, colourcode: Codes, mix: Mix, drive: Drive };
+export const KINDS = { puzzle: PuzzleMission, drops: Cells, ride: Cells, cells: Cells, splat: Roundup, stack: Stack, pin: Tractor, tractor: Tractor, drone: Drone, lasers: Lasers, chase: Chase, stealth: Stealth, boss: Boss, colourcode: Codes, mix: Mix, drive: Drive };
 // the water missions (dive, boat) and the colour missions (search, hues, flight) are registered by missions3.js and missions4.js
 export function makeMission(g, def, data) { const K = KINDS[def.kind]; return K ? new K(g, def, data) : null; }
