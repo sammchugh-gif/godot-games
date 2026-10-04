@@ -132,7 +132,7 @@ export const PLACES = [
         intro: [["valeria", "The Drips hid pearls on the cargo ship in the lock. Every crate has a label, but it's in code!"], ["pip", "Each symbol is a letter. Find it in the key, then tap the letters to spell the label."]],
         outro: [["rory", "It says MINE. And under it, a little wave and a U."], ["valeria", "Captain Undertow? She's labelling the sea? That's so rude."]],
         intel: { title: "MINE", text: "Undertow labels every pearl crate MINE. She thinks the sea belongs to her." } },
-      { id: "pan3", kind: "puzzle", p: "wordsearch", lv: 2, words: ["SHIP", "BOAT", "PEARL"], title: "The Control House",
+      { id: "pan3", kind: "puzzle", p: "wordsearch", lv: 2, where: "her logbook", words: ["SHIP", "BOAT", "PEARL"], title: "The Control House",
         intro: [["valeria", "The Drips took over the lock control house. They ran off when they saw you coming, and left Undertow's logbook behind!"], ["pip", "She hides her secret words in a jumble of letters. Tap the first letter of each word, then the last."]],
         outro: [["rory", "Ship, boat, pearl. It says barges come every night, and they all fill up from the lake. Somebody's draining it."], ["pip", "With valves under the lock gates. And the Drips are guarding the tunnel down there."]],
         intel: { title: "Barges by night", text: "Every night the Drips open valves under the lock gates and drain the lake into barges." } },
@@ -280,7 +280,7 @@ export const PLACES = [
     arrive: [["nia", "Agent Rory? I'm Nia, Bermuda Coast Guard cadet. The compasses have been spinning for a week."], ["rory", "What is that?"], ["nia", "That's Undertow's base. It floats. It's as big as a town."], ["torpedo", "It is also ugly. I am sorry, but it is."], ["undertow", "Welcome aboard, Agent Rory. Do wipe your flippers."], ["pip", "This is it, Rory. Find out what the Tidal Engine is, and stop it."]],
     leave: [["rory", "She's gone. The whole base is sinking after her!"], ["torpedo", "She is going down. Deep. Deeper than I have ever been."], ["frost", "Then that's where we follow. Get some rest, Agent Rory. Tomorrow, we go into the abyss."], ["pip", "End of Act One. Act Two: Into the Abyss is coming soon!"]],
     missions: [
-      { id: "ber1", kind: "puzzle", p: "wordsearch", lv: 3, words: ["SQUID", "PEARL", "WAVE", "SHIP"], title: "Deck Patrol",
+      { id: "ber1", kind: "puzzle", p: "wordsearch", lv: 3, where: "the hatch's word lock", words: ["SQUID", "PEARL", "WAVE", "SHIP"], title: "Deck Patrol",
         intro: [["nia", "That's her base, right in the middle of the Triangle. The deck is crawling with Drip guards."], ["pip", "They're all looking the other way. Quick, the main hatch has a word lock. Find every word hidden in its letters!"]],
         outro: [["rory", "I'm in. It's a huge hall full of pipes."], ["pip", "And lasers. Lots of lasers."]],
         intel: { title: "The pump hall", text: "Under the main hatch is a huge hall full of pipes, guarded by lasers." } },
