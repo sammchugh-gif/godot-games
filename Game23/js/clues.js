@@ -275,7 +275,7 @@ export class MapClue extends Clue {
   hint(m) { const k = Math.min(this.q.path.length - 1, m); this.q.path.slice(0, k).forEach(([x, y]) => { const b = this.body.querySelector(`[data-x="${x}"][data-y="${y}"]`); if (b) b.classList.add("path"); }); }
   auto() { const b = this.body.querySelector(`[data-x="${this.q.ex}"][data-y="${this.q.ey}"]`); if (b) this.tap(b); }
 }
-// the code: numbers (A=1) or symbols, and a key to read it with
+// the code: symbols, and a key to read it with (no numbers: the puzzles aren't maths)
 const SYM = [["▲", "#e03a3a"], ["●", "#2a6ad8"], ["■", "#2aa84a"], ["★", "#d8a020"], ["♥", "#d83a8a"], ["◆", "#9a4ad8"], ["✚", "#ff8a1a"], ["☾", "#2ab8c8"], ["▼", "#6a8a2a"], ["◐", "#8a5a2a"], ["✦", "#d84a2a"], ["⬟", "#4a6a9a"]];
 export class Cipher extends Clue {
   verify(q) { return ([...q.word].every(ch => q.tiles.includes(ch)) && (!q.symbols || [...q.word].every(ch => q.code[ch])) && (!q.symbols || new Set(Object.values(q.code).map(g => g[0])).size === Object.keys(q.code).length) && q.word.length >= 2) || "the code is missing letters or repeats a symbol"; }
@@ -284,10 +284,10 @@ export class Cipher extends Clue {
   make() {
     const lv = this.lv, words = this.spec.word ? [this.spec.word] : this.theme.words.filter(w => w.length <= [4, 5, 6, 7][lv - 1]);
     const word = (any(words.length ? words : ["SPY"])).toUpperCase().replace(/[^A-Z]/g, "");
-    const symbols = lv >= 3;
+    const symbols = true;
     const letters = [...new Set(word)];
     const decoys = shuffle("ABCDEFGHIJKLMNOPRSTUVWY".split("").filter(c => !letters.includes(c))).slice(0, Math.max(2, 8 - letters.length));
-    const keyLetters = symbols ? shuffle([...letters, ...decoys.slice(0, Math.max(0, 10 - letters.length))]) : null;
+    const keyLetters = symbols ? shuffle([...letters, ...decoys.slice(0, lv <= 2 ? 2 : Math.max(0, 10 - letters.length))]) : null;
     const glyphs = this.words.glyphs || SYM;
     const code = symbols ? Object.fromEntries(keyLetters.map((c, i) => [c, glyphs[i % glyphs.length]])) : null;
     const text = symbols ? "Use the key to swap each symbol for its letter." : "Each number is a letter: A is 1, B is 2, C is 3... Use the key to read the note.";
