@@ -78,7 +78,7 @@ await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing ==
   check(page.url().includes("/agent-rory-hq/arcade.html"), `PLAY on the cabinet opens the arcade (${page.url()})`);
   await page.waitForSelector("body.ready", { timeout: 30000 }); await page.screenshot({ path: `${out}/arcade_page.png` });
   await page.goto(`http://localhost:${port}/agent-rory-hq/index.html`);
-  await page.waitForFunction(() => window.__hq && window.__hq.state === "room", null, { timeout: 180000 }); await ev(() => __hq.debug.skip()); }
+  await page.waitForFunction(() => window.__hq && window.__hq.state === "room", null, { timeout: 180000 }); await waitT(1.5); await ev(() => __hq.debug.skip()); }
 // the play button goes to the game
 await ev(() => __hq.debug.goTo("zero")); await waitT(0.3); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3);
 const nav = page.waitForNavigation({ timeout: 15000 }).catch(() => null);
