@@ -1,10 +1,10 @@
 // Zero Gravity's clues (clues.js, puzzles.js): the missions that end with a puzzle for
 // Rory to crack. p is the kind of puzzle, lv its level (1 is the gentlest), say the lines
-// before it, after the line once it's solved. The kinds are Zero Gravity's own (the
-// gravity balance and lever, the launch countdown, Zero's gold bars, rocket stages,
-// power cells, Floater sort, memory match, sharing the cells), plus the three spy clues
-// every game has (the line-up, the coded note, the spy map). The codes are the trail:
-// EGYPT on the machine label, RIO on the cells, INDIA in the relay's orders, MOON on the Pump.
+// before it, after the line once it's solved. The kinds are Zero Gravity's own (BOLT's maze,
+// the gravity slide, the rocket jigsaw, spot the difference, the power grid, star link, the
+// robot builder, picture memory and the laser mirrors), plus the three spy clues every game
+// has (the line-up, the coded note, the spy map). The codes are the trail: EGYPT on the
+// machine label, RIO on the cells, INDIA in the relay's orders, MOON on the Pump.
 export const THEME = {
   things: ["Floaters", "gravity cells", "blocks", "leeches"],
   boxes: ["crates", "vans", "rockets"],

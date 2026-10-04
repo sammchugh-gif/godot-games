@@ -34,27 +34,27 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **BOLT:** Walking. Mostly walking.
 > **Pip:** Let's get you both trained. Follow the glowing beacons!
 
-**Mission 1: Cell School** (Puzzle, level 1: making an amount)
+**Mission 1: Cell School** (Puzzle, level 1: gravity slide)
 
-> **Pip:** These blue things are Gravity Cells. Each one holds a little bit of stolen gravity, and each one has a number: how much power it gives.
-> **Pip:** The training door needs exactly the right power. Tap cells to add them up. Not too much, not too little!
+> **Pip:** These blue things are Gravity Cells. Each one holds a little bit of stolen gravity.
+> **Pip:** Watch. When I tilt the gravity, a cell slides until it bumps into something. Tilt it into the green ring, Rory.
 
 *After:*
 
-> **BOLT:** The door opened. I counted the power. Twice.
-> **Pip:** Zero's machine runs on these cells. If we can count them, we can follow them.
+> **BOLT:** The cell went clunk. I like clunk.
+> **Pip:** Zero's machine runs on these cells. If we can follow the cells, we can follow him.
 
 *Intel: Gravity Cells.* Stolen gravity is kept in blue Gravity Cells. Each cell has a number on it: how much power it holds.
 
-**Mission 2: The Gravity Balance** (Puzzle, level 1: gravity balance)
+**Mission 2: Before and After** (Puzzle, level 1: spot the difference)
 
-> **Pip:** This is a gravity balance. When both sides weigh the same, it stays level.
-> **Pip:** There's a mystery box on one side. Work out what it weighs. That's how we spot a cell that's lost its gravity.
+> **Pip:** Here's my lab this morning, and here it is now. Zero's machine flew past the window in between.
+> **Pip:** Something has floated off or swapped round. Spot what's different, Rory.
 
 *After:*
 
-> **Rory:** The sides match, so the box weighs the same as the blocks.
-> **Pip:** Exactly. Zero's cells are lighter than they should be. He's sucking the gravity out of things.
+> **Rory:** Things moved all by themselves. Just from his machine going past!
+> **Pip:** Exactly. Zero sucks the gravity out of things. They get lighter and lighter, then off they float.
 
 *Intel: Light as a feather.* Anything near Zero's machine gets lighter and lighter, until it floats away. Weighing things shows where he's been.
 
@@ -69,10 +69,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Floaters.* Professor Zero's robots are called Floaters. A Gravity Bubble from Rory's watch pops them up and away.
 
-**Mission 4: Spy Memory** (Puzzle, level 1: memory match)
+**Mission 4: Spy Memory** (Puzzle, level 1: picture memory)
 
 > **Pip:** Last bit of training. A spy has to remember things. Turn the cards over two at a time.
-> **Pip:** Find each sum and its answer. If they don't match, they flip back, so remember where they were!
+> **Pip:** Find the pictures that match. If they don't match, they flip back, so remember where they were!
 
 *After:*
 
@@ -92,10 +92,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **BOLT:** I would like one drink, please, before it leaves.
 > **Pip:** Rory, something on the rooftops is soaking up the gravity. Follow the beacons.
 
-**Mission 5: Rooftop Cells** (Puzzle, level 1: sharing equally)
+**Mission 5: Rooftop Cells** (Puzzle, level 1: power grid, lights out)
 
 > **Yuki:** Look! Cells all over the arcade roof. They're humming.
-> **Pip:** I need to scan them, Rory. Share them out equally between my scanner pods, so each pod gets the same.
+> **Pip:** My scanner panels are up there too, Rory. Switch every panel on. Careful: each one flips the ones next to it.
 
 *After:*
 
@@ -104,10 +104,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: The humming cells.* The cells are tuned to a signal, like a radio. They are all being sent to the same place.
 
-**Mission 6: Vending Machine Rescue** (Puzzle, level 1: sorting by a rule)
+**Mission 6: Vending Machine Rescue** (Puzzle, level 1: laser mirrors)
 
 > **Yuki:** Oh no, it's happening again. The machines are lifting off!
-> **Pip:** Some of those aren't machines at all. They're Floaters hiding a gravity leech. Tap every one that fits the rule!
+> **Pip:** There's a gravity leech on the biggest one. Turn the mirrors, Rory, and bounce my laser onto the target to zap it off!
 > **BOLT:** Do not let the drinks escape!
 
 *After:*
@@ -172,16 +172,16 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Zero Industries.* Zero Industries rented the old tomb and pretended to make hats. It's really his workshop.
 
-**Mission 10: Capstone Blocks** (Puzzle, level 1: numbers in order)
+**Mission 10: Capstone Puzzle** (Puzzle, level 1: picture slide puzzle)
 
-> **Amira:** The Floaters knocked the capstone blocks off the plinth. Every block has a number carved on it.
-> **Pip:** They go back in order, Rory. Smallest number first.
+> **Amira:** The Floaters knocked the capstone blocks about, and jumbled up the old picture tiles on the plinth.
+> **Pip:** Slide the pieces back to make the pyramid picture, Rory. Tap a piece next to the gap.
 
 *After:*
 
 > **Amira:** Perfect. My grandad will be so pleased.
 > **BOLT:** I would like a grandad.
-> **Amira:** And look. Under the last block. A door into the tomb.
+> **Amira:** And look. Under the capstone blocks. A door into the tomb.
 
 *Intel: The tomb door.* Under the capstone blocks was a secret door into the old tomb, where Zero's workshop is.
 
@@ -224,10 +224,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 > **BOLT:** I love it.
 > **Pip:** Zero's parts are shipped from here, Rory. Find out where they're going.
 
-**Mission 13: Beach Rescue** (Puzzle, level 1: which is more?)
+**Mission 13: Beach Rescue** (Puzzle, level 1: BOLT's maze)
 
 > **Jack:** Zero's machine is pointed at the beach. The umbrellas and surfboards are floating off!
-> **Pip:** The gravity lever pins the heavy side down first. Which side is heavier, Rory?
+> **Pip:** The machine is hidden behind the beach huts, and they're like a maze. Steer BOLT through to it, Rory.
 
 *After:*
 
@@ -248,15 +248,16 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Destination Rio.* The cells on the ferries are labelled for Rio de Janeiro.
 
-**Mission 15: Under the Bridge** (Puzzle, level 1: gold bars, times tables)
+**Mission 15: Under the Bridge** (Puzzle, level 1: robot builder)
 
 > **Jack:** There's a Floater stuck under the Harbour Bridge. And it's holding a bag.
-> **BOLT:** I flew out. The bag is full of gold bars. Zero's ransom!
-> **Pip:** Count them, Rory. Stacks of bars, the same in each stack.
+> **Pip:** We need a helper robot to fetch it. I've got a box of spare parts right here.
+> **Pip:** Build the robot on the blueprint, Rory. Pick the right part each time.
 
 *After:*
 
-> **BOLT:** And it had a key card. ZERO SHIPPING, back gate.
+> **BOLT:** Our helper fetched the bag. It is full of gold bars. Zero's ransom!
+> **BOLT:** And a key card. ZERO SHIPPING, back gate.
 > **Pip:** That's the warehouse by the quay.
 
 *Intel: The gold and the key card.* Countries have started paying Zero in gold bars. A stuck Floater had a key card for the Zero Shipping warehouse.
@@ -298,10 +299,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: Floaters in costume.* Zero's Floaters are hiding in the carnival in costumes. One had a ticket for the Sugarloaf cable car.
 
-**Mission 18: Cable Car Numbers** (Puzzle, level 2: launch countdown)
+**Mission 18: Cable Car Lines** (Puzzle, level 2: join the stars)
 
-> **Lucas:** The cable cars are numbered, but Zero's swapped the signs round so nobody can find the right one.
-> **Pip:** The numbers go in a pattern. Work out what comes next, Rory.
+> **Lucas:** Zero's tangled up the cable car lines, so nobody can get up Sugarloaf Mountain.
+> **Pip:** Join each pair of matching stars to fix the lines, Rory. The lines can't cross, or the cars will bump.
 
 *After:*
 
@@ -310,10 +311,10 @@ Professor Zero is sucking the gravity out of famous places. Find out how.
 
 *Intel: The stadium.* There is a giant robot in Rio's stadium. Zero calls it the Big Floater.
 
-**Mission 19: The Stadium Key** (Puzzle, level 2: sorting by a rule)
+**Mission 19: The Stadium Key** (Puzzle, level 2: spot the difference)
 
-> **Lucas:** The Big Floater locked everybody out of the stadium, and the key is hidden on a Floater in the parade!
-> **Pip:** Tap every Floater that fits the rule, Rory. The key's on one of them.
+> **Lucas:** The Big Floater locked everybody out of the stadium, and the key is hidden somewhere in the parade!
+> **Pip:** I took a photo of the parade an hour ago. The Floaters have moved things to hide the key. Spot what's different, Rory.
 
 *After:*
 
@@ -353,10 +354,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Marcus:** She's still holding the flame, sort of. Also, all the screens just went dark.
 > **BOLT:** New York, New York. I would like a hot dog. I cannot eat hot dogs.
 
-**Mission 21: Taxi Rescue** (Puzzle, level 2: gravity balance)
+**Mission 21: Taxi Rescue** (Puzzle, level 2: laser mirrors)
 
 > **Marcus:** Here we go again. The taxis in Times Square are lifting off!
-> **Pip:** I can pin them down, but I need their weight. Read the gravity balance, Rory.
+> **Pip:** My gravity laser can pin them down. Turn the mirrors so the beam bounces onto the target, Rory.
 
 *After:*
 
@@ -414,10 +415,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Wanjiru:** It appeared last week. Zero's robots guard it. They say it's a battery test.
 > **BOLT:** I do not like that battery. It is showing off.
 
-**Mission 25: Floating Animals** (Puzzle, level 2: which is more?)
+**Mission 25: Floating Animals** (Puzzle, level 2: gravity slide)
 
 > **Wanjiru:** Oh no, here they go! The zebras, the giraffes, even the elephants!
-> **Pip:** The heavy ones first, Rory, before they get too high. Which side of the lever is heavier?
+> **Pip:** I can tilt the gravity round them. Slide the elephant into the green ring, Rory, where it's safe. It slides until it bumps into something.
 
 *After:*
 
@@ -437,10 +438,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 *Intel: Mum's radio.* A Floater stole a ranger's radio and a map of the watering hole with crosses on it.
 
-**Mission 27: Watering Hole** (Puzzle, level 2: sharing equally)
+**Mission 27: Watering Hole** (Puzzle, level 2: spot the difference)
 
 > **Wanjiru:** The Floaters stuck gravity leeches all round the watering hole, where the animals drink.
-> **Pip:** The rangers will carry them away. Share them out equally between the ranger bags, Rory.
+> **Pip:** Here's my photo from yesterday, and here's today. Spot what's different, Rory, and the rangers will know where to look.
 
 *After:*
 
@@ -474,10 +475,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Rory:** Then we walk the wall.
 > **BOLT:** It is very long. I will walk the first bit. Then you can carry me.
 
-**Mission 29: Walk the Wall** (Puzzle, level 2: numbers in order)
+**Mission 29: Walk the Wall** (Puzzle, level 2: BOLT's maze)
 
-> **Mei:** Zero's relay is in one of the watchtowers. The towers are numbered, but the wall wobbles so much they're all mixed up.
-> **Pip:** Put the watchtowers back in order, Rory, smallest number first.
+> **Mei:** Zero's relay is in one of the watchtowers. But the wall wobbles so much, the paths have all got muddled.
+> **Pip:** Steer BOLT along the wall to the watchtower, Rory. Watch out for dead ends.
 
 *After:*
 
@@ -497,9 +498,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 *Intel: The lanterns.* The relay's signal bounces off the lanterns along the wall. Scramble the lanterns and the relay goes deaf.
 
-**Mission 31: Lantern Scramble** (Puzzle, level 2: memory match)
+**Mission 31: Lantern Scramble** (Puzzle, level 2: power grid, lights out)
 
-> **Pip:** Every lantern has a sum or an answer on it. Match them all up and the signal is scrambled.
+> **Pip:** The relay's signal bounces off the lanterns. Light every lantern and the signal gets scrambled.
+> **Pip:** But they're wired up funny. Each lantern flips the ones next to it too.
 > **BOLT:** Scrambling. Like eggs.
 
 *After:*
@@ -545,10 +547,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 
 *Intel: The hatch.* The workshop hatch has a power lock. The power comes from the fountain in the east garden.
 
-**Mission 34: Fountain Fix** (Puzzle, level 2: making an amount)
+**Mission 34: Fountain Fix** (Puzzle, level 2: join the stars)
 
 > **Arjun:** The Floaters took the fountain apart. It used to power the hatch lock.
-> **Pip:** Put the power back, Rory. The fountain needs exactly the right amount. Tap the cells to add them.
+> **Pip:** Join up the fountain's pipes, Rory. Link each pair of matching stars, and don't let the pipes cross.
 
 *After:*
 
@@ -593,10 +595,10 @@ Zero's Gravity Pump is somewhere. Follow the cells to it.
 > **Admiral Frost:** Stop that launch, Agent Rory. Whatever it takes.
 > **BOLT:** It is raining. I am waterproof. Mostly.
 
-**Mission 37: Laser Beach** (Puzzle, level 3: launch countdown)
+**Mission 37: Laser Beach** (Puzzle, level 3: laser mirrors)
 
-> **Pip:** The beach is fenced with lasers, and they switch off in a pattern.
-> **Pip:** Work out the pattern, Rory. What number comes next? Then we know when to run.
+> **Pip:** The beach is fenced with lasers, and the off switch is a target on the far side.
+> **Pip:** Turn the mirrors and bounce our own laser onto the target, Rory. Then the fence switches off and we run.
 
 *After:*
 
@@ -672,25 +674,25 @@ The Pump is in orbit and its battery is on the Moon.
 
 *Intel: The launch computer.* The launch computer is fixed. POLARIS's own rocket can follow Zero into space.
 
-**Mission 42: Stack the Rocket** (Puzzle, level 3: numbers in order)
+**Mission 42: Stack the Rocket** (Puzzle, level 3: picture slide puzzle)
 
-> **Commander Hale:** Zero's Floaters mixed up our rocket stages. They have to go on in order.
-> **Pip:** Tap the stages in order, Rory. If they go on wrong, we'll go sideways.
+> **Commander Hale:** Zero's Floaters mixed up our rocket plans. The picture of how it all fits together is in bits.
+> **Pip:** Slide the pieces back to make the rocket picture, Rory. Then we'll know how to stack it.
 
 *After:*
 
-> **Commander Hale:** Rocket's stacked. Now let's check the fuel.
+> **Commander Hale:** Rocket's stacked. Now the fuelling robot. The Floaters took that apart too.
 
 *Intel: The rocket.* POLARIS's rocket is stacked and ready to fuel.
 
-**Mission 43: Fuel Check** (Puzzle, level 3: gravity balance)
+**Mission 43: Fuel Robot** (Puzzle, level 3: robot builder)
 
-> **Commander Hale:** The fuel tanks have to weigh just right, or we won't get up.
-> **Pip:** Read the balance, Rory. What does the mystery tank weigh?
+> **Commander Hale:** Our fuelling robot is in bits all over the floor. We can't fuel the rocket without it.
+> **Pip:** Build it just like the blueprint, Rory. Look closely: some parts nearly match.
 
 *After:*
 
-> **Commander Hale:** Fuel's good.
+> **Commander Hale:** It's fuelling the rocket already. Fuel's good.
 > **BOLT:** Wait. There's a Floater heading for the fuel line with a spanner!
 
 *Intel: A Floater with a spanner.* One last Floater is trying to stop the launch. It's heading for the fuel line.
@@ -721,10 +723,10 @@ The Pump is in orbit and its battery is on the Moon.
 > **Pip:** It's pulling gravity up off the whole world through that pink beam. Your suit has a jetpack. Hold JET to fly, let go to drift down.
 > **BOLT:** My feet have rockets. I was born for this.
 
-**Mission 45: Solar Cells** (Puzzle, level 3: making an amount)
+**Mission 45: Solar Cells** (Puzzle, level 3: power grid, lights out)
 
-> **Pip:** Zero's Floaters stuck cells all over the solar wings. They're draining the airlock.
-> **Commander Hale:** Give the airlock exactly the power it needs, Rory, and we're inside.
+> **Pip:** Zero's Floaters switched off the solar panels on the station's wings. That's draining the airlock.
+> **Commander Hale:** Switch every panel back on, Rory, and we're inside. Each one flips its neighbours, so think first.
 
 *After:*
 
@@ -793,10 +795,10 @@ The Pump is in orbit and its battery is on the Moon.
 > **BOLT:** I am the first robot called BOLT on the Moon. I checked.
 > **Pip:** Zero's base is over by the purple domes, and the Pump's battery is in the big crater. Let's end this.
 
-**Mission 50: Zero's Gold** (Puzzle, level 3: gold bars, times tables)
+**Mission 50: Zero's Gold** (Puzzle, level 3: picture memory)
 
 > **Commander Hale:** Look in that crater! Zero's gold. All the bars the countries paid him.
-> **Pip:** Count them, Rory, so every country gets theirs back.
+> **Pip:** It's behind a memory lock. Match all the picture pairs, Rory, and the vault opens.
 
 *After:*
 
