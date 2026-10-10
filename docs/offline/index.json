@@ -117,9 +117,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 2982398,
-   "n": 30,
-   "hash": "3d2a5e7d5655"
+   "bytes": 3105410,
+   "n": 31,
+   "hash": "4830cb65d8ce"
   },
   "slime-storm": {
    "bytes": 74304,
@@ -170,6 +170,11 @@
    "bytes": 176745,
    "n": 1,
    "hash": "b2346215ed55"
+  },
+  "world-kitchen": {
+   "bytes": 1092926,
+   "n": 19,
+   "hash": "276358c8b189"
   }
  }
 }
