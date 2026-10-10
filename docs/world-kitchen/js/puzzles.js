@@ -1,8 +1,8 @@
 // The puzzles at the puzzle stations, the same kinds as the Agent Rory games
 // and none of them maths: steer the chef through a maze to the ingredient,
 // light every oven, turn the mirrors so the laser reaches the crystal, find
-// the pairs, and slide the picture back together. Everything is drawn with
-// SVG and CSS (no emoji), made fresh each time, and every one can be solved.
+// the pairs, and turn the squares of a picture the right way up. Everything is
+// drawn with SVG and CSS (no emoji), made fresh each time, and every one can be solved.
 import { icon } from "./icons.js";
 import { ING } from "./data.js";
 
@@ -13,13 +13,13 @@ const ARROW = { up: "M20 6 L34 30 L6 30 Z", down: "M20 34 L34 10 L6 10 Z", left:
 const arrowBtn = d => `<button class="pzb" data-d="${d}"><svg viewBox="0 0 40 40"><path d="${ARROW[d]}" fill="currentColor"/></svg></button>`;
 const CHEF = `<svg viewBox="0 0 40 40"><circle cx="20" cy="25" r="11" fill="#f2c39a"/><circle cx="16" cy="24" r="1.8" fill="#222"/><circle cx="24" cy="24" r="1.8" fill="#222"/><path d="M15 29 Q20 33 25 29" stroke="#222" stroke-width="1.6" fill="none"/><rect x="11" y="10" width="18" height="6" rx="2" fill="#fff"/><circle cx="14" cy="9" r="5" fill="#fff"/><circle cx="20" cy="6" r="6" fill="#fff"/><circle cx="26" cy="9" r="5" fill="#fff"/></svg>`;
 
-export const KINDS = ["maze", "lights", "mirrors", "memory", "slider"];
-export const NAMES = { maze: "Chef's Maze", lights: "Oven Lights", mirrors: "Laser Mirrors", memory: "Picture Memory", slider: "Picture Slide" };
+export const KINDS = ["maze", "lights", "mirrors", "memory", "turn"];
+export const NAMES = { maze: "Chef's Maze", lights: "Oven Lights", mirrors: "Laser Mirrors", memory: "Picture Memory", turn: "Turn the Tiles" };
 
 // body: where to draw it; level 0..6; goal: an ingredient id for the pictures
 export function puzzle(kind, level, body, sfx, done, goal = "tomato") {
   body.innerHTML = "";
-  ({ maze, lights, mirrors, memory, slider })[kind](level, body, sfx, done, goal);
+  ({ maze, lights, mirrors, memory, turn })[kind](level, body, sfx, done, goal);
 }
 
 // ------------------------------------------------------------ the maze
@@ -140,26 +140,23 @@ function memory(lv, body, sfx, done) {
   });
 }
 
-// ------------------------------------------------------------ picture slide
-function slider(lv, body, sfx, done, goal) {
-  const pics = ["pizza", "choccake", "icecream", "sushi", "applepie", "tacos", "pancakes", "smoothie"];
-  const pic = icon(pics[R(pics.length)], 320);
-  body.appendChild(h("p", "pz-say", "Tap a piece next to the gap to slide it. Put the picture back together!"));
-  const wrap = h("div", "pz-slidewrap"), board = h("div", "pz-slide"), ref = h("div", "pz-ref", `<img alt="" src="${pic}"><span>Make this</span>`);
+// ------------------------------------------------------------ turn the tiles
+// Nine squares, each its own picture of food, and some of them turned the
+// wrong way. Tap a square to turn it a quarter; nothing moves anywhere else.
+function turn(lv, body, sfx, done) {
+  const ids = shuffle(Object.keys(ING).filter(i => !["ice", "snowflake", "crystal", "star", "sesame", "lentil", "couscous", "seaweed"].includes(i))).slice(0, 9);
+  body.appendChild(h("p", "pz-say", "Some pictures are upside down or on their side. Tap a picture to turn it, until they are all the right way up!"));
+  const wrap = h("div", "pz-slidewrap"), board = h("div", "pz-slide"), ref = h("div", "pz-ref", `<div class="refgrid">${ids.map(i => `<img alt="" src="${icon(i)}">`).join("")}</div><span>Make this</span>`);
   wrap.append(board, ref); body.appendChild(wrap);
-  let t = [1, 2, 3, 4, 5, 6, 7, 8, 0], last = -1;
-  const nb = e => { const r = Math.floor(e / 3), c = e % 3, o = []; if (r > 0) o.push(e - 3); if (r < 2) o.push(e + 3); if (c > 0) o.push(e - 1); if (c < 2) o.push(e + 1); return o; };
-  for (let k = 0; k < 12 + lv * 4; k++) { const e = t.indexOf(0), o = nb(e).filter(x => x !== last), m = o[R(o.length)]; [t[e], t[m]] = [t[m], t[e]]; last = e; }
-  if (t.join() === "1,2,3,4,5,6,7,8,0") { [t[7], t[8]] = [t[8], t[7]]; [t[5], t[8]] = [t[8], t[5]]; }
-  function draw() {
-    board.innerHTML = "";
-    t.forEach((v, i) => {
-      const b = h("button", "tile" + (v ? "" : " gap"));
-      if (v) { const k = v - 1; b.style.backgroundImage = `url(${pic})`; b.style.backgroundPosition = `${(k % 3) * 50}% ${Math.floor(k / 3) * 50}%`; b.innerHTML = `<b>${v}</b>`; }
-      b.onclick = () => { const e = t.indexOf(0); if (!nb(e).includes(i)) return; [t[e], t[i]] = [t[i], t[e]]; sfx("tap"); draw();
-        if (t.join() === "1,2,3,4,5,6,7,8,0") { board.classList.add("solved"); sfx("pick"); setTimeout(done, 700); } };
-      board.appendChild(b);
-    });
-  }
+  // a few turned (more on later levels), never none
+  const rot = Array(9).fill(0), n = Math.min(7, 3 + Math.floor(lv / 4));
+  shuffle([...Array(9).keys()]).slice(0, n).forEach(i => { rot[i] = 1 + R(3); });
+  const tiles = ids.map((id, i) => {
+    const b = h("button", "tile", `<img alt="" src="${icon(id)}">`);
+    b.onclick = () => { if (board.classList.contains("solved")) return; rot[i] = (rot[i] + 1) % 4; sfx("tap"); draw();
+      if (rot.every(r => r === 0)) { board.classList.add("solved"); sfx("pick"); setTimeout(done, 700); } };
+    board.appendChild(b); return b;
+  });
+  function draw() { tiles.forEach((b, i) => { b.style.transform = `rotate(${rot[i] * 90}deg)`; b.classList.toggle("right", rot[i] === 0); }); }
   draw();
 }
