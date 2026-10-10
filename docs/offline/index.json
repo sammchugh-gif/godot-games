@@ -15,9 +15,9 @@
    "hash": "06cb3c741485"
   },
   "agent-rory-hq": {
-   "bytes": 299086,
-   "n": 7,
-   "hash": "e30619036b77",
+   "bytes": 380787,
+   "n": 10,
+   "hash": "e0972a1daf18",
    "with": [
     "agent-rory",
     "agent-rory-deep-red",
@@ -47,9 +47,9 @@
    "hash": "1cf953d39133"
   },
   "agent-rory-zero-gravity": {
-   "bytes": 17425803,
-   "n": 575,
-   "hash": "c3747f4d8634"
+   "bytes": 18581455,
+   "n": 633,
+   "hash": "e06f96ab7434"
   },
   "blockfort": {
    "bytes": 40185305,
@@ -117,9 +117,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 3105410,
+   "bytes": 3105884,
    "n": 31,
-   "hash": "4830cb65d8ce"
+   "hash": "49d3324f2fbd"
   },
   "slime-storm": {
    "bytes": 74304,

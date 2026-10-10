@@ -1,7 +1,10 @@
 // Agent Rory HQ: POLARIS's briefing room. Rory walks round, picks a game off the
 // mission board, and in between can make a cup of tea, press the button he
 // shouldn't, spin on the office chair, pat the office dog and answer the banana
-// phone. Built on the Zero Gravity engine, loaded from its folder.
+// phone. Through the TOP SECRET door is the rest of the base (base.js) and, out
+// through the garage, the grounds (grounds.js); hidden in it is the Secret Folder
+// of side missions (side.js), played here on Zero Gravity's mission kinds. Built on
+// the Zero Gravity engine, loaded from its folder.
 import * as THREE from "three";
 import { Engine } from "../agent-rory-zero-gravity/js/engine.js";
 import { initPhysics, Physics } from "../agent-rory-zero-gravity/js/physics.js";
@@ -15,9 +18,13 @@ import { FX } from "../agent-rory-zero-gravity/js/fx.js";
 import { Audio } from "../agent-rory-zero-gravity/js/audio.js";
 import { Speech } from "../agent-rory-zero-gravity/js/speech.js";
 import { Portraits } from "../agent-rory-zero-gravity/js/portraits.js";
-import { Dialogue, HUD, toast, screen, clearLayer, onTap } from "../agent-rory-zero-gravity/js/ui.js";
+import { Dialogue, HUD, toast, banner, screen, clearLayer, onTap } from "../agent-rory-zero-gravity/js/ui.js";
 import { earthTexture } from "../agent-rory-zero-gravity/js/globe.js";
 import { CHARS } from "../agent-rory-zero-gravity/js/story.js";
+import { makeMission } from "../agent-rory-zero-gravity/js/missions.js";
+import { buildBase, compactRig } from "./base.js";
+import { buildGrounds } from "./grounds.js";
+import { SIDE, folderScreen, resultScreen, saveRecord, sideRecords } from "./side.js";
 
 // the mission files on the wall. saves: localStorage keys, total: missions in the game
 export const FILES = [
@@ -345,14 +352,20 @@ function buildRoom(w) {
   // indoors: a dim light from above, and the room's own lights do the rest
   w.setSky({ top: "#02040a", mid: "#050a18", bottom: "#050a18", sun: [70, 30], sunColor: "#bcd8ff", sunI: 0.55, hemi: ["#8ab4ff", "#141820", 0.35], fog: null, clouds: 0 });
   w.scene.userData.envI = 0.4;
+  // (the ceilings hide the sun from everything inside, so its shadows would only draw the whole
+  // base a second time: they're off, and its light is turned down to what got in anyway)
+  w.sun.castShadow = false; w.sun.intensity = 0.15;
   const RW = 26, RD = 20, RH = 6.5;
   // floor: dark tiles with a glowing grid, and the POLARIS star in the middle
   w.box(RW, 0.4, RD, M("tiles", { args: [301, [26, 34, 52], [20, 26, 40], 13], repeat: [3, 2], rough: 0.35, metal: 0.4 }), 0, -0.2, 0);
-  const grid = new THREE.GridHelper(RW, 26, 0x2a6ad0, 0x16305c); grid.position.y = 0.012; grid.material.transparent = true; grid.material.opacity = 0.5; w.scene.add(grid);
+  const grid = new THREE.GridHelper(RW, 26, 0x2a6ad0, 0x16305c); grid.position.y = 0.012; grid.scale.z = RD / RW; grid.material.transparent = true; grid.material.opacity = 0.5; w.scene.add(grid);
   const star = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.55, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x7fe3ff).multiplyScalar(1.1) })); star.rotation.x = -Math.PI / 2; star.position.y = 0.02; w.scene.add(star);
   // walls, with strips of light
   const wall = M("metal", { args: [303, [40, 48, 66]], repeat: [6, 2], rough: 0.5, metal: 0.5 });
-  w.box(RW, RH, 0.5, wall, 0, RH / 2, -RD / 2); w.box(RW, RH, 0.5, wall, 0, RH / 2, RD / 2);
+  w.box(RW, RH, 0.5, wall, 0, RH / 2, -RD / 2);
+  // (the south wall has the TOP SECRET door in the middle: it slides open onto the corridor)
+  for (const s of [-1, 1]) w.box((RW - 3.2) / 2, RH, 0.5, wall, s * (RW + 3.2) / 4, RH / 2, RD / 2);
+  w.box(3.2, RH - 4.2, 0.5, wall, 0, 4.2 + (RH - 4.2) / 2, RD / 2);
   w.box(0.5, RH, RD, wall, -RW / 2, RH / 2, 0); w.box(0.5, RH, RD, wall, RW / 2, RH / 2, 0);
   w.box(RW, 0.4, RD, M(0x0a0e18, { rough: 0.8 }), 0, RH + 0.2, 0);
   const strip = M(0x7fe3ff, { emissive: 0x7fe3ff, ei: 2.2 });
@@ -389,7 +402,7 @@ function buildRoom(w) {
   for (let i = 0; i < 5; i++) w.mesh(new THREE.BoxGeometry(0.4, 0.2, 0.6), M([0xffd166, 0x7fe3ff, 0xff9ae8, 0x7bed9f, 0xe8eef4][i], { emissive: [0xffb020, 0x3ab0ff, 0xff5ad8, 0x3aa84a, 0x9ab8d8][i], ei: 0.5 }), -RW / 2 + 0.9, 1.1, 0.6 + i * 1.0, { ry: i * 0.3 });
   const map = new THREE.Mesh(new THREE.PlaneGeometry(9, 4.5), new THREE.MeshStandardMaterial({ map: earthTexture(), emissiveMap: earthTexture(), emissive: 0x6a9adf, emissiveIntensity: 0.6, roughness: 0.6 }));
   map.position.set(RW / 2 - 0.27, 3, 0); map.rotation.y = -Math.PI / 2; map.userData.dynamic = true; w.scene.add(map);
-  w.box(3, 4.2, 0.3, M(0x2a3040, { metal: 0.7, rough: 0.3 }), 0, 2.1, RD / 2 - 0.3, { collide: false });
+  const doors = [-1, 1].map(s => { const d = w.box(1.6, 4.2, 0.2, M(0x2a3040, { metal: 0.7, rough: 0.3 }), s * 0.8, 2.1, RD / 2 - 0.05, { collide: false }); d.userData.dynamic = true; d.userData.x = s * 0.8; return d; });
   const doorSign = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.5), new THREE.MeshStandardMaterial({ map: TEX.sign("TOP SECRET", { bg: "#2a0a10", fg: "#ff5a5a", border: "#ff5a5a" }), emissive: 0xff3a3a, emissiveIntensity: 0.5 }));
   doorSign.position.set(0, 4.6, RD / 2 - 0.47); doorSign.rotation.y = Math.PI; doorSign.userData.dynamic = true; w.scene.add(doorSign);
   const terminal = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.1), new THREE.MeshStandardMaterial({ map: panelTex(["> POLARIS NETWORK", "> 6 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f"), emissive: 0xffffff, emissiveIntensity: 0.5, emissiveMap: panelTex(["> POLARIS NETWORK", "> 6 MISSION FILES", "> AGENT: RORY", "> TEA: READY"], "#7bed9f") }));
@@ -404,7 +417,7 @@ function buildRoom(w) {
   // the puzzle arcade, between the door and the POLARIS NEEDS YOU poster
   const arcade = arcadeCabinet(w, -2.6, RD / 2 - 0.75);
   w.floorY = -10;
-  return { screens, board, posters, lights, tea, button, chair, dog, phone, arcade, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
+  return { screens, board, posters, lights, tea, button, chair, dog, phone, arcade, doors, spawn: [0, 0, 6.5], yaw: Math.PI, frost: [3.4, 0, -1.2, -0.9], pip: [-RW / 2 + 2.2, 0, 3.2, Math.PI / 2] };
 }
 function panelTex(lines, color) {
   const c = document.createElement("canvas"); c.width = 512; c.height = 320; const g = c.getContext("2d");
@@ -419,6 +432,8 @@ function panelTex(lines, color) {
 // each: where it is, how close Rory must be, the button's label and what it does
 function things() {
   const R = G.room, busy = G.spin || G.alarm > 0;
+  const more = [...(G.base ? G.base.things : []), ...(G.ground ? G.ground.things : [])];
+  if (!R) return more.filter(t => !(typeof t.off === "function" ? t.off() : t.off));
   return [
     { id: "tea", x: 9.4, z: 5.6, r: 1.6, label: G.cup ? "BISCUIT" : "TEA", prompt: G.cup ? "have a biscuit" : "make a cup of tea", act: G.cup ? biscuit : makeTea, off: !!G.pouring },
     { id: "button", x: -9.4, z: 5.9, r: 1.5, label: "PRESS", prompt: "the big red button", act: pressButton, off: busy },
@@ -427,7 +442,8 @@ function things() {
     { id: "photo", x: 11.2, z: 7.3, r: 1.6, label: "LOOK", prompt: "the team photo", act: lookAtPhoto },
     { id: "arcade", x: R.arcade.x, z: R.arcade.z, r: 1.3, label: "PLAY", prompt: "the Puzzle Arcade", act: playArcade },
     { id: "phone", x: -11.0, z: -0.4, r: 1.5, label: G.ringing ? "ANSWER" : "PHONE", prompt: G.ringing ? "answer the banana phone!" : "the banana phone", act: phone },
-  ].filter(t => !t.off);
+    ...more,
+  ].filter(t => !(typeof t.off === "function" ? t.off() : t.off));
 }
 function makeTea() {
   const R = G.room;
@@ -512,39 +528,30 @@ async function boot() {
   const bar = document.querySelector(".boot-bar i"); const prog = f => { bar.style.width = Math.round(f * 100) + "%"; };
   prog(0.1);
   const engine = G.engine = new Engine(document.getElementById("view"));
-  prog(0.3); await initPhysics(); prog(0.6); await loadRobot("../agent-rory-zero-gravity/models/robot.glb"); prog(0.85);
-  const phys = G.phys = new Physics(-20), w = G.world = new World(engine, phys);
-  const room = G.room = buildRoom(w);
-  w.bake();
-  engine.setScene(w.scene);
-  G.fx = w.fx = new FX(w.scene);
+  prog(0.3); await initPhysics(); prog(0.6); await loadRobot("../agent-rory-zero-gravity/models/robot.glb"); prog(0.75);
   G.input = new Input(engine.canvas);
-  const [x, y, z] = room.spawn;
-  G.player = new Player(w, x, y, z, room.yaw);
-  G.player.camDist = 4.6;
-  G.bolt = new Robot("bolt", 1.0); G.bolt.root.position.set(x + 1.6, 0, z + 0.5); w.scene.add(G.bolt.root);
-  G.people = {};
-  for (const who of ["frost", "pip"]) { const at = room[who]; const rig = makePerson(CHARS[who].look); rig.root.position.set(at[0], at[1], at[2]); rig.root.rotation.y = at[3]; w.scene.add(rig.root); phys.fixedCyl(at[0], 0.8, at[2], 0.35, 0.8); G.people[who] = rig; }
   Speech.dir = "../agent-rory-zero-gravity/voice/"; // HQ's lines are recorded with Zero Gravity's
   Speech.init(); Speech.enabled = localStorage.getItem("rory20.voice") !== "false";
   G.portraits = new Portraits(engine.renderer, CHARS);
-  paintFaces(room.posters);
+  makeScene("inside");
   G.dialogue = new Dialogue(CHARS, G.portraits, Speech);
   G.dialogue.onLine = who => { G.talking = who; };
-  G.hud = new HUD(); G.hud.show({ onPause: () => { location.href = "list.html"; } });
+  G.hud = new HUD(); G.hud.show({ onPause });
   document.querySelector('[data-layer="hud"] .pause').textContent = "LIST";
   document.querySelectorAll('[data-layer="hud"] .cells').forEach(e => e.remove());
-  G.hud.set({ label: "AGENT RORY HQ", text: "Pick a mission off the board", progress: null });
+  hudHome();
+  folderButton();
   buildTouch();
   G.phoneAt = 25 + Math.random() * 20;
   prog(1);
   setTimeout(() => document.getElementById("boot").classList.add("gone"), 250);
   G.state = "room";
-  const first = !localStorage.getItem("roryhq.visited");
-  try { localStorage.setItem("roryhq.visited", "1"); } catch (e) { /* private mode */ }
+  const first = !localStorage.getItem("roryhq.visited"), bigger = !localStorage.getItem("roryhq.bigger");
+  try { localStorage.setItem("roryhq.visited", "1"); localStorage.setItem("roryhq.bigger", "1"); } catch (e) { /* private mode */ }
   setTimeout(() => {
     G.dialogue.show(first
-      ? [["frost", "Welcome to POLARIS headquarters, Agent Rory."], ["frost", "Your mission files are on the board. Walk up to one and open it."], ["pip", "And there's tea on the trolley. Don't press the red button."], ["bolt", "I am BOLT. I also work here now. I sweep the floor. With my feet."]]
+      ? [["frost", "Welcome to POLARIS headquarters, Agent Rory."], ["frost", "Your mission files are on the board. Walk up to one and open it."], ["pip", "And there's tea on the trolley. Don't press the red button."], ["bolt", "I am BOLT. I also work here now. I sweep the floor. With my feet."], ["frost", "The rest of the base is through the TOP SECRET door. Have a look round."]]
+      : bigger ? [["frost", "Agent Rory! We've had the builders in. The base is a great deal bigger."], ["pip", "Through the TOP SECRET door! There's a garage, a gym, my lab, and the grounds outside."], ["frost", "And somewhere in it, a secret. You're a spy. Find it."]]
       : [["frost", pick(["Welcome back, Agent Rory. Which mission today?", "Agent Rory. The files are on the board, as always.", "Good to see you, Agent Rory. Pick a file. Or have a cup of tea first."])]], null);
   }, 900);
   let last = performance.now();
@@ -552,18 +559,176 @@ async function boot() {
   requestAnimationFrame(frame);
 }
 
+// ------------------------------------------------------------ inside and out
+// the base is two places: inside (the briefing room and the rest of the base) and the grounds.
+// Going through the garage door builds the other one, the way the games load a new place.
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } } };
+const env = {
+  files: FILES,
+  say: lines => G.dialogue.show(lines, null), pick, count, toast,
+  sound: n => Audio.play(n),
+  burst: (x, y, z, c, n) => G.fx.burst(x, y, z, c, n, { speed: 4, life: 1.2, gravity: -6, size: 0.4 }),
+  boltCharge: () => { G.boltDance = 2.6; },
+  goOutside: () => travel("grounds"),
+  goInside: () => travel("inside", G.lastInside),
+  get secretFound() { return !!store.get("roryhq.bookcase"); },
+  secretOpened: () => { store.set("roryhq.bookcase", "1"); setTimeout(() => G.dialogue.show([["rory", "Whoa! The whole bookcase moved!"], ["bolt", "A secret room. I knew it was there. I did not know it was there."]], null), 900); },
+  openFolder: () => openFolder(),
+};
+function makeScene(where, at) {
+  // (let the last place go: its physics world, its geometry, its pictures (the HQ paints new ones
+  // each time it is built; a cached one used again is simply sent to the graphics card again),
+  // the sun's shadow map and the characters' skeletons. An iPad that keeps them all, trip after
+  // trip through the garage door, runs out of memory.)
+  if (G.world) {
+    const seen = new Set();
+    G.world.scene.traverse(o => {
+      if (o.geometry) o.geometry.dispose();
+      if (o.isSkinnedMesh && o.skeleton) o.skeleton.dispose();
+      if (o.isLight && o.shadow && o.shadow.map) o.shadow.dispose();
+      for (const m of [].concat(o.material || [])) for (const v of Object.values(m)) {
+        if (v && v.isTexture && !seen.has(v) && (v.image instanceof HTMLCanvasElement || v.image instanceof HTMLImageElement)) { seen.add(v); v.dispose(); }
+      }
+    });
+  }
+  if (G.phys) { try { G.phys.world.free(); } catch (e) { /* already gone */ } }
+  const phys = G.phys = new Physics(-20), w = G.world = new World(G.engine, phys);
+  G.scene = where; G.room = G.base = G.ground = null;
+  if (where === "inside") {
+    G.room = buildRoom(w);
+    // (the briefing room's own things, which are hidden when Rory is somewhere they can't be seen from)
+    G.roomStuff = w.scene.children.filter(o => o.isGroup || o.userData.dynamic);
+    G.base = buildBase(w, env);
+  } else { G.roomStuff = []; G.ground = buildGrounds(w, env); }
+  w.bake();
+  G.engine.setScene(w.scene);
+  G.fx = w.fx = new FX(w.scene);
+  const [x, y, z, yaw] = at || (G.room ? [...G.room.spawn, G.room.yaw] : G.ground.fromInside);
+  G.player = new Player(w, x, y, z, yaw ?? Math.PI);
+  G.player.camDist = 4.6;
+  G.bolt = new Robot("bolt", 1.0); G.bolt.root.position.set(x + 1.6, y, z + 0.5); w.scene.add(G.bolt.root);
+  G.people = {};
+  if (G.room) {
+    for (const who of ["frost", "pip"]) { const p = G.room[who]; const rig = makePerson(CHARS[who].look); compactRig(rig); rig.root.position.set(p[0], p[1], p[2]); rig.root.rotation.y = p[3]; w.scene.add(rig.root); phys.fixedCyl(p[0], 0.8, p[2], 0.35, 0.8); G.people[who] = rig; G.roomStuff.push(rig.root); }
+    paintFaces(G.room.posters);
+  }
+  G.cup = null; G.stars = null; G.spin = null; G.roomSeen = undefined;
+}
+// through the garage door: a moment's darkness while the other place is built
+function travel(where, at, then) {
+  if (G.state === "travel") return;
+  const back = G.state; G.state = "travel"; G.input.clear(); Audio.play("whoosh");
+  if (where === "grounds" && G.player) G.lastInside = G.base ? G.base.fromOutside : null;
+  screen("flash", `<div class="granted" style="color:#cfe0ff">${where === "grounds" ? "THE GROUNDS" : "BACK INSIDE"}<small>${where === "grounds" ? "OUT THROUGH THE GARAGE" : "POLARIS HQ"}</small></div>`, "screen");
+  setTimeout(() => {
+    makeScene(where, at || (where === "inside" ? [-31.5, 0.1, 31, Math.PI / 2] : null));
+    G.player.snapCam = true;
+    hudHome();
+    setTimeout(() => { clearLayer("flash"); G.state = back === "travel" ? "room" : back; if (then) then(); }, 350);
+  }, 450);
+}
+function hudHome() {
+  if (!G.hud) return;
+  G.hud.set(G.scene === "inside" ? { label: "AGENT RORY HQ", text: "Pick a mission off the board", progress: null, timer: null } : { label: "THE GROUNDS", text: "The garage door goes back inside", progress: null, timer: null });
+}
+function onPause() {
+  if (G.mission && G.state === "side") { pauseSide(); return; }
+  if (G.state === "room") location.href = "list.html";
+}
+
+// ------------------------------------------------------------ the Secret Folder and its side missions
+// Found in the secret archive behind Frost's bookcase. Once found, a folder button sits by LIST.
+function openFolder() {
+  if (G.state !== "room") return;
+  const first = !store.get("roryhq.secret");
+  const show = () => { G.open = true; Audio.play("beep"); folderScreen(def => { G.open = false; startSide(def); }, () => { G.open = false; }); };
+  if (first) {
+    store.set("roryhq.secret", "1"); folderButton(); Audio.play("win");
+    G.dialogue.show([["frost", "So. You found the Secret Folder, Agent Rory."], ["frost", "Side missions. Little jobs around the base. Quick ones."], ["pip", "Chases! Lasers! Escaped robots! I wrote half of them."], ["frost", "Open it any time with the folder button at the top. And Agent Rory... don't tell anyone."]], show);
+  } else show();
+}
+function folderButton() {
+  if (!store.get("roryhq.secret") || document.querySelector(".secretbtn")) return;
+  const pause = document.querySelector('[data-layer="hud"] .pause'); if (!pause) return;
+  const b = document.createElement("button"); b.className = "btn ghost small secretbtn"; b.textContent = "📁 SECRET";
+  b.addEventListener("pointerdown", e => { e.stopPropagation(); openFolder(); });
+  pause.parentNode.insertBefore(b, pause); G.secretBtn = b;
+}
+function startSide(def) {
+  const go = () => {
+    const src = G.scene === "inside" ? G.base : G.ground, data = src.missionData[def.id], st = src.starts[def.id];
+    if (st) { G.player.teleport(st[0], st[1], st[2], st[3]); G.bolt.root.position.set(st[0] + 1.2, st[1], st[2] + 1.2); }
+    G.state = "brief"; G.input.forced = null;
+    G.dialogue.show(def.intro, () => {
+      G.mission = makeMission(G, def, data);
+      G.mission.start();
+      G.state = "side"; G.input.clear();
+      banner("SIDE MISSION", `${def.icon} ${def.title}`, 1.8);
+      Audio.mood(def.kind === "chase" || def.kind === "drive" ? "chase" : "tense");
+      G.hud.set(G.mission.hud());
+    });
+  };
+  if (def.where !== G.scene) travel(def.where, null, go); else go();
+}
+function endSide(m, choice) {
+  // (the mission's robots go, and their skeletons with them)
+  if (m) { for (const o of m.objs) o.traverse(n => { if (n.isSkinnedMesh && n.skeleton) n.skeleton.dispose(); }); m.cleanup(); }
+  G.mission = null; G.driveMode = null; G.droneMode = null;
+  G.player.frozen = false; G.player.camOverride = false; G.bolt.root.visible = true;
+  G.input.forced = null; G.input.forcedY = undefined;
+  G.state = "room"; hudHome(); Audio.mood("calm"); clearLayer("pausecard");
+  if (choice === "again") startSide(m.def);
+  else if (choice === "folder") openFolder();
+}
+function pauseSide() {
+  G.state = "sidepaused";
+  const el = screen("pausecard", `<div class="card"><div class="title-sub" style="letter-spacing:.3em">PAUSED</div><div style="font-weight:900;font-size:24px;margin:6px 0">${G.mission.def.icon} ${G.mission.def.title}</div><div class="row"><button class="btn gold" data-a="go">CARRY ON</button><button class="btn ghost" data-a="quit">QUIT</button></div></div>`, "screen dim");
+  onTap(el, "[data-a]", b => { clearLayer("pausecard"); if (b.dataset.a === "go") G.state = "side"; else endSide(G.mission, "done"); });
+}
+// what Zero Gravity's missions need from the game they're in
+G.sound = n => Audio.play(n);
+G.addCells = () => {};
+G.teleports = 0;
+G.onMissionWin = m => {
+  const def = m.def, stars = m.stars(), secs = m.t;
+  G.state = "result"; G.input.forced = null;
+  const rec = saveRecord(def.id, stars, secs);
+  Audio.play("win"); Audio.mood("calm"); G.hud.set({ timer: null });
+  G.bolt.play("Dance");
+  for (let i = 1; i <= stars; i++) setTimeout(() => Audio.play("star"), 400 + i * 250);
+  resultScreen(true, def, { stars, secs, rec }, c => endSide(m, c));
+};
+G.onMissionLose = (m, why) => {
+  G.state = "result"; G.input.forced = null;
+  Audio.play("fail"); G.hud.set({ timer: null });
+  resultScreen(false, m.def, { why }, c => endSide(m, c));
+};
+
 function nearest() {
   const p = G.player.pos;
   let best = null, bd = Infinity;
   const consider = (d, r, n) => { if (d < r && d < bd) { bd = d; best = n; } };
-  for (const s of G.room.screens) consider(Math.hypot(p.x - s.x, p.z - s.z), 1.7, { kind: "file", s });
+  for (const s of G.room ? G.room.screens : []) consider(Math.hypot(p.x - s.x, p.z - s.z), 1.7, { kind: "file", s });
   for (const [who, rig] of Object.entries(G.people)) consider(rig.root.position.distanceTo(p), 2.2, { kind: "talk", who });
   for (const t of things()) consider(Math.hypot(p.x - t.x, p.z - t.z), t.r, { kind: "thing", t });
   return best;
 }
+// the briefing room's things can only be seen from the room itself and the corridor (through the
+// TOP SECRET door): anywhere else they're hidden, so they cost nothing to draw
+function roomCull() {
+  const c = G.engine.camera.position, see = G.scene === "inside" && ((Math.abs(c.x) < 13.6 && c.z < 10.4) || (c.z > 9.6 && c.z < 17.4));
+  if (see === G.roomSeen) return;
+  G.roomSeen = see;
+  for (const o of G.roomStuff || []) o.visible = see;
+}
 function tick(dt) {
   G.t += dt;
+  roomCull();
+  // (the folder only opens in the base, not in the middle of a side mission)
+  if (G.secretBtn) { const v = G.state === "room" ? "" : "hidden"; if (G.secretBtn.style.visibility !== v) G.secretBtn.style.visibility = v; }
   Audio.duck(Speech.speaking);
+  if (G.state === "travel" || G.state === "sidepaused") { G.engine.render(); return; }
+  if (G.state === "side" || G.state === "result" || G.state === "brief") { sideTick(dt); return; }
   const w = G.world, R = G.room;
   if (G.state === "room") {
     G.input.poll();
@@ -573,22 +738,54 @@ function tick(dt) {
     G.player.update(dt, G.input, G.engine.camera);
     updateBolt(dt);
     for (const [who, rig] of Object.entries(G.people)) { animatePerson(rig, { dt, speed: 0, grounded: true, talk: G.talking === who }); const c = rig.root.position, want = Math.atan2(G.player.pos.x - c.x, G.player.pos.z - c.z); let d = want - rig.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); rig.root.rotation.y += d * Math.min(1, dt * 2); }
-    updateRoom(dt);
+    if (R) updateRoom(dt);
     const n = busy || G.spin ? null : nearest();
     const label = n ? (n.kind === "file" ? "OPEN" : n.kind === "talk" ? "TALK" : n.t.label) : null;
     const key = G.input.touchUI ? `Tap ${label}` : "Press E";
     G.hud.prompt(n ? (n.kind === "file" ? `${key}: ${n.s.f.title}` : n.kind === "talk" ? `${key} to talk` : `${key}: ${n.t.prompt}`) : null);
     showAction(label);
     if (G.input.takeAction() && n) { if (n.kind === "file") openFile(n.s); else if (n.kind === "talk") talk(n.who); else n.t.act(); }
-    R.board.highlight(n && n.kind === "file" ? n.s.i : -1);
+    if (R) R.board.highlight(n && n.kind === "file" ? n.s.i : -1);
   }
   w.update(dt); G.phys.step(dt); G.fx.update(dt);
+  drawTouch();
+  G.engine.render();
+}
+// a side mission running: the same loop as Zero Gravity's own (driving, flying BOLT, the autopilot)
+function sideTick(dt) {
+  const w = G.world;
+  G.input.poll();
+  const canMove = G.state === "side" && !G.dialogue.active && !(G.mission && G.mission.freeze);
+  if (!canMove) { G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; }
+  G.player.talking = G.talking === "rory";
+  G.player.waving = G.state === "result";
+  const drone = G.droneMode;
+  G.player.frozen = !!drone; G.player.camOverride = !!drone;
+  if (G.driveMode) { G.input.takeLook(); G.driveMode.ride(dt); }
+  else if (drone) { const mx = G.input.mx, my = G.input.my; G.input.mx = 0; G.input.my = 0; G.input.jumpPressed = false; G.player.update(dt, G.input, G.engine.camera); G.input.mx = mx; G.input.my = my; }
+  else G.player.update(dt, G.input, G.engine.camera);
+  if (drone || G.driveMode) G.bolt.update(dt); else updateBolt(dt);
+  if (G.state === "side" && G.mission && !G.dialogue.active) { if (G.autoSolve) G.mission.solve(dt); G.mission.tick(dt); if (G.mission && G.state === "side") G.hud.set(G.mission.hud()); }
+  showAction(G.state === "side" && G.mission && G.mission.actionLabel ? G.mission.actionLabel() : null);
+  G.hud.prompt(null);
+  if (G.droneMode) G.droneMode.camera(G.engine.camera, dt);
+  w.camTarget = G.player.pos;
+  if (G.room) updateRoom(dt);
+  w.update(dt); G.phys.step(dt);
+  if (G.mission && G.mission.post) G.mission.post(dt);
+  if (G.driveMode) G.driveMode.camera(G.engine.camera, dt);
+  G.fx.update(dt);
   drawTouch();
   G.engine.render();
 }
 // everything in the room that moves on its own
 function updateRoom(dt) {
   const R = G.room, t = G.t, p = G.player;
+  // the TOP SECRET door slides open when Rory comes near it, from either side
+  const near = Math.hypot(p.pos.x, p.pos.z - 10) < 4.5, was = R.doorOpen || 0;
+  R.doorOpen = Math.max(0, Math.min(1, was + (near ? dt : -dt) * 2.5));
+  if (near && was === 0) Audio.play("whoosh");
+  for (const d of R.doors) d.position.x = d.userData.x + Math.sign(d.userData.x) * R.doorOpen * 1.55;
   // tea: the pot tips to pour, then Rory holds the cup and sips now and then
   if (G.pouring > 0) {
     G.pouring -= dt; R.tea.pot.rotation.z = -Math.sin(Math.min(1, (1.4 - G.pouring) / 0.4) * Math.PI / 2) * 0.7 * (G.pouring > 0.3 ? 1 : G.pouring / 0.3);
@@ -635,7 +832,7 @@ function updateRoom(dt) {
   if (happy) { dog.wag -= dt; if (Math.random() < dt * 1.5) Audio.play("pant"); }
   if (dog.woof > 0) { dog.woof -= dt; dog.head.rotation.x = -0.3; } else dog.head.rotation.x *= 0.9;
   // the banana phone rings now and then
-  if (!G.ringing && G.t > G.phoneAt && !G.dialogue.active && !G.open) { G.ringing = 8; G.ringN = 0; toast("☎ The banana phone is ringing!", 3); }
+  if (!G.ringing && G.t > G.phoneAt && !G.dialogue.active && !G.open && G.state === "room") { G.ringing = 8; G.ringN = 0; toast("☎ The banana phone is ringing!", 3); }
   if (G.ringing > 0) {
     G.ringing -= dt; R.phone.g.rotation.z = Math.sin(t * 40) * 0.08; R.phone.g.position.y = 1.0 + Math.abs(Math.sin(t * 20)) * 0.03;
     if (Math.floor(G.ringing / 1.2) !== G.ringN) { G.ringN = Math.floor(G.ringing / 1.2); Audio.play("ring"); }
@@ -653,8 +850,8 @@ function updateBolt(dt) {
 }
 function talk(who) {
   const lines = who === "frost"
-    ? [["frost", pick(["Six mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong.", "Pip's arcade machine is by the door. Every puzzle you've cracked, all in one place."])]]
-    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun.", "I built the arcade machine out of an old fridge. Every puzzle you find goes in it."])]];
+    ? [["frost", pick(["Six mission files, Agent Rory. Each one a different adventure.", "Operation Eclipse was your first. Meltdown was your biggest. Zero Gravity went to the Moon. Deep Red goes under the sea.", "Spectrum paints the world back. And Timeslip goes all the way back to the dinosaurs.", "The board shows how far you've got. Stars and all.", "Have you tried the tea? Pip makes it far too strong.", "Pip's arcade machine is by the door. Every puzzle you've cracked, all in one place.", "My office is down the corridor, Agent Rory. Mind the bookcase.", "The garage door goes out to the grounds. There's a race track, if you know where the keys are."])]]
+    : [["pip", pick(["I built BOLT on this bench. He was supposed to be a toaster.", "The gadgets here are all mine. The banana is also a phone. Don't ask.", "My favourite is Zero Gravity. You get a jetpack!", "Whatever you do, don't press the big red button. Unless you want to. It's quite fun.", "I built the arcade machine out of an old fridge. Every puzzle you find goes in it.", "Frost has a secret room somewhere. Every time I go in that office, the bookcase looks a bit different.", "Come and see my lab! It's through the TOP SECRET door and down the corridor."])]];
   G.dialogue.show(lines, null);
 }
 function openFile(s) {
@@ -712,6 +909,16 @@ G.debug = {
   things: () => things().map(t => ({ id: t.id, x: t.x, z: t.z, label: t.label })),
   goToThing(id) { const t = things().find(q => q.id === id); if (!t) return false; G.player.teleport(t.x, 0, t.z + (t.z > 0 ? -0.2 : 0.2), G.player.yaw); return true; },
   ring() { G.phoneAt = 0; },
+  // the rest of the base, the grounds and the side missions
+  scene: () => G.scene,
+  state: () => G.state,
+  go(where) { travel(where); },
+  act(id) { const t = things().find(q => q.id === id); if (!t) return false; t.act(); return true; },
+  sideIds: () => SIDE.map(s => s.id),
+  side(id) { const d = SIDE.find(s => s.id === id); if (!d) return false; startSide(d); return true; },
+  mission: () => G.mission && { id: G.mission.def.id, t: G.mission.t, left: G.mission.left },
+  records: () => sideRecords(),
+  folder() { openFolder(); },
 };
 
 // the 3D room needs WebGL; without it, go straight to the list
