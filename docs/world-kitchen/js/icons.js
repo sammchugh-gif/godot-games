@@ -3,16 +3,16 @@
 // kept as an image.
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { itemModel, vehicleModel, coinModel, meatballModel, chestModel, upgradeModel } from "./models.js";
+import { itemModel, vehicleModel, coinModel, meatballModel, chestModel, upgradeModel, chefModel } from "./models.js";
+import { miniModel, bossModel } from "./enemies.js";
 
-const S = 160;
-let r = null, scene, cam;
+let r = null, scene, cam, S = 160;
 const cache = new Map();
 
 function setup() {
-  const c = document.createElement("canvas"); c.width = c.height = S;
+  const c = document.createElement("canvas"); c.width = c.height = 320;
   r = new THREE.WebGLRenderer({ canvas: c, alpha: true, antialias: true, preserveDrawingBuffer: true });
-  r.setPixelRatio(1); r.setSize(S, S, false);
+  r.setPixelRatio(1); r.setSize(320, 320, false);
   r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.AgXToneMapping; r.toneMappingExposure = 1.15;
   scene = new THREE.Scene();
   const pm = new THREE.PMREMGenerator(r); scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
@@ -28,27 +28,31 @@ function build(id) {
   if (id === "boss") return meatballModel(true);
   if (id.startsWith("veh_")) return vehicleModel(id.slice(4));
   if (id.startsWith("up_")) return upgradeModel(id.slice(3));
+  if (id.startsWith("mini_")) return miniModel(id.slice(5));
+  if (id.startsWith("boss_")) return bossModel(id.slice(5));
+  if (id === "chef") return chefModel();
   return itemModel(id);
 }
 
 // a data: URL for the picture of id
-export function icon(id) {
-  let u = cache.get(id);
+export function icon(id, size = 160) {
+  const key = id + "@" + size; let u = cache.get(key);
   if (u) return u;
   try {
     if (!r) setup();
+    if (size !== S) { S = size; r.setSize(S, S, false); }
     const m = build(id);
     m.rotation.y = id.startsWith("veh_") ? -0.7 : -0.35;
     scene.add(m);
-    const box = new THREE.Box3().setFromObject(m), size = box.getSize(new THREE.Vector3()), mid = box.getCenter(new THREE.Vector3());
-    const rad = Math.max(size.x, size.y, size.z) * 0.62;
+    const box = new THREE.Box3().setFromObject(m), dim = box.getSize(new THREE.Vector3()), mid = box.getCenter(new THREE.Vector3());
+    const rad = Math.max(dim.x, dim.y, dim.z) * 0.62;
     const d = rad / Math.tan(cam.fov * Math.PI / 360) * 1.05;
     cam.position.copy(mid).add(new THREE.Vector3(0, 0.45, 1).normalize().multiplyScalar(d));
     cam.lookAt(mid);
     r.render(scene, cam);
     u = r.domElement.toDataURL("image/png");
     scene.remove(m);
-  } catch (e) { u = ""; }
-  cache.set(id, u);
+  } catch (e) { console.warn("icon", id, e); u = ""; }
+  cache.set(key, u);
   return u;
 }

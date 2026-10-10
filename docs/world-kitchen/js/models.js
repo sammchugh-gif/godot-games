@@ -145,6 +145,8 @@ const INGS = {
     P("dod", M(0x3a2a2a, { f: true }), [0, 0.06, 0], [0.55, 0.15, 0.55])),
   crystal: () => grp(P("oct", M(0x6ad8ff, { r: 0.1, m: 0.2, e: 0.35, f: true }), [0, 0.5, 0], [0.5, 1, 0.5]),
     P("oct", M(0xb08aff, { r: 0.1, e: 0.35, f: true }), [0.28, 0.25, 0.1], [0.24, 0.5, 0.24], [0, 0, -0.4])),
+  salmon: () => grp(P("box", M(0xff8a6a, { r: 0.4 }), [0, 0.22, 0], [1, 0.36, 0.55], [0, 0.3, 0]),
+    [-0.3, -0.1, 0.1, 0.3].map(x => P("box", M(0xffd0c0), [x, 0.41, 0], [0.04, 0.02, 0.5], [0, 0.3, 0.3]))),
   pineapple: () => grp(P("lsph", M(0xe8a83a, { f: true }), [0, 0.38, 0], [0.56, 0.76, 0.56]),
     [-0.4, 0, 0.4, 0.2, -0.2].map((a, i) => P("cone", M(0x3f9a3a), [a * 0.15, 0.88, (i % 2) * 0.05], [0.14, 0.5, 0.14], [0.1 * (i % 2), 0, a]))),
 };
@@ -193,6 +195,8 @@ const FOODS = {
     [[0.1, 0.36, 0.1], [-0.15, 0.36, 0.02], [0.02, 0.36, -0.18]].map(p => P("sph", M(0x3a1e0e), p, 0.08))),
   curry: () => grp(P("bowl", M(0xffffff, { ds: true }), [0, 0.42, 0], [0.95, 0.75, 0.95]), P("cyl", M(0xe08a1e), [0, 0.38, 0], [0.86, 0.02, 0.86]),
     P("sph", M(0xfafafa, { f: true }), [-0.15, 0.42, 0], [0.42, 0.22, 0.42]), P("sph", M(0xd81e1e), [0.2, 0.42, 0.1], [0.1, 0.06, 0.2])),
+  salmonrice: () => grp(P("bowl", M(0x2a2a3a, { ds: true }), [0, 0.42, 0], [0.95, 0.75, 0.95]), P("sph", M(0xfafafa, { f: true }), [0, 0.42, 0], [0.82, 0.36, 0.82]),
+    [-0.2, 0, 0.2].map(x => P("box", M(0xff8a6a), [x, 0.6, 0], [0.18, 0.08, 0.5], [0, 0, 0.1]))),
   sundae: () => grp(P("taper", GLASS(), [0, 0.35, 0], [0.62, 0.7, 0.62]), P("sph", M(0xffe86a), [0, 0.74, 0], 0.4), P("sph", M(0xfff6e8), [0.12, 0.95, 0.05], 0.32),
     P("slice", M(0xffc83a), [-0.2, 0.95, 0], [0.5, 0.12, 0.5], [Math.PI / 2, 0, 0.3]), P("sph", M(0xd8102a), [0.1, 1.15, 0.05], 0.1)),
 };
@@ -215,7 +219,8 @@ export function itemModel(id) {
   const r = REC[id]; if (!r) return grp(P("box", M(0xff00ff)));
   if (r.kind === "potion") return potion(r.potion);
   if (r.kind === "wand") return wand(r.color);
-  return FOODS[id] ? FOODS[id]() : grp(PLATE());
+  const f = FOODS[id] || FOODS[{ sundaedish: "sundae" }[id]];
+  return f ? f() : grp(PLATE());
 }
 // pictures for the upgrades
 export function upgradeModel(id) {
@@ -238,11 +243,11 @@ export function chestModel() {
 }
 
 // ------------------------------------------------------------ the chef
-export function chefModel(shirt) {
+export function chefModel(shirt = 0xf6f6f6) {
   const skin = M(0xf2c39a), white = M(0xffffff, { r: 0.7 }), dark = M(0x2b2b3a);
   const g = new THREE.Group();
   const body = P("cyl", M(shirt), [0, 1.05, 0], [0.62, 0.7, 0.42]);
-  const apron = P("box", white, [0, 0.98, 0.2], [0.46, 0.62, 0.06]);
+
   const head = P("sph", skin, [0, 1.7, 0], 0.62);
   const eyes = [-0.12, 0.12].map(x => P("sph", dark, [x, 1.74, 0.27], 0.08));
   const smile = P("tor", dark, [0, 1.6, 0.27], [0.16, 0.16, 0.16], [0, 0, Math.PI]); smile.geometry = new THREE.TorusGeometry(0.5, 0.12, 8, 16, Math.PI);
@@ -250,7 +255,9 @@ export function chefModel(shirt) {
   const puffs = [[-0.14, 2.22, 0], [0.14, 2.22, 0], [0, 2.3, 0.05], [0, 2.22, -0.12]].map(p => P("sph", white, p, 0.34));
   const legs = [-0.14, 0.14].map(x => { const l = new THREE.Group(); l.position.set(x, 0.72, 0); l.add(P("cyl", dark, [0, -0.32, 0], [0.18, 0.64, 0.18]), P("box", M(0x111111), [0, -0.66, 0.06], [0.2, 0.1, 0.3])); return l; });
   const arms = [-0.4, 0.4].map(x => { const a = new THREE.Group(); a.position.set(x, 1.32, 0); a.add(P("cyl", M(shirt), [0, -0.25, 0], [0.15, 0.5, 0.15]), P("sph", skin, [0, -0.54, 0], 0.17)); return a; });
-  g.add(body, apron, head, ...eyes, smile, hatBand, ...puffs, ...legs, ...arms);
+  const scarf = P("cyl", M(0xe8322a), [0, 1.42, 0.02], [0.5, 0.12, 0.38]), knot = P("sph", M(0xe8322a), [0, 1.36, 0.24], 0.14);
+  const buttons = [1.25, 1.05, 0.85].flatMap(y => [-0.08, 0.08].map(x => P("sph", M(0x2b2b3a), [x, y, 0.22], 0.05)));
+  g.add(body, head, ...eyes, smile, hatBand, ...puffs, ...legs, ...arms, scarf, knot, ...buttons);
   const hand = new THREE.Group(); hand.position.set(0, -0.56, 0.05); arms[1].add(hand);
   g.userData = { legs, arms, hand };
   return g;
@@ -307,8 +314,9 @@ export function label(text, col = "#7fe3ff") {
   g.strokeStyle = col; g.lineWidth = 5; g.stroke();
   g.fillStyle = "#fff"; g.font = "900 58px system-ui, -apple-system, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(text, 256, 66);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false }));
-  s.scale.set(4, 1, 1); s.renderOrder = 10; return s;
+  // the same size on the screen however near or far it is
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, sizeAttenuation: false }));
+  s.scale.set(0.2, 0.05, 1); s.renderOrder = 10; return s;
 }
 
 // The fixed things in each place, with circles the chef can't walk through.
