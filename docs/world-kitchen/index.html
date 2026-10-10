@@ -1,0 +1,690 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<!-- Not black-translucent: on a Home Screen app iOS then hands the page a
+     viewport a status bar shorter than the screen while still reporting the
+     full safe-area insets, so the canvas stops short and a band of bare page
+     shows at the bottom. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>World Kitchen</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#20324a;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+body{position:fixed;inset:0}
+canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
+</style><script src="../menu.js" defer></script>
+<script src="../fresh.js" defer></script>
+</head><body><canvas id="c"></canvas>
+<script>
+"use strict";
+// ============================================================ World Kitchen
+// Travel the world picking up ingredients and coins, cook foods and potions
+// in the kitchen at home, and fill orders for shops all round the world.
+// The coins buy tickets to new places, ingredients at their markets, and
+// better shoes. Everything is drawn on one canvas, the pictures are emoji,
+// and every sound is synthesised. Sophia, Rory and Dylan Games, Inc.
+document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+let W=0,H=0,DPR=1;
+// The canvas is viewport-fit=cover, so on an iPhone the notch sits on top of
+// it. CSS knows the safe insets; script only learns them by measuring an
+// element that uses them.
+const safeProbe=document.createElement("div");
+safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"+
+ "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+const SAFE={t:0,r:0,b:0,l:0};
+function readSafe(){const st=getComputedStyle(safeProbe);
+ SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
+ SAFE.b=parseFloat(st.paddingBottom)||0;SAFE.l=parseFloat(st.paddingLeft)||0}
+// Sized from the visual viewport, re-checked on a delay and by a watchdog,
+// because iOS does not always say when the viewport changed (see Slime Storm).
+function vpW(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.width?vv.width:innerWidth))}
+function vpH(){const vv=window.visualViewport;return Math.max(1,Math.round(vv&&vv.height?vv.height:innerHeight))}
+function resize(){readSafe();DPR=Math.min(window.devicePixelRatio||1,2);W=vpW();H=vpH();
+ cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";decorFor=null}
+function reflow(){resize();setTimeout(resize,60);setTimeout(resize,250)}
+function fitWatch(){if(vpW()!==W||vpH()!==H||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))resize()}
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+setInterval(fitWatch,200);
+window.addEventListener("resize",reflow);window.addEventListener("orientationchange",()=>setTimeout(reflow,150));
+
+const TAU=Math.PI*2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const EMOJI='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+const FONT='-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif';
+
+// ============================================================ the world
+// x,y place the pin on the map (0..1 across and down). price is the ticket
+// that unlocks the place for good; ingredients there cost "cost" at market.
+const PLACES=[
+ {id:"home",  name:"Home Farm",     land:"England",       x:.455,y:.15, price:0,   cost:2, store:"Granny's Café",
+  ground:["#93d46c","#6fb64e"], decor:["🌳","🌻","🐔","🐄","🌳"], items:["apple","egg","milk","wheat","carrot","strawberry"]},
+ {id:"italy", name:"Italy",         land:"Europe",        x:.53, y:.27, price:25,  cost:3, store:"Pizza Palace",
+  ground:["#e8d79a","#cdb873"], decor:["🏛️","🌻","🍇","🛵"], items:["tomato","cheese","olive","basil"]},
+ {id:"mexico",name:"Mexico",        land:"North America", x:.19, y:.39, price:40,  cost:3, store:"Taco Town",
+  ground:["#ebc07a","#d39d55"], decor:["🦎","🪅","🏜️","🐎"], items:["corn","chili","avocado","cactus"]},
+ {id:"jungle",name:"Amazon Jungle", land:"Brazil",        x:.31, y:.58, price:60,  cost:4, store:"Monkey Juice Bar",
+  ground:["#4ea65a","#2f7d40"], decor:["🌴","🦜","🐒","🐸","🌴"], items:["banana","cocoa","coconut","feather"]},
+ {id:"japan", name:"Japan",         land:"Asia",          x:.875,y:.29, price:80,  cost:4, store:"Sakura Sushi",
+  ground:["#f5d3e3","#e0a9c3"], decor:["⛩️","🗻","🎋","🏯"], items:["rice","fish","blossom","tea"]},
+ {id:"arctic",name:"North Pole",    land:"the Arctic",    x:.40, y:.07, price:100, cost:5, store:"Penguin Ice Cream",
+  ground:["#eef7fc","#cfe4f2"], decor:["🐧","⛄","🏔️","🐻‍❄️"], items:["ice","snowflake","blueberry"]},
+ {id:"desert",name:"Egypt",         land:"Africa",        x:.575,y:.40, price:120, cost:5, store:"Pharaoh's Sweets",
+  ground:["#f2d892","#dcb766"], decor:["🐫","🌴","🏜️","🦂"], items:["honey","sand","lemon"]},
+ {id:"forest",name:"Magic Forest",  land:"Canada",        x:.20, y:.19, price:150, cost:6, store:"Wizard's Potion Shop",
+  ground:["#3c7a57","#25563c"], decor:["🌲","🦄","🧚","🌲","🦉"], items:["mushroom","clover","moonflower","star"]},
+ {id:"volcano",name:"Volcano Island",land:"Hawaii",       x:.06, y:.43, price:200, cost:7, store:"Dragon Diner",
+  ground:["#7a4a3a","#4e2c22"], decor:["🌋","🌴","🐉","🪨"], items:["ember","crystal","pineapple"]},
+];
+const PLACE={};PLACES.forEach(p=>PLACE[p.id]=p);
+
+const ING={
+ apple:["🍎","Apple"],egg:["🥚","Egg"],milk:["🥛","Milk"],wheat:["🌾","Wheat"],carrot:["🥕","Carrot"],strawberry:["🍓","Strawberry"],
+ tomato:["🍅","Tomato"],cheese:["🧀","Cheese"],olive:["🫒","Olive"],basil:["🌿","Basil"],
+ corn:["🌽","Corn"],chili:["🌶️","Chili"],avocado:["🥑","Avocado"],cactus:["🌵","Cactus"],
+ banana:["🍌","Banana"],cocoa:["🫘","Cocoa Beans"],coconut:["🥥","Coconut"],feather:["🪶","Parrot Feather"],
+ rice:["🍚","Rice"],fish:["🐟","Fish"],blossom:["🌸","Cherry Blossom"],tea:["🍵","Green Tea"],
+ ice:["🧊","Ice"],snowflake:["❄️","Magic Snowflake"],blueberry:["🫐","Blueberries"],
+ honey:["🍯","Honey"],sand:["✨","Golden Sand"],lemon:["🍋","Lemon"],
+ mushroom:["🍄","Mushroom"],clover:["🍀","Lucky Clover"],moonflower:["🌼","Moonflower"],star:["⭐","Star Dust"],
+ ember:["🔥","Fire Ember"],crystal:["💎","Crystal"],pineapple:["🍍","Pineapple"],
+};
+const ING_PLACE={};PLACES.forEach(p=>p.items.forEach(i=>ING_PLACE[i]=p.id));
+const ingCost=i=>PLACE[ING_PLACE[i]].cost;
+
+// Recipes. A potion has a colour instead of an emoji and is drawn as a bottle;
+// "drink" ones do something when you drink them out exploring.
+const RECIPES=[
+ {id:"shake",   e:"🥤",name:"Strawberry Milkshake",need:["strawberry","milk"]},
+ {id:"pancakes",e:"🥞",name:"Pancakes",            need:["egg","milk","wheat"]},
+ {id:"applepie",e:"🥧",name:"Apple Pie",           need:["apple","wheat","egg"]},
+ {id:"carrotcake",e:"🍰",name:"Carrot Cake",       need:["carrot","wheat","egg"]},
+ {id:"pizza",   e:"🍕",name:"Pizza",               need:["wheat","tomato","cheese"]},
+ {id:"pasta",   e:"🍝",name:"Spaghetti",           need:["wheat","tomato","basil"]},
+ {id:"salad",   e:"🥗",name:"Salad",               need:["tomato","olive","carrot"]},
+ {id:"tacos",   e:"🌮",name:"Tacos",               need:["corn","chili","avocado"]},
+ {id:"popcorn", e:"🍿",name:"Popcorn",             need:["corn","corn"]},
+ {id:"speed",   c:"#ff4a3d",name:"Speed Potion",   need:["chili","cactus"],drink:"speed"},
+ {id:"choccake",e:"🎂",name:"Chocolate Cake",      need:["cocoa","egg","wheat"]},
+ {id:"hotchoc", e:"☕",name:"Hot Chocolate",       need:["cocoa","milk"]},
+ {id:"smoothie",e:"🍹",name:"Tropical Smoothie",   need:["banana","coconut","milk"]},
+ {id:"flying",  c:"#ff8fd0",name:"Flying Potion",  need:["feather","blossom"],drink:"fly"},
+ {id:"sushi",   e:"🍣",name:"Sushi",               need:["rice","fish"]},
+ {id:"riceball",e:"🍙",name:"Rice Ball",           need:["rice","rice"]},
+ {id:"dango",   e:"🍡",name:"Dango",               need:["rice","blossom","strawberry"]},
+ {id:"icecream",e:"🍦",name:"Ice Cream",           need:["ice","milk","strawberry"]},
+ {id:"muffin",  e:"🧁",name:"Blueberry Muffin",    need:["blueberry","wheat","egg"]},
+ {id:"frost",   c:"#7fd8ff",name:"Frost Potion",   need:["ice","snowflake","blueberry"]},
+ {id:"lemonade",e:"🧃",name:"Lemonade",            need:["lemon","honey","ice"]},
+ {id:"cookies", e:"🍪",name:"Honey Cookies",       need:["honey","wheat","cocoa"]},
+ {id:"luck",    c:"#ffd23f",name:"Luck Potion",    need:["clover","sand"],drink:"luck"},
+ {id:"giant",   c:"#5fd35a",name:"Giant Potion",   need:["mushroom","carrot","clover"]},
+ {id:"dream",   c:"#9b6bff",name:"Dream Potion",   need:["moonflower","tea","honey"]},
+ {id:"invisible",c:"#e9f4ff",name:"Invisible Potion",need:["moonflower","snowflake"]},
+ {id:"curry",   e:"🍛",name:"Fire Curry",          need:["rice","chili","ember"]},
+ {id:"sundae",  e:"🍨",name:"Pineapple Sundae",    need:["pineapple","ice","coconut"]},
+ {id:"dragon",  c:"#ff9a1f",name:"Dragon Fire Potion",need:["ember","ember","chili"]},
+ {id:"rainbow", c:"rainbow",name:"Rainbow Potion", need:["crystal","blossom","strawberry"]},
+ {id:"golden",  c:"#f6c400",name:"Golden Potion",  need:["sand","crystal","star"]},
+];
+const REC={};RECIPES.forEach(r=>{REC[r.id]=r;r.key=r.need.slice().sort().join("+");
+ r.price=Math.round(r.need.reduce((a,i)=>a+ingCost(i),0)*(r.c?2.2:1.6)+4)});
+const DRINK={speed:"Run twice as fast",fly:"Fly and grab everything near you",luck:"Coins everywhere, worth double"};
+const UPGRADES=[
+ {id:"shoes", e:"👟",name:"Faster Shoes",  what:"Walk faster",               cost:[30,80,160]},
+ {id:"magnet",e:"🧲",name:"Coin Magnet",   what:"Grab things from further",  cost:[40,90,170]},
+ {id:"basket",e:"🧺",name:"Lucky Basket",  what:"Sometimes pick up two",     cost:[50,110,200]},
+];
+
+// ============================================================ saves
+const PEOPLE=[{id:"sophia",name:"Sophia",c:"#ff7bb0"},{id:"rory",name:"Rory",c:"#4fa3ff"},{id:"dylan",name:"Dylan",c:"#5fd35a"}];
+const store={get(k,d){try{const v=localStorage.getItem("worldkitchen."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem("worldkitchen."+k,JSON.stringify(v))}catch(e){}}};
+let who=null,G=null;
+function fresh(){return{coins:10,pantry:{egg:1,milk:1},goods:{},open:{home:true},found:{},orders:[],up:{shoes:0,magnet:0,basket:0},
+ place:"home",served:0,earned:0}}
+function load(id){who=id;pot=[];made=null;hint="";cooking=0;field=null;for(const k in effects)effects[k]=0;const d=store.get("save."+id,null);G=Object.assign(fresh(),d||{});
+ G.up=Object.assign({shoes:0,magnet:0,basket:0},G.up);fillOrders();save()}
+function save(){if(who)store.set("save."+who,G)}
+setInterval(save,5000);
+const count=(bag,id)=>bag[id]||0;
+function add(bag,id,n){bag[id]=(bag[id]||0)+n;if(bag[id]<=0)delete bag[id]}
+
+// ============================================================ orders
+// Orders only ask for things that can be made from places already open, so
+// there is always a way to fill one. Each shows what goes into it.
+function canMake(r){return r.need.every(i=>G.open[ING_PLACE[i]])}
+function newOrder(){
+ const ok=RECIPES.filter(canMake),taken=G.orders.map(o=>o.r);
+ let pool=ok.filter(r=>taken.indexOf(r.id)<0);if(!pool.length)pool=ok;
+ // lean towards the newest things the player can make
+ pool.sort((a,b)=>RECIPES.indexOf(b)-RECIPES.indexOf(a));
+ const r=Math.random()<.5?pool[Math.floor(Math.random()*Math.min(4,pool.length))]:pick(pool);
+ const shops=PLACES.filter(p=>G.open[p.id]);
+ const q=Math.random()<.35?2:1;
+ return{r:r.id,q,shop:pick(shops).id,pay:Math.round(r.price*q*1.5+5)};
+}
+function fillOrders(){while(G.orders.length<3)G.orders.push(newOrder())}
+
+// ============================================================ sound
+let AC=null,master=null;
+function audioInit(){if(AC){if(AC.state!=="running")AC.resume();return}
+ try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.4;master.connect(AC.destination)}catch(e){}}
+function tone(f,d,type,v,t0,slide){if(!AC)return;const t=AC.currentTime+(t0||0),o=AC.createOscillator(),g=AC.createGain();
+ o.type=type||"sine";o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.3,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);
+ o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05)}
+const SFX={
+ tap(){tone(660,.06,"triangle",.15)},
+ pick(){tone(880,.08,"triangle",.2);tone(1320,.1,"triangle",.15,.05)},
+ coin(){tone(1400,.06,"square",.08);tone(2100,.12,"square",.08,.06)},
+ chest(){[523,659,784,1046].forEach((f,i)=>tone(f,.18,"triangle",.2,i*.07))},
+ bubble(){tone(300,.15,"sine",.2,0,600)},
+ cook(){[392,523,659,784,1046].forEach((f,i)=>tone(f,.25,"triangle",.22,i*.08))},
+ nope(){tone(220,.25,"sawtooth",.1,0,140)},
+ cash(){[1046,1318,1568].forEach((f,i)=>tone(f,.2,"square",.07,i*.06));tone(2093,.3,"triangle",.15,.2)},
+ fly(){tone(400,.5,"sine",.15,0,900)},
+};
+
+// ============================================================ input
+// A tap is a press that comes up near where it went down; a press that moves
+// further scrolls the list under it or, out exploring, walks the chef.
+let btns=[],ptr=null;
+const P={x:0,y:0};
+cv.addEventListener("pointerdown",e=>{audioInit();if(ptr)return;
+ ptr={id:e.pointerId,x0:e.clientX,y0:e.clientY,x:e.clientX,y:e.clientY,moved:false,sy:scroll,t:performance.now()};
+ try{cv.setPointerCapture(e.pointerId)}catch(_){}
+ ptr.btn=hit(e.clientX,e.clientY);
+ if(scene==="field"&&!ptr.btn){walkTo=true}
+ e.preventDefault()});
+cv.addEventListener("pointermove",e=>{if(!ptr||e.pointerId!==ptr.id)return;ptr.x=e.clientX;ptr.y=e.clientY;
+ if(Math.hypot(ptr.x-ptr.x0,ptr.y-ptr.y0)>12)ptr.moved=true;
+ if(ptr.moved&&scrollArea&&ptr.y0>scrollArea.y&&ptr.y0<scrollArea.y+scrollArea.h)scroll=clamp(ptr.sy-(ptr.y-ptr.y0),0,scrollMax)});
+function up(e){if(!ptr||e.pointerId!==ptr.id)return;const p=ptr;ptr=null;walkTo=false;lastTap={x:p.x,y:p.y};
+ if(!p.moved||(scene==="field"&&p.btn)){const b=hit(p.x,p.y);if(b&&b===p.btn&&!b.off){SFX.tap();b.fn()}}}
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",e=>{if(ptr&&e.pointerId===ptr.id){ptr=null;walkTo=false}});
+function hit(x,y){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h)return b.fn?b:null}return null}
+// same button across frames: match by position so a press that began on it
+// still counts when it comes up after a redraw
+function sameBtn(a,b){return a&&b&&Math.abs(a.x-b.x)<2&&Math.abs(a.y-b.y)<2}
+// (keyboard, for a laptop)
+const keys={};addEventListener("keydown",e=>{keys[e.key]=true});addEventListener("keyup",e=>{keys[e.key]=false});
+
+// ============================================================ drawing helpers
+function rr(x,y,w,h,r){r=Math.min(r,w/2,h/2);cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function text(s,x,y,size,col,align,weight,maxW){cx.font=(weight||"700")+" "+size+"px "+FONT;cx.fillStyle=col||"#fff";
+ cx.textAlign=align||"center";cx.textBaseline="middle";
+ if(maxW&&cx.measureText(s).width>maxW){const k=maxW/cx.measureText(s).width;cx.font=(weight||"700")+" "+Math.max(8,size*k)+"px "+FONT}
+ cx.fillText(s,x,y)}
+function emo(e,x,y,size){cx.font=size+"px "+EMOJI;cx.textAlign="center";cx.textBaseline="middle";cx.fillStyle="#000";cx.fillText(e,x,y+size*.05)}
+function coinIcon(x,y,r){cx.fillStyle="#f6c400";cx.beginPath();cx.arc(x,y,r,0,TAU);cx.fill();cx.strokeStyle="#b88a00";cx.lineWidth=Math.max(1,r*.18);cx.stroke();
+ cx.fillStyle="#fff3a8";cx.beginPath();cx.arc(x-r*.3,y-r*.3,r*.25,0,TAU);cx.fill()}
+function potion(c,x,y,s,t){
+ // a round flask: neck, cork, glass, liquid with a bubble
+ const r=s*.32,by=y+s*.1;
+ cx.fillStyle="#c58a4a";rr(x-s*.09,y-s*.46,s*.18,s*.12,s*.03);cx.fill();
+ cx.fillStyle="rgba(230,245,255,.55)";rr(x-s*.11,y-s*.36,s*.22,s*.2,s*.04);cx.fill();
+ cx.beginPath();cx.arc(x,by,r,0,TAU);cx.fillStyle="rgba(230,245,255,.55)";cx.fill();
+ let fill=c;
+ if(c==="rainbow"){fill=cx.createLinearGradient(x-r,0,x+r,0);["#ff4a3d","#ffb02e","#ffe53d","#5fd35a","#4fa3ff","#9b6bff"].forEach((k,i)=>fill.addColorStop(i/5,k))}
+ cx.save();cx.beginPath();cx.arc(x,by,r*.86,0,TAU);cx.clip();cx.fillStyle=fill;cx.fillRect(x-r,by-r*.25+Math.sin((t||0)*3)*r*.06,r*2,r*2);cx.restore();
+ cx.strokeStyle="rgba(40,60,90,.55)";cx.lineWidth=Math.max(1,s*.03);cx.beginPath();cx.arc(x,by,r,0,TAU);cx.stroke();
+ cx.fillStyle="rgba(255,255,255,.75)";cx.beginPath();cx.arc(x-r*.4,by-r*.35,r*.16,0,TAU);cx.fill();
+}
+// any ingredient or recipe by id
+function item(id,x,y,s,t){if(ING[id])return emo(ING[id][0],x,y,s*.8);const r=REC[id];if(!r)return;if(r.c)potion(r.c,x,y,s,t);else emo(r.e,x,y,s*.8)}
+const nameOf=id=>ING[id]?ING[id][1]:REC[id]?REC[id].name:id;
+function button(x,y,w,h,label,fn,o){o=o||{};const off=!!o.off;
+ cx.fillStyle="rgba(0,0,0,.25)";rr(x,y+3,w,h,o.r||h*.3);cx.fill();
+ cx.fillStyle=off?"#6b7383":(o.c||"#ff9f1c");rr(x,y,w,h,o.r||h*.3);cx.fill();
+ cx.fillStyle="rgba(255,255,255,.18)";rr(x+3,y+3,w-6,h*.42,(o.r||h*.3)*.8);cx.fill();
+ if(label)text(label,x+w/2,y+h/2+1,o.size||Math.min(h*.42,22),o.tc||"#fff","center","800",w-12);
+ btns.push({x,y,w,h,fn,off});
+}
+function panel(x,y,w,h,c){cx.fillStyle="rgba(0,0,0,.25)";rr(x,y+4,w,h,18);cx.fill();cx.fillStyle=c||"#fff8ec";rr(x,y,w,h,18);cx.fill()}
+
+// ============================================================ messages and floaters
+let toastText="",toastT=0;
+function toast(s,t){toastText=s;toastT=t||2.2}
+let floats=[];
+function floater(x,y,s,col){floats.push({x,y,s,col:col||"#fff",t:0})}
+let sparks=[];
+function burst(x,y,n,cols){for(let i=0;i<n;i++){const a=rnd(0,TAU),v=rnd(60,240);sparks.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,t:0,life:rnd(.5,1),c:pick(cols||["#ffd23f","#ff7bb0","#7fd8ff","#5fd35a"]),r:rnd(2,5)})}}
+
+// ============================================================ scenes
+// title -> map -> field (exploring a place) and from there the kitchen, the
+// market, the orders board and the recipe book. Those four are "sheets" that
+// lie over the field and go back to it.
+let scene="title",sheet=null,scroll=0,scrollMax=0,scrollArea=null,last=0,T=0;
+function go(s){scene=s;sheet=null;scroll=0}
+function openSheet(s){sheet=s;scroll=0;tab=0}
+let tab=0;
+
+// the bar along the top: pause button room on the left, coins on the right
+function topBar(title,back){
+ const h=54,y=SAFE.t;cx.fillStyle="rgba(10,20,40,.55)";cx.fillRect(0,0,W,y+h);
+ const L=SAFE.l+52,bw=back?Math.min(118,W*.26):0;
+ if(back)button(L,y+8,bw,h-16,back[0],back[1],{c:"#4fa3ff"});
+ const cw=Math.min(130,W*.25),x=W-SAFE.r-cw-10;
+ // the title sits in whatever room is left between the two
+ const l=L+bw+8,r=x-8;text(title,(l+r)/2,y+h/2,Math.min(24,Math.max(14,W*.05)),"#fff","center","800",r-l);
+ cx.fillStyle="rgba(0,0,0,.35)";rr(x,y+9,cw,h-18,(h-18)/2);cx.fill();
+ coinIcon(x+18,y+h/2,11);text(String(G.coins),x+cw/2+10,y+h/2+1,20,"#ffe680","center","800");
+ return y+h;
+}
+
+// ------------------------------------------------------------ title
+function drawTitle(){
+ const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#5ec2ff");g.addColorStop(1,"#c9f0ff");cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ // a slowly turning globe, then the name, then who is playing, stacked in the middle
+ const avail=H-SAFE.t-SAFE.b,R=clamp((avail-240)/2.6,36,Math.min(W*.2,170)),top=SAFE.t+Math.max(10,(avail-(R*2.6+240))/2);
+ const gx=W/2,gy=top+R*1.3;
+ cx.fillStyle="#2f7fd6";cx.beginPath();cx.arc(gx,gy,R,0,TAU);cx.fill();
+ cx.save();cx.beginPath();cx.arc(gx,gy,R,0,TAU);cx.clip();
+ const sh=(T*.05)%1;for(let k=-1;k<=1;k++){cx.save();cx.translate(gx-R*2+(sh+k)*R*4,gy-R);cx.scale(R*4,R*2);drawLand(.002);cx.restore()}
+ cx.restore();
+ cx.strokeStyle="rgba(255,255,255,.6)";cx.lineWidth=3;cx.beginPath();cx.arc(gx,gy,R,0,TAU);cx.stroke();
+ const icons=["🍕","🧪","🍣","🌮","🍦","🥧","🍍","🍄"];
+ icons.forEach((e,i)=>{const a=T*.6+i*TAU/icons.length;emo(e,gx+Math.cos(a)*R*1.35,gy+Math.sin(a)*R*1.1,R*.32)});
+ const ty=gy+R*1.3+34;
+ text("World Kitchen",W/2,ty,Math.min(52,W*.11),"#fff","center","900");
+ text("Find ingredients all over the world, cook, and fill the orders!",W/2,ty+42,Math.min(18,W*.04),"#1d4a7a","center","700",W*.9);
+ const bw=Math.min(200,(W-60)/3),bh=64,y=ty+112;
+ text("Who's cooking?",W/2,y-22,20,"#1d4a7a","center","800");
+ PEOPLE.forEach((p,i)=>{const x=W/2+(i-1)*(bw+14)-bw/2;
+  button(x,y,bw,bh,p.name,()=>{load(p.id);go("map");if(!store.get("seen."+p.id,false)){store.set("seen."+p.id,true);help=1}},{c:p.c,size:24})});
+}
+
+// ------------------------------------------------------------ the map
+// rough continents, in the map's own 0..1 square
+const LAND=[
+ [[.05,.17],[.13,.10],[.25,.08],[.31,.12],[.33,.18],[.29,.24],[.27,.31],[.24,.38],[.22,.45],[.19,.46],[.15,.40],[.11,.30],[.07,.25]],
+ [[.32,.04],[.40,.03],[.43,.07],[.40,.13],[.35,.12]],
+ [[.25,.50],[.31,.49],[.37,.56],[.35,.66],[.31,.78],[.28,.86],[.27,.74],[.24,.61]],
+ [[.455,.14],[.50,.09],[.56,.11],[.57,.20],[.54,.27],[.50,.29],[.47,.25],[.46,.21]],
+ [[.455,.32],[.53,.31],[.59,.36],[.62,.44],[.60,.55],[.57,.68],[.53,.71],[.50,.60],[.46,.47],[.44,.38]],
+ [[.56,.10],[.68,.06],[.83,.08],[.93,.13],[.95,.20],[.90,.28],[.85,.35],[.78,.44],[.73,.40],[.68,.42],[.63,.36],[.59,.28],[.57,.19]],
+ [[.80,.61],[.87,.59],[.92,.66],[.89,.75],[.83,.74],[.79,.68]],
+ [[.86,.25],[.89,.24],[.90,.31],[.87,.33]],
+ [[.06,.96],[.30,.92],[.60,.93],[.94,.95],[.94,1],[.06,1]],
+];
+function drawLand(lw){cx.fillStyle="#7cc96a";cx.strokeStyle="#4e9a48";cx.lineWidth=lw;
+ LAND.forEach(poly=>{cx.beginPath();poly.forEach((p,i)=>{if(i)cx.lineTo(p[0],p[1]);else cx.moveTo(p[0],p[1])});cx.closePath();cx.fill();cx.stroke()})}
+let mapPins=[];
+function drawMap(){
+ cx.fillStyle="#2a73c9";cx.fillRect(0,0,W,H);
+ const top=topBar("World Map",["👤 Players",()=>{go("title")}]);
+ const pad=12,availW=W-SAFE.l-SAFE.r-pad*2,availH=H-top-SAFE.b-pad*2;
+ const portrait=availH>availW*.9;
+ const mh=portrait?Math.min(availW*.5,availH*.42):Math.min(availH,availW*.5),mw=mh*2;
+ const mx=(W-mw)/2,my=top+pad;
+ cx.fillStyle="#3b8fe0";rr(mx,my,mw,mh,16);cx.fill();
+ cx.save();rr(mx,my,mw,mh,16);cx.clip();
+ // waves
+ cx.strokeStyle="rgba(255,255,255,.18)";cx.lineWidth=2;
+ for(let i=0;i<14;i++){const wx=mx+((i*137)%100)/100*mw,wy=my+((i*61)%100)/100*mh;cx.beginPath();cx.arc(wx+Math.sin(T+i)*4,wy,8,Math.PI*1.1,Math.PI*1.9);cx.stroke()}
+ cx.save();cx.translate(mx,my);cx.scale(mw,mh);drawLand(1.5/mh);cx.restore();
+ cx.restore();
+ const pr=Math.max(16,Math.min(28,mh*.07));
+ mapPins=[];
+ // the dotted route from home to wherever you are
+ const here=PLACE[G.place];
+ PLACES.forEach(p=>{
+  const x=mx+p.x*mw,y=my+p.y*mh,open=G.open[p.id];
+  if(p.id===G.place){cx.fillStyle="rgba(255,255,255,.35)";cx.beginPath();cx.arc(x,y,pr*1.6+Math.sin(T*4)*3,0,TAU);cx.fill()}
+  cx.fillStyle=open?"#fff":"rgba(30,40,60,.8)";cx.beginPath();cx.arc(x,y,pr,0,TAU);cx.fill();
+  cx.strokeStyle=open?"#ff9f1c":"#ffd23f";cx.lineWidth=3;cx.stroke();
+  if(p.id==="home")emo("🏠",x,y,pr*1.2);else if(open)emo(ING[p.items[0]][0],x,y,pr*1.1);else emo("🔒",x,y,pr*.95);
+  if(!portrait||mh>220){const lbl=open?p.name:p.price+" coins";text(lbl,x,y+pr+11,Math.max(11,pr*.55),"#fff","center","800")}
+  mapPins.push({p,x,y,r:pr*1.3});
+ });
+ // tap a pin
+ btns.push({x:mx,y:my,w:mw,h:mh,fn:()=>{const t=lastTap;let best=null,bd=1e9;mapPins.forEach(m=>{const d=Math.hypot(m.x-t.x,m.y-t.y);if(d<m.r*1.4&&d<bd){bd=d;best=m}});if(best)choose(best.p)}});
+ // cards: in portrait under the map, otherwise only as a hint
+ if(portrait){
+  const ly=my+mh+pad,cols=availW>520?3:2,cw=(availW-(cols-1)*10)/cols,ch=Math.min(76,(H-ly-SAFE.b-pad)/Math.ceil(PLACES.length/cols)-10);
+  if(ch>44)PLACES.forEach((p,i)=>{const x=SAFE.l+pad+(i%cols)*(cw+10),y=ly+Math.floor(i/cols)*(ch+10),open=G.open[p.id];
+   panel(x,y,cw,ch,p.id===G.place?"#fff1c2":open?"#fff8ec":"#c9d3e3");
+   emo(p.id==="home"?"🏠":open?ING[p.items[0]][0]:"🔒",x+ch*.45,y+ch/2,ch*.5);
+   text(p.name,x+ch*.85,y+ch*.36,Math.min(18,ch*.28),"#2b2b3a","left","800",cw-ch);
+   if(open)text(p.land,x+ch*.85,y+ch*.7,Math.min(14,ch*.22),"#6b7383","left","600",cw-ch);
+   else{coinIcon(x+ch*.85+8,y+ch*.7,7);text(p.price+" to visit",x+ch*.85+20,y+ch*.7,Math.min(14,ch*.22),"#6b7383","left","700",cw-ch-20)}
+   btns.push({x,y,w:cw,h:ch,fn:()=>choose(p)})});
+ }
+ else text("Tap a place to go there",W/2,H-SAFE.b-14,14,"rgba(255,255,255,.8)");
+ if(ask)drawAsk();
+}
+let ask=null,lastTap={x:0,y:0};
+function choose(p){
+ if(G.open[p.id]){travel(p.id);return}
+ ask=p;
+}
+function drawAsk(){
+ const p=ask,w=Math.min(420,W-40),h=250,x=(W-w)/2,y=(H-h)/2;
+ btns.push({x:0,y:0,w:W,h:H,fn:()=>{ask=null}});
+ panel(x,y,w,h);btns.push({x,y,w,h,fn:null});
+ text(p.name,W/2,y+34,26,"#2b2b3a","center","900",w-30);
+ text("in "+p.land,W/2,y+62,15,"#6b7383","center","700");
+ p.items.forEach((id,i)=>emo(ING[id][0],W/2+(i-(p.items.length-1)/2)*48,y+104,34));
+ const can=G.coins>=p.price;
+ text(can?"A ticket costs "+p.price+" coins.":"A ticket costs "+p.price+" coins. Find or earn "+(p.price-G.coins)+" more!",W/2,y+146,15,"#2b2b3a","center","700",w-30);
+ button(x+20,y+h-74,w/2-30,54,"Not yet",()=>{ask=null},{c:"#8a93a6"});
+ button(x+w/2+10,y+h-74,w/2-30,54,"Buy ticket",()=>{G.coins-=p.price;G.open[p.id]=true;ask=null;SFX.cash();
+  // a new place: one of its orders straight away
+  const r=RECIPES.find(r=>canMake(r)&&r.need.some(i=>ING_PLACE[i]===p.id));
+  if(r)G.orders[0]={r:r.id,q:1,shop:p.id,pay:Math.round(r.price*1.5+5)};
+  save();travel(p.id)},{c:"#3fbf5f",off:!can});
+}
+function travel(id){G.place=id;go("field");field=null;save();
+ const p=PLACE[id];toast(id==="home"?"Home! The kitchen is in the house.":"Welcome to "+p.name+"!")}
+
+// ------------------------------------------------------------ the field
+// Ingredients and coins pop up on the ground; walk over them to pick them up.
+let field=null,walkTo=false,decorFor=null,decor=[];
+const chef={x:0,y:0,face:1,step:0};
+let effects={speed:0,fly:0,luck:0};
+function fieldRect(){const t=SAFE.t+54,b=H-SAFE.b-74;return{x:SAFE.l,y:t,w:W-SAFE.l-SAFE.r,h:b-t}}
+function startField(){
+ const R=fieldRect();field={items:[],spawn:0,place:G.place};chef.x=R.x+R.w/2;chef.y=R.y+R.h*.6;
+ for(let i=0;i<5;i++)spawn(R);
+}
+function spawn(R){
+ const p=PLACE[G.place];let kind,id,v=0;const r=Math.random(),lucky=effects.luck>0;
+ if(r<(lucky?.04:.025)){kind="chest";v=Math.round(rnd(10,22))}
+ else if(r<(lucky?.55:.28)){kind="coin";v=Math.random()<.2?5:Math.random()<.4?2:1}
+ else{kind="ing";id=pick(p.items)}
+ let x,y,tries=0;
+ do{x=rnd(R.x+30,R.x+R.w-30);y=rnd(R.y+30,R.y+R.h-20);tries++}
+ while(tries<20&&(field.items.some(o=>Math.hypot(o.x-x,o.y-y)<50)||(G.place==="home"&&Math.hypot(x-houseSpot().x,y-houseSpot().y)<90)));
+ field.items.push({kind,id,v,x,y,t:0});
+}
+function houseSpot(){const R=fieldRect();return{x:R.x+Math.min(110,R.w*.18),y:R.y+Math.min(110,R.h*.28)}}
+function makeDecor(R){decor=[];const p=PLACE[G.place];let s=p.id.length*97+3;const rs=()=>{s=(s*9301+49297)%233280;return s/233280};
+ const n=Math.round(R.w*R.h/22000);for(let i=0;i<n;i++)decor.push({e:p.decor[Math.floor(rs()*p.decor.length)],x:R.x+rs()*R.w,y:R.y+rs()*R.h,s:22+rs()*22});
+ decorFor=G.place}
+function updateField(dt){
+ const R=fieldRect();if(!field||field.place!==G.place)startField();
+ const spd=(170+G.up.shoes*45)*(effects.speed>0?1.9:1);
+ let dx=0,dy=0;
+ if(walkTo&&ptr){dx=ptr.x-chef.x;dy=ptr.y-chef.y}
+ if(keys.ArrowLeft||keys.a)dx=-100;if(keys.ArrowRight||keys.d)dx=100;if(keys.ArrowUp||keys.w)dy=-100;if(keys.ArrowDown||keys.s)dy=100;
+ const d=Math.hypot(dx,dy);
+ if(d>6){const m=Math.min(spd*dt,d);chef.x+=dx/d*m;chef.y+=dy/d*m;chef.step+=dt*10;if(Math.abs(dx)>2)chef.face=dx<0?-1:1}
+ chef.x=clamp(chef.x,R.x+20,R.x+R.w-20);chef.y=clamp(chef.y,R.y+20,R.y+R.h-10);
+ for(const k in effects)if(effects[k]>0)effects[k]=Math.max(0,effects[k]-dt);
+ field.spawn-=dt;const most=effects.luck>0?14:9;
+ if(field.spawn<=0&&field.items.length<most){spawn(R);field.spawn=effects.luck>0?.35:rnd(.7,1.3)}
+ const reach=34+G.up.magnet*14+(effects.fly>0?90:0);
+ for(let i=field.items.length-1;i>=0;i--){const o=field.items[i];o.t+=dt;
+  const dd=Math.hypot(o.x-chef.x,o.y-chef.y);
+  // the magnet and the flying potion pull things in
+  if(dd<reach*1.8&&dd>reach&&(G.up.magnet||effects.fly)){o.x+=(chef.x-o.x)*dt*3;o.y+=(chef.y-o.y)*dt*3}
+  if(dd<reach){collect(o);field.items.splice(i,1)}}
+ // walking into the house goes into the kitchen
+ if(G.place==="home"){const h=houseSpot();if(Math.hypot(chef.x-h.x,chef.y-h.y)<50){chef.y=h.y+70;openSheet("kitchen")}}
+}
+function collect(o){
+ if(o.kind==="coin"){const v=o.v*(effects.luck>0?2:1);G.coins+=v;G.earned+=v;floater(o.x,o.y,"+"+v,"#ffe680");SFX.coin()}
+ else if(o.kind==="chest"){G.coins+=o.v;G.earned+=o.v;floater(o.x,o.y,"Treasure! +"+o.v,"#ffe680");burst(o.x,o.y,24);SFX.chest()}
+ else{const n=Math.random()<G.up.basket*.15?2:1;add(G.pantry,o.id,n);floater(o.x,o.y,(n>1?"+2 ":"+1 ")+ING[o.id][1],"#fff");SFX.pick()}
+}
+function drawChef(x,y,s){
+ const bob=Math.abs(Math.sin(chef.step))*s*.08,fl=effects.fly>0?Math.sin(T*6)*4-14:0;
+ y=y-bob+fl;
+ cx.fillStyle="rgba(0,0,0,.2)";cx.beginPath();cx.ellipse(x,y+s*.55-fl+bob,s*.38,s*.12,0,0,TAU);cx.fill();
+ if(effects.fly>0){emo("🪽",x-s*.45,y,s*.5);}
+ // body, apron, face, hat
+ cx.fillStyle=who?PEOPLE.find(p=>p.id===who).c:"#4fa3ff";rr(x-s*.3,y,s*.6,s*.5,s*.15);cx.fill();
+ cx.fillStyle="#fff";rr(x-s*.18,y+s*.08,s*.36,s*.4,s*.08);cx.fill();
+ cx.fillStyle="#f7c99b";cx.beginPath();cx.arc(x,y-s*.12,s*.26,0,TAU);cx.fill();
+ cx.fillStyle="#2b2b3a";cx.beginPath();cx.arc(x+chef.face*s*.08-s*.07,y-s*.15,s*.035,0,TAU);cx.arc(x+chef.face*s*.08+s*.07,y-s*.15,s*.035,0,TAU);cx.fill();
+ cx.strokeStyle="#2b2b3a";cx.lineWidth=2;cx.beginPath();cx.arc(x+chef.face*s*.08,y-s*.07,s*.08,.2,Math.PI-.2);cx.stroke();
+ cx.fillStyle="#fff";rr(x-s*.2,y-s*.45,s*.4,s*.16,s*.04);cx.fill();
+ cx.beginPath();cx.arc(x-s*.12,y-s*.5,s*.13,0,TAU);cx.arc(x+s*.12,y-s*.5,s*.13,0,TAU);cx.arc(x,y-s*.58,s*.15,0,TAU);cx.fill();
+ if(effects.speed>0){cx.strokeStyle="rgba(255,74,61,.6)";cx.lineWidth=3;for(let i=0;i<3;i++){cx.beginPath();cx.moveTo(x-chef.face*s*(.45+i*.12),y+s*(i*.15));cx.lineTo(x-chef.face*s*(.8+i*.12),y+s*(i*.15));cx.stroke()}}
+}
+function drawField(dt){
+ updateField(dt);
+ const R=fieldRect(),p=PLACE[G.place];
+ const g=cx.createLinearGradient(0,R.y,0,R.y+R.h);g.addColorStop(0,p.ground[0]);g.addColorStop(1,p.ground[1]);cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ if(decorFor!==G.place)makeDecor(R);
+ cx.globalAlpha=.85;decor.forEach(d=>emo(d.e,d.x,d.y,d.s));cx.globalAlpha=1;
+ if(G.place==="home"){const h=houseSpot();emo("🏠",h.x,h.y,90);
+  cx.fillStyle="rgba(255,255,255,.85)";rr(h.x-46,h.y+44,92,24,12);cx.fill();text("Kitchen",h.x,h.y+56,14,"#2b2b3a","center","800")}
+ // things on the ground, with a sparkle so they stand out from the scenery
+ field.items.forEach(o=>{const b=Math.sin(o.t*4+o.x)*3,pop=Math.min(1,o.t*5);
+  cx.fillStyle="rgba(255,255,255,.35)";cx.beginPath();cx.arc(o.x,o.y+b,20*pop,0,TAU);cx.fill();
+  if(o.kind==="coin")coinIcon(o.x,o.y+b,12*pop);
+  else if(o.kind==="chest")emo("🎁",o.x,o.y+b,38*pop);
+  else emo(ING[o.id][0],o.x,o.y+b,32*pop);
+  if(Math.sin(o.t*3+o.y)>.92)emo("✨",o.x+14,o.y-14,14)});
+ drawChef(chef.x,chef.y,52);
+ topBar(p.name,["🗺 Map",()=>go("map")]);
+ // the bar along the bottom
+ const bh=58,by=H-SAFE.b-bh-8,n=G.place==="home"?4:3,gap=8,bw=Math.min(190,(W-SAFE.l-SAFE.r-20-gap*(n-1))/n);
+ let x=(W-(bw*n+gap*(n-1)))/2;
+ cx.fillStyle="rgba(10,20,40,.4)";cx.fillRect(0,by-8,W,H-by+8);
+ if(G.place==="home"){button(x,by,bw,bh,"🍳 Kitchen",()=>openSheet("kitchen"),{c:"#ff6b6b"});x+=bw+gap}
+ button(x,by,bw,bh,"🛒 Market",()=>openSheet("market"),{c:"#3fbf5f"});x+=bw+gap;
+ const ready=G.orders.filter(o=>count(G.goods,o.r)>=o.q).length;
+ button(x,by,bw,bh,"📋 Orders"+(ready?" ("+ready+"!)":""),()=>openSheet("orders"),{c:ready?"#ff9f1c":"#9b6bff"});x+=bw+gap;
+ button(x,by,bw,bh,"🎒 Bag",()=>openSheet("bag"),{c:"#4fa3ff"});
+ // potions to drink, down the right-hand side
+ let py=R.y+10;
+ RECIPES.filter(r=>r.drink&&count(G.goods,r.id)>0).forEach(r=>{const x2=W-SAFE.r-70;
+  button(x2,py,60,60,"",()=>drink(r),{c:effects[r.drink]>0?"#3fbf5f":"#2b3a55"});potion(r.c,x2+30,py+30,46,T);
+  text("×"+count(G.goods,r.id),x2+48,py+50,13,"#fff","center","800");py+=70});
+ const act=Object.keys(effects).filter(k=>effects[k]>0);
+ act.forEach((k,i)=>{const s=Object.keys(DRINK).indexOf(k);text(["Speed","Flying","Luck"][s]+" "+Math.ceil(effects[k])+"s",W/2,R.y+18+i*22,16,"#fff","center","900")});
+ if(G.place==="home"&&G.earned===0&&!sheet)text("Hold your finger down to walk. Grab the things on the ground!",W/2,R.y+R.h-14,15,"#fff","center","800",W-30);
+}
+function drink(r){add(G.goods,r.id,-1);effects[r.drink]=30;SFX.fly();burst(chef.x,chef.y,30);toast(r.name+": "+DRINK[r.drink]+"!");save()}
+
+// ------------------------------------------------------------ sheets
+function sheetFrame(title,c){
+ // dim the field, then a big card
+ cx.fillStyle="rgba(0,0,0,.45)";cx.fillRect(0,0,W,H);
+ btns=[];btns.push({x:0,y:0,w:W,h:H,fn:null});
+ const m=Math.min(18,W*.03),x=SAFE.l+m,y=SAFE.t+m+6,w=W-SAFE.l-SAFE.r-m*2,h=H-SAFE.t-SAFE.b-m*2-6;
+ panel(x,y,w,h,c||"#fff8ec");
+ text(title,x+w/2,y+32,Math.min(26,w*.06),"#2b2b3a","center","900",w-200);
+ button(x+w-104,y+10,94,44,"Close",()=>{sheet=null},{c:"#8a93a6"});
+ // leave the pause button clear: it sits in the top-left corner
+ return{x,y:y+64,w,h:h-64};
+}
+// a scrolling grid of cells; draws each cell with fn(i,x,y,w,h)
+function grid(R,n,cw,ch,fn){
+ const cols=Math.max(1,Math.floor((R.w-16)/(cw+10))),cw2=(R.w-16-(cols-1)*10)/cols,rows=Math.ceil(n/cols);
+ scrollArea=R;scrollMax=Math.max(0,rows*(ch+10)-R.h+10);scroll=clamp(scroll,0,scrollMax);
+ cx.save();cx.beginPath();cx.rect(R.x,R.y,R.w,R.h);cx.clip();
+ const keep=btns.length;
+ for(let i=0;i<n;i++){const x=R.x+8+(i%cols)*(cw2+10),y=R.y+4+Math.floor(i/cols)*(ch+10)-scroll;if(y+ch<R.y||y>R.y+R.h)continue;fn(i,x,y,cw2,ch)}
+ cx.restore();
+ // buttons scrolled out of the box are not tappable
+ for(let i=btns.length-1;i>=keep;i--){const b=btns[i];if(b.y<R.y-1||b.y+b.h>R.y+R.h+1){const top=Math.max(b.y,R.y),bot=Math.min(b.y+b.h,R.y+R.h);if(bot-top<20)btns.splice(i,1);else{b.y=top;b.h=bot-top}}}
+ if(scrollMax>0){const sh=R.h*R.h/(R.h+scrollMax);cx.fillStyle="rgba(0,0,0,.2)";rr(R.x+R.w-6,R.y+(R.h-sh)*scroll/scrollMax,4,sh,2);cx.fill()}
+}
+function tabs(R,names){const tw=Math.min(170,(R.w-20)/names.length-8);
+ names.forEach((n,i)=>button(R.x+R.w/2+(i-names.length/2)*(tw+8)+4,R.y,tw,40,n,()=>{tab=i;scroll=0},{c:tab===i?"#ff9f1c":"#c6cbd6",tc:tab===i?"#fff":"#2b2b3a"}));
+ return{x:R.x,y:R.y+50,w:R.w,h:R.h-50}}
+
+// ------------------------------------------------------------ kitchen
+let pot=[],cooking=0,made=null,hint="";
+function drawKitchen(){
+ const R=sheetFrame("Kitchen","#ffeedd");
+ const wide=R.w>R.h*1.1;
+ const P1=wide?{x:R.x,y:R.y,w:R.w*.42,h:R.h}:{x:R.x,y:R.y,w:R.w,h:Math.min(R.h*.48,330)};
+ const P2=wide?{x:R.x+P1.w,y:R.y,w:R.w-P1.w,h:R.h}:{x:R.x,y:R.y+P1.h,w:R.w,h:R.h-P1.h};
+ // the cauldron
+ const sw=Math.min(70,P1.w*.24,P1.h*.18),size=clamp((P1.h-24-sw-54-36)/1.05,50,Math.min(P1.w*.5,200));
+ const cxp=P1.x+P1.w/2,cyp=P1.y+28+size*.45;
+ cx.fillStyle="#ff7a2b";for(let i=0;i<5;i++){const fx=cxp+(i-2)*size*.15,fh=size*.18*(1+Math.sin(T*10+i)*.3);cx.beginPath();cx.moveTo(fx-size*.07,cyp+size*.48);cx.quadraticCurveTo(fx,cyp+size*.48-fh*2,fx+size*.07,cyp+size*.48);cx.fill()}
+ cx.fillStyle="#2b2b3a";cx.beginPath();cx.ellipse(cxp,cyp+size*.12,size*.5,size*.4,0,0,TAU);cx.fill();
+ cx.fillStyle="#3a3a4d";cx.fillRect(cxp-size*.55,cyp-size*.2,size*1.1,size*.12);
+ const brew=cooking>0?"#ff7bb0":pot.length?"#7fd8ff":"#6fb64e";
+ cx.fillStyle=brew;cx.beginPath();cx.ellipse(cxp,cyp-size*.2,size*.48,size*.12,0,0,TAU);cx.fill();
+ for(let i=0;i<4;i++){const bx=cxp+Math.sin(T*2+i*2)*size*.3,by=cyp-size*.22-((T*40+i*30)%40);cx.fillStyle="rgba(255,255,255,.5)";cx.beginPath();cx.arc(bx,by,4+i,0,TAU);cx.fill()}
+ // three spots for what goes in
+ const sy=cyp+size*.55+6;
+ for(let i=0;i<3;i++){const sx=cxp+(i-1)*(sw+10)-sw/2;cx.fillStyle="rgba(0,0,0,.08)";rr(sx,sy,sw,sw,14);cx.fill();
+  cx.strokeStyle="rgba(0,0,0,.2)";cx.setLineDash([6,5]);cx.lineWidth=2;rr(sx,sy,sw,sw,14);cx.stroke();cx.setLineDash([]);
+  if(pot[i]){emo(ING[pot[i]][0],sx+sw/2,sy+sw/2,sw*.6);btns.push({x:sx,y:sy,w:sw,h:sw,fn:()=>{pot.splice(i,1);hint=""}})}}
+ const by=sy+sw+10;
+ button(cxp-Math.min(110,P1.w*.4),by,Math.min(220,P1.w*.8),54,cooking>0?"Stirring...":"🥄 COOK!",cook,{c:"#ff4a7a",off:pot.length<2||cooking>0});
+ if(made&&!hint)text((made.first?"NEW! ":"You made ")+REC[made.id].name+"!",cxp,P1.y+12,18,"#c2410c","center","900",P1.w-20);
+ else if(hint)text(hint,cxp,P1.y+12,15,"#c2410c","center","800",P1.w-20);
+ else text(pot.length?"Pick up to 3, then COOK":"Tap ingredients to put them in",cxp,P1.y+12,14,"#6b7383","center","700",P1.w-20);
+ // what came out
+ if(made){const k=Math.min(1,made.t*3),s=size*.75*k;cx.fillStyle="rgba(255,255,255,.85)";cx.beginPath();cx.arc(cxp,cyp,s*.65,0,TAU);cx.fill();
+  item(made.id,cxp,cyp,s,T)}
+ // the pantry
+ const ids=Object.keys(ING).filter(i=>count(G.pantry,i)>0);
+ text("Your ingredients",P2.x+P2.w/2,P2.y+10,16,"#2b2b3a","center","800");
+ const G2={x:P2.x,y:P2.y+24,w:P2.w,h:P2.h-24};
+ if(!ids.length){text("Empty! Go out and find some.",G2.x+G2.w/2,G2.y+40,16,"#6b7383","center","700",G2.w-20);return}
+ grid(G2,ids.length,84,92,(i,x,y,w,h)=>{const id=ids[i],left=count(G.pantry,id)-pot.filter(p=>p===id).length;
+  panel(x,y,w,h,left>0?"#fff":"#eee");emo(ING[id][0],x+w/2,y+h*.38,h*.42);
+  text(ING[id][1],x+w/2,y+h*.78,12,"#2b2b3a","center","700",w-8);
+  cx.fillStyle="#ff9f1c";cx.beginPath();cx.arc(x+w-14,y+14,12,0,TAU);cx.fill();text(String(left),x+w-14,y+15,13,"#fff","center","800");
+  btns.push({x,y,w,h,fn:()=>{if(left>0&&pot.length<3&&cooking<=0){pot.push(id);made=null;hint="";SFX.bubble()}else if(pot.length>=3)hint="The pot is full! COOK it, or tap one to take it out."},off:left<=0})});
+}
+function cook(){
+ const key=pot.slice().sort().join("+"),r=RECIPES.find(r=>r.key===key);
+ if(!r){
+  // nothing is used up by a wrong mix; it only says how close it was
+  const near=RECIPES.filter(r=>{const a=r.need.slice();let m=0;pot.forEach(p=>{const j=a.indexOf(p);if(j>=0){a.splice(j,1);m++}});return m>=2&&m===pot.length}).length;
+  hint=near?"Almost! Something else goes in with those.":"Puff! That didn't make anything. Look in the Recipe Book.";
+  SFX.nope();return}
+ cooking=1.1;SFX.bubble();
+ setTimeout(()=>{pot.forEach(i=>add(G.pantry,i,-1));pot=[];add(G.goods,r.id,1);const first=!G.found[r.id];G.found[r.id]=true;
+  made={id:r.id,t:0,first};cooking=0;SFX.cook();burst(W/2,H/2,first?50:20);hint="";save()},1100);
+}
+
+// ------------------------------------------------------------ market
+function drawMarket(){
+ const p=PLACE[G.place],R0=sheetFrame(p.name+" Market","#eaf8e6");
+ const names=p.id==="home"?["Buy","Sell","Upgrades"]:["Buy","Sell"];
+ const R=tabs(R0,names);
+ if(tab===0){const ids=p.items;
+  grid(R,ids.length,230,84,(i,x,y,w,h)=>{const id=ids[i],c=p.cost;panel(x,y,w,h,"#fff");emo(ING[id][0],x+42,y+h/2,40);
+   text(ING[id][1],x+80,y+h*.32,17,"#2b2b3a","left","800",w-90);text("You have "+count(G.pantry,id),x+80,y+h*.6,13,"#6b7383","left","600",w-200);
+   button(x+w-100,y+h*.5,90,h*.42,"",()=>{G.coins-=c;add(G.pantry,id,1);SFX.coin();save()},{c:"#3fbf5f",off:G.coins<c});
+   coinIcon(x+w-74,y+h*.71,9);text(String(c),x+w-46,y+h*.71+1,17,"#fff","center","800")})}
+ else if(tab===1){const ids=RECIPES.filter(r=>count(G.goods,r.id)>0);
+  if(!ids.length){text("Nothing to sell yet. Cook something in the kitchen at home!",R.x+R.w/2,R.y+50,16,"#6b7383","center","700",R.w-30);return}
+  text("Shops pay more for orders! This is the quick price.",R.x+R.w/2,R.y+10,13,"#6b7383","center","700",R.w-30);
+  const R2={x:R.x,y:R.y+24,w:R.w,h:R.h-24},pr=r=>Math.round(r.price*.8);
+  grid(R2,ids.length,230,84,(i,x,y,w,h)=>{const r=ids[i];panel(x,y,w,h,"#fff");item(r.id,x+42,y+h/2,56,T);
+   text(r.name,x+80,y+h*.32,16,"#2b2b3a","left","800",w-90);text("You have "+count(G.goods,r.id),x+80,y+h*.6,13,"#6b7383","left","600",w-200);
+   button(x+w-100,y+h*.5,90,h*.42,"",()=>{add(G.goods,r.id,-1);G.coins+=pr(r);G.earned+=pr(r);SFX.cash();save()},{c:"#ff9f1c"});
+   coinIcon(x+w-74,y+h*.71,9);text("+"+pr(r),x+w-44,y+h*.71+1,16,"#fff","center","800")})}
+ else{grid(R,UPGRADES.length,260,96,(i,x,y,w,h)=>{const u=UPGRADES[i],lv=G.up[u.id],c=u.cost[lv];panel(x,y,w,h,"#fff");emo(u.e,x+42,y+h/2,40);
+   text(u.name,x+80,y+h*.28,17,"#2b2b3a","left","800",w-90);text(u.what,x+80,y+h*.5,13,"#6b7383","left","600",w-190);
+   text("★".repeat(lv)+"☆".repeat(3-lv),x+80,y+h*.75,16,"#f6a400","left","800");
+   if(c==null)text("All done!",x+w-55,y+h*.7,15,"#3fbf5f","center","800");
+   else{button(x+w-100,y+h*.5,90,h*.4,"",()=>{G.coins-=c;G.up[u.id]++;SFX.cash();burst(x+w/2,y+h/2,20);save()},{c:"#3fbf5f",off:G.coins<c});
+    coinIcon(x+w-76,y+h*.7,9);text(String(c),x+w-46,y+h*.7+1,17,"#fff","center","800")}})}
+}
+
+// ------------------------------------------------------------ orders
+function drawOrders(){
+ const R=sheetFrame("Orders","#f0eaff");
+ text("Shops all over the world want these. Cook them, then tap Send!",R.x+R.w/2,R.y+4,14,"#6b7383","center","700",R.w-30);
+ const R2={x:R.x,y:R.y+22,w:R.w,h:R.h-22};
+ grid(R2,G.orders.length,320,150,(i,x,y,w,h)=>{const o=G.orders[i],r=REC[o.r],have=count(G.goods,o.r),ok=have>=o.q,shop=PLACE[o.shop];
+  panel(x,y,w,h,ok?"#fff7d6":"#fff");
+  text(shop.store,x+14,y+22,15,"#9b6bff","left","800",w-110);text("in "+shop.name,x+14,y+40,12,"#6b7383","left","600",w-110);
+  item(r.id,x+46,y+h*.6,64,T);
+  text((o.q>1?o.q+" × ":"")+r.name,x+86,y+h*.45,17,"#2b2b3a","left","900",w-100);
+  // the recipe, so an order is never a mystery
+  r.need.forEach((n,j)=>emo(ING[n][0],x+98+j*32,y+h*.66,24));
+  text("You have "+have,x+86,y+h*.86,12,"#6b7383","left","600");
+  coinIcon(x+w-70,y+24,10);text(String(o.pay),x+w-40,y+25,18,"#b88a00","center","900");
+  button(x+w-104,y+h-56,92,44,ok?"Send!":"Need "+(o.q-have),()=>deliver(i),{c:ok?"#3fbf5f":"#8a93a6",off:!ok,size:17});
+ });
+}
+function deliver(i){const o=G.orders[i];add(G.goods,o.r,-o.q);G.coins+=o.pay;G.earned+=o.pay;G.served++;SFX.cash();burst(W/2,H/2,40);
+ toast(PLACE[o.shop].store+" says thank you! +"+o.pay+" coins");G.orders.splice(i,1);fillOrders();save()}
+
+// ------------------------------------------------------------ bag and recipe book
+function drawBag(){
+ const R0=sheetFrame("Bag","#e6f2ff"),R=tabs(R0,["Recipe Book","Cooked","Ingredients"]);
+ if(tab===0){
+  const found=RECIPES.filter(r=>G.found[r.id]).length;
+  text("Found "+found+" of "+RECIPES.length+" recipes",R.x+R.w/2,R.y+8,14,"#6b7383","center","700");
+  grid({x:R.x,y:R.y+22,w:R.w,h:R.h-22},RECIPES.length,250,92,(i,x,y,w,h)=>{const r=RECIPES[i],f=G.found[r.id],can=canMake(r);
+   panel(x,y,w,h,f?"#fff":"#f1f3f8");
+   if(f)item(r.id,x+40,y+h/2,60,T);else{cx.globalAlpha=.25;item(r.id,x+40,y+h/2,60,0);cx.globalAlpha=1;text("?",x+40,y+h/2,30,"#2b2b3a","center","900")}
+   text(f?r.name:r.c?"A mystery potion":"A mystery food",x+80,y+h*.28,15,"#2b2b3a","left","800",w-90);
+   // a found recipe shows what goes in; an unfound one gives the first thing as a clue
+   r.need.forEach((n,j)=>{const show=f||j===0;if(show)emo(ING[n][0],x+92+j*34,y+h*.62,26);else text("?",x+92+j*34,y+h*.62,22,"#8a93a6","center","900")});
+   if(!can&&!f)text("needs places you haven't been",x+80,y+h*.88,11,"#8a93a6","left","600",w-90)});
+ }
+ else if(tab===1){const ids=RECIPES.filter(r=>count(G.goods,r.id)>0);
+  if(!ids.length){text("Nothing cooked yet.",R.x+R.w/2,R.y+40,16,"#6b7383","center","700");return}
+  grid(R,ids.length,130,110,(i,x,y,w,h)=>{const r=ids[i];panel(x,y,w,h,"#fff");item(r.id,x+w/2,y+h*.4,58,T);
+   text(r.name+" ×"+count(G.goods,r.id),x+w/2,y+h*.85,12,"#2b2b3a","center","800",w-8)})}
+ else{const ids=Object.keys(ING).filter(i=>count(G.pantry,i)>0);
+  if(!ids.length){text("No ingredients yet.",R.x+R.w/2,R.y+40,16,"#6b7383","center","700");return}
+  grid(R,ids.length,110,100,(i,x,y,w,h)=>{const id=ids[i];panel(x,y,w,h,"#fff");emo(ING[id][0],x+w/2,y+h*.4,42);
+   text(ING[id][1]+" ×"+count(G.pantry,id),x+w/2,y+h*.82,12,"#2b2b3a","center","800",w-8)})}
+}
+
+// ------------------------------------------------------------ first-time help
+let help=0;
+const HELP=[
+ ["🌍","Welcome to World Kitchen!","Travel the world to find ingredients. Hold your finger down to walk, and walk over things to pick them up."],
+ ["🍳","Cook at home","Your kitchen is in the house at Home Farm. Put 2 or 3 ingredients in the pot and press COOK. Find all the recipes!"],
+ ["📋","Fill orders","Shops all over the world send orders. Cook what they want and send it to earn coins."],
+ ["🎟️","Go further","Spend coins on tickets to new places, ingredients at the market, and faster shoes. Look out for coins and treasure on the ground!"],
+];
+function drawHelp(){
+ const h=HELP[help-1],w=Math.min(460,W-40),hh=300,x=(W-w)/2,y=(H-hh)/2;
+ cx.fillStyle="rgba(0,0,0,.5)";cx.fillRect(0,0,W,H);btns=[{x:0,y:0,w:W,h:H,fn:null}];
+ panel(x,y,w,hh);emo(h[0],W/2,y+56,56);
+ text(h[1],W/2,y+110,22,"#2b2b3a","center","900",w-30);
+ // wrap the words
+ cx.font="600 16px "+FONT;const words=h[2].split(" ");let line="",ly=y+145;
+ words.forEach(wd=>{if(cx.measureText(line+wd).width>w-50){text(line,W/2,ly,16,"#4b5263","center","600");ly+=22;line=""}line+=wd+" "});text(line,W/2,ly,16,"#4b5263","center","600");
+ button(W/2-80,y+hh-66,160,50,help<HELP.length?"Next":"Let's go!",()=>{help=help<HELP.length?help+1:0},{c:"#3fbf5f"});
+}
+
+// ============================================================ the loop
+function frame(ts){
+ const dt=Math.min(.05,last?(ts-last)/1000:0);last=ts;T+=dt;
+ const pressed=btns;btns=[];scrollArea=null;
+ cx.setTransform(DPR,0,0,DPR,0,0);
+ if(scene==="title")drawTitle();
+ else if(scene==="map")drawMap();
+ else if(scene==="field"){
+  if(sheet){const keep=walkTo;walkTo=false;drawField(0);walkTo=keep}else drawField(dt);
+  if(sheet==="kitchen")drawKitchen();else if(sheet==="market")drawMarket();else if(sheet==="orders")drawOrders();else if(sheet==="bag")drawBag();
+ }
+ if(help&&scene!=="title")drawHelp();
+ // a press that started on a button keeps that button across the redraw
+ if(ptr&&ptr.btn){const b=btns.find(b=>sameBtn(b,ptr.btn));if(b)ptr.btn=b}
+ // effects that sit over everything
+ if(cooking>0)cooking=Math.max(.001,cooking-dt);
+ if(made)made.t+=dt;
+ for(let i=floats.length-1;i>=0;i--){const f=floats[i];f.t+=dt;f.y-=40*dt;if(f.t>1.2){floats.splice(i,1);continue}
+  cx.globalAlpha=1-f.t/1.2;cx.lineWidth=4;cx.strokeStyle="rgba(0,0,0,.5)";cx.font="800 18px "+FONT;cx.textAlign="center";cx.strokeText(f.s,f.x,f.y-30);text(f.s,f.x,f.y-30,18,f.col,"center","800");cx.globalAlpha=1}
+ for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.t+=dt;if(s.t>s.life){sparks.splice(i,1);continue}s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=300*dt;
+  cx.globalAlpha=1-s.t/s.life;cx.fillStyle=s.c;cx.beginPath();cx.arc(s.x,s.y,s.r,0,TAU);cx.fill();cx.globalAlpha=1}
+ if(toastT>0){toastT-=dt;cx.globalAlpha=Math.min(1,toastT*3);
+  cx.font="800 17px "+FONT;const tw=Math.min(W-40,cx.measureText(toastText).width+40);
+  cx.fillStyle="rgba(20,30,50,.85)";rr((W-tw)/2,SAFE.t+64,tw,40,20);cx.fill();text(toastText,W/2,SAFE.t+84,17,"#fff","center","800",tw-20);cx.globalAlpha=1}
+ requestAnimationFrame(frame);
+}
+resize();requestAnimationFrame(frame);
+
+// for the checks in tools/
+window.WK={get G(){return G},get scene(){return scene},get sheet(){return sheet},load,go,travel,openSheet,cook,deliver,
+ put(id){pot.push(id)},get pot(){return pot},RECIPES,PLACES,effects,chef,get field(){return field}};
+</script></body></html>
