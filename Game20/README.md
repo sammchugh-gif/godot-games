@@ -154,6 +154,32 @@ continue. The room imports this game's engine from
 `hq/list.html` is the quick card list, and the fallback on devices without
 WebGL.
 
+**The rest of the base.** The briefing room's south doors (marked TOP SECRET)
+slide open onto a corridor, and `hq/base.js` builds everything off it: the
+garage (Rory's vehicles from all six games on bays, and a kart), the training
+gym (bounce pads, a low-gravity bubble, a high ledge with blocks off it), Pip's
+lab (BOLT's charging dock, the confetti cannon), the canteen (cake), Frost's
+office, and the Hall of Missions along the corridor, a framed picture per game.
+The garage's roller door leads outside to the grounds (`hq/grounds.js`, built
+as a separate scene): a kart track round the building, a lake with a road round
+it, a helipad and a car park. Walking through the door swaps one scene for the
+other. To keep draw calls down on an iPad, `flatten`, `mergeGroup` and
+`compactRig` in `base.js` merge the scenery by material, the sun casts no
+shadows indoors, and the briefing room is hidden whenever the camera can't see
+into it.
+
+**The Secret Folder.** Frost's office has a bookcase; the note on the desk says
+not to tell Rory about the red book. Pulling it slides the bookcase aside onto
+a hidden archive, and the folder on the lectern there is the Secret Folder:
+eight side missions round the base, a minute or two each (`hq/side.js`). They
+are a kart chase round the track, escaped robots in the gym, a drone dash over
+the roof, a cell sprint round the gym, a buggy rally round the grounds, a laser
+corridor, a night shift sneaking past the garage guard bots, and a faster chase
+round the lake. Each is one of this game's mission kinds (`js/missions.js`), so
+each has its autopilot. Stars and best times are kept on the device
+(`roryhq.side`), and once the folder has been found a SECRET button by the pause
+button opens it from anywhere.
+
 **The Puzzle Arcade.** An old arcade cabinet stands on the south wall, opposite
 the mission board. PLAY opens `hq/arcade.html`, where every kind of puzzle from
 Zero Gravity, Deep Red, Spectrum and Timeslip can be played again at levels 1 to
@@ -185,6 +211,9 @@ Chromium with Playwright):
 - `node tools/hqtest.mjs` walks round the 3D HQ room: every file, every one of
   the things to do, the arcade cabinet opening the Puzzle Arcade, and PLAY going
   to the game.
+- `node tools/sidetest.mjs [id,id,...]` opens each of the HQ's side missions
+  from the Secret Folder, taps through the briefing, lets the autopilot play,
+  and checks it was won with no teleports.
 - `node tools/flow.mjs` plays from the title through every place in order.
 - `node tools/views.mjs` and `node tools/shot.mjs` take screenshots at full
   quality; `node tools/icon.mjs` renders the home-screen icon.

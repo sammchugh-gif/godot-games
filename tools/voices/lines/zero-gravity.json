@@ -1932,6 +1932,174 @@
   "from": "js/main.js"
  },
  {
+  "key": "09c0zmg",
+  "who": "pip",
+  "text": "The POLARIS spy car. It does nought to sixty in four seconds. Then it makes toast.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1ywb8y0",
+  "who": "rory",
+  "text": "The time-sled! I wonder if Pebble misses it.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1hun70t",
+  "who": "bolt",
+  "text": "It is set to sixty-six million years ago. I am not touching it.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0djc9nw",
+  "who": "bolt",
+  "text": "The Meltdown snowmobile. Its heated seat is my favourite place in the whole world.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0l1kkvg",
+  "who": "pip",
+  "text": "The moon buggy. It still has Moon dust in the tyres. Don't sneeze.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "01mxt6e",
+  "who": "bolt",
+  "text": "TORPEDO the submarine is asleep. Please do not tap on the glass.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0xlter4",
+  "who": "pip",
+  "text": "The Spectrum paint van. Every colour you can think of, and three you can't.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "14xrwfs",
+  "who": "bolt",
+  "text": "The kart is for side missions. They are in a secret folder. I have said too much.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1eqx3xz",
+  "who": "pip",
+  "text": "The keys are with the Secret Folder. Wherever that is.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0vumhg4",
+  "who": "rory",
+  "text": "Beep beep!",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0thnpc1",
+  "who": "bolt",
+  "text": "Ow. That is my cousin.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0xils45",
+  "who": "pip",
+  "text": "Good punch! He says thank you.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0e7e9cn",
+  "who": "rory",
+  "text": "Hi-ya!",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0akkcld",
+  "who": "pip",
+  "text": "My confetti cannon! Number three on the list. Tick.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1g4z4kl",
+  "who": "bolt",
+  "text": "I will sweep that up. Later. Much later.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0mm0tmb",
+  "who": "bolt",
+  "text": "Mmm. Electricity. Tastes like batteries.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0jifrfx",
+  "who": "bolt",
+  "text": "Charging. Charging. Fully charged. I could run to the Moon. I will walk.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "0r5uliq",
+  "who": "pip",
+  "text": "That's an anti-gravity crystal from Zero Gravity. Don't tap the glass, it gets cross.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1rd7ubk",
+  "who": "pip",
+  "text": "It's the shiniest thing in the base. I've checked.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1hb77vv",
+  "who": "pip",
+  "text": "That was my birthday cake! It's fine. My birthday was in March.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "004dkdb",
+  "who": "bolt",
+  "text": "Cake detected. Crumbs incoming.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1fvn21c",
+  "who": "frost",
+  "text": "Agent Rory, is that cake I hear? Save me a slice.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1guxeun",
+  "who": "rory",
+  "text": "Milk, cheese, and... a robot leg. Pip?",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "19jht7x",
+  "who": "pip",
+  "text": "The leg's spare! Don't eat it.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1fz3h0f",
+  "who": "rory",
+  "text": "Somebody has written FROST on every single yoghurt.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "1njgk75",
+  "who": "bolt",
+  "text": "I keep my oil in the door. It is very refreshing.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "06x4kt0",
+  "who": "rory",
+  "text": "It says: Note to self. The red book. Do NOT tell Rory.",
+  "from": "hq/base.js"
+ },
+ {
+  "key": "18mzc93",
+  "who": "rory",
+  "text": "Oops. Too late.",
+  "from": "hq/base.js"
+ },
+ {
   "key": "11vpzq7",
   "who": "frost",
   "text": "Ah. A proper cup of tea. Splendid work, Agent Rory.",
@@ -2262,6 +2430,66 @@
   "from": "hq/room.js"
  },
  {
+  "key": "0nrigpy",
+  "who": "frost",
+  "text": "The rest of the base is through the TOP SECRET door. Have a look round.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0qd23vc",
+  "who": "frost",
+  "text": "Agent Rory! We've had the builders in. The base is a great deal bigger.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0l4q3hw",
+  "who": "pip",
+  "text": "Through the TOP SECRET door! There's a garage, a gym, my lab, and the grounds outside.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "19jz4nr",
+  "who": "frost",
+  "text": "And somewhere in it, a secret. You're a spy. Find it.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0teid1j",
+  "who": "rory",
+  "text": "Whoa! The whole bookcase moved!",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0j7vw5j",
+  "who": "bolt",
+  "text": "A secret room. I knew it was there. I did not know it was there.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "13t57fk",
+  "who": "frost",
+  "text": "So. You found the Secret Folder, Agent Rory.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0zugpuy",
+  "who": "frost",
+  "text": "Side missions. Little jobs around the base. Quick ones.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "019lunf",
+  "who": "pip",
+  "text": "Chases! Lasers! Escaped robots! I wrote half of them.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "13quzi7",
+  "who": "frost",
+  "text": "Open it any time with the folder button at the top. And Agent Rory... don't tell anyone.",
+  "from": "hq/room.js"
+ },
+ {
   "key": "19nlohr",
   "who": "rory",
   "text": "Whoa. The room is still spinning.",
@@ -2334,6 +2562,18 @@
   "from": "hq/room.js"
  },
  {
+  "key": "1d49dyd",
+  "who": "frost",
+  "text": "My office is down the corridor, Agent Rory. Mind the bookcase.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "1id557m",
+  "who": "frost",
+  "text": "The garage door goes out to the grounds. There's a race track, if you know where the keys are.",
+  "from": "hq/room.js"
+ },
+ {
   "key": "1a85exh",
   "who": "pip",
   "text": "I built BOLT on this bench. He was supposed to be a toaster.",
@@ -2362,6 +2602,114 @@
   "who": "pip",
   "text": "I built the arcade machine out of an old fridge. Every puzzle you find goes in it.",
   "from": "hq/room.js"
+ },
+ {
+  "key": "0ub9vyl",
+  "who": "pip",
+  "text": "Frost has a secret room somewhere. Every time I go in that office, the bookcase looks a bit different.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "14aard0",
+  "who": "pip",
+  "text": "Come and see my lab! It's through the TOP SECRET door and down the corridor.",
+  "from": "hq/room.js"
+ },
+ {
+  "key": "0iyvsci",
+  "who": "pip",
+  "text": "Somebody's taken a kart for a joyride. It's a Floater! Round and round the track.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "0wh6rem",
+  "who": "pip",
+  "text": "Drive into the back of it three times and it'll give up. JUMP is your boost.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "189ekk2",
+  "who": "pip",
+  "text": "Oops. My cleaning robots got out of their cupboard. Five of them, loose in the gym.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1unt88w",
+  "who": "bolt",
+  "text": "Bubble them, Rory. They are not dangerous. They are just very, very tidy.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "06auw99",
+  "who": "bolt",
+  "text": "I have always wanted to fly over the roof. Please steer gently.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1m4uz0d",
+  "who": "pip",
+  "text": "Through the gold rings, in order. Hold JUMP to go up, let go to come down.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "00bvgq8",
+  "who": "frost",
+  "text": "Training exercise, Agent Rory. Eight gravity cells around the gym, and the clock is running.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "037v80s",
+  "who": "pip",
+  "text": "Use the bounce pads, and the floaty bubble! The steps go up to the ledge, and the platforms hop off it.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1il1v4m",
+  "who": "pip",
+  "text": "I've hidden eight gravity cells round the grounds. By the lake, by the helicopter, all over.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1qdolru",
+  "who": "pip",
+  "text": "Take the buggy and drive over them all before the clock runs out!",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "19k21iy",
+  "who": "pip",
+  "text": "I'm testing my new laser alarm in the corridor. Can you get to the end without setting it off?",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "0oi6s3j",
+  "who": "pip",
+  "text": "Jump the low ones, wait for the blinking ones, and dodge the ones that swing.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "0pesaf1",
+  "who": "frost",
+  "text": "The garage guard bots are on night shift. Let's see how sneaky you are, Agent Rory.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1u7d619",
+  "who": "bolt",
+  "text": "Stay out of the yellow light. I will wait here. Very quietly. Beep.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "1oeozbh",
+  "who": "pip",
+  "text": "It's that Floater again! It's taken a kart down to the lake road.",
+  "from": "hq/side.js"
+ },
+ {
+  "key": "0e9rfrt",
+  "who": "pip",
+  "text": "It's quicker this time. You'll need four bumps!",
+  "from": "hq/side.js"
  },
  {
   "key": "11hd1l6",

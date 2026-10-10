@@ -27,6 +27,28 @@
   .hqphoto img { display: block; max-width: 100%; max-height: 46vh; width: auto; height: auto; margin: 0 auto; border: 6px solid #f4efe2; box-sizing: border-box; }
   .hqphoto .plaque { display: inline-block; margin: 12px 0 8px; padding: 6px 18px; background: #c8a04a; color: #3a2410; font-weight: 900; letter-spacing: .2em; border-radius: 4px; }
   .hqphoto .row { justify-content: center; }
+  /* the Secret Folder of side missions */
+  .sidefolder { position: relative; width: min(720px, 94vw); margin-top: 26px; padding: 18px 18px 12px; background: #c8a060; border: 3px solid #8a6430; border-radius: 6px 14px 14px 14px; color: #2a1a0a; box-shadow: 0 18px 60px rgba(0, 0, 0, .6); text-align: left; }
+  .sidefolder .tab { position: absolute; top: -26px; left: 0; padding: 4px 16px; background: #c8a060; border: 3px solid #8a6430; border-bottom: none; border-radius: 10px 10px 0 0; font: 900 13px ui-monospace, monospace; letter-spacing: .2em; color: #c81a24; }
+  .sidefolder .hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+  .sidefolder .kick { font: 900 12px ui-monospace, monospace; letter-spacing: .25em; color: #c81a24; }
+  .sidefolder .ttl { font-weight: 900; font-size: clamp(26px, 5vw, 36px); line-height: 1; }
+  .sidefolder .tot { font-weight: 900; font-size: 20px; color: #6a4a10; }
+  .sidefolder .sub { margin: 6px 0 12px; font-weight: 700; color: #5a3a14; }
+  .sidefolder .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-height: calc(86vh - 190px); overflow: auto; padding: 2px 2px 4px; }
+  .sidefolder .btn.ghost { color: #2a1a0a; border-color: #8a6430; background: #f4ecd8; }
+  .sidecard { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px 10px; background: #f4ecd8; border: 2px solid #8a6430; border-radius: 10px; font-family: inherit; color: #2a1a0a; cursor: pointer; box-shadow: 0 3px 0 #8a6430; }
+  .sidecard:active { transform: translateY(2px); box-shadow: 0 1px 0 #8a6430; }
+  .sidecard .ic { font-size: 34px; }
+  .sidecard .nm { font-weight: 900; font-size: 16px; text-align: center; }
+  .sidecard .pl { font: 800 10px ui-monospace, monospace; letter-spacing: .14em; color: #8a6430; }
+  .sidecard .stars { font-size: 20px; letter-spacing: 2px; color: #c8b088; }
+  .sidecard .stars .on { color: #e8a010; text-shadow: none; }
+  .sidecard .bt { font: 800 11px ui-monospace, monospace; color: #6a4a2a; }
+  .sidefolder .row { justify-content: center; margin-top: 12px; }
+  .sidetime { font-weight: 900; font-size: 22px; }
+  .sidetime b { color: #7bed9f; } .sidetime i { color: #8ea4c4; font-style: normal; font-size: 16px; }
+  .secretbtn { color: #ff8a8a; border-color: #ff5a5a; }
 </style>
 <script type="importmap">
 { "imports": { "three": "../agent-rory-zero-gravity/js/vendor/three.module.min.js", "three/addons/": "../agent-rory-zero-gravity/js/vendor/addons/" } }

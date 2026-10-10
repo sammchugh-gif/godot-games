@@ -79,6 +79,34 @@ await use("phone"); check(await ev(() => __hq.dialogue.active && __hq.ringing ==
   await page.waitForSelector("body.ready", { timeout: 30000 }); await page.screenshot({ path: `${out}/arcade_page.png` });
   await page.goto(`http://localhost:${port}/agent-rory-hq/index.html`);
   await page.waitForFunction(() => window.__hq && window.__hq.state === "room", null, { timeout: 180000 }); await waitT(1.5); await ev(() => __hq.debug.skip()); }
+// the rest of the base: through the TOP SECRET doors, the bookcase in Frost's office, the
+// Secret Folder behind it, and out through the garage to the grounds and back
+{ await ev(() => __hq.debug.skip()); await ev(() => { __hq.player.teleport(0, 0, 7, 0); __hq.player.camYaw = Math.PI; __hq.input.forced = { mx: 0, my: 1 }; });
+  await waitT(1.2); check(await ev(() => Math.abs(__hq.room.doors[0].position.x) > 1.2), "the TOP SECRET doors slide open");
+  await waitT(2.5); await ev(() => { __hq.input.forced = null; });
+  const dz = await ev(() => __hq.player.pos.z); check(dz > 11, `Rory walks through into the corridor (z ${dz.toFixed(1)})`);
+  await page.screenshot({ path: `${out}/20_corridor.jpg`, type: "jpeg", quality: 88 });
+  check(await ev(() => !document.querySelector(".secretbtn")), "no SECRET button before the folder is found");
+  await ev(() => __hq.debug.act("note")); await waitT(0.3); await ev(() => __hq.debug.skip());
+  check(await ev(() => __hq.debug.act("book")), "the red book can be pulled");
+  await waitT(2.5); check(await ev(() => __hq.base.bookcase.open > 0.9 && localStorage.getItem("roryhq.bookcase") === "1"), "the bookcase slides aside");
+  await ev(() => __hq.debug.skip()); await ev(() => __hq.debug.goToThing("folder")); await waitT(0.6);
+  await page.screenshot({ path: `${out}/21_archive.jpg`, type: "jpeg", quality: 88 });
+  await ev(() => __hq.debug.act("folder")); await waitT(0.3); await ev(() => __hq.debug.skip()); await waitT(0.3);
+  check(await ev(() => document.querySelectorAll('[data-layer="folder"] .sidecard').length) === 8, "the Secret Folder holds eight side missions");
+  check(await ev(() => !!document.querySelector(".secretbtn")), "and the SECRET button appears");
+  await page.screenshot({ path: `${out}/22_folder.png` });
+  await ev(() => document.querySelector('[data-layer="folder"] [data-a="close"]').dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }))); await waitT(0.3);
+  // (in and out three times: the pictures each place paints are let go, not piled up)
+  let tex0 = 0;
+  for (let i = 0; i < 3; i++) {
+    await ev(() => __hq.debug.go("grounds")); await page.waitForFunction(() => __hq.state === "room" && __hq.scene === "grounds", null, { timeout: 120000 }); await waitT(1);
+    if (!i) { check(true, "out through the garage to the grounds"); await page.screenshot({ path: `${out}/23_grounds.jpg`, type: "jpeg", quality: 88 }); }
+    await ev(() => __hq.debug.act("in")); await page.waitForFunction(() => __hq.state === "room" && __hq.scene === "inside", null, { timeout: 120000 }); await waitT(1);
+    const tex = await ev(() => __hq.engine.renderer.info.memory.textures);
+    if (!i) { tex0 = tex; check(await ev(() => __hq.player.pos.x < -28), "and back in by the garage door"); }
+    else check(tex <= tex0 + 2, `round trip ${i + 1}: textures ${tex} (first ${tex0})`);
+  } }
 // the play button goes to the game
 await ev(() => __hq.debug.goTo("zero")); await waitT(0.3); await ev(() => { __hq.input.actionPressed = true; }); await waitT(0.3);
 const nav = page.waitForNavigation({ timeout: 15000 }).catch(() => null);
