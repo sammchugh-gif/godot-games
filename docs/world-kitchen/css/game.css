@@ -193,8 +193,11 @@ body { position: fixed; inset: 0; }
 .pz-slidewrap { display: flex; gap: 18px; justify-content: center; align-items: center; flex-wrap: wrap; }
 .pz-slide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: min(52vmin, 330px); aspect-ratio: 1; background: rgba(0, 0, 0, .35); padding: 4px; border-radius: 12px; }
 .tile { position: relative; border: 0; border-radius: 8px; cursor: pointer; background-color: #f4f0ff; background-size: 300% 300%; }
-.tile b { position: absolute; left: 5px; top: 3px; font-size: 16px; color: #fff; background: rgba(28, 40, 70, .8); border-radius: 8px; padding: 0 7px; }
-.tile.gap { background: none; cursor: default; }
+.tile { transition: transform .18s ease-out; padding: 6px; }
+.tile img { width: 100%; height: 100%; display: block; pointer-events: none; }
+.tile.right { box-shadow: inset 0 0 0 3px rgba(95, 211, 90, .7); }
+.pz-ref .refgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 120px; background: #f4f0ff; border-radius: 12px; padding: 4px; margin-bottom: 4px; }
+.pz-ref .refgrid img { width: 100%; height: auto; background: none; margin: 0; }
 .pz-slide.solved { box-shadow: 0 0 0 3px #5fd35a, 0 0 24px #5fd35a; }
 .pz-ref { color: var(--dim); font-weight: 800; } .pz-ref img { display: block; width: 110px; height: 110px; background: #f4f0ff; border-radius: 12px; margin-bottom: 4px; }
 
