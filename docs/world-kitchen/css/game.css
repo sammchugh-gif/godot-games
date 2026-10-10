@@ -210,3 +210,6 @@ body { position: fixed; inset: 0; }
   .objective span { font-size: 13px; }
 }
 @media (max-width: 520px) { .hearts { transform: scale(.76); transform-origin: top right; } .hud-top { right: calc(118px + var(--sr)); } .objective { max-width: none; } .objective span { font-size: 13px; } .bossbar { width: calc(100% - 230px); } }
+.findhere { display: flex; gap: 4px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 10px 0 0; }
+.findhere b { font-size: 12px; letter-spacing: .14em; color: var(--cyan); text-transform: uppercase; margin-right: 6px; }
+.findhere .ic.mini { width: 40px; height: 40px; }

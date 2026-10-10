@@ -2,11 +2,12 @@
 // of each. Each model stands on the ground at its origin and faces +z.
 import * as THREE from "three";
 import { P, mat as M, meatballModel } from "./models.js";
+import { MINIS2, BOSSES2 } from "./enemies2.js";
 
 const TAU = Math.PI * 2;
 const grp = (...k) => { const g = new THREE.Group(); k.flat().forEach(x => x && g.add(x)); return g; };
 // cross eyes and frowning brows, s is the size of an eye
-function face(y, z, s = 0.2, gap = 0.22, o = {}) {
+export function face(y, z, s = 0.2, gap = 0.22, o = {}) {
   const white = M(0xffffff, { r: 0.3 }), black = M(0x111111);
   return [-1, 1].flatMap(k => [
     P("sph", white, [k * gap, y, z], [s, s * 1.1, s * 0.6]),
@@ -14,8 +15,8 @@ function face(y, z, s = 0.2, gap = 0.22, o = {}) {
     o.nobrow ? null : P("box", black, [k * gap, y + s * 0.75, z + s * 0.1], [s * 1.2, s * 0.22, s * 0.2], [0, 0, k * 0.45]),
   ]).filter(Boolean);
 }
-const feet = (c = 0x222222, w = 0.25, s = 0.22) => [-w, w].map(x => P("sph", M(c), [x, s * 0.5, 0.05], [s * 1.2, s, s * 1.5]));
-const mouth = (y, z, w = 0.25) => { const m = P("box", M(0x3a0a0a), [0, y, z], [w, 0.07, 0.06]); return m; };
+export const feet = (c = 0x222222, w = 0.25, s = 0.22) => [-w, w].map(x => P("sph", M(c), [x, s * 0.5, 0.05], [s * 1.2, s, s * 1.5]));
+export const mouth = (y, z, w = 0.25) => { const m = P("box", M(0x3a0a0a), [0, y, z], [w, 0.07, 0.06]); return m; };
 
 // ------------------------------------------------------------ the little ones
 export const MINIS = {
@@ -79,5 +80,5 @@ export const BOSSES = {
     Array.from({ length: 6 }, (_, i) => P("cone", M(0xffc83a, { m: 0.8, r: 0.2 }), [Math.cos(i / 6 * TAU) * 0.55, 2.85, Math.sin(i / 6 * TAU) * 0.55], [0.2, 0.4, 0.2])),
     Array.from({ length: 6 }, (_, i) => P("sph", M([0xff3a5a, 0x3aa8ff, 0x5fd35a][i % 3], { e: 0.5 }), [Math.cos(i / 6 * TAU + 0.5) * 0.6, 2.6, Math.sin(i / 6 * TAU + 0.5) * 0.6], 0.12))),
 };
-export function miniModel(id) { return MINIS[id](); }
-export function bossModel(id) { return BOSSES[id](); }
+export function miniModel(id) { return (MINIS[id] || MINIS2[id])(); }
+export function bossModel(id) { return (BOSSES[id] || BOSSES2[id])(); }

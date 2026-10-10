@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { TEX, M as TM, rng } from "./tex.js";
 import { P, mat, label, padModel, houseModel } from "./models.js";
+import { dressScene } from "./places2.js";
 
 const TAU = Math.PI * 2;
 export const SPOTS = { pad: [0, 23], puzzles: [[-17, 4], [17, 4], [0, -9]], gate: [0, -27], bound: 29 };
@@ -36,7 +37,7 @@ function clouds(scene, R, n, tint = 0xffffff) {
     c.position.set(Math.cos(a) * d, 55 + R() * 40, Math.sin(a) * d); c.lookAt(0, c.position.y, 0); scene.add(c);
   }
 }
-function aurora(scene) {
+export function aurora(scene) {
   const g = new THREE.Group();
   [[0x3affb0, -160, 0.4], [0x7a5aff, -190, -0.3], [0x3ad8ff, -140, 0.9]].forEach(([c, z, ry], i) => {
     const geo = new THREE.PlaneGeometry(320, 60, 40, 1), pos = geo.attributes.position;
@@ -118,17 +119,18 @@ export function palm(B, x, z, s = 1) {
   for (let i = 0; i < 7; i++) g.add(P("box", mat(0x3f9a3a, { f: true }), [0.5 * s + Math.cos(i * 0.9) * 1.1 * s, 4.6 * s, Math.sin(i * 0.9) * 1.1 * s], [2.8 * s, 0.08 * s, 0.7 * s], [0, i * 0.9, -0.35]));
   B.add(g, x, 0, z, Math.random() * TAU); B.circles.push({ x, z, r: 0.5 });
 }
-function hills(scene, R, color, n = 16, rMin = 120, rMax = 190, tall = 1) {
+export function hills(scene, R, color, n = 16, rMin = 120, rMax = 190, tall = 1) {
   const m = mat(color, { f: true, r: 1 });
   for (let i = 0; i < n; i++) { const a = i / n * TAU + R() * 0.3, d = rMin + R() * (rMax - rMin); const h = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 2), m); h.scale.set(40 + R() * 40, (14 + R() * 26) * tall, 40 + R() * 30); h.position.set(Math.cos(a) * d, -4, Math.sin(a) * d); scene.add(h); }
 }
-function water(scene, y, size, color = 0x2a7ab8, x = 0, z = 0) {
+export function water(scene, y, size, color = 0x2a7ab8, x = 0, z = 0) {
   const w = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ color, roughness: 0.08, metalness: 0.4 })); w.rotation.x = -Math.PI / 2; w.position.set(x, y, z); w.receiveShadow = true; scene.add(w); return w;
 }
 
 // ------------------------------------------------------------ a whole level
 const GROUND = { grass: ["grass", [1, [86, 140, 58]], 70], paving: ["paving", [2, [196, 178, 150], 64], 80], sand: ["sand", [6, [226, 196, 140]], 60],
-  cobble: ["cobble", [3, [128, 120, 112]], 90], snow: ["snow", [7], 50], stone: ["stone", [5, [110, 96, 96]], 70] };
+  cobble: ["cobble", [3, [128, 120, 112]], 90], snow: ["snow", [7], 50], stone: ["stone", [5, [110, 96, 96]], 70],
+  asphalt: ["asphalt", [10], 80], drygrass: ["grass", [11, [176, 156, 86]], 70], blacksand: ["sand", [12, [72, 68, 66]], 60] };
 
 export function buildLevel(L) {
   const s = new THREE.Scene(), R = rng(L.n * 977 + 13);
@@ -149,7 +151,7 @@ export function buildLevel(L) {
   const road = new THREE.Mesh(new THREE.PlaneGeometry(6, 60), TM(plazaK[0], { args: plazaK[1], repeat: [3, 30] })); road.rotation.x = -Math.PI / 2; road.position.set(0, 0.015, 0); road.receiveShadow = true; s.add(road);
   if (!L.night) clouds(s, R, 10, L.n === 6 ? 0xffb0a0 : 0xffffff);
   const W = { scene: s, B, fx: [], R };
-  (DRESS[L.id] || (() => {}))(W, L);
+  (DRESS[L.id] || (L.scene ? dressScene : () => {}))(W, L);
   // the airfield pad
   const pad = padModel(); B.add(pad, SPOTS.pad[0], 0, SPOTS.pad[1]); B.sign("AIRFIELD", SPOTS.pad[0], 7.2, SPOTS.pad[1]);
   return { scene: s, circles: B.circles, rects: B.rects, fx: W.fx, B, sun };
@@ -284,8 +286,8 @@ export function buildArena(L) {
   const [gk, gargs, rep] = GROUND[L.ground];
   const g = new THREE.Mesh(new THREE.PlaneGeometry(500, 500), TM(gk, { args: gargs, repeat: [rep * 2.5, rep * 2.5] })); g.rotation.x = -Math.PI / 2; g.receiveShadow = true; s.add(g);
   if (L.id === "volcano") water(s, 0.03, 600, 0x2a8ab8);
-  if (L.id === "arctic") aurora(s);
-  hills(s, R, L.id === "arctic" ? 0xe8f0fa : L.id === "mexico" || L.id === "volcano" ? 0xc89a60 : 0x5a8a48, 14);
+  if (L.id === "arctic" || (L.scene && L.scene.aurora)) aurora(s);
+  hills(s, R, L.scene && L.scene.hills || (L.ground === "snow" ? 0xe8f0fa : L.ground === "sand" || L.ground === "drygrass" ? 0xc89a60 : 0x5a8a48), 14);
   const floor = new THREE.Mesh(new THREE.CylinderGeometry(19, 19.5, 0.4, 48), TM("stone", { args: [5, [200, 190, 170]], repeat: [6, 6] })); floor.position.y = 0.2; floor.receiveShadow = true; s.add(floor);
   const B = builder(s), st = TM("stone", { args: [5, [226, 216, 196]], repeat: [1, 2] });
   for (let i = 0; i < 20; i++) { if (i === 5) continue; const a = i / 20 * TAU; B.cyl(0.9, 1, 7, st, Math.cos(a) * 19, 3.5, Math.sin(a) * 19, { solid: false }); B.add(P("cone6", mat(0xff8a1f, { e: 2 }), [0, 0, 0], [0.5, 0.9, 0.5]), Math.cos(a) * 19, 7.6, Math.sin(a) * 19); }

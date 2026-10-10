@@ -6,7 +6,7 @@
 // world, and you fly home to cook it. Sophia, Rory and Dylan Games, Inc.
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { LEVELS, LEVEL, ING, REC, RECIPES, VEHICLES, orderStars } from "./data.js";
+import { LEVELS, LEVEL, LAST, ING, REC, RECIPES, VEHICLES, orderStars } from "./data.js";
 import { itemModel, chefModel, vehicleModel, kitchenModel, label, mat, P } from "./models.js";
 import { miniModel, bossModel } from "./enemies.js";
 import { buildLevel, buildArena, SPOTS } from "./places.js";
@@ -78,12 +78,14 @@ const add = (bag, id, n) => { bag[id] = (bag[id] || 0) + n; if (bag[id] <= 0) de
 // food goes straight to the kitchen
 function gain(id, n) { add(G.pantry, id, n); G.seen[id] = true; fillOrders(); }
 
-const SHOPS = { home: "Granny's Cafe, Home Farm", italy: "Pizza Palace, Italy", mexico: "Taco Town, Mexico", japan: "Sakura Sushi, Japan", arctic: "Penguin Ice Cream, North Pole", volcano: "Tiki Smoothie Bar, Hawaii" };
+// A food is ordered by the shop in the country it comes from; potions by
+// any shop you have been to.
+const shopOf = id => { const l = LEVEL[id]; return `${l.store}, ${l.name}`; };
 function newOrder() {
   const ok = RECIPES.filter(r => !r.grand && known(G, r)), taken = G.orders.map(o => o.r);
   let pool = ok.filter(r => !taken.includes(r.id)); if (!pool.length) pool = ok; if (!pool.length) return null;
-  const r = pick(pool), shops = ["home", ...LEVELS.filter(l => G.open[l.id] && SHOPS[l.id]).map(l => l.id)];
-  return { r: r.id, q: Math.random() < 0.3 ? 2 : 1, shop: SHOPS[pick(shops)] };
+  const r = pick(pool), been = LEVELS.filter(l => l.store && (l.n === 0 || G.open[l.id])).map(l => l.id);
+  return { r: r.id, q: Math.random() < 0.3 ? 2 : 1, shop: shopOf(r.from && LEVEL[r.from] ? r.from : pick(been)) };
 }
 function fillOrders() { while (G.orders.length < 3) { const o = newOrder(); if (!o) break; G.orders.push(o); } }
 fillOrders();
@@ -131,10 +133,14 @@ function marker(scene, x, z, color, text, textCol) {
 function setSign(m, text, col) { if (m.sign) m.g.remove(m.sign); m.sign = label(text, col); m.sign.position.y = 3.6; m.sign.scale.multiplyScalar(0.8); m.g.add(m.sign); }
 function setMarker(m, color) { m.ring.material.color.set(color); m.beam.material.color.set(color); m.gem.material = mat(color, { e: 1.6 }); }
 
-const worlds = new Map();
+const worlds = new Map(), arenas = new Map();
 const puzzleName = (L, i) => (L.n === 0 ? (i ? "HEN HOUSE" : "VEGETABLE PATCH") : "PUZZLE");
+function forget(map, keep) {
+  for (const [k, w] of map) if (!keep.includes(k)) { w.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); }); map.delete(k); }
+}
 function levelWorld(id) {
   if (worlds.has(id)) return worlds.get(id);
+  forget(worlds, ["home", G.place, cur && cur.id]); forget(arenas, []);
   const L = LEVEL[id], built = buildLevel(L); prep(built.scene);
   const w = { id, L, ...built, bound: SPOTS.bound, stations: [], minis: [], parked: new THREE.Group(), puzzles: [] };
   w.parked.position.set(SPOTS.pad[0], 0.1, SPOTS.pad[1]); w.parked.rotation.y = -2.4; w.scene.add(w.parked); w.circles.push({ x: SPOTS.pad[0], z: SPOTS.pad[1], r: 1.6 });
@@ -287,7 +293,7 @@ function knockedOut() {
 // ============================================================ the little enemies
 function tickMinis(w, dt, list = w.minis, speedK = 1) {
   for (const m of list) {
-    m.t += dt; m.slow -= dt; const sp = (m.slow > 0 ? 0.45 : 1) * (2.6 + (w.L ? w.L.n : 3) * 0.25) * speedK;
+    m.t += dt; m.slow -= dt; const sp = (m.slow > 0 ? 0.45 : 1) * (2.6 + Math.min(8, w.L ? w.L.n : 3) * 0.25) * speedK;
     const dx = me.x - m.x, dz = me.z - m.z, d = Math.hypot(dx, dz) || 1;
     let vx = 0, vz = 0;
     if (d < 12 || mode === "arena") { vx = dx / d * sp; vz = dz / d * sp; }
@@ -315,20 +321,15 @@ function startPuzzle(w, p) {
 // ============================================================ bosses
 // Every boss picks from its own set of attacks, and sends little ones out
 // once it is half beaten. Its health bar is at the bottom of the screen.
-const ATTACKS = {
-  meatball: ["charge", "lob"], taco: ["stomp", "volley"], sushi: ["spin", "lob"], sundae: ["volley", "charge", "summon"],
-  dragon: ["breath", "volley", "stomp"], burger: ["charge", "lob", "stomp", "volley", "spin", "breath", "summon"],
-};
-const SIZE = { meatball: 2.6, taco: 2.2, sushi: 2.2, sundae: 1.8, dragon: 2.2, burger: 2.2 };
-let B = null, arenaOf = null; const arenas = new Map();
+let B = null, arenaOf = null;
 function enterBoss(w) {
   const L = w.L;
   bossCard(L, () => {
     arenaOf = w.id;
-    if (!arenas.has(w.id)) { const a = buildArena(L); prep(a.scene); arenas.set(w.id, { id: "arena", L, ...a, stations: [{ id: "exit", x: 0, z: 18, r: 2.4, act: "LEAVE", run: () => endBoss() }] }); }
+    if (!arenas.has(w.id)) { forget(arenas, []); const a = buildArena(L); prep(a.scene); arenas.set(w.id, { id: "arena", L, ...a, stations: [{ id: "exit", x: 0, z: 18, r: 2.4, act: "LEAVE", run: () => endBoss() }] }); }
     const a = arenas.get(w.id); mode = "arena"; setWorld(a);
     me.x = 0; me.z = 13; me.y = 0; me.hearts = me.max; me.hurt = 0; view.yaw = 0; view.pitch = 0.42;
-    const s = SIZE[L.boss.id], g = bossModel(L.boss.id); g.scale.setScalar(s); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); a.scene.add(g);
+    const s = L.boss.size, g = bossModel(L.boss.id); g.scale.setScalar(s); g.traverse(o => { if (o.isMesh) o.castShadow = true; }); a.scene.add(g);
     B = { L, g, x: 0, z: -6, r: s * 1.15, hp: L.boss.hp, st: "idle", t: 2, slow: 0, minis: [], shots: [], fire: null, spawnT: 6, dead: 0, hop: 0 };
     sfx("boom"); banner("BOSS FIGHT", L.boss.name, "", 2200);
   });
@@ -336,7 +337,7 @@ function enterBoss(w) {
 function tickBoss(dt) {
   const b = B, sp = b.slow > 0 ? 0.5 : 1; b.slow -= dt;
   if (b.dead) { b.dead -= dt; b.g.scale.multiplyScalar(1 - dt * 0.7); b.g.rotation.y += dt * 9; if (b.dead <= 0) bossWon(); return; }
-  const dx = me.x - b.x, dz = me.z - b.z, d = Math.hypot(dx, dz) || 1, att = ATTACKS[b.L.boss.id];
+  const dx = me.x - b.x, dz = me.z - b.z, d = Math.hypot(dx, dz) || 1, att = b.L.boss.attacks;
   b.t -= dt * sp;
   const face = Math.atan2(dx, dz);
   if (b.st === "idle") {
@@ -361,12 +362,16 @@ function tickBoss(dt) {
   b.g.position.z = b.z; b.g.position.y = b.hop + (b.st === "idle" ? Math.abs(Math.sin(performance.now() / 260)) * 0.25 : 0);
   if (d < b.r + 0.6 && me.y < 2.5) hurt(b.x, b.z);
   // half beaten: little ones join in
-  if (b.hp < b.L.boss.hp / 2 && b.L.boss.id !== "sundae") { b.spawnT -= dt; if (b.spawnT <= 0 && b.minis.length < 3) { b.spawnT = 9; b.minis.push(spawnMini(cur, { ...b.L.mini, hp: 2 }, 0, { x: b.x, z: b.z })); } }
+  if (b.hp < b.L.boss.hp / 2 && !b.L.boss.attacks.includes("summon")) { b.spawnT -= dt; if (b.spawnT <= 0 && b.minis.length < 3) { b.spawnT = 9; b.minis.push(spawnMini(cur, { ...b.L.mini, hp: 2 }, 0, { x: b.x, z: b.z })); } }
   tickMinis(cur, dt, b.minis, 0.9);
   tickShots(dt);
 }
 function rest(b) { b.st = "idle"; b.t = rnd(1.2, 2.2) * (b.hp < b.L.boss.hp / 3 ? 0.7 : 1); }
-const SHOT_COL = { meatball: 0xd8201a, taco: 0xd81e1e, sushi: 0xfafafa, sundae: 0xf4f8ff, dragon: 0xff7a1f, burger: 0xffc83a };
+const SHOTS = { meatball: 0xd8201a, taco: 0xd81e1e, sushi: 0xfafafa, sundae: 0xf4f8ff, dragon: 0xff7a1f, burger: 0xffc83a, count: 0xfff0a0, donut: 0xff7ab0, currypot: 0xf0b030,
+  fortune: 0xf0c060, carnival: 0xff7ab0, mummy: 0x2a7a2a, gyro: 0xf4f4f0, stroop: 0xc87a2a, matryoshka: 0x8a1a4a, bigpotato: 0xc8a060, moose: 0x6a3a1e, giraffe: 0xff3a8a,
+  tomyum: 0xe8701a, puffin: 0x6a3a1e, toro: 0xd8321e, kebab: 0x5fbf3a, bibimbap: 0xff8a1f, genie: 0x9b6bff, fondue: 0xffd860, crab: 0x6a4428, gaucho: 0x8a3a1a,
+  pho: 0xf8e8c0, gelato: 0xc8f0d8, hotpot: 0xd8321e };
+const SHOT_COL = new Proxy(SHOTS, { get: (o, k) => o[k] ?? 0xff8a3a });
 function lob(b, tx, tz) {
   const mark = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.6, 32), new THREE.MeshBasicMaterial({ color: 0xff2a2a, transparent: true, opacity: 0.8, depthWrite: false })); mark.rotation.x = -Math.PI / 2; mark.position.set(tx, 0.45, tz); cur.scene.add(mark);
   const m = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 12), mat(SHOT_COL[b.L.boss.id], { r: 0.3 })); m.castShadow = true; cur.scene.add(m);
@@ -416,6 +421,7 @@ function bossWon() {
   const next = LEVELS[L.n + 1];
   if (next && !next.final) G.open[next.id] = true;
   save(); endBoss();
+  if (L.id === LAST) setTimeout(openFortress, 4000);
   if (L.final) { rewardCard("THE END", "World's Best Chef!", [["grand", 1]], `Chef ${G.name}, you beat King Burgerbeard and saved the world's food! The shops still want your cooking: keep filling orders.`); banner("THE WORLD IS SAVED", "Chef " + G.name, "", 5000); return; }
   rewardCard("BOSS BEATEN!", L.boss.name, loot, (first && next && !next.final ? `Level ${next.n}, ${next.name}, is open at the airfield! ` : "") + "Everything has gone straight to the kitchen.");
 }
@@ -462,9 +468,14 @@ function cook(pot) {
   }
   pot.forEach(i => add(G.pantry, i, -1)); add(G.goods, r.id, 1);
   const isNew = !G.cooked[r.id]; G.cooked[r.id] = true;
-  if (r.grand && !G.open.fortress) { G.open.fortress = true; setTimeout(() => banner("THE GRAND CONCOCTION", "The way is open!", "Fly to the Burger Fortress from the airfield. King Burgerbeard is waiting.", 5200), 3400); }
+  if (r.grand && !G.open.fortress) setTimeout(() => openFortress() || banner("THE GRAND CONCOCTION", "It's ready!", `When you have beaten all ${LEVEL[LAST].n} bosses, it will open the way to the last one.`, 5200), 3400);
   save(); showMade(r.id, isNew ? "NEW RECIPE!" : "YOU MADE", "");
   return { ok: true };
+}
+function openFortress() {
+  if (G.open.fortress || !G.cooked.grand || !G.beaten[LAST]) return false;
+  G.open.fortress = true; save();
+  banner("THE WAY IS OPEN", "Burger Fortress", "Fly there from the airfield. King Burgerbeard is waiting.", 5200); return true;
 }
 function showMade(id, t1, t3) {
   const k = kitchen; if (k.made) k.made.g.removeFromParent();
@@ -570,6 +581,8 @@ function tickFx(dt, t) {
   if (cur && cur.fx) for (const [k, o, at] of cur.fx) {
     if (k === "smoke") { o.userData.t = (o.userData.t + dt * 0.1) % 1; const u = o.userData.t; o.position.set(at[0] + Math.sin(u * 9) * 3, at[1] + u * 40, at[2]); o.scale.setScalar(3 + u * 14); o.material.opacity = 0.5 * (1 - u); }
     else if (k === "peck") o.rotation.x = Math.max(0, Math.sin(t * 3 + o.position.x)) * 0.5;
+    else if (k === "spin") o.rotation.z -= dt * 0.8;
+    else if (k === "geyser") { const u = (t % 7) / 7, h = u < 0.25 ? Math.sin(u / 0.25 * Math.PI) * 26 : 0.5; o.scale.set(1, Math.max(0.5, h), 1); o.position.y = Math.max(0.5, h) / 2; }
   }
   if (cur && cur.puzzles) for (const p of cur.puzzles) { p.m.gem.rotation.y += dt * 1.5; p.m.gem.position.y = 2.4 + Math.sin(t * 2 + p.i) * 0.2; }
   if (cur && cur.gate) { const o = gateOpen(cur); cur.gate.bars.position.y += ((o ? 7 : 0) - cur.gate.bars.position.y) * Math.min(1, dt * 2); cur.gate.portal.visible = o; cur.gate.portal.material.opacity = 0.4 + Math.sin(t * 4) * 0.15; }

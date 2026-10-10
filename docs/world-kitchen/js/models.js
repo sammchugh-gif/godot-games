@@ -3,6 +3,7 @@
 // kitchen and the boss. No files to load and no emoji anywhere.
 import * as THREE from "three";
 import { REC, ING } from "./data.js";
+import { INGS2, FOODS2 } from "./food2.js";
 
 const TAU = Math.PI * 2;
 const mats = new Map();
@@ -216,6 +217,8 @@ function wand(color) {
 // any ingredient or cooked thing, about one unit tall
 export function itemModel(id) {
   if (INGS[id]) return INGS[id]();
+  if (INGS2[id]) return INGS2[id]();
+  if (FOODS2[id]) return FOODS2[id]();
   const r = REC[id]; if (!r) return grp(P("box", M(0xff00ff)));
   if (r.kind === "potion") return potion(r.potion);
   if (r.kind === "wand") return wand(r.color);

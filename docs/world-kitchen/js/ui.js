@@ -125,6 +125,7 @@ export function levelCard(L, first, go) {
       <div><img alt="" src="${icon("mini_" + L.mini.id, 320)}"><b>${L.mini.name}</b><small>Zap them for food</small></div>
       <div class="big"><img alt="" src="${icon("boss_" + L.boss.id, 320)}"><b>${L.boss.name}</b><small>${L.final ? "The last boss of all" : "The boss of " + L.name}</small></div>
     </div>
+    <div class="findhere"><b>Food here</b>${L.items.map(i => img(i, "mini")).join("")}${L.magic ? img(L.magic, "mini") : ""}</div>
     <p class="say">${first ? `Zap the ${L.mini.name} and solve the puzzles. Then the boss's gate opens!` : "They're back! Zap them for more food, solve the puzzles, and the boss is waiting."}</p>
     <button class="btn gold big" data-go>LET'S GO!</button>`);
   $("[data-go]", c).onclick = () => { K.sfx("tap"); closeCard(); go && go(); };
@@ -144,17 +145,9 @@ export function rewardCard(t1, t2, items, note, go) {
 }
 export function bossCard(L, go) {
   const c = card(`<div class="eyebrow">BOSS FIGHT</div><div class="gtitle">${L.boss.name}</div><img class="bosspic" alt="" src="${icon("boss_" + L.boss.id, 320)}">
-    <p class="say">${BOSS_TIPS[L.boss.id]}</p><button class="btn gold big" data-go>FIGHT!</button>`);
+    <p class="say">${L.boss.tip}</p><button class="btn gold big" data-go>FIGHT!</button>`);
   $("[data-go]", c).onclick = () => { K.sfx("tap"); closeCard(); go && go(); };
 }
-const BOSS_TIPS = {
-  meatball: "He rolls at you, and throws sauce where the red rings are. Keep zapping!",
-  taco: "When he stomps, a ring rolls across the ground: JUMP over it! Watch for his chili peppers.",
-  sushi: "He spins round fast, then throws rice balls. Keep away when he spins, and zap him when he stops.",
-  sundae: "He throws snowballs and slides at you. He sends Snowball Scoops too: zap them first!",
-  dragon: "His fire breath goes where the red glow is. Run round the side of him and zap!",
-  burger: "King Burgerbeard does everything the other bosses did. Use your best wand and your potions!",
-};
 
 // ------------------------------------------------------------ drawers (the kitchen, and the airfield)
 export const isOpen = () => drawer.classList.contains("open");
@@ -206,7 +199,7 @@ export function open(which) {
   else if (which === "recipes") slide("Recipe Drawer", ["Recipes"], (_, el) => {
     const list = [...RECIPES, ...WANDS.filter(w => w.need.length)].filter(r => known(G, r));
     el.appendChild(h("p", "say", "Recipes appear here when you have found everything that goes in them. Or just try mixing things!"));
-    const g = grid(el); list.forEach(r => cell(g, r.id, r.name, needs(r) + (r.drink ? "<br>" + DRINK[r.drink] : r.kind === "wand" ? "<br>Make it at the wand bench" : r.grand ? "<br>Opens the way to the last boss!" : ""), null, null, { hot: !!r.grand }));
+    const g = grid(el); list.forEach(r => cell(g, r.id, r.name, (r.from ? `From ${LEVEL[r.from].n ? LEVEL[r.from].name : "Home Farm"}<br>` : "") + needs(r) + (r.drink ? "<br>" + DRINK[r.drink] : r.kind === "wand" ? "<br>Make it at the wand bench" : r.grand ? "<br>Opens the way to the last boss!" : ""), null, null, { hot: !!r.grand }));
   });
   else if (which === "wands") slide("Wand Bench", ["Make", "Your Wands"], (tab, el) => {
     if (tab === "Make") {
@@ -223,7 +216,7 @@ export function open(which) {
       el.appendChild(h("p", "say", `Fly in your ${VEHICLES.find(v => v.id === G.vehicle).name}. Where to?`));
       const g = grid(el);
       LEVELS.filter(l => l.id !== G.place && (l.n === 0 || G.open[l.id])).forEach(l => cell(g, l.n === 0 ? "pancakes" : "boss_" + l.boss.id, l.name,
-        l.n === 0 ? "Home: the kitchen is here" : `Level ${l.n}${G.beaten[l.id] ? " · boss beaten" : ""}`, "FLY", () => K.fly(l.id), { gold: true, hot: l.n > 0 && !G.beaten[l.id] }));
+        (l.n === 0 ? "Home: the kitchen is here" : `Level ${l.n}, ${l.land}${G.beaten[l.id] ? " · boss beaten" : ""}`) + `<br><span class="needs">${l.items.map(i => img(i, "mini")).join("")}</span>`, "FLY", () => K.fly(l.id), { gold: true, hot: l.n > 0 && !G.beaten[l.id] }));
     } else {
       el.appendChild(h("p", "say", `Send orders from the kitchen to earn stars. You have ${G.stars} ${starIcon}`));
       const g = grid(el);
