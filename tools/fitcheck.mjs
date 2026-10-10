@@ -28,7 +28,7 @@ catch {
   const m = await import(alt); chromium = m.chromium || (m.default && m.default.chromium);
 }
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png' };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* the games that fill the screen with one canvas */
