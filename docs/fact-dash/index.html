@@ -1,0 +1,835 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<!-- Not black-translucent: on a Home Screen app iOS then hands the page a
+     viewport a status bar shorter than the screen while still reporting the
+     full safe-area insets, so the canvas stops short. -->
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Fact Dash</title>
+<style>
+html,body{margin:0;padding:0;height:100%;background:#1c2a52;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;touch-action:none}
+</style><script>window.__shelfPaused=function(){try{return scene!=="play"}catch(e){return true}};</script><script src="../menu.js" defer></script>
+<script src="../fresh.js" defer></script>
+</head><body><canvas id="c"></canvas>
+<script>
+"use strict";
+// ============================================================ Fact Dash
+// Number facts, fast. Adding and taking away to 10 and to 20, times and
+// divide to 12: every fact is learned in its family (3 + 5, 5 + 3, 8 - 3,
+// 8 - 5), a few at a time, and practised in five little games until it comes
+// back quickly. A fact is "fast" once it has been answered right, quickly,
+// three times running; a new family arrives when the ones being learned are
+// nearly there. A star a day for enough right answers.
+// Sophia, Rory and Dylan Games, Inc.
+document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
+document.addEventListener("dblclick",e=>e.preventDefault(),{passive:false});
+const cv=document.getElementById("c");let cx=cv.getContext("2d");
+let W=0,H=0,DPR=1,U=1;
+// The canvas is viewport-fit=cover, so the notch and the home indicator sit
+// on top of it; script learns the safe insets by measuring an element that
+// uses them.
+const safeProbe=document.createElement("div");
+safeProbe.style.cssText="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;"+
+ "padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)";
+document.body.appendChild(safeProbe);
+const SAFE={t:0,r:0,b:0,l:0};
+function ownsTheScreen(){return navigator.standalone!==false}
+function readSafe(){const st=getComputedStyle(safeProbe);
+ SAFE.t=parseFloat(st.paddingTop)||0;SAFE.r=parseFloat(st.paddingRight)||0;
+ SAFE.b=ownsTheScreen()?(parseFloat(st.paddingBottom)||0):0;SAFE.l=parseFloat(st.paddingLeft)||0}
+// sized from the visual viewport and re-checked several times a second: iOS
+// does not reliably say when the screen under a page has grown
+function screenSize(){const vv=window.visualViewport,de=document.documentElement;
+ let w=Math.round(vv&&vv.width?vv.width:innerWidth),h=Math.round(vv&&vv.height?vv.height:innerHeight);
+ if(ownsTheScreen()){w=Math.max(w,Math.round(de.clientWidth)||0);h=Math.max(h,Math.round(de.clientHeight)||0)}
+ return{w:Math.max(1,w),h:Math.max(1,h),d:Math.min(window.devicePixelRatio||1,2)}}
+function resize(){readSafe();const z=screenSize();DPR=z.d;W=z.w;H=z.h;
+ cv.style.width=W+"px";cv.style.height=H+"px";cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+ // one menu unit: about 0.9 on a phone held upright, 1.4 on an iPad
+ U=Math.max(0.7,Math.min(1.6,Math.min(W/430,H/600)))}
+function sizeWatch(){const z=screenSize();if(z.w!==W||z.h!==H||z.d!==DPR||cv.width!==Math.round(W*DPR)||cv.height!==Math.round(H*DPR))resize()}
+function reflow(){resize();setTimeout(resize,60);setTimeout(resize,250)}
+window.addEventListener("resize",reflow);window.addEventListener("orientationchange",()=>setTimeout(reflow,150));
+window.addEventListener("pageshow",reflow);document.addEventListener("visibilitychange",()=>{if(!document.hidden)reflow()});
+if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visualViewport.addEventListener("scroll",reflow)}
+resize();
+
+// Shown small on the home screen, so it is clear which version a phone runs.
+const BUILD="2026.10.30-1";
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),easeOut=t=>t<0?0:t>1?1:1-(1-t)*(1-t);
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+ const f=v=>Math.max(0,Math.min(255,Math.round(amt<0?v*(1+amt):v+(255-v)*amt)));return"rgb("+f(r)+","+f(g)+","+f(b)+")"}
+function mix(h1,h2,t){const a=parseInt(h1.slice(1),16),b=parseInt(h2.slice(1),16),f=s=>Math.round(lerp((a>>s)&255,(b>>s)&255,clamp(t,0,1)));
+ return"rgb("+f(16)+","+f(8)+","+f(0)+")"}
+const hash1=n=>{const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s)};
+
+// ================================================================ facts
+// The facts, the families they are learned in, and what to ask next. Pure:
+// no screen, no clock, no Math.random (a random source is passed in), so
+// tools/factcheck.mjs lifts this section out and plays it by the thousand.
+//
+// A track is a set of facts: adding to 10, adding and taking away to 10 or to
+// 20, times and divide to 12. Facts are learned in families - 3 + 5, 5 + 3,
+// 8 - 3 and 8 - 5 belong together - in the order the strategies are taught:
+// plus nothing, plus one, plus two, doubles, pairs that make ten, ten plus,
+// near doubles, plus nine, then the rest. Times go ones, twos, tens, fives,
+// squares, threes, fours, nines, then the harder ones.
+const TRACKS=[
+ {id:"add10",name:"Adding to 10",short:"+ to 10",ops:"+",max:10,next:"addsub10"},
+ {id:"addsub10",name:"Adding and taking away to 10",short:"+ − to 10",ops:"+-",max:10,next:"addsub20"},
+ {id:"addsub20",name:"Adding and taking away to 20",short:"+ − to 20",ops:"+-",max:20,next:null},
+ {id:"muldiv",name:"Times and divide to 12",short:"× ÷ to 12",ops:"x/",max:12,next:null}];
+const TRACK={};for(const t of TRACKS)TRACK[t.id]=t;
+const SYM={"+":"+","-":"−","x":"×","/":"÷"};
+function factOf(x,op,y){return{k:x+op+y,x,op,y,ans:op==="+"?x+y:op==="-"?x-y:op==="x"?x*y:x/y}}
+function addRank(a,b){const c=a+b;return a===0?0:a===1?1:a===2?2:a===b?3:c===10?4:b===10?5:b-a===1?6:b===9?7:8}
+function mulRank(a,b){const has=n=>a===n||b===n;
+ return has(1)?0:has(2)?1:has(10)?2:has(5)?3:a===b?4:has(3)?5:has(4)?6:has(9)?7:has(11)?8:has(6)?9:has(12)?10:has(7)?11:12}
+const FAMS={};
+function families(tid){if(FAMS[tid])return FAMS[tid];const t=TRACK[tid],out=[];
+ if(t.ops==="x/"){for(let a=1;a<=t.max;a++)for(let b=a;b<=t.max;b++){const c=a*b,f=[factOf(a,"x",b)];
+   if(a!==b)f.push(factOf(b,"x",a));f.push(factOf(c,"/",a));if(a!==b)f.push(factOf(c,"/",b));
+   out.push({id:a+"x"+b,a,b,c,op:"x",r:mulRank(a,b),facts:f})}}
+ else{for(let c=0;c<=t.max;c++)for(let a=0;a<=c/2;a++){const b=c-a;if(b>10)continue;const f=[factOf(a,"+",b)];
+   if(a!==b)f.push(factOf(b,"+",a));
+   if(t.ops.indexOf("-")>=0){f.push(factOf(c,"-",a));if(a!==b)f.push(factOf(c,"-",b))}
+   out.push({id:a+"+"+b,a,b,c,op:"+",r:addRank(a,b),facts:f})}}
+ out.sort((p,q)=>p.r-q.r||p.c-q.c||p.a-q.a);return FAMS[tid]=out}
+function trackFacts(tid){const out=[];for(const f of families(tid))out.push(...f.facts);return out}
+// A fact's record: n tries, ok right, s the run of right-and-quick answers
+// (up to 4), sl the run of right-but-slow ones, m whether it has ever been
+// missed, f whether it is fast, ms the last time taken.
+function stat(p,k){return p.facts[k]||(p.facts[k]={n:0,ok:0,s:0,sl:0,m:0,f:0,ms:0})}
+// "Fast" (fluent): right and quick three times running - or twice, for a fact
+// never once missed, so a child who already knows a fact is not held on it.
+// Once fast it stays fast unless it is got wrong, or is slow twice running:
+// one slow answer on a tired day does not undo it.
+function fluent(st){return!!st&&!!st.f}
+const isFast=(p,k)=>fluent(p.facts[k]);
+function famFluent(p,f){return f.facts.every(x=>isFast(p,x.k))}
+// the facts this child is working on in a track: those of the families met
+function activeFacts(p,tid){const met=new Set(p.intro[tid]||[]),out=[];
+ for(const f of families(tid))if(met.has(f.id))out.push(...f.facts);return out}
+// How many facts are being learned at once: new families come in until this
+// many are not yet fast.
+const POOL=6;
+// The families to meet before the next game. A family whose facts are all
+// fast already (learned on an earlier track) is met without being shown;
+// at most three new ones are shown at a time.
+function toMeet(p,tid){const met=new Set(p.intro[tid]||[]);
+ let learning=activeFacts(p,tid).filter(f=>!isFast(p,f.k)).length;const show=[],quiet=[];
+ for(const f of families(tid)){if(met.has(f.id))continue;
+  if(famFluent(p,f)){quiet.push(f);continue}
+  if(learning>=POOL||show.length>=3)break;
+  show.push(f);learning+=f.facts.filter(x=>!isFast(p,x.k)).length}
+ return{show,quiet}}
+function meet(p,tid,fams){const l=p.intro[tid]||(p.intro[tid]=[]);for(const f of fams)if(l.indexOf(f.id)<0)l.push(f.id)}
+// What to ask next. A fact just missed comes back after two others; then
+// mostly the facts being learned, with the fast ones mixed in now and then so
+// they stay fast; never the same fact twice running, and not one of the last
+// few if there is any choice.
+function pickFact(p,tid,rng){const act=activeFacts(p,tid);if(!act.length)return null;
+ const recent=p.recent||[],byK={};for(const f of act)byK[f.k]=f;
+ p.retry=(p.retry||[]).filter(r=>byK[r.k]);
+ const due=p.retry.findIndex(r=>r.at<=p.tick&&r.k!==recent[0]);
+ if(due>=0)return byK[p.retry.splice(due,1)[0].k];
+ const keep=act.length>8?3:act.length>4?2:act.length>1?1:0,avoid=new Set(recent.slice(0,keep));
+ const learn=[],known=[];for(const f of act){if(avoid.has(f.k))continue;(isFast(p,f.k)?known:learn).push(f)}
+ let from=learn.length&&(!known.length||rng()<0.72)?learn:known.length?known:learn;
+ if(!from.length)from=act.filter(f=>f.k!==recent[0]);if(!from.length)from=act;
+ const w=from.map(f=>{const st=p.facts[f.k];return!st||!st.n?3:st.m&&st.s<2?2:1});
+ let r=rng()*w.reduce((a,b)=>a+b,0);for(let i=0;i<from.length;i++){r-=w[i];if(r<=0)return from[i]}return from[from.length-1]}
+// An answer: ok right or wrong, ms how long it took, fastMs the speed goal.
+function record(p,k,ok,ms,fastMs){const st=stat(p,k),was=fluent(st);st.n++;st.ms=Math.round(ms);
+ if(ok){st.ok++;p.pace=Math.round((p.pace||5000)*0.85+Math.min(ms,15000)*0.15);
+  if(ms<=fastMs){st.s=Math.min(4,st.s+1);st.sl=0;if(st.s>=3||(st.s>=2&&!st.m))st.f=1}
+  else{st.s=Math.max(0,st.s-1);st.sl=(st.sl||0)+1;if(st.sl>=2)st.f=0}}
+ else{st.m=1;st.s=0;st.sl=0;st.f=0;p.retry=(p.retry||[]).filter(r=>r.k!==k).concat([{k,at:p.tick+3}]).slice(-6)}
+ p.tick=(p.tick||0)+1;p.recent=[k].concat(p.recent||[]).slice(0,4);
+ return{nowFast:!was&&fluent(st),lost:was&&!fluent(st)}}
+// every family met and every fact fast: on to the next track
+function trackDone(p,tid){return families(tid).every(f=>famFluent(p,f))}
+function fastCount(p,tid){let n=0;const all=trackFacts(tid);for(const f of all)if(isFast(p,f.k))n++;return{n,of:all.length}}
+// Wrong answers to choose from, for the games where the answer is tapped:
+// near misses, and the slips a child really makes (adding instead of taking
+// away, the next number in the times table).
+function choices(f,n,rng){const a=f.ans,c=[a+1,a-1,a+2,a-2,a+3];
+ if(f.op==="+")c.push(Math.abs(f.x-f.y),a+10);if(f.op==="-")c.push(f.x+f.y,f.y);
+ if(f.op==="x")c.push(a+f.x,a-f.x,a+f.y,a-f.y,f.x+f.y);if(f.op==="/")c.push(f.y,f.x-f.y,a*2);
+ const pool=[];for(const v of c)if(v>=0&&v!==a&&pool.indexOf(v)<0&&Number.isInteger(v))pool.push(v);
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ // the near ones first, so there is always a close call among them
+ const out=[a];for(const v of pool){if(out.length>=n)break;out.push(v)}
+ for(let i=out.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
+const factText=f=>f.x+" "+SYM[f.op]+" "+f.y;
+
+// ================================================================ saves
+// Everything lives under "factdash." - the shelf menu finds a game's saves by
+// the prefix taken from its folder name.
+const store={get(k,d){try{const v=localStorage.getItem("factdash."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem("factdash."+k,JSON.stringify(v))}catch(e){}}};
+const PCOLS=["#4dabf7","#51cf66","#f783ac","#ffa94d","#9775fa","#ffd43b","#ff6b6b","#20c997"];
+function newProfile(name,track,col){return fixProfile({id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e6),name,track,look:{col,hat:"none",extra:"none"}})}
+function fixProfile(p){const d={facts:{},intro:{},retry:[],recent:[],tick:0,coins:0,owned:{},days:{},streak:0,lastLit:"",
+  games:{rocket:1,balloon:1},speed:3,goal:30,pace:5000,rounds:0,best:{},track:"addsub10",look:{col:PCOLS[0],hat:"none",extra:"none"}};
+ for(const k in d)if(p[k]==null)p[k]=d[k];if(!TRACK[p.track])p.track="addsub10";p.owned["col:"+p.look.col]=1;return p}
+let profiles=store.get("profiles",null);
+if(!Array.isArray(profiles)||!profiles.length)profiles=[newProfile("Dylan","addsub10","#4dabf7"),newProfile("Rory","addsub20","#51cf66"),newProfile("Sophia","muldiv","#f783ac")];
+profiles.forEach(fixProfile);
+let me=profiles.find(p=>p.id===store.get("who",""))||null;
+// only the last two months of days are kept
+function save(){for(const p of profiles){const ks=Object.keys(p.days).sort();while(ks.length>60)delete p.days[ks.shift()]}
+ store.set("profiles",profiles);if(me)store.set("who",me.id)}
+const settings=Object.assign({sfx:true},store.get("settings",{}));
+function saveSettings(){store.set("settings",settings)}
+function dayKey(d){d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function today(p){const k=dayKey();return p.days[k]||(p.days[k]={n:0,ok:0,lit:0})}
+const fastMs=p=>(p.speed||3)*1000;
+
+// ================================================================ sound
+// A phone keeps an audio context asleep until a gesture it recognises (a
+// touchend, a click, a key), so every one of those wakes it, and the frame
+// loop asks for it back once a second in case the phone interrupted it.
+let AC=null,sfxBus=null;
+function audioInit(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();
+ sfxBus=AC.createGain();sfxBus.gain.value=settings.sfx?0.8:0;sfxBus.connect(AC.destination)}catch(e){}}
+function audioWake(){audioInit();if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+function audioNudge(){if(AC&&AC.state!=="running"&&AC.resume)AC.resume().catch(()=>{})}
+window.addEventListener("pageshow",audioNudge);window.addEventListener("focus",audioNudge);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)audioNudge()});
+window.__audio=()=>AC?{state:AC.state,now:AC.currentTime}:null;window.__audioCtx=()=>AC;
+function tone(f0,f1,dur,type,vol,delay){if(!AC||!settings.sfx)return;const t=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
+ o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,20),t+dur);
+ g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+ o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+dur+0.03)}
+let noiseBuf=null;
+function noise(dur,vol,delay,freq,hi){if(!AC||!settings.sfx)return;if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+ const t=AC.currentTime+(delay||0),s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=noiseBuf;
+ f.type=hi?"highpass":"lowpass";f.frequency.value=freq||900;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+ s.connect(f);f.connect(g);g.connect(sfxBus);s.start(t,Math.random()*0.5);s.stop(t+dur+0.02)}
+const NOTE=n=>440*Math.pow(2,(n-69)/12);
+const SFX={
+ tap(){tone(880,700,0.05,"triangle",0.08)},
+ key(){tone(620,560,0.05,"triangle",0.1)},
+ good(){tone(NOTE(72),NOTE(72),0.12,"triangle",0.16);tone(NOTE(76),NOTE(76),0.18,"triangle",0.16,0.08)},
+ fast(){[72,76,79,84].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.16,"triangle",0.13,i*0.05));tone(2400,3200,0.15,"sine",0.04,0.18)},
+ // a wrong answer is a soft "hmm", never a buzzer
+ bad(){tone(NOTE(60),NOTE(57),0.22,"sine",0.14);tone(NOTE(55),NOTE(52),0.28,"sine",0.1,0.12)},
+ pop(){noise(0.08,0.35,0,2500,true);tone(900,300,0.08,"square",0.05)},
+ splash(){noise(0.3,0.25,0,1200)},
+ hop(){tone(300,700,0.16,"sine",0.12)},
+ chomp(){noise(0.06,0.3,0,800);noise(0.06,0.3,0.14,800);noise(0.06,0.3,0.28,800)},
+ whoosh(){noise(0.5,0.18,0,700);tone(120,260,0.5,"sawtooth",0.03)},
+ vroom(){tone(90,180,0.35,"sawtooth",0.05);noise(0.3,0.08,0,400)},
+ coin(){tone(NOTE(88),NOTE(88),0.06,"square",0.05);tone(NOTE(93),NOTE(93),0.12,"square",0.05,0.06)},
+ star(){[67,72,76,79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.25,"triangle",0.13,i*0.09))},
+ meet(){[76,79,84].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.3,"sine",0.12,i*0.12))},
+ win(){[60,64,67,72,67,72,76].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.22,"triangle",0.14,i*0.1))},
+ buy(){[79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.12,"square",0.05,i*0.06))}};
+function sfx(k){if(AC&&settings.sfx)try{SFX[k]()}catch(e){}}
+
+// ================================================================ drawing kit
+const FONT='ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold",-apple-system,BlinkMacSystemFont,system-ui,sans-serif';
+function font(px,w){cx.font=(w||800)+" "+Math.max(1,Math.round(px))+"px "+FONT}
+function rr(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function txt(t,x,y,px,col,al,wt,sh){font(px,wt);cx.textAlign=al||"center";cx.textBaseline="middle";
+ if(sh){cx.fillStyle=sh;cx.fillText(t,x,y+Math.max(1,px*0.07))}cx.fillStyle=col||"#fff";cx.fillText(t,x,y)}
+function fitTxt(t,x,y,px,maxW,col,al,wt,sh){font(px,wt);const w=cx.measureText(t).width;if(w>maxW)px*=maxW/w;txt(t,x,y,px,col,al,wt,sh);return px}
+function circle(x,y,r,col){cx.fillStyle=col;cx.beginPath();cx.arc(x,y,Math.max(0.1,r),0,Math.PI*2);cx.fill()}
+function ellipse(x,y,rx,ry,col,rot){cx.fillStyle=col;cx.beginPath();cx.ellipse(x,y,Math.max(0.1,rx),Math.max(0.1,ry),rot||0,0,Math.PI*2);cx.fill()}
+let btns=[],T=0;
+// a button: drawn, and remembered for the next tap. o.hold: must be held.
+function button(x,y,w,h,label,fn,o){o=o||{};const r=o.r!=null?o.r:Math.min(h/2,16*U),col=o.col||"#ffffff",ink=o.ink||"#24305e";
+ if(!o.flat){cx.fillStyle="rgba(0,0,0,0.22)";rr(x,y+4*U,w,h,r);cx.fill()}
+ cx.fillStyle=col;rr(x,y,w,h,r);cx.fill();
+ if(o.ring){cx.strokeStyle=o.ring;cx.lineWidth=3*U;rr(x,y,w,h,r);cx.stroke()}
+ if(!o.flat){cx.fillStyle="rgba(255,255,255,0.28)";rr(x+3*U,y+3*U,w-6*U,Math.min(h*0.4,16*U),r*0.7);cx.fill()}
+ let lx=x+w/2;
+ if(o.icon){const s=o.isz||Math.min(h*0.5,26*U);if(label){const tw=(font(o.fs||Math.min(h*0.42,22*U),900),cx.measureText(label).width);const tot=s+8*U+tw;
+   icon(o.icon,x+w/2-tot/2+s/2,y+h/2,s,ink);lx=x+w/2-tot/2+s+8*U+tw/2}else icon(o.icon,x+w/2,y+h/2,s,ink)}
+ if(label)fitTxt(label,lx,y+h/2+1,o.fs||Math.min(h*0.42,22*U),w-14*U,ink,"center",900);
+ if(o.off){cx.fillStyle="rgba(30,40,70,0.45)";rr(x,y,w,h,r);cx.fill()}
+ if(fn)btns.push({x,y:y-2*U,w,h:h+6*U,fn,hold:o.hold,label:label||o.icon||""})}
+function panel(x,y,w,h,col,r){r=r==null?18*U:r;cx.fillStyle="rgba(0,0,0,0.2)";rr(x,y+5*U,w,h,r);cx.fill();cx.fillStyle=col||"#fffaf0";rr(x,y,w,h,r);cx.fill()}
+function hitBtn(p){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return b}return null}
+function star(x,y,r,col,k){cx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rad=i%2?r*(k||0.45):r;cx.lineTo(x+Math.cos(a)*rad,y+Math.sin(a)*rad)}cx.closePath();cx.fillStyle=col;cx.fill()}
+function coin(x,y,r){circle(x,y+r*0.12,r,"#c98a12");circle(x,y,r,"#ffd43b");circle(x,y,r*0.72,"#fcc419");star(x,y,r*0.45,"#fff3bf")}
+function icon(k,x,y,s,col){cx.save();cx.translate(x,y);cx.strokeStyle=col;cx.fillStyle=col;cx.lineWidth=Math.max(2,s*0.14);cx.lineCap="round";cx.lineJoin="round";
+ const h=s/2;
+ if(k==="x"){cx.beginPath();cx.moveTo(-h*0.6,-h*0.6);cx.lineTo(h*0.6,h*0.6);cx.moveTo(h*0.6,-h*0.6);cx.lineTo(-h*0.6,h*0.6);cx.stroke()}
+ else if(k==="back"){cx.beginPath();cx.moveTo(h*0.3,-h*0.7);cx.lineTo(-h*0.4,0);cx.lineTo(h*0.3,h*0.7);cx.stroke()}
+ else if(k==="del"){cx.beginPath();cx.moveTo(-h*0.95,0);cx.lineTo(-h*0.4,-h*0.6);cx.lineTo(h*0.9,-h*0.6);cx.lineTo(h*0.9,h*0.6);cx.lineTo(-h*0.4,h*0.6);cx.closePath();cx.stroke();
+  cx.lineWidth*=0.8;cx.beginPath();cx.moveTo(-h*0.05,-h*0.25);cx.lineTo(h*0.5,h*0.25);cx.moveTo(h*0.5,-h*0.25);cx.lineTo(-h*0.05,h*0.25);cx.stroke()}
+ else if(k==="ok"){cx.beginPath();cx.moveTo(-h*0.7,0);cx.lineTo(-h*0.15,h*0.55);cx.lineTo(h*0.75,-h*0.55);cx.stroke()}
+ else if(k==="lock"){cx.lineWidth=s*0.13;cx.beginPath();cx.arc(0,-h*0.2,h*0.42,Math.PI,0);cx.stroke();rr(-h*0.62,-h*0.2,h*1.24,h*0.95,h*0.2);cx.fill()}
+ else if(k==="chart"){for(let i=0;i<3;i++){const bh=[0.6,1.1,1.6][i]*h;cx.fillRect(-h*0.85+i*h*0.62,h*0.8-bh,h*0.42,bh)}}
+ else if(k==="bag"){rr(-h*0.75,-h*0.35,h*1.5,h*1.15,h*0.2);cx.fill();cx.beginPath();cx.arc(0,-h*0.35,h*0.38,Math.PI,0);cx.stroke()}
+ else if(k==="gear"){cx.beginPath();for(let i=0;i<16;i++){const a=i*Math.PI/8,r=i%2?h*0.62:h*0.9;cx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}cx.closePath();cx.fill();
+  cx.globalCompositeOperation="destination-out";circle(0,0,h*0.3,"#000");cx.globalCompositeOperation="source-over"}
+ else if(k==="people"){circle(-h*0.35,-h*0.3,h*0.32,col);circle(h*0.4,-h*0.2,h*0.27,col);
+  cx.beginPath();cx.ellipse(-h*0.35,h*0.55,h*0.6,h*0.45,0,Math.PI,0);cx.fill();cx.beginPath();cx.ellipse(h*0.45,h*0.55,h*0.48,h*0.38,0,Math.PI,0);cx.fill()}
+ else if(k==="play"){cx.beginPath();cx.moveTo(-h*0.45,-h*0.7);cx.lineTo(h*0.7,0);cx.lineTo(-h*0.45,h*0.7);cx.closePath();cx.fill()}
+ else if(k==="sound"){cx.beginPath();cx.moveTo(-h*0.8,-h*0.3);cx.lineTo(-h*0.35,-h*0.3);cx.lineTo(h*0.15,-h*0.75);cx.lineTo(h*0.15,h*0.75);cx.lineTo(-h*0.35,h*0.3);cx.lineTo(-h*0.8,h*0.3);cx.closePath();cx.fill();
+  cx.beginPath();cx.arc(h*0.25,0,h*0.5,-0.8,0.8);cx.stroke()}
+ cx.restore()}
+let toastMsg="",toastT=-9;
+function toast(m){toastMsg=m;toastT=T}
+function drawToast(){const a=T-toastT;if(a>2.6||!toastMsg)return;const al=a<0.2?a/0.2:a>2.2?(2.6-a)/0.4:1;cx.globalAlpha=al;
+ font(17*U,800);const w=Math.min(W-30*U,cx.measureText(toastMsg).width+40*U),h=44*U,y=botY()-h-80*U;
+ cx.fillStyle="rgba(20,28,60,0.92)";rr(W/2-w/2,y,w,h,h/2);cx.fill();fitTxt(toastMsg,W/2,y+h/2,17*U,w-24*U,"#fff","center",800);cx.globalAlpha=1}
+function topY(){return SAFE.t+10*U}
+// the shelf's red cross sits in the top left corner (36px, 7px in) except
+// while a game is being played: nothing else goes there
+function clearL(){return SAFE.l+52}
+function botY(){return H-SAFE.b-10*U}
+function sideL(){return SAFE.l+14*U}
+function sideR(){return W-SAFE.r-14*U}
+// lay n boxes out in rows to fill a space, as large as they will go
+function grid(n,x,y,w,h,gap,aspect){let best=null;for(let c=1;c<=n;c++){const rows=Math.ceil(n/c),bw=(w-gap*(c-1))/c,bh=(h-gap*(rows-1))/rows;
+  let cw=bw,ch=cw/aspect;if(ch>bh){ch=bh;cw=ch*aspect}if(!best||cw*ch>best.cw*best.ch)best={c,rows,cw,ch}}
+ const out=[],tw=best.c*best.cw+(best.c-1)*gap,th=best.rows*best.ch+(best.rows-1)*gap;
+ for(let i=0;i<n;i++){const r=Math.floor(i/best.c),c=i%best.c,inRow=Math.min(best.c,n-r*best.c),rw=inRow*best.cw+(inRow-1)*gap;
+  out.push({x:x+(w-rw)/2+c*(best.cw+gap),y:y+(h-th)/2+r*(best.ch+gap),w:best.cw,h:best.ch})}return out}
+function sky(c1,c2){const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,c1);g.addColorStop(1,c2);cx.fillStyle=g;cx.fillRect(0,0,W,H)}
+function cloud(x,y,s,a){cx.globalAlpha=a==null?0.9:a;circle(x,y,s*0.5,"#fff");circle(x-s*0.45,y+s*0.12,s*0.36,"#fff");circle(x+s*0.48,y+s*0.1,s*0.4,"#fff");
+ ellipse(x,y+s*0.26,s*0.9,s*0.2,"#fff");cx.globalAlpha=1}
+// the little particles of a good answer: confetti, crumbs, splashes
+let parts=[];
+function burst(x,y,n,cols,spd,kind){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(0.3+Math.random()*0.7)*spd;
+  parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-spd*0.4,t:0,life:0.7+Math.random()*0.6,col:cols[i%cols.length],s:(3+Math.random()*5)*U,kind:kind||"conf",rot:Math.random()*6})}}
+function stepParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t>p.life){parts.splice(i,1);continue}
+  p.vy+=(p.kind==="drop"?900:500)*U*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=dt*8;
+  cx.globalAlpha=1-p.t/p.life;cx.fillStyle=p.col;
+  if(p.kind==="conf"){cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);cx.restore()}else circle(p.x,p.y,p.s*0.5,p.col)}
+ cx.globalAlpha=1}
+
+// ================================================================ the buddy
+// Each player's own little creature: a colour, a hat and an extra, all from
+// the shop. It looks at whatever is happening, blinks, and cheers.
+const HATS=[{id:"none",name:"No hat",price:0},{id:"cap",name:"Cap",price:15},{id:"party",name:"Party hat",price:20},{id:"bunny",name:"Bunny ears",price:25},
+ {id:"cowboy",name:"Cowboy hat",price:30},{id:"crown",name:"Crown",price:45},{id:"wizard",name:"Wizard hat",price:45}];
+const EXTRAS=[{id:"none",name:"Nothing",price:0},{id:"glasses",name:"Glasses",price:15},{id:"bow",name:"Bow tie",price:15},{id:"shades",name:"Sunglasses",price:25},{id:"cape",name:"Cape",price:35}];
+const COLNAMES={"#4dabf7":"Sky blue","#51cf66":"Leaf green","#f783ac":"Bubblegum","#ffa94d":"Orange","#9775fa":"Purple","#ffd43b":"Sunshine","#ff6b6b":"Cherry","#20c997":"Mint"};
+function buddy(x,y,s,look,o){o=o||{};const col=look.col||"#4dabf7",mood=o.mood||"happy",lk=o.look||{x:0,y:0};
+ const bob=o.still?0:Math.sin(T*3+(o.seed||0))*s*0.03,jy=y+bob-(o.jump||0)*s;
+ if(look.extra==="cape"){cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x-s*0.6,jy-s*0.2);cx.quadraticCurveTo(x-s*1.25,jy+s*0.7,x-s*0.8,jy+s*0.95);
+  cx.lineTo(x+s*0.8,jy+s*0.95);cx.quadraticCurveTo(x+s*1.25,jy+s*0.7,x+s*0.6,jy-s*0.2);cx.closePath();cx.fill()}
+ ellipse(x-s*0.42,y+s*0.88,s*0.3,s*0.16,shade(col,-0.35));ellipse(x+s*0.42,y+s*0.88,s*0.3,s*0.16,shade(col,-0.35));
+ if(!o.noShadow)ellipse(x,y+s*1.02,s*0.85,s*0.12,"rgba(0,0,0,0.15)");
+ const g=cx.createRadialGradient(x-s*0.3,jy-s*0.4,s*0.1,x,jy,s*1.05);g.addColorStop(0,shade(col,0.35));g.addColorStop(1,shade(col,-0.12));
+ cx.fillStyle=g;cx.beginPath();cx.ellipse(x,jy,s,s*0.95,0,0,Math.PI*2);cx.fill();
+ ellipse(x,jy+s*0.38,s*0.55,s*0.4,"rgba(255,255,255,0.22)");
+ // arms up when cheering
+ cx.strokeStyle=shade(col,-0.2);cx.lineWidth=s*0.16;cx.lineCap="round";
+ const up=mood==="cheer"?1:0;cx.beginPath();cx.moveTo(x-s*0.88,jy+s*0.1);cx.lineTo(x-s*(1.15-up*0.05),jy+s*(0.35-up*0.95));cx.moveTo(x+s*0.88,jy+s*0.1);cx.lineTo(x+s*(1.15-up*0.05),jy+s*(0.35-up*0.95));cx.stroke();
+ // eyes, which blink and look
+ const blink=(Math.sin(T*1.3+(o.seed||0)*3)>0.985)?0.12:1;
+ for(const sx of[-1,1]){const ex=x+sx*s*0.34,ey=jy-s*0.2;ellipse(ex,ey,s*0.24,s*0.27*blink,"#fff");
+  if(blink>0.5){circle(ex+lk.x*s*0.09,ey+lk.y*s*0.09+s*0.03,s*0.12,"#1d2340");circle(ex+lk.x*s*0.09-s*0.04,ey+lk.y*s*0.09-s*0.02,s*0.04,"#fff")}}
+ if(look.extra==="glasses"){cx.strokeStyle="#343a40";cx.lineWidth=s*0.06;for(const sx of[-1,1]){cx.beginPath();cx.arc(x+sx*s*0.34,jy-s*0.2,s*0.27,0,Math.PI*2);cx.stroke()}
+  cx.beginPath();cx.moveTo(x-s*0.08,jy-s*0.22);cx.lineTo(x+s*0.08,jy-s*0.22);cx.stroke()}
+ if(look.extra==="shades"){cx.fillStyle="#212529";for(const sx of[-1,1]){rr(x+sx*s*0.34-s*0.28,jy-s*0.38,s*0.56,s*0.32,s*0.12);cx.fill()}cx.fillRect(x-s*0.1,jy-s*0.3,s*0.2,s*0.06)}
+ // cheeks and mouth
+ ellipse(x-s*0.62,jy+s*0.12,s*0.13,s*0.08,"rgba(255,120,150,0.45)");ellipse(x+s*0.62,jy+s*0.12,s*0.13,s*0.08,"rgba(255,120,150,0.45)");
+ cx.strokeStyle="#1d2340";cx.lineWidth=s*0.07;cx.lineCap="round";
+ if(mood==="oops"){cx.beginPath();cx.moveTo(x-s*0.2,jy+s*0.3);cx.quadraticCurveTo(x,jy+s*0.2,x+s*0.2,jy+s*0.3);cx.stroke()}
+ else if(mood==="wow"||mood==="cheer"){cx.fillStyle="#1d2340";cx.beginPath();cx.ellipse(x,jy+s*0.26,s*0.16,s*0.18,0,0,Math.PI*2);cx.fill();ellipse(x,jy+s*0.33,s*0.09,s*0.06,"#ff8787")}
+ else{cx.beginPath();cx.arc(x,jy+s*0.1,s*0.24,0.25,Math.PI-0.25);cx.stroke()}
+ if(look.extra==="bow"){const by=jy+s*0.62;cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x,by);cx.lineTo(x-s*0.3,by-s*0.16);cx.lineTo(x-s*0.3,by+s*0.16);cx.closePath();cx.fill();
+  cx.beginPath();cx.moveTo(x,by);cx.lineTo(x+s*0.3,by-s*0.16);cx.lineTo(x+s*0.3,by+s*0.16);cx.closePath();cx.fill();circle(x,by,s*0.07,"#c92a2a")}
+ hat(look.hat,x,jy-s*0.88,s)}
+function hat(k,x,y,s){if(!k||k==="none")return;
+ if(k==="cap"){cx.fillStyle="#e03131";cx.beginPath();cx.ellipse(x,y+s*0.12,s*0.62,s*0.42,0,Math.PI,0);cx.fill();ellipse(x+s*0.45,y+s*0.12,s*0.42,s*0.09,"#c92a2a");circle(x,y-s*0.3,s*0.07,"#c92a2a")}
+ else if(k==="party"){cx.fillStyle="#9775fa";cx.beginPath();cx.moveTo(x-s*0.38,y+s*0.12);cx.lineTo(x,y-s*0.85);cx.lineTo(x+s*0.38,y+s*0.12);cx.closePath();cx.fill();
+  cx.strokeStyle="#ffd43b";cx.lineWidth=s*0.08;for(let i=1;i<3;i++){const t=i/3;cx.beginPath();cx.moveTo(x-s*0.38*(1-t)-1,y+s*0.12-s*0.97*t);cx.lineTo(x+s*0.38*(1-t)+1,y+s*0.12-s*0.97*t);cx.stroke()}circle(x,y-s*0.88,s*0.11,"#ff6b6b")}
+ else if(k==="crown"){cx.fillStyle="#fcc419";cx.beginPath();cx.moveTo(x-s*0.45,y+s*0.15);cx.lineTo(x-s*0.5,y-s*0.35);cx.lineTo(x-s*0.22,y-s*0.08);cx.lineTo(x,y-s*0.48);cx.lineTo(x+s*0.22,y-s*0.08);
+  cx.lineTo(x+s*0.5,y-s*0.35);cx.lineTo(x+s*0.45,y+s*0.15);cx.closePath();cx.fill();circle(x,y-s*0.05,s*0.07,"#e03131");circle(x-s*0.28,y+s*0.04,s*0.05,"#4dabf7");circle(x+s*0.28,y+s*0.04,s*0.05,"#51cf66")}
+ else if(k==="wizard"){cx.fillStyle="#3b5bdb";cx.beginPath();cx.moveTo(x-s*0.55,y+s*0.18);cx.quadraticCurveTo(x+s*0.05,y-s*0.2,x+s*0.25,y-s*1.05);cx.quadraticCurveTo(x+s*0.2,y-s*0.2,x+s*0.55,y+s*0.18);cx.closePath();cx.fill();
+  ellipse(x,y+s*0.16,s*0.7,s*0.12,"#364fc7");star(x-s*0.05,y-s*0.25,s*0.13,"#ffd43b");star(x+s*0.15,y-s*0.6,s*0.08,"#ffd43b")}
+ else if(k==="cowboy"){ellipse(x,y+s*0.12,s*0.85,s*0.16,"#a0672c");cx.fillStyle="#b8793a";rr(x-s*0.4,y-s*0.42,s*0.8,s*0.56,s*0.18);cx.fill();cx.fillStyle="#5c3a1a";cx.fillRect(x-s*0.4,y,s*0.8,s*0.1)}
+ else if(k==="bunny"){for(const sx of[-1,1]){ellipse(x+sx*s*0.28,y-s*0.45,s*0.15,s*0.5,"#fff",sx*0.15);ellipse(x+sx*s*0.28,y-s*0.42,s*0.07,s*0.36,"#ffc9de",sx*0.15)}}}
+
+// ================================================================ dots
+// What a fact looks like, for a child who is stuck or got it wrong: two
+// colours of counters in ten-frames for adding, counters crossed out for
+// taking away, rows of counters for times and divide.
+function dotsFor(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#adb5bd";
+ // a x b: a rows of b. c / a = b: the c counters shared into a rows of b
+ if(f.op==="x"||f.op==="/"){const nr=f.op==="x"?f.x:f.y,nc=f.op==="x"?f.y:f.ans,d=Math.min(w/(nc*1.25),h/(nr*1.25),26*U),ox=x+w/2-(nc-1)*d*1.25/2,oy=y+h/2-(nr-1)*d*1.25/2;
+  for(let r=0;r<nr;r++)for(let c=0;c<nc;c++)circle(ox+c*d*1.25,oy+r*d*1.25,d*0.5,r%2?A:B);return}
+ const tot=f.op==="+"?f.x+f.y:f.x,frames=tot>10?2:1,cell=Math.min(w/(frames*5.6+(frames-1)*0.6),h/2.4,30*U),fw=cell*5,gap=cell*0.6,ox=x+w/2-(frames*fw+(frames-1)*gap)/2,oy=y+h/2-cell;
+ for(let fi=0;fi<frames;fi++){const fx=ox+fi*(fw+gap);cx.fillStyle="rgba(255,255,255,0.85)";rr(fx-cell*0.08,oy-cell*0.08,fw+cell*0.16,cell*2+cell*0.16,cell*0.2);cx.fill();
+  cx.strokeStyle="#ced4da";cx.lineWidth=Math.max(1,cell*0.05);for(let i=0;i<10;i++){cx.strokeRect(fx+(i%5)*cell,oy+Math.floor(i/5)*cell,cell,cell)}}
+ for(let i=0;i<tot;i++){const fi=Math.floor(i/10),j=i%10,px=ox+fi*(fw+gap)+(j%5+0.5)*cell,py=oy+(Math.floor(j/5)+0.5)*cell;
+  if(f.op==="+")circle(px,py,cell*0.38,i<f.x?A:B);
+  else{const gone=i>=f.x-f.y;circle(px,py,cell*0.38,gone?X:A);if(gone){cx.strokeStyle="#495057";cx.lineWidth=cell*0.1;cx.beginPath();cx.moveTo(px-cell*0.3,py-cell*0.3);cx.lineTo(px+cell*0.3,py+cell*0.3);cx.stroke()}}}}
+
+// ================================================================ the games
+// Five games, each a different way to answer the same facts. In the "keys"
+// games the answer is typed on a number pad - remembering it, which is what
+// makes a fact fast; in the "tap" games it is picked from a few, which is a
+// change of pace. Each game draws its own world around the question.
+const GAMES=[
+ {id:"rocket",name:"Rocket Ride",input:"keys",price:0,col:"#4dabf7",total:12,goodT:0.85,say:"Answer to fly. Quick answers boost!"},
+ {id:"balloon",name:"Balloon Pop",input:"tap",price:0,col:"#ff8787",total:12,goodT:0.75,say:"Pop the balloon with the answer."},
+ {id:"frog",name:"Frog Hop",input:"tap",price:25,col:"#51cf66",total:10,goodT:1.05,say:"Hop to the lily pad with the answer."},
+ {id:"monster",name:"Monster Munch",input:"keys",price:50,col:"#9775fa",total:12,goodT:0.9,say:"Feed the monster: type the answer."},
+ {id:"race",name:"Race Day",input:"keys",price:80,col:"#ffa94d",total:10,goodT:0.6,say:"Beat Robo to the finish!"}];
+const GAME={};for(const g of GAMES)GAME[g.id]=g;
+
+let scene="who",R=null,rnd=Math.random;
+// ---------------------------------------------------------------- a round
+function startGame(gid){const g=GAME[gid];if(!g)return;const m=toMeet(me,me.track);
+ if(m.quiet.length)meet(me,me.track,m.quiet);
+ if(m.show.length){coach={fams:m.show,then:gid,t:T};scene="meet";sfx("meet");save();return}
+ beginRound(gid)}
+function beginRound(gid){const g=GAME[gid];
+ R={g,n:0,ok:0,fast:0,coins:0,wrong:0,newFast:[],q:null,typed:"",state:"ask",asked:T,until:0,t0:T,hint:false,lit:-9,shake:0,targets:[],
+  alt:0,goal:0,boost:0,full:0,mouth:0,me:0,bot:0,botDone:-1,meDone:-1,hops:0,jump:null,slide:0};
+ if(g.id==="race")R.botSec=clamp((me.pace||5000)*1.25/1000+0.4,2.4,9);
+ scene="play";nextQ()}
+function roundOver(){return R.g.id==="race"?R.ok>=R.g.total:R.n>=R.g.total}
+function nextQ(){if(R.pendingHop){R.hops++;R.pendingHop=false}
+ if(roundOver()){R.state="end";R.until=T+(R.g.id==="race"?1.6:1.4);if(R.g.id==="race")R.won=R.bot<1;return}
+ // every fact being learned is fast already: meet the next ones now
+ const m=toMeet(me,me.track);if(m.quiet.length)meet(me,me.track,m.quiet);
+ if(m.show.length&&!activeFacts(me,me.track).some(f=>!isFast(me,f.k))){coach={fams:m.show,resume:true,t:T};scene="meet";sfx("meet");return}
+ const f=pickFact(me,me.track,rnd);R.q=f;R.typed="";R.state="ask";R.hint=false;R.wrongV=null;
+ R.asked=T+(R.g.input==="tap"?0.55:0.15);
+ ASK[R.g.id]&&ASK[R.g.id](R,f)}
+// an answer to the question being asked
+function answer(v){if(!R||R.state!=="ask"||!R.q)return;const f=R.q,ok=v===f.ans,ms=Math.max(0,(T-R.asked)*1000),quick=ok&&ms<=fastMs(me);
+ const rec=record(me,f.k,ok,ms,fastMs(me)),day=today(me);day.n++;
+ if(ok){day.ok++;R.ok++;let c=1;if(quick){R.fast++;c++}R.coins+=c;me.coins+=c;
+  if(rec.nowFast&&R.newFast.indexOf(f.k)<0)R.newFast.push(f.k);
+  if(!day.lit&&day.ok>=me.goal){day.lit=1;me.coins+=10;R.coins+=10;R.lit=T;const y=dayKey(new Date(Date.now()-864e5));me.streak=me.lastLit===y?me.streak+1:1;me.lastLit=dayKey();setTimeout(()=>sfx("star"),350)}
+  sfx(quick?"fast":"good");R.state="good";R.until=T+R.g.goodT;R.quick=quick;GOOD[R.g.id]&&GOOD[R.g.id](R,quick)}
+ else{R.wrong++;R.wrongV=v;sfx("bad");R.state="coach";R.typed="";R.coachT=T;R.shake=1;BAD[R.g.id]&&BAD[R.g.id](R,v)}
+ save()}
+// after a wrong answer the right one is shown, with counters, and put in
+// by the child before going on - it is not counted as a try
+function coachDone(){if(!R||R.state!=="coach")return;sfx("good");R.state="good";R.until=T+R.g.goodT;R.quick=false;R.fromCoach=true;GOOD[R.g.id]&&GOOD[R.g.id](R,false)}
+function typeDigit(d){if(!R||!R.q||(R.state!=="ask"&&R.state!=="coach"))return;sfx("key");
+ const want=String(R.q.ans);if(R.typed.length>=want.length)R.typed="";R.typed+=d;
+ if(R.typed.length>=want.length){if(R.state==="ask")answer(+R.typed);else if(R.typed===want)coachDone();else{R.shake=1;setTimeout(()=>{if(R&&R.state==="coach")R.typed=""},250)}}}
+function typeBack(){if(R&&R.typed){R.typed=R.typed.slice(0,-1);sfx("key")}}
+function typeOk(){if(!R||!R.typed)return;if(R.state==="ask")answer(+R.typed);else if(R.state==="coach"){if(R.typed===String(R.q.ans))coachDone();else{R.typed="";R.shake=1}}}
+function tapTarget(t){if(!R||!R.q||t.dead)return;
+ if(R.state==="ask"){if(t.v!==R.q.ans)t.dead=T;answer(t.v)}
+ else if(R.state==="coach"&&t.v===R.q.ans)coachDone()}
+function stepRound(dt){if(!R)return;R.shake=Math.max(0,R.shake-dt*2.5);
+ if(R.state==="ask"&&T-R.asked>8)R.hint=true;
+ if(R.state==="good"&&T>=R.until){R.n++;R.fromCoach=false;nextQ()}
+ if(R.state==="end"&&T>=R.until)finishRound()}
+let done=null;
+function finishRound(){const g=R.g;me.coins+=3;R.coins+=3;me.rounds++;
+ const acc=R.n?R.ok/Math.max(1,R.ok+R.wrong):0,stars=R.wrong===0&&R.fast>=R.ok*0.6?3:acc>=0.75?2:1;
+ const best=me.best[g.id]||0;let line="";
+ if(g.id==="rocket"){const km=Math.round(R.goal*10);line=R.goal>=16?"Moon landing! "+km+" km":"You flew "+km+" km!";me.best.rocket=Math.max(best,km)}
+ else if(g.id==="race"){line=R.won?"You beat Robo!":"Robo won this time. Rematch?";if(R.won)me.best.race=best+1}
+ else if(g.id==="balloon")line="You popped "+R.ok+" balloons!";
+ else if(g.id==="frog")line="Froggy made it across!";
+ else if(g.id==="monster")line="The monster ate "+R.ok+" cookies. Yum!";
+ let up=null;const tr=TRACK[me.track];if(trackDone(me,me.track)&&tr.next){up={from:tr,to:TRACK[tr.next]};me.track=tr.next}
+ done={g,stars,coins:R.coins,ok:R.ok,wrong:R.wrong,fast:R.fast,newFast:R.newFast.slice(),line,up,t:T,lit:R.lit>=0};
+ save();scene="done";sfx(stars===3?"win":"star")}
+
+// ---------------------------------------------------------------- layout
+// Where things go in a game: the bar at the top, the question, the game's own
+// space, and (for the typing games) the number pad - under the game when the
+// screen is upright, beside it when it is sideways.
+function layout(g){const top=topY(),hud=46*U,y0=top+hud+6*U,bot=botY(),x0=SAFE.l+8*U,cw=W-SAFE.l-SAFE.r-16*U,L={hud:{y:top,h:hud}};
+ if(g.input==="keys"){if(H>=W*1.02){const ph=Math.min((bot-y0)*0.46,4*84*U+60*U);L.pad={x:x0,y:bot-ph,w:cw,h:ph};L.A={x:x0,y:y0,w:cw,h:bot-ph-y0-8*U}}
+  else{const pw=Math.min(cw*0.42,3*100*U+40*U);L.pad={x:x0+cw-pw,y:y0,w:pw,h:bot-y0};L.A={x:x0,y:y0,w:cw-pw-10*U,h:bot-y0}}}
+ else L.A={x:x0,y:y0,w:cw,h:bot-y0};
+ const ch=clamp(L.A.h*0.2,58*U,92*U),cwid=Math.min(L.A.w,460*U);L.card={x:L.A.x+L.A.w/2-cwid/2,y:L.A.y,w:cwid,h:ch};
+ L.G={x:L.A.x,y:L.A.y+ch+10*U,w:L.A.w,h:L.A.h-ch-10*U};return L}
+function drawCard(L){const c=L.card,f=R.q;if(!f)return;const coach=R.state==="coach",good=R.state==="good"&&!R.fromCoach;
+ const sx=R.shake>0?Math.sin(T*50)*R.shake*8*U:0;
+ cx.save();cx.translate(sx,0);panel(c.x,c.y,c.w,c.h,coach?"#fff4e6":good?"#ebfbee":"#ffffff",c.h*0.3);
+ const fs=c.h*0.56,q=factText(f)+" = ";font(fs,900);const qw=cx.measureText(q).width,bw=Math.max(c.h*0.9,cx.measureText(String(f.ans)).width+c.h*0.35),tot=qw+bw;
+ let x=c.x+c.w/2-tot/2;if(tot>c.w-16*U){const k=(c.w-16*U)/tot;cx.translate(c.x+c.w/2,c.y+c.h/2);cx.scale(k,k);cx.translate(-(c.x+c.w/2),-(c.y+c.h/2))}
+ txt(q,x+qw/2,c.y+c.h/2+2,fs,"#24305e","center",900);
+ const bx=x+qw,by=c.y+c.h*0.14,bh=c.h*0.72;cx.fillStyle=coach?"#ffe8cc":good?"#d3f9d8":"#edf2ff";rr(bx,by,bw,bh,bh*0.25);cx.fill();
+ let show=R.typed||"",col="#3b5bdb";
+ if(good){show=String(f.ans);col="#2b8a3e"}
+ else if(coach&&R.g.input==="tap"){show=String(f.ans);col="#e8590c"}
+ else if(!show&&R.state==="ask"&&R.g.input==="keys"&&Math.sin(T*6)>0){cx.fillStyle="#91a7ff";cx.fillRect(bx+bw/2-1.5*U,by+bh*0.2,3*U,bh*0.6)}
+ else if(!show&&R.g.input==="tap")show="?",col="#91a7ff";
+ if(show)txt(show,bx+bw/2,c.y+c.h/2+2,fs,col,"center",900);
+ cx.restore();
+ // a fact got wrong: the right answer, and what it looks like
+ if(coach||(R.hint&&R.state==="ask")){const A=L.A,tap=R.g.input==="tap",G=L.G;
+  let ph=Math.min(A.h-c.h-14*U,coach?190*U:130*U),pw=Math.min(A.w,460*U),px=A.x+A.w/2-pw/2,py=c.y+c.h+10*U;
+  if(tap){ph=Math.min(G.h*0.24-6*U,coach?170*U:120*U);py=G.y+G.h-ph}
+  if(ph>40*U){cx.globalAlpha=coach?1:0.9;panel(px,py,pw,ph,coach?"#fff":"rgba(255,255,255,0.92)",16*U);
+   const ty=py+20*U;if(coach){fitTxt(factText(f)+" = "+f.ans,px+pw/2,ty+4*U,24*U,pw-20*U,"#e8590c","center",900)}
+   else txt("Need a hand? Count them!",px+pw/2,ty,15*U,"#5c7cfa","center",800);
+   if(ph>70*U)dotsFor(f,px+12*U,ty+18*U,pw-24*U,ph-(ty-py)-(coach?36:24)*U);
+   if(coach)txt(R.g.input==="keys"?"Now you type "+f.ans:"Now tap "+f.ans,px+pw/2,py+ph-13*U,15*U,"#495057","center",800);
+   cx.globalAlpha=1}}}
+function drawHud(L){const y=L.hud.y,h=L.hud.h;
+ button(sideL(),y,h,h,"",()=>{scene="home";R=null},{icon:"x",col:"rgba(255,255,255,0.9)",isz:h*0.42});
+ // one pip a question
+ const n=R.g.total,done=R.g.id==="race"?R.ok:R.n,pw=Math.min(14*U,(W-260*U)/n),gap=pw*0.5,tw=n*pw+(n-1)*gap,x0=W/2-tw/2;
+ cx.fillStyle="rgba(0,0,0,0.25)";rr(x0-10*U,y+h/2-pw/2-6*U,tw+20*U,pw+12*U,(pw+12*U)/2);cx.fill();
+ for(let i=0;i<n;i++)circle(x0+i*(pw+gap)+pw/2,y+h/2,pw*0.42,i<done?"#ffd43b":"rgba(255,255,255,0.45)");
+ coinChip(sideR(),y+h/2,h*0.8)}
+function coinChip(xr,y,h){const s=String(me.coins);font(h*0.5,900);const w=cx.measureText(s).width+h*1.3;
+ cx.fillStyle="rgba(0,0,0,0.3)";rr(xr-w,y-h/2,w,h,h/2);cx.fill();coin(xr-w+h*0.5,y,h*0.32);txt(s,xr-h*0.35,y+1,h*0.5,"#fff","right",900)}
+function drawPad(L){const P=L.pad;if(!P)return;const g=10*U,k=Math.min((P.w-2*g-16*U)/3,(P.h-3*g-16*U)/4,100*U),kw=Math.min(k*1.25,(P.w-2*g-16*U)/3),
+  tw=3*kw+2*g,th=4*k+3*g,x0=P.x+P.w/2-tw/2,y0=P.y+P.h/2-th/2;
+ cx.fillStyle="rgba(255,255,255,0.16)";rr(x0-10*U,y0-10*U,tw+20*U,th+20*U,22*U);cx.fill();
+ const keys=["1","2","3","4","5","6","7","8","9","del","0","ok"];
+ keys.forEach((kk,i)=>{const c=i%3,r=Math.floor(i/3),x=x0+c*(kw+g),y=y0+r*(k+g);
+  if(kk==="del")button(x,y,kw,k,"",typeBack,{icon:"del",col:"#dbe4ff",isz:k*0.42});
+  else if(kk==="ok")button(x,y,kw,k,"",typeOk,{icon:"ok",col:R.typed?"#69db7c":"#d3f9d8",ink:"#1b4332",isz:k*0.45});
+  else button(x,y,kw,k,kk,()=>typeDigit(kk),{fs:k*0.52,col:"#ffffff"})})}
+
+// ---------------------------------------------------------------- Rocket Ride
+// Each right answer is fuel; a quick one is a boost. Twelve questions, and
+// the Moon is at sixteen - only quick answers get there.
+const ASK={},GOOD={},BAD={},DRAW={};
+GOOD.rocket=(R,quick)=>{R.goal+=quick?1.6:1;R.boost=quick?1.2:0.7;sfx("whoosh")};
+BAD.rocket=R=>{R.sput=T};
+DRAW.rocket=(R,L,dt)=>{const G=L.G;R.alt+=(R.goal-R.alt)*Math.min(1,dt*2.2);R.boost=Math.max(0,R.boost-dt);
+ const a=clamp(R.alt/14,0,1);sky(mix("#7cc8ff","#0b1236",a),mix("#e3f4ff","#26346e",a));
+ if(a>0.25)for(let i=0;i<70;i++){cx.globalAlpha=(a-0.25)*(0.5+0.5*Math.sin(T*2+i))*0.9;circle(hash1(i)*W,hash1(i+99)*H,(1+hash1(i+7)*1.6)*U,"#fff")}cx.globalAlpha=1;
+ const unit=Math.max(G.h*0.3,90*U),rh=clamp(G.h*0.36,70*U,180*U),rx=G.x+G.w*0.45,ry=G.y+G.h*0.58,ground=ry+rh*0.55+R.alt*unit;
+ // the world going by: clouds, a planet, a ringed planet, the Moon
+ for(let i=0;i<9;i++){const alt=1.2+i*0.95,y=ground-alt*unit;if(y<-80*U||y>H+80*U)continue;cloud(G.x+G.w*hash1(i*5+1),y,(60+hash1(i)*50)*U,0.85-a*0.4)}
+ const pl=(alt,fx,r,c,ring)=>{const y=ground-alt*unit;if(y<-r*3||y>H+r*3)return;const x=G.x+G.w*fx;circle(x,y,r,c);circle(x-r*0.3,y-r*0.3,r*0.45,"rgba(255,255,255,0.18)");
+  if(ring){cx.strokeStyle="rgba(255,236,170,0.85)";cx.lineWidth=r*0.18;cx.beginPath();cx.ellipse(x,y,r*1.7,r*0.45,-0.3,0,Math.PI*2);cx.stroke()}};
+ pl(8.5,0.18,32*U,"#ff922b");pl(12,0.82,26*U,"#cc5de8",true);
+ const my=ground-16*unit-rh*0.4;if(my>-120*U){circle(G.x+G.w*0.45,my,60*U,"#f1f3f5");for(let i=0;i<5;i++)circle(G.x+G.w*0.45+(hash1(i)-0.5)*70*U,my+(hash1(i+3)-0.5)*60*U,(6+hash1(i+9)*9)*U,"#ced4da")}
+ if(ground<H+40*U){cx.fillStyle="#69db7c";cx.beginPath();cx.moveTo(0,ground);for(let x=0;x<=W;x+=20*U)cx.lineTo(x,ground-Math.sin(x*0.01)*10*U);cx.lineTo(W,H);cx.lineTo(0,H);cx.fill();
+  cx.fillStyle="#868e96";cx.fillRect(rx-rh*0.5,ground-rh*0.08,rh,rh*0.12);cx.fillStyle="#adb5bd";cx.fillRect(rx+rh*0.42,ground-rh*1.1,rh*0.08,rh*1.05)}
+ const sp=R.sput&&T-R.sput<0.6?Math.sin(T*60)*6*U:0;
+ rocket(rx+sp,ry,rh,R.state==="end"?1.4:(R.boost>0?0.6+R.boost:0.25+0.1*Math.sin(T*20)));
+ // how high, and how far to the Moon
+ const bx=G.x+G.w-16*U,by0=G.y+14*U,by1=G.y+G.h-14*U;cx.fillStyle="rgba(255,255,255,0.3)";rr(bx-6*U,by0,12*U,by1-by0,6*U);cx.fill();
+ const k=clamp(R.alt/16,0,1);cx.fillStyle="#ffd43b";rr(bx-6*U,by1-(by1-by0)*k,12*U,(by1-by0)*k,6*U);cx.fill();circle(bx,by0-2*U,11*U,"#f1f3f5");
+ txt(Math.round(R.alt*10)+" km",bx-12*U,by1-(by1-by0)*k,13*U,"#fff","right",900,"rgba(0,0,0,0.4)")};
+function rocket(x,y,h,flame){const w=h*0.4;
+ if(flame>0){const fl=h*0.35*flame*(0.85+0.15*Math.sin(T*40)),g=cx.createLinearGradient(0,y+h*0.38,0,y+h*0.38+fl);g.addColorStop(0,"#fff3bf");g.addColorStop(0.4,"#ffa94d");g.addColorStop(1,"rgba(255,80,40,0)");
+  cx.fillStyle=g;cx.beginPath();cx.moveTo(x-w*0.3,y+h*0.36);cx.quadraticCurveTo(x,y+h*0.4+fl*1.1,x+w*0.3,y+h*0.36);cx.closePath();cx.fill()}
+ cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x-w*0.45,y+h*0.05);cx.lineTo(x-w*0.85,y+h*0.42);cx.lineTo(x-w*0.4,y+h*0.36);cx.closePath();cx.fill();
+ cx.beginPath();cx.moveTo(x+w*0.45,y+h*0.05);cx.lineTo(x+w*0.85,y+h*0.42);cx.lineTo(x+w*0.4,y+h*0.36);cx.closePath();cx.fill();
+ const g=cx.createLinearGradient(x-w/2,0,x+w/2,0);g.addColorStop(0,"#dee2e6");g.addColorStop(0.45,"#ffffff");g.addColorStop(1,"#adb5bd");cx.fillStyle=g;
+ cx.beginPath();cx.moveTo(x,y-h*0.5);cx.bezierCurveTo(x+w*0.75,y-h*0.25,x+w*0.55,y+h*0.3,x+w*0.38,y+h*0.38);cx.lineTo(x-w*0.38,y+h*0.38);cx.bezierCurveTo(x-w*0.55,y+h*0.3,x-w*0.75,y-h*0.25,x,y-h*0.5);cx.fill();
+ cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x,y-h*0.5);cx.bezierCurveTo(x+w*0.3,y-h*0.42,x+w*0.42,y-h*0.36,x+w*0.48,y-h*0.3);cx.lineTo(x-w*0.48,y-h*0.3);cx.bezierCurveTo(x-w*0.42,y-h*0.36,x-w*0.3,y-h*0.42,x,y-h*0.5);cx.fill();
+ circle(x,y-h*0.06,w*0.33,"#495057");circle(x,y-h*0.06,w*0.27,"#a5d8ff");
+ cx.save();cx.beginPath();cx.arc(x,y-h*0.06,w*0.27,0,Math.PI*2);cx.clip();buddy(x,y-h*0.02,w*0.22,me.look,{noShadow:1,still:1,mood:R&&R.state==="good"?"cheer":"happy"});cx.restore();
+ cx.fillStyle="#e03131";cx.fillRect(x-w*0.06,y+h*0.12,w*0.12,h*0.26)}
+
+// ---------------------------------------------------------------- Balloon Pop
+const BCOLS=["#ff6b6b","#4dabf7","#ffd43b","#69db7c","#cc5de8","#ff922b"];
+ASK.balloon=(R,f)=>{const vs=choices(f,4,rnd),off=Math.floor(rnd()*6);R.targets=vs.map((v,i)=>({v,col:BCOLS[(i+off)%6],fx:(i+0.5)/vs.length+(rnd()-0.5)*0.06,fy:0.12+(i%2)*0.2+rnd()*0.05,t0:T+i*0.07,seed:rnd()*6}))};
+GOOD.balloon=(R)=>{const t=R.targets.find(t=>t.v===R.q.ans);if(t){t.pop=T;burst(t.hx,t.hy,26,[t.col,"#fff","#ffd43b"],380*U);sfx("pop")}for(const o of R.targets)if(o!==t)o.away=T};
+BAD.balloon=(R,v)=>{const t=R.targets.find(t=>t.v===v);if(t){burst(t.hx,t.hy,12,["#adb5bd","#868e96"],200*U);sfx("pop")}};
+DRAW.balloon=(R,L,dt)=>{const G=L.G;sky("#a5d8ff","#e7f5ff");circle(G.x+G.w*0.85,G.y+30*U,34*U,"#ffe066");
+ for(let i=0;i<4;i++)cloud(((T*12*U+i*W*0.31)%(W+200*U))-100*U,G.y+(30+i*37%90)*U,(70+i*15)*U,0.8);
+ cx.fillStyle="#8ce99a";cx.beginPath();cx.moveTo(0,H);cx.lineTo(0,H*0.86);for(let x=0;x<=W;x+=24*U)cx.lineTo(x,H*0.86-Math.sin(x*0.008+1)*16*U);cx.lineTo(W,H);cx.fill();
+ cx.fillStyle="#51cf66";cx.beginPath();cx.moveTo(0,H);cx.lineTo(0,H*0.92);for(let x=0;x<=W;x+=24*U)cx.lineTo(x,H*0.92-Math.sin(x*0.011)*10*U);cx.lineTo(W,H);cx.fill();
+ const n=R.targets.length||4,r=clamp(Math.min(G.w/(n*2.5),G.h*0.13),30*U,72*U);
+ for(const t of R.targets){if(t.pop||(t.dead&&T-t.dead>0.05))continue;const k=easeOut((T-t.t0)/0.9);let y=lerp(G.y+G.h+r*2,G.y+G.h*t.fy+r,k)+Math.sin(T*2+t.seed)*5*U,x=G.x+G.w*t.fx+Math.sin(T*1.3+t.seed)*4*U;
+  if(t.away){const a=T-t.away;y-=a*a*900*U;if(y<-r*3)continue}
+  t.hx=x;t.hy=y;t.hr=r*1.15;
+  cx.strokeStyle="rgba(80,80,80,0.6)";cx.lineWidth=1.5*U;cx.beginPath();cx.moveTo(x,y+r*1.15);cx.quadraticCurveTo(x+Math.sin(T*2+t.seed)*10*U,y+r*1.9,x,y+r*2.7);cx.stroke();
+  const glow=R.state==="coach"&&t.v===R.q.ans;if(glow){circle(x,y,r*1.35+Math.sin(T*8)*4*U,"rgba(255,212,59,0.55)")}
+  const g=cx.createRadialGradient(x-r*0.35,y-r*0.4,r*0.1,x,y,r*1.2);g.addColorStop(0,shade(t.col,0.45));g.addColorStop(1,shade(t.col,-0.15));cx.fillStyle=g;
+  cx.beginPath();cx.ellipse(x,y,r,r*1.15,0,0,Math.PI*2);cx.fill();cx.fillStyle=shade(t.col,-0.2);cx.beginPath();cx.moveTo(x-r*0.12,y+r*1.22);cx.lineTo(x+r*0.12,y+r*1.22);cx.lineTo(x,y+r*1.1);cx.fill();
+  ellipse(x-r*0.38,y-r*0.45,r*0.16,r*0.28,"rgba(255,255,255,0.5)",-0.5);
+  txt(String(t.v),x,y+2*U,r*0.8,"#fff","center",900,"rgba(0,0,0,0.25)")}
+ buddy(G.x+46*U,H*0.86-10*U,34*U,me.look,{mood:R.state==="good"?"cheer":R.state==="coach"?"oops":"happy",look:{x:0.5,y:-0.8}})};
+
+// ---------------------------------------------------------------- Frog Hop
+ASK.frog=(R,f)=>{const vs=choices(f,3,rnd);R.targets=vs.map((v,i)=>({v,row:i,t0:T+i*0.08}));R.jump=null};
+GOOD.frog=(R)=>{const t=R.targets.find(t=>t.v===R.q.ans);R.jump={to:t,t0:T};R.pendingHop=true;sfx("hop");setTimeout(()=>{sfx("splash")},420)};
+BAD.frog=(R,v)=>{const t=R.targets.find(t=>t.v===v);if(t){t.sunk=T;burst(t.hx,t.hy,14,["#a5d8ff","#e7f5ff"],220*U,"drop");sfx("splash")}};
+DRAW.frog=(R,L,dt)=>{const G=L.G;sky("#99e9f2","#3bc9db");
+ const off=(R.hops+(R.jump?ease((T-R.jump.t0-0.45)/0.45):0))*G.w*0.4;
+ // ripples and reeds go by as the frog hops on
+ for(let i=0;i<14;i++){const x=((hash1(i)*W*2-off*0.6)%(W*1.2)+W*1.2)%(W*1.2)-W*0.1,y=G.y+hash1(i+20)*G.h;cx.strokeStyle="rgba(255,255,255,0.35)";cx.lineWidth=2*U;cx.beginPath();cx.ellipse(x,y,26*U,7*U,0,0,Math.PI*2);cx.stroke()}
+ for(let i=0;i<10;i++){const x=((i*W*0.23-off)%(W*1.15)+W*1.15)%(W*1.15)-W*0.05,base=i%2?H:G.y+16*U;cx.strokeStyle="#2b8a3e";cx.lineWidth=5*U;
+  for(let j=0;j<3;j++){cx.beginPath();cx.moveTo(x+j*8*U,base);cx.quadraticCurveTo(x+j*8*U+8*U,base+(i%2?-1:1)*50*U,x+j*8*U+(j-1)*10*U,base+(i%2?-1:1)*(70+j*12)*U);cx.stroke()}}
+ const rx=clamp(Math.min(G.w*0.12,G.h*0.18),34*U,92*U),ry=rx*0.55,sx=G.x+G.w*0.2,sy=G.y+G.h*0.42,px=G.x+G.w*0.68,rows=[0.14,0.41,0.68];
+ // the island at the end
+ const slideK=R.jump?ease((T-R.jump.t0-0.45)/0.45):0,left=R.g.total-R.hops;let isl=null;
+ if(left<=1){const ix=px+G.w*0.4*(left-slideK)+G.w*0.3;isl={x:ix,y:G.y+G.h*0.4};
+  ellipse(ix,isl.y+G.h*0.06,G.w*0.26,G.h*0.3,"#ffe066");ellipse(ix,isl.y-G.h*0.02,G.w*0.18,G.h*0.12,"#94d82d");cx.fillStyle="#495057";cx.fillRect(ix+G.w*0.06,isl.y-G.h*0.32,4*U,G.h*0.3);
+  cx.fillStyle="#ff6b6b";cx.beginPath();cx.moveTo(ix+G.w*0.06+4*U,isl.y-G.h*0.32);cx.lineTo(ix+G.w*0.06+40*U,isl.y-G.h*0.26);cx.lineTo(ix+G.w*0.06+4*U,isl.y-G.h*0.2);cx.fill()}
+ pad(sx-slideK*(px-sx),sy,rx,ry,"#40c057");
+ for(const t of R.targets){const k=easeOut((T-t.t0)/0.4),y=G.y+G.h*rows[t.row],x=px-slideK*(px-sx)+(1-k)*60*U;let sink=t.sunk?clamp((T-t.sunk)/0.5,0,1):0;
+  if(R.jump&&t!==R.jump.to){cx.globalAlpha=1-slideK}
+  t.hx=x;t.hy=y;t.hr=rx*1.1;
+  if(R.state==="coach"&&t.v===R.q.ans)ellipse(x,y,rx*1.3+Math.sin(T*8)*4*U,ry*1.4,"rgba(255,236,153,0.8)");
+  pad(x,y+sink*8*U,rx*(1-sink*0.15),ry*(1-sink*0.15),sink?"#8a9a8a":"#51cf66");
+  if(!sink||sink<1)txt(String(t.v),x,y+sink*8*U+1,ry*1.15,sink?"#e9ecef":"#fff","center",900,"rgba(0,40,0,0.35)");cx.globalAlpha=1}
+ // the frog: sitting, or mid-hop
+ let fx=sx,fy=sy-ry*0.4,jump=0;
+ if(R.jump){const k=clamp((T-R.jump.t0)/0.45,0,1),t=R.jump.to,tx=G.x+G.w*0.68,ty=G.y+G.h*rows[t.row]-ry*0.4;fx=lerp(sx,tx,k);fy=lerp(sy-ry*0.4,ty,k)-Math.sin(k*Math.PI)*G.h*0.25;jump=Math.sin(k*Math.PI);
+  if(k>=1){fx=tx-slideK*(tx-sx);fy=lerp(ty,sy-ry*0.4,slideK)}}
+ // across: one last hop onto the island
+ if(R.state==="end"&&isl){const k=clamp((T-(R.until-1.4))/0.6,0,1);fx=lerp(sx,isl.x-G.w*0.04,k);fy=lerp(sy-ry*0.4,isl.y-ry*0.6,k)-Math.sin(k*Math.PI)*G.h*0.25;jump=Math.sin(k*Math.PI)}
+ frog(fx,fy,rx*0.62,jump,R.state==="coach"?"oops":R.state==="good"||R.state==="end"?"cheer":"happy");
+ // how far across
+ const n=R.g.total,dw=Math.min(18*U,G.w/(n*1.6));for(let i=0;i<n;i++)circle(G.x+G.w/2+(i-(n-1)/2)*dw*1.5,G.y+G.h-8*U,dw*0.4,i<R.hops?"#2b8a3e":"rgba(255,255,255,0.6)")};
+function pad(x,y,rx,ry,col){ellipse(x,y+ry*0.25,rx,ry,"rgba(0,60,80,0.25)");cx.fillStyle=col;cx.beginPath();cx.ellipse(x,y,rx,ry,0,0.25,Math.PI*2-0.05);cx.lineTo(x,y);cx.closePath();cx.fill();
+ cx.strokeStyle="rgba(0,80,0,0.25)";cx.lineWidth=1.5*U;for(let i=0;i<5;i++){const a=0.6+i*1.1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+Math.cos(a)*rx*0.8,y+Math.sin(a)*ry*0.8);cx.stroke()}}
+function frog(x,y,s,jump,mood){const legs=jump*s*0.6;
+ ellipse(x-s*0.7,y+s*0.45+legs*0.5,s*0.35,s*0.18,"#2f9e44");ellipse(x+s*0.7,y+s*0.45+legs*0.5,s*0.35,s*0.18,"#2f9e44");
+ ellipse(x,y,s,s*0.75,"#40c057");ellipse(x,y+s*0.2,s*0.65,s*0.45,"#b2f2bb");
+ for(const sx of[-1,1]){circle(x+sx*s*0.45,y-s*0.6,s*0.32,"#40c057");circle(x+sx*s*0.45,y-s*0.62,s*0.22,"#fff");circle(x+sx*s*0.45,y-s*0.6,s*0.11,"#212529")}
+ cx.strokeStyle="#1b4332";cx.lineWidth=s*0.08;cx.lineCap="round";cx.beginPath();
+ if(mood==="oops"){cx.moveTo(x-s*0.3,y+s*0.05);cx.quadraticCurveTo(x,y-s*0.08,x+s*0.3,y+s*0.05)}else cx.arc(x,y-s*0.15,s*0.38,0.4,Math.PI-0.4);cx.stroke();
+ hat(me.look.hat,x,y-s*0.75,s*0.75)}
+
+// ---------------------------------------------------------------- Monster Munch
+ASK.monster=(R)=>{R.cookie={t0:T,eat:-1}};
+GOOD.monster=(R)=>{R.cookie.eat=T;setTimeout(()=>{sfx("chomp");if(R){R.full=Math.min(0.35,R.full+0.025);burst(R.mx||W/2,R.my||H/2,16,["#c08552","#7f4f24","#e6b98a"],260*U,"drop")}},280)};
+BAD.monster=(R)=>{R.no=T};
+DRAW.monster=(R,L,dt)=>{const G=L.G;sky("#ffe8cc","#ffc078");
+ cx.fillStyle="#e8590c22";for(let i=0;i<8;i++){cx.fillStyle=i%2?"rgba(255,255,255,0.18)":"rgba(255,255,255,0.08)";cx.beginPath();cx.moveTo(W/2,H*1.1);cx.lineTo(W*(i/8)-W*0.2,-H*0.2);cx.lineTo(W*((i+1)/8)-W*0.2,-H*0.2);cx.fill()}
+ cx.fillStyle="#d9480f";cx.fillRect(0,G.y+G.h*0.86,W,H);cx.fillStyle="#e8590c";cx.fillRect(0,G.y+G.h*0.86,W,6*U);
+ const s=clamp(Math.min(G.w,G.h)*0.3,55*U,160*U)*(1+R.full),mx=G.x+G.w*0.5,my=G.y+G.h*0.86-s*0.95;R.mx=mx;R.my=my;
+ const shake=R.no&&T-R.no<0.7?Math.sin((T-R.no)*30)*s*0.12:0;
+ // the cookie: in from the side, then into the mouth
+ const ck=R.cookie||{t0:T,eat:-1},cr=s*0.38;let cxp=lerp(G.x+G.w+cr*2,mx+s*1.15,easeOut((T-ck.t0)/0.6)),cyp=my-s*0.6+Math.sin(T*2.5)*5*U;
+ let mouth=0.35+0.15*Math.sin(T*3);if(ck.eat>=0){const k=clamp((T-ck.eat)/0.3,0,1);cxp=lerp(mx+s*1.15,mx,k);cyp=lerp(cyp,my+s*0.15,k);mouth=k<1?0.9:Math.abs(Math.sin((T-ck.eat-0.3)*14))*0.6*(T-ck.eat<0.8?1:0)}
+ R.mouth=mouth;
+ monster(mx+shake,my,s,mouth,R.state==="coach"?"oops":R.state==="good"?"cheer":"happy",shake);
+ if(!(ck.eat>=0&&T-ck.eat>=0.3)){circle(cxp,cyp,cr,"#d9a066");circle(cxp,cyp,cr*0.86,"#e6b98a");for(let i=0;i<6;i++){const a=i*1.1+0.4;circle(cxp+Math.cos(a)*cr*0.5,cyp+Math.sin(a)*cr*0.5,cr*0.11,"#5c3a1a")}}};
+function monster(x,y,s,mouth,mood,shake){const fur="#9775fa";
+ for(let i=0;i<22;i++){const a=i/22*Math.PI*2;circle(x+Math.cos(a)*s*0.98,y+Math.sin(a)*s*0.9,s*0.16,shade(fur,-0.1))}
+ ellipse(x,y,s,s*0.92,fur);
+ for(const sx of[-1,1]){cx.fillStyle="#fff3bf";cx.beginPath();cx.moveTo(x+sx*s*0.45,y-s*0.75);cx.lineTo(x+sx*s*0.7,y-s*1.25);cx.lineTo(x+sx*s*0.25,y-s*0.85);cx.fill()}
+ const ey=y-s*0.35;circle(x-s*0.32,ey,s*0.24,"#fff");circle(x+s*0.32,ey,s*0.24,"#fff");
+ const lx=mood==="oops"?Math.sin(T*20)*0.3:0.4;circle(x-s*0.32+lx*s*0.1,ey,s*0.11,"#212529");circle(x+s*0.32+lx*s*0.1,ey,s*0.11,"#212529");
+ const mw=s*0.62,mh=s*(0.08+mouth*0.45),my=y+s*0.22;cx.fillStyle="#5f3dc4";cx.beginPath();cx.ellipse(x,my,mw,Math.max(mh,s*0.06),0,0,Math.PI*2);cx.fill();
+ if(mh>s*0.15){ellipse(x,my+mh*0.45,mw*0.5,mh*0.4,"#f06595");cx.fillStyle="#fff";for(let i=-2;i<=2;i++){cx.beginPath();cx.moveTo(x+i*mw*0.3-mw*0.1,my-mh*0.9);cx.lineTo(x+i*mw*0.3+mw*0.1,my-mh*0.9);cx.lineTo(x+i*mw*0.3,my-mh*0.55);cx.fill()}}
+ hat(me.look.hat,x,y-s*0.95,s*0.6)}
+
+// ---------------------------------------------------------------- Race Day
+// Robo drives while you think and stops while you are being shown a fact, so
+// its pace is set from yours: a little slower than your usual - you win by
+// being quicker than you were.
+GOOD.race=(R)=>{sfx("vroom")};
+DRAW.race=(R,L,dt)=>{const G=L.G;sky("#74c0fc","#d0ebff");
+ if(R.state==="ask"&&R.bot<1)R.bot=Math.min(1,R.bot+dt/(R.g.total*R.botSec));
+ if(R.bot>=1&&R.botDone<0)R.botDone=T;
+ const target=R.ok/R.g.total;R.me+=(target-R.me)*Math.min(1,dt*3);if(R.me>0.995&&R.meDone<0){R.meDone=T;sfx(R.botDone<0?"win":"good")}
+ const len=G.w*3.2,lead=Math.max(R.me,R.bot),cam=clamp(lead*len-G.w*0.55,0,len-G.w*0.7);
+ const road=G.y+G.h*0.42,lane=Math.min(G.h*0.24,90*U);
+ cx.fillStyle="#8ce99a";cx.fillRect(0,road-G.h*0.2,W,H);
+ // grandstand flags
+ for(let i=0;i<30;i++){const x=G.x+i*90*U-(cam*0.5)%(90*U);cx.fillStyle=BCOLS[i%6];cx.beginPath();cx.moveTo(x,road-G.h*0.2);cx.lineTo(x+20*U,road-G.h*0.2);cx.lineTo(x+10*U,road-G.h*0.2+18*U);cx.fill()}
+ cx.fillStyle="#495057";cx.fillRect(0,road,W,lane*2+12*U);cx.fillStyle="#fff";
+ for(let x=G.x-((cam)%(60*U));x<W;x+=60*U)cx.fillRect(x,road+lane+4*U,30*U,4*U);
+ const fx=G.x+len-cam;if(fx<W+20*U){for(let r=0;r<Math.ceil((lane*2+12*U)/(10*U));r++)for(let c=0;c<2;c++){cx.fillStyle=(r+c)%2?"#fff":"#212529";cx.fillRect(fx+c*10*U,road+r*10*U,10*U,10*U)}}
+ const cw=clamp(lane*1.5,60*U,130*U);
+ car(G.x+R.bot*len-cam,road+lane*0.5+4*U,cw,"#adb5bd",true);
+ car(G.x+R.me*len-cam,road+lane*1.5+8*U,cw,me.look.col,false);
+ if(R.botDone>=0&&R.meDone<0)fitTxt("Robo is home - keep going!",G.x+G.w/2,road+lane*2+40*U,18*U,G.w,"#fff","center",900,"rgba(0,0,0,0.4)")};
+function car(x,y,w,col,robo){const h=w*0.42,spin=T*20;
+ cx.fillStyle=col;rr(x-w*0.5,y-h*0.35,w,h*0.6,h*0.2);cx.fill();cx.fillStyle=shade(col,-0.2);rr(x-w*0.15,y-h*0.6,w*0.4,h*0.35,h*0.12);cx.fill();
+ for(const wx of[-0.3,0.3]){circle(x+wx*w,y+h*0.28,h*0.26,"#212529");cx.strokeStyle="#adb5bd";cx.lineWidth=h*0.06;cx.beginPath();cx.moveTo(x+wx*w+Math.cos(spin)*h*0.15,y+h*0.28+Math.sin(spin)*h*0.15);cx.lineTo(x+wx*w-Math.cos(spin)*h*0.15,y+h*0.28-Math.sin(spin)*h*0.15);cx.stroke()}
+ if(robo){const hx=x+w*0.05,hy=y-h*0.75;cx.fillStyle="#868e96";rr(hx-h*0.3,hy-h*0.3,h*0.6,h*0.5,h*0.1);cx.fill();circle(hx-h*0.12,hy-h*0.08,h*0.08,"#ffd43b");circle(hx+h*0.12,hy-h*0.08,h*0.08,"#ffd43b");
+  cx.strokeStyle="#868e96";cx.lineWidth=h*0.05;cx.beginPath();cx.moveTo(hx,hy-h*0.3);cx.lineTo(hx,hy-h*0.5);cx.stroke();circle(hx,hy-h*0.52,h*0.07,"#ff6b6b")}
+ else buddy(x+w*0.05,y-h*0.68,h*0.36,me.look,{noShadow:1,mood:R&&R.state==="good"?"cheer":R&&R.state==="coach"?"oops":"happy"})}
+
+// ================================================================ screens
+let coach=null;
+function bg(){sky("#3b5bdb","#1c2a52");for(let i=0;i<40;i++){cx.globalAlpha=0.25+0.25*Math.sin(T+i);circle(hash1(i)*W,hash1(i+50)*H,(1+hash1(i+3)*2)*U,"#fff")}cx.globalAlpha=1}
+function backBtn(fn){button(clearL(),topY(),46*U,46*U,"",fn||(()=>{scene="home"}),{icon:"back",col:"rgba(255,255,255,0.9)",isz:20*U})}
+function drawWho(){bg();txt("Who's playing?",W/2,topY()+34*U,34*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const n=profiles.length+(profiles.length<6?1:0),top=topY()+70*U,bottom=botY()-24*U;
+ grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,0.85).forEach((c,i)=>{const p=profiles[i];
+  if(!p){cx.fillStyle="rgba(255,255,255,0.14)";rr(c.x,c.y,c.w,c.h,20*U);cx.fill();txt("+",c.x+c.w/2,c.y+c.h*0.42,c.h*0.32,"#fff");fitTxt("Add a player",c.x+c.w/2,c.y+c.h*0.78,c.h*0.09,c.w*0.9,"#fff");
+   btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{const nm=ask("Name for the new player?","");if(nm){const q=newProfile(nm,"addsub10",PCOLS[profiles.length%PCOLS.length]);profiles.push(q);save()}}});return}
+  panel(c.x,c.y,c.w,c.h,"#fffaf0",20*U);buddy(c.x+c.w/2,c.y+c.h*0.4,c.h*0.2,p.look,{seed:i});
+  fitTxt(p.name,c.x+c.w/2,c.y+c.h*0.74,c.h*0.12,c.w*0.9,"#24305e","center",900);fitTxt(TRACK[p.track].short,c.x+c.w/2,c.y+c.h*0.88,c.h*0.07,c.w*0.9,"#748ffc","center",800);
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{me=p;save();scene="home"}})})}
+function ask(q,d){try{const v=window.prompt(q,d);return v?String(v).trim().slice(0,12):""}catch(e){return""}}
+function drawHome(){bg();const day=today(me),port=H>W;
+ // the player and today's star
+ const top=topY(),bx=clearL()+46*U,by=top+62*U;button(sideR()-44*U,top,44*U,44*U,"",()=>{scene="who"},{icon:"people",col:"rgba(255,255,255,0.9)",isz:22*U});
+ buddy(bx,by,40*U,me.look,{mood:day.lit?"cheer":"happy",look:{x:0.6,y:0}});
+ fitTxt("Hi "+me.name+"!",bx+56*U,top+36*U,30*U,sideR()-bx-56*U-170*U,"#fff","left",900,"rgba(0,0,0,0.3)");
+ font(17*U,900);coinChip(bx+56*U+cx.measureText(String(me.coins)).width+44*U,top+78*U,34*U);
+ starMeter(sideR()-104*U,top+52*U,34*U,day,null,true);
+ // the facts
+ const fc=fastCount(me,me.track),py=top+136*U,pw=sideR()-sideL();
+ cx.fillStyle="rgba(255,255,255,0.12)";rr(sideL(),py,pw,52*U,14*U);cx.fill();
+ fitTxt(TRACK[me.track].name,sideL()+14*U,py+16*U,15*U,pw-28*U,"#dbe4ff","left",800);
+ const bw=pw-28*U-110*U;cx.fillStyle="rgba(0,0,0,0.3)";rr(sideL()+14*U,py+30*U,bw,12*U,6*U);cx.fill();cx.fillStyle="#69db7c";rr(sideL()+14*U,py+30*U,Math.max(12*U,bw*fc.n/fc.of),12*U,6*U);cx.fill();
+ txt(fc.n+" of "+fc.of+" fast",sideR()-14*U,py+36*U,14*U,"#fff","right",900);
+ // the games
+ const gy=py+64*U,gh=botY()-gy-66*U;
+ grid(GAMES.length,sideL(),gy,pw,gh,12*U,port?1:1.1).forEach((c,i)=>{const g=GAMES[i],own=!!me.games[g.id];
+  cx.fillStyle="rgba(0,0,0,0.25)";rr(c.x,c.y+5*U,c.w,c.h,20*U);cx.fill();cx.fillStyle=g.col;rr(c.x,c.y,c.w,c.h,20*U);cx.fill();
+  cx.save();rr(c.x,c.y,c.w,c.h,20*U);cx.clip();gameIcon(g.id,c.x+c.w/2,c.y+c.h*0.42,Math.min(c.w,c.h)*0.32);cx.restore();
+  fitTxt(g.name,c.x+c.w/2,c.y+c.h*0.84,Math.min(c.h*0.12,22*U),c.w-16*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+  if(!own){cx.fillStyle="rgba(20,28,60,0.55)";rr(c.x,c.y,c.w,c.h,20*U);cx.fill();icon("lock",c.x+c.w/2,c.y+c.h*0.36,Math.min(c.w,c.h)*0.22,"#fff");
+   coin(c.x+c.w/2-22*U,c.y+c.h*0.6,11*U);txt(String(g.price),c.x+c.w/2+8*U,c.y+c.h*0.6,18*U,"#ffd43b","center",900)}
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{if(own)startGame(g.id);else if(me.coins>=g.price){me.coins-=g.price;me.games[g.id]=1;save();sfx("buy");toast(g.name+" unlocked!")}
+   else toast("Need "+(g.price-me.coins)+" more coins - keep playing!")}})});
+ const by2=botY()-50*U,bw2=(pw-20*U)/3;
+ button(sideL(),by2,bw2,50*U,"Facts",()=>{scene="facts"},{icon:"chart",col:"#e7f5ff"});
+ button(sideL()+bw2+10*U,by2,bw2,50*U,"Shop",()=>{scene="shop"},{icon:"bag",col:"#fff3bf"});
+ button(sideL()+2*(bw2+10*U),by2,bw2,50*U,"Grown-ups",null,{icon:"gear",col:"#f1f3f5",fs:Math.min(16*U,bw2/7)});
+ holdBtn(sideL()+2*(bw2+10*U),by2,bw2,50*U,()=>{scene="settings"});
+ txt("v"+BUILD,W/2,botY()-58*U,10*U,"rgba(255,255,255,0.45)","center",700);
+ checkUpdate();updateBanner()}
+// Today's star fills with right answers; lit, it pays ten coins.
+function starMeter(x,y,r,day,ink,short){const k=clamp(day.ok/me.goal,0,1),sh=ink?null:"rgba(0,0,0,0.3)";ink=ink||"#fff";
+ star(x,y,r,sh?"rgba(255,255,255,0.18)":"#e9ecef");cx.save();cx.beginPath();cx.rect(x-r,y+r-2*r*k,2*r,2*r*k);cx.clip();star(x,y,r,day.lit?"#ffd43b":"#fab005");cx.restore();
+ if(day.lit){cx.globalAlpha=0.4+0.3*Math.sin(T*3);star(x,y,r*1.25,"rgba(255,224,102,0.5)");cx.globalAlpha=1}
+ txt(day.lit?"Today's star!":Math.min(day.ok,me.goal)+" / "+me.goal+(short?"":" for today's star"),x,y+r+14*U,13*U,ink,"center",900,sh);
+ if(me.streak>1&&day.lit)txt(me.streak+" days in a row",x,y+r+30*U,11*U,sh?"#ffe066":"#e67700","center",800)}
+function gameIcon(id,x,y,s){
+ if(id==="rocket"){cx.save();cx.translate(x,y);cx.rotate(0.5);cx.translate(-x,-y);rocket(x,y,s*1.6,0.6+0.2*Math.sin(T*15));cx.restore()}
+ else if(id==="balloon"){for(let i=0;i<3;i++){const bx=x+(i-1)*s*0.62,by=y-s*0.1+(i%2)*s*0.25+Math.sin(T*2+i)*3*U;cx.strokeStyle="rgba(255,255,255,0.7)";cx.lineWidth=1.5*U;cx.beginPath();cx.moveTo(bx,by+s*0.45);cx.lineTo(bx,by+s*1.1);cx.stroke();
+   ellipse(bx,by,s*0.38,s*0.45,BCOLS[(i*2+1)%6]);ellipse(bx-s*0.12,by-s*0.15,s*0.07,s*0.12,"rgba(255,255,255,0.5)")}}
+ else if(id==="frog"){pad(x,y+s*0.45,s*0.9,s*0.38,"#2f9e44");frog(x,y+s*0.1,s*0.55,0,"happy")}
+ else if(id==="monster")monster(x,y+s*0.1,s*0.62,0.5+0.3*Math.sin(T*3),"happy",0);
+ else if(id==="race"){car(x,y+s*0.2,s*1.6,"#fff3bf",false)}}
+// Grown-up things are behind a button that has to be held, so a tap from a
+// small finger does not change the facts being practised.
+let holding=null;
+function holdBtn(x,y,w,h,fn){btns.push({x,y,w,h,fn,hold:true});
+ if(holding&&holding.x===x&&holding.y===y){const k=clamp((T-holding.t0)/1.5,0,1);cx.strokeStyle="#4c6ef5";cx.lineWidth=5*U;rr(x,y,w*k,h,14*U);cx.stroke();
+  if(k>=1){holding=null;sfx("tap");fn()}}}
+function drawMeet(){bg();const c=coach;txt("New facts!",W/2,topY()+30*U,34*U,"#ffe066","center",900,"rgba(0,0,0,0.3)");
+ fitTxt("They go together. Look for the pattern.",W/2,topY()+64*U,16*U,W-40*U,"#dbe4ff","center",800);
+ const top=topY()+86*U,bottom=botY()-76*U,n=c.fams.length,port=H>W;
+ const boxes=grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,port?(n===1?1.05:1.9):1.15);
+ c.fams.forEach((f,i)=>{const b=boxes[i];const k=easeOut((T-c.t-i*0.15)/0.4);cx.globalAlpha=k;panel(b.x,b.y+(1-k)*30*U,b.w,b.h,"#fffaf0",18*U);
+  const lines=f.facts.map(x=>factText(x)+" = "+x.ans),half=b.h*0.52,lh=Math.min((b.h-half-12*U)/Math.ceil(lines.length/(port?2:1)),34*U);
+  dotsFor(f.facts[0],b.x+10*U,b.y+(1-k)*30*U+8*U,b.w-20*U,half-12*U);
+  lines.forEach((l,j)=>{const col=port?j%2:0,row=port?Math.floor(j/2):j,cols=port?2:1;
+   fitTxt(l,b.x+b.w*(col+0.5)/cols,b.y+(1-k)*30*U+half+row*lh+lh/2,lh*0.62,b.w/cols-12*U,f.facts[j].op==="+"||f.facts[j].op==="x"?"#e03131":"#1c7ed6","center",900)});cx.globalAlpha=1});
+ button(W/2-110*U,botY()-60*U,220*U,58*U,"Let's play!",()=>{const m=coach;coach=null;meet(me,me.track,m.fams);save();if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)},{icon:"play",col:"#69db7c",ink:"#113a1a",fs:24*U})}
+function drawPlay(dt){const L=layout(R.g);DRAW[R.g.id](R,L,dt);stepParts(dt);
+ if(L.pad){cx.fillStyle="rgba(20,28,60,0.28)";rr(L.pad.x,L.pad.y,L.pad.w,L.pad.h,22*U);cx.fill()}
+ if(R.state!=="end")drawCard(L);drawHud(L);if(L.pad&&R.state!=="end")drawPad(L);
+ if(R.lit>=0&&T-R.lit<2.5){const k=T-R.lit,s=easeOut(k/0.4)*(1+0.05*Math.sin(T*8));cx.globalAlpha=k>2?(2.5-k)/0.5:1;
+  star(W/2,H/2,90*U*s,"#ffd43b");txt("Today's star!",W/2,H/2+110*U*s,26*U,"#fff","center",900,"rgba(0,0,0,0.4)");txt("+10",W/2,H/2+4*U,30*U,"#7a5300","center",900);cx.globalAlpha=1}
+ if(R.n===0&&T-R.t0<3.2&&R.state==="ask"){cx.globalAlpha=clamp((3.2-(T-R.t0))/0.5,0,1);fitTxt(R.g.say,W/2,L.card.y+L.card.h+26*U,19*U,L.A.w-20*U,"#fff","center",900,"rgba(0,0,0,0.45)");cx.globalAlpha=1}
+ if(R.state==="good"&&R.quick&&T<R.until)fitTxt(["Zoom!","Speedy!","Fast!","Wow!","Super quick!"][R.n%5],W/2,L.card.y+L.card.h+30*U,26*U,W*0.8,"#ffe066","center",900,"rgba(0,0,0,0.35)")}
+function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Math.min(sideR()-sideL(),520*U),px=W/2-pw/2;
+ const per0=Math.max(1,Math.floor((pw-20*U)/(104*U))),want=230*U+(d.newFast.length?30*U+Math.min(2,Math.ceil(d.newFast.length/per0))*38*U:0)+(d.up?60*U:0)+110*U;
+ const ph=Math.min(botY()-top-70*U,want);
+ panel(px,top,pw,ph,"#fffaf0",22*U);
+ for(let i=0;i<3;i++){const k=easeOut((T-d.t-0.2-i*0.25)/0.35),sx=W/2+(i-1)*70*U;star(sx,top+52*U,32*U*(i<d.stars?k:1),i<d.stars?"#fcc419":"#dee2e6")}
+ fitTxt(d.line,W/2,top+110*U,26*U,pw-30*U,"#24305e","center",900);
+ txt(d.ok+" right"+(d.fast?", "+d.fast+" quick":""),W/2,top+142*U,17*U,"#5c7cfa","center",800);
+ coin(W/2-40*U,top+178*U,14*U);txt("+"+d.coins,W/2,top+179*U,22*U,"#e67700","left",900);
+ let y=top+212*U;
+ if(d.newFast.length){txt("Fast now:",W/2,y,16*U,"#2b8a3e","center",900);y+=24*U;
+  const ch=d.newFast.map(k=>{const m=/^(\d+)(.)(\d+)$/.exec(k);return m[1]+" "+SYM[m[2]]+" "+m[3]}),cw=96*U,per=Math.max(1,Math.floor((pw-20*U)/(cw+8*U)));
+  ch.slice(0,per*2).forEach((t,i)=>{const r=Math.floor(i/per),c=i%per,inRow=Math.min(per,ch.length-r*per),x=W/2-(inRow*(cw+8*U)-8*U)/2+c*(cw+8*U);
+   cx.fillStyle="#d3f9d8";rr(x,y+r*38*U,cw,30*U,15*U);cx.fill();fitTxt(t,x+cw/2,y+r*38*U+15*U,16*U,cw-10*U,"#2b8a3e","center",900)});y+=Math.min(2,Math.ceil(ch.length/per))*38*U+6*U}
+ if(d.up){fitTxt("Every "+d.up.from.short+" fact is fast!",W/2,y+10*U,20*U,pw-30*U,"#e8590c","center",900);fitTxt("Next up: "+d.up.to.name,W/2,y+36*U,16*U,pw-30*U,"#495057","center",800);y+=60*U}
+ const day=today(me);if(y<top+ph-80*U)starMeter(W/2,Math.min(top+ph-62*U,y+44*U),28*U,day,"#24305e");
+ const bw=Math.min(180*U,(pw-30*U)/2);
+ button(W/2-bw-6*U,botY()-58*U,bw,54*U,"Home",()=>{scene="home"},{col:"#f1f3f5"});
+ button(W/2+6*U,botY()-58*U,bw,54*U,"Again!",()=>startGame(d.g.id),{icon:"play",col:"#69db7c",ink:"#113a1a"})}
+// The fact map: every family in the track, green once all its facts are
+// fast, yellow while it is being learned, grey before it has been met.
+function drawFacts(){bg();backBtn();const tid=me.track,t=TRACK[tid];fitTxt(me.name+"'s facts",W/2,topY()+23*U,26*U,W-140*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const fc=fastCount(me,tid);fitTxt(t.name+": "+fc.n+" of "+fc.of+" fast",W/2,topY()+56*U,15*U,W-40*U,"#dbe4ff","center",800);
+ const mul=t.ops==="x/",lo=mul?1:0,hi=mul?t.max:10,n=hi-lo+1,top=topY()+80*U,legH=34*U,avail=Math.min(sideR()-sideL(),botY()-top-legH-10*U),cell=avail/(n+1),x0=W/2-cell*(n+1)/2;
+ const met=new Set(me.intro[tid]||[]),byId={};for(const f of families(tid))byId[f.id]=f;
+ txt(mul?"×":"+",x0+cell/2,top+cell/2,cell*0.5,"#ffe066","center",900);
+ for(let i=0;i<n;i++){txt(String(lo+i),x0+(i+1.5)*cell,top+cell/2,cell*0.42,"#ffe066","center",900);txt(String(lo+i),x0+cell/2,top+(i+1.5)*cell,cell*0.42,"#ffe066","center",900)}
+ for(let a=lo;a<=hi;a++)for(let b=lo;b<=hi;b++){const id=mul?Math.min(a,b)+"x"+Math.max(a,b):Math.min(a,b)+"+"+Math.max(a,b),f=byId[id];const x=x0+(b-lo+1)*cell,y=top+(a-lo+1)*cell;
+  let col="rgba(255,255,255,0.06)";if(f){col=famFluent(me,f)?"#51cf66":met.has(f.id)?"#ffd43b":"rgba(255,255,255,0.22)"}
+  cx.fillStyle=col;rr(x+cell*0.06,y+cell*0.06,cell*0.88,cell*0.88,cell*0.18);cx.fill();
+  if(f&&cell>26*U)txt(String(mul?a*b:a+b),x+cell/2,y+cell/2+1,cell*0.38,famFluent(me,f)||met.has(f.id)?"#24305e":"rgba(255,255,255,0.5)","center",800)}
+ const ly=top+(n+1)*cell+20*U;[["#51cf66","Fast"],["#ffd43b","Learning"],["rgba(255,255,255,0.22)","Coming up"]].forEach((l,i)=>{const x=W/2+(i-1)*110*U;cx.fillStyle=l[0];rr(x-46*U,ly-9*U,18*U,18*U,5*U);cx.fill();txt(l[1],x-22*U,ly,14*U,"#fff","left",800)})}
+// the shop: colours, hats and extras for the buddy
+let shopTab=0;
+function drawShop(){bg();backBtn();txt("Shop",W/2,topY()+23*U,28*U,"#fff","center",900,"rgba(0,0,0,0.3)");coinChip(sideR(),topY()+23*U,36*U);
+ const tabs=["Colours","Hats","Extras"],tw=Math.min(130*U,(sideR()-sideL()-20*U)/3);tabs.forEach((t,i)=>button(W/2-1.5*tw-10*U+i*(tw+10*U),topY()+56*U,tw,42*U,t,()=>{shopTab=i},{col:i===shopTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:17*U}));
+ const items=shopTab===0?PCOLS.map(c=>({id:"col:"+c,name:COLNAMES[c],price:10,look:{col:c,hat:me.look.hat,extra:me.look.extra},wear:()=>{me.look.col=c}})):
+  shopTab===1?HATS.map(h=>({id:"hat:"+h.id,name:h.name,price:h.price,look:{col:me.look.col,hat:h.id,extra:me.look.extra},wear:()=>{me.look.hat=h.id}})):
+  EXTRAS.map(e=>({id:"ext:"+e.id,name:e.name,price:e.price,look:{col:me.look.col,hat:me.look.hat,extra:e.id},wear:()=>{me.look.extra=e.id}}));
+ const top=topY()+112*U;grid(items.length,sideL(),top,sideR()-sideL(),botY()-top,12*U,0.85).forEach((c,i)=>{const it=items[i],own=it.price===0||me.owned[it.id],
+   on=shopTab===0?me.look.col===it.look.col:shopTab===1?me.look.hat===it.look.hat:me.look.extra===it.look.extra;
+  panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",16*U);if(on){cx.strokeStyle="#fab005";cx.lineWidth=3*U;rr(c.x,c.y,c.w,c.h,16*U);cx.stroke()}
+  buddy(c.x+c.w/2,c.y+c.h*0.44,c.h*0.2,it.look,{seed:i,still:1});fitTxt(it.name,c.x+c.w/2,c.y+c.h*0.78,c.h*0.09,c.w*0.9,"#24305e","center",900);
+  if(own)fitTxt(on?"Wearing":"Wear",c.x+c.w/2,c.y+c.h*0.91,c.h*0.08,c.w*0.9,"#2b8a3e","center",800);
+  else{coin(c.x+c.w/2-16*U,c.y+c.h*0.91,8*U);txt(String(it.price),c.x+c.w/2+6*U,c.y+c.h*0.91,14*U,"#e67700","center",900)}
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{if(own){it.wear();save();sfx("tap")}else if(me.coins>=it.price){me.coins-=it.price;me.owned[it.id]=1;it.wear();save();sfx("buy");toast("Yours!")}else toast("Need "+(it.price-me.coins)+" more coins")}})})}
+// grown-up settings for this player
+let resetArm=-9;
+function drawSettings(){bg();backBtn();txt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const x0=sideL(),w=sideR()-sideL();let y=topY()+64*U;const row=(label,opts,cur,set,fmt)=>{txt(label,x0,y+10*U,15*U,"#dbe4ff","left",800);y+=24*U;
+   const bw=(w-(opts.length-1)*8*U)/opts.length;opts.forEach((o,i)=>button(x0+i*(bw+8*U),y,bw,44*U,fmt(o),()=>{set(o);save()},{col:o===cur?"#ffd43b":"rgba(255,255,255,0.9)",fs:Math.min(15*U,bw/7)}));y+=58*U};
+ row("Facts to practise",TRACKS.map(t=>t.id),me.track,v=>{me.track=v},v=>TRACK[v].short);
+ row("A fact is fast when answered within",[2,3,4,5],me.speed,v=>{me.speed=v},v=>v+" seconds");
+ row("Right answers for today's star",[20,30,40,60],me.goal,v=>{me.goal=v},v=>String(v));
+ row("Sounds",[true,false],settings.sfx,v=>{settings.sfx=v;saveSettings();if(sfxBus)sfxBus.gain.value=v?0.8:0},v=>v?"On":"Off");
+ // a week at a glance
+ txt("This week",x0,y+10*U,15*U,"#dbe4ff","left",800);y+=26*U;const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);days.push({k:dayKey(d),l:"SMTWTFS"[d.getDay()]})}
+ const cw=w/7;days.forEach((d,i)=>{const r=me.days[d.k]||{ok:0,n:0,lit:0},bh=Math.min(50*U,r.ok/Math.max(1,me.goal)*50*U);cx.fillStyle=r.lit?"#ffd43b":"rgba(255,255,255,0.35)";
+  rr(x0+i*cw+cw*0.25,y+50*U-bh,cw*0.5,Math.max(2*U,bh),4*U);cx.fill();txt(d.l,x0+i*cw+cw/2,y+64*U,12*U,"#fff","center",800);if(r.n)txt(String(r.ok),x0+i*cw+cw/2,y+50*U-bh-9*U,11*U,"#fff","center",800)});y+=86*U;
+ const armed=T-resetArm<3;button(x0,Math.min(y,botY()-48*U),w,46*U,armed?"Tap again to reset "+me.name+"'s facts":"Start "+me.name+"'s facts again",()=>{if(armed){me.facts={};me.intro={};me.retry=[];me.recent=[];save();toast("Facts reset");resetArm=-9}else resetArm=T},{col:armed?"#ff8787":"rgba(255,255,255,0.6)",fs:15*U})}
+
+// On the home screen - never mid-game - ask the website which version it
+// has: a Home Screen app can keep running an old copy for days.
+let newBuild=null,checkedAt=-1e9;
+function checkUpdate(){if(T-checkedAt<300||!window.fetch)return;checkedAt=T;
+ try{fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{const m=/const BUILD="([^"]+)"/.exec(t||"");if(m&&m[1]!==BUILD)newBuild=m[1]}).catch(()=>{})}catch(e){}}
+function updateBanner(){if(!newBuild)return;const uw=Math.min(W*0.8,320*U),uh=42*U;
+ button(W/2-uw/2,topY()+104*U,uw,uh,"New version! Tap to update",()=>{try{location.replace(location.pathname+"?v="+encodeURIComponent(newBuild))}catch(e){}},{col:"#ff922b",ink:"#fff",fs:16*U})}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&T-checkedAt>60)checkedAt=-1e9});
+
+// ================================================================ input
+function rectPos(x,y){const r=cv.getBoundingClientRect();return{x:x-r.left,y:y-r.top}}
+function onMenu(t){try{return!!(t&&t.closest&&t.closest("[id^=shelf-menu]"))}catch(e){return false}}
+function press(p){audioWake();const b=hitBtn(p);
+ if(b){if(b.hold){holding={x:b.x,y:b.y,t0:T};return}sfx("tap");b.fn();return}
+ if(scene==="play"&&R&&R.g.input==="tap"){let best=null,bd=1e9;for(const t of R.targets){if(t.hx==null||t.dead||t.pop)continue;const d=Math.hypot(p.x-t.hx,p.y-t.hy);if(d<t.hr&&d<bd){bd=d;best=t}}if(best)tapTarget(best)}}
+let lastTouchAt=0,evN=0;
+window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioWake();for(const t of e.changedTouches){if(onMenu(t.target))continue;press(rectPos(t.clientX,t.clientY))}},{passive:false});
+window.addEventListener("touchend",()=>{lastTouchAt=performance.now();audioWake();holding=null});window.addEventListener("touchcancel",()=>{holding=null});
+cv.addEventListener("mousedown",e=>{if(performance.now()-lastTouchAt<900)return;evN++;press(rectPos(e.clientX,e.clientY))});
+window.addEventListener("mouseup",()=>{holding=null});
+window.addEventListener("keydown",e=>{audioWake();const k=e.key;if(scene!=="play"||!R)return;
+ if(/^[0-9]$/.test(k)&&R.g.input==="keys")typeDigit(k);else if(k==="Backspace")typeBack();else if(k==="Enter")typeOk();else if(k==="Escape"){scene="home";R=null}});
+window.__shelfInput=()=>"events:"+evN+" scene:"+scene;
+
+// ================================================================ loop
+let last=0,sizeTick=0,nudgeT=0;
+function frame(ts){requestAnimationFrame(frame);const now=ts/1000;let dt=last?now-last:1/60;last=now;dt=Math.min(Math.max(dt,0),0.1);T+=dt;
+ if((sizeTick=(sizeTick+1)%5)===0)sizeWatch();if(T-nudgeT>1){nudgeT=T;audioNudge()}
+ btns=[];cx.setTransform(DPR,0,0,DPR,0,0);
+ if(!me&&scene!=="who")scene="who";
+ if(scene==="play"&&R){stepRound(dt);if(R)drawPlay(dt);else drawHome()}
+ else if(scene==="who")drawWho();else if(scene==="meet"&&coach)drawMeet();else if(scene==="done"&&done)drawDone();
+ else if(scene==="facts")drawFacts();else if(scene==="shop")drawShop();else if(scene==="settings")drawSettings();else{scene="home";drawHome()}
+ drawToast()}
+if(me)scene="home";
+requestAnimationFrame(frame);
+// for the checks in tools/: who is playing, the round, and a way to answer
+window.FD={get scene(){return scene},set scene(s){scene=s},get R(){return R},get me(){return me},get profiles(){return profiles},
+ pick(i){me=profiles[i];save();scene="home"},start(gid){startGame(gid)},go(){if(scene==="meet"&&coach){const m=coach;coach=null;meet(me,me.track,m.fams);if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)}},
+ answer(v){if(!R||!R.q)return;if(R.g.input==="keys"){for(const d of String(v))typeDigit(d)}else{const t=R.targets.find(t=>t.v===v);if(t)tapTarget(t)}},
+ // the Home Screen icon, drawn with the game's own buddy (tools: icon.png)
+ icon(size){const c=document.createElement("canvas");c.width=c.height=size;const was=cx,wu=U;cx=c.getContext("2d");U=size/180;
+  const g=cx.createLinearGradient(0,0,0,size);g.addColorStop(0,"#5c7cfa");g.addColorStop(1,"#1c2a52");cx.fillStyle=g;cx.fillRect(0,0,size,size);
+  for(let i=0;i<14;i++)circle(hash1(i)*size,hash1(i+30)*size*0.6,(1+hash1(i+5)*2)*U,"rgba(255,255,255,0.6)");
+  star(size*0.8,size*0.2,size*0.12,"#ffd43b");
+  txt("3+4",size*0.38,size*0.24,size*0.22,"#fff","center",900,"rgba(0,0,0,0.3)");
+  buddy(size*0.5,size*0.66,size*0.25,{col:"#4dabf7",hat:"none",extra:"none"},{still:1,mood:"cheer",noShadow:1});
+  const out=c.toDataURL("image/png");cx=was;U=wu;return out},
+ get buttons(){return btns.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,label:b.label||""}))},families,toMeet,pickFact,record,fluent,choices,GAMES,TRACKS};
+</script>
+</body></html>

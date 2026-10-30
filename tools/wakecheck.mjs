@@ -43,6 +43,8 @@ const GAMES = {
   'pinball-quest':  { start: "window.PB.start('goal')", music: true, selfWakes: true },
   /* Mahjong Club has no music, but asks for its sound back once a second too */
   'mahjong-club':   { selfWakes: true },
+  /* and so does Fact Dash, which has sound effects and no music */
+  'fact-dash':      { selfWakes: true },
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];
