@@ -16,6 +16,18 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 | Adding and taking away to 20 | Rory | 242 |
 | Times and divide to 12 | Sophia | 288 |
 
+Doubling is a set of its own, practised alongside the main facts:
+
+| Doubling | Who starts here | Facts in it |
+| --- | --- | --- |
+| Doubling to 20 (double 1 to double 10) | Dylan | 10 |
+| Doubles and halves to 20 (double 4 is 8, half of 8 is 4) | | 20 |
+| Doubles and halves to 40 | Rory | 40 |
+| Doubles and halves to 100 | Sophia | 100 |
+
+A switch on the home screen (**+ − to 10** or **Doubles**) sets which facts
+the games practise. Ladybird Doubles always practises doubling.
+
 First grade asks for adding and taking away within 20, with the facts to 10
 known fluently (Common Core 1.OA.C.6). When every fact in a set is fast, the
 game moves on to the next one by itself (to 10, then to 20) and says so.
@@ -25,7 +37,9 @@ game moves on to the next one by itself (to 10, then to 20) and says so.
 - **Families.** Facts are learned in families, so that 3 + 5, 5 + 3, 8 − 3
   and 8 − 5 arrive together. A "New facts!" card shows each new family with
   counters in ten-frames before it is played.
-- **Strategy order.** Adding and taking away run plus nothing, plus one, plus
+- **Strategy order.** Doubling runs double 1 to 5, then 10, then 6 to 9; in
+  the bigger sets the tens, then the fives, the teens and the rest. Adding
+  and taking away run plus nothing, plus one, plus
   two, doubles, the pairs that make ten, ten plus, near doubles, plus nine,
   then the rest. Times and divide run ones, twos, tens, fives, squares,
   threes, fours, nines, then the harder ones.
@@ -50,7 +64,7 @@ game moves on to the next one by itself (to 10, then to 20) and says so.
 
 ## The games
 
-All five use the same facts. Typing the answer, in Rocket Ride, Monster Munch
+All six use the same facts. Typing the answer, in Rocket Ride, Monster Munch
 and Race Day, is recall, which is what builds fluency. Tapping it, in Balloon
 Pop and Frog Hop, is a change of pace.
 
@@ -58,6 +72,7 @@ Pop and Frog Hop, is a change of pace.
 | --- | --- | --- |
 | Rocket Ride | Type answers to fly; quick ones boost. The Moon is out of reach without them. | free |
 | Balloon Pop | Pop the balloon with the answer. | free |
+| Ladybird Doubles | A ladybird lands with spots on one wing; the answer gives the other wing the same, because a double is a mirror. For a half, the spots wait on the leaf and share out onto the two wings. Big numbers are written on the wings. Always doubling. | free |
 | Frog Hop | Hop across the pond on the lily pad with the answer. | 25 coins |
 | Monster Munch | Feed the monster cookies by typing the answers. | 50 coins |
 | Race Day | Race Robo. Robo drives only while you think, at a pace set from your own usual time, so you win by beating yourself. | 80 coins |
@@ -95,7 +110,7 @@ The facts, the families and what to ask next are pure code (no screen, no
 clock, a random source passed in), so the check lifts them out of the page and
 tests them:
 
-- every set has the right facts with the right answers;
+- every set has the right facts with the right answers, doubling included;
 - the families come in strategy order;
 - a fact never comes twice running;
 - a missed fact returns within four questions;
@@ -105,11 +120,14 @@ tests them:
   - a typical first grader in about 1,000 (35 days at 30 a day);
   - one who finds it hard in about 2,000. Neither is ever learning more than
     ten facts at once;
-- facts made fast on one set are not taught again on the next.
+- facts made fast on one set are not taught again on the next;
+- a typical first grader makes double 1 to double 10 fast in about 65
+  answers, after which the halves come in a few families at a time.
 
-With Playwright it then plays all five games with real taps on the number
+With Playwright it then plays all six games with real taps on the number
 keys, balloons and lily pads, answering one question wrong in each to go
 through the help. It does this on an upright phone, a sideways phone and an
-iPad.
+iPad. It also checks that the **Doubles** switch turns the games over to
+doubling.
 
 `docs/fact-dash/index.html` is the published copy; this folder mirrors it.
