@@ -59,7 +59,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visua
 resize();
 
 // Shown small on the home screen, so it is clear which version a phone runs.
-const BUILD="2026.10.30-1";
+const BUILD="2026.10.30-2";
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),easeOut=t=>t<0?0:t>1?1:1-(1-t)*(1-t);
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shade(hex,amt){const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
@@ -79,20 +79,32 @@ const hash1=n=>{const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s
 // plus nothing, plus one, plus two, doubles, pairs that make ten, ten plus,
 // near doubles, plus nine, then the rest. Times go ones, twos, tens, fives,
 // squares, threes, fours, nines, then the harder ones.
+//
+// Doubling is a set of its own, practised alongside: double 1 to double 10
+// first, then each double with its half (double 4 is 8, half of 8 is 4), then
+// on to doubles and halves to 40 and to 100 - the small ones first, then the
+// tens, the fives, the teens and the rest.
 const TRACKS=[
  {id:"add10",name:"Adding to 10",short:"+ to 10",ops:"+",max:10,next:"addsub10"},
  {id:"addsub10",name:"Adding and taking away to 10",short:"+ − to 10",ops:"+-",max:10,next:"addsub20"},
  {id:"addsub20",name:"Adding and taking away to 20",short:"+ − to 20",ops:"+-",max:20,next:null},
- {id:"muldiv",name:"Times and divide to 12",short:"× ÷ to 12",ops:"x/",max:12,next:null}];
+ {id:"muldiv",name:"Times and divide to 12",short:"× ÷ to 12",ops:"x/",max:12,next:null},
+ {id:"dbl10",name:"Doubling to 20",short:"Double to 20",ops:"d",max:10,next:"dblh10",dbl:1},
+ {id:"dblh10",name:"Doubles and halves to 20",short:"Double, half 20",ops:"dh",max:10,next:"dblh20",dbl:1},
+ {id:"dblh20",name:"Doubles and halves to 40",short:"Double, half 40",ops:"dh",max:20,next:"dblh50",dbl:1},
+ {id:"dblh50",name:"Doubles and halves to 100",short:"Double, half 100",ops:"dh",max:50,next:null,dbl:1}];
 const TRACK={};for(const t of TRACKS)TRACK[t.id]=t;
 const SYM={"+":"+","-":"−","x":"×","/":"÷"};
+const dblOf=n=>({k:"d"+n,x:n,op:"d",y:0,ans:2*n}),halfOf=n=>({k:"h"+2*n,x:2*n,op:"h",y:0,ans:n});
+const dblRank=n=>n<=5?0:n===10?1:n<10?2:n%10===0?3:n%5===0?4:n<20?5:6;
 function factOf(x,op,y){return{k:x+op+y,x,op,y,ans:op==="+"?x+y:op==="-"?x-y:op==="x"?x*y:x/y}}
 function addRank(a,b){const c=a+b;return a===0?0:a===1?1:a===2?2:a===b?3:c===10?4:b===10?5:b-a===1?6:b===9?7:8}
 function mulRank(a,b){const has=n=>a===n||b===n;
  return has(1)?0:has(2)?1:has(10)?2:has(5)?3:a===b?4:has(3)?5:has(4)?6:has(9)?7:has(11)?8:has(6)?9:has(12)?10:has(7)?11:12}
 const FAMS={};
 function families(tid){if(FAMS[tid])return FAMS[tid];const t=TRACK[tid],out=[];
- if(t.ops==="x/"){for(let a=1;a<=t.max;a++)for(let b=a;b<=t.max;b++){const c=a*b,f=[factOf(a,"x",b)];
+ if(t.ops[0]==="d"){for(let n=1;n<=t.max;n++){const f=[dblOf(n)];if(t.ops.indexOf("h")>=0)f.push(halfOf(n));out.push({id:"d"+n,a:n,b:n,c:2*n,op:"d",r:dblRank(n),facts:f})}}
+ else if(t.ops==="x/"){for(let a=1;a<=t.max;a++)for(let b=a;b<=t.max;b++){const c=a*b,f=[factOf(a,"x",b)];
    if(a!==b)f.push(factOf(b,"x",a));f.push(factOf(c,"/",a));if(a!==b)f.push(factOf(c,"/",b));
    out.push({id:a+"x"+b,a,b,c,op:"x",r:mulRank(a,b),facts:f})}}
  else{for(let c=0;c<=t.max;c++)for(let a=0;a<=c/2;a++){const b=c-a;if(b>10)continue;const f=[factOf(a,"+",b)];
@@ -161,12 +173,16 @@ function fastCount(p,tid){let n=0;const all=trackFacts(tid);for(const f of all)i
 function choices(f,n,rng){const a=f.ans,c=[a+1,a-1,a+2,a-2,a+3];
  if(f.op==="+")c.push(Math.abs(f.x-f.y),a+10);if(f.op==="-")c.push(f.x+f.y,f.y);
  if(f.op==="x")c.push(a+f.x,a-f.x,a+f.y,a-f.y,f.x+f.y);if(f.op==="/")c.push(f.y,f.x-f.y,a*2);
+ if(f.op==="d")c.push(f.x,f.x+1,f.x+2,a+10);if(f.op==="h")c.push(f.x,f.x-1,a+10,a-10);
  const pool=[];for(const v of c)if(v>=0&&v!==a&&pool.indexOf(v)<0&&Number.isInteger(v))pool.push(v);
  for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
  // the near ones first, so there is always a close call among them
  const out=[a];for(const v of pool){if(out.length>=n)break;out.push(v)}
  for(let i=out.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
-const factText=f=>f.x+" "+SYM[f.op]+" "+f.y;
+const factText=f=>f.op==="d"?"Double "+f.x:f.op==="h"?"Half of "+f.x:f.x+" "+SYM[f.op]+" "+f.y;
+// a fact named by its key ("3+5", "8-3", "d4", "h8"), for the end of a game
+function keyText(k){let m=/^d(\d+)$/.exec(k);if(m)return"Double "+m[1];m=/^h(\d+)$/.exec(k);if(m)return"Half of "+m[1];
+ m=/^(\d+)(.)(\d+)$/.exec(k);return m?m[1]+" "+SYM[m[2]]+" "+m[3]:k}
 
 // ================================================================ saves
 // Everything lives under "factdash." - the shelf menu finds a game's saves by
@@ -174,12 +190,17 @@ const factText=f=>f.x+" "+SYM[f.op]+" "+f.y;
 const store={get(k,d){try{const v=localStorage.getItem("factdash."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
  set(k,v){try{localStorage.setItem("factdash."+k,JSON.stringify(v))}catch(e){}}};
 const PCOLS=["#4dabf7","#51cf66","#f783ac","#ffa94d","#9775fa","#ffd43b","#ff6b6b","#20c997"];
-function newProfile(name,track,col){return fixProfile({id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e6),name,track,look:{col,hat:"none",extra:"none"}})}
+function newProfile(name,track,col,dtrack){return fixProfile({id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e6),name,track,dtrack,look:{col,hat:"none",extra:"none"}})}
 function fixProfile(p){const d={facts:{},intro:{},retry:[],recent:[],tick:0,coins:0,owned:{},days:{},streak:0,lastLit:"",
   games:{rocket:1,balloon:1},speed:3,goal:30,pace:5000,rounds:0,best:{},track:"addsub10",look:{col:PCOLS[0],hat:"none",extra:"none"}};
- for(const k in d)if(p[k]==null)p[k]=d[k];if(!TRACK[p.track])p.track="addsub10";p.owned["col:"+p.look.col]=1;return p}
+ for(const k in d)if(p[k]==null)p[k]=d[k];if(!TRACK[p.track]||TRACK[p.track].dbl)p.track="addsub10";p.owned["col:"+p.look.col]=1;
+ // doubling came a day later: it starts where the player's main facts suggest
+ if(!TRACK[p.dtrack]||!TRACK[p.dtrack].dbl)p.dtrack=p.track==="muldiv"?"dblh50":p.track==="addsub20"?"dblh20":"dbl10";
+ if(p.mode!=="dbl")p.mode="main";if(p.games.ladybug==null)p.games.ladybug=1;return p}
+// which set the games practise: the player's main facts, or doubling
+const curTrack=p=>p.mode==="dbl"?p.dtrack:p.track;
 let profiles=store.get("profiles",null);
-if(!Array.isArray(profiles)||!profiles.length)profiles=[newProfile("Dylan","addsub10","#4dabf7"),newProfile("Rory","addsub20","#51cf66"),newProfile("Sophia","muldiv","#f783ac")];
+if(!Array.isArray(profiles)||!profiles.length)profiles=[newProfile("Dylan","addsub10","#4dabf7","dbl10"),newProfile("Rory","addsub20","#51cf66","dblh20"),newProfile("Sophia","muldiv","#f783ac","dblh50")];
 profiles.forEach(fixProfile);
 let me=profiles.find(p=>p.id===store.get("who",""))||null;
 // only the last two months of days are kept
@@ -230,7 +251,8 @@ const SFX={
  star(){[67,72,76,79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.25,"triangle",0.13,i*0.09))},
  meet(){[76,79,84].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.3,"sine",0.12,i*0.12))},
  win(){[60,64,67,72,67,72,76].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.22,"triangle",0.14,i*0.1))},
- buy(){[79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.12,"square",0.05,i*0.06))}};
+ buy(){[79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.12,"square",0.05,i*0.06))},
+ flutter(){for(let i=0;i<5;i++)tone(700+i*90,900+i*90,0.05,"triangle",0.06,0.35+i*0.06)}};
 function sfx(k){if(AC&&settings.sfx)try{SFX[k]()}catch(e){}}
 
 // ================================================================ drawing kit
@@ -358,7 +380,18 @@ function hat(k,x,y,s){if(!k||k==="none")return;
 // What a fact looks like, for a child who is stuck or got it wrong: two
 // colours of counters in ten-frames for adding, counters crossed out for
 // taking away, rows of counters for times and divide.
+function tenFrame(fx,oy,cell){cx.fillStyle="rgba(255,255,255,0.85)";rr(fx-cell*0.08,oy-cell*0.08,cell*5.16,cell*2.16,cell*0.2);cx.fill();
+ cx.strokeStyle="#ced4da";cx.lineWidth=Math.max(1,cell*0.05);for(let i=0;i<10;i++)cx.strokeRect(fx+(i%5)*cell,oy+Math.floor(i/5)*cell,cell,cell)}
 function dotsFor(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#adb5bd";
+ // a double: the same counters twice, side by side, like a mirror; bigger
+ // ones as two equal bars and the total under them
+ if(f.op==="d"||f.op==="h"){const n=f.op==="d"?f.x:f.ans;
+  if(n<=10){const cell=Math.min(w/11.8,h/2.4,30*U),gap=cell*0.8,ox=x+w/2-(10*cell+gap)/2,oy=y+h/2-cell;
+   for(let fi=0;fi<2;fi++){const fx=ox+fi*(5*cell+gap);tenFrame(fx,oy,cell);for(let i=0;i<n;i++)circle(fx+(i%5+0.5)*cell,oy+(Math.floor(i/5)+0.5)*cell,cell*0.38,fi?B:A)}return}
+  const bw=Math.min(w*0.86,380*U),bh=Math.min(h*0.3,32*U),bx=x+w/2-bw/2,by=y+h/2-bh-4*U;
+  cx.fillStyle=A;rr(bx,by,bw/2-2*U,bh,6*U);cx.fill();cx.fillStyle=B;rr(bx+bw/2+2*U,by,bw/2-2*U,bh,6*U);cx.fill();
+  txt(String(n),bx+bw/4,by+bh/2+1,bh*0.62,"#fff","center",900);txt(String(n),bx+bw*3/4,by+bh/2+1,bh*0.62,"#fff","center",900);
+  cx.fillStyle="#ffd43b";rr(bx,by+bh+8*U,bw,bh,6*U);cx.fill();txt(String(2*n),bx+bw/2,by+bh*1.5+9*U,bh*0.62,"#5c3c00","center",900);return}
  // a x b: a rows of b. c / a = b: the c counters shared into a rows of b
  if(f.op==="x"||f.op==="/"){const nr=f.op==="x"?f.x:f.y,nc=f.op==="x"?f.y:f.ans,d=Math.min(w/(nc*1.25),h/(nr*1.25),26*U),ox=x+w/2-(nc-1)*d*1.25/2,oy=y+h/2-(nr-1)*d*1.25/2;
   for(let r=0;r<nr;r++)for(let c=0;c<nc;c++)circle(ox+c*d*1.25,oy+r*d*1.25,d*0.5,r%2?A:B);return}
@@ -370,13 +403,15 @@ function dotsFor(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#adb5bd";
   else{const gone=i>=f.x-f.y;circle(px,py,cell*0.38,gone?X:A);if(gone){cx.strokeStyle="#495057";cx.lineWidth=cell*0.1;cx.beginPath();cx.moveTo(px-cell*0.3,py-cell*0.3);cx.lineTo(px+cell*0.3,py+cell*0.3);cx.stroke()}}}}
 
 // ================================================================ the games
-// Five games, each a different way to answer the same facts. In the "keys"
+// Six games, each a different way to answer the same facts (Ladybird
+// Doubles always practises doubling, whatever the others are set to). In the "keys"
 // games the answer is typed on a number pad - remembering it, which is what
 // makes a fact fast; in the "tap" games it is picked from a few, which is a
 // change of pace. Each game draws its own world around the question.
 const GAMES=[
  {id:"rocket",name:"Rocket Ride",input:"keys",price:0,col:"#4dabf7",total:12,goodT:0.85,say:"Answer to fly. Quick answers boost!"},
  {id:"balloon",name:"Balloon Pop",input:"tap",price:0,col:"#ff8787",total:12,goodT:0.75,say:"Pop the balloon with the answer."},
+ {id:"ladybug",name:"Ladybird Doubles",input:"keys",price:0,col:"#20c997",total:10,goodT:1.05,say:"Both wings get the same spots!",only:"dbl"},
  {id:"frog",name:"Frog Hop",input:"tap",price:25,col:"#51cf66",total:10,goodT:1.05,say:"Hop to the lily pad with the answer."},
  {id:"monster",name:"Monster Munch",input:"keys",price:50,col:"#9775fa",total:12,goodT:0.9,say:"Feed the monster: type the answer."},
  {id:"race",name:"Race Day",input:"keys",price:80,col:"#ffa94d",total:10,goodT:0.6,say:"Beat Robo to the finish!"}];
@@ -384,12 +419,13 @@ const GAME={};for(const g of GAMES)GAME[g.id]=g;
 
 let scene="who",R=null,rnd=Math.random;
 // ---------------------------------------------------------------- a round
-function startGame(gid){const g=GAME[gid];if(!g)return;const m=toMeet(me,me.track);
- if(m.quiet.length)meet(me,me.track,m.quiet);
- if(m.show.length){coach={fams:m.show,then:gid,t:T};scene="meet";sfx("meet");save();return}
+const trackFor=g=>g.only==="dbl"?me.dtrack:curTrack(me);
+function startGame(gid){const g=GAME[gid];if(!g)return;const tid=trackFor(g),m=toMeet(me,tid);
+ if(m.quiet.length)meet(me,tid,m.quiet);
+ if(m.show.length){coach={fams:m.show,then:gid,t:T,tid};scene="meet";sfx("meet");save();return}
  beginRound(gid)}
 function beginRound(gid){const g=GAME[gid];
- R={g,n:0,ok:0,fast:0,coins:0,wrong:0,newFast:[],q:null,typed:"",state:"ask",asked:T,until:0,t0:T,hint:false,lit:-9,shake:0,targets:[],
+ R={g,tid:trackFor(g),n:0,ok:0,fast:0,coins:0,wrong:0,newFast:[],q:null,typed:"",state:"ask",asked:T,until:0,t0:T,hint:false,lit:-9,shake:0,targets:[],
   alt:0,goal:0,boost:0,full:0,mouth:0,me:0,bot:0,botDone:-1,meDone:-1,hops:0,jump:null,slide:0};
  if(g.id==="race")R.botSec=clamp((me.pace||5000)*1.25/1000+0.4,2.4,9);
  scene="play";nextQ()}
@@ -397,9 +433,9 @@ function roundOver(){return R.g.id==="race"?R.ok>=R.g.total:R.n>=R.g.total}
 function nextQ(){if(R.pendingHop){R.hops++;R.pendingHop=false}
  if(roundOver()){R.state="end";R.until=T+(R.g.id==="race"?1.6:1.4);if(R.g.id==="race")R.won=R.bot<1;return}
  // every fact being learned is fast already: meet the next ones now
- const m=toMeet(me,me.track);if(m.quiet.length)meet(me,me.track,m.quiet);
- if(m.show.length&&!activeFacts(me,me.track).some(f=>!isFast(me,f.k))){coach={fams:m.show,resume:true,t:T};scene="meet";sfx("meet");return}
- const f=pickFact(me,me.track,rnd);R.q=f;R.typed="";R.state="ask";R.hint=false;R.wrongV=null;
+ const m=toMeet(me,R.tid);if(m.quiet.length)meet(me,R.tid,m.quiet);
+ if(m.show.length&&!activeFacts(me,R.tid).some(f=>!isFast(me,f.k))){coach={fams:m.show,resume:true,t:T,tid:R.tid};scene="meet";sfx("meet");return}
+ const f=pickFact(me,R.tid,rnd);R.q=f;R.typed="";R.state="ask";R.hint=false;R.wrongV=null;
  R.asked=T+(R.g.input==="tap"?0.55:0.15);
  ASK[R.g.id]&&ASK[R.g.id](R,f)}
 // an answer to the question being asked
@@ -435,7 +471,8 @@ function finishRound(){const g=R.g;me.coins+=3;R.coins+=3;me.rounds++;
  else if(g.id==="balloon")line="You popped "+R.ok+" balloons!";
  else if(g.id==="frog")line="Froggy made it across!";
  else if(g.id==="monster")line="The monster ate "+R.ok+" cookies. Yum!";
- let up=null;const tr=TRACK[me.track];if(trackDone(me,me.track)&&tr.next){up={from:tr,to:TRACK[tr.next]};me.track=tr.next}
+ else if(g.id==="ladybug")line=R.ok+" ladybirds flew home!";
+ let up=null;const tr=TRACK[R.tid];if(trackDone(me,R.tid)&&tr.next){up={from:tr,to:TRACK[tr.next]};if(tr.dbl)me.dtrack=tr.next;else me.track=tr.next}
  done={g,stars,coins:R.coins,ok:R.ok,wrong:R.wrong,fast:R.fast,newFast:R.newFast.slice(),line,up,t:T,lit:R.lit>=0};
  save();scene="done";sfx(stars===3?"win":"star")}
 
@@ -464,7 +501,8 @@ function drawCard(L){const c=L.card,f=R.q;if(!f)return;const coach=R.state==="co
  if(show)txt(show,bx+bw/2,c.y+c.h/2+2,fs,col,"center",900);
  cx.restore();
  // a fact got wrong: the right answer, and what it looks like
- if(coach||(R.hint&&R.state==="ask")){const A=L.A,tap=R.g.input==="tap",G=L.G;
+ if(coach&&R.g.id==="ladybug"){fitTxt(factText(f)+" = "+f.ans+" \u2013 both wings the same. Now type "+f.ans,c.x+c.w/2,c.y+c.h+18*U,17*U,L.A.w-16*U,"#e8590c","center",900,"rgba(255,255,255,0.8)");return}
+ if(coach||(R.hint&&R.state==="ask"&&R.g.id!=="ladybug")){const A=L.A,tap=R.g.input==="tap",G=L.G;
   let ph=Math.min(A.h-c.h-14*U,coach?190*U:130*U),pw=Math.min(A.w,460*U),px=A.x+A.w/2-pw/2,py=c.y+c.h+10*U;
   if(tap){ph=Math.min(G.h*0.24-6*U,coach?170*U:120*U);py=G.y+G.h-ph}
   if(ph>40*U){cx.globalAlpha=coach?1:0.9;panel(px,py,pw,ph,coach?"#fff":"rgba(255,255,255,0.92)",16*U);
@@ -643,6 +681,51 @@ function car(x,y,w,col,robo){const h=w*0.42,spin=T*20;
   cx.strokeStyle="#868e96";cx.lineWidth=h*0.05;cx.beginPath();cx.moveTo(hx,hy-h*0.3);cx.lineTo(hx,hy-h*0.5);cx.stroke();circle(hx,hy-h*0.52,h*0.07,"#ff6b6b")}
  else buddy(x+w*0.05,y-h*0.68,h*0.36,me.look,{noShadow:1,mood:R&&R.state==="good"?"cheer":R&&R.state==="coach"?"oops":"happy"})}
 
+// ---------------------------------------------------------------- Ladybird Doubles
+// A ladybird lands with spots on one wing; the answer gives the other wing
+// the same - a double is a mirror. For a half, the spots wait on the leaf and
+// share themselves out onto the two wings. Bigger numbers are written on the
+// wings instead of spotted.
+ASK.ladybug=(R,f)=>{R.bug={t0:T,n:f.op==="d"?f.x:f.ans,half:f.op==="h",done:-1,col:BCOLS[Math.floor(rnd()*6)]}};
+GOOD.ladybug=(R)=>{R.bug.done=T;sfx("flutter")};
+BAD.ladybug=(R)=>{R.bug.no=T};
+DRAW.ladybug=(R,L,dt)=>{const G=L.G;sky("#c5f6fa","#e6fcf5");circle(G.x+G.w*0.12,G.y+26*U,26*U,"#ffe066");
+ cx.fillStyle="#8ce99a";cx.fillRect(0,G.y+G.h*0.78,W,H);
+ for(let i=0;i<16;i++){const x=hash1(i)*W,y=G.y+G.h*0.8+hash1(i+9)*(H-G.y-G.h*0.8);cx.strokeStyle="#2f9e44";cx.lineWidth=2*U;cx.beginPath();cx.moveTo(x,y+14*U);cx.lineTo(x,y);cx.stroke();
+  for(let k=0;k<5;k++){const a=k/5*Math.PI*2+T*0.3;circle(x+Math.cos(a)*5*U,y+Math.sin(a)*5*U,3.5*U,BCOLS[i%6])}circle(x,y,3*U,"#fff3bf")}
+ const b=R.bug||{t0:T,n:1,half:false,done:-1},s=clamp(Math.min(G.w*0.22,G.h*0.25),40*U,140*U);
+ let x=G.x+G.w/2,y=G.y+G.h*0.5;const land=easeOut((T-b.t0)/0.6);let open=land<1?1-land:0;
+ x=lerp(G.x-s*2.5,x,land);y=lerp(G.y-s,y,land)-Math.sin(land*Math.PI)*s*0.4;
+ if(b.done>=0){const k=clamp((T-b.done-0.6)/0.45,0,1);open=Math.max(open,k>0?1:0);x+=k*k*G.w;y-=k*G.h*0.9}
+ if(b.no&&T-b.no<0.6)x+=Math.sin((T-b.no)*40)*6*U;
+ ellipse(G.x+G.w/2,G.y+G.h*0.5+s*1.05,s*1.9,s*0.42,"#40c057");ellipse(G.x+G.w/2,G.y+G.h*0.5+s*1.0,s*1.7,s*0.3,"#69db7c");
+ const reveal=b.done>=0||R.state==="coach",k=reveal?clamp((T-(b.done>=0?b.done:R.coachT))/0.5,0,1):0;
+ if(b.half)ladybird(x,y,s,open,b.n,b.n,b.n>10,k,k);else ladybird(x,y,s,open,b.n,b.n,b.n>10,1,k);
+ // a half: the spots wait on the front of the leaf until they are shared out
+ if(b.half&&k<1){const tot=b.n*2,cy=G.y+G.h*0.5+s*1.24;cx.globalAlpha=(1-k)*clamp(land*2-1,0,1);
+  if(tot<=20){const d=Math.min(s*0.21,G.w*0.8/10),ox=G.x+G.w/2-(Math.min(tot,10)-1)*d/2;for(let i=0;i<tot;i++)circle(ox+(i%10)*d,cy-d*0.5+Math.floor(i/10)*d,d*0.4,"#212529")}
+  else txt(String(tot)+" spots",G.x+G.w/2,cy,s*0.3,"#1b4332","center",900);cx.globalAlpha=1}
+ };
+// spots on a wing, a pair to a row from the top, inside the wing's curve
+const SPOTV=[-0.45,-0.13,0.19,0.5,0.78];
+function spotAt(i,s){const v=SPOTV[Math.floor(i/2)%5],u=i%2?Math.max(0.4,0.9*Math.sqrt(1-v*v)-0.18):0.17;return{u:u*s,v:v*s}}
+function ladybird(x,y,s,open,left,right,big,la,ra){
+ cx.strokeStyle="#212529";cx.lineWidth=Math.max(2,s*0.06);cx.lineCap="round";
+ for(const sx of[-1,1])for(let i=0;i<3;i++){cx.beginPath();cx.moveTo(x+sx*s*0.55,y-s*0.3+i*s*0.4);cx.lineTo(x+sx*s*1.05,y-s*0.2+i*s*0.45);cx.stroke()}
+ for(const sx of[-1,1]){cx.save();cx.translate(x,y-s*0.7);cx.rotate(sx*open*0.55);cx.translate(-x,-(y-s*0.7));
+  const g=cx.createRadialGradient(x+sx*s*0.3,y-s*0.4,s*0.1,x+sx*s*0.3,y,s*1.1);g.addColorStop(0,"#ff6b6b");g.addColorStop(1,"#c92a2a");cx.fillStyle=g;
+  cx.beginPath();cx.ellipse(x,y,s*0.9,s,0,sx<0?Math.PI/2:-Math.PI/2,sx<0?Math.PI*1.5:Math.PI/2);cx.closePath();cx.fill();
+  ellipse(x+sx*s*0.45,y-s*0.55,s*0.14,s*0.08,"rgba(255,255,255,0.35)",sx*0.6);
+  const n=sx<0?left:right,a=sx<0?(la==null?1:la):(ra==null?1:ra);
+  if(big){if(a>0){cx.globalAlpha=a;circle(x+sx*s*0.45,y+s*0.1,s*0.34,"#212529");txt(String(n),x+sx*s*0.45,y+s*0.11,s*0.36,"#fff","center",900);cx.globalAlpha=1}}
+  else for(let i=0;i<n;i++){const p=spotAt(i,s),pop=clamp(a*n-i,0,1);circle(x+sx*p.u,y+p.v,s*0.1*pop,"#212529")}
+  cx.restore()}
+ cx.strokeStyle="#212529";cx.lineWidth=Math.max(1.5,s*0.03);cx.beginPath();cx.moveTo(x,y-s*0.95);cx.lineTo(x,y+s);cx.stroke();
+ circle(x,y-s*1.02,s*0.38,"#212529");for(const sx of[-1,1]){circle(x+sx*s*0.16,y-s*1.12,s*0.1,"#fff");circle(x+sx*s*0.16,y-s*1.1,s*0.05,"#212529");
+  cx.strokeStyle="#212529";cx.lineWidth=Math.max(1.5,s*0.035);cx.beginPath();cx.moveTo(x+sx*s*0.12,y-s*1.36);cx.quadraticCurveTo(x+sx*s*0.2,y-s*1.65,x+sx*s*0.38,y-s*1.62);cx.stroke();circle(x+sx*s*0.38,y-s*1.62,s*0.05,"#212529")}
+ cx.strokeStyle="#fff";cx.lineWidth=Math.max(1.5,s*0.035);cx.beginPath();cx.arc(x,y-s*0.98,s*0.14,0.3,Math.PI-0.3);cx.stroke();
+ hat(me.look.hat,x,y-s*1.3,s*0.5)}
+
 // ================================================================ screens
 let coach=null;
 function bg(){sky("#3b5bdb","#1c2a52");for(let i=0;i<40;i++){cx.globalAlpha=0.25+0.25*Math.sin(T+i);circle(hash1(i)*W,hash1(i+50)*H,(1+hash1(i+3)*2)*U,"#fff")}cx.globalAlpha=1}
@@ -663,14 +746,14 @@ function drawHome(){bg();const day=today(me),port=H>W;
  fitTxt("Hi "+me.name+"!",bx+56*U,top+36*U,30*U,sideR()-bx-56*U-170*U,"#fff","left",900,"rgba(0,0,0,0.3)");
  font(17*U,900);coinChip(bx+56*U+cx.measureText(String(me.coins)).width+44*U,top+78*U,34*U);
  starMeter(sideR()-104*U,top+52*U,34*U,day,null,true);
- // the facts
- const fc=fastCount(me,me.track),py=top+136*U,pw=sideR()-sideL();
- cx.fillStyle="rgba(255,255,255,0.12)";rr(sideL(),py,pw,52*U,14*U);cx.fill();
- fitTxt(TRACK[me.track].name,sideL()+14*U,py+16*U,15*U,pw-28*U,"#dbe4ff","left",800);
- const bw=pw-28*U-110*U;cx.fillStyle="rgba(0,0,0,0.3)";rr(sideL()+14*U,py+30*U,bw,12*U,6*U);cx.fill();cx.fillStyle="#69db7c";rr(sideL()+14*U,py+30*U,Math.max(12*U,bw*fc.n/fc.of),12*U,6*U);cx.fill();
- txt(fc.n+" of "+fc.of+" fast",sideR()-14*U,py+36*U,14*U,"#fff","right",900);
+ // the facts, and which set the games practise: the main facts or doubling
+ const tid=curTrack(me),fc=fastCount(me,tid),py=top+132*U,pw=sideR()-sideL();
+ cx.fillStyle="rgba(255,255,255,0.12)";rr(sideL(),py,pw,70*U,14*U);cx.fill();
+ setPills(sideL()+10*U,py+8*U,Math.min(pw*0.62,300*U),30*U);
+ txt(fc.n+" of "+fc.of+" fast",sideR()-14*U,py+23*U,14*U,"#fff","right",900);
+ const bw=pw-28*U;cx.fillStyle="rgba(0,0,0,0.3)";rr(sideL()+14*U,py+48*U,bw,12*U,6*U);cx.fill();cx.fillStyle="#69db7c";rr(sideL()+14*U,py+48*U,Math.max(12*U,bw*fc.n/fc.of),12*U,6*U);cx.fill();
  // the games
- const gy=py+64*U,gh=botY()-gy-66*U;
+ const gy=py+82*U,gh=botY()-gy-66*U;
  grid(GAMES.length,sideL(),gy,pw,gh,12*U,port?1:1.1).forEach((c,i)=>{const g=GAMES[i],own=!!me.games[g.id];
   cx.fillStyle="rgba(0,0,0,0.25)";rr(c.x,c.y+5*U,c.w,c.h,20*U);cx.fill();cx.fillStyle=g.col;rr(c.x,c.y,c.w,c.h,20*U);cx.fill();
   cx.save();rr(c.x,c.y,c.w,c.h,20*U);cx.clip();gameIcon(g.id,c.x+c.w/2,c.y+c.h*0.42,Math.min(c.w,c.h)*0.32);cx.restore();
@@ -686,6 +769,9 @@ function drawHome(){bg();const day=today(me),port=H>W;
  holdBtn(sideL()+2*(bw2+10*U),by2,bw2,50*U,()=>{scene="settings"});
  txt("v"+BUILD,W/2,botY()-58*U,10*U,"rgba(255,255,255,0.45)","center",700);
  checkUpdate();updateBanner()}
+// two pills: the player's main facts, or doubling
+function setPills(x,y,w,h){const opts=[["main",TRACK[me.track].short],["dbl","Doubles"]],gw=(w-8*U)/2;
+ opts.forEach((o,i)=>button(x+i*(gw+8*U),y,gw,h,o[1],()=>{me.mode=o[0];save()},{col:me.mode===o[0]?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(15*U,h*0.5),r:h/2,flat:1}))}
 // Today's star fills with right answers; lit, it pays ten coins.
 function starMeter(x,y,r,day,ink,short){const k=clamp(day.ok/me.goal,0,1),sh=ink?null:"rgba(0,0,0,0.3)";ink=ink||"#fff";
  star(x,y,r,sh?"rgba(255,255,255,0.18)":"#e9ecef");cx.save();cx.beginPath();cx.rect(x-r,y+r-2*r*k,2*r,2*r*k);cx.clip();star(x,y,r,day.lit?"#ffd43b":"#fab005");cx.restore();
@@ -698,7 +784,8 @@ function gameIcon(id,x,y,s){
    ellipse(bx,by,s*0.38,s*0.45,BCOLS[(i*2+1)%6]);ellipse(bx-s*0.12,by-s*0.15,s*0.07,s*0.12,"rgba(255,255,255,0.5)")}}
  else if(id==="frog"){pad(x,y+s*0.45,s*0.9,s*0.38,"#2f9e44");frog(x,y+s*0.1,s*0.55,0,"happy")}
  else if(id==="monster")monster(x,y+s*0.1,s*0.62,0.5+0.3*Math.sin(T*3),"happy",0);
- else if(id==="race"){car(x,y+s*0.2,s*1.6,"#fff3bf",false)}}
+ else if(id==="race"){car(x,y+s*0.2,s*1.6,"#fff3bf",false)}
+ else if(id==="ladybug"){ellipse(x,y+s*0.75,s*1.2,s*0.25,"#2b8a3e");ladybird(x,y+s*0.15,s*0.55,0,3,3,false,1,1)}}
 // Grown-up things are behind a button that has to be held, so a tap from a
 // small finger does not change the facts being practised.
 let holding=null;
@@ -713,8 +800,8 @@ function drawMeet(){bg();const c=coach;txt("New facts!",W/2,topY()+30*U,34*U,"#f
   const lines=f.facts.map(x=>factText(x)+" = "+x.ans),half=b.h*0.52,lh=Math.min((b.h-half-12*U)/Math.ceil(lines.length/(port?2:1)),34*U);
   dotsFor(f.facts[0],b.x+10*U,b.y+(1-k)*30*U+8*U,b.w-20*U,half-12*U);
   lines.forEach((l,j)=>{const col=port?j%2:0,row=port?Math.floor(j/2):j,cols=port?2:1;
-   fitTxt(l,b.x+b.w*(col+0.5)/cols,b.y+(1-k)*30*U+half+row*lh+lh/2,lh*0.62,b.w/cols-12*U,f.facts[j].op==="+"||f.facts[j].op==="x"?"#e03131":"#1c7ed6","center",900)});cx.globalAlpha=1});
- button(W/2-110*U,botY()-60*U,220*U,58*U,"Let's play!",()=>{const m=coach;coach=null;meet(me,me.track,m.fams);save();if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)},{icon:"play",col:"#69db7c",ink:"#113a1a",fs:24*U})}
+   fitTxt(l,b.x+b.w*(col+0.5)/cols,b.y+(1-k)*30*U+half+row*lh+lh/2,lh*0.62,b.w/cols-12*U,f.facts[j].op==="+"||f.facts[j].op==="x"||f.facts[j].op==="d"?"#e03131":"#1c7ed6","center",900)});cx.globalAlpha=1});
+ button(W/2-110*U,botY()-60*U,220*U,58*U,"Let's play!",()=>{const m=coach;coach=null;meet(me,m.tid,m.fams);save();if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)},{icon:"play",col:"#69db7c",ink:"#113a1a",fs:24*U})}
 function drawPlay(dt){const L=layout(R.g);DRAW[R.g.id](R,L,dt);stepParts(dt);
  if(L.pad){cx.fillStyle="rgba(20,28,60,0.28)";rr(L.pad.x,L.pad.y,L.pad.w,L.pad.h,22*U);cx.fill()}
  if(R.state!=="end")drawCard(L);drawHud(L);if(L.pad&&R.state!=="end")drawPad(L);
@@ -723,7 +810,7 @@ function drawPlay(dt){const L=layout(R.g);DRAW[R.g.id](R,L,dt);stepParts(dt);
  if(R.n===0&&T-R.t0<3.2&&R.state==="ask"){cx.globalAlpha=clamp((3.2-(T-R.t0))/0.5,0,1);fitTxt(R.g.say,W/2,L.card.y+L.card.h+26*U,19*U,L.A.w-20*U,"#fff","center",900,"rgba(0,0,0,0.45)");cx.globalAlpha=1}
  if(R.state==="good"&&R.quick&&T<R.until)fitTxt(["Zoom!","Speedy!","Fast!","Wow!","Super quick!"][R.n%5],W/2,L.card.y+L.card.h+30*U,26*U,W*0.8,"#ffe066","center",900,"rgba(0,0,0,0.35)")}
 function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Math.min(sideR()-sideL(),520*U),px=W/2-pw/2;
- const per0=Math.max(1,Math.floor((pw-20*U)/(104*U))),want=230*U+(d.newFast.length?30*U+Math.min(2,Math.ceil(d.newFast.length/per0))*38*U:0)+(d.up?60*U:0)+110*U;
+ const per0=Math.max(1,Math.floor((pw-20*U)/(120*U))),want=230*U+(d.newFast.length?30*U+Math.min(2,Math.ceil(d.newFast.length/per0))*38*U:0)+(d.up?60*U:0)+110*U;
  const ph=Math.min(botY()-top-70*U,want);
  panel(px,top,pw,ph,"#fffaf0",22*U);
  for(let i=0;i<3;i++){const k=easeOut((T-d.t-0.2-i*0.25)/0.35),sx=W/2+(i-1)*70*U;star(sx,top+52*U,32*U*(i<d.stars?k:1),i<d.stars?"#fcc419":"#dee2e6")}
@@ -732,7 +819,7 @@ function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Mat
  coin(W/2-40*U,top+178*U,14*U);txt("+"+d.coins,W/2,top+179*U,22*U,"#e67700","left",900);
  let y=top+212*U;
  if(d.newFast.length){txt("Fast now:",W/2,y,16*U,"#2b8a3e","center",900);y+=24*U;
-  const ch=d.newFast.map(k=>{const m=/^(\d+)(.)(\d+)$/.exec(k);return m[1]+" "+SYM[m[2]]+" "+m[3]}),cw=96*U,per=Math.max(1,Math.floor((pw-20*U)/(cw+8*U)));
+  const ch=d.newFast.map(keyText),cw=112*U,per=Math.max(1,Math.floor((pw-20*U)/(cw+8*U)));
   ch.slice(0,per*2).forEach((t,i)=>{const r=Math.floor(i/per),c=i%per,inRow=Math.min(per,ch.length-r*per),x=W/2-(inRow*(cw+8*U)-8*U)/2+c*(cw+8*U);
    cx.fillStyle="#d3f9d8";rr(x,y+r*38*U,cw,30*U,15*U);cx.fill();fitTxt(t,x+cw/2,y+r*38*U+15*U,16*U,cw-10*U,"#2b8a3e","center",900)});y+=Math.min(2,Math.ceil(ch.length/per))*38*U+6*U}
  if(d.up){fitTxt("Every "+d.up.from.short+" fact is fast!",W/2,y+10*U,20*U,pw-30*U,"#e8590c","center",900);fitTxt("Next up: "+d.up.to.name,W/2,y+36*U,16*U,pw-30*U,"#495057","center",800);y+=60*U}
@@ -742,17 +829,25 @@ function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Mat
  button(W/2+6*U,botY()-58*U,bw,54*U,"Again!",()=>startGame(d.g.id),{icon:"play",col:"#69db7c",ink:"#113a1a"})}
 // The fact map: every family in the track, green once all its facts are
 // fast, yellow while it is being learned, grey before it has been met.
-function drawFacts(){bg();backBtn();const tid=me.track,t=TRACK[tid];fitTxt(me.name+"'s facts",W/2,topY()+23*U,26*U,W-140*U,"#fff","center",900,"rgba(0,0,0,0.3)");
- const fc=fastCount(me,tid);fitTxt(t.name+": "+fc.n+" of "+fc.of+" fast",W/2,topY()+56*U,15*U,W-40*U,"#dbe4ff","center",800);
- const mul=t.ops==="x/",lo=mul?1:0,hi=mul?t.max:10,n=hi-lo+1,top=topY()+80*U,legH=34*U,avail=Math.min(sideR()-sideL(),botY()-top-legH-10*U),cell=avail/(n+1),x0=W/2-cell*(n+1)/2;
- const met=new Set(me.intro[tid]||[]),byId={};for(const f of families(tid))byId[f.id]=f;
+function drawFacts(){bg();backBtn();const tid=curTrack(me),t=TRACK[tid];fitTxt(me.name+"'s facts",W/2,topY()+23*U,26*U,W-140*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const pw0=Math.min(sideR()-sideL(),320*U);setPills(W/2-pw0/2,topY()+48*U,pw0,32*U);
+ const fc=fastCount(me,tid);fitTxt(t.name+": "+fc.n+" of "+fc.of+" fast",W/2,topY()+98*U,15*U,W-40*U,"#dbe4ff","center",800);
+ const legend=y=>[["#51cf66","Fast"],["#ffd43b","Learning"],["rgba(255,255,255,0.22)","Coming up"]].forEach((l,i)=>{const x=W/2+(i-1)*110*U;cx.fillStyle=l[0];rr(x-46*U,y-9*U,18*U,18*U,5*U);cx.fill();txt(l[1],x-22*U,y,14*U,"#fff","left",800)});
+ const met=new Set(me.intro[tid]||[]);
+ // doubling: one tile a number, its double (and half) together
+ if(t.dbl){const fams=families(tid).slice().sort((a,b)=>a.a-b.a),top=topY()+120*U,cells=grid(fams.length,sideL(),top,sideR()-sideL(),botY()-top-44*U,8*U,1.7);
+  fams.forEach((f,i)=>{const c=cells[i],fast=famFluent(me,f),on=met.has(f.id);cx.fillStyle=fast?"#51cf66":on?"#ffd43b":"rgba(255,255,255,0.22)";rr(c.x,c.y,c.w,c.h,c.h*0.2);cx.fill();
+   fitTxt(f.a+" + "+f.a+" = "+f.c,c.x+c.w/2,c.y+c.h/2+1,c.h*0.38,c.w-8*U,fast||on?"#24305e":"rgba(255,255,255,0.6)","center",800)});
+  legend(botY()-16*U);return}
+ const mul=t.ops==="x/",lo=mul?1:0,hi=mul?t.max:10,n=hi-lo+1,top=topY()+116*U,legH=34*U,avail=Math.min(sideR()-sideL(),botY()-top-legH-10*U),cell=avail/(n+1),x0=W/2-cell*(n+1)/2;
+ const byId={};for(const f of families(tid))byId[f.id]=f;
  txt(mul?"×":"+",x0+cell/2,top+cell/2,cell*0.5,"#ffe066","center",900);
  for(let i=0;i<n;i++){txt(String(lo+i),x0+(i+1.5)*cell,top+cell/2,cell*0.42,"#ffe066","center",900);txt(String(lo+i),x0+cell/2,top+(i+1.5)*cell,cell*0.42,"#ffe066","center",900)}
  for(let a=lo;a<=hi;a++)for(let b=lo;b<=hi;b++){const id=mul?Math.min(a,b)+"x"+Math.max(a,b):Math.min(a,b)+"+"+Math.max(a,b),f=byId[id];const x=x0+(b-lo+1)*cell,y=top+(a-lo+1)*cell;
   let col="rgba(255,255,255,0.06)";if(f){col=famFluent(me,f)?"#51cf66":met.has(f.id)?"#ffd43b":"rgba(255,255,255,0.22)"}
   cx.fillStyle=col;rr(x+cell*0.06,y+cell*0.06,cell*0.88,cell*0.88,cell*0.18);cx.fill();
   if(f&&cell>26*U)txt(String(mul?a*b:a+b),x+cell/2,y+cell/2+1,cell*0.38,famFluent(me,f)||met.has(f.id)?"#24305e":"rgba(255,255,255,0.5)","center",800)}
- const ly=top+(n+1)*cell+20*U;[["#51cf66","Fast"],["#ffd43b","Learning"],["rgba(255,255,255,0.22)","Coming up"]].forEach((l,i)=>{const x=W/2+(i-1)*110*U;cx.fillStyle=l[0];rr(x-46*U,ly-9*U,18*U,18*U,5*U);cx.fill();txt(l[1],x-22*U,ly,14*U,"#fff","left",800)})}
+ legend(top+(n+1)*cell+20*U)}
 // the shop: colours, hats and extras for the buddy
 let shopTab=0;
 function drawShop(){bg();backBtn();txt("Shop",W/2,topY()+23*U,28*U,"#fff","center",900,"rgba(0,0,0,0.3)");coinChip(sideR(),topY()+23*U,36*U);
@@ -770,9 +865,12 @@ function drawShop(){bg();backBtn();txt("Shop",W/2,topY()+23*U,28*U,"#fff","cente
 // grown-up settings for this player
 let resetArm=-9;
 function drawSettings(){bg();backBtn();txt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,"#fff","center",900,"rgba(0,0,0,0.3)");
- const x0=sideL(),w=sideR()-sideL();let y=topY()+64*U;const row=(label,opts,cur,set,fmt)=>{txt(label,x0,y+10*U,15*U,"#dbe4ff","left",800);y+=24*U;
+ // (two columns when the screen is wide, so a sideways phone fits it all)
+ const wide=W>H*1.1,full=sideR()-sideL(),w=wide?(full-24*U)/2:full;let x0=sideL(),y=topY()+64*U,rows=0;
+ const row=(label,opts,cur,set,fmt)=>{if(wide&&rows++===3){x0=sideL()+w+24*U;y=topY()+64*U}txt(label,x0,y+10*U,15*U,"#dbe4ff","left",800);y+=24*U;
    const bw=(w-(opts.length-1)*8*U)/opts.length;opts.forEach((o,i)=>button(x0+i*(bw+8*U),y,bw,44*U,fmt(o),()=>{set(o);save()},{col:o===cur?"#ffd43b":"rgba(255,255,255,0.9)",fs:Math.min(15*U,bw/7)}));y+=58*U};
- row("Facts to practise",TRACKS.map(t=>t.id),me.track,v=>{me.track=v},v=>TRACK[v].short);
+ row("Facts to practise",TRACKS.filter(t=>!t.dbl).map(t=>t.id),me.track,v=>{me.track=v},v=>TRACK[v].short);
+ row("Doubling",TRACKS.filter(t=>t.dbl).map(t=>t.id),me.dtrack,v=>{me.dtrack=v},v=>TRACK[v].short);
  row("A fact is fast when answered within",[2,3,4,5],me.speed,v=>{me.speed=v},v=>v+" seconds");
  row("Right answers for today's star",[20,30,40,60],me.goal,v=>{me.goal=v},v=>String(v));
  row("Sounds",[true,false],settings.sfx,v=>{settings.sfx=v;saveSettings();if(sfxBus)sfxBus.gain.value=v?0.8:0},v=>v?"On":"Off");
@@ -812,7 +910,9 @@ function frame(ts){requestAnimationFrame(frame);const now=ts/1000;let dt=last?no
  if((sizeTick=(sizeTick+1)%5)===0)sizeWatch();if(T-nudgeT>1){nudgeT=T;audioNudge()}
  btns=[];cx.setTransform(DPR,0,0,DPR,0,0);
  if(!me&&scene!=="who")scene="who";
- if(scene==="play"&&R){stepRound(dt);if(R)drawPlay(dt);else drawHome()}
+ // (a round can end, or stop for new facts, as it steps: draw what is showing now)
+ if(scene==="play"&&R)stepRound(dt);
+ if(scene==="play"&&R)drawPlay(dt);
  else if(scene==="who")drawWho();else if(scene==="meet"&&coach)drawMeet();else if(scene==="done"&&done)drawDone();
  else if(scene==="facts")drawFacts();else if(scene==="shop")drawShop();else if(scene==="settings")drawSettings();else{scene="home";drawHome()}
  drawToast()}
@@ -820,7 +920,7 @@ if(me)scene="home";
 requestAnimationFrame(frame);
 // for the checks in tools/: who is playing, the round, and a way to answer
 window.FD={get scene(){return scene},set scene(s){scene=s},get R(){return R},get me(){return me},get profiles(){return profiles},
- pick(i){me=profiles[i];save();scene="home"},start(gid){startGame(gid)},go(){if(scene==="meet"&&coach){const m=coach;coach=null;meet(me,me.track,m.fams);if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)}},
+ pick(i){me=profiles[i];save();scene="home"},start(gid){startGame(gid)},go(){if(scene==="meet"&&coach){const m=coach;coach=null;meet(me,m.tid,m.fams);if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)}},
  answer(v){if(!R||!R.q)return;if(R.g.input==="keys"){for(const d of String(v))typeDigit(d)}else{const t=R.targets.find(t=>t.v===v);if(t)tapTarget(t)}},
  // the Home Screen icon, drawn with the game's own buddy (tools: icon.png)
  icon(size){const c=document.createElement("canvas");c.width=c.height=size;const was=cx,wu=U;cx=c.getContext("2d");U=size/180;

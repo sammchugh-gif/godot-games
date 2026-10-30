@@ -46,14 +46,14 @@ function mulberry(s) { return () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Ma
 const kid = track => ({ facts: {}, intro: {}, retry: [], recent: [], tick: 0, track, pace: 5000 });
 
 console.log('the facts');
-const want = { add10: 66, addsub10: 132, addsub20: 242, muldiv: 288 };
+const want = { add10: 66, addsub10: 132, addsub20: 242, muldiv: 288, dbl10: 10, dblh10: 20, dblh20: 40, dblh50: 100 };
 for (const t of E.TRACKS) {
   const fs_ = E.trackFacts(t.id), keys = new Set(fs_.map(f => f.k));
   const right = fs_.every(f => {
-    const v = f.op === '+' ? f.x + f.y : f.op === '-' ? f.x - f.y : f.op === 'x' ? f.x * f.y : f.x / f.y;
+    const v = f.op === '+' ? f.x + f.y : f.op === '-' ? f.x - f.y : f.op === 'x' ? f.x * f.y : f.op === 'd' ? 2 * f.x : f.op === 'h' ? f.x / 2 : f.x / f.y;
     return v === f.ans && Number.isInteger(f.ans) && f.ans >= 0 && f.x >= 0 && f.y >= 0;
   });
-  const inRange = fs_.every(f => t.ops === 'x/' ? (f.op === 'x' ? f.x <= 12 && f.y <= 12 : f.ans <= 12 && f.y <= 12 && f.y >= 1)
+  const inRange = fs_.every(f => t.dbl ? (f.op === 'd' ? f.x <= t.max : f.ans <= t.max) : t.ops === 'x/' ? (f.op === 'x' ? f.x <= 12 && f.y <= 12 : f.ans <= 12 && f.y <= 12 && f.y >= 1)
     : (f.op === '+' ? f.ans <= t.max && f.x <= 10 && f.y <= 10 : f.x <= t.max));
   check(`${t.id}: ${want[t.id]} facts, each once, every answer right`, fs_.length === want[t.id] && keys.size === fs_.length && right && inRange, `${fs_.length} facts`);
 }
@@ -61,6 +61,9 @@ const fam = E.families('addsub10');
 check('to 10: plus nothing, one, two, then doubles, then making ten', fam.slice(0, 11).every(f => f.a === 0) && fam.find(f => f.a === f.b && f.a > 2).r === 3 && fam.findIndex(f => f.c === 10 && f.a > 2 && f.a !== f.b) > fam.findIndex(f => f.a === 4 && f.b === 4), fam.slice(0, 4).map(f => f.id).join(' '));
 const mf = E.families('muldiv');
 check('times: ones, twos and tens before sevens and eights', mf.findIndex(f => f.a === 7 && f.b === 8) > mf.findIndex(f => f.a === 2 && f.b === 9) && mf[0].a === 1, mf.slice(0, 3).map(f => f.id).join(' '));
+const df = E.families('dblh50');
+check('doubling: the small ones first, then tens, then fives', df.slice(0, 5).every(f => f.a <= 5) && df.findIndex(f => f.a === 30) < df.findIndex(f => f.a === 35) && df.findIndex(f => f.a === 35) < df.findIndex(f => f.a === 37), df.slice(0, 7).map(f => f.id).join(' '));
+check('a double comes with its half: double 4 and half of 8', JSON.stringify(E.families('dblh10').find(f => f.id === 'd4').facts.map(f => [f.k, f.ans])) === '[["d4",8],["h8",4]]');
 check('every family holds its own facts: 3 + 5, 5 + 3, 8 - 3, 8 - 5', JSON.stringify(fam.find(f => f.id === '3+5').facts.map(f => f.k)) === '["3+5","5+3","8-3","8-5"]');
 
 console.log('choosing answers to tap');
@@ -121,7 +124,11 @@ check('a typical first grader gets there', typical.done && typical.maxLearning <
 const hard = play('addsub10', 0.55, 0.15, 12000, 13, null, 14);
 check('a child who finds it hard gets there too, never flooded', hard.done && hard.maxLearning <= E.POOL + 6, `${hard.n} answers (${Math.ceil(hard.n / 30)} days of 30), at most ${hard.maxLearning} being learned at once`);
 const times = play('muldiv', 0.8, 0.4, 15000, 21, null, 6);
+const dbl = play('dbl10', 0.75, 0.3, 4000, 17, null, 6);
+check('a typical first grader learns double 1 to double 10', dbl.done && dbl.maxLearning <= E.POOL + 6, `${dbl.n} answers`);
 check('times and divide to 12 can be finished', times.done, `${times.n} answers`);
+{ const m = E.toMeet(dbl.k, 'dblh10');
+  check('doubles learned: the halves come in a family at a time', m.quiet.length === 0 && m.show.length >= 1 && m.show.length <= 3 && m.show.every(f => f.facts.length === 2), `${m.show.length} shown`); }
 
 console.log('one track to the next');
 { const k = quick.k; const m = E.toMeet(k, 'addsub20');
@@ -158,7 +165,7 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
     check('"Who\'s playing?", then a tap on Dylan', who === 'who' && (await pg.evaluate(() => FD.scene)) === 'home' && (await pg.evaluate(() => FD.me.name)) === 'Dylan');
     await pg.evaluate(() => { for (const g of FD.GAMES) FD.me.games[g.id] = 1; });
     if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_home.png` });
-    for (const g of ['rocket', 'balloon', 'frog', 'monster', 'race']) {
+    for (const g of ['rocket', 'balloon', 'ladybug', 'frog', 'monster', 'race']) {
       const c0 = await pg.evaluate(() => FD.me.coins);
       await pg.evaluate(id => FD.start(id), g);
       await sleep(150);
@@ -168,7 +175,9 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
         const s = await pg.evaluate(() => ({ scene: FD.scene, st: FD.R && FD.R.state, q: FD.R && FD.R.q && { ans: FD.R.q.ans, k: FD.R.q.k }, input: FD.R && FD.R.g.input,
           targets: FD.R ? FD.R.targets.map(t => ({ v: t.v, x: t.hx, y: t.hy, dead: !!t.dead })) : [], buttons: FD.buttons }));
         if (s.scene === 'meet') { met = true; if (shots && !shot) await pg.screenshot({ path: `${shots}/fd_${tag}_meet.png` });
-          const b = s.buttons.find(b => /Let's play/.test(b.label)); await pg.touchscreen.tap(b.x + b.w / 2, b.y + b.h / 2); await sleep(150); continue; }
+          const b = s.buttons.find(b => /Let's play/.test(b.label));
+          if (!b) { check(`${g}: "New facts!" can be left`, false, errs[0] || JSON.stringify(s.buttons.map(b => b.label))); break; }
+          await pg.touchscreen.tap(b.x + b.w / 2, b.y + b.h / 2); await sleep(150); continue; }
         if (s.scene === 'done') break;
         if (s.scene !== 'play' || !s.q || (s.st !== 'ask' && s.st !== 'coach')) { await sleep(120); continue; }
         // the second question of each game is answered wrong, on purpose
@@ -196,6 +205,23 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
         `${answered} right, +${end.coins - c0} coins${met ? ', met new facts' : ''}${errs.length ? ' ' + errs[0] : ''}`);
       await pg.evaluate(() => { FD.scene = 'home'; });
     }
+    // the switch on the home screen turns the games over to doubling, and
+    // Ladybird Doubles doubles whatever the switch says
+    await pg.evaluate(() => { FD.scene = 'home'; });
+    await sleep(150);
+    const pill = (await pg.evaluate(() => FD.buttons)).find(b => b.label === 'Doubles');
+    await pg.touchscreen.tap(pill.x + pill.w / 2, pill.y + pill.h / 2);
+    await sleep(150);
+    await pg.evaluate(() => FD.start('balloon')); await sleep(200);
+    if ((await pg.evaluate(() => FD.scene)) === 'meet') { await pg.evaluate(() => FD.go()); await sleep(150); }
+    const dq = await pg.evaluate(() => FD.R && FD.R.q && FD.R.q.k);
+    if (shots) { await sleep(700); await pg.screenshot({ path: `${shots}/fd_${tag}_balloon_doubles.png` }); }
+    await pg.evaluate(() => { FD.scene = 'home'; FD.me.mode = 'main'; });
+    await pg.evaluate(() => FD.start('ladybug')); await sleep(200);
+    if ((await pg.evaluate(() => FD.scene)) === 'meet') { await pg.evaluate(() => FD.go()); await sleep(150); }
+    const lq = await pg.evaluate(() => FD.R && FD.R.q && FD.R.q.k);
+    check('"Doubles" turns the games to doubling; Ladybird always doubles', /^[dh]\d+$/.test(dq || '') && /^[dh]\d+$/.test(lq || ''), `${dq}, ${lq}`);
+    await pg.evaluate(() => { FD.scene = 'home'; FD.me.mode = 'dbl'; });
     for (const sc of ['facts', 'shop', 'settings', 'who']) { await pg.evaluate(s => { FD.scene = s; }, sc); await sleep(150); if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_${sc}.png` }); }
     check(`${tag}: the other screens draw`, !errs.length, errs[0] || '');
     await bctx.close();
