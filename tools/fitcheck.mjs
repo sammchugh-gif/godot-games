@@ -33,7 +33,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /* the games that fill the screen with one canvas */
 const FULL = ['star-swarm', 'slime-storm', 'dungeon-dash', 'turbo-karts', 'vine-swing', 'pinball-quest', 'mahjong-club',
-              'riddle-rumble', 'super-strikers', 'marble-mayhem', 'tank-tussle', 'world-kitchen'];
+              'riddle-rumble', 'super-strikers', 'marble-mayhem', 'tank-tussle', 'world-kitchen', 'fact-dash'];
 /* and the one that letterboxes a fixed stage: it must grow with the screen */
 const BOXED = 'paws-of-fury';
 
