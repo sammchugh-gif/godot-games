@@ -46,6 +46,18 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 | Looks | say … for … secs · say · turn into (any sprite) · next costume · switch costume to · grow · shrink · normal size · hide · show · backdrop |
 | Sound | play sound (pop, boing, coin, jump, laser, drum, ta-da, oops, zap) · play note (do to high do) |
 | Score | set score · change score · say my score |
+| My Blocks | ＋ Make a Block, then your own blocks (see below) |
+
+## My Blocks
+
+**＋ Make a Block** (at the bottom of the palette) asks for a name, adds the
+block to the sprite's My Blocks, and puts a pink **define** hat in the code
+area. Whatever is snapped under the define hat is what the block does; the
+block can go in any of that sprite's scripts, as often as wanted, and can
+even use itself (up to 60 deep). ✎ next to a block renames it everywhere or
+throws it away; dragging its define script onto the palette throws it away
+too, after asking. Like Scratch's, they belong to one sprite, and copying a
+sprite copies its blocks. Unlike Scratch's, they take no inputs yet.
 
 Scripts run the way Scratch's do: every script gets a turn every frame, loops
 give the others a turn at the end of each pass, and a move is animated at the

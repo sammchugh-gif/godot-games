@@ -7,7 +7,7 @@
 <title>Code Lab</title>
 <style>
 :root{--bg:#1b2238;--panel:#232c46;--panel2:#2c3757;--line:#3a4870;--ink:#eef2fb;--dim:#9aa7c4;
- --ev:#e6a800;--mo:#4c97ff;--lo:#9966ff;--so:#cf63cf;--co:#ff8c1a;--se:#2eb5c9;--sc:#e8546a}
+ --ev:#e6a800;--mo:#4c97ff;--lo:#9966ff;--so:#cf63cf;--co:#ff8c1a;--se:#2eb5c9;--sc:#e8546a;--my:#f25fa8}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;
  font:15px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
@@ -35,7 +35,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer;touch-action:manipulat
 #blocks{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px 120px;touch-action:pan-y;-webkit-overflow-scrolling:touch}
 #blocks h3{margin:14px 2px 8px;font-size:14px;color:var(--dim);font-weight:600}
 #blocks h3:first-child{margin-top:4px}
-#blocks .blk{margin-bottom:10px;touch-action:pan-y}
+#blocks .blk{margin-bottom:10px;touch-action:none}
 #trash{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:6px;
  background:rgba(200,52,60,.18);border:3px dashed rgba(255,120,120,.6);font-weight:700;font-size:16px;pointer-events:none;color:#ffb3b3}
 #trash b{font-size:40px}
@@ -73,6 +73,12 @@ body.dragging #trash{display:flex}
 .blk input.t{width:92px;text-align:left}
 .blk select{padding-right:20px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E") no-repeat right 7px center;max-width:150px}
 #blocks .blk select{max-width:118px}
+.mbn{font-weight:800}
+.blk.define>.row{border-radius:22px 22px 6px 6px;padding-top:13px}
+.mkblock{display:block;margin:2px 0 12px;background:#3a2a44;border:2px dashed #f25fa8;color:#ffc2e0;border-radius:10px;padding:9px 12px;font-weight:800}
+.mbrow{display:flex;align-items:center;gap:6px;margin-bottom:10px}.mbrow .blk{margin-bottom:0!important}.mbedit{background:var(--panel2);border-radius:50%;width:30px;height:30px;flex:none;font-size:14px}
+.mbhint{color:var(--dim);font-size:13px;line-height:1.4;margin:0 2px 10px}
+.mbprev{padding:10px 0}
 #tidy{position:sticky;float:right;right:10px;top:10px;z-index:5;margin:10px 10px 0 0;background:rgba(20,26,44,.85);border-radius:20px;padding:7px 12px;font-size:14px;font-weight:700}
 .blk.run>.row,.blk.run>.foot,.blk.run>.mouthrow>.arm{box-shadow:0 0 0 3px #fff3a0 inset}
 #ghost{position:fixed;left:0;top:0;z-index:50;pointer-events:none;opacity:.9;transform-origin:0 0}
@@ -192,7 +198,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.10.31-2";
+const BUILD="2026.10.31-3";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -253,7 +259,7 @@ const MSGS=[["go","go"],["win","you win"],["lose","game over"],["next","next lev
 // project for menus of sprites).
 const CATS=[
  {id:"ev",name:"Events",c:"var(--ev)"},{id:"mo",name:"Move",c:"var(--mo)"},{id:"co",name:"Control",c:"var(--co)"},
- {id:"se",name:"Sensing",c:"var(--se)"},{id:"lo",name:"Looks",c:"var(--lo)"},{id:"so",name:"Sound",c:"var(--so)"},{id:"sc",name:"Score",c:"var(--sc)"}];
+ {id:"se",name:"Sensing",c:"var(--se)"},{id:"lo",name:"Looks",c:"var(--lo)"},{id:"so",name:"Sound",c:"var(--so)"},{id:"sc",name:"Score",c:"var(--sc)"},{id:"my",name:"My Blocks",c:"var(--my)"}];
 const SPRITE_MENU=extra=>()=>{const c=P&&P.sprites.length?cur():null;return(P?P.sprites.filter(s=>!c||s.id!==c.id).map(s=>[s.id,s.name]):[]).concat(extra)};
 const SPECS={
  flag:{cat:"ev",kind:"hat",text:"when <span class='ic' style='color:#5f5'>⚑</span> clicked"},
@@ -306,6 +312,11 @@ const SPECS={
  setscore:{cat:"sc",kind:"stack",text:"set score to %1",args:["n:0"]},
  addscore:{cat:"sc",kind:"stack",text:"change score by %1",args:["n:1"]},
  sayscore:{cat:"sc",kind:"stack",text:"say my score"},
+ // My Blocks: a block of your own. Its "define" hat holds what it does, and
+ // the block itself runs that. Both carry the block's id in a[0]; the name is
+ // looked up, so renaming it renames it everywhere.
+ define:{cat:"my",kind:"hat define",text:"define %N"},
+ call:{cat:"my",kind:"stack",text:"%N"},
 };
 const PALETTE={
  ev:["flag","key","tap","touch","getmsg","send"],
@@ -314,26 +325,29 @@ const PALETTE={
  se:["waittouch","waitkey","follow"],
  lo:["say","sayf","costume","nextc","setc","grow","shrink","normal","hide","show","backdrop"],
  so:["sound","note"],
- sc:["setscore","addscore","sayscore"]};
+ sc:["setscore","addscore","sayscore"],
+ my:[]};
 const catOf=op=>CATS.find(c=>c.id===SPECS[op].cat);
-const isHat=op=>SPECS[op].kind==="hat";
+const isHat=op=>/hat/.test(SPECS[op].kind);
 const isCap=op=>/cap/.test(SPECS[op].kind);
 const isC=op=>/\bc\b/.test(SPECS[op].kind);
 function argDefault(a){if(typeof a==="string")return a.slice(2);const o=typeof a==="function"?a():a;return o.length?o[0][0]:""}
-function newBlock(op){const s=SPECS[op],b={id:uid(),op,a:(s.args||[]).map(argDefault)};if(isC(op))b.body=[];return b}
+function newBlock(op,mb){const s=SPECS[op],b={id:uid(),op,a:(s.args||[]).map(argDefault)};if(isC(op))b.body=[];if(mb)b.a=[mb];return b}
+const myBlock=(id,sp)=>((sp||cur()).myblocks||[]).find(m=>m.id===id);
+const defineOf=(sp,id)=>sp.scripts.find(sc=>sc.blocks[0].op==="define"&&sc.blocks[0].a[0]===id);
 
 // ================================================================ project
 let P=null,curId=null;
 const cur=()=>P.sprites.find(s=>s.id===curId)||P.sprites[0];
 function mkSprite(look,x,y,name){const lk=lookOf(look);
- return{id:uid(),name:uniqueName(name||lk.n),look,x,y,size:100,falls:lk.kind==="char",solid:lk.kind==="solid",animate:true,scripts:[]}}
+ return{id:uid(),name:uniqueName(name||lk.n),look,x,y,size:100,falls:lk.kind==="char",solid:lk.kind==="solid",animate:true,scripts:[],myblocks:[]}}
 // projects saved before the drawn sprites kept an emoji in "emoji"
-function migrate(p){p.sprites.forEach(s=>{if(!s.look)s.look=s.emoji||"cat";delete s.emoji;if(s.animate===undefined)s.animate=true});return p}
+function migrate(p){p.sprites.forEach(s=>{if(!s.myblocks)s.myblocks=[];if(!s.look)s.look=s.emoji||"cat";delete s.emoji;if(s.animate===undefined)s.animate=true});return p}
 function uniqueName(n){if(!P)return n;let k=n,i=2;while(P.sprites.some(s=>s.name===k))k=n+" "+i++;return k}
 // a script is written as a short list: [op, arg, arg, [body...]] so the
 // examples below read like the blocks they make
 function S(x,y,...list){return{x,y,blocks:list.map(B)}}
-function B(t){const op=t[0],b=newBlock(op);let i=1;
+function B(t){const op=t[0],b=newBlock(op);let i=1;if(op==="call"||op==="define"){b.a=[t[1]];return b}
  (SPECS[op].args||[]).forEach((a,k)=>{if(t[i]!==undefined&&!Array.isArray(t[i])){b.a[k]=String(t[i]);i++}});
  if(isC(op))b.body=(Array.isArray(t[i])?t[i]:[]).map(B);return b}
 function blankProject(){
@@ -364,10 +378,11 @@ const EXAMPLES=[
   coin.scripts=[S(30,70,["flag"],["show"],["forever",[["nextc"],["wait",0.12]]]),S(30,260,["touch",frog.id],["sound","coin"],["addscore",1],["hide"])];
   cac.scripts=[S(30,70,["getmsg","win"],["spin"],["spin"])];
   P.sprites.push(frog,cac,b1,b2,fl,coin);curId=frog.id;return P}},
- {em:"dragon",name:"Dragon Dance",about:"No buttons needed: press the flag and watch repeat, notes and spins make a little show.",make(){
+ {em:"dragon",name:"Dragon Dance",about:"No buttons needed: the dragon dances with a block of its own, “dance step”, made with Make a Block.",make(){
   P={v:1,id:uid(),name:"Dragon Dance",backdrop:"night",sprites:[]};
-  const d=mkSprite("dragon",240,230);d.falls=false;
-  d.scripts=[S(30,70,["flag"],["say","Watch me dance!",2],["repeat",4,[["diag","ur",40],["note","0"],["diag","dr",40],["note","4"],["diag","dl",40],["note","7"],["diag","ul",40],["note","12"]]],["spin"],["sound","tada"],["say","Ta-da!",2]),
+  const d=mkSprite("dragon",240,230);d.falls=false;const dance={id:uid(),name:"dance step"};d.myblocks=[dance];
+  d.scripts=[S(30,70,["flag"],["say","Watch me dance!",2],["repeat",4,[["call",dance.id]]],["spin"],["sound","tada"],["say","Ta-da!",2]),
+   S(330,300,["define",dance.id],["diag","ur",40],["note","0"],["diag","dr",40],["note","4"],["diag","dl",40],["note","7"],["diag","ul",40],["note","12"]),
    S(330,70,["tap"],["grow",30],["sound","boing"],["wait",0.5],["normal"])];
   P.sprites.push(d);return P}},
  {em:"ghost",name:"Ghost Chase",about:"The ghost floats after the bunny. Run with the arrows and grab the hearts before it catches you.",make(){
@@ -399,15 +414,20 @@ function renderCats(){const c=$("#cats");c.innerHTML="";
   b.onclick=()=>{curCat=k.id;renderCats();const h=blocksEl.querySelector(`h3[data-c="${k.id}"]`);if(h)blocksEl.scrollTo({top:h.offsetTop-8,behavior:"smooth"})};c.appendChild(b)})}
 function renderPalette(){blocksEl.innerHTML="";
  CATS.forEach(k=>{const h=el("h3",null,k.name);h.dataset.c=k.id;blocksEl.appendChild(h);
-  PALETTE[k.id].forEach(op=>{const b=blockEl(newBlock(op),true);b.dataset.op=op;blocksEl.appendChild(b);blocksEl.appendChild(el("br"))})})}
+  PALETTE[k.id].forEach(op=>{const b=blockEl(newBlock(op),true);b.dataset.op=op;blocksEl.appendChild(b);blocksEl.appendChild(el("br"))});
+  if(k.id==="my"){const mk=el("button","mkblock","＋ Make a Block");mk.onclick=makeBlockSheet;blocksEl.appendChild(mk);
+   cur().myblocks.forEach(m=>{const w=el("div","mbrow");const b=blockEl(newBlock("call",m.id),true);b.dataset.op="call";b.dataset.mb=m.id;
+    const ed=el("button","mbedit","✎");ed.title="Rename or delete";ed.onclick=()=>editBlockSheet(m);w.appendChild(b);w.appendChild(ed);blocksEl.appendChild(w)});
+   if(!cur().myblocks.length)blocksEl.appendChild(el("p","mbhint","Make a block of your own, give it a name, then build what it does under its pink <b>define</b> block."))}})}
 blocksEl.addEventListener("scroll",()=>{let best=null;blocksEl.querySelectorAll("h3").forEach(h=>{if(h.offsetTop-40<=blocksEl.scrollTop)best=h.dataset.c});
  if(best&&best!==curCat){curCat=best;renderCats()}},{passive:true});
 // one block's DOM; in the palette its inputs are live too, so a child can
 // set "move right 50" before dragging it out
 function blockEl(b,inPal){const s=SPECS[b.op],cat=catOf(b.op);
  const e=el("div","blk "+s.kind);e.style.setProperty("--c",cat.c);e.dataset.id=b.id;
- const row=el("div","row");const parts=s.text.split(/(%\d)/);
+ const row=el("div","row");const parts=s.text.split(/(%\d|%N)/);
  parts.forEach(p=>{const m=/^%(\d)$/.exec(p);
+  if(p==="%N"){const mb=myBlock(b.a[0]);row.appendChild(el("span","mbn",esc(mb?mb.name:"(gone)")));return}
   if(!m){if(p.trim())row.appendChild(el("span",null,p.trim()));return}
   const k=+m[1]-1,a=s.args[k];
   if(typeof a==="string"){const inp=el("input",a[0]==="t"?"t":null);inp.value=b.a[k];
@@ -470,8 +490,11 @@ window.addEventListener("pointermove",e=>{
  if(!press||e.pointerId!==press.id)return;
  const dx=e.clientX-press.x,dy=e.clientY-press.y;
  if(Math.hypot(dx,dy)>8){
-  // in the palette an upward or downward slide scrolls the list instead
-  if(press.fromPal&&Math.abs(dy)>Math.abs(dx)*1.2&&performance.now()-press.t<380){clearTimeout(press.timer);press=null;return}
+  // in the palette a slide straight up or down scrolls the list (the page
+  // does it, not the browser, so the browser never takes the finger away
+  // from a drag that bends); any other way picks the block up
+  if(press.fromPal&&!press.scroll&&Math.abs(dy)>Math.abs(dx)*2.5&&performance.now()-press.t<380){clearTimeout(press.timer);press.scroll={top:blocksEl.scrollTop}}
+  if(press.scroll){blocksEl.scrollTop=press.scroll.top-dy;e.preventDefault();return}
   beginDrag(e.clientX,e.clientY)}},{passive:false});
 window.addEventListener("pointerup",e=>{
  if(drag&&e.pointerId===drag.pid){endDrag(e.clientX,e.clientY);return}
@@ -483,14 +506,14 @@ window.addEventListener("pointercancel",e=>{
 document.addEventListener("touchmove",e=>{if(drag&&e.cancelable)e.preventDefault()},{passive:false});
 function beginDrag(x,y){const p=press;press=null;clearTimeout(p.timer);
  const r=p.blk.getBoundingClientRect();let blocks,from=null;
- if(p.fromPal){blocks=[newBlock(p.blk.dataset.op)];
+ if(p.fromPal){blocks=[newBlock(p.blk.dataset.op,p.blk.dataset.mb)];
   // keep whatever was typed into the palette copy
-  const palB=palModel(p.blk);if(palB)blocks[0].a=palB.slice()}
+  const palB=palModel(p.blk);if(palB&&!p.blk.dataset.mb)blocks[0].a=palB.slice()}
  else{const loc=locate(p.blk.dataset.id);if(!loc)return;
-  blocks=loc.list.splice(loc.i);from=loc;
+  blocks=loc.list.splice(loc.i);from=loc;p.sx=loc.script.x;p.sy=loc.script.y;
   if(!loc.owner&&loc.list.length===0)cur().scripts.splice(cur().scripts.indexOf(loc.script),1);
   renderScripts()}
- drag={pid:p.id,blocks,ox:x-r.left,oy:y-r.top,lx:x,ly:y,fromPal:p.fromPal,target:null};
+ drag={pid:p.id,blocks,ox:x-r.left,oy:y-r.top,lx:x,ly:y,fromPal:p.fromPal,target:null,sx:p.sx||40,sy:p.sy||60};
  ghost.innerHTML="";const st=el("div","stack");blocks.forEach(b=>st.appendChild(blockEl(b)));ghost.appendChild(st);
  document.body.classList.add("dragging");moveDrag(x,y)}
 function palModel(blkEl){const op=blkEl.dataset.op,s=SPECS[op];
@@ -517,14 +540,19 @@ function overScripts(x,y){const r=scrEl.getBoundingClientRect();return x>=r.left
 function endDrag(x,y,cancel){const d=drag;drag=null;document.body.classList.remove("dragging");ghost.innerHTML="";dropEl.style.display="none";
  const sp=cur();
  if(cancel&&d.fromPal)return;
- if(!cancel&&overPalette(x,y)){if(!d.fromPal){save();toast("Thrown away")}renderScripts();return}
+ if(!cancel&&overPalette(x,y)){
+  if(!d.fromPal&&d.blocks[0].op==="define"){const m=myBlock(d.blocks[0].a[0]);
+   if(m&&!confirm("Throw away the block “"+m.name+"”? It will vanish from every script that uses it.")){
+    sp.scripts.push({x:Math.max(4,d.sx),y:Math.max(44,d.sy),blocks:d.blocks});renderScripts();return}
+   if(m)removeMyBlock(m)}
+  if(!d.fromPal){save();toast("Thrown away")}renderScripts();renderPalette();return}
  if(d.target&&!cancel){const t=d.target;t.list.splice(t.i,0,...d.blocks);if(t.script)t.script.y=Math.max(4,t.script.y-t.above)}
  else if(!cancel&&!overScripts(x,y)&&d.fromPal){return}
  else{const ar=areaEl.getBoundingClientRect();
   sp.scripts.push({x:Math.max(4,Math.round(x-d.ox-ar.left)),y:Math.max(44,Math.round(y-d.oy-ar.top)),blocks:d.blocks})}
  save();renderScripts()}
 function tapBlock(p){
- if(p.fromPal){const b=newBlock(p.blk.dataset.op);const v=palModel(p.blk);if(v)b.a=v;
+ if(p.fromPal){const b=newBlock(p.blk.dataset.op,p.blk.dataset.mb);const v=palModel(p.blk);if(v&&!p.blk.dataset.mb)b.a=v;
   if(isHat(b.op)){toast("Hat blocks start a script: drag it into the code area");return}
   wake();startThread(liveOf(cur()),[b],"tap:"+b.id);return}
  const sc=topBlockOf(p.blk.dataset.id);if(!sc)return;wake();
@@ -673,6 +701,10 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
  case"note":note(num(a[0]));yield* waitSecs(t,0.25);break;
  case"setscore":RUN.score=num(a[0]);RUN.scoreSeen=true;break;
  case"addscore":RUN.score+=num(a[0]);RUN.scoreSeen=true;break;
+ case"call":{const sc=defineOf(l.src,a[0]);t.depth=t.depth||0;
+  // a block that uses itself is fine, up to a point
+  if(sc&&t.depth<60){t.depth++;try{yield* runList(t,sc.blocks.slice(1))}finally{t.depth--}}break}
+ case"define":break;
  case"sayscore":l.say="My score is "+RUN.score;yield* waitSecs(t,2);l.say="";break;
  default:yield}}
 function flag(){wake();stopAll(true);resetLive();RUN.running=true;
@@ -802,6 +834,37 @@ function spriteSheet(s){openSheet(`<h2>${lookImg(s.look,"hi")} <span id="shName"
   const reid=l=>l.forEach(b=>{b.id=uid();if(b.body)reid(b.body)});c.scripts.forEach(sc=>reid(sc.blocks));P.sprites.push(c);curId=c.id;closeSheet();commit()};
  $("#del").onclick=()=>{if(P.sprites.length<2){toast("A project needs at least one sprite");return}
   if(!confirm("Delete "+s.name+" and all its code?"))return;P.sprites.splice(P.sprites.indexOf(s),1);curId=P.sprites[0].id;closeSheet();commit()}}
+// ------------------------------------------------------------ My Blocks
+// a new define block goes below everything else, and the view follows it
+function placeNewScript(blocks){const sp=cur();let y=60;
+ areaEl.querySelectorAll(":scope>.stack").forEach(st=>{y=Math.max(y,st.offsetTop+st.offsetHeight+70)});
+ sp.scripts.push({x:20,y,blocks});renderScripts();scrEl.scrollTo({left:0,top:Math.max(0,y-60),behavior:"smooth"})}
+function makeBlockSheet(){const sp=cur();
+ openSheet(`<h2>Make a Block</h2><p>Give your block a name, like <b>big jump</b> or <b>dance</b>. Then build what it does under its pink <b>define</b> block. ${esc(sp.name)} can use it as often as you like.</p>
+ <div class="mbprev"><div class="blk" style="--c:var(--my)"><div class="row"><input class="t" id="mbName" maxlength="24" placeholder="block name" autocomplete="off" autocorrect="off" spellcheck="false" style="width:220px"></div></div></div>
+ <div class="acts"><button id="mbOk" style="background:#f25fa8">Make it</button><button data-close>Cancel</button></div>`);
+ card.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet);
+ const inp=$("#mbName");setTimeout(()=>{try{inp.focus()}catch(e){}},50);
+ const ok=()=>{let n=inp.value.trim().replace(/\s+/g," ");if(!n){toast("Give your block a name");return}
+  if(sp.myblocks.some(m=>m.name.toLowerCase()===n.toLowerCase())){toast("There is already a block called “"+n+"”");return}
+  const m={id:uid(),name:n};sp.myblocks.push(m);
+  closeSheet();placeNewScript([newBlock("define",m.id)]);save();renderPalette();curCat="my";renderCats();
+  const h=blocksEl.querySelector('h3[data-c="my"]');if(h)blocksEl.scrollTop=h.offsetTop-8;
+  toast("Now snap blocks under “define "+n+"”")};
+ $("#mbOk").onclick=ok;inp.onkeydown=e=>{if(e.key==="Enter")ok()}}
+function removeMyBlock(m){const sp=cur();sp.myblocks=sp.myblocks.filter(x=>x!==m);
+ const strip=list=>{for(let i=list.length-1;i>=0;i--){const b=list[i];if(b.op==="call"&&b.a[0]===m.id)list.splice(i,1);else if(b.body)strip(b.body)}};
+ sp.scripts=sp.scripts.filter(sc=>!(sc.blocks[0].op==="define"&&sc.blocks[0].a[0]===m.id));
+ sp.scripts.forEach(sc=>strip(sc.blocks));sp.scripts=sp.scripts.filter(sc=>sc.blocks.length)}
+function editBlockSheet(m){const sp=cur();
+ openSheet(`<h2>${esc(m.name)}</h2><p>Rename this block, or throw it away. Renaming changes it everywhere it is used.</p>
+ <input class="namein" id="mbRen" value="${esc(m.name)}" maxlength="24" autocomplete="off">
+ <div class="acts"><button id="mbSave" style="background:#f25fa8">Rename</button>${defineOf(sp,m.id)?"":`<button id="mbBack">Bring back its define block</button>`}<button class="red" id="mbDel">Throw away</button></div>`);
+ $("#mbSave").onclick=()=>{const n=$("#mbRen").value.trim().replace(/\s+/g," ");if(!n)return;
+  if(sp.myblocks.some(x=>x!==m&&x.name.toLowerCase()===n.toLowerCase())){toast("There is already a block called “"+n+"”");return}
+  m.name=n;closeSheet();save();renderPalette();renderScripts()};
+ const back=$("#mbBack");if(back)back.onclick=()=>{closeSheet();placeNewScript([newBlock("define",m.id)]);save()};
+ $("#mbDel").onclick=()=>{if(!confirm("Throw away “"+m.name+"” and take it out of every script?"))return;removeMyBlock(m);closeSheet();save();renderPalette();renderScripts()}}
 function backdropSheet(){openSheet(`<h2>Backdrop</h2><p>The picture behind your game.</p><div class="grid">`+Object.keys(BACKDROPS).map(k=>{const b=BACKDROPS[k];
   return`<button data-bd="${k}" class="${k===P.backdrop?"on":""}"><span style="display:block;width:56px;height:40px;border-radius:8px;background:linear-gradient(${b.top},${b.bot} 75%,${b.ground} 75%)"></span>${b.name}</button>`}).join("")+`</div>`);
  card.querySelectorAll("[data-bd]").forEach(b=>b.onclick=()=>{P.backdrop=b.dataset.bd;RUN.backdrop=P.backdrop;save();closeSheet()})}
