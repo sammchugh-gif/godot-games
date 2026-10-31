@@ -45,6 +45,8 @@ const GAMES = {
   'mahjong-club':   { selfWakes: true },
   /* and so does Fact Dash, which has sound effects and no music */
   'fact-dash':      { selfWakes: true },
+  /* and Code Lab, which makes its sounds on the spot */
+  'code-lab':       { selfWakes: true },
   'riddle-rumble':  {}, 'super-strikers': {}, 'tank-tussle': {},
 };
 const only = process.argv[2];

@@ -56,6 +56,11 @@
    "n": 9,
    "hash": "41ecdaf74126"
   },
+  "code-lab": {
+   "bytes": 78850,
+   "n": 2,
+   "hash": "63c61f76228a"
+  },
   "dungeon-dash": {
    "bytes": 145702,
    "n": 1,
@@ -127,9 +132,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 3183616,
-   "n": 33,
-   "hash": "b5429aa836f6"
+   "bytes": 3288117,
+   "n": 34,
+   "hash": "dc6ea2339792"
   },
   "slime-storm": {
    "bytes": 74304,
