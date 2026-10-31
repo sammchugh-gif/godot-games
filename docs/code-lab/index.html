@@ -44,11 +44,11 @@ body.dragging #trash{display:flex}
 #scr{grid-area:scr;position:relative;overflow:auto;min-height:0;min-width:0;-webkit-overflow-scrolling:touch;
  background-color:#202943;background-image:radial-gradient(rgba(255,255,255,.07) 1.2px,transparent 1.3px);background-size:22px 22px}
 #canvasArea{position:relative;width:1600px;height:1600px}
-#hint{position:absolute;left:24px;top:24px;max-width:300px;color:var(--dim);font-size:15px;line-height:1.45;pointer-events:none}
+#hint{position:absolute;left:24px;top:64px;max-width:300px;color:var(--dim);font-size:15px;line-height:1.45;pointer-events:none}
 #hint b{color:#ffd166}
 #who{position:sticky;left:10px;top:10px;float:left;z-index:5;display:flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;
  background:rgba(20,26,44,.85);border-radius:20px;font-weight:700;font-size:14px;pointer-events:none}
-#who span{font-size:22px}
+#who .li{width:28px;height:28px}
 /* ---------------------------------------------------------- blocks */
 .stack{display:flex;flex-direction:column;align-items:flex-start}
 #canvasArea>.stack{position:absolute}
@@ -93,7 +93,7 @@ body.dragging #trash{display:flex}
 #addSp{background:#2f7de1}
 #splist{flex:1;overflow:auto;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;padding:2px 10px 10px}
 .sp{width:74px;height:78px;border-radius:12px;background:var(--panel2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;position:relative}
-.sp span{font-size:34px;line-height:40px}.sp em{font-style:normal;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp .li{width:46px;height:46px}.sp em{font-style:normal;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sp.on{box-shadow:0 0 0 3px #4c97ff;background:#33406a}
 .sp.on:after{content:"⚙";position:absolute;right:4px;top:2px;font-size:14px;color:#9cc2ff}
 /* ---------------------------------------------------------- big stage */
@@ -110,7 +110,7 @@ body.big .pb{width:76px;height:64px;font-size:28px}body.big .pb.a{width:84px}
  #pad{width:100%}
  #sprites{flex:1 1 100%;max-height:78px}
  #splist{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden}
- .sp{width:62px;height:58px;flex:none}.sp span{font-size:26px;line-height:30px}
+ .sp{width:62px;height:58px;flex:none}.sp .li{width:36px;height:36px}
  #sprites .head{display:none}
  #sprites{flex-direction:row}
  #spTools{display:flex;flex-direction:column;gap:6px;padding:8px 0 8px 8px}
@@ -128,13 +128,15 @@ body.big #stagebox{margin:0}
 .card{background:#1f2741;border:1.5px solid var(--line);border-radius:18px;padding:18px;width:min(620px,100%);max-height:calc(100% - 20px);overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .card h2{margin:0 0 4px;font-size:22px;color:#ffd166}.card p{margin:0 0 14px;color:var(--dim);line-height:1.4}
 .card .x{float:right;background:var(--panel2);border-radius:50%;width:36px;height:36px;font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
 .grid button{background:var(--panel2);border-radius:12px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px}
-.grid button span{font-size:34px;line-height:42px}
+.grid button .li{width:68px;height:68px}
+.ptabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 10px;padding-bottom:2px}.ptabs button{background:var(--panel2);border-radius:18px;padding:8px 13px;font-weight:700;white-space:nowrap}.ptabs button.on{background:#2f7de1}
+.card h2 .hi{width:40px;height:40px;vertical-align:middle}
 .grid button.on{box-shadow:0 0 0 3px #4c97ff}
 .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:16px}
 .pcard{position:relative;background:var(--panel2);border-radius:14px;padding:14px 12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:92px}
-.pcard b{font-size:16px}.pcard small{color:var(--dim);line-height:1.35}.pcard .em{font-size:26px}
+.pcard b{font-size:16px}.pcard small{color:var(--dim);line-height:1.35}.pcard .em{font-size:26px;width:40px;height:40px}
 .pcard.new{background:#2f7de1}.pcard.ex{background:#3b3466}
 .pcard .del{position:absolute;right:6px;top:6px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.25);font-size:14px}
 .card h4{margin:6px 0 8px;color:var(--dim);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
@@ -152,6 +154,7 @@ body.big #stagebox{margin:0}
 <script>window.__shelfPaused=function(){try{return !(document.body.classList.contains("big")&&RUN.running)}catch(e){return true}};</script>
 <script src="../menu.js" defer></script>
 <script src="../fresh.js" defer></script>
+<script src="art.js"></script>
 </head><body>
 <div id="app">
  <div id="top">
@@ -189,7 +192,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.10.31-1";
+const BUILD="2026.10.31-2";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -206,6 +209,28 @@ const COSTUMES=[["🐱","Cat"],["🐶","Dog"],["🐸","Frog"],["🤖","Robot"],[
  ["☁️","Cloud"],["🔥","Fire"],["💣","Bomb"],["🏁","Flag"],["🚪","Door"],["🍄","Mushroom"],["❤️","Heart"],["🎁","Present"]];
 const SOLID_BY_DEFAULT=new Set(["🧱","🟫"]);
 const FALLS_BY_DEFAULT=new Set(["🐱","🐶","🐸","🤖","🦄","🐵","🦖","🐧","🐰","🦊","🐼","⚽","🚗"]);
+// A look is a drawn sprite from art.js, or one of the emoji above. Drawn
+// ones are in their own units; SCALE turns those into stage pixels.
+const SCALE=0.8,GROUPS=["Animals","People","Fantasy","Food","Things","Level","Emoji"];
+const EMOJI_LOOKS=COSTUMES.map(c=>({k:c[0],n:c[1],g:"Emoji",w:70,h:70,emoji:true,costumes:["still"],
+ kind:SOLID_BY_DEFAULT.has(c[0])?"solid":FALLS_BY_DEFAULT.has(c[0])?"char":"thing"}));
+const LOOKS=(window.ART?ART.looks:[]).concat(EMOJI_LOOKS);
+const LOOK=new Map(LOOKS.map(l=>[l.k,l]));
+const lookOf=k=>LOOK.get(k)||{k,n:"?",g:"Emoji",w:70,h:70,emoji:true,costumes:["still"],kind:"thing"};
+const walker=lk=>lk.kind==="char"&&lk.costumes.length===4&&lk.costumes[3]==="jump";
+// drawn looks are painted once per costume and size into a little canvas
+const lookCache=new Map();
+function lookCanvas(k,c,ppu){const lk=lookOf(k),q=Math.max(0.5,Math.ceil(ppu*4)/4),key=k+"|"+c+"|"+q;let cv2=lookCache.get(key);
+ if(!cv2){const pw=lk.w+60,ph=lk.h+70;cv2=document.createElement("canvas");cv2.width=Math.ceil(pw*q);cv2.height=Math.ceil(ph*q);
+  const g=cv2.getContext("2d");g.scale(q,q);g.translate(pw/2,ph/2);
+  if(lk.emoji){g.font='70px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';g.textAlign="center";g.textBaseline="middle";g.fillText(k,0,5)}
+  else ART.draw(g,k,c);
+  cv2.pw=pw;cv2.ph=ph;if(lookCache.size>400)lookCache.clear();lookCache.set(key,cv2)}return cv2}
+const thumbs=new Map();
+function thumb(k){let u=thumbs.get(k);if(!u){const lk=lookOf(k),cvs=lookCanvas(k,0,2),t=document.createElement("canvas");t.width=t.height=120;
+  const g=t.getContext("2d"),s=Math.min(114/Math.max(lk.w,lk.h+(lk.emoji?0:6)),2.4)/2;g.translate(60,60+(lk.emoji?0:3));g.scale(s,s);g.drawImage(cvs,-cvs.width/2,-cvs.height/2);
+  u=t.toDataURL();thumbs.set(k,u)}return u}
+const lookImg=(k,cls)=>`<img class="${cls||"li"}" src="${thumb(k)}" alt="">`;
 const BACKDROPS={
  sky:{name:"Sunny sky",top:"#7cc8ff",bot:"#d9f1ff",ground:"#56b24a",dirt:"#8a5a2b"},
  night:{name:"Night",top:"#0b1240",bot:"#33307a",ground:"#2c5a3a",dirt:"#3b2a1c",stars:1},
@@ -265,7 +290,9 @@ const SPECS={
 
  say:{cat:"lo",kind:"stack",text:"say %1 for %2 secs",args:["t:Hello!","n:2"]},
  sayf:{cat:"lo",kind:"stack",text:"say %1",args:["t:Hi!"]},
- costume:{cat:"lo",kind:"stack",text:"turn into %1",args:[COSTUMES.map(c=>[c[0],c[0]+" "+c[1]])]},
+ costume:{cat:"lo",kind:"stack",text:"turn into %1",args:[LOOKS.map(l=>[l.k,(l.emoji?l.k+" ":"")+l.n])]},
+ nextc:{cat:"lo",kind:"stack",text:"next costume"},
+ setc:{cat:"lo",kind:"stack",text:"switch costume to %1",args:[()=>{const lk=lookOf(P&&P.sprites.length?cur().look:"cat");return lk.costumes.map((n,i)=>[String(i),n])}]},
  grow:{cat:"lo",kind:"stack",text:"grow by %1",args:["n:20"]},
  shrink:{cat:"lo",kind:"stack",text:"shrink by %1",args:["n:20"]},
  normal:{cat:"lo",kind:"stack",text:"normal size"},
@@ -285,7 +312,7 @@ const PALETTE={
  mo:["right","left","up","down","diag","jump","spin","home","rand","goto","grav","speed"],
  co:["wait","repeat","forever","ifkey","iftouch","ifscore","stopall"],
  se:["waittouch","waitkey","follow"],
- lo:["say","sayf","costume","grow","shrink","normal","hide","show","backdrop"],
+ lo:["say","sayf","costume","nextc","setc","grow","shrink","normal","hide","show","backdrop"],
  so:["sound","note"],
  sc:["setscore","addscore","sayscore"]};
 const catOf=op=>CATS.find(c=>c.id===SPECS[op].cat);
@@ -298,9 +325,10 @@ function newBlock(op){const s=SPECS[op],b={id:uid(),op,a:(s.args||[]).map(argDef
 // ================================================================ project
 let P=null,curId=null;
 const cur=()=>P.sprites.find(s=>s.id===curId)||P.sprites[0];
-function mkSprite(emoji,x,y,name){
- const nm=name||(COSTUMES.find(c=>c[0]===emoji)||[0,"Sprite"])[1];
- return{id:uid(),name:uniqueName(nm),emoji,x,y,size:100,falls:FALLS_BY_DEFAULT.has(emoji),solid:SOLID_BY_DEFAULT.has(emoji),scripts:[]}}
+function mkSprite(look,x,y,name){const lk=lookOf(look);
+ return{id:uid(),name:uniqueName(name||lk.n),look,x,y,size:100,falls:lk.kind==="char",solid:lk.kind==="solid",animate:true,scripts:[]}}
+// projects saved before the drawn sprites kept an emoji in "emoji"
+function migrate(p){p.sprites.forEach(s=>{if(!s.look)s.look=s.emoji||"cat";delete s.emoji;if(s.animate===undefined)s.animate=true});return p}
 function uniqueName(n){if(!P)return n;let k=n,i=2;while(P.sprites.some(s=>s.name===k))k=n+" "+i++;return k}
 // a script is written as a short list: [op, arg, arg, [body...]] so the
 // examples below read like the blocks they make
@@ -310,13 +338,13 @@ function B(t){const op=t[0],b=newBlock(op);let i=1;
  if(isC(op))b.body=(Array.isArray(t[i])?t[i]:[]).map(B);return b}
 function blankProject(){
  P={v:1,id:uid(),name:"My game",backdrop:"sky",sprites:[]};
- const cat=mkSprite("🐱",120,260);
+ const cat=mkSprite("cat",120,240);
  cat.scripts=[S(30,70,["flag"],["say","Let's code!",2])];
  P.sprites.push(cat);return P}
 const EXAMPLES=[
- {em:"⭐",name:"Star Catcher",about:"Steer the cat with the buttons and catch the star. Every catch scores a point.",make(){
+ {em:"star",name:"Star Catcher",about:"Steer the cat with the buttons and catch the star. Every catch scores a point.",make(){
   P={v:1,id:uid(),name:"Star Catcher",backdrop:"sky",sprites:[]};
-  const cat=mkSprite("🐱",80,280),star=mkSprite("⭐",360,140);
+  const cat=mkSprite("cat",80,280),star=mkSprite("star",360,140);
   cat.falls=false;
   cat.scripts=[S(30,70,["flag"],["setscore",0],["say","Catch the star!",2]),
    S(30,230,["key","right"],["right",30]),S(30,320,["key","left"],["left",30]),
@@ -324,33 +352,33 @@ const EXAMPLES=[
   star.scripts=[S(30,70,["touch",cat.id],["sound","coin"],["addscore",1],["rand"]),
    S(30,220,["flag"],["forever",[["spin"],["wait",1]]])];
   P.sprites.push(cat,star);return P}},
- {em:"🐸",name:"Frog Jump",about:"A little platformer: ◀ ▶ to walk, A to jump. Hop over the cactus and up the bricks to the flag.",make(){
+ {em:"frog",name:"Frog Jump",about:"A little platformer: ◀ ▶ to walk, A to jump. Hop over the cactus and up the platforms to the flag.",make(){
   P={v:1,id:uid(),name:"Frog Jump",backdrop:"jungle",sprites:[]};
-  const frog=mkSprite("🐸",50,298),cac=mkSprite("🌵",190,298),b1=mkSprite("🧱",290,250),b2=mkSprite("🧱",370,190),fl=mkSprite("🏁",370,135);
-  fl.falls=false;b1.size=b2.size=110;
+  const frog=mkSprite("frog",50,296),cac=mkSprite("cactus",180,296),b1=mkSprite("grass",290,262),b2=mkSprite("grass",418,192),fl=mkSprite("flag",440,146),
+   coin=mkSprite("coin",290,222);
   frog.scripts=[S(30,70,["flag"],["speed","4"],["forever",[["ifkey","right",[["right",4]]],["ifkey","left",[["left",4]]]]]),
    S(30,330,["key","a"],["jump",110],["sound","jump"]),
    S(330,330,["key","up"],["jump",110],["sound","jump"]),
    S(30,450,["touch",cac.id],["sound","oops"],["say","Ouch!",1],["home"])];
-  fl.scripts=[S(30,70,["touch",frog.id],["sound","tada"],["say","You win!",3],["send","win"])];
+  fl.scripts=[S(30,70,["touch",frog.id],["sound","tada"],["say","You win!",3],["send","win"]),S(30,230,["flag"],["forever",[["nextc"],["wait",0.3]]])];
+  coin.scripts=[S(30,70,["flag"],["show"],["forever",[["nextc"],["wait",0.12]]]),S(30,260,["touch",frog.id],["sound","coin"],["addscore",1],["hide"])];
   cac.scripts=[S(30,70,["getmsg","win"],["spin"],["spin"])];
-  P.sprites.push(frog,cac,b1,b2,fl);curId=frog.id;return P}},
- {em:"🐉",name:"Dragon Dance",about:"No buttons needed: press the flag and watch repeat, notes and spins make a little show.",make(){
+  P.sprites.push(frog,cac,b1,b2,fl,coin);curId=frog.id;return P}},
+ {em:"dragon",name:"Dragon Dance",about:"No buttons needed: press the flag and watch repeat, notes and spins make a little show.",make(){
   P={v:1,id:uid(),name:"Dragon Dance",backdrop:"night",sprites:[]};
-  const d=mkSprite("🐉",240,230);d.falls=false;
+  const d=mkSprite("dragon",240,230);d.falls=false;
   d.scripts=[S(30,70,["flag"],["say","Watch me dance!",2],["repeat",4,[["diag","ur",40],["note","0"],["diag","dr",40],["note","4"],["diag","dl",40],["note","7"],["diag","ul",40],["note","12"]]],["spin"],["sound","tada"],["say","Ta-da!",2]),
    S(330,70,["tap"],["grow",30],["sound","boing"],["wait",0.5],["normal"])];
   P.sprites.push(d);return P}},
- {em:"👻",name:"Ghost Chase",about:"The ghost floats after the bunny. Run with the arrows and grab the hearts before it catches you.",make(){
+ {em:"ghost",name:"Ghost Chase",about:"The ghost floats after the bunny. Run with the arrows and grab the hearts before it catches you.",make(){
   P={v:1,id:uid(),name:"Ghost Chase",backdrop:"castle",sprites:[]};
-  const bun=mkSprite("🐰",80,270),gh=mkSprite("👻",400,90),h=mkSprite("❤️",300,200);
+  const bun=mkSprite("bunny",80,270),gh=mkSprite("ghost",400,90),h=mkSprite("heart",300,200);
   bun.falls=false;
   bun.scripts=[S(30,70,["flag"],["setscore",0],["speed","7"],["forever",[["ifkey","right",[["right",5]]],["ifkey","left",[["left",5]]],["ifkey","up",[["up",5]]],["ifkey","down",[["down",5]]]]])];
-  gh.scripts=[S(30,70,["flag"],["home"],["wait",1],["forever",[["follow",bun.id]]]),
-   S(30,300,["touch",bun.id],["sound","oops"],["say","Boo! Got you!",2],["stopall"])];
+  gh.scripts=[S(30,70,["flag"],["setc","0"],["home"],["wait",1],["forever",[["follow",bun.id]]]),
+   S(30,300,["touch",bun.id],["setc","2"],["sound","oops"],["say","Boo! Got you!",2],["stopall"])];
   h.scripts=[S(30,70,["touch",bun.id],["sound","coin"],["addscore",1],["rand"]),S(30,230,["flag"],["rand"])];
   P.sprites.push(bun,gh,h);curId=bun.id;return P}}];
-
 // ------------------------------------------------------------ storage
 const LS="codelab.";
 function lsGet(k,d){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -359,8 +387,8 @@ function lsDel(k){try{localStorage.removeItem(LS+k)}catch(e){}}
 let saveT=0;
 function save(){clearTimeout(saveT);saveT=setTimeout(saveNow,300)}
 function saveNow(){if(!P)return;lsSet("p."+P.id,P);const list=lsGet("list",[]).filter(x=>x.id!==P.id);
- list.unshift({id:P.id,name:P.name,em:(P.sprites[0]||{}).emoji||"🐱",t:Date.now()});lsSet("list",list.slice(0,60));lsSet("last",P.id)}
-function openProject(p,lay){stopAll();P=p;curId=(P.sprites.find(s=>s.id===curId)||P.sprites[0]).id;resetLive();renderAll();
+ list.unshift({id:P.id,name:P.name,em:(P.sprites[0]||{}).look||"cat",t:Date.now()});lsSet("list",list.slice(0,60));lsSet("last",P.id)}
+function openProject(p,lay){stopAll();P=migrate(p);curId=(P.sprites.find(s=>s.id===curId)||P.sprites[0]).id;resetLive();renderAll();
  if(lay){const keep=curId;P.sprites.forEach(s=>{curId=s.id;tidy()});curId=keep;renderAll()}scrEl.scrollTo(0,0);saveNow()}
 
 // ================================================================ editor
@@ -400,7 +428,7 @@ function blockEl(b,inPal){const s=SPECS[b.op],cat=catOf(b.op);
 function renderScripts(){areaEl.querySelectorAll(":scope>.stack").forEach(n=>n.remove());const sp=cur();
  sp.scripts.forEach((sc,i)=>{const st=el("div","stack");st.style.left=sc.x+"px";st.style.top=sc.y+"px";st.dataset.script=i;
   sc.blocks.forEach(b=>st.appendChild(blockEl(b)));areaEl.appendChild(st)});
- $("#who").innerHTML=`<span>${sp.emoji}</span>${esc(sp.name)}`;
+ $("#who").innerHTML=`${lookImg(sp.look)}${esc(sp.name)}`;
  const h=$("#hint");h.style.display=sp.scripts.length?"none":"";
  h.innerHTML=`<b>${esc(sp.name)}</b> has no code yet.<br><br>Drag a yellow <b>when ⚑ clicked</b> block here, then snap a blue <b>move</b> block underneath it. Press the green ⚑ to run it.<br><br>Tap any block to try it on its own.`;
  areaEl.style.width=Math.max(1200,...sp.scripts.map(s=>s.x+700))+"px";areaEl.style.height=Math.max(1200,...sp.scripts.map(s=>s.y+900))+"px";
@@ -412,7 +440,7 @@ function tidy(){const sp=cur();renderScripts();const stacks=[...areaEl.querySele
  sp.scripts.forEach((sc,i)=>{let c=0;for(let k=1;k<cols;k++)if(colY[k]<colY[c]-20)c=k;sc.x=20+c*(maxW+30);sc.y=colY[c];colY[c]+=hs[i]+30});
  renderScripts();save()}
 function renderSprites(){const l=$("#splist");l.innerHTML="";
- P.sprites.forEach(s=>{const b=el("button","sp"+(s.id===curId?" on":""),`<span>${s.emoji}</span><em>${esc(s.name)}</em>`);
+ P.sprites.forEach(s=>{const b=el("button","sp"+(s.id===curId?" on":""),`${lookImg(s.look)}<em>${esc(s.name)}</em>`);
   b.onclick=()=>{if(s.id===curId)spriteSheet(s);else{curId=s.id;renderSprites();renderScripts();renderPalette()}};l.appendChild(b)})}
 function renderAll(){$("#pname").textContent=P.name;renderCats();renderPalette();renderSprites();renderScripts()}
 // find a block anywhere in the current sprite: its list and its place in it
@@ -508,28 +536,28 @@ function tapBlock(p){
 // 480 by 360 like Scratch's, drawn at twice that. y grows downwards; a
 // sprite's x,y is the middle of its feet... its centre, and the floor is a
 // strip along the bottom.
-const SW=480,SH=360,FLOOR=SH-36,BASE=52,GRAV=1500;
+const SW=480,SH=360,FLOOR=SH-36,GRAV=1500;
 const cv=$("#stage"),cx=cv.getContext("2d");
 const RUN={running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
 const liveOf=sp=>RUN.live.find(l=>l.id===sp.id);
-function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,emoji:s.emoji,falls:s.falls,solid:s.solid,visible:true,
+function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,look:s.look,costume:0,walkT:-9,falls:s.falls,solid:s.solid,visible:true,
  say:"",sayUntil:0,flip:false,rot:0,speed:4,onGround:false,hop:null}}
 function resetLive(){RUN.touching.clear();RUN.live=P.sprites.map(mkLive);RUN.score=0;RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()}
 function syncLive(){// sprites added, removed or changed in the editor while stopped
  const old=RUN.live;RUN.live=P.sprites.map(s=>{const l=old.find(o=>o.id===s.id);if(l&&RUN.running){l.src=s;return l}return mkLive(s)});
  if(!RUN.running)RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()||RUN.score!==0}
 function usesScore(){return JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"setscore"')||JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"addscore"')}
-const half=l=>BASE*l.size/100/2;
-function box(l,shrink){const h=half(l)*(shrink||1);return{l:l.x-h,r:l.x+h,t:l.y-h,b:l.y+h}}
+const hw=l=>lookOf(l.look).w*SCALE*l.size/200,hh=l=>lookOf(l.look).h*SCALE*l.size/200;
+function box(l,shrink){const w=hw(l)*(shrink||1),h=hh(l)*(shrink||1);return{l:l.x-w,r:l.x+w,t:l.y-h,b:l.y+h}}
 function overlap(a,b){return a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t}
 function touchingThing(l,what){
- if(what==="edge"){const h=half(l);return l.x-h<=1||l.x+h>=SW-1||l.y-h<=1}
- if(what==="ground"){return l.onGround||l.y+half(l)>=FLOOR-0.5}
+ if(what==="edge"){const w=hw(l),h=hh(l);return l.x-w<=1||l.x+w>=SW-1||l.y-h<=1}
+ if(what==="ground"){return l.onGround||l.y+hh(l)>=FLOOR-0.5}
  const o=RUN.live.find(q=>q.id===what);if(!o||!o.visible||!l.visible||o===l)return false;
  return overlap(box(l,.78),box(o,.78))}
 // keep a sprite on the stage and out of solid sprites
-function settle(l,dx,dy){const h=half(l);
- l.x=clamp(l.x,h,SW-h);
+function settle(l,dx,dy){const h=hh(l),w=hw(l);
+ l.x=clamp(l.x,w,SW-w);
  if(l.y+h>FLOOR){l.y=FLOOR-h;if(l.vy>0)l.vy=0;l.onGround=true}
  if(l.y-h<0){l.y=h;if(l.vy<0)l.vy=0}
  if(l.solid)return;
@@ -556,14 +584,19 @@ function drawBackdrop(){const bd=BACKDROPS[RUN.backdrop]||BACKDROPS.sky;
  if(bd.bricks){cx.strokeStyle="rgba(0,0,0,.12)";cx.lineWidth=1;for(let y=0;y<FLOOR;y+=24)for(let x=(y/24%2)*24;x<SW;x+=48)cx.strokeRect(x,y,48,24)}
  if(RUN.backdrop==="sky"){cx.fillStyle="rgba(255,255,255,.85)";[[70,60],[300,40],[420,90]].forEach(([x,y],i)=>{const xx=(x+RUN.t*6*(i+1))%(SW+80)-40;cx.beginPath();cx.arc(xx,y,16,0,7);cx.arc(xx+18,y-6,20,0,7);cx.arc(xx+38,y,15,0,7);cx.fill()})}
  cx.fillStyle=bd.dirt;cx.fillRect(0,FLOOR,SW,SH-FLOOR);cx.fillStyle=bd.ground;cx.fillRect(0,FLOOR,SW,9)}
-function drawSprite(l){if(!l.visible)return;const s=BASE*l.size/100;
+// which costume shows: a walking character steps and jumps by itself
+function shownCostume(l){const lk=lookOf(l.look);
+ if(l.src.animate!==false&&walker(lk)&&RUN.running){
+  if(l.falls&&!l.onGround&&Math.abs(l.vy)>40)return 3;
+  if(RUN.t-l.walkT<0.12)return 1+(Math.floor(RUN.t*8)%2)}
+ return Math.min(l.costume,lk.costumes.length-1)}
+function drawSprite(l){if(!l.visible)return;const k=l.size/100*SCALE,ppu=k*cv.width/SW,img=lookCanvas(l.look,shownCostume(l),ppu);
  cx.save();cx.translate(l.x,l.y);if(l.rot)cx.rotate(l.rot);if(l.flip)cx.scale(-1,1);
- cx.font=`${Math.round(s)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;cx.textAlign="center";cx.textBaseline="middle";
- cx.fillText(l.emoji,0,s*0.06);cx.restore();
- if(l.src.id===curId&&!RUN.running&&!document.body.classList.contains("big")){cx.strokeStyle="rgba(76,151,255,.8)";cx.setLineDash([4,3]);cx.lineWidth=1.5;cx.strokeRect(l.x-s/2,l.y-s/2,s,s);cx.setLineDash([])}}
+ cx.drawImage(img,-img.pw*k/2,-img.ph*k/2,img.pw*k,img.ph*k);cx.restore();
+ if(l.src.id===curId&&!RUN.running&&!document.body.classList.contains("big")){const b=box(l);cx.strokeStyle="rgba(76,151,255,.8)";cx.setLineDash([4,3]);cx.lineWidth=1.5;cx.strokeRect(b.l,b.t,b.r-b.l,b.b-b.t);cx.setLineDash([])}}
 function drawSay(l){if(!l.visible||!l.say)return;cx.font="600 14px -apple-system,system-ui,sans-serif";
  const lines=wrap(l.say,150),w=Math.max(...lines.map(t=>cx.measureText(t).width))+18,h=lines.length*17+12;
- let x=clamp(l.x+half(l)*.4,4,SW-w-4),y=Math.max(4,l.y-half(l)-h-10);
+ let x=clamp(l.x+hw(l)*.4,4,SW-w-4),y=Math.max(4,l.y-hh(l)-h-10);
  cx.fillStyle="#fff";cx.strokeStyle="#aab";cx.lineWidth=1.5;rr(x,y,w,h,10);cx.fill();cx.stroke();
  cx.beginPath();cx.moveTo(x+14,y+h-1);cx.lineTo(clamp(l.x,x+8,x+w-8),y+h+9);cx.lineTo(x+28,y+h-1);cx.fill();
  cx.fillStyle="#223";cx.textAlign="left";cx.textBaseline="top";lines.forEach((t,i)=>cx.fillText(t,x+9,y+7+i*17))}
@@ -589,11 +622,11 @@ function fireHats(pred,restart){
    startThread(l,sc.blocks.slice(1),key,h.id)}}}
 function* runList(t,list){for(const b of list){if(t.done)return;yield* runBlock(t,b)}}
 const num=(v,d)=>{const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:(d||0)};
-function* moveBy(t,dx,dy){const l=t.l;if(dx)l.flip=dx<0;
+function* moveBy(t,dx,dy){const l=t.l;if(dx)l.flip=dx<0;if(dx||dy)l.walkT=RUN.t;
  const dist=Math.hypot(dx,dy),dur=Math.max(1/60,dist/(l.speed*60));let done=0;
  if(dy<0&&l.falls)l.vy=Math.min(l.vy,0);
  while(done<1&&!t.done){const k=Math.min(1,done+RUN.dt/dur),f=k-done;done=k;
-  l.x+=dx*f;l.y+=dy*f;if(dy<0&&l.falls)l.vy=0;settle(l,dx*f,dy*f);if(done<1)yield}}
+  l.x+=dx*f;l.y+=dy*f;if(dx||dy)l.walkT=RUN.t;if(dy<0&&l.falls)l.vy=0;settle(l,dx*f,dy*f);if(done<1)yield}}
 function* waitSecs(t,s){const end=RUN.t+s;while(RUN.t<end&&!t.done)yield}
 function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
  switch(b.op){
@@ -608,13 +641,13 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
   yield;break}
  case"spin":{const end=RUN.t+0.5;while(RUN.t<end&&!t.done){l.rot=(1-(end-RUN.t)/0.5)*Math.PI*2*(l.flip?-1:1);yield}l.rot=0;break}
  case"home":l.x=l.src.x;l.y=l.src.y;l.vy=0;settle(l,0,0);break;
- case"rand":{const h=half(l);for(let k=0;k<20;k++){l.x=h+Math.random()*(SW-2*h);l.y=h+Math.random()*(FLOOR-2*h-10);
+ case"rand":{const w=hw(l),h=hh(l);for(let k=0;k<20;k++){l.x=w+Math.random()*(SW-2*w);l.y=h+Math.random()*(FLOOR-2*h-10);
    if(!RUN.live.some(o=>o!==l&&o.visible&&overlap(box(l),box(o))))break}l.vy=0;break}
  case"goto":{const o=RUN.live.find(q=>q.id===a[0]);if(o){l.x=o.x;l.y=o.y;l.vy=0}break}
  case"grav":l.falls=a[0]==="on";if(!l.falls)l.vy=0;break;
  case"speed":l.speed=num(a[0],4);break;
  case"follow":{const o=RUN.live.find(q=>q.id===a[0]);if(o){const dx=o.x-l.x,dy=o.y-l.y,d=Math.hypot(dx,dy);
-   if(d>1){const st=Math.min(d,l.speed*0.6);l.x+=dx/d*st;if(!l.falls)l.y+=dy/d*st;l.flip=dx<0;settle(l,dx/d*st,dy/d*st)}}break}
+   if(d>1){const st=Math.min(d,l.speed*0.6);l.x+=dx/d*st;if(!l.falls)l.y+=dy/d*st;l.flip=dx<0;l.walkT=RUN.t;settle(l,dx/d*st,dy/d*st)}}break}
  case"wait":yield* waitSecs(t,clamp(num(a[0]),0,600));break;
  case"repeat":{const n=Math.round(clamp(num(a[0]),0,10000));for(let i=0;i<n&&!t.done;i++){yield* runList(t,b.body);yield}break}
  case"forever":while(!t.done){yield* runList(t,b.body);yield}break;
@@ -627,7 +660,9 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
  case"send":fireHats(h=>h.op==="getmsg"&&h.a[0]===a[0],true);break;
  case"say":l.say=a[0];yield* waitSecs(t,clamp(num(a[1]),0,600));if(l.say===a[0])l.say="";break;
  case"sayf":l.say=a[0];break;
- case"costume":l.emoji=a[0];break;
+ case"costume":l.look=a[0];l.costume=0;settle(l,0,0);break;
+ case"nextc":l.costume=(Math.min(l.costume,lookOf(l.look).costumes.length-1)+1)%lookOf(l.look).costumes.length;break;
+ case"setc":l.costume=Math.max(0,Math.min(lookOf(l.look).costumes.length-1,Math.round(num(a[0]))));break;
  case"grow":l.size=clamp(l.size+num(a[0]),10,600);settle(l,0,0);break;
  case"shrink":l.size=clamp(l.size-num(a[0]),10,600);settle(l,0,0);break;
  case"normal":l.size=l.src.size;settle(l,0,0);break;
@@ -683,7 +718,7 @@ cv.addEventListener("pointerdown",e=>{wake();const p=stagePt(e),l=spriteAt(p);if
  sdrag={pid:e.pointerId,l,dx:l.x-p.x,dy:l.y-p.y,moved:false,sx:e.clientX,sy:e.clientY};cv.setPointerCapture(e.pointerId)});
 cv.addEventListener("pointermove",e=>{if(!sdrag||e.pointerId!==sdrag.pid)return;const p=stagePt(e),l=sdrag.l;
  if(Math.hypot(e.clientX-sdrag.sx,e.clientY-sdrag.sy)>4)sdrag.moved=true;
- const h=half(l);l.x=clamp(p.x+sdrag.dx,h,SW-h);l.y=clamp(p.y+sdrag.dy,h,FLOOR-h)});
+ const w=hw(l),h=hh(l);l.x=clamp(p.x+sdrag.dx,w,SW-w);l.y=clamp(p.y+sdrag.dy,h,FLOOR-h)});
 const endS=e=>{if(!sdrag||e.pointerId!==sdrag.pid)return;const l=sdrag.l,moved=sdrag.moved;sdrag=null;
  if(moved){l.src.x=Math.round(l.x);l.src.y=Math.round(l.y);save()}
  else{for(const sc of l.src.scripts){const h=sc.blocks[0];if(h.op==="tap"){startThread(l,sc.blocks.slice(1),"script:"+h.id,h.id)}}}};
@@ -734,23 +769,35 @@ function openSheet(html){card.innerHTML=`<button class="x" data-close>✕</butto
  card.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet)}
 function closeSheet(){sheet.classList.remove("on")}
 sheet.addEventListener("pointerdown",e=>{if(e.target===sheet)closeSheet()});
-function costumeGrid(sel){return`<div class="grid">`+COSTUMES.map(c=>`<button data-em="${c[0]}" class="${c[0]===sel?"on":""}"><span>${c[0]}</span>${c[1]}</button>`).join("")+`</div>`}
-function addSpriteSheet(){openSheet(`<h2>Add a sprite</h2><p>Pick a character or a thing. Characters fall to the ground; bricks are solid, so others can stand on them.</p>`+costumeGrid());
- card.querySelectorAll("[data-em]").forEach(b=>b.onclick=()=>{if(P.sprites.length>=12){toast("Twelve sprites is the most");return}
-  const s=mkSprite(b.dataset.em,120+Math.random()*240,120+Math.random()*120);P.sprites.push(s);curId=s.id;syncLive();closeSheet();renderAll();save()})}
-function spriteSheet(s){openSheet(`<h2>${s.emoji} ${esc(s.name)}</h2>
+// the look picker: a row of groups, and a grid of that group's looks
+let pickGroup="Animals";
+function lookPicker(sel,onPick){const box=el("div","picker");
+ const tabs=el("div","ptabs"),grid=el("div","grid");box.appendChild(tabs);box.appendChild(grid);
+ if(sel)pickGroup=lookOf(sel).g;
+ const draw=()=>{tabs.innerHTML="";GROUPS.forEach(g=>{const b=el("button",g===pickGroup?"on":null,g);b.onclick=()=>{pickGroup=g;draw()};tabs.appendChild(b)});
+  grid.innerHTML="";LOOKS.filter(l=>l.g===pickGroup).forEach(l=>{const b=el("button",l.k===sel?"on":null,`${lookImg(l.k)}${esc(l.n)}`);
+   b.onclick=()=>{sel=l.k;grid.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));onPick(l.k)};grid.appendChild(b)})};
+ draw();return box}
+function addSpriteSheet(){openSheet(`<h2>Add a sprite</h2><p>Characters walk, jump and fall to the ground; platforms and blocks are solid, so others can stand on them.</p>`);
+ card.appendChild(lookPicker(null,k=>{if(P.sprites.length>=16){toast("Sixteen sprites is the most");return}
+  const s=mkSprite(k,120+Math.random()*240,120+Math.random()*120);P.sprites.push(s);curId=s.id;syncLive();closeSheet();renderAll();save()}))}
+function spriteSheet(s){openSheet(`<h2>${lookImg(s.look,"hi")} <span id="shName">${esc(s.name)}</span></h2>
  <input class="namein" id="nm" value="${esc(s.name)}" maxlength="18" autocomplete="off">
  <div class="opts"><label><input type="checkbox" id="fa" ${s.falls?"checked":""}> Falls (gravity)</label>
  <label><input type="checkbox" id="so" ${s.solid?"checked":""}> Solid (stand on it)</label>
+ <label><input type="checkbox" id="an" ${s.animate!==false?"checked":""}> Walks by itself</label>
  <label>Size <select id="sz">${[50,75,100,125,150,200,300].map(v=>`<option ${v===s.size?"selected":""}>${v}</option>`).join("")}</select></label></div>
- <h4>Look</h4>${costumeGrid(s.emoji)}
+ <h4>Look</h4><div id="pickHere"></div>
  <div class="acts"><button id="dup">Copy this sprite</button><button class="red" id="del">Delete</button></div>`);
- const nm=$("#nm");nm.onchange=()=>{const v=nm.value.trim();if(v&&v!==s.name)s.name=uniqueName(v);commit()};
+ const nm=$("#nm");nm.onchange=()=>{const v=nm.value.trim();if(v&&v!==s.name)s.name=uniqueName(v);$("#shName").textContent=s.name;commit()};
  const commit=()=>{syncLive();renderAll();save()};
  $("#fa").onchange=e=>{s.falls=e.target.checked;commit()};
  $("#so").onchange=e=>{s.solid=e.target.checked;commit()};
  $("#sz").onchange=e=>{s.size=+e.target.value;commit()};
- card.querySelectorAll("[data-em]").forEach(b=>b.onclick=()=>{s.emoji=b.dataset.em;card.querySelectorAll("[data-em]").forEach(x=>x.classList.toggle("on",x===b));card.querySelector("h2").textContent=s.emoji+" "+s.name;commit()});
+ $("#an").onchange=e=>{s.animate=e.target.checked;commit()};
+ $("#pickHere").appendChild(lookPicker(s.look,k=>{const lk=lookOf(k),was=lookOf(s.look);s.look=k;
+  if(lk.kind!==was.kind){s.falls=lk.kind==="char";s.solid=lk.kind==="solid";$("#fa").checked=s.falls;$("#so").checked=s.solid}
+  card.querySelector("h2 img").src=thumb(k);commit()}));
  $("#dup").onclick=()=>{const c=JSON.parse(JSON.stringify(s));c.id=uid();c.name=uniqueName(s.name);c.x=Math.min(SW-30,s.x+40);
   const reid=l=>l.forEach(b=>{b.id=uid();if(b.body)reid(b.body)});c.scripts.forEach(sc=>reid(sc.blocks));P.sprites.push(c);curId=c.id;closeSheet();commit()};
  $("#del").onclick=()=>{if(P.sprites.length<2){toast("A project needs at least one sprite");return}
@@ -761,8 +808,8 @@ function backdropSheet(){openSheet(`<h2>Backdrop</h2><p>The picture behind your 
 function projectsSheet(first){const list=lsGet("list",[]);
  openSheet(`<h2>Code Lab</h2><p>Make your own games with blocks. Start a new one, open one you made, or try an example and change it.</p>
  <div class="plist"><button class="pcard new" id="newP"><span class="em">✨</span><b>New game</b><small>A cat and an empty stage</small></button></div>
- <h4>Examples to play and change</h4><div class="plist">`+EXAMPLES.map((x,i)=>`<button class="pcard ex" data-ex="${i}"><span class="em">${x.em}</span><b>${x.name}</b><small>${x.about}</small></button>`).join("")+`</div>`+
- (list.length?`<h4>My games</h4><div class="plist">`+list.map(p=>`<button class="pcard" data-p="${p.id}"><span class="em">${p.em}</span><b>${esc(p.name)}</b><small>${new Date(p.t).toLocaleDateString()}</small><span class="del" data-del="${p.id}">🗑</span></button>`).join("")+`</div>`:""));
+ <h4>Examples to play and change</h4><div class="plist">`+EXAMPLES.map((x,i)=>`<button class="pcard ex" data-ex="${i}">${lookImg(x.em,"em")}<b>${x.name}</b><small>${x.about}</small></button>`).join("")+`</div>`+
+ (list.length?`<h4>My games</h4><div class="plist">`+list.map(p=>`<button class="pcard" data-p="${p.id}">${lookImg(p.em,"em")}<b>${esc(p.name)}</b><small>${new Date(p.t).toLocaleDateString()}</small><span class="del" data-del="${p.id}">🗑</span></button>`).join("")+`</div>`:""));
  if(first)card.querySelector(".x").remove();
  $("#newP").onclick=()=>{curId=null;openProject(blankProject());closeSheet();toast("A new game! Drag blocks into the middle.")};
  card.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{curId=null;closeSheet();const p=EXAMPLES[+b.dataset.ex].make();openProject(p,true);toast("Press ⚑ to play it, then change the code!")});
@@ -782,7 +829,7 @@ window.addEventListener("pagehide",saveNow);
 window.CL={get P(){return P},RUN,flag,stopAll,keyDown,keyUp,EXAMPLES,openProject,SPECS,cur,BUILD};
 
 (function boot(){const lastId=lsGet("last",null),p=lastId&&lsGet("p."+lastId,null);
- if(p&&p.sprites&&p.sprites.length){P=p;curId=P.sprites[0].id;resetLive();renderAll()}
+ if(p&&p.sprites&&p.sprites.length){P=migrate(p);curId=P.sprites[0].id;resetLive();renderAll()}
  else{blankProject();curId=P.sprites[0].id;resetLive();renderAll();projectsSheet(true)}
  requestAnimationFrame(frame)})();
 </script></body></html>

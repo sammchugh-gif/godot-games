@@ -16,6 +16,14 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   too.
 - **Tap to try.** Tap a block in the palette to run just that block on the
   chosen sprite; tap a script to run it, and tap it again to stop it.
+- **Sprite library.** 94 cartoon sprites drawn in code in a flat, outlined
+  style (`art.js`), in seven groups: Animals, People, Fantasy, Food, Things,
+  Level (platforms, blocks, spikes, lava, springs, ladders) and the old emoji.
+  Characters have four costumes (still, two steps, jump) and switch between
+  them by themselves while they walk and jump, unless "Walks by itself" is
+  off; things have one costume or a few (a coin that turns, a door that
+  opens, a flag that waves). Platforms are solid and wide, so others stand on
+  them. Projects saved before the library keep their emoji.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
   whether it is solid (others can stand on it). Drag a sprite on the stage to
@@ -35,7 +43,7 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 | Move | move right / left / up / down · move diagonally (↗ ↖ ↘ ↙) · jump (height) · spin around · go to start · go to a random spot · go to (sprite) · gravity on/off · set speed |
 | Control | wait · repeat · forever · if (button) held · if touching (sprite / edge / ground) · if score is … or more · stop everything |
 | Sensing | wait till I touch · wait for (button) · step towards (sprite) |
-| Looks | say … for … secs · say · turn into (costume) · grow · shrink · normal size · hide · show · backdrop |
+| Looks | say … for … secs · say · turn into (any sprite) · next costume · switch costume to · grow · shrink · normal size · hide · show · backdrop |
 | Sound | play sound (pop, boing, coin, jump, laser, drum, ta-da, oops, zap) · play note (do to high do) |
 | Score | set score · change score · say my score |
 
@@ -57,5 +65,5 @@ last open (`codelab.last`). 📁 Projects opens, starts and deletes them.
 
 ## Publishing
 
-The game is `index.html` and `icon.png`; copy both to `docs/code-lab/`, then
+The game is `index.html`, `art.js` and `icon.png`; copy all three to `docs/code-lab/`, then
 run `node tools/offline-list.mjs`.
