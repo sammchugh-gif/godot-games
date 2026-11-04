@@ -1148,6 +1148,10 @@ let coach=null;
 // the room from the shop, darkened a little at the top so words stay clear
 function bg(){const k=me&&me.look?me.look.room:"night";room(k);
  if(k!=="night"){const g=cx.createLinearGradient(0,0,0,150*U);g.addColorStop(0,"rgba(0,0,0,0.25)");g.addColorStop(1,"rgba(0,0,0,0)");cx.fillStyle=g;cx.fillRect(0,0,W,150*U)}}
+// a screen's title: centred, or beside the back button if centred it would
+// have to shrink
+function title(t,px){font(px,900);const lx=clearL()+56*U;if(cx.measureText(t).width<=W-2*lx)txt(t,W/2,topY()+23*U,px,"#fff","center",900,"rgba(0,0,0,0.3)");
+ else fitTxt(t,lx,topY()+23*U,px,sideR()-lx,"#fff","left",900,"rgba(0,0,0,0.3)")}
 function backBtn(fn){button(clearL(),topY(),46*U,46*U,"",fn||(()=>{scene="home"}),{icon:"back",col:"rgba(255,255,255,0.9)",isz:20*U})}
 function drawWho(){bg();txt("Who's playing?",W/2,topY()+34*U,34*U,"#fff","center",900,"rgba(0,0,0,0.3)");
  const n=profiles.length+(profiles.length<6?1:0),top=topY()+70*U,bottom=botY()-24*U;
@@ -1195,7 +1199,7 @@ function drawHome(){bg();const day=today(me),port=H>W;
 let pickFrom="home";
 function practiseChip(x,y,w,h,from){button(x,y,w,h,trk(curTrack(me)).short,()=>{pickFrom=from;scene="pick"},{icon:"down",col:"#ffd43b",fs:Math.min(15*U,h*0.5),r:h/2,flat:1,isz:h*0.42,id:"practise"})}
 // "What shall we practise?": a card for each kind on the player's list
-function drawPick(){bg();backBtn(()=>{scene=pickFrom});fitTxt("What shall we practise?",W/2,topY()+23*U,26*U,W-2*(clearL()+56*U),"#fff","center",900,"rgba(0,0,0,0.3)");
+function drawPick(){bg();backBtn(()=>{scene=pickFrom});title("What shall we practise?",26*U);
  const list=AREAS.filter(a=>!me.hide[a.id]),top=topY()+58*U,port=H>W;
  grid(list.length,sideL(),top,sideR()-sideL(),botY()-top,12*U,port?2.3:1.5).forEach((c,i)=>{const a=list[i],tid=me.lv[a.id],t=trk(tid),fc=fastCount(me,tid),on=me.mode===a.id;
   panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",18*U);if(on){cx.strokeStyle="#fab005";cx.lineWidth=4*U;rr(c.x,c.y,c.w,c.h,18*U);cx.stroke()}
@@ -1324,7 +1328,7 @@ function preview(key,id,x,y,w,h,i){
  const look=Object.assign({},me.look);look[key]=id;buddy(x+w/2,y+h*0.6,h*0.27,look,{seed:i,still:1})}
 // Grown-up settings for this player: what to practise, and how.
 let setTab=0,resetArm=-9;
-function drawSettings(){bg();backBtn();fitTxt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,W-2*(clearL()+56*U),"#fff","center",900,"rgba(0,0,0,0.3)");
+function drawSettings(){bg();backBtn();title("Grown-ups: "+me.name,24*U);
  const tabs=["What to practise","Speed and more"],tw=Math.min(200*U,(sideR()-sideL()-10*U)/2);
  tabs.forEach((t,i)=>button(W/2-tw-5*U+i*(tw+10*U),topY()+52*U,tw,38*U,t,()=>{setTab=i},{col:i===setTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(15*U,tw/9)}));
  // (two columns when the screen is wide, so a sideways phone fits it all)
