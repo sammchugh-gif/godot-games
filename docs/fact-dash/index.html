@@ -998,7 +998,7 @@ DRAW.ninja=(R,L,dt)=>{const G=L.G,STEP=G.h*0.4,baseY=G.y+G.h*0.88,top=R.g.total,
  cx.fillStyle=mix("#e8590c","#2b1d5c",prog);cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=30*U)cx.lineTo(x,baseY-G.h*0.1+cam*0.25+Math.sin(x*0.006+1)*20*U);cx.lineTo(W,H);cx.fill();
  for(let i=0;i<14;i++){const y=baseY-((i+0.6)*STEP*1.1-cam*0.8);if(y<G.y-60*U||y>H+60*U)continue;cloud(G.x+G.w*hash1(i*7+2),y,(50+hash1(i)*40)*U,0.5)}
  bamboo(G,cam);
- const pw=clamp(G.w*0.25,80*U,170*U),ph=pw*0.34,s=clamp(pw*0.24,18*U,42*U);
+ const pw=clamp(G.w*0.27,90*U,190*U),ph=pw*0.4,s=clamp(pw*0.22,18*U,42*U);
  const ty=lvY(top+1);if(ty>G.y-pw*2&&ty<H+pw)pagoda(G.x+G.w/2,ty,Math.min(G.w*0.55,STEP*1.6));
  // the lantern a quick answer's star is thrown at
  const lp=R.lamp;let lx=0,ly=0;
@@ -1027,7 +1027,7 @@ DRAW.ninja=(R,L,dt)=>{const G=L.G,STEP=G.h*0.4,baseY=G.y+G.h*0.88,top=R.g.total,
 function ledge(x,y,w,h,label){ellipse(x,y+h*1.15,w*0.42,h*0.22,"rgba(0,0,0,0.18)");
  cx.fillStyle="#6b4a2b";rr(x-w/2,y+h*0.1,w,h*0.9,h*0.4);cx.fill();cx.fillStyle="#8b5e34";rr(x-w/2,y,w,h*0.78,h*0.38);cx.fill();
  cx.fillStyle="#69db7c";rr(x-w/2-2*U,y-h*0.14,w+4*U,h*0.32,h*0.16);cx.fill();
- if(label)fitTxt(label,x,y+h*0.47,h*0.66,w*0.8,"#fff","center",900,"rgba(0,0,0,0.45)")}
+ if(label)fitTxt(label,x,y+h*0.45,h*0.7,w*0.8,"#fff","center",900,"rgba(0,0,0,0.45)")}
 function bamboo(G,cam){const seg=58*U;for(let i=0;i<6;i++){const left=i<3,w=(10+hash1(i)*5)*U,x=left?G.x+(2+i*20)*U:G.x+G.w-(2+(i-3)*20)*U-w,off=(cam*(0.6+(i%3)*0.15))%seg;
   cx.globalAlpha=0.85;cx.fillStyle=i%3===1?"#2b8a3e":"#37b24d";cx.fillRect(x,0,w,H);cx.fillStyle="#1e6b30";
   for(let y=-seg+off+hash1(i+5)*seg;y<H;y+=seg){cx.fillRect(x-1*U,y,w+2*U,3*U);if(hash1(i*31+Math.round((y-off)/seg))>0.6)ellipse(x+(left?w+10*U:-10*U),y+4*U,12*U,4*U,"#40c057",left?0.4:-0.4)}
@@ -1062,7 +1062,7 @@ DRAW.apple=(R,L,dt)=>{const G=L.G;sky("#a5d8ff","#e7f5ff");circle(G.x+G.w*0.9,G.
  const ground=G.y+G.h*0.94;cx.fillStyle="#8ce99a";cx.fillRect(0,ground,W,H);cx.fillStyle="#69db7c";cx.fillRect(0,ground,W,5*U);
  cx.fillStyle="#8b5e34";cx.fillRect(G.x+6*U,G.y,22*U,ground-G.y);
  for(let i=0;i<10;i++)circle(G.x+G.w*(i/9),G.y+G.h*(0.03+hash1(i)*0.05),Math.max(G.w*0.09,30*U)+hash1(i+3)*16*U,i%2?"#2f9e44":"#37b24d");
- const s=clamp(G.h*0.075,20*U,46*U),ar=clamp(G.w*0.055,18*U,40*U),bw=clamp(G.w*0.2,s*2.6,150*U),by=ground-s*0.98,rim=by-s*0.05,hang=G.y+G.h*0.12;
+ const s=clamp(G.h*0.075,20*U,46*U),ar=clamp(G.w*0.055,18*U,40*U),bw=clamp(G.w*0.2,s*2.6,150*U),by=ground-s*0.98,rim=by+s*0.28,hang=G.y+G.h*0.12;
  R.bx+=(R.aim-R.bx)*Math.min(1,dt*14);R.bx=clamp(R.bx,0.06,0.94);const bxp=G.x+G.w*R.bx;
  // which apple the basket is under, and since when
  let under=null,ud=1e9;for(const t of R.targets){if(t.dead||t.away||t.caught)continue;const d=Math.abs(G.x+G.w*t.fx-bxp);if(d<bw*0.5&&d<ud){ud=d;under=t}}
@@ -1081,8 +1081,8 @@ DRAW.apple=(R,L,dt)=>{const G=L.G;sky("#a5d8ff","#e7f5ff");circle(G.x+G.w*0.9,G.
   apple(x,y,ar*sc,t.col,String(t.v));cx.globalAlpha=1}
  // the buddy and the basket, with what has been picked so far peeking out
  buddy(bxp,by,s,me.look,{mood:R.state==="coach"?"oops":R.state==="good"||R.state==="end"?"cheer":"happy",look:{x:0,y:-1},still:1});
- const n=Math.min(R.picked||0,7);for(let i=0;i<n;i++)apple(bxp+(i-(n-1)/2)*ar*0.75,rim-ar*0.25-(i%2)*ar*0.2,ar*0.45,APCOL[i%3],null);
- const bh=s*0.95;cx.fillStyle="#c08552";cx.beginPath();cx.moveTo(bxp-bw/2,rim);cx.lineTo(bxp+bw/2,rim);cx.lineTo(bxp+bw*0.4,rim+bh);cx.lineTo(bxp-bw*0.4,rim+bh);cx.closePath();cx.fill();
+ const n=Math.min(R.picked||0,7);for(let i=0;i<n;i++)apple(bxp+(i-(n-1)/2)*bw*0.13,rim-ar*0.12-(i%2)*ar*0.12,ar*0.4,APCOL[i%3],null);
+ const bh=s*0.8;cx.fillStyle="#c08552";cx.beginPath();cx.moveTo(bxp-bw/2,rim);cx.lineTo(bxp+bw/2,rim);cx.lineTo(bxp+bw*0.4,rim+bh);cx.lineTo(bxp-bw*0.4,rim+bh);cx.closePath();cx.fill();
  cx.strokeStyle="#8b5e34";cx.lineWidth=2*U;for(let i=1;i<4;i++){const yy=rim+bh*i/4,ww=bw/2-bw*0.1*i/4;cx.beginPath();cx.moveTo(bxp-ww,yy);cx.lineTo(bxp+ww,yy);cx.stroke()}
  ellipse(bxp,rim,bw/2,bh*0.14,"#a0673b")};
 function apple(x,y,r,col,label){ellipse(x,y+r*0.1,r,r*0.92,shade(col,-0.18));circle(x-r*0.04,y,r*0.9,col);ellipse(x-r*0.35,y-r*0.35,r*0.16,r*0.26,"rgba(255,255,255,0.45)",-0.5);
@@ -1114,14 +1114,14 @@ DRAW.snow=(R,L,dt)=>{const G=L.G;sky("#74c0fc","#e7f5ff");
   cx.fillStyle="#fff";cx.beginPath();cx.moveTo(x-h*0.12,y-h*0.66);cx.lineTo(x,y-h);cx.lineTo(x+h*0.12,y-h*0.66);cx.fill()}
  cx.fillStyle="#f8f9fa";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=24*U)cx.lineTo(x,G.y+G.h*0.36-Math.sin(x*0.005)*10*U);cx.lineTo(W,H);cx.fill();
  for(let i=0;i<36;i++){const x=hash1(i)*W+Math.sin(T+i)*14*U,y=(hash1(i+9)*H+T*(24+hash1(i)*24)*U)%H;circle(x,y,(1.4+hash1(i+4)*2)*U,"rgba(255,255,255,0.9)")}
- const laneY=[0.46,0.63,0.8],laneS=[0.72,0.86,1],base=clamp(Math.min(G.w*0.075,G.h*0.075),16*U,44*U);
+ const laneY=[0.46,0.63,0.8],laneS=[0.72,0.86,1],base=clamp(Math.min(G.w*0.09,G.h*0.1),18*U,52*U);
  const fx=G.x+G.w*0.5,fy=G.y+G.h*0.97,s=clamp(base*0.85,15*U,38*U);R.from={x:fx,y:fy-s*1.2};
  for(const t of R.targets.slice().sort((a,b)=>a.lane-b.lane)){const ss=base*laneS[t.lane],k=easeOut((T-t.t0)/0.5);
   if(!t.dead&&!t.hit&&(R.state==="ask"||(R.state==="coach"&&t.v!==R.q.ans))){t.fx+=t.dir*t.sp*dt;if(t.fx<0.1){t.fx=0.1;t.dir=1}if(t.fx>0.9){t.fx=0.9;t.dir=-1}}
   let x=G.x+G.w*t.fx,al=k;const y=G.y+G.h*laneY[t.lane];
   if(t.away){const a=T-t.away;x+=(t.fx<0.5?-1:1)*a*a*900*U;al*=clamp(1-a/0.8,0,1)}
   if(t.hit!=null)al*=clamp(1-(T-t.hit)/0.35,0,1);
-  if(al<=0.01)continue;t.hx=x;t.hy=y-ss*2.05;t.hr=ss*1.5;cx.globalAlpha=al;
+  if(al<=0.01)continue;t.hx=x;t.hy=y-ss*2.05;t.hr=ss*1.6;cx.globalAlpha=al;
   if(R.state==="coach"&&t.v===R.q.ans)ellipse(x,y-ss*1.7,ss*1.8+Math.sin(T*8)*3*U,ss*2.4,"rgba(255,236,153,0.75)");
   snowman(x,y,ss,String(t.v),t.dead!=null?T-t.dead:-1);cx.globalAlpha=1}
  // where a flick is pointing, while the finger is still down
@@ -1139,8 +1139,8 @@ function snowman(x,y,s,label,splat){const sx=splat>=0&&splat<0.6?Math.sin(splat*
  circle(x-s*0.15,y-s*2.98,s*0.06,"#212529");circle(x+s*0.15,y-s*2.98,s*0.06,"#212529");cx.fillStyle="#ff922b";cx.beginPath();cx.moveTo(x,y-s*2.9);cx.lineTo(x+s*0.38,y-s*2.84);cx.lineTo(x,y-s*2.8);cx.fill();
  cx.fillStyle="#212529";cx.fillRect(x-s*0.32,y-s*3.36,s*0.64,s*0.1);rr(x-s*0.22,y-s*3.72,s*0.44,s*0.38,s*0.06);cx.fill();
  cx.strokeStyle="#5c3a1a";cx.lineWidth=Math.max(2,s*0.08);cx.beginPath();cx.moveTo(x-s*0.5,y-s*1.95);cx.lineTo(x-s*0.85,y-s*2.25);cx.moveTo(x+s*0.5,y-s*1.95);cx.lineTo(x+s*0.85,y-s*2.25);cx.stroke();
- cx.fillStyle="#fff9db";rr(x-s*0.95,y-s*2.55,s*1.9,s*1.0,s*0.18);cx.fill();cx.strokeStyle="#a0673b";cx.lineWidth=Math.max(2,s*0.08);rr(x-s*0.95,y-s*2.55,s*1.9,s*1.0,s*0.18);cx.stroke();
- fitTxt(label,x,y-s*2.04,s*0.72,s*1.7,"#24305e","center",900);
+ cx.fillStyle="#fff9db";rr(x-s*1.1,y-s*2.62,s*2.2,s*1.15,s*0.2);cx.fill();cx.strokeStyle="#a0673b";cx.lineWidth=Math.max(2,s*0.08);rr(x-s*1.1,y-s*2.62,s*2.2,s*1.15,s*0.2);cx.stroke();
+ fitTxt(label,x,y-s*2.04,s*0.86,s*1.95,"#24305e","center",900);
  if(splat>=0){cx.globalAlpha=clamp(1-splat/1.2,0,1);circle(x+s*0.2,y-s*2.1,s*0.35,"#fff");for(let i=0;i<6;i++){const a=i*1.05;circle(x+s*0.2+Math.cos(a)*s*0.4,y-s*2.1+Math.sin(a)*s*0.4,s*0.12,"#fff")}cx.globalAlpha=1}}
 
 // ================================================================ screens
@@ -1195,7 +1195,7 @@ function drawHome(){bg();const day=today(me),port=H>W;
 let pickFrom="home";
 function practiseChip(x,y,w,h,from){button(x,y,w,h,trk(curTrack(me)).short,()=>{pickFrom=from;scene="pick"},{icon:"down",col:"#ffd43b",fs:Math.min(15*U,h*0.5),r:h/2,flat:1,isz:h*0.42,id:"practise"})}
 // "What shall we practise?": a card for each kind on the player's list
-function drawPick(){bg();backBtn(()=>{scene=pickFrom});fitTxt("What shall we practise?",W/2,topY()+23*U,26*U,W-2*clearL()-40*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+function drawPick(){bg();backBtn(()=>{scene=pickFrom});fitTxt("What shall we practise?",W/2,topY()+23*U,26*U,W-2*(clearL()+56*U),"#fff","center",900,"rgba(0,0,0,0.3)");
  const list=AREAS.filter(a=>!me.hide[a.id]),top=topY()+58*U,port=H>W;
  grid(list.length,sideL(),top,sideR()-sideL(),botY()-top,12*U,port?2.3:1.5).forEach((c,i)=>{const a=list[i],tid=me.lv[a.id],t=trk(tid),fc=fastCount(me,tid),on=me.mode===a.id;
   panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",18*U);if(on){cx.strokeStyle="#fab005";cx.lineWidth=4*U;rr(c.x,c.y,c.w,c.h,18*U);cx.stroke()}
@@ -1324,7 +1324,7 @@ function preview(key,id,x,y,w,h,i){
  const look=Object.assign({},me.look);look[key]=id;buddy(x+w/2,y+h*0.6,h*0.27,look,{seed:i,still:1})}
 // Grown-up settings for this player: what to practise, and how.
 let setTab=0,resetArm=-9;
-function drawSettings(){bg();backBtn();fitTxt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,W-2*clearL()-60*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+function drawSettings(){bg();backBtn();fitTxt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,W-2*(clearL()+56*U),"#fff","center",900,"rgba(0,0,0,0.3)");
  const tabs=["What to practise","Speed and more"],tw=Math.min(200*U,(sideR()-sideL()-10*U)/2);
  tabs.forEach((t,i)=>button(W/2-tw-5*U+i*(tw+10*U),topY()+52*U,tw,38*U,t,()=>{setTab=i},{col:i===setTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(15*U,tw/9)}));
  // (two columns when the screen is wide, so a sideways phone fits it all)

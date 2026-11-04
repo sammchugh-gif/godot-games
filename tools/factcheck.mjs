@@ -240,8 +240,10 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
             // drag the basket from where it is to under the apple
             const from = await pg.evaluate(() => { const G = FD.R.L.G; return { x: G.x + G.w * FD.R.bx, y: G.y + G.h * 0.85 }; });
             await swipe(from.x, from.y, t.x, from.y); dragged++;
-          } else if (s.input === 'fling' && answered === 0) {
-            // flick a snowball from below the thrower towards the snowman
+          } else if (s.input === 'fling' && !flicked && !wrong && await pg.evaluate(v => { const f = FD.R.from, a = t => Math.atan2(t.hy - f.y, t.hx - f.x),
+              me = FD.R.targets.find(t => t.v === v); return FD.R.targets.every(t => t === me || t.dead || t.away || t.hx == null || Math.abs(a(t) - a(me)) > 0.35); }, t.v)) {
+            // flick a snowball from below the thrower towards the snowman,
+            // when no other snowman stands in the same line
             const f = await pg.evaluate(() => FD.R.from), d = Math.hypot(t.x - f.x, t.y - f.y);
             await swipe(f.x, f.y + 30, f.x + (t.x - f.x) / d * 90, f.y + 30 + (t.y - f.y) / d * 90, 5); flicked++;
           } else await pg.touchscreen.tap(t.x, t.y);
@@ -288,7 +290,7 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
     await pg.evaluate(() => { FD.scene = 'home'; }); await sleep(100); await tap(await btn(/^practise$/));
     const hidden = !(await btn(/^Times and divide$/));
     await pg.evaluate(() => { FD.scene = 'settings'; }); await sleep(150);
-    await tap(await btn(/^×/)); // "× and ÷" on the list row
+    await tap(await btn(/^× and ÷$/)); // on the list row
     await tap(await btn(/^Choose tables$/));
     const t1 = await pg.evaluate(() => FD.me.lv.times);
     await tap(await btn(/^7$/));
@@ -308,12 +310,14 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
     if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_shop_pets.png` });
     await tap(await btn(/^Rooms$/)); await tap(await btn(/^Outer space$/));
     await tap(await btn(/^Hats$/));
-    const pages = !!(await btn(/^next$/)); if (pages) await tap(await btn(/^next$/));
-    const halo = await btn(/^Halo$/); if (halo) await tap(halo);
+    // (the halo is on whichever page the screen's size puts it)
+    let halo = await btn(/^Halo$/), pages = 0;
+    while (!halo && pages < 4) { const nx = await btn(/^next$/); if (!nx) break; await tap(nx); pages++; halo = await btn(/^Halo$/); }
+    if (halo) await tap(halo);
     const sh = await pg.evaluate(() => ({ pet: FD.me.look.pet, room: FD.me.look.room, hat: FD.me.look.hat, coins: FD.me.coins, wish: FD.me.wish }));
     if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_shop_hats.png` });
-    check('shop: a puppy and a room bought with real taps, the hats paged through', sh.pet === 'puppy' && sh.room === 'space' && sh.coins === 30 && pages && !!halo,
-      `${sh.pet}, ${sh.room}, ${sh.coins} coins left`);
+    check('shop: a puppy and a room bought with real taps, the hats paged through', sh.pet === 'puppy' && sh.room === 'space' && sh.coins === 30 && !!halo,
+      `${sh.pet}, ${sh.room}, ${sh.coins} coins left, ${pages} pages turned`);
     check('shop: a thing too dear (the halo) becomes what the player is saving for', sh.wish === 'hat:halo' && sh.hat !== 'halo', sh.wish);
     for (const sc of ['home', 'facts', 'who']) { await pg.evaluate(s => { FD.scene = s; }, sc); await sleep(150); if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_${sc}_after.png` }); }
     // every room, pattern, hat, extra and pet drawn once
