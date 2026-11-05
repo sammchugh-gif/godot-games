@@ -92,6 +92,86 @@ for (const c of CASES) {
   if (!ok) bad++;
   console.log(`${ok ? 'ok  ' : 'FAIL'} hiss               voicing ${m.voiced.toFixed(2)} (want under 0.4)`);
 }
-/* the good /r/ must sit clearly below every non-/r/ */
+
+/* ---- words: the judge, on words whose formants glide from sound to sound.
+   Each segment is [ms, F1, F2, F3]; F4 sits at 4300 Hz. Formants move
+   linearly over the first 50 ms of each segment, as they do between real
+   speech sounds; a 0 for F1 is a closure (silence), as in the t of "tree". */
+function word(segs, f0 = 240) {
+  const n = Math.round(FS * segs.reduce((a, s) => a + s[0], 0) / 1000);
+  const track = new Float64Array(n * 4), amp = new Float64Array(n);
+  let i = 0, prev = segs.find(s => s[1]);
+  for (const s of segs) {
+    const len = Math.round(FS * s[0] / 1000), glide = Math.min(len, Math.round(FS * 0.05));
+    for (let k = 0; k < len; k++, i++) {
+      const a = k < glide ? k / glide : 1;
+      for (let j = 1; j <= 3; j++) track[i * 4 + j - 1] = (prev[j] || s[j]) * (1 - a) + (s[j] || prev[j]) * a;
+      track[i * 4 + 3] = 4300;
+      amp[i] = s[1] ? 1 : 0;
+    }
+    if (s[1]) prev = s;
+  }
+  /* pulse source, then four time-varying resonators */
+  let x = new Float64Array(n), ph = 0;
+  for (let k = 0; k < n; k++) { ph += f0 / FS; if (ph >= 1) { ph -= 1; x[k] = amp[k]; } }
+  x = resonate(x, 0, 100, FS);
+  for (let j = 0; j < 4; j++) {
+    const y = new Float64Array(n); let y1 = 0, y2 = 0;
+    for (let k = 0; k < n; k++) {
+      const f = track[k * 4 + j], bw = 80 + j * 40;
+      const r = Math.exp(-Math.PI * bw / FS), c = -r * r, b = 2 * r * Math.cos(2 * Math.PI * f / FS), a = 1 - b - c;
+      const v = a * x[k] + b * y1 + c * y2; y[k] = v; y2 = y1; y1 = v;
+    }
+    x = y;
+  }
+  for (let k = n - 1; k > 0; k--) x[k] -= x[k - 1];
+  let peak = 0; for (const v of x) peak = Math.max(peak, Math.abs(v));
+  /* half a second of quiet either side, as in a real recording */
+  const pad = FS / 2, out = new Float32Array(n + 2 * pad);
+  for (let k = 0; k < out.length; k++) out[k] = 0.002 * (rand() * 2 - 1);
+  for (let k = 0; k < n; k++) out[pad + k] += 0.3 * x[k] / peak;
+  return out;
+}
+/* what the page does: every 15 ms, the last 2048 samples, low-passed and thinned */
+function frames(sig) {
+  const lp = lowpass(sig, 5000, FS), out = [], sm = new D.Smoother(5);
+  for (let end = 2048; end <= lp.length; end += Math.round(FS * 0.015)) {
+    const r = D.analyze(D.decimate(lp.subarray(end - 2048, end), FACTOR), FS2);
+    const voice = r.rms > 0.004 && r.voiced > 0.55;
+    out.push({ voice, f3: voice && r.f3 ? sm.push(r.f3) : 0 });
+    if (!voice) sm.clear();
+  }
+  return out;
+}
+const THR = { good: 2500, bad: 2800 };
+const R = [130, 450, 1300, 2050], W = [130, 400, 850, 3100];
+const WORDS = [
+  /* name, segments, the right verdict */
+  ['red',            [R, [300, 650, 2200, 3300]], 'g'],
+  ['wed (for red)',  [W, [300, 650, 2200, 3300]], 'm'],
+  ['carrot',         [[150, 900, 1700, 3300], [80, 450, 1300, 2100], [200, 550, 1600, 3200]], 'g'],
+  ['cawwot',         [[150, 900, 1700, 3300], [80, 400, 900, 3050], [200, 550, 1600, 3200]], 'm'],
+  ['tree',           [[60, 0], [90, 400, 1400, 2150], [280, 350, 2800, 3600]], 'g'],
+  ['twee',           [[60, 0], [90, 400, 900, 3150], [280, 350, 2800, 3600]], 'm'],
+  ['rabbit, short R',[[70, 450, 1300, 2100], [160, 900, 1700, 3300], [60, 0], [150, 400, 2300, 3400]], 'g'],
+  ['ball (no R)',    [[250, 600, 1000, 3000], [150, 450, 1100, 3100]], 'm'],
+];
+for (const [name, segs, want] of WORDS) {
+  const fr = frames(word(segs)), ft = D.wordFeatures(fr), v = D.judge(ft, THR);
+  const ok = v === want;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name.padEnd(18)} lowest held F3 ${String(ft.low).padStart(4)}  typical ${ft.typ}  -> ${v} (want ${want})  ${ft.n} voiced frames`);
+}
+/* learning: his good Rs low, his wrong ones high, the lines go between */
+{
+  const t = [];
+  for (let k = 0; k < 12; k++) { t.push({ low: 2150 + k * 25, label: 'g' }); t.push({ low: 2900 + k * 30, label: 'm' }); }
+  const L = D.learn(t), A = D.agreement(t, L);
+  const ok = L && L.good > 2400 && L.good <= 2930 && L.bad >= L.good && A.falseGreat === 0 && A.agree === A.decided;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} learning           lines ${L && L.good}/${L && L.bad} from ${L && L.from}; agrees ${A.agree}/${A.decided}, ${A.falseGreat} false Great`);
+  const none = D.learn(t.slice(0, 10));
+  if (none) { bad++; console.log('FAIL learning needs 8 of each'); } else console.log('ok   learning waits for 8 of each');
+}
 console.log(bad ? `\n${bad} failed` : '\nall good');
 process.exit(bad ? 1 : 0);

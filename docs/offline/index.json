@@ -117,9 +117,9 @@
    "hash": "dbc62e906c3b"
   },
   "r-rocket": {
-   "bytes": 53378,
+   "bytes": 85923,
    "n": 4,
-   "hash": "6a1800e15312"
+   "hash": "d5cbace53321"
   },
   "riddle-rumble": {
    "bytes": 80109,
@@ -137,9 +137,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 3311341,
+   "bytes": 3319552,
    "n": 35,
-   "hash": "fd64aff2979b"
+   "hash": "499a57145e2c"
   },
   "slime-storm": {
    "bytes": 74304,

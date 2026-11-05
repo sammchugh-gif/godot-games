@@ -163,7 +163,80 @@ function decimate(buf, factor) {
   return out;
 }
 
-var api = { analyze: analyze, lpc: lpc, roots: roots, voicing: voicing, decimate: decimate, Smoother: Smoother, ORDER: ORDER };
+
+/* ------------------------------------------------------------ words
+
+   Judging the R in a word. While he says it, the page analyses a frame every
+   15 ms and keeps { voice, f3 } for each. A good R pulls F3 down for at least
+   a few tens of milliseconds somewhere in the word; a "w"-like R doesn't.
+   So the word's score is its lowest *sustained* F3: over every run of three
+   voiced frames in a row, the highest of the three, and the lowest of those.
+   One stray low frame can't make an R; three in a row can.
+
+   That score is compared with two lines set to his voice:
+     at or below `good`  -> "g"  the R came down: Great R
+     at or above `bad`   -> "m"  it didn't: Not yet
+     in between          -> "n"  not sure: try again, or a grown-up decides
+   It hears only the R's resonance. It can't tell whether he said the right
+   word, or anything about the other sounds in it. */
+function median3(a, i) {
+  var x = a[Math.max(0, i - 1)], y = a[i], z = a[Math.min(a.length - 1, i + 1)];
+  return Math.max(Math.min(x, y), Math.min(Math.max(x, y), z));
+}
+function wordFeatures(frames) {
+  var raw = [], i;
+  for (i = 0; i < frames.length; i++) if (frames[i].voice && frames[i].f3 > 0) raw.push(frames[i].f3);
+  var out = { n: raw.length, low: 0, typ: 0 };
+  if (raw.length < 4) return out;
+  var tr = raw.map(function (v, k) { return median3(raw, k); });
+  var low = Infinity;
+  for (i = 0; i + 2 < tr.length; i++) low = Math.min(low, Math.max(tr[i], tr[i + 1], tr[i + 2]));
+  var srt = tr.slice().sort(function (p, q) { return p - q; });
+  out.low = Math.round(low); out.typ = Math.round(srt[srt.length >> 1]);
+  return out;
+}
+function judge(feat, thr) {
+  if (!feat || feat.n < 4) return "none";
+  if (feat.low <= thr.good) return "g";
+  if (feat.low >= thr.bad) return "m";
+  return "n";
+}
+/* Learn his lines from words a grown-up has scored. `trials` are
+   { low, label } with label "g" (a good R) or "m" (not yet).
+   good: low enough that at most 1 in 10 of his wrong Rs would pass as Great.
+   bad:  high enough that at most 1 in 10 of his good Rs would be told Not yet.
+   Needs 8 of each; until then it returns null and the defaults stand. */
+function quantile(a, q) {
+  var s = a.slice().sort(function (p, r) { return p - r; });
+  var pos = (s.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+  return s[lo] + (s[hi] - s[lo]) * (pos - lo);
+}
+function learn(trials) {
+  var good = [], bad = [];
+  trials.forEach(function (t) { if (!t.low) return; if (t.label === "g") good.push(t.low); else if (t.label === "m") bad.push(t.low); });
+  if (good.length < 8 || bad.length < 8) return null;
+  var g = quantile(bad, 0.10) - 1, b = quantile(good, 0.90) + 1;
+  /* if his good and wrong Rs don't overlap, one line between them */
+  if (g >= b) g = b = Math.round((g + b) / 2);
+  return { good: Math.round(g), bad: Math.round(b), from: good.length + bad.length };
+}
+/* How the judge, with lines `thr`, compares with the grown-up. */
+function agreement(trials, thr) {
+  var r = { scored: 0, decided: 0, agree: 0, unsure: 0, falseGreat: 0, wrongs: 0 };
+  trials.forEach(function (t) {
+    if ((t.label !== "g" && t.label !== "m") || !t.low) return;
+    r.scored++;
+    var v = judge({ n: 9, low: t.low }, thr);
+    if (t.label === "m") r.wrongs++;
+    if (v === "n") { r.unsure++; return; }
+    r.decided++;
+    if (v === t.label) r.agree++;
+    if (v === "g" && t.label === "m") r.falseGreat++;
+  });
+  return r;
+}
+
+var api = { wordFeatures: wordFeatures, judge: judge, learn: learn, agreement: agreement, analyze: analyze, lpc: lpc, roots: roots, voicing: voicing, decimate: decimate, Smoother: Smoother, ORDER: ORDER };
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 else root.RDSP = api;
 })(this);

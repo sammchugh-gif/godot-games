@@ -15,7 +15,7 @@
 <script src="../fresh.js" defer></script>
 <title>R Rocket</title>
 <style>
-/* Layout: four stacked screens (home, rocket, words, grown-ups) over one night sky; the rocket screen is a canvas */
+/* Layout: stacked screens over one night sky - a mission map (home), Star Run (a canvas flown by voice), Word Blaster, results, a planet arrival and the grown-ups' page */
 :root {
   --sky: #0b1026;
   --sky2: #18214a;
@@ -36,64 +36,95 @@ html, body { height: 100%; margin: 0; background: var(--sky); color: var(--ink);
 body { font: 17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-.screen { position: fixed; inset: 0; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px); background: radial-gradient(ellipse at 50% 0%, var(--sky2) 0%, var(--sky) 70%); }
-.inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-h1 { font-size: clamp(2.2rem, 9vw, 3.4rem); margin: 4vh 0 0; text-align: center; letter-spacing: -.01em; line-height: 1.05; }
+button:disabled { opacity: .45; cursor: default; }
+.screen { position: fixed; inset: 0; overflow-y: auto; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px); background: radial-gradient(ellipse at 50% 0%, var(--sky2) 0%, var(--sky) 70%); }
+.inner { max-width: 660px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: clamp(2.2rem, 9vw, 3.2rem); margin: 1vh 0 0; text-align: center; letter-spacing: -.01em; line-height: 1.05; }
 h1 b { color: var(--flame); }
-h2 { margin: 0; font-size: 1.4rem; }
+h2 { margin: 0; font-size: 1.35rem; }
 h3 { margin: 0 0 6px; font-size: 1.05rem; }
 p { margin: 0; }
 .soft { color: var(--soft); }
 .small { font-size: .9rem; }
 .center { text-align: center; }
-.big { display: flex; align-items: center; gap: 16px; width: 100%; padding: 18px 20px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); text-align: left; }
+.big { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 20px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); text-align: left; }
 .big .ico { font-size: 2.4rem; line-height: 1; }
 .big b { display: block; font-size: 1.25rem; }
 .big span.soft { font-size: .95rem; }
 .big.main { background: linear-gradient(135deg, #ff9f43, #ff6b6b); border: 0; color: #2a0f00; }
 .big.main span.soft { color: #4a1c00; }
+.big.blue { background: linear-gradient(135deg, #7aa2ff, #8a6bff); border: 0; color: #0b1026; }
+.big.blue span.soft { color: #1b1f4a; }
 .bar { display: flex; align-items: center; gap: 10px; }
 .bar .grow { flex: 1; }
 .pill { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 9px 16px; font-size: .95rem; font-weight: 600; }
 .pill.on { background: var(--accent); color: #0b1026; border-color: var(--accent); }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
 .note { background: rgba(255,209,102,.1); border: 1px solid rgba(255,209,102,.35); border-radius: 14px; padding: 12px 14px; font-size: .92rem; color: #ffe3a1; }
-.err { background: rgba(255,122,122,.12); border-color: rgba(255,122,122,.45); color: #ffc1c1; }
+.meter { height: 12px; border-radius: 6px; background: rgba(255,255,255,.1); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.meter.fuel i { background: linear-gradient(90deg, #ff9f43, #ffd166); }
+.meter.mission i { background: var(--go); }
 
-/* rocket */
-#rocketScreen { padding: 0; overflow: hidden; }
-#sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#rocketTop { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0; display: flex; gap: 10px; align-items: center; }
-#rocketTop .grow { flex: 1; text-align: center; font-weight: 700; text-shadow: 0 2px 8px #000; }
-#rocketMsg { position: absolute; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); text-align: center; font-size: 1.15rem; font-weight: 700; text-shadow: 0 2px 8px #000; }
+/* mission map */
+#map { width: 100%; height: 150px; display: block; }
+.mapline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 6px; }
+.crew { display: flex; gap: 6px; flex-wrap: wrap; font-size: 1.6rem; min-height: 1.6rem; }
+.crew span.empty { opacity: .2; filter: grayscale(1); }
+.topline { display: flex; justify-content: space-between; align-items: center; }
 
-/* words */
+/* star run */
+#runScreen { padding: 0; overflow: hidden; }
+#run { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#runTop { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 0; display: flex; gap: 10px; align-items: center; }
+#runTop .grow { flex: 1; text-align: center; font-weight: 800; font-size: 1.15rem; text-shadow: 0 2px 8px #000; }
+#runMsg { position: absolute; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); text-align: center; font-size: 1.15rem; font-weight: 700; text-shadow: 0 2px 8px #000; pointer-events: none; }
+#runWarn { position: absolute; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); }
+
+/* word blaster */
 .levels { display: flex; flex-wrap: wrap; gap: 8px; }
-.word { text-align: center; padding: 22px 16px; }
-.word .pic { font-size: clamp(4rem, 22vw, 7rem); line-height: 1.1; }
-.word .txt { font-size: clamp(2rem, 9vw, 3rem); font-weight: 800; letter-spacing: .01em; margin-top: 6px; }
-.word .txt.sentence { font-size: clamp(1.4rem, 6vw, 2rem); }
+.stage { position: relative; }
+.word { text-align: center; padding: 18px 16px; position: relative; overflow: hidden; transition: background .3s; }
+.word .pic { font-size: clamp(4rem, 20vw, 6.4rem); line-height: 1.1; display: inline-block; }
+.word .txt { font-size: clamp(2rem, 9vw, 3rem); font-weight: 800; letter-spacing: .01em; margin-top: 4px; }
+.word .txt.sentence { font-size: clamp(1.3rem, 5.5vw, 1.9rem); }
 .word .txt u { text-decoration: none; color: var(--flame); }
+.word.boom .pic { animation: boom .7s ease-in forwards; }
+.word.great { background: rgba(61,220,151,.16); }
+.word.wobble { animation: wobble .5s; }
+.word.unsure { background: rgba(255,209,102,.12); }
+@keyframes boom { 30% { transform: scale(1.3) rotate(-8deg); } 100% { transform: scale(0) rotate(40deg); opacity: 0; } }
+@keyframes wobble { 20% { transform: translateX(-12px); } 40% { transform: translateX(10px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(4px); } }
+.bit { position: absolute; font-size: 1.8rem; pointer-events: none; animation: fly 1s ease-out forwards; }
+@keyframes fly { to { transform: translate(var(--dx), var(--dy)) rotate(200deg); opacity: 0; } }
+.combo { position: absolute; top: 8px; right: 12px; font-weight: 800; color: var(--flame); font-size: 1.1rem; }
 .say { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .mic { width: 116px; height: 116px; border-radius: 50%; border: 0; background: radial-gradient(circle at 35% 30%, #ffb46b, #ff6b3d); color: #2a0f00; font-weight: 800; font-size: 1.05rem; box-shadow: 0 10px 30px rgba(255,107,61,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .mic .ico { font-size: 2.2rem; line-height: 1; }
 .mic.rec { background: radial-gradient(circle at 35% 30%, #ff8a8a, #e23d3d); animation: pulse 1s ease-in-out infinite; }
-.mic:disabled { opacity: .45; }
+.mic.next { background: radial-gradient(circle at 35% 30%, #7af0b8, #2bbf7f); color: #052a19; box-shadow: 0 10px 30px rgba(61,220,151,.35); }
 @keyframes pulse { 50% { transform: scale(1.06); } }
-@media (prefers-reduced-motion: reduce) { .mic.rec { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .mic.rec, .word.boom .pic, .word.wobble, .bit { animation: none; } }
 .side { width: 84px; height: 84px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); font-weight: 700; font-size: .9rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; align-self: center; }
 .side .ico { font-size: 1.6rem; line-height: 1; }
+.verdict { text-align: center; font-size: 1.3rem; font-weight: 800; min-height: 1.6em; }
+.verdict.g { color: var(--go); } .verdict.m { color: var(--miss); } .verdict.n { color: var(--near); }
 .judge { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.judge button { border: 0; border-radius: 16px; padding: 14px 6px; font-weight: 800; font-size: 1.02rem; color: #10131f; }
+.judge.two { grid-template-columns: 1fr 1fr; }
+.judge button { border: 0; border-radius: 16px; padding: 12px 6px; font-weight: 800; font-size: 1rem; color: #10131f; }
 .judge .g { background: var(--go); }
 .judge .n { background: var(--near); }
 .judge .m { background: var(--miss); }
-.judge small { display: block; font-weight: 600; font-size: .8rem; opacity: .75; }
-.hint { text-align: center; font-size: .95rem; min-height: 1.4em; }
+.judge .ok { background: #c9d2ec; }
+.judge small { display: block; font-weight: 600; font-size: .78rem; opacity: .75; }
+.fix { border-top: 1px dashed var(--line); padding-top: 10px; }
 .dots { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
 .dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.15); }
 .dots i.g { background: var(--go); } .dots i.n { background: var(--near); } .dots i.m { background: var(--miss); }
 .stars { font-size: 3.4rem; text-align: center; letter-spacing: .1em; }
+.alien { font-size: 6rem; line-height: 1; text-align: center; animation: bob 1.6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-10px); } }
+#planetBig { width: 220px; height: 220px; margin: 0 auto; display: block; }
 
 /* grown-ups */
 table { width: 100%; border-collapse: collapse; font-size: .92rem; }
@@ -102,124 +133,174 @@ th { color: var(--soft); font-weight: 600; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 input[type=range] { width: 100%; accent-color: var(--flame); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
-.meter { height: 12px; border-radius: 6px; background: rgba(255,255,255,.1); overflow: hidden; }
-.meter i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+.stat { font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 
-<!-- ======================================================== home -->
+<!-- ======================================================== home: the mission map -->
 <section class="screen" id="home">
   <div class="inner">
-    <h1><b>R</b> Rocket</h1>
-    <p class="center soft">Practise the R sound. The rocket listens.</p>
-    <button class="big main" data-go="rocket"><span class="ico">🚀</span><span><b>Rocket</b><span class="soft">Hold a long rrrr and make it fly</span></span></button>
-    <button class="big" data-go="words"><span class="ico">🦜</span><span><b>Words</b><span class="soft">Say R words, hear yourself, get a star</span></span></button>
-    <button class="big" data-go="grown"><span class="ico">🧑‍🔬</span><span><b>Grown-ups</b><span class="soft">Set the rocket to Rory's voice, and see how he's doing</span></span></button>
-    <p class="center soft small" id="homeLine"></p>
+    <div class="topline">
+      <span style="width:80px"></span>
+      <h1><b>R</b> Rocket</h1>
+      <button class="pill" id="soundBtn" aria-label="Sound on or off" style="width:80px">🔊</button>
+    </div>
+    <div class="card">
+      <canvas id="map" aria-label="Map of the planets, and how far the rocket has flown"></canvas>
+      <div class="mapline"><b id="mapWhere"></b><span class="soft small" id="mapNext"></span></div>
+      <div class="meter fuel" style="margin-top:8px"><i id="fuelBar"></i></div>
+      <p class="soft small" style="margin-top:10px">Space crew</p>
+      <div class="crew" id="crew"></div>
+    </div>
+    <div class="card">
+      <div class="mapline"><b>Today's mission: <span id="missionGoal"></span> great Rs</b><span id="streak" class="small"></span></div>
+      <div class="meter mission" style="margin-top:8px"><i id="missionBar"></i></div>
+      <p class="soft small" id="missionLine" style="margin-top:6px"></p>
+    </div>
+    <button class="big main" data-go="run"><span class="ico">🚀</span><span><b>Star Run</b><span class="soft">Fly with your R. Hold rrrr to zoom up and grab the stars</span></span></button>
+    <button class="big blue" data-go="blast"><span class="ico">☄️</span><span><b>Word Blaster</b><span class="soft">Say the word. A great R blasts the asteroid</span></span></button>
+    <button class="big" data-go="grown"><span class="ico">🧑‍🚀</span><span><b>Mission Control</b><span class="soft">For grown-ups: set it to Rory's voice, teach the judge, see progress</span></span></button>
   </div>
 </section>
 
-<!-- ======================================================== rocket -->
-<section class="screen" id="rocketScreen" hidden>
-  <canvas id="sky"></canvas>
-  <div id="rocketTop">
+<!-- ======================================================== star run -->
+<section class="screen" id="runScreen" hidden>
+  <canvas id="run"></canvas>
+  <div id="runTop">
     <button class="pill" data-go="home">‹ Back</button>
-    <div class="grow" id="rocketScore"></div>
-    <button class="pill" id="rocketReset">Again</button>
+    <div class="grow" id="runScore"></div>
+    <span style="width:70px"></span>
   </div>
-  <div id="rocketMsg"></div>
+  <div class="note" id="runWarn" hidden>Grown-up: the rocket isn't set to Rory's voice yet. It works, but set it in Mission Control (step 1) for the best results.</div>
+  <div id="runMsg"></div>
 </section>
 
-<!-- ======================================================== words -->
-<section class="screen" id="words" hidden>
+<!-- ======================================================== word blaster -->
+<section class="screen" id="blast" hidden>
   <div class="inner">
     <div class="bar"><button class="pill" data-go="home">‹ Back</button><div class="grow"></div><span class="soft small" id="roundCount"></span></div>
     <div class="levels" id="levels"></div>
     <div class="card word" id="wordCard">
+      <span class="combo" id="combo"></span>
       <div class="pic" id="wPic"></div>
       <div class="txt" id="wTxt"></div>
     </div>
     <div class="say">
       <button class="side" id="hearBtn"><span class="ico">🔊</span>Hear it</button>
-      <button class="mic" id="sayBtn"><span class="ico">🎤</span><span id="sayLabel">Say it</span></button>
+      <button class="mic" id="sayBtn"><span class="ico" id="sayIco">🎤</span><span id="sayLabel">Say it</span></button>
       <button class="side" id="againBtn" disabled><span class="ico">👂</span>Me again</button>
     </div>
-    <p class="hint" id="wHint"></p>
-    <div id="judgeBox">
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+    <p class="center soft small" id="wHint"></p>
+
+    <!-- the grown-up judges (and so teaches the app) -->
+    <div id="rateBox" hidden>
       <p class="center soft small" style="margin-bottom:8px">Grown-up: how was the R?</p>
       <div class="judge">
-        <button class="g" data-mark="g">Great R<small>sounded right</small></button>
-        <button class="n" data-mark="n">Nearly<small>close</small></button>
-        <button class="m" data-mark="m">Not yet<small>try again</small></button>
+        <button class="g" data-rate="g">Great R<small>sounded right</small></button>
+        <button class="n" data-rate="n">Nearly<small>close</small></button>
+        <button class="m" data-rate="m">Not yet<small>try again</small></button>
       </div>
+    </div>
+    <!-- the app judged: a grown-up can put it right -->
+    <div id="fixBox" class="fix" hidden>
+      <p class="center soft small" style="margin-bottom:8px" id="fixQ">Grown-up: did the app get it right?</p>
+      <div class="judge" id="fixBtns"></div>
     </div>
     <div class="dots" id="dots"></div>
   </div>
 </section>
 
-<!-- ======================================================== round done -->
+<!-- ======================================================== results -->
 <section class="screen" id="done" hidden>
   <div class="inner center">
-    <h1 style="margin-top:8vh">Round done!</h1>
+    <h1 style="margin-top:6vh" id="doneTitle">Round done!</h1>
     <div class="stars" id="doneStars"></div>
     <p id="doneLine" style="font-size:1.2rem"></p>
+    <p id="doneFuel" style="font-size:1.1rem; color: var(--near); font-weight: 700"></p>
     <p class="soft" id="doneAdvice"></p>
-    <button class="big main" id="doneAgain"><span class="ico">🔁</span><span><b>Another round</b></span></button>
-    <button class="big" data-go="home"><span class="ico">🏠</span><span><b>Home</b></span></button>
+    <button class="big main" id="doneAgain"><span class="ico">🔁</span><span><b>Play again</b></span></button>
+    <button class="big" data-go="home"><span class="ico">🗺️</span><span><b>Mission map</b></span></button>
+  </div>
+</section>
+
+<!-- ======================================================== a new planet -->
+<section class="screen" id="arrive" hidden>
+  <div class="inner center">
+    <h1 style="margin-top:4vh" id="arriveTitle"></h1>
+    <canvas id="planetBig" width="440" height="440"></canvas>
+    <div class="alien" id="arriveAlien"></div>
+    <p style="font-size:1.25rem; font-weight:700" id="arriveLine"></p>
+    <button class="big main" id="arriveGo"><span class="ico">🚀</span><span><b>Onwards!</b></span></button>
   </div>
 </section>
 
 <!-- ======================================================== grown-ups -->
 <section class="screen" id="grown" hidden>
   <div class="inner">
-    <div class="bar"><button class="pill" data-go="home">‹ Back</button><h2 class="grow center">Grown-ups</h2><span style="width:70px"></span></div>
+    <div class="bar"><button class="pill" data-go="home">‹ Back</button><h2 class="grow center">Mission Control</h2><span style="width:70px"></span></div>
 
     <div class="note">
-      This is for <b>practice between therapy sessions</b>, not instead of them. Practise only the
-      levels his speech therapist says he is ready for: practising an R he can't yet make correctly
-      mostly practises the wrong R. The words leave out R at the end of a word (car, four), which a
-      British accent doesn't sound anyway.
+      For <b>practice between therapy sessions</b>, not instead of them. Practise only the levels his
+      speech therapist says he is ready for: practising an R he can't make yet mostly practises the
+      wrong one. The words leave out R at the end of a word (car, four), which a British accent
+      doesn't sound anyway.
     </div>
 
     <div class="card">
       <h3>1 · Set the rocket to Rory's voice</h3>
-      <p class="soft small">The rocket watches the third resonance of his voice (F3). A good R pulls it
-      well down; an "ah" or a "w"-ish R leaves it high. Everyone's voice is different, so measure his.</p>
+      <p class="soft small">Everything listens to the third resonance of his voice (F3). A good R pulls it
+      well down; an "ah" or a "w"-ish R leaves it high. Voices differ, so measure his.</p>
       <div class="row" style="margin-top:12px">
         <button class="pill" id="calAh">Measure his "ahhh"</button>
         <button class="pill" id="calR">Measure his best R</button>
       </div>
       <div class="meter" style="margin-top:12px"><i id="calMeter"></i></div>
       <p class="small" id="calOut" style="margin-top:8px"></p>
-      <p class="small soft" style="margin-top:4px">Ask him to hold the sound for three seconds, about a hand's length from the iPad.
-      Use <b>best R</b> after his therapist has helped him make a good one: that is the best setting.</p>
+      <p class="small soft" style="margin-top:4px">Ask him to hold the sound for four seconds, about a hand's length from the iPad.
+      <b>Best R</b> is the better setting: measure it right after his therapist has helped him make a good one.</p>
     </div>
 
     <div class="card">
-      <h3>2 · Target line</h3>
-      <p class="soft small">The rocket climbs when F3 is below this line. Lower makes it harder.</p>
-      <input type="range" id="target" min="1600" max="3400" step="25">
+      <h3>2 · Target line (Star Run)</h3>
+      <p class="soft small">The rocket climbs when F3 is below this line. Lower is harder.</p>
+      <input type="range" id="target" min="1600" max="3400" step="25" aria-label="Target line">
       <p class="center" style="margin-top:4px"><b id="targetOut"></b> <span class="soft small" id="baseOut"></span></p>
     </div>
 
     <div class="card">
-      <h3>3 · How he's doing</h3>
-      <p class="soft small">Words scored by you, by day and level. Many therapists look for about 80% correct before moving up a level.</p>
+      <h3>3 · Who judges the words?</h3>
+      <div class="row" style="margin:8px 0 10px">
+        <button class="pill" data-mode="app">The app judges</button>
+        <button class="pill" data-mode="grown">I judge, and teach the app</button>
+      </div>
+      <p class="soft small" id="modeLine"></p>
+      <div id="judgeStats" class="small stat" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="pill" id="forget">Forget what it learned</button>
+        <button class="pill" id="playbackBtn"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>4 · How he's doing</h3>
+      <p class="soft small">Words by day and level (the final call on each word, after any correction). Many therapists look for about 80% before moving up a level.</p>
       <div id="log" style="margin-top:10px"></div>
       <div class="row" style="margin-top:12px">
         <button class="pill" id="copyLog">Copy for his therapist</button>
         <button class="pill" id="clearLog">Clear history</button>
       </div>
-      <p class="small soft" id="copyOut" style="margin-top:6px"></p>
+      <p class="small soft" id="copyOut" style="margin-top:6px; white-space: pre-wrap; -webkit-user-select: text; user-select: text"></p>
     </div>
 
     <div class="card small soft">
-      <h3 style="color:var(--ink)">What the rocket can and can't tell</h3>
-      <p>It measures one thing reliably on a held sound: whether F3 has come down, which is what a good R does.
-      It can't judge a whole word. In a quick word the R lasts a few hundredths of a second, and a phone's speech
-      recogniser would "hear" <i>wabbit</i> as <i>rabbit</i> anyway. So in Words <b>you</b> are the judge, and
-      the rocket's dip shows only as a hint. Recordings stay on this iPad and are not kept.</p>
+      <h3 style="color:var(--ink)">What the judge can and can't hear</h3>
+      <p>It listens for one thing: whether F3 dips low enough, for long enough, somewhere in the word, which is
+      what a good R does and a "w"-like R doesn't. It can't tell whether he said the right word, or judge any
+      other sound. It will sometimes be wrong, so it says "not sure" rather than guess, and every call can be
+      corrected. A wrong "Great R!" teaches the wrong R, so it is set to be stingy with them, and it gets
+      better at his voice from your corrections. Recordings stay on this iPad and are not kept.</p>
     </div>
   </div>
 </section>
@@ -227,115 +308,228 @@ input[type=range] { width: 100%; accent-color: var(--flame); }
 <script>
 "use strict";
 (function () {
-/* ------------------------------------------------------------ storage */
+var $ = function (id) { return document.getElementById(id); };
+
+/* ============================================================ storage */
 var KEY = "rrocket.v1";
-var data = { target: 2500, base: 0, best: 0, log: {}, rocket: {} };
+var data = { target: 2500, base: 0, best: 0, log: {}, rocket: {}, fuel: 0, days: {}, trials: [], mode: "app", playback: true, sound: true, runBest: 0, level: "start", crewSeen: 0 };
 try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) for (var k in saved) data[k] = saved[k]; } catch (e) {}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
 function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-var $ = function (id) { return document.getElementById(id); };
+function calibrated() { return !!(data.base || data.best); }
 
-/* ------------------------------------------------------------ words */
-/* /r/ before a vowel only: at the start, in the middle, and in blends.
-   Capital R in the text marks the R to colour. */
-var LEVELS = [
-  { id: "long", name: "Long R", hold: true, items: [
-    ["🚀", "Rrrrrrr"], ["🐯", "Rrrrrrr"], ["🏎️", "Rrrrrrr"], ["🐕", "Rrrrrrr"], ["🦁", "Rrrrrrr"] ] },
-  { id: "syl", name: "Ra Ree Roo", items: [
-    ["🅰️", "Ra"], ["🐝", "Ree"], ["🦘", "Roo"], ["☀️", "Ray"], ["🚣", "Row"], ["🌾", "Rye"], ["👆", "Rah"], ["🔁", "Ro-ro"] ] },
-  { id: "start", name: "R at the start", items: [
-    ["🟥", "Red"], ["🐰", "Rabbit"], ["🚀", "Rocket"], ["🌧️", "Rain"], ["🤖", "Robot"], ["💍", "Ring"], ["🌹", "Rose"],
-    ["🏃", "Run"], ["🌈", "Rainbow"], ["🪨", "Rock"], ["📏", "Ruler"], ["📖", "Read"], ["🍚", "Rice"], ["🦏", "Rhino"],
-    ["📻", "Radio"], ["🐀", "Rat"], ["🏁", "Race"], ["🪢", "Rope"], ["🏠", "Roof"], ["🦝", "Raccoon"] ] },
-  { id: "mid", name: "R in the middle", items: [
-    ["🥕", "CaRRot"], ["🦜", "PaRRot"], ["🦒", "GiRaffe"], ["0️⃣", "ZeRo"], ["🍒", "CheRRy"], ["➡️", "ARRow"],
-    ["🦸", "HeRo"], ["🏴‍☠️", "PiRate"], ["🍊", "ORange"], ["🥋", "KaRate"], ["📅", "TomoRRow"], ["🫐", "BeRRy"],
-    ["🙏", "SoRRy"], ["🔄", "ARound"], ["🐻", "TeRRy the bear"] ] },
-  { id: "blend", name: "Blends", items: [
-    ["🌳", "TRee"], ["🐸", "FRog"], ["🚂", "TRain"], ["🦀", "CRab"], ["🥁", "DRum"], ["🍞", "BRead"], ["🟩", "GReen"],
-    ["🟫", "BRown"], ["🍇", "GRapes"], ["3️⃣", "THRee"], ["😢", "CRy"], ["🐉", "DRagon"], ["🚚", "TRuck"], ["👑", "CRown"],
-    ["🎁", "PResent"], ["🥦", "BRoccoli"], ["🍟", "FRies"], ["🖍️", "CRayon"], ["🏆", "TRophy"], ["🍓", "StRawbeRRy"] ] },
-  { id: "sent", name: "Sentences", items: [
-    ["🚀", "Rory Runs Round the Red Rocket."], ["🐰", "The Rabbit ate a caRRot."], ["🐸", "THRee GReen FRogs Ride a TRain."],
-    ["🐉", "The DRagon has a CRown."], ["🦜", "A paRRot sat in a TRee."], ["🤖", "Rory Reads about Robots."],
-    ["🦏", "The Rhino is Running in the Rain."], ["🍇", "GRapes and BRead for BReakfast."], ["🌈", "A Rainbow is Red and GReen."],
-    ["🏆", "Rory won the TRophy in the Race."] ] }
+/* ============================================================ the journey */
+var PLANETS = [
+  { name: "the Moon", at: 0,   col: "#cfd3dc", ring: 0, alien: "🧑‍🚀", who: "Captain Rory" },
+  { name: "Mars",     at: 40,  col: "#e0603a", ring: 0, alien: "👽", who: "Zib the Martian" },
+  { name: "Jupiter",  at: 100, col: "#d9a066", ring: 0, alien: "🐙", who: "Gloop the space octopus" },
+  { name: "Saturn",   at: 180, col: "#e8cf8a", ring: 1, alien: "🤖", who: "Bolt-R the robot" },
+  { name: "Uranus",   at: 280, col: "#8fe3e8", ring: 0, alien: "👾", who: "Pix the pixel alien" },
+  { name: "Neptune",  at: 400, col: "#4b6cf0", ring: 0, alien: "🦑", who: "Squirt the deep-space squid" },
+  { name: "Pluto",    at: 550, col: "#c9a98a", ring: 0, alien: "🐲", who: "Ember the star dragon" },
+  { name: "Planet R", at: 750, col: "#ff9f43", ring: 1, alien: "🛸", who: "the Rrr-ship, yours to fly" }
 ];
-function markup(t) {
-  /* every R is coloured; other capitals inside a word are just lower case */
-  return t.replace(/[A-Z]/g, function (c, i) {
-    var start = i === 0 || t[i - 1] === " ";
-    if (c === "R") return "<u>" + (start ? "R" : "r") + "</u>";
-    return start ? c : c.toLowerCase();
-  });
+var GOAL = 20;
+function reached() { var n = 0; PLANETS.forEach(function (p, i) { if (data.fuel >= p.at) n = i; }); return n; }
+function greatToday() { return data.days[today()] || 0; }
+function streak() {
+  var n = 0, d = new Date();
+  if ((data.days[today()] || 0) < GOAL) d.setDate(d.getDate() - 1); /* today still counts as "on" */
+  for (;;) {
+    var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    if ((data.days[key] || 0) >= GOAL) { n++; d.setDate(d.getDate() - 1); } else break;
+  }
+  return n;
 }
-function plain(t) { /* what the speaking voice reads */
-  return t.replace(/[A-Z]/g, function (c, i) { return (i === 0 || t[i - 1] === " ") ? c : c.toLowerCase(); });
+/* every great R is a unit of fuel and counts toward today's mission */
+var pendingArrival = -1;
+function addFuel(n) {
+  if (!n) return;
+  var before = reached();
+  data.fuel = Math.max(0, data.fuel + n);
+  data.days[today()] = Math.max(0, (data.days[today()] || 0) + n);
+  var after = reached();
+  if (after > before && after > data.crewSeen) { pendingArrival = after; }
+  save();
 }
 
-/* ------------------------------------------------------------ screens */
-var current = "home";
-function show(id) {
-  ["home", "rocketScreen", "words", "done", "grown"].forEach(function (s) { $(s).hidden = s !== id; });
-  current = id;
+function drawPlanet(g, x, y, r, p, glow) {
+  if (glow) {
+    var hg = g.createRadialGradient(x, y, r * .9, x, y, r * 1.6);
+    hg.addColorStop(0, "rgba(255,209,102,.45)"); hg.addColorStop(1, "rgba(255,209,102,0)");
+    g.fillStyle = hg; g.beginPath(); g.arc(x, y, r * 1.6, 0, 7); g.fill();
+  }
+  var gr = g.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
+  gr.addColorStop(0, "#fff"); gr.addColorStop(.25, p.col); gr.addColorStop(1, shade(p.col));
+  g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+  if (p.ring) { g.strokeStyle = "rgba(255,240,200,.75)"; g.lineWidth = Math.max(2, r * .14); g.beginPath(); g.ellipse(x, y, r * 1.7, r * .45, -.35, 0, 7); g.stroke(); }
 }
+function shade(hex) {
+  var n = parseInt(hex.slice(1), 16), f = .45;
+  return "rgb(" + Math.round((n >> 16) * f) + "," + Math.round(((n >> 8) & 255) * f) + "," + Math.round((n & 255) * f) + ")";
+}
+function drawRocket(g, x, y, s, tilt, flame, sputter) {
+  g.save(); g.translate(x, y); g.rotate(tilt || 0); g.scale(s, s);
+  if (flame > 0) {
+    var fl = 20 + 30 * flame + 10 * Math.random();
+    var fg = g.createLinearGradient(0, 40, 0, 40 + fl);
+    fg.addColorStop(0, "#fff3b0"); fg.addColorStop(.4, "#ff9f43"); fg.addColorStop(1, "rgba(255,80,40,0)");
+    g.fillStyle = fg; g.beginPath(); g.moveTo(-14, 40); g.quadraticCurveTo(0, 40 + fl * 1.3, 14, 40); g.closePath(); g.fill();
+  }
+  if (sputter) { g.fillStyle = "rgba(180,180,190,.5)"; for (var i = 0; i < 3; i++) { g.beginPath(); g.arc((Math.random() - .5) * 20, 52 + i * 10, 6 + i * 3, 0, 7); g.fill(); } }
+  g.fillStyle = "#e23d3d"; g.beginPath(); g.moveTo(-18, 30); g.lineTo(-34, 50); g.lineTo(-18, 46); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(18, 30); g.lineTo(34, 50); g.lineTo(18, 46); g.closePath(); g.fill();
+  g.fillStyle = "#f4f6fb"; g.beginPath(); g.moveTo(0, -60); g.bezierCurveTo(26, -36, 22, 20, 18, 44); g.lineTo(-18, 44); g.bezierCurveTo(-22, 20, -26, -36, 0, -60); g.fill();
+  g.fillStyle = "#e23d3d"; g.beginPath(); g.moveTo(0, -60); g.bezierCurveTo(14, -48, 17, -38, 19, -30); g.lineTo(-19, -30); g.bezierCurveTo(-17, -38, -14, -48, 0, -60); g.fill();
+  g.fillStyle = "#7aa2ff"; g.beginPath(); g.arc(0, -8, 10, 0, 7); g.fill(); g.strokeStyle = "#c9d2ec"; g.lineWidth = 3; g.stroke();
+  g.fillStyle = "#e23d3d"; g.font = "800 18px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("R", 0, 30); g.textAlign = "left";
+  g.restore();
+}
+
+/* ============================================================ home */
+var current = "home";
+var SCREENS = ["home", "runScreen", "blast", "done", "arrive", "grown"];
+function show(id) { SCREENS.forEach(function (s) { $(s).hidden = s !== id; }); current = id; window.scrollTo(0, 0); }
 document.addEventListener("click", function (e) {
   var b = e.target.closest("[data-go]"); if (!b) return;
   var to = b.getAttribute("data-go");
-  if (to === "rocket") openRocket();
-  else if (to === "words") openWords();
+  sfx.tap();
+  if (to === "run") openRun();
+  else if (to === "blast") openBlast();
   else if (to === "grown") openGrown();
-  else { stopAll(); show("home"); homeLine(); }
+  else goHome();
 });
-function homeLine() {
-  var d = data.rocket[today()];
-  $("homeLine").textContent = d && d.best ? "Today's best rocket hold: " + d.best.toFixed(1) + " s" : "";
+function goHome() {
+  stopAll();
+  if (pendingArrival >= 0) { showArrival(); return; }
+  show("home"); paintHome();
 }
+function paintHome() {
+  var i = reached(), here = PLANETS[i], next = PLANETS[i + 1];
+  $("mapWhere").textContent = "🚀 At " + here.name;
+  $("mapNext").textContent = next ? (next.at - data.fuel) + " great Rs to " + next.name : "You've reached the edge of the galaxy!";
+  $("fuelBar").style.width = next ? Math.round(100 * (data.fuel - here.at) / (next.at - here.at)) + "%" : "100%";
+  $("crew").innerHTML = PLANETS.map(function (p, k) { return '<span title="' + p.who + '"' + (k <= i ? "" : ' class="empty"') + ">" + p.alien + "</span>"; }).join("");
+  var t = greatToday();
+  $("missionGoal").textContent = GOAL;
+  $("missionBar").style.width = Math.min(100, Math.round(100 * t / GOAL)) + "%";
+  $("missionLine").textContent = t >= GOAL ? "Mission complete! ⭐ " + t + " great Rs today." : t + " of " + GOAL + " so far today.";
+  var s = streak();
+  $("streak").textContent = s ? "🔥 " + s + " day" + (s === 1 ? "" : "s") + " in a row" : "";
+  $("soundBtn").textContent = data.sound ? "🔊" : "🔇";
+  drawMap();
+}
+function drawMap() {
+  var cv = $("map"), w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  var g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  var n = PLANETS.length, pad = 26, i = reached();
+  var px = function (k) { return pad + (w - 2 * pad) * k / (n - 1); };
+  var py = function (k) { return h * .55 + Math.sin(k * 1.3) * h * .18; };
+  /* the dotted route, bright where he has flown */
+  for (var k = 0; k < n - 1; k++) {
+    g.strokeStyle = k < i ? "rgba(255,209,102,.9)" : "rgba(255,255,255,.2)"; g.lineWidth = 3; g.setLineDash([4, 7]);
+    g.beginPath(); g.moveTo(px(k), py(k)); g.lineTo(px(k + 1), py(k + 1)); g.stroke();
+  }
+  g.setLineDash([]);
+  PLANETS.forEach(function (p, k) {
+    var r = Math.min(16, (w - 2 * pad) / (n - 1) * .3) * (k === 0 ? .8 : 1);
+    g.globalAlpha = k <= i + 1 ? 1 : .45;
+    drawPlanet(g, px(k), py(k), r, p, k === i);
+    g.globalAlpha = 1;
+  });
+  /* the rocket, part way to the next planet */
+  var next = PLANETS[i + 1], f = next ? (data.fuel - PLANETS[i].at) / (next.at - PLANETS[i].at) : 0;
+  var rx = px(i) + (next ? (px(i + 1) - px(i)) * f : 0), ry = py(i) + (next ? (py(i + 1) - py(i)) * f : 0) - 30;
+  drawRocket(g, rx, ry, .32, next ? Math.atan2(py(i + 1) - py(i), px(i + 1) - px(i)) + Math.PI / 2 : 0, .6);
+}
+window.addEventListener("resize", function () { if (current === "home") drawMap(); if (current === "runScreen") sizeRun(); });
+$("soundBtn").addEventListener("click", function () { data.sound = !data.sound; save(); paintHome(); sfx.tap(); });
 
-/* ------------------------------------------------------------ microphone */
-var ctx = null, stream = null, analyser = null, buf = null, factor = 4, fs2 = 12000, recorder = null;
-var noiseFloor = 0.002;
+function showArrival() {
+  var i = pendingArrival, p = PLANETS[i];
+  pendingArrival = -1; data.crewSeen = Math.max(data.crewSeen, i); save();
+  $("arriveTitle").textContent = "You reached " + p.name + "!";
+  $("arriveAlien").textContent = p.alien;
+  $("arriveLine").textContent = p.who.charAt(0).toUpperCase() + p.who.slice(1) + " joins your space crew!";
+  var cv = $("planetBig"), g = cv.getContext("2d"); g.clearRect(0, 0, 440, 440);
+  drawPlanet(g, 220, 220, 130, p, true);
+  show("arrive"); sfx.fanfare();
+}
+$("arriveGo").addEventListener("click", function () { show("home"); paintHome(); });
+
+/* ============================================================ sound effects
+   Made on the spot, no files. On an iPhone, sound played while the
+   microphone is open comes out of the earpiece, so Word Blaster plays its
+   effects after the microphone has closed. */
+var ctx = null;
+function audio() {
+  if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); }
+  if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+  return ctx;
+}
+function tone(freq, dur, type, vol, when, slide) {
+  if (!data.sound) return;
+  var a = audio(); if (!a) return;
+  var t = a.currentTime + (when || 0), o = a.createOscillator(), v = a.createGain();
+  o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  v.gain.setValueAtTime(0.0001, t); v.gain.exponentialRampToValueAtTime(vol || .15, t + .01); v.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(v); v.connect(a.destination); o.start(t); o.stop(t + dur + .02);
+}
+function noise(dur, vol) {
+  if (!data.sound) return;
+  var a = audio(); if (!a) return;
+  var n = Math.floor(a.sampleRate * dur), b = a.createBuffer(1, n, a.sampleRate), d = b.getChannelData(0);
+  for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+  var s = a.createBufferSource(), v = a.createGain(), f = a.createBiquadFilter();
+  f.type = "lowpass"; f.frequency.value = 900; v.gain.value = vol || .4;
+  s.buffer = b; s.connect(f); f.connect(v); v.connect(a.destination); s.start();
+}
+var sfx = {
+  tap: function () { tone(660, .06, "triangle", .06); },
+  star: function (k) { tone(880 + 60 * Math.min(k || 0, 10), .12, "triangle", .12); },
+  comet: function () { [784, 988, 1175, 1568].forEach(function (f, i) { tone(f, .14, "triangle", .12, i * .06); }); },
+  bump: function () { tone(160, .25, "sawtooth", .12, 0, 60); },
+  boom: function () { noise(.5, .5); tone(220, .3, "square", .06, 0, 50); },
+  great: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, .16, "triangle", .13, .05 + i * .07); }); },
+  nope: function () { tone(330, .16, "sine", .1); tone(262, .22, "sine", .1, .14); },
+  hmm: function () { tone(440, .12, "sine", .08); tone(494, .16, "sine", .08, .12); },
+  fanfare: function () { [523, 659, 784, 659, 784, 1047].forEach(function (f, i) { tone(f, i === 5 ? .5 : .16, "triangle", .14, i * .13); }); }
+};
+document.addEventListener("pointerdown", function () { if (data.sound) audio(); }, { once: true });
+
+/* ============================================================ microphone */
+var stream = null, analyser = null, buf = null, factor = 4, fs2 = 12000, recorder = null, noiseFloor = 0.002;
 function micError(err) {
-  var why = err && err.name === "NotAllowedError"
-    ? "The microphone is switched off for this page. On the iPad: Settings → Safari → Microphone → Allow (or Ask), then try again."
+  return err && err.name === "NotAllowedError"
+    ? "The microphone is switched off for this app. On the iPad: Settings → Safari → Microphone → Allow (or Ask), then try again."
     : "Couldn't start the microphone" + (err && err.message ? " (" + err.message + ")" : "") + ".";
-  return why;
 }
 function startMic() {
   if (stream) return Promise.resolve();
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.reject(new Error("this browser has no microphone access"));
-  var AC = window.AudioContext || window.webkitAudioContext;
-  if (!ctx) ctx = new AC();
-  var p = ctx.resume ? ctx.resume() : Promise.resolve();
+  var a = audio(); if (!a) return Promise.reject(new Error("no audio"));
   /* no echo cancelling, noise suppression or volume levelling: they reshape
      the very spectrum being measured */
-  return p.then(function () {
-    return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-  }).then(function (s) {
+  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }).then(function (s) {
     stream = s;
-    var src = ctx.createMediaStreamSource(s);
-    var lp1 = ctx.createBiquadFilter(), lp2 = ctx.createBiquadFilter();
+    var src = a.createMediaStreamSource(s), lp1 = a.createBiquadFilter(), lp2 = a.createBiquadFilter();
     lp1.type = lp2.type = "lowpass"; lp1.frequency.value = lp2.frequency.value = 5000;
-    analyser = ctx.createAnalyser(); analyser.fftSize = 2048;
+    analyser = a.createAnalyser(); analyser.fftSize = 2048;
     src.connect(lp1); lp1.connect(lp2); lp2.connect(analyser);
-    factor = Math.max(1, Math.round(ctx.sampleRate / 12000));
-    fs2 = ctx.sampleRate / factor;
+    factor = Math.max(1, Math.round(a.sampleRate / 12000)); fs2 = a.sampleRate / factor;
     buf = new Float32Array(analyser.fftSize);
   });
 }
-/* stop the microphone: on an iPhone, sound played while it is open comes out
-   of the earpiece, quietly */
-function stopMic() {
-  if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
-  stream = null; analyser = null;
-}
+function stopMic() { if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; analyser = null; }
 var smooth = new RDSP.Smoother(5);
-/* one look at the microphone: { voiced, loud, f3, f2, env } */
+/* one look at the microphone */
 function listen() {
   if (!analyser) return null;
   analyser.getFloatTimeDomainData(buf);
   var r = RDSP.analyze(RDSP.decimate(buf, factor), fs2);
-  if (r.rms > 0) noiseFloor = r.voiced < 0.4 ? noiseFloor * 0.97 + r.rms * 0.03 : noiseFloor * 0.999 + 0.0000001;
+  if (r.rms > 0) noiseFloor = r.voiced < 0.4 ? noiseFloor * 0.97 + r.rms * 0.03 : noiseFloor * 0.999;
   noiseFloor = Math.min(Math.max(noiseFloor, 0.0005), 0.05);
   r.loud = r.rms > Math.max(0.004, noiseFloor * 3);
   r.voice = r.loud && r.voiced > 0.55;
@@ -344,143 +538,247 @@ function listen() {
   return r;
 }
 
-/* ------------------------------------------------------------ rocket */
-var cv = $("sky"), g = cv.getContext("2d"), W = 0, H = 0, DPR = 1;
-var rk = null, loopOn = false, stars = [];
-function size() {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  g.setTransform(DPR, 0, 0, DPR, 0, 0);
+/* ============================================================ star run
+   A voice-flown side-scroller. A good R (F3 under the target line) fires
+   the engine and the rocket climbs; anything else and it sinks. Stars sit
+   high and low, comets near the top need a long R, and asteroids drift
+   along the bottom so that sinking has a cost. A minute a run. */
+var cv = $("run"), g = cv.getContext("2d"), W = 0, H = 0;
+var stars = []; for (var s = 0; s < 140; s++) stars.push([Math.random(), Math.random(), Math.random() * 1.6 + .3]);
+var run = null, runLoop = false;
+var RUN_SECS = 60;
+function sizeRun() {
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = cv.clientWidth; H = cv.clientHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-window.addEventListener("resize", function () { if (current === "rocketScreen") size(); });
-for (var s = 0; s < 120; s++) stars.push([Math.random(), Math.random(), Math.random() * 1.6 + .3]);
-function resetRocket() { rk = { alt: 0, vel: 0, hold: 0, best: 0, total: 0, trace: [], t: performance.now(), boosts: [] }; }
-function openRocket() {
-  show("rocketScreen"); size(); resetRocket();
-  $("rocketMsg").textContent = "Starting the microphone…";
+function openRun() {
+  show("runScreen"); sizeRun();
+  $("runWarn").hidden = calibrated();
+  run = { t0: 0, now: performance.now(), y: 1, vy: 0, things: [], spawn: 0, stars: 0, combo: 0, bestCombo: 0, hold: 0, bestHold: 0, boosts: 0, boosted: 0, trace: [], pops: [], shake: 0, state: "count", scroll: 0, sputter: 0, hint: 0 };
+  $("runMsg").textContent = "Starting the microphone…"; $("runScore").textContent = "";
   startMic().then(function () {
-    $("rocketMsg").textContent = "Hold a long rrrrr and keep the rocket climbing!";
-    if (!loopOn) { loopOn = true; requestAnimationFrame(tick); }
-  }, function (err) { $("rocketMsg").textContent = micError(err); });
+    run.state = "count"; run.t0 = performance.now();
+    if (!runLoop) { runLoop = true; requestAnimationFrame(runTick); }
+  }, function (err) { $("runMsg").textContent = micError(err); });
 }
-$("rocketReset").addEventListener("click", resetRocket);
-function tick(now) {
-  if (current !== "rocketScreen") { loopOn = false; return; }
-  requestAnimationFrame(tick);
-  var dt = Math.min(0.1, (now - rk.t) / 1000); rk.t = now;
-  var r = listen();
-  var T = data.target, good = false, f3 = 0;
-  if (r && r.f3s) { f3 = r.f3s; good = f3 < T; }
-  /* climbing: harder the further under the line, falling gently otherwise */
-  if (good) {
-    var push = Math.min(1, (T - f3) / 500) * 0.7 + 0.5;
-    rk.vel = Math.min(220, rk.vel + 260 * push * dt);
-    rk.hold += dt; rk.total += dt;
-    if (rk.hold > rk.best) rk.best = rk.hold;
-  } else {
-    if (rk.hold > 0.6) rk.boosts.push({ t: now, s: rk.hold });
-    rk.hold = 0;
-    rk.vel = Math.max(-60, rk.vel - 140 * dt);
-  }
-  rk.alt = Math.max(0, rk.alt + rk.vel * dt);
-  if (rk.alt === 0 && rk.vel < 0) rk.vel = 0;
-  rk.trace.push({ t: now, f3: f3, voice: !!(r && r.voice) });
-  while (rk.trace.length && now - rk.trace[0].t > 6000) rk.trace.shift();
-  /* the day's best */
-  var d = data.rocket[today()] || (data.rocket[today()] = { best: 0, secs: 0 });
-  if (rk.best > d.best) { d.best = rk.best; }
-  d.secs += good ? dt : 0;
-  if (Math.floor(now / 2000) !== Math.floor((now - dt * 1000) / 2000)) save();
+function playTop() { return 150; }
+function playBottom() { return H - 70; }
+function yToPx(y) { return playTop() + (playBottom() - playTop()) * y; } /* y: 0 top, 1 bottom */
+function runTick(now) {
+  if (current !== "runScreen" || !run) { runLoop = false; return; }
+  requestAnimationFrame(runTick);
+  var dt = Math.min(.05, (now - run.now) / 1000); run.now = now;
+  var r = listen(), T = data.target, f3 = r && r.f3s ? r.f3s : 0, good = !!f3 && f3 < T, voiced = !!(r && r.voice);
+  run.trace.push({ t: now, f3: f3 }); while (run.trace.length && now - run.trace[0].t > 6000) run.trace.shift();
 
-  $("rocketScore").textContent = Math.round(rk.alt) + " m  ·  best hold " + rk.best.toFixed(1) + " s";
-  if (r && !r.loud) $("rocketMsg").textContent = "Hold a long rrrrr and keep the rocket climbing!";
-  else if (r && r.loud && !r.voice) $("rocketMsg").textContent = "Use your voice: rrrrr";
-  else if (good) $("rocketMsg").textContent = rk.hold > 2 ? "Brilliant R! Keep it going!" : "That's an R! Hold it!";
-  else if (f3) $("rocketMsg").textContent = "Pull the R back: tongue up and back, lips not too round";
-  draw(r, f3, good, now);
+  if (run.state === "count") {
+    var c = 3 - Math.floor((now - run.t0) / 900);
+    $("runMsg").textContent = c > 0 ? "Get ready… " + c : "GO! Hold rrrrr to fly up!";
+    if (c <= 0) { run.state = "play"; run.t0 = now; sfx.star(5); $("runWarn").hidden = true; }
+    drawRun(now, good, voiced && !good);
+    return;
+  }
+  if (run.state !== "play") return;
+  var left = RUN_SECS - (now - run.t0) / 1000;
+  if (left <= 0) { endRun(); return; }
+
+  /* flying */
+  var span = Math.max(1, playBottom() - playTop());
+  if (good) {
+    run.vy = Math.max(-1.25, run.vy - (2.6 + Math.min(1, (T - f3) / 500) * 1.6) * dt);
+    run.hold += dt;
+    if (run.hold > run.bestHold) run.bestHold = run.hold;
+    /* an R boost (and a unit of fuel) for every full second of R */
+    if (Math.floor(run.hold) > run.boosted) { run.boosted = Math.floor(run.hold); run.boosts++; pop(run.boosted > 1 ? run.boosted + " s R boost!" : "R boost!", "#ffd166"); sfx.star(8); }
+  } else {
+    if (run.hold > 0) { run.hold = 0; run.boosted = 0; }
+    run.vy = Math.min(.9, run.vy + 1.5 * dt);
+  }
+  run.y += run.vy * dt;
+  if (run.y < .03) { run.y = .03; run.vy = 0; }
+  if (run.y > 1) { run.y = 1; run.vy = 0; }
+  if (voiced && !good && f3) { run.sputter = .25; if (now - run.hint > 2500) { run.hint = now; } }
+  run.sputter = Math.max(0, run.sputter - dt);
+
+  /* the world goes by */
+  var speed = Math.max(170, W * .22);
+  run.scroll += speed * dt;
+  run.spawn -= dt;
+  if (run.spawn <= 0) {
+    run.spawn = .75 + Math.random() * .45;
+    var roll = Math.random(), it;
+    /* most of the treasure is up high, where only a held R can reach */
+    if (roll < .12) it = { kind: "comet", y: .03 + Math.random() * .09 };
+    else if (roll < .32) it = { kind: "rock", y: .74 + Math.random() * .24, spin: Math.random() * 6 };
+    else { var h = Math.random(); it = { kind: "star", y: h < .5 ? .03 + Math.random() * .27 : h < .8 ? .3 + Math.random() * .3 : .6 + Math.random() * .25 }; }
+    it.x = W + 40; run.things.push(it);
+  }
+  var rx = W * .24, ry = yToPx(run.y);
+  run.things.forEach(function (it) {
+    it.x -= speed * dt;
+    if (it.hit) return;
+    var iy = yToPx(it.y), d = Math.hypot(it.x - rx, iy - ry);
+    if (d < (it.kind === "rock" ? 40 : 38)) {
+      it.hit = true;
+      if (it.kind === "rock") { run.combo = 0; run.shake = .35; sfx.bump(); pop("Bonk!", "#ff7a7a"); }
+      else {
+        var v = it.kind === "comet" ? 5 : 1;
+        run.combo++; run.bestCombo = Math.max(run.bestCombo, run.combo);
+        if (run.combo >= 5) v += 1;
+        run.stars += v;
+        if (it.kind === "comet") { sfx.comet(); pop("+5 Comet!", "#7af0ff"); } else sfx.star(run.combo);
+        if (run.combo === 5 || run.combo === 10 || run.combo === 20) pop("Combo x" + run.combo + "!", "#ff9f43");
+      }
+    }
+  });
+  run.things = run.things.filter(function (it) { return it.x > -60 && !(it.hit && it.kind !== "rock"); });
+  run.shake = Math.max(0, run.shake - dt);
+
+  $("runScore").textContent = "⭐ " + run.stars + "   ⏱ " + Math.ceil(left);
+  $("runMsg").textContent = good ? (run.hold > 1.5 ? "Brilliant R! Keep it going!" : "That's an R! Fly!")
+    : (voiced && f3) ? "Pull the R back: tongue up and back, lips not too round"
+    : r && r.loud ? "Use your voice: rrrrr" : "Hold rrrrr to fly up!";
+  drawRun(now, good, run.sputter > 0);
 }
-function draw(r, f3, good, now) {
-  /* sky darkens as the rocket climbs */
-  var k = Math.min(1, rk.alt / 3000);
+function pop(text, col) { run.pops.push({ t: performance.now(), text: text, col: col }); }
+function drawRun(now, good, sputter) {
+  var k = Math.min(1, run.stars / 120);
   var grd = g.createLinearGradient(0, 0, 0, H);
-  grd.addColorStop(0, "rgb(" + Math.round(24 - 18 * k) + "," + Math.round(33 - 25 * k) + "," + Math.round(74 - 50 * k) + ")");
-  grd.addColorStop(1, "rgb(" + Math.round(40 - 30 * k) + "," + Math.round(60 - 45 * k) + "," + Math.round(120 - 80 * k) + ")");
+  grd.addColorStop(0, "rgb(" + Math.round(16 - 10 * k) + "," + Math.round(22 - 14 * k) + "," + Math.round(60 - 30 * k) + ")");
+  grd.addColorStop(1, "rgb(" + Math.round(34 - 20 * k) + "," + Math.round(48 - 30 * k) + "," + Math.round(108 - 60 * k) + ")");
   g.fillStyle = grd; g.fillRect(0, 0, W, H);
-  /* stars scroll past */
+  var sx = run.shake ? (Math.random() - .5) * 14 : 0;
+  g.save(); g.translate(sx, 0);
   g.fillStyle = "#fff";
   stars.forEach(function (s) {
-    var y = ((s[1] * H + rk.alt * 0.6 * s[2]) % H);
-    g.globalAlpha = 0.25 + 0.5 * k + 0.2 * Math.sin(now / 500 + s[0] * 30);
-    g.fillRect(s[0] * W, y, s[2], s[2]);
+    var x = ((s[0] * W - run.scroll * .25 * s[2]) % W + W) % W;
+    g.globalAlpha = .3 + .4 * Math.sin(now / 600 + s[1] * 40) * .5 + .3; g.fillRect(x, s[1] * H, s[2], s[2]);
   });
   g.globalAlpha = 1;
-  /* ground, sinking away */
-  var gy = H * 0.86 + rk.alt * 0.8;
-  if (gy < H) { g.fillStyle = "#2b6b4a"; g.fillRect(0, gy, W, H - gy); g.fillStyle = "#3d8a60"; g.fillRect(0, gy, W, 6); }
+  /* a far planet drifting by, for depth */
+  var pp = PLANETS[Math.min(PLANETS.length - 1, reached() + 1)];
+  drawPlanet(g, W * 1.1 - (run.scroll * .05) % (W * 1.5), H * .3, Math.min(W, H) * .09, pp, false);
+  /* the ground */
+  g.fillStyle = "#24304f"; g.fillRect(0, playBottom() + 40, W, H);
+  g.fillStyle = "#30406a"; for (var i = -1; i < W / 60 + 2; i++) { var cx = i * 60 - (run.scroll % 60); g.beginPath(); g.arc(cx, playBottom() + 48, 18, Math.PI, 0); g.fill(); }
 
-  /* the trace: F3 over the last six seconds, the target line, the R zone */
-  var pw = Math.min(W - 32, 520), ph = Math.min(150, H * 0.2), py = 74;
-  var x0 = (W - pw) / 2;
-  var fy = function (f) { return py + ph * (1 - (Math.max(1200, Math.min(4200, f)) - 1200) / 3000); };
-  g.fillStyle = "rgba(0,0,0,.35)"; roundRect(x0, py, pw, ph, 12); g.fill();
-  var ty = fy(data.target);
-  g.fillStyle = "rgba(61,220,151,.18)"; g.fillRect(x0, ty, pw, py + ph - ty);
-  g.strokeStyle = "rgba(61,220,151,.9)"; g.setLineDash([6, 5]); g.lineWidth = 2;
-  g.beginPath(); g.moveTo(x0, ty); g.lineTo(x0 + pw, ty); g.stroke(); g.setLineDash([]);
-  g.fillStyle = "rgba(61,220,151,.95)"; g.font = "600 12px system-ui, sans-serif"; g.fillText("R zone", x0 + 8, Math.min(py + ph - 6, ty + 15));
-  g.lineWidth = 3; g.lineCap = "round";
-  for (var i = 1; i < rk.trace.length; i++) {
-    var a = rk.trace[i - 1], b = rk.trace[i];
-    if (!a.f3 || !b.f3) continue;
-    g.strokeStyle = b.f3 < data.target ? "#3ddc97" : "#ffb36b";
-    g.beginPath();
-    g.moveTo(x0 + pw * (1 - (now - a.t) / 6000), fy(a.f3));
-    g.lineTo(x0 + pw * (1 - (now - b.t) / 6000), fy(b.f3));
-    g.stroke();
-  }
-  g.fillStyle = "rgba(255,255,255,.55)"; g.font = "11px system-ui, sans-serif";
-  g.fillText(f3 ? "F3 " + Math.round(f3) + " Hz" : "", x0 + pw - 80, py + 14);
-
-  /* the rocket */
-  var rx = W / 2, ry = H * 0.62 - Math.min(H * 0.18, rk.vel * 0.4);
-  g.save(); g.translate(rx, ry);
-  var sc = Math.min(1.4, Math.max(0.8, Math.min(W, H) / 520));
-  g.scale(sc, sc);
-  if (good || rk.vel > 5) {
-    var fl = 30 + 25 * Math.random() + (good ? Math.min(40, rk.hold * 15) : 0);
-    var fg = g.createLinearGradient(0, 40, 0, 40 + fl);
-    fg.addColorStop(0, "#fff3b0"); fg.addColorStop(0.4, "#ff9f43"); fg.addColorStop(1, "rgba(255,80,40,0)");
-    g.fillStyle = fg; g.beginPath(); g.moveTo(-14, 40); g.quadraticCurveTo(0, 40 + fl * 1.3, 14, 40); g.closePath(); g.fill();
-  }
-  g.fillStyle = "#e23d3d"; g.beginPath(); g.moveTo(-18, 30); g.lineTo(-34, 50); g.lineTo(-18, 46); g.closePath(); g.fill();
-  g.beginPath(); g.moveTo(18, 30); g.lineTo(34, 50); g.lineTo(18, 46); g.closePath(); g.fill();
-  g.fillStyle = "#f4f6fb"; g.beginPath(); g.moveTo(0, -60); g.bezierCurveTo(26, -36, 22, 20, 18, 44); g.lineTo(-18, 44); g.bezierCurveTo(-22, 20, -26, -36, 0, -60); g.fill();
-  g.fillStyle = "#e23d3d"; g.beginPath(); g.moveTo(0, -60); g.bezierCurveTo(14, -48, 17, -38, 19, -30); g.lineTo(-19, -30); g.bezierCurveTo(-17, -38, -14, -48, 0, -60); g.fill();
-  g.fillStyle = "#7aa2ff"; g.beginPath(); g.arc(0, -8, 10, 0, Math.PI * 2); g.fill();
-  g.strokeStyle = "#c9d2ec"; g.lineWidth = 3; g.stroke();
-  g.fillStyle = "#e23d3d"; g.font = "800 18px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("R", 0, 30); g.textAlign = "left";
+  run.things.forEach(function (it) {
+    var y = yToPx(it.y);
+    if (it.kind === "star") starShape(it.x, y, 16, "#ffd166");
+    else if (it.kind === "comet") {
+      var tail = g.createLinearGradient(it.x, y, it.x + 90, y); tail.addColorStop(0, "rgba(122,240,255,.8)"); tail.addColorStop(1, "rgba(122,240,255,0)");
+      g.fillStyle = tail; g.beginPath(); g.moveTo(it.x, y - 12); g.lineTo(it.x + 90, y); g.lineTo(it.x, y + 12); g.fill();
+      starShape(it.x, y, 20, "#bff8ff");
+    } else {
+      g.save(); g.translate(it.x, y); g.rotate(it.spin + now / 900);
+      g.fillStyle = it.hit ? "#6b5a5a" : "#8a7a70"; g.beginPath();
+      for (var a = 0; a < 9; a++) { var rr = 26 + (a % 3) * 5; g.lineTo(Math.cos(a / 9 * 6.283) * rr, Math.sin(a / 9 * 6.283) * rr); }
+      g.closePath(); g.fill(); g.fillStyle = "#6e6058"; g.beginPath(); g.arc(-6, -4, 6, 0, 7); g.arc(8, 8, 4, 0, 7); g.fill();
+      g.restore();
+    }
+  });
+  var rx = W * .24, ry = yToPx(run.y), tilt = Math.PI / 2 + Math.max(-.5, Math.min(.5, run.vy * .5));
+  drawRocket(g, rx, ry, Math.min(1.1, Math.max(.7, Math.min(W, H) / 700)), tilt, good ? 1 : 0, sputter);
   g.restore();
 
-  /* a "boost!" for every R held past 0.6 s */
-  rk.boosts = rk.boosts.filter(function (b) { return now - b.t < 1200; });
-  rk.boosts.forEach(function (b) {
-    var a = 1 - (now - b.t) / 1200;
-    g.globalAlpha = a; g.fillStyle = "#ffd166"; g.font = "800 26px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText(b.s.toFixed(1) + " s R!", rx, ry - 90 - 40 * (1 - a)); g.textAlign = "left"; g.globalAlpha = 1;
+  /* the F3 strip: what his voice is doing, against the R zone */
+  var pw = Math.min(W - 32, 460), ph = 64, x0 = (W - pw) / 2, py = 66;
+  var fy = function (f) { return py + ph * (1 - (Math.max(1400, Math.min(4000, f)) - 1400) / 2600); };
+  g.fillStyle = "rgba(0,0,0,.4)"; rr(x0, py, pw, ph, 10); g.fill();
+  var ty = fy(data.target);
+  g.fillStyle = "rgba(61,220,151,.2)"; g.fillRect(x0, ty, pw, py + ph - ty);
+  g.strokeStyle = "rgba(61,220,151,.9)"; g.setLineDash([5, 5]); g.lineWidth = 2; g.beginPath(); g.moveTo(x0, ty); g.lineTo(x0 + pw, ty); g.stroke(); g.setLineDash([]);
+  g.fillStyle = "rgba(61,220,151,.95)"; g.font = "600 11px system-ui, sans-serif"; g.fillText("R zone", x0 + 8, Math.min(py + ph - 5, ty + 13));
+  g.lineWidth = 3; g.lineCap = "round";
+  for (var j = 1; j < run.trace.length; j++) {
+    var p = run.trace[j - 1], q = run.trace[j]; if (!p.f3 || !q.f3) continue;
+    g.strokeStyle = q.f3 < data.target ? "#3ddc97" : "#ffb36b"; g.beginPath();
+    g.moveTo(x0 + pw * (1 - (now - p.t) / 6000), fy(p.f3)); g.lineTo(x0 + pw * (1 - (now - q.t) / 6000), fy(q.f3)); g.stroke();
+  }
+  /* pop-up words */
+  run.pops = run.pops.filter(function (b) { return now - b.t < 1100; });
+  run.pops.forEach(function (b, i) {
+    var a = 1 - (now - b.t) / 1100;
+    g.globalAlpha = a; g.fillStyle = b.col; g.font = "800 28px system-ui, sans-serif"; g.textAlign = "center";
+    var by = ry < 260 ? ry + 90 + 40 * (1 - a) + i * 30 : ry - 80 - 50 * (1 - a) - i * 30;
+    g.fillText(b.text, rx + 60, by); g.textAlign = "left"; g.globalAlpha = 1;
   });
 }
-function roundRect(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function starShape(x, y, r, col) {
+  g.fillStyle = col; g.beginPath();
+  for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * .45 : r; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); }
+  g.closePath(); g.fill();
+}
+function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function endRun() {
+  run.state = "over"; stopMic();
+  var fuel = Math.min(30, run.boosts);
+  var d = data.rocket[today()] || (data.rocket[today()] = { best: 0, secs: 0 });
+  d.best = Math.max(d.best, run.bestHold); d.runs = (d.runs || 0) + 1; d.boosts = (d.boosts || 0) + run.boosts;
+  var best = run.stars > data.runBest; if (best) data.runBest = run.stars;
+  addFuel(fuel); save();
+  $("doneTitle").textContent = best ? "New record!" : "Run complete!";
+  var st = run.stars >= 40 ? 3 : run.stars >= 18 ? 2 : 1;
+  $("doneStars").textContent = "⭐".repeat(st) + "☆".repeat(3 - st);
+  $("doneLine").textContent = run.stars + " stars · longest R " + run.bestHold.toFixed(1) + " s · best combo " + run.bestCombo;
+  $("doneFuel").textContent = fuel ? "+" + fuel + " rocket fuel: one for every second of R ⛽" : "Hold an R for a whole second to get an R boost and fuel!";
+  $("doneAdvice").textContent = "Record: " + data.runBest + " stars";
+  doneAgain = openRun;
+  show("done"); sfx.fanfare();
+}
 
-/* ------------------------------------------------------------ words */
-var level = LEVELS[2], round = [], pos = 0, marks = [], lastClip = null, recLow = 0, recVoiced = 0;
-var ROUND = 10;
+/* ============================================================ words */
+/* /r/ before a vowel only: at the start, in the middle, and in blends.
+   Capitals inside a word mark the R sounds (and the rest of a blend). */
+var LEVELS = [
+  { id: "long", name: "Long R", hold: true, items: [["🚀", "Rrrrrrr"], ["🐯", "Rrrrrrr"], ["🏎️", "Rrrrrrr"], ["🐕", "Rrrrrrr"], ["🦁", "Rrrrrrr"]] },
+  { id: "syl", name: "Ra Ree Roo", items: [["🅰️", "Ra"], ["🐝", "Ree"], ["🦘", "Roo"], ["☀️", "Ray"], ["🚣", "Row"], ["🌾", "Rye"], ["👆", "Rah"], ["🔁", "Ro-ro"]] },
+  { id: "start", name: "R at the start", items: [
+    ["🟥", "Red"], ["🐰", "Rabbit"], ["🚀", "Rocket"], ["🌧️", "Rain"], ["🤖", "Robot"], ["💍", "Ring"], ["🌹", "Rose"],
+    ["🏃", "Run"], ["🌈", "Rainbow"], ["🪨", "Rock"], ["📏", "Ruler"], ["📖", "Read"], ["🍚", "Rice"], ["🦏", "Rhino"],
+    ["📻", "Radio"], ["🐀", "Rat"], ["🏁", "Race"], ["🪢", "Rope"], ["🏠", "Roof"], ["🦝", "Raccoon"]] },
+  { id: "mid", name: "R in the middle", items: [
+    ["🥕", "CaRRot"], ["🦜", "PaRRot"], ["🦒", "GiRaffe"], ["0️⃣", "ZeRo"], ["🍒", "CheRRy"], ["➡️", "ARRow"],
+    ["🦸", "HeRo"], ["🏴‍☠️", "PiRate"], ["🍊", "ORange"], ["🥋", "KaRate"], ["📅", "TomoRRow"], ["🫐", "BeRRy"],
+    ["🙏", "SoRRy"], ["🔄", "ARound"], ["🐻", "TeRRy the bear"]] },
+  { id: "blend", name: "Blends", items: [
+    ["🌳", "TRee"], ["🐸", "FRog"], ["🚂", "TRain"], ["🦀", "CRab"], ["🥁", "DRum"], ["🍞", "BRead"], ["🟩", "GReen"],
+    ["🟫", "BRown"], ["🍇", "GRapes"], ["3️⃣", "THRee"], ["😢", "CRy"], ["🐉", "DRagon"], ["🚚", "TRuck"], ["👑", "CRown"],
+    ["🎁", "PResent"], ["🥦", "BRoccoli"], ["🍟", "FRies"], ["🖍️", "CRayon"], ["🏆", "TRophy"], ["🍓", "StRawbeRRy"]] },
+  { id: "sent", name: "Sentences", items: [
+    ["🚀", "Rory Runs Round the Red Rocket."], ["🐰", "The Rabbit ate a caRRot."], ["🐸", "THRee GReen FRogs Ride a TRain."],
+    ["🐉", "The DRagon has a CRown."], ["🦜", "A paRRot sat in a TRee."], ["🤖", "Rory Reads about Robots."],
+    ["🦏", "The Rhino is Running in the Rain."], ["🍇", "GRapes and BRead for BReakfast."], ["🌈", "A Rainbow is Red and GReen."],
+    ["🏆", "Rory won the TRophy in the Race."]] }
+];
+function markup(t) {
+  return t.replace(/[A-Z]/g, function (c, i) {
+    var start = i === 0 || t[i - 1] === " ";
+    if (c === "R") return "<u>" + (start ? "R" : "r") + "</u>";
+    return start ? c : c.toLowerCase();
+  });
+}
+function plain(t) { return t.replace(/[A-Z]/g, function (c, i) { return (i === 0 || t[i - 1] === " ") ? c : c.toLowerCase(); }); }
+
+/* the judge's lines: learned from the grown-up's calls once there are
+   enough, otherwise from the target line */
+function lines() {
+  var L = RDSP.learn(data.trials);
+  if (L) return { good: L.good, bad: L.bad, learned: L.from };
+  return { good: data.target, bad: data.target + 300, learned: 0 };
+}
+
+/* ============================================================ word blaster */
+var level = LEVELS[2], round = [], pos = 0, marks = [], tries = 0, combo = 0, bestCombo = 0, roundFuel = 0;
+var lastClip = null, trial = null, wordDone = false, doneAgain = null;
+var ROUND = 10, MAX_TRIES = 3;
 function buildLevels() {
   $("levels").innerHTML = "";
   LEVELS.forEach(function (L) {
     var b = document.createElement("button");
     b.className = "pill" + (L === level ? " on" : ""); b.textContent = L.name;
-    b.onclick = function () { level = L; buildLevels(); newRound(); };
+    b.onclick = function () { level = L; data.level = L.id; save(); buildLevels(); newRound(); };
     $("levels").appendChild(b);
   });
 }
@@ -488,23 +786,41 @@ function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floo
 function newRound() {
   var pool = shuffle(level.items.slice()); round = [];
   while (round.length < ROUND) round = round.concat(pool.slice(0, ROUND - round.length));
-  pos = 0; marks = []; showWord();
+  pos = 0; marks = []; combo = 0; bestCombo = 0; roundFuel = 0; showWord();
 }
-function openWords() {
-  try { level = LEVELS.filter(function (L) { return L.id === data.level; })[0] || level; } catch (e) {}
-  show("words"); buildLevels(); newRound();
+function openBlast() {
+  level = LEVELS.filter(function (L) { return L.id === data.level; })[0] || LEVELS[2];
+  show("blast"); buildLevels(); newRound();
 }
 function showWord() {
   var it = round[pos];
+  tries = 0; wordDone = false; trial = null; lastClip = null;
+  $("wordCard").className = "card word";
   $("wPic").textContent = it[0];
   $("wTxt").innerHTML = markup(it[1]);
   $("wTxt").className = "txt" + (level.id === "sent" ? " sentence" : "");
   $("roundCount").textContent = (pos + 1) + " of " + ROUND;
-  $("wHint").textContent = level.hold ? "Hold the R for as long as you can." : "Tap Hear it, then Say it.";
-  $("againBtn").disabled = true; lastClip = null;
-  var dots = ""; for (var i = 0; i < ROUND; i++) dots += '<i class="' + (marks[i] || "") + '"></i>';
-  $("dots").innerHTML = dots;
+  $("combo").textContent = combo >= 2 ? "🔥 x" + combo : "";
+  $("verdict").textContent = ""; $("verdict").className = "verdict";
+  $("wHint").textContent = level.hold ? "Hold the R as long as you can." : "Tap Say it and say the word.";
+  $("rateBox").hidden = true; $("fixBox").hidden = true;
+  $("againBtn").disabled = true;
+  setSay("say");
+  paintDots();
 }
+function paintDots() {
+  var h = ""; for (var i = 0; i < ROUND; i++) h += '<i class="' + (marks[i] || "") + '"></i>';
+  $("dots").innerHTML = h;
+}
+function setSay(state) {
+  var b = $("sayBtn"); b.classList.remove("rec", "next"); b.disabled = false;
+  if (state === "say") { $("sayIco").textContent = "🎤"; $("sayLabel").textContent = tries ? "Again" : "Say it"; }
+  else if (state === "rec") { b.classList.add("rec"); $("sayIco").textContent = "⏹"; $("sayLabel").textContent = "Stop"; }
+  else if (state === "next") { b.classList.add("next"); $("sayIco").textContent = "▶"; $("sayLabel").textContent = pos + 1 >= ROUND ? "Finish" : "Next"; }
+  else if (state === "wait") { b.disabled = true; }
+  b.dataset.state = state;
+}
+
 /* a model to copy: the device's own voice, British if it has one */
 var voice = null;
 function pickVoice() {
@@ -518,19 +834,21 @@ $("hearBtn").addEventListener("click", function () {
   speechSynthesis.cancel();
   var u = new SpeechSynthesisUtterance(level.hold ? "rrrrrrrrr" : plain(round[pos][1]));
   if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
-  u.rate = 0.8; speechSynthesis.speak(u);
+  u.rate = .8; speechSynthesis.speak(u);
 });
 
-var recording = false, recTimer = 0, recStart = 0, heard = 0, quietSince = 0, chunks = [];
+var recording = false, recStart = 0, heard = 0, quietSince = 0, chunks = [], recFrames = [];
 $("sayBtn").addEventListener("click", function () {
+  var st = this.dataset.state;
+  if (st === "next") { nextWord(); return; }
   if (recording) { finishRec(); return; }
   if (window.speechSynthesis) speechSynthesis.cancel();
-  $("sayBtn").disabled = true;
+  setSay("wait");
   startMic().then(function () {
-    $("sayBtn").disabled = false;
-    recording = true; recStart = performance.now(); heard = 0; quietSince = 0; recLow = 0; recVoiced = 0; chunks = [];
-    $("sayBtn").classList.add("rec"); $("sayLabel").textContent = "Stop";
-    $("wHint").textContent = "Listening…";
+    recording = true; recStart = performance.now(); heard = 0; quietSince = 0; chunks = []; recFrames = [];
+    setSay("rec"); $("verdict").textContent = ""; $("verdict").className = "verdict";
+    $("wHint").textContent = "Listening…"; $("fixBox").hidden = true; $("rateBox").hidden = true;
+    $("wordCard").className = "card word";
     recorder = null;
     if (window.MediaRecorder) {
       try {
@@ -541,69 +859,181 @@ $("sayBtn").addEventListener("click", function () {
       } catch (e) { recorder = null; }
     }
     recLoop();
-  }, function (err) { $("sayBtn").disabled = false; $("wHint").textContent = micError(err); });
+  }, function (err) { setSay("say"); $("wHint").textContent = micError(err); });
 });
+/* a frame every 15 ms, for the judge */
 function recLoop() {
   if (!recording) return;
   var now = performance.now(), r = listen();
-  if (r && r.voice) {
-    heard += 1; quietSince = 0; recVoiced++;
-    if (r.f3s && r.f3s < data.target) recLow++;
-  } else if (heard > 6 && !quietSince) quietSince = now;
-  var limit = level.hold ? 6000 : level.id === "sent" ? 6000 : 3500;
-  if (now - recStart > limit || (quietSince && now - quietSince > 700)) { finishRec(); return; }
-  setTimeout(recLoop, 30);
+  if (r) recFrames.push({ voice: !!r.voice, f3: r.f3s || 0 });
+  if (r && r.voice) { heard++; quietSince = 0; }
+  else if (heard > 8 && !quietSince) quietSince = now;
+  var limit = level.hold || level.id === "sent" ? 6000 : 3500;
+  if (now - recStart > limit || (quietSince && now - quietSince > 600)) { finishRec(); return; }
+  setTimeout(recLoop, 15);
 }
 function finishRec() {
+  if (!recording) return;
   recording = false;
-  $("sayBtn").classList.remove("rec"); $("sayLabel").textContent = "Say it";
-  var done = function () {
+  var feat = RDSP.wordFeatures(recFrames), L = lines(), v = RDSP.judge(feat, L);
+  trial = { d: today(), lvl: level.id, w: plain(round[pos][1]), low: feat.low, typ: feat.typ, app: v, label: "" };
+  if (feat.n >= 4) { data.trials.push(trial); if (data.trials.length > 400) data.trials.splice(0, data.trials.length - 400); save(); }
+  var after = function () {
     stopMic();
     if (chunks.length) {
       lastClip = URL.createObjectURL(new Blob(chunks, { type: chunks[0].type || "audio/mp4" }));
       $("againBtn").disabled = false;
-      setTimeout(playBack, 150);
     }
+    react(v, feat);
   };
-  if (recorder && recorder.state !== "inactive") { recorder.onstop = done; recorder.stop(); } else done();
-  /* the hint: only on a sound held long enough to measure */
-  if (!heard) $("wHint").textContent = "I didn't hear anything. Try a bit louder or closer.";
-  else if (level.hold || level.id === "syl") {
-    var secs = recLow * 0.03;
-    $("wHint").textContent = recLow >= 8 ? "🚀 The rocket heard an R for " + secs.toFixed(1) + " s!" : "The rocket didn't hear the R dip that time.";
-  } else $("wHint").textContent = recLow >= 3 ? "🚀 The rocket heard the R dip. Grown-up, how did it sound?" : "Grown-up, how did the R sound?";
+  if (recorder && recorder.state !== "inactive") { recorder.onstop = after; recorder.stop(); } else after();
 }
-function playBack() {
-  if (!lastClip) return;
-  var a = new Audio(lastClip); a.play().catch(function () {});
+function playBack(then) {
+  if (!lastClip) { if (then) then(); return; }
+  var a = new Audio(lastClip), done = false, fin = function () { if (!done) { done = true; if (then) then(); } };
+  a.onended = fin; a.onerror = fin; setTimeout(fin, 6500);
+  a.play().catch(fin);
 }
-$("againBtn").addEventListener("click", playBack);
-document.querySelectorAll("[data-mark]").forEach(function (b) {
+$("againBtn").addEventListener("click", function () { playBack(); });
+
+function react(v, feat) {
+  tries++;
+  if (v === "none") {
+    tries--; setSay("say");
+    $("verdict").textContent = "I didn't hear you!"; $("verdict").className = "verdict";
+    $("wHint").textContent = "Try a bit louder, or closer to the iPad.";
+    return;
+  }
+  if (data.mode === "grown") {
+    /* the grown-up decides; the app keeps its own guess quietly to compare */
+    setSay("wait");
+    $("wHint").textContent = "";
+    var ask = function () { $("rateBox").hidden = false; };
+    if (data.playback) playBack(ask); else ask();
+    return;
+  }
+  /* the app decides */
+  var call = function () {
+    if (v === "g") great(false);
+    else if (v === "m") notYet(false);
+    else unsure();
+    offerFix(v);
+  };
+  if (data.playback) { $("wHint").textContent = "👂 Listen to yourself…"; setSay("wait"); playBack(call); } else call();
+}
+function great(byGrownUp) {
+  marks[pos] = "g"; combo++; bestCombo = Math.max(bestCombo, combo); roundFuel++;
+  addFuel(1);
+  $("verdict").textContent = combo >= 3 ? "Great R! 🔥 x" + combo : ["Great R!", "Blasted it!", "Super R!", "Kaboom!"][Math.floor(Math.random() * 4)];
+  $("verdict").className = "verdict g";
+  $("wHint").textContent = byGrownUp ? "" : "The asteroid's gone!";
+  $("combo").textContent = combo >= 2 ? "🔥 x" + combo : "";
+  $("wordCard").className = "card word great boom";
+  burst();
+  sfx.boom(); setTimeout(sfx.great, 250);
+  wordDone = true; setSay("next"); paintDots();
+}
+function notYet(byGrownUp) {
+  combo = 0; $("combo").textContent = "";
+  $("wordCard").className = "card word"; void $("wordCard").offsetWidth; $("wordCard").className = "card word wobble";
+  sfx.nope();
+  if (tries >= MAX_TRIES) {
+    marks[pos] = "m"; wordDone = true; setSay("next");
+    $("verdict").textContent = "Shields held! On to the next one."; $("verdict").className = "verdict m";
+    $("wHint").textContent = "";
+  } else {
+    setSay("say");
+    $("verdict").textContent = "Not yet! Try again"; $("verdict").className = "verdict m";
+    $("wHint").textContent = level.hold ? "Tongue up and back, lips not too round." : "Make the R big and strong: rrr-" + plain(round[pos][1]).toLowerCase();
+  }
+  paintDots();
+}
+function unsure() {
+  $("wordCard").className = "card word unsure"; sfx.hmm();
+  if (tries >= MAX_TRIES) {
+    marks[pos] = "n"; wordDone = true; setSay("next");
+    $("verdict").textContent = "Nearly! On to the next one."; $("verdict").className = "verdict n";
+  } else {
+    setSay("say");
+    $("verdict").textContent = "Hmm, I couldn't tell. Once more!"; $("verdict").className = "verdict n";
+  }
+  $("wHint").textContent = "";
+  paintDots();
+}
+/* the grown-up can put the app right; every correction (or confirmation)
+   is what the judge learns from */
+function offerFix(v) {
+  var t = trial, box = $("fixBtns"); box.innerHTML = "";
+  var add = function (cls, label, sub, fn) {
+    var b = document.createElement("button"); b.className = cls; b.innerHTML = label + "<small>" + sub + "</small>";
+    b.onclick = function () { fn(); $("fixBox").hidden = true; save(); }; box.appendChild(b);
+  };
+  if (v === "g") {
+    add("ok", "✓ Right", "it was good", function () { t.label = "g"; });
+    add("m", "✗ Not a good R", "take it back", function () {
+      t.label = "m"; if (marks[pos] === "g") { addFuel(-1); roundFuel--; combo = 0; }
+      marks[pos] = undefined; wordDone = false; tries = Math.min(tries, MAX_TRIES - 1); notYet(true);
+    });
+    box.className = "judge two";
+  } else {
+    add("g", "It was great", "give it", function () { t.label = "g"; if (marks[pos] !== "g") great(true); });
+    add("n", "Nearly", "", function () { t.label = "n"; });
+    add("ok", "✓ Right", v === "m" ? "not yet" : "not sure", function () { t.label = v === "m" ? "m" : ""; });
+    box.className = "judge";
+  }
+  $("fixQ").textContent = "Grown-up: did the app get it right?";
+  $("fixBox").hidden = false;
+}
+document.querySelectorAll("[data-rate]").forEach(function (b) {
   b.addEventListener("click", function () {
-    if (recording) finishRec();
-    var m = b.getAttribute("data-mark");
-    marks[pos] = m;
-    var d = data.log[today()] || (data.log[today()] = {});
-    var L = d[level.id] || (d[level.id] = { g: 0, n: 0, m: 0 });
-    L[m]++; data.level = level.id; save();
-    pos++;
-    if (pos >= ROUND) roundDone(); else showWord();
+    var m = b.getAttribute("data-rate");
+    if (trial) { trial.label = m; save(); }
+    $("rateBox").hidden = true;
+    if (m === "g") great(true);
+    else if (m === "m") notYet(true);
+    else { marks[pos] = "n"; combo = 0; wordDone = true; setSay("next"); $("verdict").textContent = "Nearly!"; $("verdict").className = "verdict n"; paintDots(); }
   });
 });
+function nextWord() {
+  if (!marks[pos]) marks[pos] = "n";
+  logWord(marks[pos]);
+  pos++;
+  if (pos >= ROUND) roundDone(); else showWord();
+}
+function logWord(m) {
+  var d = data.log[today()] || (data.log[today()] = {});
+  var L = d[level.id] || (d[level.id] = { g: 0, n: 0, m: 0 });
+  L[m]++; save();
+}
+function burst() {
+  var card = $("wordCard"), bits = ["✨", "⭐", "💥", "🌟", "✨", "💫", "⭐", "💥"];
+  bits.forEach(function (c, i) {
+    var s = document.createElement("span"), a = i / bits.length * 6.283;
+    s.className = "bit"; s.textContent = c;
+    s.style.left = "calc(50% - 14px)"; s.style.top = "30%";
+    s.style.setProperty("--dx", Math.round(Math.cos(a) * 160) + "px"); s.style.setProperty("--dy", Math.round(Math.sin(a) * 110) + "px");
+    card.appendChild(s); setTimeout(function () { s.remove(); }, 1100);
+  });
+}
 function roundDone() {
   var gN = marks.filter(function (x) { return x === "g"; }).length, nN = marks.filter(function (x) { return x === "n"; }).length;
-  var pct = Math.round(100 * gN / ROUND);
-  var st = pct >= 80 ? 3 : pct >= 50 ? 2 : 1;
+  var pct = Math.round(100 * gN / ROUND), st = pct >= 80 ? 3 : pct >= 50 ? 2 : 1;
+  $("doneTitle").textContent = st === 3 ? "Asteroid field cleared!" : "Round done!";
   $("doneStars").textContent = "⭐".repeat(st) + "☆".repeat(3 - st);
-  $("doneLine").textContent = gN + " great R" + (gN === 1 ? "" : "s") + (nN ? ", " + nN + " nearly" : "") + " out of " + ROUND + ".";
-  $("doneAdvice").textContent = pct >= 80 ? "Grown-up: that's 80% or more. If his therapist agrees, he may be ready for the next level."
-    : pct < 50 ? "Grown-up: under half right. Try the level below, or the Rocket, to find the R first." : "";
-  show("done");
+  $("doneLine").textContent = gN + " great R" + (gN === 1 ? "" : "s") + (nN ? ", " + nN + " nearly" : "") + " out of " + ROUND + (bestCombo >= 3 ? " · best combo " + bestCombo : "") + ".";
+  $("doneFuel").textContent = roundFuel > 0 ? "+" + roundFuel + " rocket fuel ⛽" : "";
+  $("doneAdvice").textContent = pct >= 80 ? "Grown-up: 80% or more. If his therapist agrees, he may be ready for the next level."
+    : pct < 50 ? "Grown-up: under half. Try the level below, or Star Run, to find the R first." : "";
+  doneAgain = function () { show("blast"); newRound(); };
+  show("done"); sfx.fanfare();
 }
-$("doneAgain").addEventListener("click", function () { show("words"); newRound(); });
+$("doneAgain").addEventListener("click", function () {
+  if (pendingArrival >= 0) { showArrival(); return; }
+  if (doneAgain) doneAgain();
+});
 
-/* ------------------------------------------------------------ grown-ups */
-function openGrown() { show("grown"); paintTarget(); paintLog(); $("calOut").textContent = ""; }
+/* ============================================================ mission control */
+function openGrown() { show("grown"); paintTarget(); paintJudge(); paintLog(); $("calOut").textContent = ""; $("copyOut").textContent = ""; }
 function paintTarget() {
   $("target").value = data.target;
   $("targetOut").textContent = data.target + " Hz";
@@ -612,7 +1042,36 @@ function paintTarget() {
   if (data.best) bits.push("his best R: " + data.best + " Hz");
   $("baseOut").textContent = bits.length ? "(" + bits.join(", ") + ")" : "";
 }
-$("target").addEventListener("input", function () { data.target = +this.value; save(); paintTarget(); });
+$("target").addEventListener("input", function () { data.target = +this.value; save(); paintTarget(); paintJudge(); });
+document.querySelectorAll("[data-mode]").forEach(function (b) {
+  b.addEventListener("click", function () { data.mode = b.getAttribute("data-mode"); save(); paintJudge(); });
+});
+$("playbackBtn").addEventListener("click", function () { data.playback = !data.playback; save(); paintJudge(); });
+$("forget").addEventListener("click", function () {
+  if (!confirm("Forget every word you've scored for the judge? It goes back to its starting lines.")) return;
+  data.trials = []; save(); paintJudge();
+});
+function paintJudge() {
+  document.querySelectorAll("[data-mode]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-mode") === data.mode); });
+  $("playbackBtn").textContent = data.playback ? "Play his voice back: on" : "Play his voice back: off";
+  $("modeLine").textContent = data.mode === "app"
+    ? "The app calls each word Great R, Not yet or Not sure. You can correct any call, and each correction teaches it his voice."
+    : "You score each word; the app makes its own call quietly and learns from yours. Good for the first few sessions.";
+  var L = lines(), labelled = data.trials.filter(function (t) { return t.label === "g" || t.label === "m"; });
+  var g = labelled.filter(function (t) { return t.label === "g"; }).length, m = labelled.length - g;
+  var h = "";
+  if (L.learned) h += "<p><b>Taught by you:</b> learned from " + L.learned + " scored words. A word is <b>Great</b> if F3 dips to " + L.good + " Hz or lower, <b>Not yet</b> if it stays at " + L.bad + " Hz or above, <b>Not sure</b> in between.</p>";
+  else h += "<p><b>Starting lines</b> (from the target): Great at " + L.good + " Hz or lower, Not yet at " + L.bad + " Hz or above. It learns his own lines once you've scored 8 good and 8 not-yet words: " + g + " good and " + m + " not-yet so far.</p>";
+  if (labelled.length >= 5) {
+    var A = RDSP.agreement(data.trials, L);
+    h += "<p style='margin-top:6px'><b>How it compares with you</b> on the " + A.scored + " words you've scored: it agreed on <b>" + A.agree + " of the " + A.decided + "</b> it made a call on" +
+      (A.decided ? " (" + Math.round(100 * A.agree / A.decided) + "%)" : "") + ", and said Not sure on " + A.unsure + ". " +
+      "It called <b>" + A.falseGreat + " of your " + A.wrongs + "</b> not-yet words Great" + (A.wrongs ? " (" + Math.round(100 * A.falseGreat / A.wrongs) + "%)" : "") + ". " +
+      (A.wrongs >= 5 && A.falseGreat / A.wrongs > .2 ? "<span style='color:var(--miss)'>That's too many: keep judging yourself for now.</span>" : "") + "</p>" +
+      "<p class='soft' style='margin-top:4px'>(Measured on the same words it learned from, so it flatters the app a little.)</p>";
+  }
+  $("judgeStats").innerHTML = h;
+}
 function calibrate(kind) {
   var btns = [$("calAh"), $("calR")]; btns.forEach(function (b) { b.disabled = true; });
   $("calOut").textContent = "Starting the microphone…";
@@ -631,22 +1090,21 @@ function calibrate(kind) {
       var med = Math.round(vals[vals.length >> 1] / 25) * 25;
       if (kind === "ah") {
         data.base = med;
-        if (!data.best) data.target = clamp(Math.round(med * 0.8 / 25) * 25);
-        $("calOut").textContent = "His \"ahh\": F3 about " + med + " Hz." + (data.best ? "" : " Target set to " + data.target + " Hz (20% lower). Measuring a good R from his therapist session is better still.");
+        if (!data.best) data.target = clamp(Math.round(med * .8 / 25) * 25);
+        $("calOut").textContent = "His \"ahh\": F3 about " + med + " Hz." + (data.best ? "" : " Target set to " + data.target + " Hz (20% lower). Measuring a good R from a therapy session is better still.");
       } else {
         data.best = med;
         data.target = clamp(Math.round((med + 150) / 25) * 25);
-        var warn = data.base && med > data.base * 0.9 ? " That's barely below his \"ahh\", so it may not have been a good R yet: check with his therapist." : "";
+        var warn = data.base && med > data.base * .9 ? " That's barely below his \"ahh\", so it may not have been a good R yet: check with his therapist." : "";
         $("calOut").textContent = "His R: F3 about " + med + " Hz. Target set just above it, " + data.target + " Hz." + warn;
       }
-      save(); paintTarget();
+      save(); paintTarget(); paintJudge();
     })();
   }, function (err) { btns.forEach(function (b) { b.disabled = false; }); $("calOut").textContent = micError(err); });
 }
 function clamp(v) { return Math.max(1600, Math.min(3400, v)); }
 $("calAh").addEventListener("click", function () { calibrate("ah"); });
 $("calR").addEventListener("click", function () { calibrate("r"); });
-var NAMES = {}; LEVELS.forEach(function (L) { NAMES[L.id] = L.name; });
 function rows() {
   var out = [];
   Object.keys(data.log).sort().reverse().forEach(function (d) {
@@ -660,35 +1118,43 @@ function rows() {
 }
 function paintLog() {
   var r = rows();
-  if (!r.length) { $("log").innerHTML = '<p class="soft small">Nothing yet. Scores from Words appear here.</p>'; return; }
-  var h = "<table><tr><th>Day</th><th>Level</th><th class=num>Tries</th><th class=num>Great R</th></tr>";
+  if (!r.length) { $("log").innerHTML = '<p class="soft small">Nothing yet. Words from Word Blaster appear here.</p>'; return; }
+  var h = "<table><tr><th>Day</th><th>Level</th><th class=num>Words</th><th class=num>Great R</th></tr>";
   r.slice(0, 40).forEach(function (x) { h += "<tr><td>" + x.d.slice(5) + "</td><td>" + x.lvl + "</td><td class=num>" + x.n + "</td><td class=num>" + x.g + " (" + x.pct + "%)</td></tr>"; });
   $("log").innerHTML = h + "</table>";
 }
 $("copyLog").addEventListener("click", function () {
-  var lines = ["R practice at home (scored by parent: great / nearly / not yet)"];
-  rows().forEach(function (x) { lines.push(x.d + "  " + x.lvl + ": " + x.g + "/" + x.n + " great (" + x.pct + "%), " + x.nr + " nearly"); });
+  var L = lines(), A = RDSP.agreement(data.trials, L);
+  var lines_ = ["R practice at home with R Rocket (" + (data.mode === "app" ? "words judged by the app, corrected by a parent" : "words judged by a parent") + ")"];
+  rows().forEach(function (x) { lines_.push(x.d + "  " + x.lvl + ": " + x.g + "/" + x.n + " great (" + x.pct + "%), " + x.nr + " nearly"); });
+  if (A.scored) lines_.push("", "App vs parent on " + A.scored + " parent-scored words: agreed on " + A.agree + "/" + A.decided + " it decided, unsure on " + A.unsure + ", called " + A.falseGreat + "/" + A.wrongs + " parent 'not yet' words great.");
+  lines_.push("Judge: lowest held F3 in the word; great <= " + L.good + " Hz, not yet >= " + L.bad + " Hz" + (L.learned ? " (learned from " + L.learned + " parent-scored words)" : " (default)") + ". Star Run target " + data.target + " Hz" + (data.base ? ", his ahh " + data.base + " Hz" : "") + (data.best ? ", his best R " + data.best + " Hz" : "") + ".");
   var rd = Object.keys(data.rocket).sort().reverse().slice(0, 14);
-  if (rd.length) { lines.push("", "Rocket (sustained R, F3 target " + data.target + " Hz" + (data.base ? ", his ahh " + data.base + " Hz" : "") + ")"); rd.forEach(function (d) { lines.push(d + "  best hold " + data.rocket[d].best.toFixed(1) + " s, " + Math.round(data.rocket[d].secs) + " s in the R zone"); }); }
-  var text = lines.join("\n");
+  if (rd.length) { lines_.push("", "Star Run (sustained R)"); rd.forEach(function (d) { var x = data.rocket[d]; lines_.push(d + "  longest R " + (x.best || 0).toFixed(1) + " s" + (x.boosts ? ", " + x.boosts + " s of R in all" : "")); }); }
+  var text = lines_.join("\n");
   var ok = function () { $("copyOut").textContent = "Copied. Paste it into an email or message."; };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { $("copyOut").textContent = text; });
   else $("copyOut").textContent = text;
 });
 $("clearLog").addEventListener("click", function () {
-  if (!confirm("Clear all the scores and rocket times?")) return;
+  if (!confirm("Clear the word scores and Star Run times? (Rocket fuel, planets and what the judge has learned stay.)")) return;
   data.log = {}; data.rocket = {}; save(); paintLog();
 });
 
-/* ------------------------------------------------------------ leaving */
+/* ============================================================ leaving */
 function stopAll() {
-  if (recording) finishRec();
+  if (recording) { recording = false; if (recorder && recorder.state !== "inactive") try { recorder.stop(); } catch (e) {} }
   stopMic();
   if (window.speechSynthesis) speechSynthesis.cancel();
 }
-document.addEventListener("visibilitychange", function () { if (document.hidden) { stopAll(); if (current === "rocketScreen") { show("home"); homeLine(); } } });
-homeLine();
-window.RR = { data: data, LEVELS: LEVELS, markup: markup, plain: plain };
+document.addEventListener("visibilitychange", function () {
+  if (!document.hidden) return;
+  if (current === "runScreen" && run && run.state === "play") { stopAll(); goHome(); }
+  else if (recording) { stopAll(); setSay("say"); }
+  else stopAll();
+});
+paintHome();
+window.RR = { data: data, LEVELS: LEVELS, lines: lines, markup: markup, get run() { return run; } };
 })();
 </script>
 </body>
