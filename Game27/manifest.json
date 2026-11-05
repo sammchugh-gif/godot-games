@@ -1,0 +1,10 @@
+{
+  "name": "R Rocket",
+  "short_name": "R Rocket",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1026",
+  "theme_color": "#0b1026",
+  "icons": [{ "src": "icon.png", "sizes": "180x180", "type": "image/png" }]
+}

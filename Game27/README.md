@@ -4,8 +4,10 @@ Game 27. Practice for the R sound between speech therapy sessions, made for
 Rory. One page and a small sound-analysis file, no engine, plays offline.
 Needs the microphone.
 
-Play it at <https://sammchugh-gif.github.io/godot-games/r-rocket/>, or from the
-shelf. On the iPhone or iPad: Share → Add to Home Screen.
+It is its own app: open <https://sammchugh-gif.github.io/godot-games/r-rocket/>
+in Safari on Rory's iPad, then Share → Add to Home Screen. The icon is a
+rocket called R Rocket, it opens full screen with no way into the games, and
+after one visit online it works offline. It is also on the shelf.
 
 ## What it does
 
@@ -54,5 +56,5 @@ device and are not kept.
 
 ## Publishing
 
-The game is `index.html`, `dsp.js` and `icon.png`; copy all three to
+The app is `index.html`, `dsp.js`, `manifest.json` and `icon.png`; copy all four to
 `docs/r-rocket/`, then run `node tools/offline-list.mjs`.

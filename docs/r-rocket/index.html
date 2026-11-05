@@ -5,9 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b1026">
+<meta name="apple-mobile-web-app-title" content="R Rocket">
 <link rel="apple-touch-icon" href="icon.png">
-<script src="../menu.js"></script>
+<link rel="manifest" href="manifest.json">
+<!-- No shelf menu here: R Rocket is its own app on Rory's Home Screen, and
+     its own Back buttons are the way around. fresh.js keeps it up to date
+     and saves it for playing offline. -->
 <script src="dsp.js"></script>
+<script src="../fresh.js" defer></script>
 <title>R Rocket</title>
 <style>
 /* Layout: four stacked screens (home, rocket, words, grown-ups) over one night sky; the rocket screen is a canvas */
@@ -47,7 +52,7 @@ p { margin: 0; }
 .big span.soft { font-size: .95rem; }
 .big.main { background: linear-gradient(135deg, #ff9f43, #ff6b6b); border: 0; color: #2a0f00; }
 .big.main span.soft { color: #4a1c00; }
-.bar { display: flex; align-items: center; gap: 10px; padding-left: 40px; } /* clear of the shelf's menu button */
+.bar { display: flex; align-items: center; gap: 10px; }
 .bar .grow { flex: 1; }
 .pill { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 9px 16px; font-size: .95rem; font-weight: 600; }
 .pill.on { background: var(--accent); color: #0b1026; border-color: var(--accent); }
@@ -58,7 +63,7 @@ p { margin: 0; }
 /* rocket */
 #rocketScreen { padding: 0; overflow: hidden; }
 #sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#rocketTop { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0 56px; display: flex; gap: 10px; align-items: center; }
+#rocketTop { position: absolute; left: 0; right: 0; top: 0; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0; display: flex; gap: 10px; align-items: center; }
 #rocketTop .grow { flex: 1; text-align: center; font-weight: 700; text-shadow: 0 2px 8px #000; }
 #rocketMsg { position: absolute; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); text-align: center; font-size: 1.15rem; font-weight: 700; text-shadow: 0 2px 8px #000; }
 
