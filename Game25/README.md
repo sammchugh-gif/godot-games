@@ -9,28 +9,30 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 
 ## What it practises
 
-| Facts | Who starts here | Facts in it |
+Five kinds of fact. Each kind is a ladder of sets, and a player climbs each
+ladder on their own: when every fact in a set is fast, the game moves on to
+the next set by itself and says so.
+
+| Kind | Sets, in order | Facts |
 | --- | --- | --- |
-| Adding to 10 | (choose it in Grown-ups) | 66 |
-| Adding and taking away to 10 | Dylan | 132 |
-| Adding and taking away to 20 | Rory | 242 |
-| Times and divide to 12 | Sophia | 288 |
+| Adding and taking away | Adding to 10 · Adding and taking away to 10 (Dylan) · to 20 (Rory) | 66 · 132 · 242 |
+| Doubles and halves | Double 1 to 10 (Dylan) · Doubles and halves to 20 · to 40 (Rory) · to 100 (Sophia) | 10 · 20 · 40 · 100 |
+| Missing numbers | Make 10 (7 + ? = 10) · Missing numbers to 10 (3 + ? = 8, 8 − ? = 3) · to 20 | 18 · 90 · 200 |
+| Tens | Ten more, ten less (23 + 10, 33 − 10) · Adding and taking away tens (30 + 40, 70 − 30) | 100 · 90 |
+| Times and divide | The 2s, 5s and 10s · the 2s to 5s and 10s · Times and divide to 12 (Sophia) | 126 · 190 · 288 |
 
-Doubling is a set of its own, practised alongside the main facts:
+A grown-up can also choose any times tables (just the 7s, say).
 
-| Doubling | Who starts here | Facts in it |
-| --- | --- | --- |
-| Doubling to 20 (double 1 to double 10) | Dylan | 10 |
-| Doubles and halves to 20 (double 4 is 8, half of 8 is 4) | | 20 |
-| Doubles and halves to 40 | Rory | 40 |
-| Doubles and halves to 100 | Sophia | 100 |
-
-A switch on the home screen (**+ − to 10** or **Doubles**) sets which facts
-the games practise. Ladybird Doubles always practises doubling.
+The yellow button on the home screen shows what the games are practising.
+Tapping it opens **What shall we practise?**, a card for each kind on the
+player's list with how far they have got. Ladybird Doubles always
+practises doubling.
 
 First grade asks for adding and taking away within 20, with the facts to 10
-known fluently (Common Core 1.OA.C.6). When every fact in a set is fast, the
-game moves on to the next one by itself (to 10, then to 20) and says so.
+known fluently (Common Core 1.OA.C.6). It also asks for the unknown number
+in an addition or subtraction (1.OA.D.8, "8 + ? = 11") and for 10 more or
+10 less than a two-digit number (1.NBT.C.5). Times and divide start off the
+list for a young player, until a grown-up adds them.
 
 ## How it teaches
 
@@ -39,10 +41,14 @@ game moves on to the next one by itself (to 10, then to 20) and says so.
   counters in ten-frames before it is played.
 - **Strategy order.** Doubling runs double 1 to 5, then 10, then 6 to 9; in
   the bigger sets the tens, then the fives, the teens and the rest. Adding
-  and taking away run plus nothing, plus one, plus
-  two, doubles, the pairs that make ten, ten plus, near doubles, plus nine,
-  then the rest. Times and divide run ones, twos, tens, fives, squares,
-  threes, fours, nines, then the harder ones.
+  and taking away (and missing numbers, and whole tens) run plus nothing,
+  plus one, plus two, doubles, the pairs that make ten, ten plus, near
+  doubles, plus nine, then the rest. Ten more and ten less start with the
+  numbers under ten (3 + 10), then the tens. Times and divide run ones,
+  twos, tens, fives, squares, threes, fours, nines, then the harder ones.
+- **Nothing taught twice.** A fact already fast in one set is not taught
+  again in the next: finish Make 10 and those facts are skipped in the
+  missing numbers to 10.
 - **A few at a time.** New families arrive only while fewer than six facts are
   being learned. A child who finds it hard is never flooded; a child who knows
   them races through.
@@ -58,42 +64,62 @@ game moves on to the next one by itself (to 10, then to 20) and says so.
   counters: two colours in ten-frames for adding, crossed-out counters for
   taking away, rows for times and divide. The child then puts in the right
   answer before going on; that does not count as a try. The fact comes back
-  after two more questions.
+  after two more questions. Numbers past 20 are shown as rods of ten and
+  little cubes.
 - **Hints.** Stuck for 8 seconds on a question, a child is offered the
   counters to count.
 
 ## The games
 
-All six use the same facts. Typing the answer, in Rocket Ride, Monster Munch
-and Race Day, is recall, which is what builds fluency. Tapping it, in Balloon
-Pop and Frog Hop, is a change of pace.
+All nine use the same facts. Typing the answer, in Rocket Ride, Monster Munch,
+Race Day and Ladybird Doubles, is recall, which is what builds fluency. The
+other five are a change of pace, and three of them are played with the hands.
 
 | Game | How | Unlock |
 | --- | --- | --- |
 | Rocket Ride | Type answers to fly; quick ones boost. The Moon is out of reach without them. | free |
 | Balloon Pop | Pop the balloon with the answer. | free |
-| Ladybird Doubles | A ladybird lands with spots on one wing; the answer gives the other wing the same, because a double is a mirror. For a half, the spots wait on the leaf and share out onto the two wings. Big numbers are written on the wings. Always doubling. | free |
+| Ninja Leap | Climb a bamboo grove to the temple at the top. Tap the drifting ledge with the answer to leap onto it. A quick answer is a somersault and a star thrown at a lantern; a wrong ledge crumbles. | free |
+| Ladybird Doubles | A ladybird lands with spots on one wing; the answer gives the other wing the same, because a double is a mirror. For a half, the spots wait on the leaf and share out onto the two wings. Always doubling. | free |
 | Frog Hop | Hop across the pond on the lily pad with the answer. | 25 coins |
+| Apple Catch | Drag the basket (or tap where it should go) under the falling apple with the answer. An apple that falls past comes round again. | 35 coins |
 | Monster Munch | Feed the monster cookies by typing the answers. | 50 coins |
+| Snowball Toss | Flick a snowball at the snowman holding the answer, or tap him. The flick needs only rough aim. | 65 coins |
 | Race Day | Race Robo. Robo drives only while you think, at a pace set from your own usual time, so you win by beating yourself. | 80 coins |
+
+In the games where something has to move, the clock does not count the
+moving. In Apple Catch it stops when the basket sets off for the apple, and
+the apples never start above the basket. In Snowball Toss it stops at the
+throw, not when the snowball lands.
 
 ## Rewards
 
 - **Coins:** one per right answer, one more for a quick one, three for
-  finishing a game, and ten for lighting today's star. Coins unlock the games,
-  and buy colours, hats and extras for the player's buddy in the Shop.
+  finishing a game, and ten for lighting today's star.
+- **The shop** has six tabs, 68 things in all, worth 7,620
+  coins. At 60 to 80 coins a day that is a few months of saving.
+  - **Colours:** 14.
+  - **Patterns:** spots to gold.
+  - **Hats:** 18, up to a space helmet.
+  - **Extras:** a moustache, wings, a jetpack and more.
+  - **Pets:** a chick, puppy, kitten, owl, bunny, panda, robot, dragon or
+    unicorn, which sits beside the buddy.
+  - **Rooms:** the menus' backdrop, from a sunset to outer space.
+- **Saving for something.** Tapping a thing that costs too much makes it
+  the thing the player is saving for. The end of every game says how many
+  more coins it needs, and a bar fills along the Shop button.
 - **Today's star** fills with right answers (30 by default; grown-ups can set
   20–60) and counts days in a row.
 
 ## For grown-ups
 
-- **Facts** shows the table of every family: green fast, yellow being
-  learned, grey still to come.
-- **Grown-ups** (hold the button for a second and a half) sets:
-  - which facts are practised;
-  - the speed that counts as fast;
-  - the daily goal;
-  - sound on or off.
+- **Facts** shows every family in the set being practised: green fast,
+  yellow being learned, grey still to come.
+- **Grown-ups** (hold the button for a second and a half) has two pages:
+  - **What to practise:** the set for each kind, any times tables you
+    choose, and which kinds are on the player's list.
+  - **Speed and more:** the speed that counts as fast, the daily goal, and
+    sound on or off.
 
   It also shows the week's right answers day by day, and can start a
   player's facts again.
@@ -110,7 +136,8 @@ The facts, the families and what to ask next are pure code (no screen, no
 clock, a random source passed in), so the check lifts them out of the page and
 tests them:
 
-- every set has the right facts with the right answers, doubling included;
+- every set of every kind has the right facts with the right answers,
+  including a grown-up's own choice of tables;
 - the families come in strategy order;
 - a fact never comes twice running;
 - a missed fact returns within four questions;
@@ -122,12 +149,25 @@ tests them:
     ten facts at once;
 - facts made fast on one set are not taught again on the next;
 - a typical first grader makes double 1 to double 10 fast in about 65
-  answers, after which the halves come in a few families at a time.
+  answers, after which the halves come in a few families at a time;
+- a typical child gets through each new set: Make 10 in about 150 answers,
+  the others in 600 to 1,000;
+- Make 10 learned, those facts are skipped in the missing numbers; the 2s,
+  5s and 10s learned, only the 3s and 4s are new.
 
-With Playwright it then plays all six games with real taps on the number
-keys, balloons and lily pads, answering one question wrong in each to go
-through the help. It does this on an upright phone, a sideways phone and an
-iPad. It also checks that the **Doubles** switch turns the games over to
-doubling.
+With Playwright it then plays all nine games with real input, answering
+one question wrong in each to go through the help:
+
+- taps on the number keys, the balloons, the lily pads and the ledges;
+- the basket dragged under the apple;
+- a snowball flicked, finger down to finger up.
+
+It does this on an upright phone, a sideways phone and an iPad. It then:
+
+- chooses each kind of fact from the list a child sees;
+- adds times to a player's list and chooses just the 7s;
+- buys a pet and a room in the shop with real taps, and saves up for
+  something too dear;
+- draws every thing in the shop.
 
 `docs/fact-dash/index.html` is the published copy; this folder mirrors it.

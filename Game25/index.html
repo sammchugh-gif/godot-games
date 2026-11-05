@@ -17,12 +17,13 @@ body{position:fixed;inset:0}canvas{display:block;position:fixed;left:0;top:0;tou
 <script>
 "use strict";
 // ============================================================ Fact Dash
-// Number facts, fast. Adding and taking away to 10 and to 20, times and
-// divide to 12: every fact is learned in its family (3 + 5, 5 + 3, 8 - 3,
-// 8 - 5), a few at a time, and practised in five little games until it comes
+// Number facts, fast. Five kinds of fact - adding and taking away, doubles
+// and halves, missing numbers, tens, times and divide - each a ladder of sets
+// a child climbs. Every fact is learned in its family (3 + 5, 5 + 3, 8 - 3,
+// 8 - 5), a few at a time, and practised in nine little games until it comes
 // back quickly. A fact is "fast" once it has been answered right, quickly,
 // three times running; a new family arrives when the ones being learned are
-// nearly there. A star a day for enough right answers.
+// nearly there. A star a day for enough right answers, and coins for a shop.
 // Sophia, Rory and Dylan Games, Inc.
 document.addEventListener("touchmove",e=>{if(e.cancelable)e.preventDefault()},{passive:false});
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
@@ -59,7 +60,7 @@ if(window.visualViewport){visualViewport.addEventListener("resize",reflow);visua
 resize();
 
 // Shown small on the home screen, so it is clear which version a phone runs.
-const BUILD="2026.10.30-2";
+const BUILD="2026.11.04-1";
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t,ease=t=>t<0?0:t>1?1:t*t*(3-2*t),easeOut=t=>t<0?0:t>1?1:1-(1-t)*(1-t);
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shade(hex,amt){const n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
@@ -73,40 +74,77 @@ const hash1=n=>{const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s
 // no screen, no clock, no Math.random (a random source is passed in), so
 // tools/factcheck.mjs lifts this section out and plays it by the thousand.
 //
-// A track is a set of facts: adding to 10, adding and taking away to 10 or to
-// 20, times and divide to 12. Facts are learned in families - 3 + 5, 5 + 3,
+// Facts come in five kinds (AREAS), and each kind is a ladder of sets
+// (TRACKS) that a player climbs on their own: adding and taking away;
+// doubles and halves; missing numbers (3 + ? = 8); tens (34 + 10, 30 + 40);
+// times and divide. A set's facts are learned in families - 3 + 5, 5 + 3,
 // 8 - 3 and 8 - 5 belong together - in the order the strategies are taught:
 // plus nothing, plus one, plus two, doubles, pairs that make ten, ten plus,
 // near doubles, plus nine, then the rest. Times go ones, twos, tens, fives,
-// squares, threes, fours, nines, then the harder ones.
+// squares, threes, fours, nines, then the harder ones, and a grown-up can
+// pick just some of the tables.
 //
-// Doubling is a set of its own, practised alongside: double 1 to double 10
-// first, then each double with its half (double 4 is 8, half of 8 is 4), then
-// on to doubles and halves to 40 and to 100 - the small ones first, then the
-// tens, the fives, the teens and the rest.
+// Doubling runs double 1 to double 10 first, then each double with its half
+// (double 4 is 8, half of 8 is 4), then doubles and halves to 40 and to 100:
+// the small ones first, then the tens, the fives, the teens and the rest.
+// Missing numbers start with the pairs that make 10. Tens start with ten
+// more and ten less (23 + 10, 33 - 10), then whole tens (30 + 40).
+const AREAS=[
+ {id:"plus",name:"Adding and taking away",short:"+ and −",glyph:"3+4",col:"#4dabf7"},
+ {id:"dbl",name:"Doubles and halves",short:"Doubles",glyph:"6+6",col:"#20c997"},
+ {id:"miss",name:"Missing numbers",short:"Missing",glyph:"3+?",col:"#f06595"},
+ {id:"tens",name:"Tens",short:"Tens",glyph:"+10",col:"#fd7e14"},
+ {id:"times",name:"Times and divide",short:"× and ÷",glyph:"4×5",col:"#845ef7"}];
+const AREA={};for(const a of AREAS)AREA[a.id]=a;
 const TRACKS=[
- {id:"add10",name:"Adding to 10",short:"+ to 10",ops:"+",max:10,next:"addsub10"},
- {id:"addsub10",name:"Adding and taking away to 10",short:"+ − to 10",ops:"+-",max:10,next:"addsub20"},
- {id:"addsub20",name:"Adding and taking away to 20",short:"+ − to 20",ops:"+-",max:20,next:null},
- {id:"muldiv",name:"Times and divide to 12",short:"× ÷ to 12",ops:"x/",max:12,next:null},
- {id:"dbl10",name:"Doubling to 20",short:"Double to 20",ops:"d",max:10,next:"dblh10",dbl:1},
- {id:"dblh10",name:"Doubles and halves to 20",short:"Double, half 20",ops:"dh",max:10,next:"dblh20",dbl:1},
- {id:"dblh20",name:"Doubles and halves to 40",short:"Double, half 40",ops:"dh",max:20,next:"dblh50",dbl:1},
- {id:"dblh50",name:"Doubles and halves to 100",short:"Double, half 100",ops:"dh",max:50,next:null,dbl:1}];
+ {id:"add10",area:"plus",kind:"add",name:"Adding to 10",short:"+ to 10",ops:"+",max:10,next:"addsub10"},
+ {id:"addsub10",area:"plus",kind:"add",name:"Adding and taking away to 10",short:"+ − to 10",ops:"+-",max:10,next:"addsub20"},
+ {id:"addsub20",area:"plus",kind:"add",name:"Adding and taking away to 20",short:"+ − to 20",ops:"+-",max:20,next:null},
+ {id:"dbl10",area:"dbl",kind:"dbl",name:"Doubling to 20",short:"Double to 20",ops:"d",max:10,next:"dblh10",dbl:1},
+ {id:"dblh10",area:"dbl",kind:"dbl",name:"Doubles and halves to 20",short:"Double, half 20",ops:"dh",max:10,next:"dblh20",dbl:1},
+ {id:"dblh20",area:"dbl",kind:"dbl",name:"Doubles and halves to 40",short:"Double, half 40",ops:"dh",max:20,next:"dblh50",dbl:1},
+ {id:"dblh50",area:"dbl",kind:"dbl",name:"Doubles and halves to 100",short:"Double, half 100",ops:"dh",max:50,next:null,dbl:1},
+ {id:"bond10",area:"miss",kind:"miss",name:"Make 10",short:"Make 10",max:10,bond:1,next:"miss10"},
+ {id:"miss10",area:"miss",kind:"miss",name:"Missing numbers to 10",short:"? to 10",max:10,next:"miss20"},
+ {id:"miss20",area:"miss",kind:"miss",name:"Missing numbers to 20",short:"? to 20",max:20,next:null},
+ {id:"ten1",area:"tens",kind:"ten",name:"Ten more, ten less",short:"10 more, less",max:50,next:"tens2"},
+ {id:"tens2",area:"tens",kind:"tens",name:"Adding and taking away tens",short:"+ − tens",max:100,next:null},
+ {id:"x2510",area:"times",kind:"mul",name:"The 2s, 5s and 10s",short:"× 2, 5, 10",ops:"x/",max:12,tables:[2,5,10],next:"x2345"},
+ {id:"x2345",area:"times",kind:"mul",name:"The 2s, 3s, 4s, 5s and 10s",short:"× 2 to 5, 10",ops:"x/",max:12,tables:[2,3,4,5,10],next:"muldiv"},
+ {id:"muldiv",area:"times",kind:"mul",name:"Times and divide to 12",short:"× ÷ to 12",ops:"x/",max:12,next:null}];
 const TRACK={};for(const t of TRACKS)TRACK[t.id]=t;
+// A grown-up's own choice of tables is a set too: "x:3,4" is the 3s and 4s.
+function tablesId(list){const l=[];for(const n of list)if(n>=1&&n<=12&&l.indexOf(n)<0)l.push(n);l.sort((a,b)=>a-b);return l.length?"x:"+l.join(","):null}
+function trk(tid){if(TRACK[tid])return TRACK[tid];const m=/^x:(\d+(,\d+)*)$/.exec(tid||"");if(!m)return null;
+ const tb=m[1].split(",").map(Number);if(tablesId(tb)!==tid)return null;
+ const l=tb.map(n=>n+"s"),nm=l.length>1?l.slice(0,-1).join(", ")+" and "+l[l.length-1]:l[0];
+ return TRACK[tid]={id:tid,area:"times",kind:"mul",name:"The "+nm,short:"× "+tb.join(", "),ops:"x/",max:12,tables:tb,next:null,custom:1}}
 const SYM={"+":"+","-":"−","x":"×","/":"÷"};
 const dblOf=n=>({k:"d"+n,x:n,op:"d",y:0,ans:2*n}),halfOf=n=>({k:"h"+2*n,x:2*n,op:"h",y:0,ans:n});
 const dblRank=n=>n<=5?0:n===10?1:n<10?2:n%10===0?3:n%5===0?4:n<20?5:6;
 function factOf(x,op,y){return{k:x+op+y,x,op,y,ans:op==="+"?x+y:op==="-"?x-y:op==="x"?x*y:x/y}}
+// A missing number: [3,"+",null,8] is 3 + ? = 8. x and y are the two numbers
+// of the whole fact (3 and 5), for the counters and the near misses.
+function missOf(a,s,b,c){const ans=a==null?(s==="+"?c-b:c+b):s==="+"?c-a:a-c;
+ return{k:(a==null?"?":a)+s+(b==null?"?":b)+"="+c,op:"m",p:[a,s,b,c],x:a==null?ans:a,y:b==null?ans:b,ans}}
 function addRank(a,b){const c=a+b;return a===0?0:a===1?1:a===2?2:a===b?3:c===10?4:b===10?5:b-a===1?6:b===9?7:8}
 function mulRank(a,b){const has=n=>a===n||b===n;
  return has(1)?0:has(2)?1:has(10)?2:has(5)?3:a===b?4:has(3)?5:has(4)?6:has(9)?7:has(11)?8:has(6)?9:has(12)?10:has(7)?11:12}
 const FAMS={};
-function families(tid){if(FAMS[tid])return FAMS[tid];const t=TRACK[tid],out=[];
- if(t.ops[0]==="d"){for(let n=1;n<=t.max;n++){const f=[dblOf(n)];if(t.ops.indexOf("h")>=0)f.push(halfOf(n));out.push({id:"d"+n,a:n,b:n,c:2*n,op:"d",r:dblRank(n),facts:f})}}
- else if(t.ops==="x/"){for(let a=1;a<=t.max;a++)for(let b=a;b<=t.max;b++){const c=a*b,f=[factOf(a,"x",b)];
-   if(a!==b)f.push(factOf(b,"x",a));f.push(factOf(c,"/",a));if(a!==b)f.push(factOf(c,"/",b));
+function families(tid){if(FAMS[tid])return FAMS[tid];const t=trk(tid),out=[];if(!t)return out;
+ if(t.kind==="dbl"){for(let n=1;n<=t.max;n++){const f=[dblOf(n)];if(t.ops.indexOf("h")>=0)f.push(halfOf(n));out.push({id:"d"+n,a:n,b:n,c:2*n,op:"d",r:dblRank(n),facts:f})}}
+ else if(t.kind==="mul"){const tb=t.tables;for(let a=1;a<=t.max;a++)for(let b=a;b<=t.max;b++){if(tb&&tb.indexOf(a)<0&&tb.indexOf(b)<0)continue;
+   const c=a*b,f=[factOf(a,"x",b)];if(a!==b)f.push(factOf(b,"x",a));f.push(factOf(c,"/",a));if(a!==b)f.push(factOf(c,"/",b));
    out.push({id:a+"x"+b,a,b,c,op:"x",r:mulRank(a,b),facts:f})}}
+ // 3 + ? = 8, 5 + ? = 8, 8 - ? = 3, 8 - ? = 5 (Make 10: only the tens)
+ else if(t.kind==="miss"){for(let c=2;c<=t.max;c++){if(t.bond&&c!==10)continue;for(let a=1;a<=c/2;a++){const b=c-a;if(b>10)continue;
+   const f=[missOf(a,"+",null,c)];if(a!==b)f.push(missOf(b,"+",null,c));f.push(missOf(c,"-",null,a));if(a!==b)f.push(missOf(c,"-",null,b));
+   out.push({id:a+"+"+b,a,b,c,op:"m",r:addRank(a,b),facts:f})}}}
+ // 23 + 10 and 33 - 10: the ones under ten first (ten plus), then the tens
+ else if(t.kind==="ten"){for(let n=1;n<=t.max;n++)out.push({id:"t"+n,a:n,b:10,c:n+10,op:"+",r:n<10?0:n%10===0?1:2,facts:[factOf(n,"+",10),factOf(n+10,"-",10)]})}
+ // 30 + 40: the facts to 10, in tens
+ else if(t.kind==="tens"){for(let c=2;c*10<=t.max;c++)for(let a=1;a<=c/2;a++){const b=c-a,A=a*10,B=b*10,C=c*10,f=[factOf(A,"+",B)];
+   if(a!==b)f.push(factOf(B,"+",A));f.push(factOf(C,"-",A));if(a!==b)f.push(factOf(C,"-",B));out.push({id:A+"+"+B,a:A,b:B,c:C,op:"+",r:addRank(a,b),facts:f})}}
  else{for(let c=0;c<=t.max;c++)for(let a=0;a<=c/2;a++){const b=c-a;if(b>10)continue;const f=[factOf(a,"+",b)];
    if(a!==b)f.push(factOf(b,"+",a));
    if(t.ops.indexOf("-")>=0){f.push(factOf(c,"-",a));if(a!==b)f.push(factOf(c,"-",b))}
@@ -167,21 +205,27 @@ function record(p,k,ok,ms,fastMs){const st=stat(p,k),was=fluent(st);st.n++;st.ms
 // every family met and every fact fast: on to the next track
 function trackDone(p,tid){return families(tid).every(f=>famFluent(p,f))}
 function fastCount(p,tid){let n=0;const all=trackFacts(tid);for(const f of all)if(isFast(p,f.k))n++;return{n,of:all.length}}
-// Wrong answers to choose from, for the games where the answer is tapped:
+// Wrong answers to choose from, for the games where the answer is picked:
 // near misses, and the slips a child really makes (adding instead of taking
-// away, the next number in the times table).
+// away, the next number in the times table, a ten out, the number given).
 function choices(f,n,rng){const a=f.ans,c=[a+1,a-1,a+2,a-2,a+3];
  if(f.op==="+")c.push(Math.abs(f.x-f.y),a+10);if(f.op==="-")c.push(f.x+f.y,f.y);
+ if((f.op==="+"||f.op==="-")&&f.y%10===0&&f.y>0&&(f.x>10||a>20))c.push(a+10,a-10,a+20,a-20);
  if(f.op==="x")c.push(a+f.x,a-f.x,a+f.y,a-f.y,f.x+f.y);if(f.op==="/")c.push(f.y,f.x-f.y,a*2);
  if(f.op==="d")c.push(f.x,f.x+1,f.x+2,a+10);if(f.op==="h")c.push(f.x,f.x-1,a+10,a-10);
+ if(f.op==="m"){const kn=f.p[0]==null?f.p[2]:f.p[0];c.push(f.p[3],kn,f.p[3]+kn)}
  const pool=[];for(const v of c)if(v>=0&&v!==a&&pool.indexOf(v)<0&&Number.isInteger(v))pool.push(v);
  for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
- // the near ones first, so there is always a close call among them
  const out=[a];for(const v of pool){if(out.length>=n)break;out.push(v)}
  for(let i=out.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
-const factText=f=>f.op==="d"?"Double "+f.x:f.op==="h"?"Half of "+f.x:f.x+" "+SYM[f.op]+" "+f.y;
-// a fact named by its key ("3+5", "8-3", "d4", "h8"), for the end of a game
+const mtxt=(p,q)=>(p[0]==null?q:p[0])+" "+SYM[p[1]]+" "+(p[2]==null?q:p[2])+" = "+p[3];
+const factText=f=>f.op==="d"?"Double "+f.x:f.op==="h"?"Half of "+f.x:f.op==="m"?mtxt(f.p,"?"):f.x+" "+SYM[f.op]+" "+f.y;
+// the fact with its answer in it: "3 + 5 = 8", "Double 4 = 8"
+const solved=f=>f.op==="m"?mtxt(f.p,f.ans):factText(f)+" = "+f.ans;
+// a fact named by its key ("3+5", "8-3", "d4", "h8", "3+?=8"), for the end
+// of a game
 function keyText(k){let m=/^d(\d+)$/.exec(k);if(m)return"Double "+m[1];m=/^h(\d+)$/.exec(k);if(m)return"Half of "+m[1];
+ m=/^(\d+|\?)([+-])(\d+|\?)=(\d+)$/.exec(k);if(m)return mtxt([m[1]==="?"?null:m[1],m[2],m[3]==="?"?null:m[3],m[4]],"?");
  m=/^(\d+)(.)(\d+)$/.exec(k);return m?m[1]+" "+SYM[m[2]]+" "+m[3]:k}
 
 // ================================================================ saves
@@ -190,17 +234,31 @@ function keyText(k){let m=/^d(\d+)$/.exec(k);if(m)return"Double "+m[1];m=/^h(\d+
 const store={get(k,d){try{const v=localStorage.getItem("factdash."+k);return v==null?d:JSON.parse(v)}catch(e){return d}},
  set(k,v){try{localStorage.setItem("factdash."+k,JSON.stringify(v))}catch(e){}}};
 const PCOLS=["#4dabf7","#51cf66","#f783ac","#ffa94d","#9775fa","#ffd43b","#ff6b6b","#20c997"];
-function newProfile(name,track,col,dtrack){return fixProfile({id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e6),name,track,dtrack,look:{col,hat:"none",extra:"none"}})}
+function newProfile(name,col,lv,mode){return fixProfile({id:"p"+Date.now().toString(36)+Math.floor(Math.random()*1e6),name,lv:Object.assign({},lv),mode,look:{col}})}
+// A player is on one set of each kind (lv), the games practise one kind
+// (mode), and a grown-up can take kinds off the player's list (hide).
 function fixProfile(p){const d={facts:{},intro:{},retry:[],recent:[],tick:0,coins:0,owned:{},days:{},streak:0,lastLit:"",
-  games:{rocket:1,balloon:1},speed:3,goal:30,pace:5000,rounds:0,best:{},track:"addsub10",look:{col:PCOLS[0],hat:"none",extra:"none"}};
- for(const k in d)if(p[k]==null)p[k]=d[k];if(!TRACK[p.track]||TRACK[p.track].dbl)p.track="addsub10";p.owned["col:"+p.look.col]=1;
- // doubling came a day later: it starts where the player's main facts suggest
- if(!TRACK[p.dtrack]||!TRACK[p.dtrack].dbl)p.dtrack=p.track==="muldiv"?"dblh50":p.track==="addsub20"?"dblh20":"dbl10";
- if(p.mode!=="dbl")p.mode="main";if(p.games.ladybug==null)p.games.ladybug=1;return p}
-// which set the games practise: the player's main facts, or doubling
-const curTrack=p=>p.mode==="dbl"?p.dtrack:p.track;
+  games:{rocket:1,balloon:1},speed:3,goal:30,pace:5000,rounds:0,best:{},lv:{},hide:{},look:{},wish:null};
+ for(const k in d)if(p[k]==null)p[k]=d[k];
+ p.look=Object.assign({col:PCOLS[0],hat:"none",extra:"none",pat:"none",pet:"none",room:"night"},p.look);p.owned["col:"+p.look.col]=1;
+ // Saves from before the five kinds have track (+ − or × ÷), dtrack
+ // (doubling) and mode "main" or "dbl"; they are left as they were.
+ const lv=p.lv,old=TRACK[p.track],has=(a,t)=>!!trk(t)&&trk(t).area===a;
+ if(!has("plus",lv.plus))lv.plus=old&&old.area==="plus"?p.track:p.track==="muldiv"?"addsub20":"addsub10";
+ if(!has("dbl",lv.dbl))lv.dbl=TRACK[p.dtrack]&&TRACK[p.dtrack].dbl?p.dtrack:p.track==="muldiv"?"dblh50":lv.plus==="addsub20"?"dblh20":"dbl10";
+ if(!has("miss",lv.miss))lv.miss=lv.plus==="addsub20"?"miss10":"bond10";
+ if(!has("tens",lv.tens))lv.tens="ten1";
+ if(!has("times",lv.times))lv.times=p.track==="muldiv"?"muldiv":"x2510";
+ if(!AREA[p.mode])p.mode=old&&old.area==="times"?"times":"plus";
+ // times and divide stay off a young player's list until a grown-up adds them
+ if(p.hide.times==null)p.hide.times=lv.plus==="addsub20"||p.mode==="times"?0:1;
+ p.hide[p.mode]=0;
+ if(p.games.ladybug==null)p.games.ladybug=1;if(p.games.ninja==null)p.games.ninja=1;return p}
+// which set the games practise
+const curTrack=p=>p.lv[p.mode]||p.lv.plus;
 let profiles=store.get("profiles",null);
-if(!Array.isArray(profiles)||!profiles.length)profiles=[newProfile("Dylan","addsub10","#4dabf7","dbl10"),newProfile("Rory","addsub20","#51cf66","dblh20"),newProfile("Sophia","muldiv","#f783ac","dblh50")];
+if(!Array.isArray(profiles)||!profiles.length)profiles=[newProfile("Dylan","#4dabf7",{plus:"addsub10",dbl:"dbl10"},"plus"),
+ newProfile("Rory","#51cf66",{plus:"addsub20",dbl:"dblh20"},"plus"),newProfile("Sophia","#f783ac",{plus:"addsub20",dbl:"dblh50",times:"muldiv"},"times")];
 profiles.forEach(fixProfile);
 let me=profiles.find(p=>p.id===store.get("who",""))||null;
 // only the last two months of days are kept
@@ -252,7 +310,9 @@ const SFX={
  meet(){[76,79,84].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.3,"sine",0.12,i*0.12))},
  win(){[60,64,67,72,67,72,76].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.22,"triangle",0.14,i*0.1))},
  buy(){[79,84,88].forEach((n,i)=>tone(NOTE(n),NOTE(n),0.12,"square",0.05,i*0.06))},
- flutter(){for(let i=0;i<5;i++)tone(700+i*90,900+i*90,0.05,"triangle",0.06,0.35+i*0.06)}};
+ flutter(){for(let i=0;i<5;i++)tone(700+i*90,900+i*90,0.05,"triangle",0.06,0.35+i*0.06)},
+ toss(){noise(0.18,0.12,0,1800,true);tone(500,900,0.15,"sine",0.06)},
+ splat(){noise(0.22,0.3,0,700);tone(220,120,0.12,"sine",0.08)}};
 function sfx(k){if(AC&&settings.sfx)try{SFX[k]()}catch(e){}}
 
 // ================================================================ drawing kit
@@ -276,7 +336,7 @@ function button(x,y,w,h,label,fn,o){o=o||{};const r=o.r!=null?o.r:Math.min(h/2,1
    icon(o.icon,x+w/2-tot/2+s/2,y+h/2,s,ink);lx=x+w/2-tot/2+s+8*U+tw/2}else icon(o.icon,x+w/2,y+h/2,s,ink)}
  if(label)fitTxt(label,lx,y+h/2+1,o.fs||Math.min(h*0.42,22*U),w-14*U,ink,"center",900);
  if(o.off){cx.fillStyle="rgba(30,40,70,0.45)";rr(x,y,w,h,r);cx.fill()}
- if(fn)btns.push({x,y:y-2*U,w,h:h+6*U,fn,hold:o.hold,label:label||o.icon||""})}
+ if(fn)btns.push({x,y:y-2*U,w,h:h+6*U,fn,hold:o.hold,label:o.id||label||o.icon||""})}
 function panel(x,y,w,h,col,r){r=r==null?18*U:r;cx.fillStyle="rgba(0,0,0,0.2)";rr(x,y+5*U,w,h,r);cx.fill();cx.fillStyle=col||"#fffaf0";rr(x,y,w,h,r);cx.fill()}
 function hitBtn(p){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h)return b}return null}
 function star(x,y,r,col,k){cx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rad=i%2?r*(k||0.45):r;cx.lineTo(x+Math.cos(a)*rad,y+Math.sin(a)*rad)}cx.closePath();cx.fillStyle=col;cx.fill()}
@@ -285,6 +345,8 @@ function icon(k,x,y,s,col){cx.save();cx.translate(x,y);cx.strokeStyle=col;cx.fil
  const h=s/2;
  if(k==="x"){cx.beginPath();cx.moveTo(-h*0.6,-h*0.6);cx.lineTo(h*0.6,h*0.6);cx.moveTo(h*0.6,-h*0.6);cx.lineTo(-h*0.6,h*0.6);cx.stroke()}
  else if(k==="back"){cx.beginPath();cx.moveTo(h*0.3,-h*0.7);cx.lineTo(-h*0.4,0);cx.lineTo(h*0.3,h*0.7);cx.stroke()}
+ else if(k==="next"){cx.beginPath();cx.moveTo(-h*0.3,-h*0.7);cx.lineTo(h*0.4,0);cx.lineTo(-h*0.3,h*0.7);cx.stroke()}
+ else if(k==="down"){cx.beginPath();cx.moveTo(-h*0.6,-h*0.25);cx.lineTo(0,h*0.35);cx.lineTo(h*0.6,-h*0.25);cx.stroke()}
  else if(k==="del"){cx.beginPath();cx.moveTo(-h*0.95,0);cx.lineTo(-h*0.4,-h*0.6);cx.lineTo(h*0.9,-h*0.6);cx.lineTo(h*0.9,h*0.6);cx.lineTo(-h*0.4,h*0.6);cx.closePath();cx.stroke();
   cx.lineWidth*=0.8;cx.beginPath();cx.moveTo(-h*0.05,-h*0.25);cx.lineTo(h*0.5,h*0.25);cx.moveTo(h*0.5,-h*0.25);cx.lineTo(-h*0.05,h*0.25);cx.stroke()}
  else if(k==="ok"){cx.beginPath();cx.moveTo(-h*0.7,0);cx.lineTo(-h*0.15,h*0.55);cx.lineTo(h*0.75,-h*0.55);cx.stroke()}
@@ -331,40 +393,105 @@ function stepParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=
  cx.globalAlpha=1}
 
 // ================================================================ the buddy
-// Each player's own little creature: a colour, a hat and an extra, all from
-// the shop. It looks at whatever is happening, blinks, and cheers.
+// Each player's own little creature: a colour, a pattern, a hat, an extra and
+// a pet, all from the shop. It looks at whatever is happening, blinks, and
+// cheers. The rooms, also from the shop, are the menus' backgrounds.
 const HATS=[{id:"none",name:"No hat",price:0},{id:"cap",name:"Cap",price:15},{id:"party",name:"Party hat",price:20},{id:"bunny",name:"Bunny ears",price:25},
- {id:"cowboy",name:"Cowboy hat",price:30},{id:"crown",name:"Crown",price:45},{id:"wizard",name:"Wizard hat",price:45}];
-const EXTRAS=[{id:"none",name:"Nothing",price:0},{id:"glasses",name:"Glasses",price:15},{id:"bow",name:"Bow tie",price:15},{id:"shades",name:"Sunglasses",price:25},{id:"cape",name:"Cape",price:35}];
-const COLNAMES={"#4dabf7":"Sky blue","#51cf66":"Leaf green","#f783ac":"Bubblegum","#ffa94d":"Orange","#9775fa":"Purple","#ffd43b":"Sunshine","#ff6b6b":"Cherry","#20c997":"Mint"};
-function buddy(x,y,s,look,o){o=o||{};const col=look.col||"#4dabf7",mood=o.mood||"happy",lk=o.look||{x:0,y:0};
- const bob=o.still?0:Math.sin(T*3+(o.seed||0))*s*0.03,jy=y+bob-(o.jump||0)*s;
- if(look.extra==="cape"){cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x-s*0.6,jy-s*0.2);cx.quadraticCurveTo(x-s*1.25,jy+s*0.7,x-s*0.8,jy+s*0.95);
+ {id:"cowboy",name:"Cowboy hat",price:30},{id:"ninja",name:"Ninja band",price:35},{id:"beanie",name:"Bobble hat",price:40},{id:"crown",name:"Crown",price:45},
+ {id:"wizard",name:"Wizard hat",price:45},{id:"pirate",name:"Pirate hat",price:60},{id:"chef",name:"Chef's hat",price:60},{id:"flower",name:"Flower crown",price:80},
+ {id:"propeller",name:"Propeller cap",price:90},{id:"tophat",name:"Top hat",price:100},{id:"viking",name:"Viking helmet",price:130},{id:"unihorn",name:"Unicorn horn",price:160},
+ {id:"dino",name:"Dino spikes",price:200},{id:"halo",name:"Halo",price:250},{id:"astro",name:"Space helmet",price:300}];
+const EXTRAS=[{id:"none",name:"Nothing",price:0},{id:"glasses",name:"Glasses",price:15},{id:"bow",name:"Bow tie",price:15},{id:"shades",name:"Sunglasses",price:25},
+ {id:"scarf",name:"Scarf",price:35},{id:"cape",name:"Cape",price:35},{id:"tache",name:"Moustache",price:40},{id:"medal",name:"Gold medal",price:60},
+ {id:"balloon",name:"Balloon",price:80},{id:"phones",name:"Headphones",price:90},{id:"wand",name:"Magic wand",price:110},{id:"skate",name:"Skateboard",price:150},
+ {id:"wings",name:"Wings",price:220},{id:"jetpack",name:"Jetpack",price:280}];
+const PATS=[{id:"none",name:"Plain",price:0},{id:"spots",name:"Spots",price:40},{id:"stripes",name:"Stripes",price:50},{id:"hearts",name:"Hearts",price:70},
+ {id:"stars",name:"Stars",price:90},{id:"tiger",name:"Tiger",price:120},{id:"rainbow",name:"Rainbow",price:180},{id:"galaxy",name:"Galaxy",price:260},{id:"gold",name:"Gold",price:400}];
+const PETS=[{id:"none",name:"No pet",price:0},{id:"chick",name:"Chick",price:120},{id:"puppy",name:"Puppy",price:150},{id:"kitten",name:"Kitten",price:150},
+ {id:"owl",name:"Owl",price:170},{id:"bunny",name:"Bunny",price:190},{id:"panda",name:"Panda",price:260},{id:"robot",name:"Robot",price:320},
+ {id:"dragon",name:"Dragon",price:400},{id:"unicorn",name:"Unicorn",price:480}];
+const ROOMS=[{id:"night",name:"Starry night",price:0},{id:"sunset",name:"Sunset",price:80},{id:"snow",name:"Snowy hills",price:120},{id:"ocean",name:"Under the sea",price:160},
+ {id:"jungle",name:"Jungle",price:200},{id:"candy",name:"Candy land",price:250},{id:"space",name:"Outer space",price:320}];
+const MORECOLS=["#e599f7","#66d9e8","#a9e34b","#ced4da","#a0673b","#364fc7"];
+const COLNAMES={"#4dabf7":"Sky blue","#51cf66":"Leaf green","#f783ac":"Bubblegum","#ffa94d":"Orange","#9775fa":"Purple","#ffd43b":"Sunshine","#ff6b6b":"Cherry","#20c997":"Mint",
+ "#e599f7":"Lilac","#66d9e8":"Aqua","#a9e34b":"Lime","#ced4da":"Silver","#a0673b":"Cocoa","#364fc7":"Midnight"};
+// The shop's tabs. An item is owned as "<pre>:<id>" and worn as look[key].
+const SHOP=[
+ {tab:"Colours",key:"col",pre:"col",items:PCOLS.map(c=>({id:c,name:COLNAMES[c],price:10})).concat(MORECOLS.map(c=>({id:c,name:COLNAMES[c],price:20})))},
+ {tab:"Patterns",key:"pat",pre:"pat",items:PATS},{tab:"Hats",key:"hat",pre:"hat",items:HATS},{tab:"Extras",key:"extra",pre:"ext",items:EXTRAS},
+ {tab:"Pets",key:"pet",pre:"pet",items:PETS},{tab:"Rooms",key:"room",pre:"room",items:ROOMS}];
+const ITEM={};for(const s of SHOP)for(const it of s.items)ITEM[s.pre+":"+it.id]={tab:s,it};
+// o: mood, look (where the eyes go), jump, seed, still (no bob), noShadow,
+// band (a ninja's headband), pet (the pet beside it)
+function buddy(x,y,s,look,o){o=o||{};const col=look.col||"#4dabf7",mood=o.mood||"happy",lk=o.look||{x:0,y:0},ex=look.extra;
+ const bob=o.still?0:Math.sin(T*3+(o.seed||0))*s*0.03,jy=y+bob-(o.jump||0)*s,up=mood==="cheer"?1:0;
+ // the arm tips, where a wand or a balloon is held
+ const hl={x:x-s*(1.15-up*0.05),y:jy+s*(0.35-up*0.95)},hr={x:x+s*(1.15-up*0.05),y:jy+s*(0.35-up*0.95)};
+ if(ex==="cape"){cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x-s*0.6,jy-s*0.2);cx.quadraticCurveTo(x-s*1.25,jy+s*0.7,x-s*0.8,jy+s*0.95);
   cx.lineTo(x+s*0.8,jy+s*0.95);cx.quadraticCurveTo(x+s*1.25,jy+s*0.7,x+s*0.6,jy-s*0.2);cx.closePath();cx.fill()}
+ if(ex==="wings"){const fl=Math.sin(T*6)*0.15;for(const sx of[-1,1]){ellipse(x+sx*s*0.95,jy-s*0.25,s*0.62,s*0.3,"rgba(255,255,255,0.92)",sx*(0.5+fl));
+  ellipse(x+sx*s*0.85,jy+s*0.1,s*0.45,s*0.22,"rgba(208,235,255,0.92)",sx*(0.2+fl))}}
+ if(ex==="jetpack"){for(const sx of[-1,1]){cx.fillStyle="#868e96";rr(x+sx*s*0.95-s*0.2,jy-s*0.45,s*0.4,s*0.95,s*0.18);cx.fill();circle(x+sx*s*0.95,jy-s*0.45,s*0.2,"#e03131");
+  const fl=s*(0.35+0.15*Math.sin(T*30+sx));cx.fillStyle="#ffa94d";cx.beginPath();cx.moveTo(x+sx*s*0.95-s*0.15,jy+s*0.5);cx.lineTo(x+sx*s*0.95,jy+s*0.5+fl);cx.lineTo(x+sx*s*0.95+s*0.15,jy+s*0.5);cx.fill()}}
+ if(ex==="skate"){cx.fillStyle="#e8590c";rr(x-s*0.95,y+s*0.96,s*1.9,s*0.14,s*0.07);cx.fill();circle(x-s*0.6,y+s*1.16,s*0.1,"#343a40");circle(x+s*0.6,y+s*1.16,s*0.1,"#343a40")}
  ellipse(x-s*0.42,y+s*0.88,s*0.3,s*0.16,shade(col,-0.35));ellipse(x+s*0.42,y+s*0.88,s*0.3,s*0.16,shade(col,-0.35));
- if(!o.noShadow)ellipse(x,y+s*1.02,s*0.85,s*0.12,"rgba(0,0,0,0.15)");
+ if(!o.noShadow)ellipse(x,y+s*(ex==="skate"?1.28:1.02),s*0.85,s*0.12,"rgba(0,0,0,0.15)");
  const g=cx.createRadialGradient(x-s*0.3,jy-s*0.4,s*0.1,x,jy,s*1.05);g.addColorStop(0,shade(col,0.35));g.addColorStop(1,shade(col,-0.12));
  cx.fillStyle=g;cx.beginPath();cx.ellipse(x,jy,s,s*0.95,0,0,Math.PI*2);cx.fill();
+ if(look.pat&&look.pat!=="none"){cx.save();cx.beginPath();cx.ellipse(x,jy,s,s*0.95,0,0,Math.PI*2);cx.clip();pattern(look.pat,x,jy,s,col);cx.restore()}
  ellipse(x,jy+s*0.38,s*0.55,s*0.4,"rgba(255,255,255,0.22)");
  // arms up when cheering
  cx.strokeStyle=shade(col,-0.2);cx.lineWidth=s*0.16;cx.lineCap="round";
- const up=mood==="cheer"?1:0;cx.beginPath();cx.moveTo(x-s*0.88,jy+s*0.1);cx.lineTo(x-s*(1.15-up*0.05),jy+s*(0.35-up*0.95));cx.moveTo(x+s*0.88,jy+s*0.1);cx.lineTo(x+s*(1.15-up*0.05),jy+s*(0.35-up*0.95));cx.stroke();
+ cx.beginPath();cx.moveTo(x-s*0.88,jy+s*0.1);cx.lineTo(hl.x,hl.y);cx.moveTo(x+s*0.88,jy+s*0.1);cx.lineTo(hr.x,hr.y);cx.stroke();
  // eyes, which blink and look
  const blink=(Math.sin(T*1.3+(o.seed||0)*3)>0.985)?0.12:1;
- for(const sx of[-1,1]){const ex=x+sx*s*0.34,ey=jy-s*0.2;ellipse(ex,ey,s*0.24,s*0.27*blink,"#fff");
-  if(blink>0.5){circle(ex+lk.x*s*0.09,ey+lk.y*s*0.09+s*0.03,s*0.12,"#1d2340");circle(ex+lk.x*s*0.09-s*0.04,ey+lk.y*s*0.09-s*0.02,s*0.04,"#fff")}}
- if(look.extra==="glasses"){cx.strokeStyle="#343a40";cx.lineWidth=s*0.06;for(const sx of[-1,1]){cx.beginPath();cx.arc(x+sx*s*0.34,jy-s*0.2,s*0.27,0,Math.PI*2);cx.stroke()}
+ for(const sx of[-1,1]){const ex2=x+sx*s*0.34,ey=jy-s*0.2;ellipse(ex2,ey,s*0.24,s*0.27*blink,"#fff");
+  if(blink>0.5){circle(ex2+lk.x*s*0.09,ey+lk.y*s*0.09+s*0.03,s*0.12,"#1d2340");circle(ex2+lk.x*s*0.09-s*0.04,ey+lk.y*s*0.09-s*0.02,s*0.04,"#fff")}}
+ if(ex==="glasses"){cx.strokeStyle="#343a40";cx.lineWidth=s*0.06;for(const sx of[-1,1]){cx.beginPath();cx.arc(x+sx*s*0.34,jy-s*0.2,s*0.27,0,Math.PI*2);cx.stroke()}
   cx.beginPath();cx.moveTo(x-s*0.08,jy-s*0.22);cx.lineTo(x+s*0.08,jy-s*0.22);cx.stroke()}
- if(look.extra==="shades"){cx.fillStyle="#212529";for(const sx of[-1,1]){rr(x+sx*s*0.34-s*0.28,jy-s*0.38,s*0.56,s*0.32,s*0.12);cx.fill()}cx.fillRect(x-s*0.1,jy-s*0.3,s*0.2,s*0.06)}
+ if(ex==="shades"){cx.fillStyle="#212529";for(const sx of[-1,1]){rr(x+sx*s*0.34-s*0.28,jy-s*0.38,s*0.56,s*0.32,s*0.12);cx.fill()}cx.fillRect(x-s*0.1,jy-s*0.3,s*0.2,s*0.06)}
  // cheeks and mouth
  ellipse(x-s*0.62,jy+s*0.12,s*0.13,s*0.08,"rgba(255,120,150,0.45)");ellipse(x+s*0.62,jy+s*0.12,s*0.13,s*0.08,"rgba(255,120,150,0.45)");
  cx.strokeStyle="#1d2340";cx.lineWidth=s*0.07;cx.lineCap="round";
  if(mood==="oops"){cx.beginPath();cx.moveTo(x-s*0.2,jy+s*0.3);cx.quadraticCurveTo(x,jy+s*0.2,x+s*0.2,jy+s*0.3);cx.stroke()}
  else if(mood==="wow"||mood==="cheer"){cx.fillStyle="#1d2340";cx.beginPath();cx.ellipse(x,jy+s*0.26,s*0.16,s*0.18,0,0,Math.PI*2);cx.fill();ellipse(x,jy+s*0.33,s*0.09,s*0.06,"#ff8787")}
  else{cx.beginPath();cx.arc(x,jy+s*0.1,s*0.24,0.25,Math.PI-0.25);cx.stroke()}
- if(look.extra==="bow"){const by=jy+s*0.62;cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x,by);cx.lineTo(x-s*0.3,by-s*0.16);cx.lineTo(x-s*0.3,by+s*0.16);cx.closePath();cx.fill();
+ if(ex==="tache"){for(const sx of[-1,1]){ellipse(x+sx*s*0.16,jy+s*0.06,s*0.18,s*0.08,"#5c3a1a",sx*0.25);circle(x+sx*s*0.33,jy+s*0.0,s*0.06,"#5c3a1a")}}
+ if(ex==="bow"){const by=jy+s*0.62;cx.fillStyle="#e03131";cx.beginPath();cx.moveTo(x,by);cx.lineTo(x-s*0.3,by-s*0.16);cx.lineTo(x-s*0.3,by+s*0.16);cx.closePath();cx.fill();
   cx.beginPath();cx.moveTo(x,by);cx.lineTo(x+s*0.3,by-s*0.16);cx.lineTo(x+s*0.3,by+s*0.16);cx.closePath();cx.fill();circle(x,by,s*0.07,"#c92a2a")}
- hat(look.hat,x,jy-s*0.88,s)}
+ if(ex==="scarf"){cx.save();cx.beginPath();cx.ellipse(x,jy,s*1.02,s*0.97,0,0,Math.PI*2);cx.clip();cx.fillStyle="#e03131";cx.fillRect(x-s,jy+s*0.46,s*2,s*0.2);
+  cx.fillStyle="#fff";for(let i=-3;i<=3;i++)cx.fillRect(x+i*s*0.3-s*0.04,jy+s*0.46,s*0.08,s*0.2);cx.restore();
+  cx.fillStyle="#e03131";rr(x+s*0.3,jy+s*0.5,s*0.2,s*0.5,s*0.06);cx.fill()}
+ if(ex==="medal"){cx.strokeStyle="#4c6ef5";cx.lineWidth=s*0.08;cx.beginPath();cx.moveTo(x-s*0.25,jy+s*0.4);cx.lineTo(x,jy+s*0.62);cx.lineTo(x+s*0.25,jy+s*0.4);cx.stroke();
+  circle(x,jy+s*0.7,s*0.15,"#fcc419");star(x,jy+s*0.7,s*0.09,"#fff3bf")}
+ if(ex==="phones"){cx.strokeStyle="#343a40";cx.lineWidth=s*0.09;cx.beginPath();cx.ellipse(x,jy-s*0.15,s*0.98,s*0.95,0,Math.PI*1.08,Math.PI*1.92);cx.stroke();
+  for(const sx of[-1,1]){cx.fillStyle="#ff6b6b";rr(x+sx*s*0.98-s*0.13,jy-s*0.38,s*0.26,s*0.42,s*0.1);cx.fill()}}
+ if(ex==="wand"){cx.strokeStyle="#343a40";cx.lineWidth=s*0.07;cx.beginPath();cx.moveTo(hr.x,hr.y);cx.lineTo(hr.x+s*0.25,hr.y-s*0.5);cx.stroke();
+  star(hr.x+s*0.28,hr.y-s*0.58,s*0.18,"#ffd43b");if(Math.sin(T*5)>0)star(hr.x+s*0.5,hr.y-s*0.8,s*0.06,"#fff3bf")}
+ if(ex==="balloon"){cx.strokeStyle="rgba(60,60,60,0.7)";cx.lineWidth=Math.max(1,s*0.03);cx.beginPath();cx.moveTo(hl.x,hl.y);cx.quadraticCurveTo(hl.x-s*0.3,hl.y-s*0.6,hl.x-s*0.2,hl.y-s*1.2);cx.stroke();
+  ellipse(hl.x-s*0.2,hl.y-s*1.55+Math.sin(T*2)*s*0.04,s*0.32,s*0.38,"#ff6b6b");ellipse(hl.x-s*0.3,hl.y-s*1.65,s*0.07,s*0.12,"rgba(255,255,255,0.5)",-0.4)}
+ if(o.band&&look.hat!=="ninja")ninjaBand(x,jy-s*0.56,s);
+ hat(look.hat,x,jy-s*0.88,s);
+ if(o.pet)pet(look.pet,x-s*1.0,y+s*0.62,s*0.4)}
+// a pattern on the buddy's body, already clipped to it
+function pattern(k,x,y,s,col){
+ if(k==="spots")for(let i=0;i<9;i++)circle(x+(hash1(i)-0.5)*1.8*s,y+(hash1(i+20)-0.5)*1.8*s,s*(0.1+hash1(i+40)*0.08),shade(col,-0.25));
+ else if(k==="stripes"){cx.fillStyle=shade(col,-0.22);for(let i=-3;i<=3;i++)cx.fillRect(x-s,y+i*s*0.32-s*0.07,2*s,s*0.14)}
+ else if(k==="hearts")for(let i=0;i<8;i++){const hx=x+(hash1(i+3)-0.5)*1.7*s,hy=y+(hash1(i+13)-0.5)*1.7*s,r=s*0.09;circle(hx-r*0.6,hy,r,"#ff6b9a");circle(hx+r*0.6,hy,r,"#ff6b9a");
+  cx.beginPath();cx.moveTo(hx-r*1.5,hy+r*0.3);cx.lineTo(hx,hy+r*1.8);cx.lineTo(hx+r*1.5,hy+r*0.3);cx.fill()}
+ else if(k==="stars")for(let i=0;i<8;i++)star(x+(hash1(i+5)-0.5)*1.7*s,y+(hash1(i+15)-0.5)*1.7*s,s*0.13,"#fff3bf");
+ else if(k==="tiger"){cx.strokeStyle="rgba(40,30,20,0.55)";cx.lineWidth=s*0.1;cx.lineCap="round";for(let i=0;i<6;i++){const a=-0.9+i*0.36,sx=i<3?-1:1;
+  cx.beginPath();cx.moveTo(x+sx*s,y+a*s);cx.quadraticCurveTo(x+sx*s*0.6,y+a*s+s*0.06,x+sx*s*0.45,y+a*s+s*0.2);cx.stroke()}}
+ else if(k==="rainbow"){const g=cx.createLinearGradient(x-s,0,x+s,0);["#ff6b6b","#ffa94d","#ffd43b","#69db7c","#4dabf7","#9775fa"].forEach((c,i)=>g.addColorStop(i/5,c));
+  cx.globalAlpha=0.6;cx.fillStyle=g;cx.fillRect(x-s,y-s,2*s,2*s);cx.globalAlpha=1}
+ else if(k==="galaxy"){cx.fillStyle="rgba(24,12,70,0.72)";cx.fillRect(x-s,y-s,2*s,2*s);circle(x+s*0.3,y-s*0.2,s*0.5,"rgba(204,93,232,0.28)");
+  for(let i=0;i<14;i++){cx.globalAlpha=0.5+0.5*Math.sin(T*3+i);circle(x+(hash1(i+7)-0.5)*1.8*s,y+(hash1(i+17)-0.5)*1.8*s,s*0.035,"#fff")}cx.globalAlpha=1}
+ else if(k==="gold"){const g=cx.createLinearGradient(x-s,y-s,x+s,y+s);g.addColorStop(0,"#fff3bf");g.addColorStop(0.45,"#fcc419");g.addColorStop(1,"#e67700");
+  cx.globalAlpha=0.85;cx.fillStyle=g;cx.fillRect(x-s,y-s,2*s,2*s);cx.globalAlpha=1;if(Math.sin(T*2.5)>0.3)star(x-s*0.45,y-s*0.5,s*0.12,"#fff")}}
+function ninjaBand(x,y,s){const w=Math.sin(T*9)*s*0.08;cx.fillStyle="#e03131";rr(x-s*0.86,y-s*0.1,s*1.72,s*0.2,s*0.08);cx.fill();
+ cx.strokeStyle="#c92a2a";cx.lineWidth=s*0.1;cx.lineCap="round";cx.beginPath();cx.moveTo(x+s*0.8,y);cx.quadraticCurveTo(x+s*1.15,y-s*0.1+w,x+s*1.45,y+s*0.05-w);
+ cx.moveTo(x+s*0.8,y+s*0.04);cx.quadraticCurveTo(x+s*1.1,y+s*0.2-w,x+s*1.35,y+s*0.32+w);cx.stroke();circle(x+s*0.8,y,s*0.1,"#c92a2a")}
+// y is the top of the head
 function hat(k,x,y,s){if(!k||k==="none")return;
  if(k==="cap"){cx.fillStyle="#e03131";cx.beginPath();cx.ellipse(x,y+s*0.12,s*0.62,s*0.42,0,Math.PI,0);cx.fill();ellipse(x+s*0.45,y+s*0.12,s*0.42,s*0.09,"#c92a2a");circle(x,y-s*0.3,s*0.07,"#c92a2a")}
  else if(k==="party"){cx.fillStyle="#9775fa";cx.beginPath();cx.moveTo(x-s*0.38,y+s*0.12);cx.lineTo(x,y-s*0.85);cx.lineTo(x+s*0.38,y+s*0.12);cx.closePath();cx.fill();
@@ -374,15 +501,108 @@ function hat(k,x,y,s){if(!k||k==="none")return;
  else if(k==="wizard"){cx.fillStyle="#3b5bdb";cx.beginPath();cx.moveTo(x-s*0.55,y+s*0.18);cx.quadraticCurveTo(x+s*0.05,y-s*0.2,x+s*0.25,y-s*1.05);cx.quadraticCurveTo(x+s*0.2,y-s*0.2,x+s*0.55,y+s*0.18);cx.closePath();cx.fill();
   ellipse(x,y+s*0.16,s*0.7,s*0.12,"#364fc7");star(x-s*0.05,y-s*0.25,s*0.13,"#ffd43b");star(x+s*0.15,y-s*0.6,s*0.08,"#ffd43b")}
  else if(k==="cowboy"){ellipse(x,y+s*0.12,s*0.85,s*0.16,"#a0672c");cx.fillStyle="#b8793a";rr(x-s*0.4,y-s*0.42,s*0.8,s*0.56,s*0.18);cx.fill();cx.fillStyle="#5c3a1a";cx.fillRect(x-s*0.4,y,s*0.8,s*0.1)}
- else if(k==="bunny"){for(const sx of[-1,1]){ellipse(x+sx*s*0.28,y-s*0.45,s*0.15,s*0.5,"#fff",sx*0.15);ellipse(x+sx*s*0.28,y-s*0.42,s*0.07,s*0.36,"#ffc9de",sx*0.15)}}}
+ else if(k==="bunny"){for(const sx of[-1,1]){ellipse(x+sx*s*0.28,y-s*0.45,s*0.15,s*0.5,"#fff",sx*0.15);ellipse(x+sx*s*0.28,y-s*0.42,s*0.07,s*0.36,"#ffc9de",sx*0.15)}}
+ else if(k==="ninja")ninjaBand(x,y+s*0.32,s);
+ else if(k==="beanie"||k==="propeller"){cx.fillStyle=k==="beanie"?"#4c6ef5":"#ff6b6b";cx.beginPath();cx.ellipse(x,y+s*0.2,s*0.66,s*0.6,0,Math.PI,0);cx.fill();
+  if(k==="propeller"){cx.fillStyle="#ffd43b";cx.beginPath();cx.moveTo(x,y+s*0.2);cx.ellipse(x,y+s*0.2,s*0.66,s*0.6,0,Math.PI*1.33,Math.PI*1.66);cx.closePath();cx.fill();
+   cx.fillStyle="#4dabf7";cx.beginPath();cx.moveTo(x,y+s*0.2);cx.ellipse(x,y+s*0.2,s*0.66,s*0.6,0,Math.PI*1.66,Math.PI*2);cx.closePath();cx.fill();
+   cx.fillStyle="#495057";cx.fillRect(x-s*0.03,y-s*0.55,s*0.06,s*0.18);const b=Math.abs(Math.cos(T*18));ellipse(x-s*0.32*b,y-s*0.57,s*0.32*b+0.5,s*0.07,"#e03131");ellipse(x+s*0.32*b,y-s*0.57,s*0.32*b+0.5,s*0.07,"#e03131")}
+  else{cx.fillStyle="#364fc7";rr(x-s*0.66,y+s*0.08,s*1.32,s*0.18,s*0.08);cx.fill();circle(x,y-s*0.42,s*0.16,"#fff")}}
+ else if(k==="pirate"){cx.fillStyle="#212529";cx.beginPath();cx.moveTo(x-s*0.8,y+s*0.15);cx.quadraticCurveTo(x-s*0.5,y-s*0.6,x,y-s*0.35);cx.quadraticCurveTo(x+s*0.5,y-s*0.6,x+s*0.8,y+s*0.15);
+  cx.quadraticCurveTo(x,y-s*0.05,x-s*0.8,y+s*0.15);cx.fill();circle(x,y-s*0.15,s*0.12,"#fff");cx.strokeStyle="#fff";cx.lineWidth=s*0.04;cx.beginPath();
+  cx.moveTo(x-s*0.17,y-s*0.0);cx.lineTo(x+s*0.17,y+s*0.08);cx.moveTo(x+s*0.17,y-s*0.0);cx.lineTo(x-s*0.17,y+s*0.08);cx.stroke()}
+ else if(k==="chef"){for(const [dx,dy] of[[-0.3,-0.3],[0,-0.48],[0.3,-0.3]])circle(x+dx*s,y+dy*s,s*0.3,"#f8f9fa");cx.fillStyle="#f1f3f5";rr(x-s*0.42,y-s*0.2,s*0.84,s*0.38,s*0.06);cx.fill();
+  cx.strokeStyle="#ced4da";cx.lineWidth=s*0.03;cx.beginPath();cx.moveTo(x-s*0.42,y+s*0.05);cx.lineTo(x+s*0.42,y+s*0.05);cx.stroke()}
+ else if(k==="flower"){for(let i=0;i<5;i++){const a=Math.PI*(1.12+i*0.19),fx=x+Math.cos(a)*s*0.72,fy=y+s*0.62+Math.sin(a)*s*0.8,c=["#ff6b6b","#ffd43b","#f783ac","#9775fa","#4dabf7"][i];
+  for(let j=0;j<5;j++){const b=j/5*Math.PI*2;circle(fx+Math.cos(b)*s*0.08,fy+Math.sin(b)*s*0.08,s*0.07,c)}circle(fx,fy,s*0.05,"#fff3bf")}}
+ else if(k==="tophat"){ellipse(x,y+s*0.14,s*0.75,s*0.13,"#212529");cx.fillStyle="#212529";rr(x-s*0.42,y-s*0.7,s*0.84,s*0.84,s*0.06);cx.fill();cx.fillStyle="#c92a2a";cx.fillRect(x-s*0.42,y-s*0.06,s*0.84,s*0.14)}
+ else if(k==="viking"){cx.fillStyle="#f1e3c7";for(const sx of[-1,1]){cx.beginPath();cx.moveTo(x+sx*s*0.5,y+s*0.05);cx.quadraticCurveTo(x+sx*s*1.05,y-s*0.05,x+sx*s*0.95,y-s*0.65);cx.quadraticCurveTo(x+sx*s*0.8,y-s*0.2,x+sx*s*0.45,y-s*0.2);cx.fill()}
+  cx.fillStyle="#868e96";cx.beginPath();cx.ellipse(x,y+s*0.2,s*0.66,s*0.6,0,Math.PI,0);cx.fill();cx.fillStyle="#495057";cx.fillRect(x-s*0.66,y+s*0.06,s*1.32,s*0.14);cx.fillRect(x-s*0.06,y-s*0.4,s*0.12,s*0.5)}
+ else if(k==="unihorn"){for(const sx of[-1,1]){cx.fillStyle="#fff";cx.beginPath();cx.moveTo(x+sx*s*0.3,y+s*0.15);cx.lineTo(x+sx*s*0.48,y-s*0.2);cx.lineTo(x+sx*s*0.6,y+s*0.2);cx.fill()}
+  cx.fillStyle="#fcc419";cx.beginPath();cx.moveTo(x-s*0.16,y+s*0.12);cx.lineTo(x,y-s*0.85);cx.lineTo(x+s*0.16,y+s*0.12);cx.fill();cx.strokeStyle="#e67700";cx.lineWidth=s*0.04;
+  for(let i=1;i<4;i++){const t=i/4;cx.beginPath();cx.moveTo(x-s*0.16*(1-t),y+s*0.12-s*0.97*t+s*0.05);cx.lineTo(x+s*0.16*(1-t),y+s*0.12-s*0.97*t-s*0.05);cx.stroke()}}
+ else if(k==="dino"){cx.fillStyle="#40c057";for(let i=0;i<5;i++){const a=Math.PI*(1.15+i*0.175),bx=x+Math.cos(a)*s*0.8,by=y+s*0.75+Math.sin(a)*s*0.78,ox=Math.cos(a)*s*0.32,oy=Math.sin(a)*s*0.32;
+  cx.beginPath();cx.moveTo(bx-oy*0.45,by+ox*0.45);cx.lineTo(bx+ox,by+oy);cx.lineTo(bx+oy*0.45,by-ox*0.45);cx.fill()}}
+ else if(k==="halo"){cx.globalAlpha=0.5+0.2*Math.sin(T*3);ellipse(x,y-s*0.35,s*0.62,s*0.2,"rgba(255,236,153,0.6)");cx.globalAlpha=1;cx.strokeStyle="#fcc419";cx.lineWidth=s*0.09;
+  cx.beginPath();cx.ellipse(x,y-s*0.35,s*0.5,s*0.14,0,0,Math.PI*2);cx.stroke()}
+ else if(k==="astro"){const cy0=y+s*0.88;circle(x,cy0,s*1.22,"rgba(200,230,255,0.16)");cx.strokeStyle="rgba(255,255,255,0.75)";cx.lineWidth=s*0.07;
+  cx.beginPath();cx.arc(x,cy0,s*1.22,0,Math.PI*2);cx.stroke();cx.strokeStyle="rgba(255,255,255,0.6)";cx.lineWidth=s*0.09;cx.beginPath();cx.arc(x,cy0,s*0.98,-2.6,-1.9);cx.stroke();
+  cx.strokeStyle="#adb5bd";cx.lineWidth=s*0.05;cx.beginPath();cx.moveTo(x,cy0-s*1.22);cx.lineTo(x,cy0-s*1.5);cx.stroke();circle(x,cy0-s*1.52,s*0.07,Math.sin(T*4)>0?"#ff6b6b":"#fa5252")}}
+// A pet sits beside its buddy and bobs about; (x, y) is the middle of its
+// head, and it stands about s below.
+function pet(k,x,y,s){if(!k||k==="none")return;const b=Math.abs(Math.sin(T*4+x*0.05))*s*0.08,ink="#212529";
+ ellipse(x,y+s*1.02,s*0.7,s*0.13,"rgba(0,0,0,0.15)");y-=b;
+ const eyes=(ex,ey,r,col)=>{for(const sx of[-1,1]){circle(x+sx*ex,y+ey,r,col||ink);circle(x+sx*ex-r*0.3,y+ey-r*0.3,r*0.35,"#fff")}};
+ if(k==="chick"){ellipse(x,y+s*0.3,s*0.78,s*0.72,"#ffd43b");ellipse(x+s*0.55,y+s*0.45,s*0.22,s*0.36,"#fcc419",0.5);eyes(s*0.26,s*0.05,s*0.1);
+  cx.fillStyle="#ff922b";cx.beginPath();cx.moveTo(x-s*0.13,y+s*0.22);cx.lineTo(x+s*0.13,y+s*0.22);cx.lineTo(x,y+s*0.42);cx.fill();
+  cx.strokeStyle="#ff922b";cx.lineWidth=s*0.09;for(const sx of[-1,1]){cx.beginPath();cx.moveTo(x+sx*s*0.22,y+s*0.95);cx.lineTo(x+sx*s*0.22,y+s*1.02+b);cx.stroke()}
+  ellipse(x,y-s*0.42,s*0.07,s*0.16,"#fab005",0.3)}
+ else if(k==="puppy"){cx.strokeStyle="#a0673b";cx.lineWidth=s*0.14;cx.lineCap="round";cx.beginPath();cx.moveTo(x+s*0.55,y+s*0.65);cx.quadraticCurveTo(x+s*0.95,y+s*0.4,x+s*0.9+Math.sin(T*12)*s*0.15,y+s*0.15);cx.stroke();
+  ellipse(x,y+s*0.65,s*0.62,s*0.42,"#c08552");circle(x,y,s*0.58,"#d9a066");for(const sx of[-1,1])ellipse(x+sx*s*0.55,y+s*0.08,s*0.18,s*0.38,"#8b5e34",-sx*0.3);
+  ellipse(x,y+s*0.22,s*0.3,s*0.2,"#f1d0a8");circle(x,y+s*0.14,s*0.09,ink);eyes(s*0.22,-s*0.12,s*0.08);ellipse(x,y+s*0.4,s*0.07,s*0.1,"#ff8787")}
+ else if(k==="kitten"){cx.strokeStyle="#868e96";cx.lineWidth=s*0.13;cx.lineCap="round";cx.beginPath();cx.moveTo(x+s*0.5,y+s*0.8);cx.quadraticCurveTo(x+s*1.0,y+s*0.7,x+s*0.85,y+s*0.2+Math.sin(T*3)*s*0.1);cx.stroke();
+  ellipse(x,y+s*0.65,s*0.55,s*0.42,"#adb5bd");for(const sx of[-1,1]){cx.fillStyle="#adb5bd";cx.beginPath();cx.moveTo(x+sx*s*0.5,y-s*0.15);cx.lineTo(x+sx*s*0.45,y-s*0.7);cx.lineTo(x+sx*s*0.1,y-s*0.45);cx.fill();
+   cx.fillStyle="#ffc9de";cx.beginPath();cx.moveTo(x+sx*s*0.42,y-s*0.25);cx.lineTo(x+sx*s*0.4,y-s*0.55);cx.lineTo(x+sx*s*0.2,y-s*0.42);cx.fill()}
+  circle(x,y,s*0.55,"#ced4da");for(const sx of[-1,1]){ellipse(x+sx*s*0.22,y-s*0.06,s*0.11,s*0.14,"#69db7c");ellipse(x+sx*s*0.22,y-s*0.06,s*0.04,s*0.12,ink)}
+  cx.fillStyle="#f783ac";cx.beginPath();cx.moveTo(x-s*0.07,y+s*0.12);cx.lineTo(x+s*0.07,y+s*0.12);cx.lineTo(x,y+s*0.2);cx.fill();
+  cx.strokeStyle="rgba(60,60,60,0.6)";cx.lineWidth=Math.max(1,s*0.025);for(const sx of[-1,1])for(const dy of[0.12,0.22]){cx.beginPath();cx.moveTo(x+sx*s*0.15,y+s*0.18);cx.lineTo(x+sx*s*0.6,y+s*dy+s*0.02);cx.stroke()}}
+ else if(k==="owl"){ellipse(x,y+s*0.3,s*0.72,s*0.82,"#8b5e34");ellipse(x,y+s*0.55,s*0.45,s*0.45,"#e6b98a");for(const sx of[-1,1]){cx.fillStyle="#8b5e34";cx.beginPath();cx.moveTo(x+sx*s*0.6,y-s*0.2);cx.lineTo(x+sx*s*0.55,y-s*0.7);cx.lineTo(x+sx*s*0.25,y-s*0.4);cx.fill();
+   ellipse(x+sx*s*0.62,y+s*0.45,s*0.18,s*0.4,"#6b4423",sx*0.2);circle(x+sx*s*0.27,y-s*0.05,s*0.26,"#fff3bf");circle(x+sx*s*0.27,y-s*0.05,s*0.13,ink)}
+  cx.fillStyle="#ff922b";cx.beginPath();cx.moveTo(x-s*0.08,y+s*0.12);cx.lineTo(x+s*0.08,y+s*0.12);cx.lineTo(x,y+s*0.3);cx.fill()}
+ else if(k==="bunny"){ellipse(x,y+s*0.65,s*0.55,s*0.42,"#f1f3f5");for(const sx of[-1,1]){ellipse(x+sx*s*0.2,y-s*0.75,s*0.13,s*0.45,"#f8f9fa",sx*0.12);ellipse(x+sx*s*0.2,y-s*0.72,s*0.06,s*0.32,"#ffc9de",sx*0.12)}
+  circle(x,y,s*0.52,"#f8f9fa");eyes(s*0.2,-s*0.06,s*0.08);circle(x,y+s*0.14,s*0.06,"#f783ac");ellipse(x-s*0.32,y+s*0.15,s*0.09,s*0.05,"rgba(255,120,150,0.5)");ellipse(x+s*0.32,y+s*0.15,s*0.09,s*0.05,"rgba(255,120,150,0.5)")}
+ else if(k==="panda"){ellipse(x,y+s*0.65,s*0.6,s*0.45,"#f8f9fa");for(const sx of[-1,1]){ellipse(x+sx*s*0.5,y+s*0.65,s*0.16,s*0.3,ink,sx*0.3);circle(x+sx*s*0.42,y-s*0.42,s*0.17,ink)}
+  circle(x,y,s*0.55,"#fff");for(const sx of[-1,1]){ellipse(x+sx*s*0.22,y-s*0.02,s*0.13,s*0.17,ink,sx*0.5);circle(x+sx*s*0.22,y-s*0.04,s*0.05,"#fff")}circle(x,y+s*0.18,s*0.07,ink)}
+ else if(k==="robot"){cx.fillStyle="#868e96";rr(x-s*0.45,y+s*0.38,s*0.9,s*0.5,s*0.1);cx.fill();circle(x-s*0.3,y+s*0.92,s*0.11,ink);circle(x+s*0.3,y+s*0.92,s*0.11,ink);
+  cx.fillStyle="#ced4da";rr(x-s*0.55,y-s*0.45,s*1.1,s*0.8,s*0.16);cx.fill();cx.fillStyle="#212529";rr(x-s*0.42,y-s*0.32,s*0.84,s*0.5,s*0.1);cx.fill();
+  const bl=Math.sin(T*1.7)>0.95?0.2:1;for(const sx of[-1,1])ellipse(x+sx*s*0.2,y-s*0.08,s*0.09,s*0.11*bl,"#66d9e8");cx.strokeStyle="#868e96";cx.lineWidth=s*0.06;
+  cx.beginPath();cx.moveTo(x,y-s*0.45);cx.lineTo(x,y-s*0.72);cx.stroke();circle(x,y-s*0.75,s*0.08,Math.sin(T*5)>0?"#ff6b6b":"#ffd43b")}
+ else if(k==="dragon"){const fl=Math.sin(T*7)*0.35;for(const sx of[-1,1]){cx.fillStyle="#2b8a3e";cx.beginPath();cx.moveTo(x+sx*s*0.35,y+s*0.45);cx.lineTo(x+sx*s*1.05,y-s*0.1-fl*s*0.3);cx.lineTo(x+sx*s*0.8,y+s*0.45);cx.fill()}
+  ellipse(x,y+s*0.62,s*0.55,s*0.42,"#40c057");ellipse(x,y+s*0.7,s*0.3,s*0.28,"#ffe066");for(const sx of[-1,1]){cx.fillStyle="#fff3bf";cx.beginPath();cx.moveTo(x+sx*s*0.2,y-s*0.4);cx.lineTo(x+sx*s*0.38,y-s*0.85);cx.lineTo(x+sx*s*0.42,y-s*0.3);cx.fill()}
+  circle(x,y,s*0.52,"#51cf66");ellipse(x,y+s*0.25,s*0.32,s*0.2,"#69db7c");circle(x-s*0.1,y+s*0.22,s*0.04,ink);circle(x+s*0.1,y+s*0.22,s*0.04,ink);eyes(s*0.22,-s*0.12,s*0.08);
+  if(Math.sin(T*1.3)>0.92){ellipse(x+s*0.45,y+s*0.3,s*0.22,s*0.12,"#ffa94d");ellipse(x+s*0.62,y+s*0.3,s*0.12,s*0.08,"#ffd43b")}}
+ else if(k==="unicorn"){ellipse(x,y+s*0.65,s*0.6,s*0.42,"#fff");["#ff6b6b","#ffd43b","#69db7c","#4dabf7","#9775fa"].forEach((c,i)=>circle(x-s*0.45+i*0.02*s,y-s*0.35+i*s*0.2,s*0.16,c));
+  circle(x,y,s*0.52,"#fff");ellipse(x+s*0.12,y+s*0.25,s*0.3,s*0.2,"#fff0f6");cx.fillStyle="#fcc419";cx.beginPath();cx.moveTo(x-s*0.08,y-s*0.42);cx.lineTo(x+s*0.05,y-s*1.0);cx.lineTo(x+s*0.16,y-s*0.42);cx.fill();
+  eyes(s*0.2,-s*0.08,s*0.08);ellipse(x+s*0.36,y+s*0.08,s*0.08,s*0.05,"rgba(255,120,150,0.55)")}}
+// The menus' background: the room the player has chosen in the shop.
+function room(k){const m=Math.min(W,H);
+ if(k==="sunset"){sky("#5f3dc4","#ff922b");circle(W*0.5,H*0.84,m*0.22,"#ffd43b");cx.globalAlpha=0.3;circle(W*0.5,H*0.84,m*0.3,"#ffe066");cx.globalAlpha=1;
+  cx.fillStyle="#3b1d5c";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=20)cx.lineTo(x,H*0.84-Math.sin(x*0.006+1)*m*0.05);cx.lineTo(W,H);cx.fill();
+  cx.fillStyle="#2b1446";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=20)cx.lineTo(x,H*0.9-Math.sin(x*0.009)*m*0.03);cx.lineTo(W,H);cx.fill();
+  cx.strokeStyle="rgba(40,20,60,0.6)";cx.lineWidth=2*U;for(let i=0;i<3;i++){const bx=((T*20*U+i*W*0.37)%(W+60))-30,by=H*(0.25+i*0.07);cx.beginPath();cx.moveTo(bx-8*U,by);cx.quadraticCurveTo(bx-4*U,by-5*U,bx,by);cx.quadraticCurveTo(bx+4*U,by-5*U,bx+8*U,by);cx.stroke()}}
+ else if(k==="snow"){sky("#1864ab","#a5d8ff");cx.fillStyle="#e7f5ff";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=20)cx.lineTo(x,H*0.82-Math.sin(x*0.005)*m*0.06);cx.lineTo(W,H);cx.fill();
+  cx.fillStyle="#fff";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=20)cx.lineTo(x,H*0.9-Math.sin(x*0.008+2)*m*0.03);cx.lineTo(W,H);cx.fill();
+  for(let i=0;i<50;i++){const x=hash1(i)*W+Math.sin(T+i)*12*U,y=(hash1(i+9)*H+T*(20+hash1(i)*30)*U)%H;circle(x,y,(1.5+hash1(i+4)*2)*U,"rgba(255,255,255,0.85)")}}
+ else if(k==="ocean"){sky("#1c7ed6","#0b2545");cx.globalAlpha=0.08;cx.fillStyle="#fff";for(let i=0;i<5;i++){cx.beginPath();cx.moveTo(W*(0.1+i*0.2),0);cx.lineTo(W*(0.2+i*0.2),0);cx.lineTo(W*(0.05+i*0.22),H);cx.lineTo(W*(i*0.22-0.05),H);cx.fill()}cx.globalAlpha=1;
+  for(let i=0;i<9;i++){const x=W*(0.05+i*0.12),h=m*(0.12+hash1(i)*0.12);cx.strokeStyle=i%2?"#2f9e44":"#37b24d";cx.lineWidth=6*U;cx.lineCap="round";cx.beginPath();cx.moveTo(x,H);
+   cx.quadraticCurveTo(x+Math.sin(T*1.5+i)*14*U,H-h*0.5,x+Math.sin(T*1.5+i+1)*10*U,H-h);cx.stroke()}
+  for(let i=0;i<3;i++){const fx=((T*(25+i*10)*U+i*W*0.4)%(W+80*U))-40*U,fy=H*(0.35+i*0.15),fc=["#ffa94d","#ffd43b","#ff8787"][i];ellipse(fx,fy,16*U,9*U,fc);
+   cx.fillStyle=fc;cx.beginPath();cx.moveTo(fx-14*U,fy);cx.lineTo(fx-26*U,fy-8*U);cx.lineTo(fx-26*U,fy+8*U);cx.fill();circle(fx+8*U,fy-2*U,2*U,"#212529")}
+  cx.strokeStyle="rgba(255,255,255,0.45)";cx.lineWidth=1.5*U;for(let i=0;i<14;i++){const x=hash1(i+3)*W+Math.sin(T*2+i)*6*U,y=H-((T*(30+hash1(i)*30)*U+hash1(i+7)*H)%H);cx.beginPath();cx.arc(x,y,(2+hash1(i+1)*4)*U,0,Math.PI*2);cx.stroke()}}
+ else if(k==="jungle"){sky("#2f9e44","#0b3d1c");for(let i=0;i<7;i++){const x=W*(0.06+i*0.15),len=m*(0.15+hash1(i)*0.2);cx.strokeStyle="#1b5e20";cx.lineWidth=3*U;cx.beginPath();cx.moveTo(x,0);
+   cx.quadraticCurveTo(x+Math.sin(T+i)*10*U,len*0.5,x,len);cx.stroke();for(let j=1;j<5;j++)ellipse(x+(j%2?8:-8)*U,len*j/5,9*U,4*U,"#40c057",j%2?0.5:-0.5)}
+  for(const [lx,ly,r,a] of[[0,H,0.42,-0.6],[W,H,0.4,-2.5],[0,H*0.55,0.25,-0.2],[W,H*0.6,0.26,-2.9]]){cx.save();cx.translate(lx,ly);cx.rotate(a);ellipse(m*r*0.55,0,m*r*0.6,m*r*0.22,"#2b8a3e");cx.strokeStyle="#1e6b30";cx.lineWidth=2*U;
+   cx.beginPath();cx.moveTo(0,0);cx.lineTo(m*r*1.1,0);cx.stroke();cx.restore()}
+  for(let i=0;i<12;i++){cx.globalAlpha=0.4+0.4*Math.sin(T*3+i*2);circle(hash1(i+30)*W+Math.sin(T*0.7+i)*20*U,hash1(i+40)*H,2.5*U,"#ffe066")}cx.globalAlpha=1}
+ else if(k==="candy"){sky("#f06595","#7048e8");for(let i=0;i<30;i++){const x=hash1(i)*W,y=(hash1(i+9)*H+T*(15+hash1(i)*15)*U)%H;cx.save();cx.translate(x,y);cx.rotate(i+T*0.5);cx.fillStyle=["#fff","#ffd43b","#69db7c","#4dabf7"][i%4];
+   cx.fillRect(-4*U,-1.5*U,8*U,3*U);cx.restore()}
+  for(let i=0;i<5;i++){const x=W*(0.1+i*0.2),h=m*(0.16+hash1(i+2)*0.1),r=m*0.06;cx.fillStyle="#f8f9fa";cx.fillRect(x-2.5*U,H-h,5*U,h);
+   circle(x,H-h,r,["#ff6b6b","#ffd43b","#4dabf7","#69db7c","#cc5de8"][i]);cx.strokeStyle="rgba(255,255,255,0.8)";cx.lineWidth=3*U;cx.beginPath();for(let a=0;a<12;a+=0.3)cx.lineTo(x+Math.cos(a+T)*a/12*r,H-h+Math.sin(a+T)*a/12*r);cx.stroke()}}
+ else if(k==="space"){sky("#0b0b2a","#2b145c");circle(W*0.75,H*0.3,m*0.25,"rgba(204,93,232,0.12)");for(let i=0;i<80;i++){cx.globalAlpha=0.3+0.6*Math.abs(Math.sin(T*0.8+i));circle(hash1(i)*W,hash1(i+80)*H,(0.8+hash1(i+5)*1.6)*U,"#fff")}cx.globalAlpha=1;
+  const px=W*0.82,py=H*0.72,pr=m*0.09;circle(px,py,pr,"#ffa94d");circle(px-pr*0.3,py-pr*0.3,pr*0.4,"rgba(255,255,255,0.2)");cx.strokeStyle="rgba(255,236,170,0.85)";cx.lineWidth=pr*0.15;cx.beginPath();cx.ellipse(px,py,pr*1.7,pr*0.42,-0.3,0,Math.PI*2);cx.stroke();
+  circle(W*0.15,H*0.85,m*0.05,"#74c0fc");const ct=(T*0.15)%1.4;if(ct<1){const cxp=W*(1.1-ct*1.3),cyp=H*(0.1+ct*0.3);cx.strokeStyle="rgba(255,255,255,0.5)";cx.lineWidth=2*U;cx.beginPath();cx.moveTo(cxp,cyp);cx.lineTo(cxp+40*U,cyp-10*U);cx.stroke();circle(cxp,cyp,3*U,"#fff")}}
+ else{sky("#3b5bdb","#1c2a52");for(let i=0;i<40;i++){cx.globalAlpha=0.25+0.25*Math.sin(T+i);circle(hash1(i)*W,hash1(i+50)*H,(1+hash1(i+3)*2)*U,"#fff")}cx.globalAlpha=1}}
 
 // ================================================================ dots
 // What a fact looks like, for a child who is stuck or got it wrong: two
 // colours of counters in ten-frames for adding, counters crossed out for
-// taking away, rows of counters for times and divide.
+// taking away, rows of counters for times and divide, rods of ten and little
+// cubes for the numbers past 20. A missing number is drawn as its whole fact.
 function tenFrame(fx,oy,cell){cx.fillStyle="rgba(255,255,255,0.85)";rr(fx-cell*0.08,oy-cell*0.08,cell*5.16,cell*2.16,cell*0.2);cx.fill();
  cx.strokeStyle="#ced4da";cx.lineWidth=Math.max(1,cell*0.05);for(let i=0;i<10;i++)cx.strokeRect(fx+(i%5)*cell,oy+Math.floor(i/5)*cell,cell,cell)}
 function dotsFor(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#adb5bd";
+ if(f.op==="m")return dotsFor({op:f.p[1],x:f.x,y:f.y},x,y,w,h);
+ if((f.op==="+"&&f.x+f.y>20)||(f.op==="-"&&f.x>20))return blocks(f,x,y,w,h);
  // a double: the same counters twice, side by side, like a mirror; bigger
  // ones as two equal bars and the total under them
  if(f.op==="d"||f.op==="h"){const n=f.op==="d"?f.x:f.ans;
@@ -401,25 +621,45 @@ function dotsFor(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#adb5bd";
  for(let i=0;i<tot;i++){const fi=Math.floor(i/10),j=i%10,px=ox+fi*(fw+gap)+(j%5+0.5)*cell,py=oy+(Math.floor(j/5)+0.5)*cell;
   if(f.op==="+")circle(px,py,cell*0.38,i<f.x?A:B);
   else{const gone=i>=f.x-f.y;circle(px,py,cell*0.38,gone?X:A);if(gone){cx.strokeStyle="#495057";cx.lineWidth=cell*0.1;cx.beginPath();cx.moveTo(px-cell*0.3,py-cell*0.3);cx.lineTo(px+cell*0.3,py+cell*0.3);cx.stroke()}}}}
+// Numbers past 20 as tens and ones: a rod for each ten, a little cube for
+// each one. Adding, the two numbers in two colours; taking away, the tens
+// (then the ones) taken are crossed out from the end.
+function blocks(f,x,y,w,h){const A="#ff6b6b",B="#4dabf7",X="#ced4da",parts=f.op==="+"?[[f.x,A],[f.y,B]]:[[f.x,A]];
+ const units=v=>Math.floor(v/10)*1.3+(v%10?Math.ceil(v%10/5)*0.7+0.2:0);let tot=-0.9;for(const p of parts)tot+=units(p[0])+0.9;
+ const u=Math.min(w/Math.max(tot,1),h/5.6,15*U),top=y+h/2-2.5*u;let px=x+w/2-tot*u/2;
+ const cutR=f.op==="-"?Math.floor(f.y/10):0,cutO=f.op==="-"?f.y%10:0;
+ const cross=(x0,y0,ww,hh)=>{cx.strokeStyle="#495057";cx.lineWidth=Math.max(1.5,u*0.14);cx.beginPath();cx.moveTo(x0,y0);cx.lineTo(x0+ww,y0+hh);cx.moveTo(x0+ww,y0);cx.lineTo(x0,y0+hh);cx.stroke()};
+ for(const [v,col] of parts){const r=Math.floor(v/10),o=v%10;
+  for(let i=0;i<r;i++){const gone=i>=r-cutR;cx.fillStyle=gone?X:col;rr(px,top,u,5*u,u*0.2);cx.fill();cx.strokeStyle="rgba(0,0,0,0.18)";cx.lineWidth=Math.max(1,u*0.06);
+   for(let j=1;j<10;j++){cx.beginPath();cx.moveTo(px,top+j*0.5*u);cx.lineTo(px+u,top+j*0.5*u);cx.stroke()}if(gone)cross(px,top+u,u,3*u);px+=1.3*u}
+  if(o){px+=0.2*u;for(let i=0;i<o;i++){const qx=px+Math.floor(i/5)*0.7*u,qy=top+5*u-(i%5+1)*0.6*u,gone=i>=o-cutO;cx.fillStyle=gone?X:col;rr(qx,qy,0.5*u,0.5*u,u*0.1);cx.fill();if(gone)cross(qx,qy,0.5*u,0.5*u)}
+   px+=Math.ceil(o/5)*0.7*u}
+  px+=0.9*u}}
 
 // ================================================================ the games
-// Six games, each a different way to answer the same facts (Ladybird
-// Doubles always practises doubling, whatever the others are set to). In the "keys"
-// games the answer is typed on a number pad - remembering it, which is what
-// makes a fact fast; in the "tap" games it is picked from a few, which is a
-// change of pace. Each game draws its own world around the question.
+// Nine games, each a different way to answer the same facts (Ladybird
+// Doubles always practises doubling, whatever the others are set to). In the
+// "keys" games the answer is typed on a number pad - remembering it, which
+// is what makes a fact fast; in the others it is picked from a few, which is
+// a change of pace: tapped ("tap"), caught by moving a basket ("move"), or
+// thrown at ("fling"). Each game draws its own world around the question.
+// line: a wrong answer is explained in a line under the question, not a
+// panel, so the game underneath stays in sight; verb says what to do next.
 const GAMES=[
  {id:"rocket",name:"Rocket Ride",input:"keys",price:0,col:"#4dabf7",total:12,goodT:0.85,say:"Answer to fly. Quick answers boost!"},
  {id:"balloon",name:"Balloon Pop",input:"tap",price:0,col:"#ff8787",total:12,goodT:0.75,say:"Pop the balloon with the answer."},
- {id:"ladybug",name:"Ladybird Doubles",input:"keys",price:0,col:"#20c997",total:10,goodT:1.05,say:"Both wings get the same spots!",only:"dbl"},
+ {id:"ninja",name:"Ninja Leap",input:"tap",price:0,col:"#364fc7",total:10,goodT:1.0,line:1,verb:"leap to",say:"Leap to the answer! Quick ones throw a star."},
+ {id:"ladybug",name:"Ladybird Doubles",input:"keys",price:0,col:"#20c997",total:10,goodT:1.05,line:1,say:"Both wings get the same spots!",only:"dbl"},
  {id:"frog",name:"Frog Hop",input:"tap",price:25,col:"#51cf66",total:10,goodT:1.05,say:"Hop to the lily pad with the answer."},
+ {id:"apple",name:"Apple Catch",input:"move",price:35,col:"#e03131",total:10,goodT:0.8,line:1,verb:"catch",say:"Slide the basket under the answer."},
  {id:"monster",name:"Monster Munch",input:"keys",price:50,col:"#9775fa",total:12,goodT:0.9,say:"Feed the monster: type the answer."},
+ {id:"snow",name:"Snowball Toss",input:"fling",price:65,col:"#1098ad",total:10,goodT:0.9,line:1,verb:"throw at",say:"Flick a snowball at the answer!"},
  {id:"race",name:"Race Day",input:"keys",price:80,col:"#ffa94d",total:10,goodT:0.6,say:"Beat Robo to the finish!"}];
 const GAME={};for(const g of GAMES)GAME[g.id]=g;
 
 let scene="who",R=null,rnd=Math.random;
 // ---------------------------------------------------------------- a round
-const trackFor=g=>g.only==="dbl"?me.dtrack:curTrack(me);
+const trackFor=g=>g.only==="dbl"?me.lv.dbl:curTrack(me);
 function startGame(gid){const g=GAME[gid];if(!g)return;const tid=trackFor(g),m=toMeet(me,tid);
  if(m.quiet.length)meet(me,tid,m.quiet);
  if(m.show.length){coach={fams:m.show,then:gid,t:T,tid};scene="meet";sfx("meet");save();return}
@@ -436,10 +676,12 @@ function nextQ(){if(R.pendingHop){R.hops++;R.pendingHop=false}
  const m=toMeet(me,R.tid);if(m.quiet.length)meet(me,R.tid,m.quiet);
  if(m.show.length&&!activeFacts(me,R.tid).some(f=>!isFast(me,f.k))){coach={fams:m.show,resume:true,t:T,tid:R.tid};scene="meet";sfx("meet");return}
  const f=pickFact(me,R.tid,rnd);R.q=f;R.typed="";R.state="ask";R.hint=false;R.wrongV=null;
- R.asked=T+(R.g.input==="tap"?0.55:0.15);
+ // the clock starts once the answers can be read
+ R.asked=T+(R.g.input==="keys"?0.15:R.g.input==="tap"?0.55:0.35);
  ASK[R.g.id]&&ASK[R.g.id](R,f)}
-// an answer to the question being asked
-function answer(v){if(!R||R.state!=="ask"||!R.q)return;const f=R.q,ok=v===f.ans,ms=Math.max(0,(T-R.asked)*1000),quick=ok&&ms<=fastMs(me);
+// An answer to the question being asked. ms: how long it took, when the
+// game knows better than the clock (a basket's journey, a snowball's flight).
+function answer(v,ms){if(!R||R.state!=="ask"||!R.q)return;const f=R.q,ok=v===f.ans;if(ms==null)ms=Math.max(0,(T-R.asked)*1000);const quick=ok&&ms<=fastMs(me);
  const rec=record(me,f.k,ok,ms,fastMs(me)),day=today(me);day.n++;
  if(ok){day.ok++;R.ok++;let c=1;if(quick){R.fast++;c++}R.coins+=c;me.coins+=c;
   if(rec.nowFast&&R.newFast.indexOf(f.k)<0)R.newFast.push(f.k);
@@ -455,7 +697,7 @@ function typeDigit(d){if(!R||!R.q||(R.state!=="ask"&&R.state!=="coach"))return;s
  if(R.typed.length>=want.length){if(R.state==="ask")answer(+R.typed);else if(R.typed===want)coachDone();else{R.shake=1;setTimeout(()=>{if(R&&R.state==="coach")R.typed=""},250)}}}
 function typeBack(){if(R&&R.typed){R.typed=R.typed.slice(0,-1);sfx("key")}}
 function typeOk(){if(!R||!R.typed)return;if(R.state==="ask")answer(+R.typed);else if(R.state==="coach"){if(R.typed===String(R.q.ans))coachDone();else{R.typed="";R.shake=1}}}
-function tapTarget(t){if(!R||!R.q||t.dead)return;
+function tapTarget(t){if(!R||!R.q||t.dead)return;if(TAP[R.g.id])return TAP[R.g.id](R,t);
  if(R.state==="ask"){if(t.v!==R.q.ans)t.dead=T;answer(t.v)}
  else if(R.state==="coach"&&t.v===R.q.ans)coachDone()}
 function stepRound(dt){if(!R)return;R.shake=Math.max(0,R.shake-dt*2.5);
@@ -472,7 +714,10 @@ function finishRound(){const g=R.g;me.coins+=3;R.coins+=3;me.rounds++;
  else if(g.id==="frog")line="Froggy made it across!";
  else if(g.id==="monster")line="The monster ate "+R.ok+" cookies. Yum!";
  else if(g.id==="ladybug")line=R.ok+" ladybirds flew home!";
- let up=null;const tr=TRACK[R.tid];if(trackDone(me,R.tid)&&tr.next){up={from:tr,to:TRACK[tr.next]};if(tr.dbl)me.dtrack=tr.next;else me.track=tr.next}
+ else if(g.id==="ninja"){line=R.fast?"To the top, and "+R.fast+(R.fast>1?" lanterns":" lantern")+" hit!":"The ninja made it to the top!";me.best.ninja=Math.max(best,R.fast)}
+ else if(g.id==="apple")line="You caught "+R.ok+" apples!";
+ else if(g.id==="snow")line="You hit "+R.ok+" snowmen!";
+ let up=null;const tr=trk(R.tid);if(trackDone(me,R.tid)&&tr.next){up={from:tr,to:trk(tr.next)};me.lv[tr.area]=tr.next}
  done={g,stars,coins:R.coins,ok:R.ok,wrong:R.wrong,fast:R.fast,newFast:R.newFast.slice(),line,up,t:T,lit:R.lit>=0};
  save();scene="done";sfx(stars===3?"win":"star")}
 
@@ -486,30 +731,35 @@ function layout(g){const top=topY(),hud=46*U,y0=top+hud+6*U,bot=botY(),x0=SAFE.l
  else L.A={x:x0,y:y0,w:cw,h:bot-y0};
  const ch=clamp(L.A.h*0.2,58*U,92*U),cwid=Math.min(L.A.w,460*U);L.card={x:L.A.x+L.A.w/2-cwid/2,y:L.A.y,w:cwid,h:ch};
  L.G={x:L.A.x,y:L.A.y+ch+10*U,w:L.A.w,h:L.A.h-ch-10*U};return L}
-function drawCard(L){const c=L.card,f=R.q;if(!f)return;const coach=R.state==="coach",good=R.state==="good"&&!R.fromCoach;
+// the question either side of the answer box: "3 + 5 = [ ]", "3 + [ ] = 8"
+function cardParts(f){if(f.op!=="m")return[factText(f)+" = ",""];const p=f.p,s=" "+SYM[p[1]]+" ";
+ return p[0]==null?["",s+p[2]+" = "+p[3]]:[p[0]+s,(p[2]==null?"":p[2])+" = "+p[3]]}
+function drawCard(L){const c=L.card,f=R.q;if(!f)return;const coach=R.state==="coach",good=R.state==="good"&&!R.fromCoach,keys=R.g.input==="keys";
  const sx=R.shake>0?Math.sin(T*50)*R.shake*8*U:0;
  cx.save();cx.translate(sx,0);panel(c.x,c.y,c.w,c.h,coach?"#fff4e6":good?"#ebfbee":"#ffffff",c.h*0.3);
- const fs=c.h*0.56,q=factText(f)+" = ";font(fs,900);const qw=cx.measureText(q).width,bw=Math.max(c.h*0.9,cx.measureText(String(f.ans)).width+c.h*0.35),tot=qw+bw;
+ const fs=c.h*0.56,pp=cardParts(f);font(fs,900);const aw=cx.measureText(pp[0]).width,zw=cx.measureText(pp[1]).width,bw=Math.max(c.h*0.9,cx.measureText(String(f.ans)).width+c.h*0.35),tot=aw+bw+zw;
  let x=c.x+c.w/2-tot/2;if(tot>c.w-16*U){const k=(c.w-16*U)/tot;cx.translate(c.x+c.w/2,c.y+c.h/2);cx.scale(k,k);cx.translate(-(c.x+c.w/2),-(c.y+c.h/2))}
- txt(q,x+qw/2,c.y+c.h/2+2,fs,"#24305e","center",900);
- const bx=x+qw,by=c.y+c.h*0.14,bh=c.h*0.72;cx.fillStyle=coach?"#ffe8cc":good?"#d3f9d8":"#edf2ff";rr(bx,by,bw,bh,bh*0.25);cx.fill();
+ if(pp[0])txt(pp[0],x+aw/2,c.y+c.h/2+2,fs,"#24305e","center",900);
+ const bx=x+aw,by=c.y+c.h*0.14,bh=c.h*0.72;cx.fillStyle=coach?"#ffe8cc":good?"#d3f9d8":"#edf2ff";rr(bx,by,bw,bh,bh*0.25);cx.fill();
+ if(pp[1])txt(pp[1],bx+bw+zw/2,c.y+c.h/2+2,fs,"#24305e","center",900);
  let show=R.typed||"",col="#3b5bdb";
  if(good){show=String(f.ans);col="#2b8a3e"}
- else if(coach&&R.g.input==="tap"){show=String(f.ans);col="#e8590c"}
- else if(!show&&R.state==="ask"&&R.g.input==="keys"&&Math.sin(T*6)>0){cx.fillStyle="#91a7ff";cx.fillRect(bx+bw/2-1.5*U,by+bh*0.2,3*U,bh*0.6)}
- else if(!show&&R.g.input==="tap")show="?",col="#91a7ff";
+ else if(coach&&!keys){show=String(f.ans);col="#e8590c"}
+ else if(!show&&R.state==="ask"&&keys&&Math.sin(T*6)>0){cx.fillStyle="#91a7ff";cx.fillRect(bx+bw/2-1.5*U,by+bh*0.2,3*U,bh*0.6)}
+ else if(!show&&!keys)show="?",col="#91a7ff";
  if(show)txt(show,bx+bw/2,c.y+c.h/2+2,fs,col,"center",900);
  cx.restore();
  // a fact got wrong: the right answer, and what it looks like
- if(coach&&R.g.id==="ladybug"){fitTxt(factText(f)+" = "+f.ans+" \u2013 both wings the same. Now type "+f.ans,c.x+c.w/2,c.y+c.h+18*U,17*U,L.A.w-16*U,"#e8590c","center",900,"rgba(255,255,255,0.8)");return}
- if(coach||(R.hint&&R.state==="ask"&&R.g.id!=="ladybug")){const A=L.A,tap=R.g.input==="tap",G=L.G;
+ if(coach&&R.g.line){const say=R.g.id==="ladybug"?" – both wings the same. Now type "+f.ans:" – now "+R.g.verb+" "+f.ans;
+  fitTxt(solved(f)+say,c.x+c.w/2,c.y+c.h+18*U,17*U,L.A.w-16*U,"#e8590c","center",900,"rgba(255,255,255,0.8)");return}
+ if(coach||(R.hint&&R.state==="ask"&&R.g.id!=="ladybug")){const A=L.A,G=L.G,low=!keys&&!R.g.line;
   let ph=Math.min(A.h-c.h-14*U,coach?190*U:130*U),pw=Math.min(A.w,460*U),px=A.x+A.w/2-pw/2,py=c.y+c.h+10*U;
-  if(tap){ph=Math.min(G.h*0.24-6*U,coach?170*U:120*U);py=G.y+G.h-ph}
+  if(low){ph=Math.min(G.h*0.24-6*U,coach?170*U:120*U);py=G.y+G.h-ph}else if(R.g.line)ph=Math.min(G.h*0.3,120*U);
   if(ph>40*U){cx.globalAlpha=coach?1:0.9;panel(px,py,pw,ph,coach?"#fff":"rgba(255,255,255,0.92)",16*U);
-   const ty=py+20*U;if(coach){fitTxt(factText(f)+" = "+f.ans,px+pw/2,ty+4*U,24*U,pw-20*U,"#e8590c","center",900)}
+   const ty=py+20*U;if(coach){fitTxt(solved(f),px+pw/2,ty+4*U,24*U,pw-20*U,"#e8590c","center",900)}
    else txt("Need a hand? Count them!",px+pw/2,ty,15*U,"#5c7cfa","center",800);
    if(ph>70*U)dotsFor(f,px+12*U,ty+18*U,pw-24*U,ph-(ty-py)-(coach?36:24)*U);
-   if(coach)txt(R.g.input==="keys"?"Now you type "+f.ans:"Now tap "+f.ans,px+pw/2,py+ph-13*U,15*U,"#495057","center",800);
+   if(coach)txt(keys?"Now you type "+f.ans:"Now tap "+f.ans,px+pw/2,py+ph-13*U,15*U,"#495057","center",800);
    cx.globalAlpha=1}}}
 function drawHud(L){const y=L.hud.y,h=L.hud.h;
  button(sideL(),y,h,h,"",()=>{scene="home";R=null},{icon:"x",col:"rgba(255,255,255,0.9)",isz:h*0.42});
@@ -532,7 +782,7 @@ function drawPad(L){const P=L.pad;if(!P)return;const g=10*U,k=Math.min((P.w-2*g-
 // ---------------------------------------------------------------- Rocket Ride
 // Each right answer is fuel; a quick one is a boost. Twelve questions, and
 // the Moon is at sixteen - only quick answers get there.
-const ASK={},GOOD={},BAD={},DRAW={};
+const ASK={},GOOD={},BAD={},DRAW={},TAP={};
 GOOD.rocket=(R,quick)=>{R.goal+=quick?1.6:1;R.boost=quick?1.2:0.7;sfx("whoosh")};
 BAD.rocket=R=>{R.sput=T};
 DRAW.rocket=(R,L,dt)=>{const G=L.G;R.alt+=(R.goal-R.alt)*Math.min(1,dt*2.2);R.boost=Math.max(0,R.boost-dt);
@@ -726,52 +976,240 @@ function ladybird(x,y,s,open,left,right,big,la,ra){
  cx.strokeStyle="#fff";cx.lineWidth=Math.max(1.5,s*0.035);cx.beginPath();cx.arc(x,y-s*0.98,s*0.14,0.3,Math.PI-0.3);cx.stroke();
  hat(me.look.hat,x,y-s*1.3,s*0.5)}
 
+// ---------------------------------------------------------------- Ninja Leap
+// Up through a bamboo grove at dusk to the temple at the top. The ledges with
+// the answers drift from side to side, a little more the higher it gets;
+// tapping the right one is a leap onto it, and a quick answer is a
+// somersault and a star thrown at a paper lantern on the way. A wrong ledge
+// crumbles away. The ninja is the player's own buddy, in a headband.
+ASK.ninja=(R,f)=>{if(R.jump){R.baseFx=R.jump.lx!=null?R.jump.lx:R.jump.to.fxNow;R.jump=null}if(R.baseFx==null)R.baseFx=0.5;
+ const vs=choices(f,3,rnd);R.targets=vs.map((v,i)=>({v,fx:0.2+i*0.3,fxNow:0.2+i*0.3,ph:rnd()*6.3,sp:0.9+rnd()*0.6,t0:T+i*0.08}));
+ if(!R.lamp||R.lamp.pop>=0)R.lamp={t0:T,pop:-1,side:rnd()<0.5?0.14:0.86}};
+GOOD.ninja=(R,quick)=>{const t=R.targets.find(t=>t.v===R.q.ans);R.jump={to:t,t0:T,flip:quick};R.pendingHop=true;sfx("hop");if(quick&&R.lamp&&R.lamp.pop<0)R.shuri=T};
+BAD.ninja=()=>{sfx("whoosh")};
+DRAW.ninja=(R,L,dt)=>{const G=L.G,STEP=G.h*0.4,baseY=G.y+G.h*0.88,top=R.g.total,mid=!!(R.jump&&R.pendingHop),jk=R.jump?clamp((T-R.jump.t0)/0.5,0,1):0;
+ // at the end, one last leap up to the temple
+ const endK=R.state==="end"?clamp((T-(R.until-1.4))/0.7,0,1):0;
+ const cam=(R.hops+(mid?ease((T-R.jump.t0-0.2)/0.6):0)+ease(endK)*0.9)*STEP,lvY=i=>baseY-(i*STEP-cam),prog=clamp(cam/(STEP*(top+1)),0,1);
+ // the sky darkens to night as the ninja climbs, and the sun becomes the moon
+ sky(mix("#ff922b","#1b1442",prog),mix("#ffd8a8","#5f3dc4",prog));
+ if(prog>0.3){for(let i=0;i<40;i++){cx.globalAlpha=(prog-0.3)*(0.5+0.5*Math.sin(T*2+i));circle(hash1(i)*W,G.y+hash1(i+40)*G.h*0.8,(1+hash1(i+3)*1.5)*U,"#fff")}cx.globalAlpha=1}
+ circle(G.x+G.w*0.72,G.y+G.h*(0.16+(1-prog)*0.5),Math.min(G.w,G.h)*0.08,mix("#ffe066","#f8f9fa",prog));
+ cx.fillStyle=mix("#e8590c","#2b1d5c",prog);cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=30*U)cx.lineTo(x,baseY-G.h*0.1+cam*0.25+Math.sin(x*0.006+1)*20*U);cx.lineTo(W,H);cx.fill();
+ for(let i=0;i<14;i++){const y=baseY-((i+0.6)*STEP*1.1-cam*0.8);if(y<G.y-60*U||y>H+60*U)continue;cloud(G.x+G.w*hash1(i*7+2),y,(50+hash1(i)*40)*U,0.5)}
+ bamboo(G,cam);
+ const pw=clamp(G.w*0.27,90*U,190*U),ph=pw*0.4,s=clamp(pw*0.22,18*U,42*U);
+ const ty=lvY(top+1);if(ty>G.y-pw*2&&ty<H+pw)pagoda(G.x+G.w/2,ty,Math.min(G.w*0.55,STEP*1.6));
+ // the lantern a quick answer's star is thrown at
+ const lp=R.lamp;let lx=0,ly=0;
+ if(lp){lx=G.x+G.w*lp.side;ly=G.y+G.h*0.14*easeOut((T-lp.t0)/0.6)+Math.sin(T*1.6)*4*U;
+  if(lp.pop<0&&R.state!=="end"){cx.strokeStyle="rgba(60,30,10,0.7)";cx.lineWidth=2*U;cx.beginPath();cx.moveTo(lx,G.y-10*U);cx.lineTo(lx,ly-Math.min(G.w,G.h)*0.06);cx.stroke();lantern(lx,ly,Math.min(G.w,G.h)*0.05)}}
+ // the ledge underfoot, and the three with the answers
+ const landFx=R.jump&&!mid?(R.jump.lx!=null?R.jump.lx:R.jump.to.fxNow):R.baseFx,amp=0.03+0.004*Math.min(R.hops,5);
+ ledge(G.x+G.w*(mid?R.baseFx:landFx),lvY(R.hops),R.hops===0?pw*1.5:pw,ph,null);
+ if(R.state==="ask"||R.state==="coach"||mid)for(const t of R.targets){const k=easeOut((T-t.t0)/0.4);let fx=t.fx+amp*Math.sin(T*t.sp+t.ph);
+  if(mid&&t===R.jump.to&&jk>=1){if(R.jump.lx==null)R.jump.lx=t.fxNow;fx=R.jump.lx}
+  t.fxNow=fx;const x=G.x+G.w*fx;let y=lvY(R.hops+1)+(1-k)*30*U,al=k;
+  if(mid&&t!==R.jump.to)al*=1-jk;
+  if(t.dead){const d=T-t.dead;y+=d*d*900*U;al*=clamp(1-d/0.8,0,1)}
+  if(al<=0.01)continue;t.hx=x;t.hy=y+ph*0.3;t.hr=pw*0.62;cx.globalAlpha=al;
+  if(R.state==="coach"&&t.v===R.q.ans)ellipse(x,y+ph*0.3,pw*0.7+Math.sin(T*8)*4*U,ph*1.4,"rgba(255,236,153,0.75)");
+  ledge(x,y,pw,ph,String(t.v));cx.globalAlpha=1}
+ // the ninja: standing, mid-leap (a somersault if quick), or up to the temple
+ const x0=G.x+G.w*(mid?R.baseFx:landFx),y0=lvY(R.hops)-s*0.95;let bx=x0,by=y0,rot=0;
+ if(mid){const tx=G.x+G.w*(R.jump.lx!=null?R.jump.lx:R.jump.to.fxNow),ty2=lvY(R.hops+1)-s*0.95;bx=lerp(x0,tx,jk);by=lerp(y0,ty2,jk)-Math.sin(jk*Math.PI)*STEP*0.5;if(R.jump.flip)rot=jk*Math.PI*2*(tx>=x0?1:-1)}
+ if(endK>0){const tx=G.x+G.w/2,ty2=lvY(top+1)-s*0.95;bx=lerp(x0,tx,endK);by=lerp(y0,ty2,endK)-Math.sin(endK*Math.PI)*STEP*0.5}
+ cx.save();cx.translate(bx,by);cx.rotate(rot);buddy(0,0,s,me.look,{still:1,band:1,noShadow:1,mood:R.state==="coach"?"oops":R.state==="good"||R.state==="end"?"cheer":"happy",look:{x:0,y:-0.8}});cx.restore();
+ if(R.shuri!=null&&lp&&lp.pop<0){const k=clamp((T-R.shuri)/0.35,0,1);shuriken(lerp(bx,lx,k),lerp(by,ly,k)-Math.sin(k*Math.PI)*30*U,s*0.42,T*20);
+  if(k>=1){lp.pop=T;R.shuri=null;burst(lx,ly,24,["#ff6b6b","#ffd43b","#fff"],320*U);sfx("pop")}}
+ if(R.state==="end"&&endK>=1&&(!R.fw||T-R.fw>0.3)){R.fw=T;burst(G.x+G.w*(0.2+rnd()*0.6),G.y+G.h*(0.08+rnd()*0.3),30,BCOLS,380*U);sfx("pop")}};
+// y is the top of the ledge, where feet go
+function ledge(x,y,w,h,label){ellipse(x,y+h*1.15,w*0.42,h*0.22,"rgba(0,0,0,0.18)");
+ cx.fillStyle="#6b4a2b";rr(x-w/2,y+h*0.1,w,h*0.9,h*0.4);cx.fill();cx.fillStyle="#8b5e34";rr(x-w/2,y,w,h*0.78,h*0.38);cx.fill();
+ cx.fillStyle="#69db7c";rr(x-w/2-2*U,y-h*0.14,w+4*U,h*0.32,h*0.16);cx.fill();
+ if(label)fitTxt(label,x,y+h*0.45,h*0.7,w*0.8,"#fff","center",900,"rgba(0,0,0,0.45)")}
+function bamboo(G,cam){const seg=58*U;for(let i=0;i<6;i++){const left=i<3,w=(10+hash1(i)*5)*U,x=left?G.x+(2+i*20)*U:G.x+G.w-(2+(i-3)*20)*U-w,off=(cam*(0.6+(i%3)*0.15))%seg;
+  cx.globalAlpha=0.85;cx.fillStyle=i%3===1?"#2b8a3e":"#37b24d";cx.fillRect(x,0,w,H);cx.fillStyle="#1e6b30";
+  for(let y=-seg+off+hash1(i+5)*seg;y<H;y+=seg){cx.fillRect(x-1*U,y,w+2*U,3*U);if(hash1(i*31+Math.round((y-off)/seg))>0.6)ellipse(x+(left?w+10*U:-10*U),y+4*U,12*U,4*U,"#40c057",left?0.4:-0.4)}
+  cx.globalAlpha=1}}
+// the temple at the top: y is where it stands
+function pagoda(x,y,s){cx.fillStyle="#8b5e34";rr(x-s*0.5,y,s,s*0.1,s*0.04);cx.fill();
+ for(let i=0;i<3;i++){const w=s*(0.42-i*0.1),by=y-i*s*0.24;cx.fillStyle="#f1e3c7";cx.fillRect(x-w*0.7,by-s*0.19,w*1.4,s*0.19);if(i===0){cx.fillStyle="#5c2a1a";cx.fillRect(x-s*0.06,by-s*0.15,s*0.12,s*0.15)}
+  cx.fillStyle="#c92a2a";cx.beginPath();cx.moveTo(x-w*1.25,by-s*0.17);cx.quadraticCurveTo(x,by-s*0.34,x+w*1.25,by-s*0.17);cx.lineTo(x+w*0.8,by-s*0.27);cx.lineTo(x-w*0.8,by-s*0.27);cx.closePath();cx.fill()}
+ cx.fillStyle="#ffd43b";cx.fillRect(x-s*0.015,y-s*0.92,s*0.03,s*0.2);circle(x,y-s*0.94,s*0.035,"#ffd43b")}
+function lantern(x,y,r){circle(x,y,r*1.8,"rgba(255,180,80,0.25)");cx.fillStyle="#ffd43b";cx.fillRect(x-r*0.5,y-r*1.15,r,r*0.3);cx.fillRect(x-r*0.5,y+r*0.85,r,r*0.3);
+ ellipse(x,y,r*0.95,r*1.05,"#e03131");cx.strokeStyle="rgba(120,0,0,0.45)";cx.lineWidth=Math.max(1,r*0.08);for(const k of[0.45,0.05]){cx.beginPath();cx.ellipse(x,y,r*0.95*k,r*1.05,0,0,Math.PI*2);cx.stroke()}}
+function shuriken(x,y,r,rot){cx.save();cx.translate(x,y);cx.rotate(rot);cx.fillStyle="#ced4da";cx.beginPath();
+ for(let i=0;i<8;i++){const a=i*Math.PI/4,rad=i%2?r*0.3:r;cx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad)}cx.closePath();cx.fill();circle(0,0,r*0.15,"#495057");cx.restore()}
+
+// ---------------------------------------------------------------- Apple Catch
+// Apples with the answers drop from the tree: slide the basket under the right
+// one, by dragging or by tapping where it should go. An apple that falls past
+// comes round again; only catching a wrong one counts as wrong. The time that
+// counts is when the basket set off for the apple, not how long the apple
+// took to fall - and the apples never start above the basket, so it always
+// has to set off.
+const ACOLS=[0.14,0.38,0.62,0.86],APCOL=["#e03131","#f08c00","#74b816"];
+ASK.apple=(R,f)=>{if(R.bx==null)R.bx=R.aim=0.5;let near=0;ACOLS.forEach((c,i)=>{if(Math.abs(c-R.bx)<Math.abs(ACOLS[near]-R.bx))near=i});
+ const cols=[0,1,2,3].filter(i=>i!==near);for(let i=cols.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[cols[i],cols[j]]=[cols[j],cols[i]]}
+ const vs=choices(f,3,rnd),fall=Math.max(2.3,3.3-R.ok*0.1);R.targets=vs.map((v,i)=>({v,fx:ACOLS[cols[i]],t0:T+i*0.06,drop:T+0.8+i*0.4,fall,col:APCOL[Math.floor(rnd()*3)]}));R.under=null;R.commit=T};
+GOOD.apple=R=>{for(const t of R.targets)if(!t.caught)t.away=T;R.picked=(R.picked||0)+1};
+BAD.apple=R=>{for(const t of R.targets)if(t.v!==R.q.ans&&!t.dead)t.away=T};
+function catchApple(R,t){const ok=t.v===R.q.ans;sfx("pop");
+ if(R.state==="ask"){if(ok)t.caught=T;else t.dead=T;answer(t.v,Math.max(0,(R.commit-R.asked)*1000))}
+ else if(ok){t.caught=T;coachDone()}else t.dead=T}
+DRAW.apple=(R,L,dt)=>{const G=L.G;sky("#a5d8ff","#e7f5ff");circle(G.x+G.w*0.9,G.y+G.h*0.32,24*U,"#ffe066");
+ const ground=G.y+G.h*0.94;cx.fillStyle="#8ce99a";cx.fillRect(0,ground,W,H);cx.fillStyle="#69db7c";cx.fillRect(0,ground,W,5*U);
+ cx.fillStyle="#8b5e34";cx.fillRect(G.x+6*U,G.y,22*U,ground-G.y);
+ for(let i=0;i<10;i++)circle(G.x+G.w*(i/9),G.y+G.h*(0.03+hash1(i)*0.05),Math.max(G.w*0.09,30*U)+hash1(i+3)*16*U,i%2?"#2f9e44":"#37b24d");
+ const s=clamp(G.h*0.075,20*U,46*U),ar=clamp(G.w*0.055,18*U,40*U),bw=clamp(G.w*0.2,s*2.6,150*U),by=ground-s*0.98,rim=by+s*0.28,hang=G.y+G.h*0.12;
+ R.bx+=(R.aim-R.bx)*Math.min(1,dt*14);R.bx=clamp(R.bx,0.06,0.94);const bxp=G.x+G.w*R.bx;
+ // which apple the basket is under, and since when
+ let under=null,ud=1e9;for(const t of R.targets){if(t.dead||t.away||t.caught)continue;const d=Math.abs(G.x+G.w*t.fx-bxp);if(d<bw*0.5&&d<ud){ud=d;under=t}}
+ if(under!==R.under){R.under=under;R.commit=T}
+ for(const t of R.targets){if(t.caught)continue;let x=G.x+G.w*t.fx,y,al=1,sc=1;
+  if(t.away){const a=T-t.away;y=(t.y||hang)+a*a*800*U;al=clamp(1-a/0.7,0,1);if(al<=0)continue}
+  else if(t.dead){const a=T-t.dead;y=rim-a*420*U+a*a*1300*U;x+=(t.fx<R.bx?-1:1)*a*240*U;al=clamp(1-a/0.9,0,1);if(al<=0)continue}
+  else{const k=(T-t.drop)/t.fall;
+   if(k<0){y=hang+(k>-0.25?Math.sin(T*40)*2*U:0);sc=easeOut((T-t.t0)/0.3)}
+   else{y=lerp(hang,rim,0.45*k+0.55*k*k);
+    if(k>=1&&!t.past){if(Math.abs(x-bxp)<bw*0.5+ar*0.35&&(R.state==="ask"||R.state==="coach")){catchApple(R,t);if(t.caught)continue}else t.past=true}
+    // missed: it comes round again
+    if(t.past&&y>ground-ar){t.past=false;t.drop=T+0.6;t.t0=T;y=hang;sc=0}}}
+  t.y=y;t.hx=x;t.hy=y;t.hr=ar*1.2;if(sc<=0)continue;cx.globalAlpha=al;
+  if(R.state==="coach"&&t.v===R.q.ans)circle(x,y,ar*1.45+Math.sin(T*8)*3*U,"rgba(255,236,153,0.8)");
+  apple(x,y,ar*sc,t.col,String(t.v));cx.globalAlpha=1}
+ // the buddy and the basket, with what has been picked so far peeking out
+ buddy(bxp,by,s,me.look,{mood:R.state==="coach"?"oops":R.state==="good"||R.state==="end"?"cheer":"happy",look:{x:0,y:-1},still:1});
+ const n=Math.min(R.picked||0,7);for(let i=0;i<n;i++)apple(bxp+(i-(n-1)/2)*bw*0.13,rim-ar*0.12-(i%2)*ar*0.12,ar*0.4,APCOL[i%3],null);
+ const bh=s*0.8;cx.fillStyle="#c08552";cx.beginPath();cx.moveTo(bxp-bw/2,rim);cx.lineTo(bxp+bw/2,rim);cx.lineTo(bxp+bw*0.4,rim+bh);cx.lineTo(bxp-bw*0.4,rim+bh);cx.closePath();cx.fill();
+ cx.strokeStyle="#8b5e34";cx.lineWidth=2*U;for(let i=1;i<4;i++){const yy=rim+bh*i/4,ww=bw/2-bw*0.1*i/4;cx.beginPath();cx.moveTo(bxp-ww,yy);cx.lineTo(bxp+ww,yy);cx.stroke()}
+ ellipse(bxp,rim,bw/2,bh*0.14,"#a0673b")};
+function apple(x,y,r,col,label){ellipse(x,y+r*0.1,r,r*0.92,shade(col,-0.18));circle(x-r*0.04,y,r*0.9,col);ellipse(x-r*0.35,y-r*0.35,r*0.16,r*0.26,"rgba(255,255,255,0.45)",-0.5);
+ cx.strokeStyle="#5c3a1a";cx.lineWidth=Math.max(1.5,r*0.1);cx.beginPath();cx.moveTo(x,y-r*0.8);cx.lineTo(x+r*0.08,y-r*1.1);cx.stroke();ellipse(x+r*0.3,y-r*1.0,r*0.26,r*0.11,"#40c057",-0.5);
+ if(label)fitTxt(label,x,y+r*0.08,r*0.95,r*1.5,"#fff","center",900,"rgba(0,0,0,0.4)")}
+
+// ---------------------------------------------------------------- Snowball Toss
+// Snowmen hold up the answers as they slide along the hill: flick a snowball
+// at the right one, or tap it. The ball goes to whichever snowman the flick
+// points nearest, so the aim need only be rough. The time that counts is the
+// throw, not the flight; a wrong answer leaves the right snowman standing
+// still to be hit.
+ASK.snow=(R,f)=>{const vs=choices(f,3,rnd),lanes=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(rnd()*(i+1));[lanes[i],lanes[j]]=[lanes[j],lanes[i]]}
+ R.targets=vs.map((v,i)=>({v,lane:lanes[i],fx:0.15+rnd()*0.7,dir:rnd()<0.5?-1:1,sp:0.05+rnd()*0.05+Math.min(R.ok,8)*0.004,t0:T+i*0.1}));R.ball=null};
+GOOD.snow=R=>{for(const t of R.targets)if(t.hit==null)t.away=T};
+BAD.snow=R=>{for(const t of R.targets)if(t.v!==R.q.ans&&!t.dead)t.away=T};
+TAP.snow=(R,t)=>throwAt(t);
+function throwAt(t){if(!R||R.ball||t.dead||t.away||!(R.state==="ask"||R.state==="coach"))return;R.ball={t0:T,to:t,ms:Math.max(0,(T-R.asked)*1000)};sfx("toss")}
+// a flick: at the snowman nearest the direction thrown, if one is near it
+function fling(dx,dy){if(!R||R.ball||!R.from||!(R.state==="ask"||R.state==="coach"))return;const a=Math.atan2(dy,dx);let best=null,bd=0.6;
+ for(const t of R.targets){if(t.dead||t.away||t.hx==null)continue;let d=Math.abs(a-Math.atan2(t.hy-R.from.y,t.hx-R.from.x));if(d>Math.PI)d=2*Math.PI-d;if(d<bd){bd=d;best=t}}
+ if(best)throwAt(best);else{R.ball={t0:T,miss:{dx,dy}};sfx("toss")}}
+function snowHit(b){const t=b.to;if(!R||t.dead||t.away)return;burst(t.hx,t.hy,18,["#fff","#e7f5ff","#d0ebff"],260*U,"drop");sfx("splat");
+ if(R.state==="ask"){if(t.v===R.q.ans)t.hit=T;else t.dead=T;answer(t.v,b.ms)}
+ else if(R.state==="coach"&&t.v===R.q.ans){t.hit=T;coachDone()}}
+DRAW.snow=(R,L,dt)=>{const G=L.G;sky("#74c0fc","#e7f5ff");
+ cx.fillStyle="#dbe4ff";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=24*U)cx.lineTo(x,G.y+G.h*0.3-Math.sin(x*0.007+1)*18*U);cx.lineTo(W,H);cx.fill();
+ for(let i=0;i<9;i++){const x=G.x+G.w*(i+0.3)/9,y=G.y+G.h*0.3-Math.sin((x)*0.007+1)*18*U,h=(26+hash1(i)*20)*U;cx.fillStyle="#2b8a3e";cx.beginPath();cx.moveTo(x-h*0.35,y);cx.lineTo(x,y-h);cx.lineTo(x+h*0.35,y);cx.fill();
+  cx.fillStyle="#fff";cx.beginPath();cx.moveTo(x-h*0.12,y-h*0.66);cx.lineTo(x,y-h);cx.lineTo(x+h*0.12,y-h*0.66);cx.fill()}
+ cx.fillStyle="#f8f9fa";cx.beginPath();cx.moveTo(0,H);for(let x=0;x<=W;x+=24*U)cx.lineTo(x,G.y+G.h*0.36-Math.sin(x*0.005)*10*U);cx.lineTo(W,H);cx.fill();
+ for(let i=0;i<36;i++){const x=hash1(i)*W+Math.sin(T+i)*14*U,y=(hash1(i+9)*H+T*(24+hash1(i)*24)*U)%H;circle(x,y,(1.4+hash1(i+4)*2)*U,"rgba(255,255,255,0.9)")}
+ const laneY=[0.46,0.63,0.8],laneS=[0.72,0.86,1],base=clamp(Math.min(G.w*0.09,G.h*0.1),18*U,52*U);
+ const fx=G.x+G.w*0.5,fy=G.y+G.h*0.97,s=clamp(base*0.85,15*U,38*U);R.from={x:fx,y:fy-s*1.2};
+ for(const t of R.targets.slice().sort((a,b)=>a.lane-b.lane)){const ss=base*laneS[t.lane],k=easeOut((T-t.t0)/0.5);
+  if(!t.dead&&!t.hit&&(R.state==="ask"||(R.state==="coach"&&t.v!==R.q.ans))){t.fx+=t.dir*t.sp*dt;if(t.fx<0.1){t.fx=0.1;t.dir=1}if(t.fx>0.9){t.fx=0.9;t.dir=-1}}
+  let x=G.x+G.w*t.fx,al=k;const y=G.y+G.h*laneY[t.lane];
+  if(t.away){const a=T-t.away;x+=(t.fx<0.5?-1:1)*a*a*900*U;al*=clamp(1-a/0.8,0,1)}
+  if(t.hit!=null)al*=clamp(1-(T-t.hit)/0.35,0,1);
+  if(al<=0.01)continue;t.hx=x;t.hy=y-ss*2.05;t.hr=ss*1.6;cx.globalAlpha=al;
+  if(R.state==="coach"&&t.v===R.q.ans)ellipse(x,y-ss*1.7,ss*1.8+Math.sin(T*8)*3*U,ss*2.4,"rgba(255,236,153,0.75)");
+  snowman(x,y,ss,String(t.v),t.dead!=null?T-t.dead:-1);cx.globalAlpha=1}
+ // where a flick is pointing, while the finger is still down
+ const sw=R.swipe;if(sw&&Math.hypot(sw.cx-sw.x,sw.cy-sw.y)>14*U&&sw.cy<sw.y){const m=Math.hypot(sw.cx-sw.x,sw.cy-sw.y),len=G.h*0.3;
+  cx.strokeStyle="rgba(255,255,255,0.85)";cx.lineWidth=4*U;cx.setLineDash([8*U,8*U]);cx.beginPath();cx.moveTo(R.from.x,R.from.y);cx.lineTo(R.from.x+(sw.cx-sw.x)/m*len,R.from.y+(sw.cy-sw.y)/m*len);cx.stroke();cx.setLineDash([])}
+ const b=R.ball,bk=b?clamp((T-b.t0)/0.4,0,1):0;
+ buddy(fx,fy-s*0.95,s,me.look,{mood:R.state==="coach"?"oops":(b&&bk<0.4)||R.state==="good"||R.state==="end"?"cheer":"happy",look:{x:0,y:-1},still:1});
+ if(!b&&(R.state==="ask"||R.state==="coach"))circle(fx+s*1.15,fy-s*0.62,s*0.3,"#fff");
+ if(b){let tx,ty;if(b.miss){const m=Math.hypot(b.miss.dx,b.miss.dy)||1;tx=R.from.x+b.miss.dx/m*G.h;ty=R.from.y+b.miss.dy/m*G.h}else{tx=b.to.hx;ty=b.to.hy}
+  const px=lerp(fx+s*1.1,tx,bk),py=lerp(fy-s*1.3,ty,bk)-Math.sin(bk*Math.PI)*G.h*0.12,br=lerp(s*0.32,s*0.2,bk);circle(px,py,br,"#fff");circle(px-br*0.3,py-br*0.3,br*0.35,"#e7f5ff");
+  if(bk>=1){R.ball=null;if(!b.miss)snowHit(b)}}};
+// y is where the snowman stands; the answer is on a sign it holds up
+function snowman(x,y,s,label,splat){const sx=splat>=0&&splat<0.6?Math.sin(splat*40)*s*0.12:0;x+=sx;
+ ellipse(x,y,s*0.9,s*0.18,"rgba(60,80,120,0.15)");circle(x,y-s*0.8,s*0.85,"#fff");circle(x,y-s*1.95,s*0.62,"#f8f9fa");circle(x,y-s*2.9,s*0.45,"#fff");
+ circle(x-s*0.15,y-s*2.98,s*0.06,"#212529");circle(x+s*0.15,y-s*2.98,s*0.06,"#212529");cx.fillStyle="#ff922b";cx.beginPath();cx.moveTo(x,y-s*2.9);cx.lineTo(x+s*0.38,y-s*2.84);cx.lineTo(x,y-s*2.8);cx.fill();
+ cx.fillStyle="#212529";cx.fillRect(x-s*0.32,y-s*3.36,s*0.64,s*0.1);rr(x-s*0.22,y-s*3.72,s*0.44,s*0.38,s*0.06);cx.fill();
+ cx.strokeStyle="#5c3a1a";cx.lineWidth=Math.max(2,s*0.08);cx.beginPath();cx.moveTo(x-s*0.5,y-s*1.95);cx.lineTo(x-s*0.85,y-s*2.25);cx.moveTo(x+s*0.5,y-s*1.95);cx.lineTo(x+s*0.85,y-s*2.25);cx.stroke();
+ cx.fillStyle="#fff9db";rr(x-s*1.1,y-s*2.62,s*2.2,s*1.15,s*0.2);cx.fill();cx.strokeStyle="#a0673b";cx.lineWidth=Math.max(2,s*0.08);rr(x-s*1.1,y-s*2.62,s*2.2,s*1.15,s*0.2);cx.stroke();
+ fitTxt(label,x,y-s*2.04,s*0.86,s*1.95,"#24305e","center",900);
+ if(splat>=0){cx.globalAlpha=clamp(1-splat/1.2,0,1);circle(x+s*0.2,y-s*2.1,s*0.35,"#fff");for(let i=0;i<6;i++){const a=i*1.05;circle(x+s*0.2+Math.cos(a)*s*0.4,y-s*2.1+Math.sin(a)*s*0.4,s*0.12,"#fff")}cx.globalAlpha=1}}
+
 // ================================================================ screens
 let coach=null;
-function bg(){sky("#3b5bdb","#1c2a52");for(let i=0;i<40;i++){cx.globalAlpha=0.25+0.25*Math.sin(T+i);circle(hash1(i)*W,hash1(i+50)*H,(1+hash1(i+3)*2)*U,"#fff")}cx.globalAlpha=1}
+// the room from the shop, darkened a little at the top so words stay clear
+function bg(){const k=me&&me.look?me.look.room:"night";room(k);
+ if(k!=="night"){const g=cx.createLinearGradient(0,0,0,150*U);g.addColorStop(0,"rgba(0,0,0,0.25)");g.addColorStop(1,"rgba(0,0,0,0)");cx.fillStyle=g;cx.fillRect(0,0,W,150*U)}}
+// a screen's title: centred, or beside the back button if centred it would
+// have to shrink
+function title(t,px){font(px,900);const lx=clearL()+56*U;if(cx.measureText(t).width<=W-2*lx)txt(t,W/2,topY()+23*U,px,"#fff","center",900,"rgba(0,0,0,0.3)");
+ else fitTxt(t,lx,topY()+23*U,px,sideR()-lx,"#fff","left",900,"rgba(0,0,0,0.3)")}
 function backBtn(fn){button(clearL(),topY(),46*U,46*U,"",fn||(()=>{scene="home"}),{icon:"back",col:"rgba(255,255,255,0.9)",isz:20*U})}
 function drawWho(){bg();txt("Who's playing?",W/2,topY()+34*U,34*U,"#fff","center",900,"rgba(0,0,0,0.3)");
  const n=profiles.length+(profiles.length<6?1:0),top=topY()+70*U,bottom=botY()-24*U;
  grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,0.85).forEach((c,i)=>{const p=profiles[i];
   if(!p){cx.fillStyle="rgba(255,255,255,0.14)";rr(c.x,c.y,c.w,c.h,20*U);cx.fill();txt("+",c.x+c.w/2,c.y+c.h*0.42,c.h*0.32,"#fff");fitTxt("Add a player",c.x+c.w/2,c.y+c.h*0.78,c.h*0.09,c.w*0.9,"#fff");
-   btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{const nm=ask("Name for the new player?","");if(nm){const q=newProfile(nm,"addsub10",PCOLS[profiles.length%PCOLS.length]);profiles.push(q);save()}}});return}
-  panel(c.x,c.y,c.w,c.h,"#fffaf0",20*U);buddy(c.x+c.w/2,c.y+c.h*0.4,c.h*0.2,p.look,{seed:i});
-  fitTxt(p.name,c.x+c.w/2,c.y+c.h*0.74,c.h*0.12,c.w*0.9,"#24305e","center",900);fitTxt(TRACK[p.track].short,c.x+c.w/2,c.y+c.h*0.88,c.h*0.07,c.w*0.9,"#748ffc","center",800);
-  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{me=p;save();scene="home"}})})}
+   btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{const nm=ask("Name for the new player?","");if(nm){const q=newProfile(nm,PCOLS[profiles.length%PCOLS.length],{plus:"addsub10"},"plus");profiles.push(q);save()}}});return}
+  panel(c.x,c.y,c.w,c.h,"#fffaf0",20*U);buddy(c.x+c.w/2+c.h*0.04,c.y+c.h*0.4,c.h*0.2,p.look,{seed:i,pet:1});
+  fitTxt(p.name,c.x+c.w/2,c.y+c.h*0.74,c.h*0.12,c.w*0.9,"#24305e","center",900);fitTxt(trk(curTrack(p)).short,c.x+c.w/2,c.y+c.h*0.88,c.h*0.07,c.w*0.9,"#748ffc","center",800);
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{me=p;save();scene="home"},label:p.name})})}
 function ask(q,d){try{const v=window.prompt(q,d);return v?String(v).trim().slice(0,12):""}catch(e){return""}}
 function drawHome(){bg();const day=today(me),port=H>W;
  // the player and today's star
  const top=topY(),bx=clearL()+46*U,by=top+62*U;button(sideR()-44*U,top,44*U,44*U,"",()=>{scene="who"},{icon:"people",col:"rgba(255,255,255,0.9)",isz:22*U});
- buddy(bx,by,40*U,me.look,{mood:day.lit?"cheer":"happy",look:{x:0.6,y:0}});
+ buddy(bx,by,40*U,me.look,{mood:day.lit?"cheer":"happy",look:{x:0.6,y:0},pet:1});
  fitTxt("Hi "+me.name+"!",bx+56*U,top+36*U,30*U,sideR()-bx-56*U-170*U,"#fff","left",900,"rgba(0,0,0,0.3)");
  font(17*U,900);coinChip(bx+56*U+cx.measureText(String(me.coins)).width+44*U,top+78*U,34*U);
  starMeter(sideR()-104*U,top+52*U,34*U,day,null,true);
- // the facts, and which set the games practise: the main facts or doubling
+ // the facts, and which kind the games practise
  const tid=curTrack(me),fc=fastCount(me,tid),py=top+132*U,pw=sideR()-sideL();
  cx.fillStyle="rgba(255,255,255,0.12)";rr(sideL(),py,pw,70*U,14*U);cx.fill();
- setPills(sideL()+10*U,py+8*U,Math.min(pw*0.62,300*U),30*U);
+ practiseChip(sideL()+10*U,py+8*U,Math.min(pw*0.62,300*U),30*U,"home");
  txt(fc.n+" of "+fc.of+" fast",sideR()-14*U,py+23*U,14*U,"#fff","right",900);
  const bw=pw-28*U;cx.fillStyle="rgba(0,0,0,0.3)";rr(sideL()+14*U,py+48*U,bw,12*U,6*U);cx.fill();cx.fillStyle="#69db7c";rr(sideL()+14*U,py+48*U,Math.max(12*U,bw*fc.n/fc.of),12*U,6*U);cx.fill();
  // the games
  const gy=py+82*U,gh=botY()-gy-66*U;
- grid(GAMES.length,sideL(),gy,pw,gh,12*U,port?1:1.1).forEach((c,i)=>{const g=GAMES[i],own=!!me.games[g.id];
-  cx.fillStyle="rgba(0,0,0,0.25)";rr(c.x,c.y+5*U,c.w,c.h,20*U);cx.fill();cx.fillStyle=g.col;rr(c.x,c.y,c.w,c.h,20*U);cx.fill();
-  cx.save();rr(c.x,c.y,c.w,c.h,20*U);cx.clip();gameIcon(g.id,c.x+c.w/2,c.y+c.h*0.42,Math.min(c.w,c.h)*0.32);cx.restore();
-  fitTxt(g.name,c.x+c.w/2,c.y+c.h*0.84,Math.min(c.h*0.12,22*U),c.w-16*U,"#fff","center",900,"rgba(0,0,0,0.3)");
-  if(!own){cx.fillStyle="rgba(20,28,60,0.55)";rr(c.x,c.y,c.w,c.h,20*U);cx.fill();icon("lock",c.x+c.w/2,c.y+c.h*0.36,Math.min(c.w,c.h)*0.22,"#fff");
+ grid(GAMES.length,sideL(),gy,pw,gh,10*U,port?1:1.1).forEach((c,i)=>{const g=GAMES[i],own=!!me.games[g.id];
+  cx.fillStyle="rgba(0,0,0,0.25)";rr(c.x,c.y+5*U,c.w,c.h,18*U);cx.fill();cx.fillStyle=g.col;rr(c.x,c.y,c.w,c.h,18*U);cx.fill();
+  cx.save();rr(c.x,c.y,c.w,c.h,18*U);cx.clip();gameIcon(g.id,c.x+c.w/2,c.y+c.h*0.42,Math.min(c.w,c.h)*0.32);cx.restore();
+  fitTxt(g.name,c.x+c.w/2,c.y+c.h*0.84,Math.min(c.h*0.12,22*U),c.w-12*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+  if(!own){cx.fillStyle="rgba(20,28,60,0.55)";rr(c.x,c.y,c.w,c.h,18*U);cx.fill();icon("lock",c.x+c.w/2,c.y+c.h*0.36,Math.min(c.w,c.h)*0.22,"#fff");
    coin(c.x+c.w/2-22*U,c.y+c.h*0.6,11*U);txt(String(g.price),c.x+c.w/2+8*U,c.y+c.h*0.6,18*U,"#ffd43b","center",900)}
-  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{if(own)startGame(g.id);else if(me.coins>=g.price){me.coins-=g.price;me.games[g.id]=1;save();sfx("buy");toast(g.name+" unlocked!")}
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,label:g.name,fn:()=>{if(own)startGame(g.id);else if(me.coins>=g.price){me.coins-=g.price;me.games[g.id]=1;save();sfx("buy");toast(g.name+" unlocked!")}
    else toast("Need "+(g.price-me.coins)+" more coins - keep playing!")}})});
  const by2=botY()-50*U,bw2=(pw-20*U)/3;
  button(sideL(),by2,bw2,50*U,"Facts",()=>{scene="facts"},{icon:"chart",col:"#e7f5ff"});
  button(sideL()+bw2+10*U,by2,bw2,50*U,"Shop",()=>{scene="shop"},{icon:"bag",col:"#fff3bf"});
+ // what the player is saving for, as a bar along the Shop button
+ const w=ITEM[me.wish];if(w){const k=clamp(me.coins/w.it.price,0,1),x=sideL()+bw2+10*U+10*U,ww=bw2-20*U;cx.fillStyle="rgba(0,0,0,0.15)";rr(x,by2+42*U,ww,4*U,2*U);cx.fill();
+  cx.fillStyle=k>=1?"#40c057":"#fab005";rr(x,by2+42*U,Math.max(4*U,ww*k),4*U,2*U);cx.fill()}
  button(sideL()+2*(bw2+10*U),by2,bw2,50*U,"Grown-ups",null,{icon:"gear",col:"#f1f3f5",fs:Math.min(16*U,bw2/7)});
  holdBtn(sideL()+2*(bw2+10*U),by2,bw2,50*U,()=>{scene="settings"});
  txt("v"+BUILD,W/2,botY()-58*U,10*U,"rgba(255,255,255,0.45)","center",700);
  checkUpdate();updateBanner()}
-// two pills: the player's main facts, or doubling
-function setPills(x,y,w,h){const opts=[["main",TRACK[me.track].short],["dbl","Doubles"]],gw=(w-8*U)/2;
- opts.forEach((o,i)=>button(x+i*(gw+8*U),y,gw,h,o[1],()=>{me.mode=o[0];save()},{col:me.mode===o[0]?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(15*U,h*0.5),r:h/2,flat:1}))}
+// which facts the games practise; a tap opens the list to choose from
+let pickFrom="home";
+function practiseChip(x,y,w,h,from){button(x,y,w,h,trk(curTrack(me)).short,()=>{pickFrom=from;scene="pick"},{icon:"down",col:"#ffd43b",fs:Math.min(15*U,h*0.5),r:h/2,flat:1,isz:h*0.42,id:"practise"})}
+// "What shall we practise?": a card for each kind on the player's list
+function drawPick(){bg();backBtn(()=>{scene=pickFrom});title("What shall we practise?",26*U);
+ const list=AREAS.filter(a=>!me.hide[a.id]),top=topY()+58*U,port=H>W;
+ grid(list.length,sideL(),top,sideR()-sideL(),botY()-top,12*U,port?2.3:1.5).forEach((c,i)=>{const a=list[i],tid=me.lv[a.id],t=trk(tid),fc=fastCount(me,tid),on=me.mode===a.id;
+  panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",18*U);if(on){cx.strokeStyle="#fab005";cx.lineWidth=4*U;rr(c.x,c.y,c.w,c.h,18*U);cx.stroke()}
+  const r=Math.min(c.h*0.3,c.w*0.15),gx=c.x+r+14*U;circle(gx,c.y+c.h/2,r,a.col);fitTxt(a.glyph,gx,c.y+c.h/2+1,r*0.75,r*1.6,"#fff","center",900);
+  const tx=gx+r+14*U,tw=c.x+c.w-tx-14*U,bh=Math.min(c.h*0.08,10*U);
+  fitTxt(a.name,tx,c.y+c.h*0.28,Math.min(c.h*0.17,22*U),tw,"#24305e","left",900);
+  fitTxt(t.name,tx,c.y+c.h*0.5,Math.min(c.h*0.12,16*U),tw,"#5c7cfa","left",800);
+  cx.fillStyle="#e9ecef";rr(tx,c.y+c.h*0.66,tw,bh,bh/2);cx.fill();cx.fillStyle="#51cf66";rr(tx,c.y+c.h*0.66,Math.max(bh,tw*fc.n/fc.of),bh,bh/2);cx.fill();
+  fitTxt(fc.n+" of "+fc.of+" fast",tx,c.y+c.h*0.66+bh+Math.min(c.h*0.1,12*U),Math.min(c.h*0.1,13*U),tw,"#868e96","left",800);
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,label:a.name,fn:()=>{me.mode=a.id;save();scene=pickFrom}})})}
 // Today's star fills with right answers; lit, it pays ten coins.
 function starMeter(x,y,r,day,ink,short){const k=clamp(day.ok/me.goal,0,1),sh=ink?null:"rgba(0,0,0,0.3)";ink=ink||"#fff";
  star(x,y,r,sh?"rgba(255,255,255,0.18)":"#e9ecef");cx.save();cx.beginPath();cx.rect(x-r,y+r-2*r*k,2*r,2*r*k);cx.clip();star(x,y,r,day.lit?"#ffd43b":"#fab005");cx.restore();
@@ -785,32 +1223,38 @@ function gameIcon(id,x,y,s){
  else if(id==="frog"){pad(x,y+s*0.45,s*0.9,s*0.38,"#2f9e44");frog(x,y+s*0.1,s*0.55,0,"happy")}
  else if(id==="monster")monster(x,y+s*0.1,s*0.62,0.5+0.3*Math.sin(T*3),"happy",0);
  else if(id==="race"){car(x,y+s*0.2,s*1.6,"#fff3bf",false)}
- else if(id==="ladybug"){ellipse(x,y+s*0.75,s*1.2,s*0.25,"#2b8a3e");ladybird(x,y+s*0.15,s*0.55,0,3,3,false,1,1)}}
+ else if(id==="ladybug"){ellipse(x,y+s*0.75,s*1.2,s*0.25,"#2b8a3e");ladybird(x,y+s*0.15,s*0.55,0,3,3,false,1,1)}
+ else if(id==="ninja"){ledge(x-s*0.5,y+s*0.75,s*1.1,s*0.36,null);ledge(x+s*0.75,y-s*0.15,s*0.9,s*0.3,null);const k=(T*0.8)%1;
+  buddy(x-s*0.1+k*s*0.5,y+s*0.25-Math.sin(k*Math.PI)*s*0.5,s*0.32,{col:"#4dabf7",hat:"none",extra:"none"},{still:1,band:1,noShadow:1,mood:"cheer"});shuriken(x+s*0.8,y-s*0.75,s*0.22,T*6)}
+ else if(id==="apple"){apple(x-s*0.45,y-s*0.55+((T*0.9)%1)*s*0.6,s*0.24,"#e03131",null);apple(x+s*0.5,y-s*0.7,s*0.24,"#74b816",null);
+  const bw=s*1.3;cx.fillStyle="#c08552";cx.beginPath();cx.moveTo(x-bw/2,y+s*0.35);cx.lineTo(x+bw/2,y+s*0.35);cx.lineTo(x+bw*0.4,y+s*0.95);cx.lineTo(x-bw*0.4,y+s*0.95);cx.fill();ellipse(x,y+s*0.35,bw/2,s*0.1,"#a0673b")}
+ else if(id==="snow"){snowman(x+s*0.3,y+s*1.0,s*0.42,"?",-1);const k=(T*0.7)%1;circle(lerp(x-s*0.9,x+s*0.3,k),lerp(y+s*0.8,y-s*0.0,k)-Math.sin(k*Math.PI)*s*0.4,s*0.12,"#fff")}}
 // Grown-up things are behind a button that has to be held, so a tap from a
 // small finger does not change the facts being practised.
 let holding=null;
 function holdBtn(x,y,w,h,fn){btns.push({x,y,w,h,fn,hold:true});
  if(holding&&holding.x===x&&holding.y===y){const k=clamp((T-holding.t0)/1.5,0,1);cx.strokeStyle="#4c6ef5";cx.lineWidth=5*U;rr(x,y,w*k,h,14*U);cx.stroke();
   if(k>=1){holding=null;sfx("tap");fn()}}}
+const factCol=f=>"+xd".indexOf(f.op==="m"?f.p[1]:f.op)>=0?"#e03131":"#1c7ed6";
 function drawMeet(){bg();const c=coach;txt("New facts!",W/2,topY()+30*U,34*U,"#ffe066","center",900,"rgba(0,0,0,0.3)");
  fitTxt("They go together. Look for the pattern.",W/2,topY()+64*U,16*U,W-40*U,"#dbe4ff","center",800);
  const top=topY()+86*U,bottom=botY()-76*U,n=c.fams.length,port=H>W;
  const boxes=grid(n,sideL(),top,sideR()-sideL(),bottom-top,14*U,port?(n===1?1.05:1.9):1.15);
  c.fams.forEach((f,i)=>{const b=boxes[i];const k=easeOut((T-c.t-i*0.15)/0.4);cx.globalAlpha=k;panel(b.x,b.y+(1-k)*30*U,b.w,b.h,"#fffaf0",18*U);
-  const lines=f.facts.map(x=>factText(x)+" = "+x.ans),half=b.h*0.52,lh=Math.min((b.h-half-12*U)/Math.ceil(lines.length/(port?2:1)),34*U);
+  const lines=f.facts.map(solved),half=b.h*0.52,lh=Math.min((b.h-half-12*U)/Math.ceil(lines.length/(port?2:1)),34*U);
   dotsFor(f.facts[0],b.x+10*U,b.y+(1-k)*30*U+8*U,b.w-20*U,half-12*U);
   lines.forEach((l,j)=>{const col=port?j%2:0,row=port?Math.floor(j/2):j,cols=port?2:1;
-   fitTxt(l,b.x+b.w*(col+0.5)/cols,b.y+(1-k)*30*U+half+row*lh+lh/2,lh*0.62,b.w/cols-12*U,f.facts[j].op==="+"||f.facts[j].op==="x"||f.facts[j].op==="d"?"#e03131":"#1c7ed6","center",900)});cx.globalAlpha=1});
+   fitTxt(l,b.x+b.w*(col+0.5)/cols,b.y+(1-k)*30*U+half+row*lh+lh/2,lh*0.62,b.w/cols-12*U,factCol(f.facts[j]),"center",900)});cx.globalAlpha=1});
  button(W/2-110*U,botY()-60*U,220*U,58*U,"Let's play!",()=>{const m=coach;coach=null;meet(me,m.tid,m.fams);save();if(m.resume&&R){scene="play";nextQ()}else beginRound(m.then)},{icon:"play",col:"#69db7c",ink:"#113a1a",fs:24*U})}
-function drawPlay(dt){const L=layout(R.g);DRAW[R.g.id](R,L,dt);stepParts(dt);
+function drawPlay(dt){const L=layout(R.g);R.L=L;DRAW[R.g.id](R,L,dt);stepParts(dt);
  if(L.pad){cx.fillStyle="rgba(20,28,60,0.28)";rr(L.pad.x,L.pad.y,L.pad.w,L.pad.h,22*U);cx.fill()}
  if(R.state!=="end")drawCard(L);drawHud(L);if(L.pad&&R.state!=="end")drawPad(L);
  if(R.lit>=0&&T-R.lit<2.5){const k=T-R.lit,s=easeOut(k/0.4)*(1+0.05*Math.sin(T*8));cx.globalAlpha=k>2?(2.5-k)/0.5:1;
   star(W/2,H/2,90*U*s,"#ffd43b");txt("Today's star!",W/2,H/2+110*U*s,26*U,"#fff","center",900,"rgba(0,0,0,0.4)");txt("+10",W/2,H/2+4*U,30*U,"#7a5300","center",900);cx.globalAlpha=1}
  if(R.n===0&&T-R.t0<3.2&&R.state==="ask"){cx.globalAlpha=clamp((3.2-(T-R.t0))/0.5,0,1);fitTxt(R.g.say,W/2,L.card.y+L.card.h+26*U,19*U,L.A.w-20*U,"#fff","center",900,"rgba(0,0,0,0.45)");cx.globalAlpha=1}
  if(R.state==="good"&&R.quick&&T<R.until)fitTxt(["Zoom!","Speedy!","Fast!","Wow!","Super quick!"][R.n%5],W/2,L.card.y+L.card.h+30*U,26*U,W*0.8,"#ffe066","center",900,"rgba(0,0,0,0.35)")}
-function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Math.min(sideR()-sideL(),520*U),px=W/2-pw/2;
- const per0=Math.max(1,Math.floor((pw-20*U)/(120*U))),want=230*U+(d.newFast.length?30*U+Math.min(2,Math.ceil(d.newFast.length/per0))*38*U:0)+(d.up?60*U:0)+110*U;
+function drawDone(){bg();const d=done,w=ITEM[me.wish],top=Math.max(topY()+10*U,SAFE.t+52),pw=Math.min(sideR()-sideL(),520*U),px=W/2-pw/2;
+ const per0=Math.max(1,Math.floor((pw-20*U)/(120*U))),want=230*U+(w?40*U:0)+(d.newFast.length?30*U+Math.min(2,Math.ceil(d.newFast.length/per0))*38*U:0)+(d.up?60*U:0)+110*U;
  const ph=Math.min(botY()-top-70*U,want);
  panel(px,top,pw,ph,"#fffaf0",22*U);
  for(let i=0;i<3;i++){const k=easeOut((T-d.t-0.2-i*0.25)/0.35),sx=W/2+(i-1)*70*U;star(sx,top+52*U,32*U*(i<d.stars?k:1),i<d.stars?"#fcc419":"#dee2e6")}
@@ -818,6 +1262,10 @@ function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Mat
  txt(d.ok+" right"+(d.fast?", "+d.fast+" quick":""),W/2,top+142*U,17*U,"#5c7cfa","center",800);
  coin(W/2-40*U,top+178*U,14*U);txt("+"+d.coins,W/2,top+179*U,22*U,"#e67700","left",900);
  let y=top+212*U;
+ // what the coins are going towards
+ if(w){const left=w.it.price-me.coins,bw=Math.min(pw-60*U,300*U),k=clamp(me.coins/w.it.price,0,1);
+  fitTxt(left>0?"Saving for "+w.it.name+": "+left+" more":w.it.name+": enough coins now!",W/2,y,15*U,pw-30*U,left>0?"#495057":"#2b8a3e","center",900);
+  cx.fillStyle="#e9ecef";rr(W/2-bw/2,y+12*U,bw,10*U,5*U);cx.fill();cx.fillStyle=k>=1?"#40c057":"#fab005";rr(W/2-bw/2,y+12*U,Math.max(10*U,bw*k),10*U,5*U);cx.fill();y+=40*U}
  if(d.newFast.length){txt("Fast now:",W/2,y,16*U,"#2b8a3e","center",900);y+=24*U;
   const ch=d.newFast.map(keyText),cw=112*U,per=Math.max(1,Math.floor((pw-20*U)/(cw+8*U)));
   ch.slice(0,per*2).forEach((t,i)=>{const r=Math.floor(i/per),c=i%per,inRow=Math.min(per,ch.length-r*per),x=W/2-(inRow*(cw+8*U)-8*U)/2+c*(cw+8*U);
@@ -827,19 +1275,19 @@ function drawDone(){bg();const d=done,top=Math.max(topY()+10*U,SAFE.t+52),pw=Mat
  const bw=Math.min(180*U,(pw-30*U)/2);
  button(W/2-bw-6*U,botY()-58*U,bw,54*U,"Home",()=>{scene="home"},{col:"#f1f3f5"});
  button(W/2+6*U,botY()-58*U,bw,54*U,"Again!",()=>startGame(d.g.id),{icon:"play",col:"#69db7c",ink:"#113a1a"})}
-// The fact map: every family in the track, green once all its facts are
-// fast, yellow while it is being learned, grey before it has been met.
-function drawFacts(){bg();backBtn();const tid=curTrack(me),t=TRACK[tid];fitTxt(me.name+"'s facts",W/2,topY()+23*U,26*U,W-140*U,"#fff","center",900,"rgba(0,0,0,0.3)");
- const pw0=Math.min(sideR()-sideL(),320*U);setPills(W/2-pw0/2,topY()+48*U,pw0,32*U);
+// The fact map: every family in the set, green once all its facts are fast,
+// yellow while it is being learned, grey before it has been met. Adding and
+// times are tables; the other kinds, a tile a family.
+function drawFacts(){bg();backBtn();const tid=curTrack(me),t=trk(tid);fitTxt(me.name+"'s facts",W/2,topY()+23*U,26*U,W-140*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const pw0=Math.min(sideR()-sideL(),320*U);practiseChip(W/2-pw0/2,topY()+48*U,pw0,32*U,"facts");
  const fc=fastCount(me,tid);fitTxt(t.name+": "+fc.n+" of "+fc.of+" fast",W/2,topY()+98*U,15*U,W-40*U,"#dbe4ff","center",800);
  const legend=y=>[["#51cf66","Fast"],["#ffd43b","Learning"],["rgba(255,255,255,0.22)","Coming up"]].forEach((l,i)=>{const x=W/2+(i-1)*110*U;cx.fillStyle=l[0];rr(x-46*U,y-9*U,18*U,18*U,5*U);cx.fill();txt(l[1],x-22*U,y,14*U,"#fff","left",800)});
  const met=new Set(me.intro[tid]||[]);
- // doubling: one tile a number, its double (and half) together
- if(t.dbl){const fams=families(tid).slice().sort((a,b)=>a.a-b.a),top=topY()+120*U,cells=grid(fams.length,sideL(),top,sideR()-sideL(),botY()-top-44*U,8*U,1.7);
+ if(t.kind!=="add"&&t.kind!=="mul"){const fams=families(tid).slice().sort((a,b)=>a.c-b.c||a.a-b.a),top=topY()+120*U,cells=grid(fams.length,sideL(),top,sideR()-sideL(),botY()-top-44*U,6*U,1.8);
   fams.forEach((f,i)=>{const c=cells[i],fast=famFluent(me,f),on=met.has(f.id);cx.fillStyle=fast?"#51cf66":on?"#ffd43b":"rgba(255,255,255,0.22)";rr(c.x,c.y,c.w,c.h,c.h*0.2);cx.fill();
-   fitTxt(f.a+" + "+f.a+" = "+f.c,c.x+c.w/2,c.y+c.h/2+1,c.h*0.38,c.w-8*U,fast||on?"#24305e":"rgba(255,255,255,0.6)","center",800)});
+   fitTxt(f.a+" + "+f.b+" = "+f.c,c.x+c.w/2,c.y+c.h/2+1,c.h*0.38,c.w-8*U,fast||on?"#24305e":"rgba(255,255,255,0.6)","center",800)});
   legend(botY()-16*U);return}
- const mul=t.ops==="x/",lo=mul?1:0,hi=mul?t.max:10,n=hi-lo+1,top=topY()+116*U,legH=34*U,avail=Math.min(sideR()-sideL(),botY()-top-legH-10*U),cell=avail/(n+1),x0=W/2-cell*(n+1)/2;
+ const mul=t.kind==="mul",lo=mul?1:0,hi=mul?t.max:10,n=hi-lo+1,top=topY()+116*U,legH=34*U,avail=Math.min(sideR()-sideL(),botY()-top-legH-10*U),cell=avail/(n+1),x0=W/2-cell*(n+1)/2;
  const byId={};for(const f of families(tid))byId[f.id]=f;
  txt(mul?"×":"+",x0+cell/2,top+cell/2,cell*0.5,"#ffe066","center",900);
  for(let i=0;i<n;i++){txt(String(lo+i),x0+(i+1.5)*cell,top+cell/2,cell*0.42,"#ffe066","center",900);txt(String(lo+i),x0+cell/2,top+(i+1.5)*cell,cell*0.42,"#ffe066","center",900)}
@@ -848,34 +1296,61 @@ function drawFacts(){bg();backBtn();const tid=curTrack(me),t=TRACK[tid];fitTxt(m
   cx.fillStyle=col;rr(x+cell*0.06,y+cell*0.06,cell*0.88,cell*0.88,cell*0.18);cx.fill();
   if(f&&cell>26*U)txt(String(mul?a*b:a+b),x+cell/2,y+cell/2+1,cell*0.38,famFluent(me,f)||met.has(f.id)?"#24305e":"rgba(255,255,255,0.5)","center",800)}
  legend(top+(n+1)*cell+20*U)}
-// the shop: colours, hats and extras for the buddy
-let shopTab=0;
+// The shop: six tabs, a page of things at a time. A thing that costs more
+// than the player has becomes what they are saving for.
+let shopTab=0,shopPage=0;
 function drawShop(){bg();backBtn();txt("Shop",W/2,topY()+23*U,28*U,"#fff","center",900,"rgba(0,0,0,0.3)");coinChip(sideR(),topY()+23*U,36*U);
- const tabs=["Colours","Hats","Extras"],tw=Math.min(130*U,(sideR()-sideL()-20*U)/3);tabs.forEach((t,i)=>button(W/2-1.5*tw-10*U+i*(tw+10*U),topY()+56*U,tw,42*U,t,()=>{shopTab=i},{col:i===shopTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:17*U}));
- const items=shopTab===0?PCOLS.map(c=>({id:"col:"+c,name:COLNAMES[c],price:10,look:{col:c,hat:me.look.hat,extra:me.look.extra},wear:()=>{me.look.col=c}})):
-  shopTab===1?HATS.map(h=>({id:"hat:"+h.id,name:h.name,price:h.price,look:{col:me.look.col,hat:h.id,extra:me.look.extra},wear:()=>{me.look.hat=h.id}})):
-  EXTRAS.map(e=>({id:"ext:"+e.id,name:e.name,price:e.price,look:{col:me.look.col,hat:me.look.hat,extra:e.id},wear:()=>{me.look.extra=e.id}}));
- const top=topY()+112*U;grid(items.length,sideL(),top,sideR()-sideL(),botY()-top,12*U,0.85).forEach((c,i)=>{const it=items[i],own=it.price===0||me.owned[it.id],
-   on=shopTab===0?me.look.col===it.look.col:shopTab===1?me.look.hat===it.look.hat:me.look.extra===it.look.extra;
-  panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",16*U);if(on){cx.strokeStyle="#fab005";cx.lineWidth=3*U;rr(c.x,c.y,c.w,c.h,16*U);cx.stroke()}
-  buddy(c.x+c.w/2,c.y+c.h*0.44,c.h*0.2,it.look,{seed:i,still:1});fitTxt(it.name,c.x+c.w/2,c.y+c.h*0.78,c.h*0.09,c.w*0.9,"#24305e","center",900);
-  if(own)fitTxt(on?"Wearing":"Wear",c.x+c.w/2,c.y+c.h*0.91,c.h*0.08,c.w*0.9,"#2b8a3e","center",800);
-  else{coin(c.x+c.w/2-16*U,c.y+c.h*0.91,8*U);txt(String(it.price),c.x+c.w/2+6*U,c.y+c.h*0.91,14*U,"#e67700","center",900)}
-  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,fn:()=>{if(own){it.wear();save();sfx("tap")}else if(me.coins>=it.price){me.coins-=it.price;me.owned[it.id]=1;it.wear();save();sfx("buy");toast("Yours!")}else toast("Need "+(it.price-me.coins)+" more coins")}})})}
-// grown-up settings for this player
-let resetArm=-9;
-function drawSettings(){bg();backBtn();txt("Grown-ups: "+me.name,W/2,topY()+23*U,24*U,"#fff","center",900,"rgba(0,0,0,0.3)");
+ const aw=sideR()-sideL(),per=aw/SHOP.length>=84*U?SHOP.length:3,tw=(aw-(per-1)*8*U)/per,ty=topY()+52*U;
+ SHOP.forEach((s,i)=>button(sideL()+(i%per)*(tw+8*U),ty+Math.floor(i/per)*44*U,tw,38*U,s.tab,()=>{shopTab=i;shopPage=0},{col:i===shopTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(16*U,tw/5.2)}));
+ const S=SHOP[shopTab],top=ty+Math.ceil(SHOP.length/per)*44*U+6*U,ah=botY()-58*U-top;
+ const cols=Math.max(2,Math.floor((aw+10*U)/(112*U))),rows=Math.max(1,Math.floor((ah+10*U)/(128*U))),n=cols*rows,pages=Math.ceil(S.items.length/n);shopPage=clamp(shopPage,0,pages-1);
+ const cells=grid(n,sideL(),top,aw,ah,10*U,0.85);
+ S.items.slice(shopPage*n,shopPage*n+n).forEach((it,i)=>{const c=cells[i],id=S.pre+":"+it.id,own=it.price===0||me.owned[id],on=me.look[S.key]===it.id;
+  panel(c.x,c.y,c.w,c.h,on?"#fff3bf":"#fffaf0",16*U);if(on||me.wish===id){cx.strokeStyle=on?"#fab005":"#74c0fc";cx.lineWidth=3*U;rr(c.x,c.y,c.w,c.h,16*U);cx.stroke()}
+  preview(S.key,it.id,c.x,c.y,c.w,c.h*0.7,i);fitTxt(it.name,c.x+c.w/2,c.y+c.h*0.79,c.h*0.09,c.w*0.9,"#24305e","center",900);
+  if(own)fitTxt(on?(S.key==="room"?"Showing":S.key==="pet"?"With you":"Wearing"):(S.key==="room"||S.key==="pet"?"Choose":"Wear"),c.x+c.w/2,c.y+c.h*0.91,c.h*0.08,c.w*0.9,"#2b8a3e","center",800);
+  else{coin(c.x+c.w/2-18*U,c.y+c.h*0.91,8*U);txt(String(it.price),c.x+c.w/2+6*U,c.y+c.h*0.91,14*U,"#e67700","center",900)}
+  btns.push({x:c.x,y:c.y,w:c.w,h:c.h,label:it.name,fn:()=>shopTap(S,it)})});
+ const fy=botY()-48*U;
+ if(pages>1){button(sideL(),fy,56*U,46*U,"",()=>{shopPage=(shopPage+pages-1)%pages},{icon:"back",col:"rgba(255,255,255,0.9)",isz:20*U,id:"prev"});
+  button(sideR()-56*U,fy,56*U,46*U,"",()=>{shopPage=(shopPage+1)%pages},{icon:"next",col:"rgba(255,255,255,0.9)",isz:20*U,id:"next"});
+  txt("Page "+(shopPage+1)+" of "+pages,W/2,fy+12*U,14*U,"#fff","center",900)}
+ let have=0,all=0;for(const k in ITEM)if(ITEM[k].it.price>0){all++;if(me.owned[k])have++}
+ const w=ITEM[me.wish];fitTxt(w?"Saving for "+w.it.name+": "+Math.min(me.coins,w.it.price)+" of "+w.it.price:"You have "+have+" of "+all+" things",W/2,fy+(pages>1?34:22)*U,13*U,aw-130*U,"#dbe4ff","center",800)}
+function shopTap(S,it){const id=S.pre+":"+it.id;
+ if(it.price===0||me.owned[id]){me.look[S.key]=it.id;save();sfx("tap")}
+ else if(me.coins>=it.price){me.coins-=it.price;me.owned[id]=1;me.look[S.key]=it.id;if(me.wish===id)me.wish=null;save();sfx("buy");toast("Yours!")}
+ else{me.wish=id;save();toast("Saving for "+it.name+": "+(it.price-me.coins)+" more coins")}}
+// a thing in the shop: the buddy wearing it, the pet, or the room in little
+function preview(key,id,x,y,w,h,i){
+ if(key==="room"){cx.save();rr(x+6*U,y+6*U,w-12*U,h-6*U,12*U);cx.clip();const sc=Math.max((w-12*U)/W,(h-6*U)/H);cx.translate(x+6*U,y+6*U);cx.scale(sc,sc);room(id);cx.restore();return}
+ if(key==="pet"){if(id==="none")txt("None",x+w/2,y+h*0.55,Math.min(w,h)*0.14,"#adb5bd","center",900);else pet(id,x+w/2,y+h*0.45,Math.min(w,h)*0.26);return}
+ const look=Object.assign({},me.look);look[key]=id;buddy(x+w/2,y+h*0.6,h*0.27,look,{seed:i,still:1})}
+// Grown-up settings for this player: what to practise, and how.
+let setTab=0,resetArm=-9;
+function drawSettings(){bg();backBtn();title("Grown-ups: "+me.name,24*U);
+ const tabs=["What to practise","Speed and more"],tw=Math.min(200*U,(sideR()-sideL()-10*U)/2);
+ tabs.forEach((t,i)=>button(W/2-tw-5*U+i*(tw+10*U),topY()+52*U,tw,38*U,t,()=>{setTab=i},{col:i===setTab?"#ffd43b":"rgba(255,255,255,0.85)",fs:Math.min(15*U,tw/9)}));
  // (two columns when the screen is wide, so a sideways phone fits it all)
- const wide=W>H*1.1,full=sideR()-sideL(),w=wide?(full-24*U)/2:full;let x0=sideL(),y=topY()+64*U,rows=0;
- const row=(label,opts,cur,set,fmt)=>{if(wide&&rows++===3){x0=sideL()+w+24*U;y=topY()+64*U}txt(label,x0,y+10*U,15*U,"#dbe4ff","left",800);y+=24*U;
-   const bw=(w-(opts.length-1)*8*U)/opts.length;opts.forEach((o,i)=>button(x0+i*(bw+8*U),y,bw,44*U,fmt(o),()=>{set(o);save()},{col:o===cur?"#ffd43b":"rgba(255,255,255,0.9)",fs:Math.min(15*U,bw/7)}));y+=58*U};
- row("Facts to practise",TRACKS.filter(t=>!t.dbl).map(t=>t.id),me.track,v=>{me.track=v},v=>TRACK[v].short);
- row("Doubling",TRACKS.filter(t=>t.dbl).map(t=>t.id),me.dtrack,v=>{me.dtrack=v},v=>TRACK[v].short);
- row("A fact is fast when answered within",[2,3,4,5],me.speed,v=>{me.speed=v},v=>v+" seconds");
- row("Right answers for today's star",[20,30,40,60],me.goal,v=>{me.goal=v},v=>String(v));
- row("Sounds",[true,false],settings.sfx,v=>{settings.sfx=v;saveSettings();if(sfxBus)sfxBus.gain.value=v?0.8:0},v=>v?"On":"Off");
+ const wide=W>H*1.1,full=sideR()-sideL(),w=wide?(full-24*U)/2:full,y0=topY()+104*U,split=setTab===0?3:2;let x0=sideL(),y=y0,rows=0;
+ const col2=()=>{if(wide&&rows++===split){x0=sideL()+w+24*U;y=y0}};
+ const row=(label,opts,on,set,fmt)=>{col2();fitTxt(label,x0,y+10*U,15*U,w,"#dbe4ff","left",800);y+=24*U;
+   const bw=(w-(opts.length-1)*6*U)/opts.length;opts.forEach((o,i)=>button(x0+i*(bw+6*U),y,bw,44*U,fmt(o),()=>{set(o);save()},{col:on(o)?"#ffd43b":"rgba(255,255,255,0.9)",fs:Math.min(15*U,bw/6)}));y+=58*U};
+ if(setTab===0){
+  for(const a of AREAS){if(a.id==="times")continue;row(a.name,TRACKS.filter(t=>t.area===a.id).map(t=>t.id),v=>me.lv[a.id]===v,v=>{me.lv[a.id]=v},v=>TRACK[v].short)}
+  const tt=trk(me.lv.times);
+  row("Times and divide",["x2510","x2345","muldiv","pick"],v=>v==="pick"?!!tt.custom:me.lv.times===v,v=>{me.lv.times=v==="pick"?(tt.custom?tt.id:tablesId(tt.tables||[1,2,3,4,5,6,7,8,9,10,11,12])):v},v=>v==="pick"?"Choose tables":TRACK[v].short);
+  // a grown-up's own choice of tables: tap each one on or off
+  if(tt.custom){const bw=(w-5*6*U)/6;for(let i=0;i<12;i++){const n=i+1,on=tt.tables.indexOf(n)>=0;
+    button(x0+(i%6)*(bw+6*U),y-8*U+Math.floor(i/6)*42*U,bw,36*U,String(n),()=>{const l=on?tt.tables.filter(v=>v!==n):tt.tables.concat([n]);if(l.length){me.lv.times=tablesId(l);save()}},{col:on?"#b197fc":"rgba(255,255,255,0.75)",fs:15*U})}
+   y+=80*U}
+  row("On "+me.name+"'s list",AREAS.map(a=>a.id),v=>!me.hide[v],v=>{const hide=!me.hide[v];if(hide&&AREAS.filter(a=>!me.hide[a.id]).length<=1)return;me.hide[v]=hide?1:0;
+   if(hide&&me.mode===v)me.mode=AREAS.find(a=>!me.hide[a.id]).id},v=>AREA[v].short);return}
+ row("A fact is fast when answered within",[2,3,4,5],v=>me.speed===v,v=>{me.speed=v},v=>v+" seconds");
+ row("Right answers for today's star",[20,30,40,60],v=>me.goal===v,v=>{me.goal=v},v=>String(v));
+ row("Sounds",[true,false],v=>settings.sfx===v,v=>{settings.sfx=v;saveSettings();if(sfxBus)sfxBus.gain.value=v?0.8:0},v=>v?"On":"Off");
  // a week at a glance
- txt("This week",x0,y+10*U,15*U,"#dbe4ff","left",800);y+=26*U;const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);days.push({k:dayKey(d),l:"SMTWTFS"[d.getDay()]})}
+ col2();txt("This week",x0,y+10*U,15*U,"#dbe4ff","left",800);y+=26*U;const days=[];for(let i=6;i>=0;i--){const d=new Date(Date.now()-i*864e5);days.push({k:dayKey(d),l:"SMTWTFS"[d.getDay()]})}
  const cw=w/7;days.forEach((d,i)=>{const r=me.days[d.k]||{ok:0,n:0,lit:0},bh=Math.min(50*U,r.ok/Math.max(1,me.goal)*50*U);cx.fillStyle=r.lit?"#ffd43b":"rgba(255,255,255,0.35)";
   rr(x0+i*cw+cw*0.25,y+50*U-bh,cw*0.5,Math.max(2*U,bh),4*U);cx.fill();txt(d.l,x0+i*cw+cw/2,y+64*U,12*U,"#fff","center",800);if(r.n)txt(String(r.ok),x0+i*cw+cw/2,y+50*U-bh-9*U,11*U,"#fff","center",800)});y+=86*U;
  const armed=T-resetArm<3;button(x0,Math.min(y,botY()-48*U),w,46*U,armed?"Tap again to reset "+me.name+"'s facts":"Start "+me.name+"'s facts again",()=>{if(armed){me.facts={};me.intro={};me.retry=[];me.recent=[];save();toast("Facts reset");resetArm=-9}else resetArm=T},{col:armed?"#ff8787":"rgba(255,255,255,0.6)",fs:15*U})}
@@ -890,18 +1365,35 @@ function updateBanner(){if(!newBuild)return;const uw=Math.min(W*0.8,320*U),uh=42
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&T-checkedAt>60)checkedAt=-1e9});
 
 // ================================================================ input
+// A finger down (press), moving (slide) and up (release). Buttons and the
+// things to tap answer at once; in Apple Catch the basket follows the finger;
+// in Snowball Toss a flick up throws.
 function rectPos(x,y){const r=cv.getBoundingClientRect();return{x:x-r.left,y:y-r.top}}
 function onMenu(t){try{return!!(t&&t.closest&&t.closest("[id^=shelf-menu]"))}catch(e){return false}}
 function press(p){audioWake();const b=hitBtn(p);
  if(b){if(b.hold){holding={x:b.x,y:b.y,t0:T};return}sfx("tap");b.fn();return}
- if(scene==="play"&&R&&R.g.input==="tap"){let best=null,bd=1e9;for(const t of R.targets){if(t.hx==null||t.dead||t.pop)continue;const d=Math.hypot(p.x-t.hx,p.y-t.hy);if(d<t.hr&&d<bd){bd=d;best=t}}if(best)tapTarget(best)}}
+ if(scene!=="play"||!R)return;const gi=R.g.input;
+ if(gi==="move"){if(R.L){R.aim=clamp((p.x-R.L.G.x)/R.L.G.w,0.06,0.94);R.drag=true}return}
+ if(gi==="tap"||gi==="fling"){let best=null,bd=1e9;for(const t of R.targets){if(t.hx==null||t.dead||t.pop||t.away)continue;const d=Math.hypot(p.x-t.hx,p.y-t.hy);if(d<t.hr&&d<bd){bd=d;best=t}}
+  if(best){tapTarget(best);return}}
+ if(gi==="fling")R.swipe={x:p.x,y:p.y,cx:p.x,cy:p.y}}
+function slide(p){if(scene!=="play"||!R)return;
+ if(R.g.input==="move"&&R.drag&&R.L)R.aim=clamp((p.x-R.L.G.x)/R.L.G.w,0.06,0.94);
+ if(R.swipe){R.swipe.cx=p.x;R.swipe.cy=p.y}}
+function release(p){if(scene!=="play"||!R)return;R.drag=false;const s=R.swipe;R.swipe=null;
+ if(s&&R.g.input==="fling"){const dx=(p?p.x:s.cx)-s.x,dy=(p?p.y:s.cy)-s.y;if(dy<-18*U&&Math.hypot(dx,dy)>24*U)fling(dx,dy)}}
 let lastTouchAt=0,evN=0;
 window.addEventListener("touchstart",e=>{lastTouchAt=performance.now();evN++;audioWake();for(const t of e.changedTouches){if(onMenu(t.target))continue;press(rectPos(t.clientX,t.clientY))}},{passive:false});
-window.addEventListener("touchend",()=>{lastTouchAt=performance.now();audioWake();holding=null});window.addEventListener("touchcancel",()=>{holding=null});
-cv.addEventListener("mousedown",e=>{if(performance.now()-lastTouchAt<900)return;evN++;press(rectPos(e.clientX,e.clientY))});
-window.addEventListener("mouseup",()=>{holding=null});
+window.addEventListener("touchmove",e=>{for(const t of e.changedTouches){if(onMenu(t.target))continue;slide(rectPos(t.clientX,t.clientY))}},{passive:true});
+window.addEventListener("touchend",e=>{lastTouchAt=performance.now();audioWake();holding=null;for(const t of e.changedTouches){if(onMenu(t.target))continue;release(rectPos(t.clientX,t.clientY))}});
+window.addEventListener("touchcancel",()=>{holding=null;release(null)});
+const mouseOk=()=>performance.now()-lastTouchAt>=900;
+cv.addEventListener("mousedown",e=>{if(!mouseOk())return;evN++;press(rectPos(e.clientX,e.clientY))});
+cv.addEventListener("mousemove",e=>{if(mouseOk()&&(e.buttons&1))slide(rectPos(e.clientX,e.clientY))});
+window.addEventListener("mouseup",e=>{holding=null;if(mouseOk())release(rectPos(e.clientX,e.clientY))});
 window.addEventListener("keydown",e=>{audioWake();const k=e.key;if(scene!=="play"||!R)return;
- if(/^[0-9]$/.test(k)&&R.g.input==="keys")typeDigit(k);else if(k==="Backspace")typeBack();else if(k==="Enter")typeOk();else if(k==="Escape"){scene="home";R=null}});
+ if(/^[0-9]$/.test(k)&&R.g.input==="keys")typeDigit(k);else if(k==="Backspace")typeBack();else if(k==="Enter")typeOk();else if(k==="Escape"){scene="home";R=null}
+ else if((k==="ArrowLeft"||k==="ArrowRight")&&R.g.input==="move")R.aim=clamp((R.aim==null?0.5:R.aim)+(k==="ArrowLeft"?-0.24:0.24),0.06,0.94)});
 window.__shelfInput=()=>"events:"+evN+" scene:"+scene;
 
 // ================================================================ loop
@@ -914,7 +1406,7 @@ function frame(ts){requestAnimationFrame(frame);const now=ts/1000;let dt=last?no
  if(scene==="play"&&R)stepRound(dt);
  if(scene==="play"&&R)drawPlay(dt);
  else if(scene==="who")drawWho();else if(scene==="meet"&&coach)drawMeet();else if(scene==="done"&&done)drawDone();
- else if(scene==="facts")drawFacts();else if(scene==="shop")drawShop();else if(scene==="settings")drawSettings();else{scene="home";drawHome()}
+ else if(scene==="facts")drawFacts();else if(scene==="pick")drawPick();else if(scene==="shop")drawShop();else if(scene==="settings")drawSettings();else{scene="home";drawHome()}
  drawToast()}
 if(me)scene="home";
 requestAnimationFrame(frame);
@@ -930,6 +1422,6 @@ window.FD={get scene(){return scene},set scene(s){scene=s},get R(){return R},get
   txt("3+4",size*0.38,size*0.24,size*0.22,"#fff","center",900,"rgba(0,0,0,0.3)");
   buddy(size*0.5,size*0.66,size*0.25,{col:"#4dabf7",hat:"none",extra:"none"},{still:1,mood:"cheer",noShadow:1});
   const out=c.toDataURL("image/png");cx=was;U=wu;return out},
- get buttons(){return btns.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,label:b.label||""}))},families,toMeet,pickFact,record,fluent,choices,GAMES,TRACKS};
+ get buttons(){return btns.map(b=>({x:b.x,y:b.y,w:b.w,h:b.h,label:b.label||""}))},families,toMeet,pickFact,record,fluent,choices,GAMES,TRACKS,AREAS,trk,SHOP};
 </script>
 </body></html>
