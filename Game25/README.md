@@ -9,7 +9,7 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 
 ## What it practises
 
-Five kinds of fact. Each kind is a ladder of sets, and a player climbs each
+Six kinds of fact. Each kind is a ladder of sets, and a player climbs each
 ladder on their own: when every fact in a set is fast, the game moves on to
 the next set by itself and says so.
 
@@ -19,9 +19,23 @@ the next set by itself and says so.
 | Doubles and halves | Double 1 to 10 (Dylan) · Doubles and halves to 20 · to 40 (Rory) · to 100 (Sophia) | 10 · 20 · 40 · 100 |
 | Missing numbers | Make 10 (7 + ? = 10) · Missing numbers to 10 (3 + ? = 8, 8 − ? = 3) · to 20 | 18 · 90 · 200 |
 | Tens | Ten more, ten less (23 + 10, 33 − 10) · Adding and taking away tens (30 + 40, 70 − 30) | 100 · 90 |
+| Big numbers | Hundreds, tens and ones (300 + 400, 342 + 100, 342 + 30) · To 1000, no carrying (342 + 125) · Carrying and borrowing (347 + 25, 378 + 145, 400 − 158) | 10 · 4 · 10 kinds |
 | Times and divide | The 2s, 5s and 10s · the 2s to 5s and 10s · Times and divide to 12 (Sophia) | 126 · 190 · 288 |
 
 A grown-up can also choose any times tables (just the 7s, say).
+
+Big numbers work differently from the rest. There are far too many 3-digit
+sums to learn one by one, and nobody should: what gets quick is the way of
+doing them. So a big "fact" is a kind of sum, such as "carrying the ones"
+(347 + 25). Each time that kind comes up, it is a fresh sum of that kind,
+chosen at random and then checked to carry or borrow exactly where the kind
+says. A kind counts as fast when it is right within 2 to 6 times the usual
+time (6 seconds for 342 + 30, 18 seconds for 378 + 145, at the usual 3).
+A wrong answer is shown worked in columns, with the 1s carried and the
+digits borrowed from crossed out with their new values above them. Stuck,
+a child is shown the two numbers lined up. The wrong answers on offer are
+the slips children make: a ten or a hundred out, a forgotten carry, or the
+smaller digit taken from the larger in every column.
 
 The yellow button on the home screen shows what the games are practising.
 Tapping it opens **What shall we practise?**, a card for each kind on the
@@ -31,8 +45,10 @@ practises doubling.
 First grade asks for adding and taking away within 20, with the facts to 10
 known fluently (Common Core 1.OA.C.6). It also asks for the unknown number
 in an addition or subtraction (1.OA.D.8, "8 + ? = 11") and for 10 more or
-10 less than a two-digit number (1.NBT.C.5). Times and divide start off the
-list for a young player, until a grown-up adds them.
+10 less than a two-digit number (1.NBT.C.5). Second grade asks for adding
+and taking away within 1000 using place value (2.NBT.B.7), and for adding
+and taking away 10 or 100 mentally (2.NBT.B.8). Times and divide, and big
+numbers, start off the list for a young player, until a grown-up adds them.
 
 ## How it teaches
 
@@ -117,7 +133,8 @@ throw, not when the snowball lands.
   yellow being learned, grey still to come.
 - **Grown-ups** (hold the button for a second and a half) has two pages:
   - **What to practise:** the set for each kind, any times tables you
-    choose, and which kinds are on the player's list.
+    choose, and which kinds are on the player's list. Big numbers start on
+    the lists of players adding and taking away to 20, such as Rory.
   - **Speed and more:** the speed that counts as fast, the daily goal, and
     sound on or off.
 
@@ -153,7 +170,9 @@ tests them:
 - a typical child gets through each new set: Make 10 in about 150 answers,
   the others in 600 to 1,000;
 - Make 10 learned, those facts are skipped in the missing numbers; the 2s,
-  5s and 10s learned, only the 3s and 4s are new.
+  5s and 10s learned, only the 3s and 4s are new;
+- big sums: 48,000 fresh ones, each worked out again column by column, carry
+  or borrow just where their kind says, with answers from 100 to 999.
 
 With Playwright it then plays all nine games with real input, answering
 one question wrong in each to go through the help:
@@ -166,6 +185,8 @@ It does this on an upright phone, a sideways phone and an iPad. It then:
 
 - chooses each kind of fact from the list a child sees;
 - adds times to a player's list and chooses just the 7s;
+- adds big numbers to the list, then types a 3-digit sum wrong (shown in
+  columns) and then right;
 - buys a pet and a room in the shop with real taps, and saves up for
   something too dear;
 - draws every thing in the shop.

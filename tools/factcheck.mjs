@@ -43,7 +43,7 @@ const SEC = '// ================================================================
 const a = html.indexOf(SEC + 'facts'), b = html.indexOf(SEC + 'saves');
 if (a < 0 || b < 0) throw new Error('section markers missing');
 const ctx = vm.createContext({ Math, Object, Array, Set, Number, String, JSON });
-vm.runInContext(html.slice(a, b) + ';globalThis.E={AREAS,TRACKS,TRACK,trk,tablesId,families,trackFacts,toMeet,meet,pickFact,record,fluent,isFast,activeFacts,trackDone,fastCount,choices,factText,solved,keyText,POOL};', ctx);
+vm.runInContext(html.slice(a, b) + ';globalThis.E={AREAS,TRACKS,TRACK,trk,tablesId,BIG,makeProblem,families,trackFacts,toMeet,meet,pickFact,record,fluent,isFast,activeFacts,trackDone,fastCount,choices,factText,solved,keyText,POOL};', ctx);
 const E = ctx.E;
 let bad = 0;
 const check = (name, ok, detail) => { console.log(`  ${name.padEnd(62)} ${detail ?? ''} ${ok ? 'ok' : '<-- FAIL'}`); if (!ok) bad++; };
@@ -52,7 +52,7 @@ const kid = track => ({ facts: {}, intro: {}, retry: [], recent: [], tick: 0, tr
 
 console.log('the facts');
 const want = { add10: 66, addsub10: 132, addsub20: 242, dbl10: 10, dblh10: 20, dblh20: 40, dblh50: 100, bond10: 18, miss10: 90, miss20: 200,
-  ten1: 100, tens2: 90, x2510: 126, x2345: 190, muldiv: 288, 'x:3': 46 };
+  ten1: 100, tens2: 90, big1: 10, big2: 4, big3: 10, x2510: 126, x2345: 190, muldiv: 288, 'x:3': 46 };
 // the answer worked out again here, from the numbers on show
 const value = f => {
   if (f.op === 'm') { const [p0, s, p2, c] = f.p; return p0 == null ? (s === '+' ? c - p2 : c + p2) : s === '+' ? c - p0 : p0 - c; }
@@ -65,6 +65,7 @@ function inRange(t, f) {
   if (t.kind === 'miss') { const [p0, s, p2, c] = f.p, whole = s === '+' ? c : (p0 ?? f.ans);
     return whole <= t.max && (!t.bond || whole === 10) && f.x >= 1 && f.y >= 1 && (s === '+' ? Math.max(f.x, f.y) <= 10 : Math.max(f.y, c) <= 10) && (p0 == null) !== (p2 == null); }
   if (t.kind === 'ten') return f.y === 10 && (f.op === '+' ? f.x <= t.max : f.x <= t.max + 10);
+  if (t.kind === 'big') return f.big && f.x >= 100 && f.ans >= 100 && f.ans <= 999 && !!E.BIG[f.gen];
   if (t.kind === 'tens') return f.x % 10 === 0 && f.y % 10 === 0 && f.ans % 10 === 0 && f.x <= 100 && f.ans <= 100 && f.ans >= 10;
   return f.op === '+' ? f.ans <= t.max && f.x <= 10 && f.y <= 10 : f.x <= t.max;
 }
@@ -89,6 +90,35 @@ check('Make 10: 1 + 9, 2 + 8 and 5 + 5 first', E.families('bond10').map(f => f.i
   check('a missing-number family: 3 + ? = 8, 5 + ? = 8, 8 - ? = 3, 8 - ? = 5', JSON.stringify(f.facts.map(x => [E.factText(x), x.ans])) === '[["3 + ? = 8",5],["5 + ? = 8",3],["8 − ? = 3",5],["8 − ? = 5",3]]'
     && E.solved(f.facts[2]) === '8 − 5 = 3' && E.keyText(f.facts[0].k) === '3 + ? = 8', f.facts.map(x => E.factText(x)).join(', ')); }
 check('ten more, ten less: the ones under ten first, then the tens', E.families('ten1').slice(0, 9).every(f => f.a < 10) && E.families('ten1')[9].a === 10, E.families('ten1').slice(8, 12).map(f => f.facts[0].k).join(' '));
+/* big sums: worked out column by column here, to see what each kind really
+   asks - which columns carry (adding) or borrow (taking away), and whether a
+   borrow has to go across a nought */
+function columns(x, y, op) {
+  const d = (n, i) => Math.floor(n / 10 ** i) % 10, out = { carry: [], across: false };
+  if (op === '+') { let c = 0; for (let i = 0; i < 3; i++) { c = d(x, i) + d(y, i) + c >= 10 ? 1 : 0; out.carry.push(c); } }
+  else { const t = [0, 1, 2].map(i => d(x, i)); for (let i = 0; i < 3; i++) { const b = t[i] < d(y, i); out.carry.push(b ? 1 : 0); if (b) { let j = i + 1; if (t[j] === 0) out.across = true; while (t[j] === 0) { t[j] = 9; j++; } t[j]--; t[i] += 10; } } }
+  return out;
+}
+const KIND = { // [ones carry, tens carry], how big the second number is
+  'h+': [[0, 0], 'h'], 'h-': [[0, 0], 'h'], 'c+': [[0, 0], 100], 'c-': [[0, 0], 100], 'd+': [[0, 0], 10], 'd-': [[0, 0], 10],
+  't+': [[0, 0], 't'], 't-': [[0, 0], 't'], 'o+': [[0, 0], 'o'], 'o-': [[0, 0], 'o'], '2+': [[0, 0], 2], '2-': [[0, 0], 2], '3+': [[0, 0], 3], '3-': [[0, 0], 3],
+  'r2+': [[1, 0], 2], 'r2-': [[1, 0], 2], 'r3+': [[1, 0], 3], 'r3-': [[1, 0], 3], 'rt+': [[0, 1], 3], 'rt-': [[0, 1], 3], 'rb+': [[1, 1], 3], 'rb-': [[1, 1], 3], 'z-': [[1, 0], 3], 'z0-': [[1, 0], 3] }; // (the tens only pass the borrow on: 0 becomes 9)
+{ const R = mulberry(31); let bad_ = [], n = 0;
+  for (const t of ['big1', 'big2', 'big3']) for (const f of E.trackFacts(t)) for (let i = 0; i < 2000; i++) {
+    const q = i ? E.makeProblem(f, R) : f, [cy, size] = KIND[f.gen], c = columns(q.x, q.y, q.op); n++;
+    const sz = size === 'h' ? q.x % 100 === 0 && q.y % 100 === 0 : size === 't' ? q.y % 10 === 0 && q.y < 100 && q.y >= 20 : size === 'o' ? q.y >= 2 && q.y <= 9
+      : size === 2 ? q.y >= 10 && q.y <= 99 : size === 3 ? q.y >= 100 : q.y === size;
+    const ok = q.k === f.k && value(q) === q.ans && q.x >= 100 && q.x <= 999 && q.ans >= 100 && q.ans <= 999 && sz && c.carry[0] === cy[0] && c.carry[1] === cy[1] && !c.carry[2]
+      && c.across === (f.gen[0] === 'z');
+    if (!ok && bad_.length < 3) bad_.push(`${f.gen}: ${q.x} ${q.op} ${q.y} = ${q.ans}`);
+  }
+  check('big sums: every fresh one is its kind (carrying just where it says)', !bad_.length, bad_.length ? bad_.join('; ') : `${n} sums`);
+  let same = 0; const f = E.trackFacts('big3')[0]; for (let i = 0; i < 50; i++) { const a = E.makeProblem(f, R), b = E.makeProblem(f, R); if (a.x === b.x && a.y === b.y) same++; }
+  check('big sums: a fresh one each time', same <= 2, `${same} of 50 repeated`);
+  let cbad = 0, slips = 0; for (const t of ['big1', 'big2', 'big3']) for (const f of E.trackFacts(t)) for (let i = 0; i < 200; i++) { const q = E.makeProblem(f, R), c = E.choices(q, 4, R);
+    if (c.length !== 4 || !c.includes(q.ans) || new Set(c).size !== 4 || c.some(v => v < 0)) cbad++; }
+  check('big sums: answers to tap, the near misses a ten or a hundred out', !cbad, `${cbad} bad`);
+  check('a big kind is named by its example: "347 + 25"', E.keyText('B:r2+') === '347 + 25' && E.keyText('B:z0-') === '400 − 158'); }
 check('adding tens: 30 + 40, 40 + 30, 70 - 30, 70 - 40', JSON.stringify(E.families('tens2').find(f => f.id === '30+40').facts.map(f => f.k)) === '["30+40","40+30","70-30","70-40"]');
 
 console.log('choosing answers to tap');
@@ -149,7 +179,7 @@ check('a typical first grader gets there', typical.done && typical.maxLearning <
 const hard = play('addsub10', 0.55, 0.15, 12000, 13, null, 14);
 check('a child who finds it hard gets there too, never flooded', hard.done && hard.maxLearning <= E.POOL + 6, `${hard.n} answers (${Math.ceil(hard.n / 30)} days of 30), at most ${hard.maxLearning} being learned at once`);
 const times = play('muldiv', 0.8, 0.4, 15000, 21, null, 6);
-for (const [tid, lim] of [['bond10', 300], ['miss10', 2500], ['ten1', 2500], ['tens2', 2500], ['x2510', 2500]]) {
+for (const [tid, lim] of [['bond10', 300], ['miss10', 2500], ['ten1', 2500], ['tens2', 2500], ['big1', 300], ['big3', 300], ['x2510', 2500]]) {
   const r = play(tid, 0.75, 0.3, 8000, 23, null, 6);
   check(`a typical child gets through ${E.TRACK[tid].name.toLowerCase()}`, r.done && r.n <= lim && r.maxLearning <= E.POOL + 6, `${r.n} answers, at most ${r.maxLearning} being learned at once`);
 }
@@ -301,7 +331,22 @@ if (process.env.PLAYWRIGHT || await import('playwright').then(() => true, () => 
     await choose('Times and divide');
     const xq = await firstQ('balloon');
     check('grown-ups: times added to the list, the 7s alone chosen, and asked', hidden && t1 === 'x:2,5,10' && t2 === 'x:2,5,7,10' && t3 === 'x:7' && /(^|\D)7(\D|$)/.test(xq || '') && /[x/]/.test(xq || ''), `${t1} > ${t2} > ${t3}: ${xq}`);
-    await pg.evaluate(() => { FD.scene = 'settings'; }); await sleep(100); await tap(await btn(/^Speed and more$/));
+    // big numbers: put on the list in Grown-ups, chosen, a fresh sum typed
+    // wrong (shown worked in columns) and then right
+    await pg.evaluate(() => { FD.scene = 'settings'; }); await sleep(150);
+    await tap(await btn(/^What to practise$/)); await tap(await btn(/^Big$/));
+    const bigOn = await choose('Big numbers');
+    const bk = await firstQ('rocket');
+    { const q = await pg.evaluate(() => FD.R.q), keys = async v => { const b = await pg.evaluate(() => FD.buttons); for (const d of String(v)) { const k = b.find(b => b.label === d); await pg.touchscreen.tap(k.x + k.w / 2, k.y + k.h / 2 + 2); await sleep(40); } };
+      await keys(q.ans === 999 ? 998 : q.ans + 1); await sleep(300);
+      const st1 = await pg.evaluate(() => FD.R.state);
+      if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_rocket_big_help.png` });
+      await keys(q.ans); await sleep(100);
+      const st2 = await pg.evaluate(() => FD.R.state);
+      check('big numbers: on the list, a 3-digit sum typed wrong, shown in columns, then right', bigOn && /^B:/.test(bk || '') && q.x >= 100 && st1 === 'coach' && st2 === 'good', `${q.x} ${q.op} ${q.y} = ${q.ans}`); }
+    await pg.evaluate(() => { FD.scene = 'facts'; }); await sleep(150); if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_facts_big.png` });
+    await pg.evaluate(() => { FD.scene = 'settings'; }); await sleep(100); if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_settings_big.png` });
+    await tap(await btn(/^Speed and more$/));
     if (shots) await pg.screenshot({ path: `${shots}/fd_${tag}_settings2.png` });
     // the shop: buy a pet and a room with real taps, page through the hats,
     // and save up for something too dear
