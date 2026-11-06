@@ -77,9 +77,9 @@
    "hash": "b2af55768af9"
   },
   "fact-dash": {
-   "bytes": 168289,
+   "bytes": 175864,
    "n": 2,
-   "hash": "9dd63c0aa90d"
+   "hash": "cd4194e2e450"
   },
   "genesis": {
    "bytes": 9253270,
@@ -137,9 +137,9 @@
    "hash": "ad5793b9b0fd"
   },
   "shelf": {
-   "bytes": 3311341,
+   "bytes": 3311454,
    "n": 35,
-   "hash": "fd64aff2979b"
+   "hash": "fd375ad8ec7d"
   },
   "slime-storm": {
    "bytes": 74304,
