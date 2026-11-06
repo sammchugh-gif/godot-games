@@ -26,7 +26,9 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   them. Projects saved before the library keep their emoji.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
-  whether it is solid (others can stand on it). Drag a sprite on the stage to
+  whether it is solid (others can stand on it), and whether it is shown at
+  the start (a hidden sprite shows faintly while editing, so it can still be
+  found and moved). Drag a sprite on the stage to
   set where it starts.
 - **The stage** is 480 by 360, like Scratch's, with a floor along the bottom.
   ⚑ puts every sprite back where it starts, sets the score to 0 and starts the
@@ -39,11 +41,11 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 
 | Group | Blocks |
 | --- | --- |
-| Events | when ⚑ clicked · when (button) pressed · when I am tapped · when I touch (sprite / edge) · when I get (message) · send (message) |
+| Events | when ⚑ clicked · when (button) pressed · when I am tapped · when I touch (sprite / edge) · when I get (message) · send (message) · when backdrop is (backdrop) |
 | Move | move right / left / up / down · move diagonally (↗ ↖ ↘ ↙) · jump (height) · spin around · go to start · go to a random spot · go to (sprite) · gravity on/off · set speed |
 | Control | wait · repeat · forever · if (button) held · if touching (sprite / edge / ground) · if score is … or more · stop everything |
 | Sensing | wait till I touch · wait for (button) · step towards (sprite) |
-| Looks | say … for … secs · say · turn into (any sprite) · next costume · switch costume to · grow · shrink · normal size · hide · show · backdrop |
+| Looks | say … for … secs · say · turn into (any sprite) · next costume · switch costume to · grow · shrink · normal size · hide · show · backdrop · next backdrop |
 | Sound | play sound (pop, boing, coin, jump, laser, drum, ta-da, oops, zap) · play note (do to high do) |
 | Score | set score · change score · say my score |
 | My Blocks | ＋ Make a Block, then your own blocks (see below) |
@@ -67,7 +69,9 @@ sprite's speed. Moving left turns a sprite to face left.
 
 Star Catcher (buttons and score), Frog Jump (a little platformer with solid
 bricks), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
-Chase (forever, `if held`, `step towards`). Opening one makes a copy to change.
+Chase (forever, `if held`, `step towards`) and Day and Night (a red button on
+the stage that changes the backdrop when tapped, and sprites that answer
+`when backdrop is`). Opening one makes a copy to change.
 
 ## Saving
 

@@ -198,7 +198,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.10.31-3";
+const BUILD="2026.11.06-1";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -267,6 +267,7 @@ const SPECS={
  tap:{cat:"ev",kind:"hat",text:"when I am tapped"},
  touch:{cat:"ev",kind:"hat",text:"when I touch %1",args:[SPRITE_MENU([["edge","the edge"]])]},
  getmsg:{cat:"ev",kind:"hat",text:"when I get %1",args:[MSGS]},
+ bdhat:{cat:"ev",kind:"hat",text:"when backdrop is %1",args:[Object.keys(BACKDROPS).map(k=>[k,BACKDROPS[k].name])]},
  send:{cat:"ev",kind:"stack",text:"send %1",args:[MSGS]},
 
  right:{cat:"mo",kind:"stack",text:"move <span class='ic'>▶</span> right %1",args:["n:30"]},
@@ -305,6 +306,7 @@ const SPECS={
  hide:{cat:"lo",kind:"stack",text:"hide"},
  show:{cat:"lo",kind:"stack",text:"show"},
  backdrop:{cat:"lo",kind:"stack",text:"backdrop %1",args:[Object.keys(BACKDROPS).map(k=>[k,BACKDROPS[k].name])]},
+ nextbd:{cat:"lo",kind:"stack",text:"next backdrop"},
 
  sound:{cat:"so",kind:"stack",text:"play sound %1",args:[SOUNDS]},
  note:{cat:"so",kind:"stack",text:"play note %1",args:[NOTES]},
@@ -319,11 +321,11 @@ const SPECS={
  call:{cat:"my",kind:"stack",text:"%N"},
 };
 const PALETTE={
- ev:["flag","key","tap","touch","getmsg","send"],
+ ev:["flag","key","tap","touch","getmsg","send","bdhat"],
  mo:["right","left","up","down","diag","jump","spin","home","rand","goto","grav","speed"],
  co:["wait","repeat","forever","ifkey","iftouch","ifscore","stopall"],
  se:["waittouch","waitkey","follow"],
- lo:["say","sayf","costume","nextc","setc","grow","shrink","normal","hide","show","backdrop"],
+ lo:["say","sayf","costume","nextc","setc","grow","shrink","normal","hide","show","backdrop","nextbd"],
  so:["sound","note"],
  sc:["setscore","addscore","sayscore"],
  my:[]};
@@ -393,7 +395,21 @@ const EXAMPLES=[
   gh.scripts=[S(30,70,["flag"],["setc","0"],["home"],["wait",1],["forever",[["follow",bun.id]]]),
    S(30,300,["touch",bun.id],["setc","2"],["sound","oops"],["say","Boo! Got you!",2],["stopall"])];
   h.scripts=[S(30,70,["touch",bun.id],["sound","coin"],["addscore",1],["rand"]),S(30,230,["flag"],["rand"])];
-  P.sprites.push(bun,gh,h);curId=bun.id;return P}}];
+  P.sprites.push(bun,gh,h);curId=bun.id;return P}},
+ {em:"button",name:"Day and Night",about:"Tap the red button to change the backdrop: day, night, space, the sea and more. The cat, the sun and the moon notice.",make(){
+  P={v:1,id:uid(),name:"Day and Night",backdrop:"sky",sprites:[]};
+  const cat=mkSprite("cat",200,280),btn=mkSprite("button",420,300,"Red button"),sun=mkSprite("sun",80,70),moon=mkSprite("moon",80,70);
+  btn.size=170;moon.shown=false;
+  btn.scripts=[S(30,70,["tap"],["setc","1"],["sound","pop"],["nextbd"],["wait",0.2],["setc","0"]),
+   S(30,330,["key","a"],["setc","1"],["sound","pop"],["nextbd"],["wait",0.2],["setc","0"])];
+  cat.scripts=[S(30,70,["flag"],["say","Tap the red button!",3]),
+   S(30,200,["bdhat","night"],["say","Time for bed!",2]),
+   S(30,320,["bdhat","space"],["jump",120],["say","Whoa, I'm in space!",2]),
+   S(30,450,["bdhat","sea"],["say","Glub glub!",2]),
+   S(30,570,["bdhat","sky"],["say","Good morning!",2])];
+  sun.scripts=[S(30,70,["flag"],["show"]),S(30,190,["bdhat","sky"],["show"]),S(30,310,["bdhat","night"],["hide"])];
+  moon.scripts=[S(30,70,["flag"],["hide"]),S(30,190,["bdhat","night"],["show"]),S(30,310,["bdhat","space"],["hide"])];
+  P.sprites.push(cat,btn,sun,moon);curId=btn.id;return P}}];
 // ------------------------------------------------------------ storage
 const LS="codelab.";
 function lsGet(k,d){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -568,7 +584,7 @@ const SW=480,SH=360,FLOOR=SH-36,GRAV=1500;
 const cv=$("#stage"),cx=cv.getContext("2d");
 const RUN={running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
 const liveOf=sp=>RUN.live.find(l=>l.id===sp.id);
-function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,look:s.look,costume:0,walkT:-9,falls:s.falls,solid:s.solid,visible:true,
+function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,look:s.look,costume:0,walkT:-9,falls:s.falls,solid:s.solid,visible:s.shown!==false,
  say:"",sayUntil:0,flip:false,rot:0,speed:4,onGround:false,hop:null}}
 function resetLive(){RUN.touching.clear();RUN.live=P.sprites.map(mkLive);RUN.score=0;RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()}
 function syncLive(){// sprites added, removed or changed in the editor while stopped
@@ -618,8 +634,9 @@ function shownCostume(l){const lk=lookOf(l.look);
   if(l.falls&&!l.onGround&&Math.abs(l.vy)>40)return 3;
   if(RUN.t-l.walkT<0.12)return 1+(Math.floor(RUN.t*8)%2)}
  return Math.min(l.costume,lk.costumes.length-1)}
-function drawSprite(l){if(!l.visible)return;const k=l.size/100*SCALE,ppu=k*cv.width/SW,img=lookCanvas(l.look,shownCostume(l),ppu);
- cx.save();cx.translate(l.x,l.y);if(l.rot)cx.rotate(l.rot);if(l.flip)cx.scale(-1,1);
+const editing=()=>!RUN.running&&!document.body.classList.contains("big");
+function drawSprite(l){if(!l.visible&&!editing())return;const k=l.size/100*SCALE,ppu=k*cv.width/SW,img=lookCanvas(l.look,shownCostume(l),ppu);
+ cx.save();if(!l.visible)cx.globalAlpha=0.3;cx.translate(l.x,l.y);if(l.rot)cx.rotate(l.rot);if(l.flip)cx.scale(-1,1);
  cx.drawImage(img,-img.pw*k/2,-img.ph*k/2,img.pw*k,img.ph*k);cx.restore();
  if(l.src.id===curId&&!RUN.running&&!document.body.classList.contains("big")){const b=box(l);cx.strokeStyle="rgba(76,151,255,.8)";cx.setLineDash([4,3]);cx.lineWidth=1.5;cx.strokeRect(b.l,b.t,b.r-b.l,b.b-b.t);cx.setLineDash([])}}
 function drawSay(l){if(!l.visible||!l.say)return;cx.font="600 14px -apple-system,system-ui,sans-serif";
@@ -696,7 +713,8 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
  case"normal":l.size=l.src.size;settle(l,0,0);break;
  case"hide":l.visible=false;break;
  case"show":l.visible=true;break;
- case"backdrop":RUN.backdrop=a[0];break;
+ case"backdrop":setBackdrop(a[0]);break;
+ case"nextbd":{const ks=Object.keys(BACKDROPS);setBackdrop(ks[(ks.indexOf(RUN.backdrop)+1)%ks.length]);break}
  case"sound":sfx(a[0]);break;
  case"note":note(num(a[0]));yield* waitSecs(t,0.25);break;
  case"setscore":RUN.score=num(a[0]);RUN.scoreSeen=true;break;
@@ -707,6 +725,8 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
  case"define":break;
  case"sayscore":l.say="My score is "+RUN.score;yield* waitSecs(t,2);l.say="";break;
  default:yield}}
+// a new backdrop starts every "when backdrop switches to" script for it
+function setBackdrop(k){if(!BACKDROPS[k]||k===RUN.backdrop)return;RUN.backdrop=k;fireHats(h=>h.op==="bdhat"&&h.a[0]===k,true)}
 function flag(){wake();stopAll(true);resetLive();RUN.running=true;
  fireHats(h=>h.op==="flag",true);$("#go").classList.add("on");if(!RUN.threads.length)toast("Nothing starts with “when ⚑ clicked” yet")}
 function stopAll(quiet){RUN.threads.forEach(t=>t.done=true);RUN.threads=[];RUN.running=false;$("#go").classList.remove("on");
@@ -741,7 +761,7 @@ function sizeStage(){const r=cv.getBoundingClientRect(),d=Math.min(2,window.devi
 // set where it starts.
 let sdrag=null;
 function stagePt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*SW,y:(e.clientY-r.top)/r.height*SH}}
-function spriteAt(p){for(let i=RUN.live.length-1;i>=0;i--){const l=RUN.live[i];if(!l.visible)continue;const b=box(l);if(p.x>=b.l&&p.x<=b.r&&p.y>=b.t&&p.y<=b.b)return l}return null}
+function spriteAt(p){for(let i=RUN.live.length-1;i>=0;i--){const l=RUN.live[i];if(!l.visible&&!editing())continue;const b=box(l);if(p.x>=b.l&&p.x<=b.r&&p.y>=b.t&&p.y<=b.b)return l}return null}
 cv.addEventListener("pointerdown",e=>{wake();const p=stagePt(e),l=spriteAt(p);if(!l)return;
  if(RUN.running||document.body.classList.contains("big")){
   for(const sc of l.src.scripts){const h=sc.blocks[0];if(h.op==="tap"){const key="script:"+h.id;if(!RUN.threads.some(t=>t.key===key&&!t.done))startThread(l,sc.blocks.slice(1),key,h.id)}}
@@ -818,6 +838,7 @@ function spriteSheet(s){openSheet(`<h2>${lookImg(s.look,"hi")} <span id="shName"
  <div class="opts"><label><input type="checkbox" id="fa" ${s.falls?"checked":""}> Falls (gravity)</label>
  <label><input type="checkbox" id="so" ${s.solid?"checked":""}> Solid (stand on it)</label>
  <label><input type="checkbox" id="an" ${s.animate!==false?"checked":""}> Walks by itself</label>
+ <label><input type="checkbox" id="sh" ${s.shown!==false?"checked":""}> Shown at start</label>
  <label>Size <select id="sz">${[50,75,100,125,150,200,300].map(v=>`<option ${v===s.size?"selected":""}>${v}</option>`).join("")}</select></label></div>
  <h4>Look</h4><div id="pickHere"></div>
  <div class="acts"><button id="dup">Copy this sprite</button><button class="red" id="del">Delete</button></div>`);
@@ -827,6 +848,7 @@ function spriteSheet(s){openSheet(`<h2>${lookImg(s.look,"hi")} <span id="shName"
  $("#so").onchange=e=>{s.solid=e.target.checked;commit()};
  $("#sz").onchange=e=>{s.size=+e.target.value;commit()};
  $("#an").onchange=e=>{s.animate=e.target.checked;commit()};
+ $("#sh").onchange=e=>{s.shown=e.target.checked;commit()};
  $("#pickHere").appendChild(lookPicker(s.look,k=>{const lk=lookOf(k),was=lookOf(s.look);s.look=k;
   if(lk.kind!==was.kind){s.falls=lk.kind==="char";s.solid=lk.kind==="solid";$("#fa").checked=s.falls;$("#so").checked=s.solid}
   card.querySelector("h2 img").src=thumb(k);commit()}));
