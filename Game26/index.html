@@ -95,6 +95,20 @@ body.dragging #trash{display:flex}
 #sprites{flex:1;min-height:0;display:flex;flex-direction:column;background:#1d2540;border-radius:10px;overflow:hidden}
 #sprites .head{display:flex;align-items:center;gap:8px;padding:8px 10px;font-weight:700;color:var(--dim);font-size:14px}
 #sprites .head span{flex:1}
+.mtabs{display:flex;background:#141a2c;border-radius:10px;padding:3px;gap:2px}.mtabs button{background:none;padding:6px 10px;border-radius:8px;font-weight:800;color:var(--dim);font-size:14px}.mtabs button.on{background:var(--panel2);color:#fff}
+.sp .mt{width:40px;height:40px;image-rendering:pixelated;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.sp .mk{position:absolute;left:5px;top:3px;font-style:normal;font-size:11px;color:#c9d4f0}
+.sp.tool{background:#26304d}.sp .ti{font-size:24px;line-height:40px}
+.mgrid{display:grid;grid-template-columns:repeat(8,1fr);width:min(272px,62vw);aspect-ratio:1;touch-action:none;border:2px solid var(--line);border-radius:6px;overflow:hidden;
+ background:repeating-conic-gradient(#3a4566 0 25%,#2c3757 0 50%) 0 0/34px 34px}
+.mgrid i{display:block;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1)}
+.medit{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin:8px 0 4px}
+.mpal{display:grid;grid-template-columns:repeat(4,38px);gap:6px}.mpal button{width:38px;height:38px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.mpal button.on{box-shadow:0 0 0 3px #fff}.mpal button.rub{background:repeating-conic-gradient(#3a4566 0 25%,#2c3757 0 50%) 0 0/14px 14px}
+.mfill{display:flex;gap:6px;margin:10px 0}.mfill button{background:var(--panel2);border-radius:9px;padding:7px 10px;font-weight:700;font-size:13px}
+#mPrev{width:144px;height:96px;image-rendering:pixelated;border-radius:8px;background:#7cc8ff;display:block}
+.mkinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.mkinds button{background:var(--panel2);border-radius:12px;padding:10px;text-align:left}
+.mkinds button.on{box-shadow:0 0 0 3px #4c97ff}.mkinds b{display:block;margin-bottom:2px}.mkinds small{color:var(--dim);line-height:1.3}
 #bdBtn,#addSp{background:var(--panel2);border-radius:9px;padding:6px 10px;font-size:14px;font-weight:700;color:#fff}
 #addSp{background:#2f7de1}
 #splist{flex:1;overflow:auto;display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px;padding:2px 10px 10px}
@@ -119,7 +133,7 @@ body.big .pb{width:76px;height:64px;font-size:28px}body.big .pb.a{width:84px}
  .sp{width:62px;height:58px;flex:none}.sp .li{width:36px;height:36px}
  #sprites .head{display:none}
  #sprites{flex-direction:row}
- #spTools{display:flex;flex-direction:column;gap:6px;padding:8px 0 8px 8px}
+ #spTools{display:grid;grid-template-columns:auto auto;gap:5px;align-content:center;padding:6px 0 6px 8px}
  .pb{height:44px;width:54px}
  .lbl{display:none}
 }
@@ -180,8 +194,8 @@ body.big #stagebox{margin:0}
    <button class="pb" data-k="down">▼</button><button class="pb" data-k="right">▶</button><button class="pb a" data-k="a">A</button>
   </div>
   <div id="sprites">
-   <div class="head"><span>Sprites</span><button id="bdBtn">🖼 Backdrop</button><button id="addSp">＋ Sprite</button></div>
-   <div id="spTools"><button id="addSp2" style="background:#2f7de1;border-radius:9px;padding:6px 8px;font-weight:700">＋</button><button id="bdBtn2" style="background:var(--panel2);border-radius:9px;padding:6px 8px">🖼</button></div>
+   <div class="head"><div class="mtabs"><button id="tabSp" class="on">🐱 Sprites</button><button id="tabLv">▦ Level</button></div><span></span><button id="bdBtn">🖼 Backdrop</button><button id="addSp">＋ Sprite</button></div>
+   <div id="spTools"><button id="tabLv2" style="background:var(--panel2);border-radius:9px;padding:6px 8px;font-weight:800">▦</button><button id="addSp2" style="background:#2f7de1;border-radius:9px;padding:6px 8px;font-weight:700">＋</button><button id="bdBtn2" style="background:var(--panel2);border-radius:9px;padding:6px 8px">🖼</button></div>
    <div id="splist"></div>
   </div>
  </div>
@@ -198,7 +212,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.11.06-1";
+const BUILD="2026.11.11-1";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -217,10 +231,15 @@ const SOLID_BY_DEFAULT=new Set(["🧱","🟫"]);
 const FALLS_BY_DEFAULT=new Set(["🐱","🐶","🐸","🤖","🦄","🐵","🦖","🐧","🐰","🦊","🐼","⚽","🚗"]);
 // A look is a drawn sprite from art.js, or one of the emoji above. Drawn
 // ones are in their own units; SCALE turns those into stage pixels.
-const SCALE=0.8,GROUPS=["Animals","People","Fantasy","Food","Things","Level","Emoji"];
+const SCALE=0.8,GROUPS=["Animals","People","Fantasy","Food","Things","Emoji"];
 const EMOJI_LOOKS=COSTUMES.map(c=>({k:c[0],n:c[1],g:"Emoji",w:70,h:70,emoji:true,costumes:["still"],
  kind:SOLID_BY_DEFAULT.has(c[0])?"solid":FALLS_BY_DEFAULT.has(c[0])?"char":"thing"}));
 const LOOKS=(window.ART?ART.looks:[]).concat(EMOJI_LOOKS);
+// Level pieces are drawn on the level grid now, not added as sprites. The
+// scenery among them stays a sprite, under Things; the rest are kept only so
+// games saved with them still draw.
+const SCENERY=new Set(["tree","cactus","mushroom","cloud","bush"]);
+LOOKS.forEach(l=>{if(l.g==="Level"){if(SCENERY.has(l.k))l.g="Things";else l.hidden=true}});
 const LOOK=new Map(LOOKS.map(l=>[l.k,l]));
 const lookOf=k=>LOOK.get(k)||{k,n:"?",g:"Emoji",w:70,h:70,emoji:true,costumes:["still"],kind:"thing"};
 const walker=lk=>lk.kind==="char"&&lk.costumes.length===4&&lk.costumes[3]==="jump";
@@ -260,12 +279,12 @@ const MSGS=[["go","go"],["win","you win"],["lose","game over"],["next","next lev
 const CATS=[
  {id:"ev",name:"Events",c:"var(--ev)"},{id:"mo",name:"Move",c:"var(--mo)"},{id:"co",name:"Control",c:"var(--co)"},
  {id:"se",name:"Sensing",c:"var(--se)"},{id:"lo",name:"Looks",c:"var(--lo)"},{id:"so",name:"Sound",c:"var(--so)"},{id:"sc",name:"Score",c:"var(--sc)"},{id:"my",name:"My Blocks",c:"var(--my)"}];
-const SPRITE_MENU=extra=>()=>{const c=P&&P.sprites.length?cur():null;return(P?P.sprites.filter(s=>!c||s.id!==c.id).map(s=>[s.id,s.name]):[]).concat(extra)};
+const SPRITE_MENU=(extra,mats)=>()=>{const c=P&&P.sprites.length?cur():null;return(P?P.sprites.filter(s=>!c||s.id!==c.id).map(s=>[s.id,s.name]):[]).concat(extra).concat(mats&&P&&P.level?P.level.mats.map(m=>["mat:"+m.k,"▦ "+m.name]):[])};
 const SPECS={
  flag:{cat:"ev",kind:"hat",text:"when <span class='ic' style='color:#5f5'>⚑</span> clicked"},
  key:{cat:"ev",kind:"hat",text:"when %1 pressed",args:[KEYS]},
  tap:{cat:"ev",kind:"hat",text:"when I am tapped"},
- touch:{cat:"ev",kind:"hat",text:"when I touch %1",args:[SPRITE_MENU([["edge","the edge"]])]},
+ touch:{cat:"ev",kind:"hat",text:"when I touch %1",args:[SPRITE_MENU([["edge","the edge"]],1)]},
  getmsg:{cat:"ev",kind:"hat",text:"when I get %1",args:[MSGS]},
  bdhat:{cat:"ev",kind:"hat",text:"when backdrop is %1",args:[Object.keys(BACKDROPS).map(k=>[k,BACKDROPS[k].name])]},
  send:{cat:"ev",kind:"stack",text:"send %1",args:[MSGS]},
@@ -287,17 +306,17 @@ const SPECS={
  repeat:{cat:"co",kind:"c",text:"repeat %1",args:["n:4"]},
  forever:{cat:"co",kind:"c cap",text:"forever"},
  ifkey:{cat:"co",kind:"c",text:"if %1 held",args:[KEYS]},
- iftouch:{cat:"co",kind:"c",text:"if touching %1",args:[SPRITE_MENU([["edge","the edge"],["ground","the ground"]])]},
+ iftouch:{cat:"co",kind:"c",text:"if touching %1",args:[SPRITE_MENU([["edge","the edge"],["ground","the ground"]],1)]},
  ifscore:{cat:"co",kind:"c",text:"if score is %1 or more",args:["n:5"]},
  stopall:{cat:"co",kind:"cap",text:"stop everything"},
 
- waittouch:{cat:"se",kind:"stack",text:"wait till I touch %1",args:[SPRITE_MENU([["edge","the edge"],["ground","the ground"]])]},
+ waittouch:{cat:"se",kind:"stack",text:"wait till I touch %1",args:[SPRITE_MENU([["edge","the edge"],["ground","the ground"]],1)]},
  waitkey:{cat:"se",kind:"stack",text:"wait for %1",args:[KEYS]},
  follow:{cat:"se",kind:"stack",text:"step towards %1",args:[SPRITE_MENU([])]},
 
  say:{cat:"lo",kind:"stack",text:"say %1 for %2 secs",args:["t:Hello!","n:2"]},
  sayf:{cat:"lo",kind:"stack",text:"say %1",args:["t:Hi!"]},
- costume:{cat:"lo",kind:"stack",text:"turn into %1",args:[LOOKS.map(l=>[l.k,(l.emoji?l.k+" ":"")+l.n])]},
+ costume:{cat:"lo",kind:"stack",text:"turn into %1",args:[LOOKS.filter(l=>!l.hidden).map(l=>[l.k,(l.emoji?l.k+" ":"")+l.n])]},
  nextc:{cat:"lo",kind:"stack",text:"next costume"},
  setc:{cat:"lo",kind:"stack",text:"switch costume to %1",args:[()=>{const lk=lookOf(P&&P.sprites.length?cur().look:"cat");return lk.costumes.map((n,i)=>[String(i),n])}]},
  grow:{cat:"lo",kind:"stack",text:"grow by %1",args:["n:20"]},
@@ -344,7 +363,7 @@ const cur=()=>P.sprites.find(s=>s.id===curId)||P.sprites[0];
 function mkSprite(look,x,y,name){const lk=lookOf(look);
  return{id:uid(),name:uniqueName(name||lk.n),look,x,y,size:100,falls:lk.kind==="char",solid:lk.kind==="solid",animate:true,scripts:[],myblocks:[]}}
 // projects saved before the drawn sprites kept an emoji in "emoji"
-function migrate(p){p.sprites.forEach(s=>{if(!s.myblocks)s.myblocks=[];if(!s.look)s.look=s.emoji||"cat";delete s.emoji;if(s.animate===undefined)s.animate=true});return p}
+function migrate(p){if(!p.level||!p.level.grid)p.level=defaultLevel();p.sprites.forEach(s=>{if(!s.myblocks)s.myblocks=[];if(!s.look)s.look=s.emoji||"cat";delete s.emoji;if(s.animate===undefined)s.animate=true});return p}
 function uniqueName(n){if(!P)return n;let k=n,i=2;while(P.sprites.some(s=>s.name===k))k=n+" "+i++;return k}
 // a script is written as a short list: [op, arg, arg, [body...]] so the
 // examples below read like the blocks they make
@@ -353,7 +372,7 @@ function B(t){const op=t[0],b=newBlock(op);let i=1;if(op==="call"||op==="define"
  (SPECS[op].args||[]).forEach((a,k)=>{if(t[i]!==undefined&&!Array.isArray(t[i])){b.a[k]=String(t[i]);i++}});
  if(isC(op))b.body=(Array.isArray(t[i])?t[i]:[]).map(B);return b}
 function blankProject(){
- P={v:1,id:uid(),name:"My game",backdrop:"sky",sprites:[]};
+ P={v:1,id:uid(),name:"My game",backdrop:"sky",sprites:[],level:defaultLevel()};
  const cat=mkSprite("cat",120,240);
  cat.scripts=[S(30,70,["flag"],["say","Let's code!",2])];
  P.sprites.push(cat);return P}
@@ -368,10 +387,10 @@ const EXAMPLES=[
   star.scripts=[S(30,70,["touch",cat.id],["sound","coin"],["addscore",1],["rand"]),
    S(30,220,["flag"],["forever",[["spin"],["wait",1]]])];
   P.sprites.push(cat,star);return P}},
- {em:"frog",name:"Frog Jump",about:"A little platformer: ◀ ▶ to walk, A to jump. Hop over the cactus and up the platforms to the flag.",make(){
+ {em:"frog",name:"Frog Jump",about:"A little platformer: ◀ ▶ to walk, A to jump. Hop over the cactus, up the grass and the bricks to the flag. The level is drawn in ▦ Level.",make(){
   P={v:1,id:uid(),name:"Frog Jump",backdrop:"jungle",sprites:[]};
-  const frog=mkSprite("frog",50,296),cac=mkSprite("cactus",180,296),b1=mkSprite("grass",290,262),b2=mkSprite("grass",418,192),fl=mkSprite("flag",440,146),
-   coin=mkSprite("coin",290,222);
+  P.level=defaultLevel();paintRow(P.level,11,9,14,"g");paintRow(P.level,12,9,14,"d");paintRow(P.level,13,9,14,"d");paintRow(P.level,8,16,19,"b");
+  const frog=mkSprite("frog",50,296),cac=mkSprite("cactus",180,296),fl=mkSprite("flag",444,148),coin=mkSprite("coin",290,228);
   frog.scripts=[S(30,70,["flag"],["speed","4"],["forever",[["ifkey","right",[["right",4]]],["ifkey","left",[["left",4]]]]]),
    S(30,330,["key","a"],["jump",110],["sound","jump"]),
    S(330,330,["key","up"],["jump",110],["sound","jump"]),
@@ -379,7 +398,7 @@ const EXAMPLES=[
   fl.scripts=[S(30,70,["touch",frog.id],["sound","tada"],["say","You win!",3],["send","win"]),S(30,230,["flag"],["forever",[["nextc"],["wait",0.3]]])];
   coin.scripts=[S(30,70,["flag"],["show"],["forever",[["nextc"],["wait",0.12]]]),S(30,260,["touch",frog.id],["sound","coin"],["addscore",1],["hide"])];
   cac.scripts=[S(30,70,["getmsg","win"],["spin"],["spin"])];
-  P.sprites.push(frog,cac,b1,b2,fl,coin);curId=frog.id;return P}},
+  P.sprites.push(frog,cac,fl,coin);curId=frog.id;return P}},
  {em:"dragon",name:"Dragon Dance",about:"No buttons needed: the dragon dances with a block of its own, “dance step”, made with Make a Block.",make(){
   P={v:1,id:uid(),name:"Dragon Dance",backdrop:"night",sprites:[]};
   const d=mkSprite("dragon",240,230);d.falls=false;const dance={id:uid(),name:"dance step"};d.myblocks=[dance];
@@ -475,7 +494,22 @@ function tidy(){const sp=cur();renderScripts();const stacks=[...areaEl.querySele
  const cols=Math.max(1,Math.min(3,Math.floor((scrEl.clientWidth-20)/(maxW+30)))),colY=Array(cols).fill(56);
  sp.scripts.forEach((sc,i)=>{let c=0;for(let k=1;k<cols;k++)if(colY[k]<colY[c]-20)c=k;sc.x=20+c*(maxW+30);sc.y=colY[c];colY[c]+=hs[i]+30});
  renderScripts();save()}
-function renderSprites(){const l=$("#splist");l.innerHTML="";
+// ------------------------------------------------------------ level mode
+let levelMode=false,tool="paint",curMat="g";
+function setLevelMode(on){levelMode=on;$("#tabSp").classList.toggle("on",!on);$("#tabLv").classList.toggle("on",on);
+ $("#tabLv2").textContent=on?"🐱":"▦";$("#tabLv2").title=on?"Sprites":"Level";
+ $("#addSp").textContent=on?"＋ Material":"＋ Sprite";document.body.classList.toggle("lvl",on);renderSprites();
+ if(on)toast(RUN.running?"Press ■, then draw on the stage":"Pick a material, then draw on the stage")}
+function renderMats(){const l=$("#splist");l.innerHTML="";
+ if(!matOf(curMat))curMat=(P.level.mats[0]||{}).k;
+ const er=el("button","sp tool"+(tool==="erase"?" on":""),`<span class="ti">🧽</span><em>Eraser</em>`);er.onclick=()=>{tool="erase";renderMats()};l.appendChild(er);
+ P.level.mats.forEach(m=>{const b=el("button","sp"+(tool==="paint"&&m.k===curMat?" on":""),`<img class="mt" src="${matImg(m.px)}" alt=""><em>${esc(m.name)}</em><i class="mk">${MAT_ICON[m.kind]||""}</i>`);
+  b.onclick=()=>{if(tool==="paint"&&m.k===curMat)materialSheet(m);else{tool="paint";curMat=m.k;renderMats()}};l.appendChild(b)});
+ const nw=el("button","sp tool",`<span class="ti">＋</span><em>New</em>`);nw.onclick=newMaterial;l.appendChild(nw);
+ const cl=el("button","sp tool",`<span class="ti">🗑</span><em>Clear level</em>`);
+ cl.onclick=()=>{if(P.level.grid.every(r=>/^\.+$/.test(r))){toast("The level is already empty");return}
+  if(confirm("Clear the whole level? The sprites stay.")){P.level.grid=Array(ROWS).fill(".".repeat(COLS));save()}};l.appendChild(cl)}
+function renderSprites(){if(levelMode)return renderMats();const l=$("#splist");l.innerHTML="";
  P.sprites.forEach(s=>{const b=el("button","sp"+(s.id===curId?" on":""),`${lookImg(s.look)}<em>${esc(s.name)}</em>`);
   b.onclick=()=>{if(s.id===curId)spriteSheet(s);else{curId=s.id;renderSprites();renderScripts();renderPalette()}};l.appendChild(b)})}
 function renderAll(){$("#pname").textContent=P.name;renderCats();renderPalette();renderSprites();renderScripts()}
@@ -591,10 +625,59 @@ function syncLive(){// sprites added, removed or changed in the editor while sto
  const old=RUN.live;RUN.live=P.sprites.map(s=>{const l=old.find(o=>o.id===s.id);if(l&&RUN.running){l.src=s;return l}return mkLive(s)});
  if(!RUN.running)RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()||RUN.score!==0}
 function usesScore(){return JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"setscore"')||JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"addscore"')}
+// ================================================================ the level
+// A grid of squares drawn with materials, under the sprites. Each material
+// is an 8 by 8 picture in 16 colours and one of five behaviours. The grid
+// sits on the floor: 20 squares across, 14 up (the top row is half off the
+// stage). Rows are stored as strings, a character per square, "." for none.
+const TS=24,COLS=20,ROWS=14,GY0=FLOOR-ROWS*TS,BOUNCE=820;
+const PAL=["","#1d1d2b","#ffffff","#8a8fa3","#5d6678","#e14b4b","#ff8c1a","#ffd23f","#5ec44a","#2f8a3a","#4c97ff","#2b4fa8","#a8e4ff","#b97a44","#6b4424","#ff6fb5"];
+const MAT_KINDS=[["solid","Solid","Stand on it, bump into it"],["top","Top only","Stand on top, jump up through it"],
+ ["bouncy","Bouncy","Bounces you up high"],["hurts","Hurts","Sends you back to the start"],["back","Background","Just a picture: walk past it"]];
+const MAT_ICON={solid:"■",top:"▔",bouncy:"⤒",hurts:"✖",back:"◌"};
+const BUILTIN_MATS=[
+ ["g","Grass","solid","98898988888888888d8d8d8ddddddeddddeddddddddddeddeddddddddddeddd"],
+ ["d","Dirt","solid","dddddeddddeddddddddddeddeddddddddddeddddddddddddedddddeddddeddd"],
+ ["s","Stone","solid","3333333433333334333333344444444433343333333433333334333344444444"],
+ ["b","Brick","solid","5555555355555553555555533333333355535555555355555553555533333333"],
+ ["w","Wood","solid","dddddddddeeeeeddddddddddeeeeeeeedddddddddddddeeeddddddddeeeeeeee"],
+ ["i","Ice","solid","ccccccccc22cccccc2cccccccccccccccccccc2cccccc22ccccccccaaaaaaaaa"],
+ ["c","Cloud","top","0222222022222222222222222222222232222223033333300000000000000000"],
+ ["p","Spring","bouncy","5555555555555555004444000400004000444400040000400044440044444444"],
+ ["l","Lava","hurts","7767767766766766665566665666656666656665665666566666666666666666"],
+ ["k","Spikes","hurts","0002000200030003003300330033003303330333033303333333333344444444"],
+ ["u","Bush","back","0099990009888890988888899898898998888889998888990999999000000000"]];
+function defaultLevel(){return{mats:BUILTIN_MATS.map(([k,name,kind,px])=>({k,name,kind,px})),grid:Array(ROWS).fill(".".repeat(COLS))}}
+function paintRow(lv,r,c0,c1,ch){for(let c=c0;c<=c1;c++)lv.grid[r]=lv.grid[r].slice(0,c)+ch+lv.grid[r].slice(c+1)}
+const matOf=k=>P.level.mats.find(m=>m.k===k);
+const matCache=new Map();
+function matCanvas(px){let c=matCache.get(px);if(!c){c=document.createElement("canvas");c.width=c.height=8;const g=c.getContext("2d");
+  for(let i=0;i<64;i++){const v=parseInt(px[i],16);if(v){g.fillStyle=PAL[v];g.fillRect(i%8,i>>3,1,1)}}
+  if(matCache.size>200)matCache.clear();matCache.set(px,c)}return c}
+const matURL=new Map();
+function matImg(px){let u=matURL.get(px);if(!u){u=matCanvas(px).toDataURL();matURL.set(px,u)}return u}
+function tileAt(c,r){if(c<0||c>=COLS||r<0||r>=ROWS||!P.level)return null;const ch=P.level.grid[r][c];return ch==="."?null:matOf(ch)}
+function setTile(c,r,ch){if(c<0||c>=COLS||r<0||r>=ROWS)return false;const row=P.level.grid[r];if(row[c]===ch)return false;
+ P.level.grid[r]=row.slice(0,c)+ch+row.slice(c+1);return true}
+// the squares a box covers, with the box of each
+function tilesIn(b){const out=[];if(!P||!P.level)return out;
+ const c0=Math.floor(b.l/TS),c1=Math.floor((b.r-0.001)/TS),r0=Math.floor((b.t-GY0)/TS),r1=Math.floor((b.b-0.001-GY0)/TS);
+ for(let r=Math.max(0,r0);r<=Math.min(ROWS-1,r1);r++)for(let c=Math.max(0,c0);c<=Math.min(COLS-1,c1);c++){const m=tileAt(c,r);
+  if(m)out.push({m,l:c*TS,r:c*TS+TS,t:GY0+r*TS,b:GY0+r*TS+TS})}return out}
+function drawLevel(){if(!P||!P.level)return;cx.imageSmoothingEnabled=false;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(m)cx.drawImage(matCanvas(m.px),c*TS,GY0+r*TS,TS,TS)}
+ cx.imageSmoothingEnabled=true;
+ if(levelMode&&editing()){cx.strokeStyle="rgba(255,255,255,.22)";cx.lineWidth=0.6;cx.beginPath();
+  for(let c=1;c<COLS;c++){cx.moveTo(c*TS,0);cx.lineTo(c*TS,FLOOR)}for(let r=1;r<=ROWS;r++){cx.moveTo(0,GY0+r*TS);cx.lineTo(SW,GY0+r*TS)}cx.stroke()}}
+// a character on a "hurts" square goes back to where it started
+function hurtCheck(){for(const l of RUN.live){if(!l.visible||!(l.falls||lookOf(l.look).kind==="char")||RUN.t<(l.hurtT||0))continue;
+ if(tilesIn(box(l,.8)).some(t=>t.m.kind==="hurts")){l.hurtT=RUN.t+0.8;sfx("oops");l.x=l.src.x;l.y=l.src.y;l.vy=0;l.hop=null;settle(l,0,0)}}}
+function touchesMat(l,k){if(!l.visible)return false;const b=box(l);b.l+=2;b.r-=2;b.t+=2;b.b+=3;return tilesIn(b).some(t=>t.m.k===k)}
 const hw=l=>lookOf(l.look).w*SCALE*l.size/200,hh=l=>lookOf(l.look).h*SCALE*l.size/200;
 function box(l,shrink){const w=hw(l)*(shrink||1),h=hh(l)*(shrink||1);return{l:l.x-w,r:l.x+w,t:l.y-h,b:l.y+h}}
 function overlap(a,b){return a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t}
 function touchingThing(l,what){
+ if(String(what).startsWith("mat:"))return touchesMat(l,what.slice(4));
  if(what==="edge"){const w=hw(l),h=hh(l);return l.x-w<=1||l.x+w>=SW-1||l.y-h<=1}
  if(what==="ground"){return l.onGround||l.y+hh(l)>=FLOOR-0.5}
  const o=RUN.live.find(q=>q.id===what);if(!o||!o.visible||!l.visible||o===l)return false;
@@ -604,12 +687,24 @@ function settle(l,dx,dy){const h=hh(l),w=hw(l);
  l.x=clamp(l.x,w,SW-w);
  if(l.y+h>FLOOR){l.y=FLOOR-h;if(l.vy>0)l.vy=0;l.onGround=true}
  if(l.y-h<0){l.y=h;if(l.vy<0)l.vy=0}
+ settleTiles(l,dy);
  if(l.solid)return;
  for(const o of RUN.live){if(o===l||!o.solid||!o.visible)continue;
   const a=box(l),b=box(o);if(!overlap(a,b))continue;
   const pen={up:a.b-b.t,down:b.b-a.t,left:a.r-b.l,right:b.r-a.l};
   // landing from above wins whenever we were coming down onto it
   if((dy>0||l.vy>0)&&pen.up<=Math.max(14,dy+2)){l.y-=pen.up;l.vy=Math.min(0,l.vy);l.onGround=true;continue}
+  const m=Math.min(pen.up,pen.down,pen.left,pen.right);
+  if(m===pen.left)l.x-=pen.left;else if(m===pen.right)l.x+=pen.right;else if(m===pen.down){l.y+=pen.down;if(l.vy<0)l.vy=0}else{l.y-=pen.up;l.onGround=true}}}
+// the level's squares: solid ones like solid sprites; top-only ones only when
+// landing on them; bouncy ones throw a falling sprite back up
+function settleTiles(l,dy){
+ for(const t of tilesIn(box(l))){const k=t.m.kind;if(k==="hurts"||k==="back")continue;
+  const a=box(l);if(!overlap(a,t))continue;
+  const pen={up:a.b-t.t,down:t.b-a.t,left:a.r-t.l,right:t.r-a.l},falling=dy>0||l.vy>0;
+  if(k==="top"){if(falling&&a.b-Math.max(dy,0)<=t.t+2){l.y-=pen.up;l.vy=Math.min(0,l.vy);l.onGround=true}continue}
+  if(falling&&pen.up<=Math.max(10,dy+2)){l.y-=pen.up;
+   if(k==="bouncy"&&l.falls){l.vy=-BOUNCE;l.onGround=false;l.walkT=-9}else{l.vy=Math.min(0,l.vy);l.onGround=true}continue}
   const m=Math.min(pen.up,pen.down,pen.left,pen.right);
   if(m===pen.left)l.x-=pen.left;else if(m===pen.right)l.x+=pen.right;else if(m===pen.down){l.y+=pen.down;if(l.vy<0)l.vy=0}else{l.y-=pen.up;l.onGround=true}}}
 function physics(dt){for(const l of RUN.live){
@@ -647,7 +742,7 @@ function drawSay(l){if(!l.visible||!l.say)return;cx.font="600 14px -apple-system
  cx.fillStyle="#223";cx.textAlign="left";cx.textBaseline="top";lines.forEach((t,i)=>cx.fillText(t,x+9,y+7+i*17))}
 function wrap(t,w){const out=[];let line="";String(t).split(/\s+/).forEach(word=>{const tryL=line?line+" "+word:word;if(cx.measureText(tryL).width>w&&line){out.push(line);line=word}else line=tryL});out.push(line);return out.slice(0,5)}
 function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
-function draw(){cx.setTransform(cv.width/SW,0,0,cv.height/SH,0,0);drawBackdrop();
+function draw(){cx.setTransform(cv.width/SW,0,0,cv.height/SH,0,0);drawBackdrop();drawLevel();
  const order=RUN.live.slice().sort((a,b)=>(b.solid?1:0)-(a.solid?1:0));order.forEach(drawSprite);RUN.live.forEach(drawSay);
  if(RUN.scoreSeen){cx.font="800 18px -apple-system,system-ui,sans-serif";const t="⭐ "+RUN.score,w=cx.measureText(t).width+20;
   cx.fillStyle="rgba(0,0,0,.45)";rr(SW-w-8,8,w,30,15);cx.fill();cx.fillStyle="#fff";cx.textAlign="left";cx.textBaseline="middle";cx.fillText(t,SW-w+2,24)}
@@ -743,7 +838,7 @@ function checkTouches(){// "when I touch" fires as the two first meet
 let last=0,markT=0;
 function frame(ts){requestAnimationFrame(frame);
  const dt=last?Math.min(0.05,(ts-last)/1000):1/60;last=ts;RUN.dt=dt;RUN.t+=dt;
- if(RUN.running){physics(dt);
+ if(RUN.running){physics(dt);hurtCheck();
   for(const t of RUN.threads.slice()){if(t.done)continue;let steps=0;
    try{const r=t.gen.next();if(r.done)t.done=true}catch(e){t.done=true;console.error(e)}
    steps++}
@@ -762,16 +857,23 @@ function sizeStage(){const r=cv.getBoundingClientRect(),d=Math.min(2,window.devi
 let sdrag=null;
 function stagePt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*SW,y:(e.clientY-r.top)/r.height*SH}}
 function spriteAt(p){for(let i=RUN.live.length-1;i>=0;i--){const l=RUN.live[i];if(!l.visible&&!editing())continue;const b=box(l);if(p.x>=b.l&&p.x<=b.r&&p.y>=b.t&&p.y<=b.b)return l}return null}
-cv.addEventListener("pointerdown",e=>{wake();const p=stagePt(e),l=spriteAt(p);if(!l)return;
+let ldraw=null;
+function paintAt(p){const c=Math.floor(p.x/TS),r=Math.floor((p.y-GY0)/TS);if(setTile(c,r,tool==="erase"?".":curMat))ldraw.changed=true}
+cv.addEventListener("pointerdown",e=>{wake();const p=stagePt(e);
+ if(levelMode&&editing()){ldraw={pid:e.pointerId,changed:false};paintAt(p);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
+ if(levelMode&&RUN.running)toast("Press ■ to draw the level");
+ const l=spriteAt(p);if(!l)return;
  if(RUN.running||document.body.classList.contains("big")){
   for(const sc of l.src.scripts){const h=sc.blocks[0];if(h.op==="tap"){const key="script:"+h.id;if(!RUN.threads.some(t=>t.key===key&&!t.done))startThread(l,sc.blocks.slice(1),key,h.id)}}
   return}
  if(curId!==l.id){curId=l.id;renderSprites();renderScripts();renderPalette()}
  sdrag={pid:e.pointerId,l,dx:l.x-p.x,dy:l.y-p.y,moved:false,sx:e.clientX,sy:e.clientY};cv.setPointerCapture(e.pointerId)});
-cv.addEventListener("pointermove",e=>{if(!sdrag||e.pointerId!==sdrag.pid)return;const p=stagePt(e),l=sdrag.l;
+cv.addEventListener("pointermove",e=>{if(ldraw&&e.pointerId===ldraw.pid){paintAt(stagePt(e));return}
+ if(!sdrag||e.pointerId!==sdrag.pid)return;const p=stagePt(e),l=sdrag.l;
  if(Math.hypot(e.clientX-sdrag.sx,e.clientY-sdrag.sy)>4)sdrag.moved=true;
  const w=hw(l),h=hh(l);l.x=clamp(p.x+sdrag.dx,w,SW-w);l.y=clamp(p.y+sdrag.dy,h,FLOOR-h)});
-const endS=e=>{if(!sdrag||e.pointerId!==sdrag.pid)return;const l=sdrag.l,moved=sdrag.moved;sdrag=null;
+const endS=e=>{if(ldraw&&e.pointerId===ldraw.pid){if(ldraw.changed)save();ldraw=null;return}
+ if(!sdrag||e.pointerId!==sdrag.pid)return;const l=sdrag.l,moved=sdrag.moved;sdrag=null;
  if(moved){l.src.x=Math.round(l.x);l.src.y=Math.round(l.y);save()}
  else{for(const sc of l.src.scripts){const h=sc.blocks[0];if(h.op==="tap"){startThread(l,sc.blocks.slice(1),"script:"+h.id,h.id)}}}};
 cv.addEventListener("pointerup",endS);cv.addEventListener("pointercancel",endS);
@@ -825,9 +927,9 @@ sheet.addEventListener("pointerdown",e=>{if(e.target===sheet)closeSheet()});
 let pickGroup="Animals";
 function lookPicker(sel,onPick){const box=el("div","picker");
  const tabs=el("div","ptabs"),grid=el("div","grid");box.appendChild(tabs);box.appendChild(grid);
- if(sel)pickGroup=lookOf(sel).g;
+ if(sel)pickGroup=lookOf(sel).g;if(!GROUPS.includes(pickGroup))pickGroup="Animals";
  const draw=()=>{tabs.innerHTML="";GROUPS.forEach(g=>{const b=el("button",g===pickGroup?"on":null,g);b.onclick=()=>{pickGroup=g;draw()};tabs.appendChild(b)});
-  grid.innerHTML="";LOOKS.filter(l=>l.g===pickGroup).forEach(l=>{const b=el("button",l.k===sel?"on":null,`${lookImg(l.k)}${esc(l.n)}`);
+  grid.innerHTML="";LOOKS.filter(l=>l.g===pickGroup&&!l.hidden).forEach(l=>{const b=el("button",l.k===sel?"on":null,`${lookImg(l.k)}${esc(l.n)}`);
    b.onclick=()=>{sel=l.k;grid.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));onPick(l.k)};grid.appendChild(b)})};
  draw();return box}
 function addSpriteSheet(){openSheet(`<h2>Add a sprite</h2><p>Characters walk, jump and fall to the ground; platforms and blocks are solid, so others can stand on them.</p>`);
@@ -887,6 +989,46 @@ function editBlockSheet(m){const sp=cur();
   m.name=n;closeSheet();save();renderPalette();renderScripts()};
  const back=$("#mbBack");if(back)back.onclick=()=>{closeSheet();placeNewScript([newBlock("define",m.id)]);save()};
  $("#mbDel").onclick=()=>{if(!confirm("Throw away “"+m.name+"” and take it out of every script?"))return;removeMyBlock(m);closeSheet();save();renderPalette();renderScripts()}}
+// ------------------------------------------------------------ materials
+const MAT_KEYS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefhjmnoqrtvxyz0123456789";
+function newMaterial(){if(P.level.mats.length>=40){toast("Forty materials is the most");return}
+ materialSheet({k:null,name:"My material",kind:"solid",px:"0".repeat(64)},true)}
+function materialSheet(m,isNew){const w={name:m.name,kind:m.kind,px:m.px.split("")};let col=w.px.find(v=>v!=="0")||"a";
+ openSheet(`<h2>${isNew?"New material":"Material"}</h2><p>Paint it square by square, then choose what it does. It is drawn on the level wherever you put it.</p>
+ <input class="namein" id="mName" value="${esc(w.name)}" maxlength="16" autocomplete="off">
+ <div class="medit"><div id="mGrid" class="mgrid"></div><div class="mside"><div id="mPal" class="mpal"></div>
+  <div class="mfill"><button id="mFill">Fill all</button><button id="mClr">Clear</button></div><canvas id="mPrev" width="24" height="16"></canvas></div></div>
+ <h4>What it does</h4><div class="mkinds" id="mKinds"></div>
+ <div class="acts"><button id="mSave" style="background:#2f7de1">${isNew?"Make it":"Save"}</button>${isNew?"":`<button id="mCopy">Make a copy</button><button class="red" id="mDel">Delete</button>`}</div>`);
+ const grid=$("#mGrid"),cells=[];for(let i=0;i<64;i++){const c=el("i");grid.appendChild(c);cells.push(c)}
+ const prev=$("#mPrev").getContext("2d");
+ const show=()=>{cells.forEach((c,i)=>{const v=parseInt(w.px[i],16);c.style.background=v?PAL[v]:""});
+  prev.clearRect(0,0,24,16);const t=matCanvas(w.px.join(""));for(let y=0;y<2;y++)for(let x=0;x<3;x++)prev.drawImage(t,x*8,y*8)};
+ const pal=$("#mPal");PAL.forEach((c,i)=>{const h=i.toString(16),b=el("button",h===col?"on":null);b.style.background=i?c:"";if(!i){b.className=(h===col?"on ":"")+"rub";b.title="Rub out"}
+  b.onclick=()=>{col=h;pal.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b))};pal.appendChild(b)});
+ const kinds=$("#mKinds");MAT_KINDS.forEach(([k,n,d])=>{const b=el("button",k===w.kind?"on":null,`<b>${MAT_ICON[k]} ${n}</b><small>${d}</small>`);
+  b.onclick=()=>{w.kind=k;kinds.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b))};kinds.appendChild(b)});
+ let painting=null;
+ const at=e=>{const r=grid.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*8),y=Math.floor((e.clientY-r.top)/r.height*8);
+  if(x<0||y<0||x>7||y>7)return;const i=y*8+x;if(w.px[i]!==painting){w.px[i]=painting;show()}};
+ grid.addEventListener("pointerdown",e=>{e.preventDefault();const r=grid.getBoundingClientRect(),i=Math.floor((e.clientY-r.top)/r.height*8)*8+Math.floor((e.clientX-r.left)/r.width*8);
+  // a tap on a square already that colour rubs it out, as most paint apps do
+  painting=w.px[i]===col&&col!=="0"?"0":col;try{grid.setPointerCapture(e.pointerId)}catch(_){}at(e)});
+ grid.addEventListener("pointermove",e=>{if(painting!==null)at(e)});
+ const stop=()=>{painting=null};grid.addEventListener("pointerup",stop);grid.addEventListener("pointercancel",stop);
+ $("#mFill").onclick=()=>{w.px=w.px.map(()=>col);show()};$("#mClr").onclick=()=>{w.px=w.px.map(()=>"0");show()};
+ show();
+ $("#mSave").onclick=()=>{const name=$("#mName").value.trim().slice(0,16)||"Material",px=w.px.join("");
+  if(/^0+$/.test(px)){toast("Paint at least one square");return}
+  if(isNew){const k=[...MAT_KEYS].find(ch=>!P.level.mats.some(x=>x.k===ch));if(!k){toast("No room for more materials");return}
+   P.level.mats.push({k,name,kind:w.kind,px});curMat=k;tool="paint"}
+  else{m.name=name;m.kind=w.kind;m.px=px}
+  closeSheet();save();renderMats();renderPalette();if(isNew)toast("Now draw with "+name+" on the stage")};
+ if(!isNew){$("#mCopy").onclick=()=>{const k=[...MAT_KEYS].find(ch=>!P.level.mats.some(x=>x.k===ch));if(!k||P.level.mats.length>=40){toast("No room for more materials");return}
+   P.level.mats.push({k,name:(($("#mName").value.trim()||m.name)+" 2").slice(0,16),kind:w.kind,px:w.px.join("")});curMat=k;tool="paint";closeSheet();save();renderMats();renderPalette()};
+  $("#mDel").onclick=()=>{const used=P.level.grid.some(r=>r.includes(m.k));
+   if(!confirm(used?"Delete “"+m.name+"” and take it off the level?":"Delete “"+m.name+"”?"))return;
+   P.level.grid=P.level.grid.map(r=>r.split(m.k).join("."));P.level.mats=P.level.mats.filter(x=>x!==m);closeSheet();save();renderMats();renderPalette()}}}
 function backdropSheet(){openSheet(`<h2>Backdrop</h2><p>The picture behind your game.</p><div class="grid">`+Object.keys(BACKDROPS).map(k=>{const b=BACKDROPS[k];
   return`<button data-bd="${k}" class="${k===P.backdrop?"on":""}"><span style="display:block;width:56px;height:40px;border-radius:8px;background:linear-gradient(${b.top},${b.bot} 75%,${b.ground} 75%)"></span>${b.name}</button>`}).join("")+`</div>`);
  card.querySelectorAll("[data-bd]").forEach(b=>b.onclick=()=>{P.backdrop=b.dataset.bd;RUN.backdrop=P.backdrop;save();closeSheet()})}
@@ -906,7 +1048,8 @@ function projectsSheet(first){const list=lsGet("list",[]);
 // ================================================================ wiring
 $("#go").onclick=flag;$("#tidy").onclick=tidy;$("#stop").onclick=()=>{stopAll();RUN.live.forEach(l=>l.say="")};
 $("#projBtn").onclick=()=>{saveNow();projectsSheet()};
-$("#addSp").onclick=$("#addSp2").onclick=addSpriteSheet;$("#bdBtn").onclick=$("#bdBtn2").onclick=backdropSheet;
+$("#addSp").onclick=()=>levelMode?newMaterial():addSpriteSheet();$("#addSp2").onclick=()=>levelMode?newMaterial():addSpriteSheet();
+$("#tabSp").onclick=()=>setLevelMode(false);$("#tabLv").onclick=()=>setLevelMode(true);$("#tabLv2").onclick=()=>setLevelMode(!levelMode);$("#bdBtn").onclick=$("#bdBtn2").onclick=backdropSheet;
 $("#bigBtn").onclick=()=>{document.body.classList.toggle("big");$("#bigBtn").textContent=document.body.classList.contains("big")?"✎":"⛶";$("#bigBtn").title=document.body.classList.contains("big")?"Back to the code":"Big stage"};
 $("#pname").onclick=()=>{const v=prompt("Name your game",P.name);if(v&&v.trim()){P.name=v.trim().slice(0,30);$("#pname").textContent=P.name;saveNow()}};
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveNow()});

@@ -24,6 +24,22 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   off; things have one costume or a few (a coin that turns, a door that
   opens, a flag that waves). Platforms are solid and wide, so others stand on
   them. Projects saved before the library keep their emoji.
+- **The level.** ▦ Level (beside 🐱 Sprites, under the stage) draws the
+  level: pick a material and tap or drag on the stage, with an eraser and a
+  Clear level button. The level is a grid of 24-pixel squares, 20 across and
+  14 up, standing on the floor. Platforms, bricks, spikes and the like are
+  materials, not sprites; the sprite picker has no Level group, and the
+  scenery that was in it (tree, cactus, mushroom, cloud, bush) is under
+  Things. Games saved with platform sprites still draw them.
+- **Materials.** Eleven to start with (grass, dirt, stone, brick, wood, ice,
+  cloud, spring, lava, spikes, bush), and ＋ New for your own: an 8 by 8
+  picture painted in 16 colours, a name, and what it does: Solid (stand on
+  it, bump into it), Top only (stand on top, jump up through it), Bouncy
+  (throws a falling sprite up high), Hurts (sends a character back to where
+  it started) or Background (just a picture). Tap the chosen material again
+  to change or copy or delete it; every project has its own. The touch
+  blocks (when I touch, if touching, wait till I touch) list the materials
+  as well as the sprites.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
   whether it is solid (others can stand on it), and whether it is shown at
@@ -67,8 +83,8 @@ sprite's speed. Moving left turns a sprite to face left.
 
 ## Examples
 
-Star Catcher (buttons and score), Frog Jump (a little platformer with solid
-bricks), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
+Star Catcher (buttons and score), Frog Jump (a little platformer on a level
+of grass, dirt and brick), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
 Chase (forever, `if held`, `step towards`) and Day and Night (a red button on
 the stage that changes the backdrop when tapped, and sprites that answer
 `when backdrop is`). Opening one makes a copy to change.
