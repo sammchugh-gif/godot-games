@@ -31,15 +31,25 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   materials, not sprites; the sprite picker has no Level group, and the
   scenery that was in it (tree, cactus, mushroom, cloud, bush) is under
   Things. Games saved with platform sprites still draw them.
-- **Materials.** Eleven to start with (grass, dirt, stone, brick, wood, ice,
-  cloud, spring, lava, spikes, bush), and ＋ New for your own: an 8 by 8
-  picture painted in 16 colours, a name, and what it does: Solid (stand on
-  it, bump into it), Top only (stand on top, jump up through it), Bouncy
-  (throws a falling sprite up high), Hurts (sends a character back to where
-  it started) or Background (just a picture). Tap the chosen material again
-  to change or copy or delete it; every project has its own. The touch
-  blocks (when I touch, if touching, wait till I touch) list the materials
-  as well as the sprites.
+- **Materials** are drawn the way the sprites are (`level.js`): flat colours
+  and an outline, a pattern and a way of moving. Each has a **shape**
+  (square, rounded, circle, hill, triangle, ramp up, ramp down, diamond,
+  star, heart, cloud, bush, spikes, or pixel paint for an 8 by 8 picture),
+  a **size** (1, 2 or 3 squares across and down), **two colours**, a
+  **pattern** (grass top, snow top, bricks, stones, wood, stripes, dots,
+  spots, bubbles, waves, shiny, checks, spring), how it **moves** (still,
+  wobble, bob, pulse, spin, flow, sparkle) and what it **does**: Solid,
+  Top only (stand on top, jump up through it), Bouncy (throws a falling
+  sprite up high, and squashes), Hurts (sends a character back to where it
+  started) or Background (just a picture). Squares next to each other join
+  into one piece of ground; hills, ramps and balls are stood on where their
+  shape is, so characters walk up ramps and over hills. Twenty-one to start
+  with, and ＋ New for your own, with a moving preview; tap the chosen
+  material again to change, copy or delete it. Every project has its own.
+  Games saved with the earlier 8 by 8 materials get the drawn ones in their
+  place, and keep any they painted themselves.
+  The touch blocks (when I touch, if touching, wait till I touch) list the
+  materials as well as the sprites.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
   whether it is solid (others can stand on it), and whether it is shown at
@@ -85,7 +95,8 @@ sprite's speed. Moving left turns a sprite to face left.
 
 Star Catcher (buttons and score), Frog Jump (a little platformer on a level
 of grass, dirt and brick), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
-Chase (forever, `if held`, `step towards`) and Day and Night (a red button on
+Chase (forever, `if held`, `step towards`) and Bouncy Hills (hills, a ramp, a
+boulder and a bouncy ball, all drawn in the level) and Day and Night (a red button on
 the stage that changes the backdrop when tapped, and sprites that answer
 `when backdrop is`). Opening one makes a copy to change.
 
@@ -97,5 +108,5 @@ last open (`codelab.last`). 📁 Projects opens, starts and deletes them.
 
 ## Publishing
 
-The game is `index.html`, `art.js` and `icon.png`; copy all three to `docs/code-lab/`, then
+The game is `index.html`, `art.js`, `level.js` and `icon.png`; copy all four to `docs/code-lab/`, then
 run `node tools/offline-list.mjs`.
