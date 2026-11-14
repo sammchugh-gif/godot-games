@@ -34,9 +34,13 @@ const PATTERNS = [["plain", "Plain"], ["grass", "Grass top"], ["snow", "Snow top
   ["wood", "Wood"], ["stripes", "Stripes"], ["dots", "Dots"], ["spots", "Spots"], ["bubbles", "Bubbles"], ["waves", "Waves"],
   ["shine", "Shiny"], ["checker", "Checks"], ["coil", "Spring"]];
 const ANIMS = [["none", "Still"], ["wobble", "Wobble"], ["bob", "Bob"], ["pulse", "Pulse"], ["spin", "Spin"], ["flow", "Flow"], ["sparkle", "Sparkle"]];
-const PIXEL = ["", "#1d1d2b", "#ffffff", "#8a8fa3", "#5d6678", "#e14b4b", "#ff8c1a", "#ffd23f", "#5ec44a", "#2f8a3a", "#4c97ff", "#2b4fa8", "#a8e4ff", "#b97a44", "#6b4424", "#ff6fb5"];
+/* the pixel painter's colours, a character each (0-9, a-v): the first
+   sixteen are the ones the 8 by 8 painter had, so old pictures keep theirs */
+const PIXEL = ["", "#1d1d2b", "#ffffff", "#8a8fa3", "#5d6678", "#e14b4b", "#ff8c1a", "#ffd23f", "#5ec44a", "#2f8a3a", "#4c97ff", "#2b4fa8", "#a8e4ff", "#b97a44", "#6b4424", "#ff6fb5",
+  "#8a1f2a", "#ffc9a0", "#f5c7a1", "#8d5a3b", "#e0a800", "#fff3c4", "#b8f08a", "#2ec4b6", "#7cc8ff", "#1b2a5a", "#c9b0ff", "#8a5be0", "#4a2a7a", "#ffc2dc", "#d0d5e0", "#7a8a2a"];
+const pixRes = px => Math.max(1, Math.round(Math.sqrt((px || "").length)));
 /* shapes whose top is flat across the whole box, for walking on */
-const FLAT = new Set(["square", "rounded", "pixel", "cloud", "bush", "spikes"]);
+const FLAT = new Set(["square", "rounded", "cloud", "bush", "spikes"]);
 const LW = 2.2;
 function rnd(seed) { let s = (seed * 2654435761) >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
 function rr(g, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
@@ -206,19 +210,37 @@ let pixCache = new Map();
 function pixelCanvas(px) {
   let c = pixCache.get(px);
   if (!c) {
-    c = document.createElement("canvas"); c.width = c.height = 8; const g = c.getContext("2d");
-    for (let i = 0; i < 64; i++) { const v = parseInt(px[i], 16); if (v) { g.fillStyle = PIXEL[v]; g.fillRect(i % 8, i >> 3, 1, 1); } }
+    const n = pixRes(px);
+    c = document.createElement("canvas"); c.width = c.height = n; const g = c.getContext("2d");
+    for (let i = 0; i < n * n; i++) { const v = parseInt(px[i], 32); if (v) { g.fillStyle = PIXEL[v] || "#000"; g.fillRect(i % n, Math.floor(i / n), 1, 1); } }
     if (pixCache.size > 200) pixCache = new Map(); pixCache.set(px, c);
   }
   return c;
+}
+/* the top and bottom of a painted picture, column by column, so a drawn
+   shape is stood on where it is drawn */
+let profCache = new Map();
+function pixProfile(px) {
+  let p = profCache.get(px);
+  if (!p) {
+    const n = pixRes(px), top = [], bot = [];
+    for (let x = 0; x < n; x++) {
+      let t = -1, b = -1;
+      for (let y = 0; y < n; y++) if (px[y * n + x] !== "0") { if (t < 0) t = y; b = y; }
+      top.push(t); bot.push(b);
+    }
+    p = { n, top, bot }; if (profCache.size > 200) profCache = new Map(); profCache.set(px, p);
+  }
+  return p;
 }
 
 /* one material in its box, at time t */
 function draw(g, m, x, y, w, h, t, o) {
   o = o || {}; t = t || 0;
   if (m.shape === "pixel") {
-    const s = g.imageSmoothingEnabled; g.imageSmoothingEnabled = false;
-    g.drawImage(pixelCanvas(m.px || "0".repeat(64)), x, y, w, h); g.imageSmoothingEnabled = s; return;
+    // a coarse picture keeps its square pixels; a detailed one is drawn smooth
+    const px = m.px || "0".repeat(64), s = g.imageSmoothingEnabled; g.imageSmoothingEnabled = pixRes(px) >= 32;
+    g.drawImage(pixelCanvas(px), x, y, w, h); g.imageSmoothingEnabled = s; return;
   }
   const seed = o.seed || 1, ph = seed * 1.7, cx = x + w / 2, cy = y + h / 2;
   const joined = m.shape === "square" && o.nb && (o.nb.u || o.nb.d || o.nb.l || o.nb.r);
@@ -269,8 +291,9 @@ function draw(g, m, x, y, w, h, t, o) {
 }
 
 /* the top and bottom of a shape at x (null outside it) */
-function topAt(shape, x0, y0, w, h, x) {
+function topAt(shape, x0, y0, w, h, x, m) {
   if (x < x0 - 0.01 || x > x0 + w + 0.01) return null;
+  if (shape === "pixel") { const p = pixProfile(m.px || ""), c = Math.max(0, Math.min(p.n - 1, Math.floor((x - x0) / w * p.n))); return p.top[c] < 0 ? null : y0 + p.top[c] / p.n * h; }
   const cx = x0 + w / 2, dx = Math.min(1, Math.abs(x - cx) / (w / 2));
   switch (shape) {
     case "circle": case "star": case "heart": return y0 + h / 2 - h / 2 * Math.sqrt(1 - dx * dx);
@@ -284,8 +307,9 @@ function topAt(shape, x0, y0, w, h, x) {
     default: return y0;
   }
 }
-function bottomAt(shape, x0, y0, w, h, x) {
+function bottomAt(shape, x0, y0, w, h, x, m) {
   if (x < x0 - 0.01 || x > x0 + w + 0.01) return null;
+  if (shape === "pixel") { const p = pixProfile(m.px || ""), c = Math.max(0, Math.min(p.n - 1, Math.floor((x - x0) / w * p.n))); return p.bot[c] < 0 ? null : y0 + (p.bot[c] + 1) / p.n * h; }
   const cx = x0 + w / 2, dx = Math.min(1, Math.abs(x - cx) / (w / 2));
   switch (shape) {
     case "circle": case "star": case "heart": return y0 + h / 2 + h / 2 * Math.sqrt(1 - dx * dx);
@@ -294,5 +318,5 @@ function bottomAt(shape, x0, y0, w, h, x) {
   }
 }
 
-window.LEVELART = { draw, path, topAt, bottomAt, shade, COLORS, SHAPES, PATTERNS, ANIMS, PIXEL, FLAT };
+window.LEVELART = { draw, path, topAt, bottomAt, shade, pixelCanvas, pixRes, COLORS, SHAPES, PATTERNS, ANIMS, PIXEL, FLAT };
 })();

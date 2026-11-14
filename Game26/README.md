@@ -34,7 +34,10 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
 - **Materials** are drawn the way the sprites are (`level.js`): flat colours
   and an outline, a pattern and a way of moving. Each has a **shape**
   (square, rounded, circle, hill, triangle, ramp up, ramp down, diamond,
-  star, heart, cloud, bush, spikes, or pixel paint for an 8 by 8 picture),
+  star, heart, cloud, bush, spikes, or pixel paint for a picture of your
+  own, 8, 16, 32 or 64 pixels across, drawn with a pen in three sizes, a
+  fill bucket, a rubber, a left-right mirror and undo, in 31 colours; a
+  painted picture is stood on where it is drawn, column by column),
   a **size** (1, 2 or 3 squares across and down), **two colours**, a
   **pattern** (grass top, snow top, bricks, stones, wood, stripes, dots,
   spots, bubbles, waves, shiny, checks, spring), how it **moves** (still,
