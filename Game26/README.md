@@ -43,16 +43,27 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   spots, bubbles, waves, shiny, checks, spring), how it **moves** (still,
   wobble, bob, pulse, spin, flow, sparkle) and what it **does**: Solid,
   Top only (stand on top, jump up through it), Bouncy (throws a falling
-  sprite up high, and squashes), Hurts (sends a character back to where it
+  sprite up high, and squashes), Pushable (while the game runs it slides
+  when walked into, pushing others in front of it, rolls if it is round,
+  falls off edges and lands on things; ⚑ and ■ put it back where it was
+  drawn), Hurts (sends a character back to where it
   started) or Background (just a picture). Squares next to each other join
   into one piece of ground; hills, ramps and balls are stood on where their
-  shape is, so characters walk up ramps and over hills. Twenty-one to start
-  with, and ＋ New for your own, with a moving preview; tap the chosen
+  shape is, so characters walk up ramps and over hills. Twenty-two to start
+  with (the boulder and a crate are pushable), and ＋ New for your own, with a moving preview; tap the chosen
   material again to change, copy or delete it. Every project has its own.
   Games saved with the earlier 8 by 8 materials get the drawn ones in their
   place, and keep any they painted themselves.
   The touch blocks (when I touch, if touching, wait till I touch) list the
   materials as well as the sprites.
+- **Level code.** A material can have code too: in ▦ Level, picking a
+  material shows its code, as tapping a sprite does. While the game runs a
+  material with code is one thing: all its squares and pieces move, hide
+  and show together, so it can be a lift, a moving platform or a door.
+  Sprites standing on it ride along, and one it runs into is pushed aside,
+  never through a wall. It has the blocks that make sense for it (events,
+  moving, go to start, speed, control, hide and show, backdrop, sound,
+  score, My Blocks); a { } badge marks materials that have code.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
   whether it is solid (others can stand on it), and whether it is shown at
@@ -99,7 +110,8 @@ sprite's speed. Moving left turns a sprite to face left.
 Star Catcher (buttons and score), Frog Jump (a little platformer on a level
 of grass, dirt and brick), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
 Chase (forever, `if held`, `step towards`) and Bouncy Hills (hills, a ramp, a
-boulder and a bouncy ball, all drawn in the level) and Day and Night (a red button on
+boulder and a bouncy ball, all drawn in the level), Boulder Step (push the
+boulder to the ledge and climb it), Lift Up (a lift with code of its own) and Day and Night (a red button on
 the stage that changes the backdrop when tapped, and sprites that answer
 `when backdrop is`). Opening one makes a copy to change.
 
