@@ -97,6 +97,7 @@ body.dragging #trash{display:flex}
 #sprites .head span{flex:1}
 .mtabs{display:flex;background:#141a2c;border-radius:10px;padding:3px;gap:2px}.mtabs button{background:none;padding:6px 10px;border-radius:8px;font-weight:800;color:var(--dim);font-size:14px}.mtabs button.on{background:var(--panel2);color:#fff}
 .sp .mt{width:44px;height:44px}
+.sp .mcode{position:absolute;right:5px;bottom:20px;font-style:normal;font-size:10px;font-weight:800;color:#1d1d2b;background:#ffd23f;border-radius:6px;padding:0 3px}
 .sp .mk{position:absolute;left:5px;top:3px;font-style:normal;font-size:11px;color:#c9d4f0}
 .sp.tool{background:#26304d}.sp .ti{font-size:24px;line-height:40px}
 .mgrid{display:grid;grid-template-columns:repeat(8,1fr);width:min(272px,62vw);aspect-ratio:1;touch-action:none;border:2px solid var(--line);border-radius:6px;overflow:hidden;
@@ -222,7 +223,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.11.14-1";
+const BUILD="2026.11.14-2";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -369,7 +370,18 @@ const defineOf=(sp,id)=>sp.scripts.find(sc=>sc.blocks[0].op==="define"&&sc.block
 
 // ================================================================ project
 let P=null,curId=null;
-const cur=()=>P.sprites.find(s=>s.id===curId)||P.sprites[0];
+// The code on show belongs to a sprite, or to a level material (curId
+// "mat:" and its key): a material's code moves all of it together.
+const isMatId=id=>typeof id==="string"&&id.startsWith("mat:");
+const curMatObj=()=>isMatId(curId)&&P&&P.level?P.level.mats.find(x=>"mat:"+x.k===curId):null;
+const cur=()=>{const m=curMatObj();if(m){if(!m.scripts)m.scripts=[];if(!m.myblocks)m.myblocks=[];return m}return P.sprites.find(s=>s.id===curId)||P.sprites[0]};
+const isMat=o=>!!o&&o.k!=null&&!!o.shape;
+// everything that has code
+const owners=()=>P.sprites.concat(P.level?P.level.mats.filter(m=>m.scripts&&m.scripts.length):[]);
+// the blocks a level material can use: no jumping, spinning or talking
+const MAT_OPS=new Set(["flag","key","tap","touch","getmsg","send","bdhat","right","left","up","down","diag","home","speed",
+ "wait","repeat","forever","ifkey","iftouch","ifscore","stopall","waittouch","waitkey","hide","show","backdrop","nextbd",
+ "sound","note","setscore","addscore","define","call"]);
 function mkSprite(look,x,y,name){const lk=lookOf(look);
  return{id:uid(),name:uniqueName(name||lk.n),look,x,y,size:100,falls:lk.kind==="char",solid:lk.kind==="solid",animate:true,scripts:[],myblocks:[]}}
 // projects saved before the drawn sprites kept an emoji in "emoji"
@@ -457,7 +469,18 @@ const EXAMPLES=[
   kid.scripts=[S(30,70,["flag"],["say","Too high! Push the boulder.",3]),S(30,190,["flag"],["speed","4"],["forever",[["ifkey","right",[["right",4]]],["ifkey","left",[["left",4]]]]]),
    S(30,450,["key","a"],["jump",110],["sound","jump"]),S(330,450,["key","up"],["jump",110],["sound","jump"])];
   star.scripts=[S(30,70,["touch",kid.id],["sound","tada"],["say","You did it!",3]),S(30,220,["flag"],["forever",[["spin"],["wait",0.6]]])];
-  P.sprites.push(kid,star);curId=kid.id;return P}}];
+  P.sprites.push(kid,star);curId=kid.id;return P}},
+ {em:"robotkid",name:"Lift Up",about:"The yellow lift has code of its own: it goes up and down for ever. Ride it up to the star. In ▦ Level, tap the Lift to see its code.",make(){
+  P={v:1,id:uid(),name:"Lift Up",backdrop:"night",sprites:[],level:defaultLevel()};const lv=P.level;
+  for(let r=6;r<=13;r++)paintRow(lv,r,15,19,r===6?"g":"d");
+  const lift={k:"A",name:"Lift",kind:"solid",shape:"rounded",size:1,c1:"#ffd23f",c2:"#e0a800",pat:"stripes",anim:"none",myblocks:[],
+   scripts:[S(30,70,["flag"],["home"],["speed","2"],["forever",[["wait",1],["up",168],["wait",1.5],["down",168]]])]};
+  lv.mats.push(lift);paintRow(lv,13,12,14,"A");
+  const hero=mkSprite("robotkid",40,286,"Hero"),star=mkSprite("star",456,113);
+  hero.scripts=[S(30,70,["flag"],["say","Ride the lift up!",2]),S(30,190,["flag"],["speed","4"],["forever",[["ifkey","right",[["right",4]]],["ifkey","left",[["left",4]]]]]),
+   S(30,450,["key","a"],["jump",110],["sound","jump"]),S(330,450,["key","up"],["jump",110],["sound","jump"])];
+  star.scripts=[S(30,70,["touch",hero.id],["sound","tada"],["say","Going up!",3]),S(30,220,["flag"],["forever",[["spin"],["wait",0.6]]])];
+  P.sprites.push(hero,star);curId=hero.id;return P}}];
 // ------------------------------------------------------------ storage
 const LS="codelab.";
 function lsGet(k,d){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -474,11 +497,11 @@ function openProject(p,lay){stopAll();P=migrate(p);curId=(P.sprites.find(s=>s.id
 const blocksEl=$("#blocks"),areaEl=$("#canvasArea"),scrEl=$("#scr");
 let curCat="ev";
 function renderCats(){const c=$("#cats");c.innerHTML="";
- CATS.forEach(k=>{const b=el("button","cat"+(k.id===curCat?" on":""),`<i style="background:${k.c}"></i>${k.name}`);
+ CATS.forEach(k=>{if(curMatObj()&&k.id!=="my"&&!PALETTE[k.id].some(op=>MAT_OPS.has(op)))return;const b=el("button","cat"+(k.id===curCat?" on":""),`<i style="background:${k.c}"></i>${k.name}`);
   b.onclick=()=>{curCat=k.id;renderCats();const h=blocksEl.querySelector(`h3[data-c="${k.id}"]`);if(h)blocksEl.scrollTo({top:h.offsetTop-8,behavior:"smooth"})};c.appendChild(b)})}
 function renderPalette(){blocksEl.innerHTML="";
- CATS.forEach(k=>{const h=el("h3",null,k.name);h.dataset.c=k.id;blocksEl.appendChild(h);
-  PALETTE[k.id].forEach(op=>{const b=blockEl(newBlock(op),true);b.dataset.op=op;blocksEl.appendChild(b);blocksEl.appendChild(el("br"))});
+ CATS.forEach(k=>{if(curMatObj()&&k.id!=="my"&&!PALETTE[k.id].some(op=>MAT_OPS.has(op)))return;const h=el("h3",null,k.name);h.dataset.c=k.id;blocksEl.appendChild(h);
+  PALETTE[k.id].filter(op=>!curMatObj()||MAT_OPS.has(op)).forEach(op=>{const b=blockEl(newBlock(op),true);b.dataset.op=op;blocksEl.appendChild(b);blocksEl.appendChild(el("br"))});
   if(k.id==="my"){const mk=el("button","mkblock","＋ Make a Block");mk.onclick=makeBlockSheet;blocksEl.appendChild(mk);
    cur().myblocks.forEach(m=>{const w=el("div","mbrow");const b=blockEl(newBlock("call",m.id),true);b.dataset.op="call";b.dataset.mb=m.id;
     const ed=el("button","mbedit","✎");ed.title="Rename or delete";ed.onclick=()=>editBlockSheet(m);w.appendChild(b);w.appendChild(ed);blocksEl.appendChild(w)});
@@ -512,9 +535,11 @@ function blockEl(b,inPal){const s=SPECS[b.op],cat=catOf(b.op);
 function renderScripts(){areaEl.querySelectorAll(":scope>.stack").forEach(n=>n.remove());const sp=cur();
  sp.scripts.forEach((sc,i)=>{const st=el("div","stack");st.style.left=sc.x+"px";st.style.top=sc.y+"px";st.dataset.script=i;
   sc.blocks.forEach(b=>st.appendChild(blockEl(b)));areaEl.appendChild(st)});
- $("#who").innerHTML=`${lookImg(sp.look)}${esc(sp.name)}`;
+ const mt=isMat(sp);
+ $("#who").innerHTML=mt?`<img class="li" src="${matThumb(sp)}" alt="">▦ ${esc(sp.name)}`:`${lookImg(sp.look)}${esc(sp.name)}`;
  const h=$("#hint");h.style.display=sp.scripts.length?"none":"";
- h.innerHTML=`<b>${esc(sp.name)}</b> has no code yet.<br><br>Drag a yellow <b>when ⚑ clicked</b> block here, then snap a blue <b>move</b> block underneath it. Press the green ⚑ to run it.<br><br>Tap any block to try it on its own.`;
+ h.innerHTML=mt?`<b>▦ ${esc(sp.name)}</b> has no code yet.<br><br>Code here moves all the ${esc(sp.name)} in the level together, like a lift or a door. Try a yellow <b>when ⚑ clicked</b>, then <b>forever</b> with <b>move ▲ up 72</b>, <b>wait</b>, <b>move ▼ down 72</b>, <b>wait</b>.<br><br>Sprites standing on it ride along.`
+  :`<b>${esc(sp.name)}</b> has no code yet.<br><br>Drag a yellow <b>when ⚑ clicked</b> block here, then snap a blue <b>move</b> block underneath it. Press the green ⚑ to run it.<br><br>Tap any block to try it on its own.`;
  areaEl.style.width=Math.max(1200,...sp.scripts.map(s=>s.x+700))+"px";areaEl.style.height=Math.max(1200,...sp.scripts.map(s=>s.y+900))+"px";
  markRunning()}
 // lay the scripts out in columns so none sit on top of another
@@ -524,8 +549,12 @@ function tidy(){const sp=cur();renderScripts();const stacks=[...areaEl.querySele
  sp.scripts.forEach((sc,i)=>{let c=0;for(let k=1;k<cols;k++)if(colY[k]<colY[c]-20)c=k;sc.x=20+c*(maxW+30);sc.y=colY[c];colY[c]+=hs[i]+30});
  renderScripts();save()}
 // ------------------------------------------------------------ level mode
-let levelMode=false,tool="paint",curMat="g";
-function setLevelMode(on){levelMode=on;$("#tabSp").classList.toggle("on",!on);$("#tabLv").classList.toggle("on",on);
+let levelMode=false,tool="paint",curMat="g",lastSprite=null;
+// show the code of a sprite or a material
+function showCode(id){if(curId===id)return;if(!isMatId(curId))lastSprite=curId;curId=id;renderCats();renderScripts();renderPalette();scrEl.scrollTo(0,0)}
+function setLevelMode(on){levelMode=on;
+ if(on&&matOf(curMat)&&tool==="paint")showCode("mat:"+curMat);
+ if(!on&&isMatId(curId))showCode(lastSprite&&P.sprites.some(s=>s.id===lastSprite)?lastSprite:P.sprites[0].id);$("#tabSp").classList.toggle("on",!on);$("#tabLv").classList.toggle("on",on);
  $("#tabLv2").textContent=on?"🐱":"▦";$("#tabLv2").title=on?"Sprites":"Level";
  $("#addSp").textContent=on?"＋ Material":"＋ Sprite";document.body.classList.toggle("lvl",on);renderSprites();
  if(on)toast(RUN.running?"Press ■, then draw on the stage":"Pick a material, then draw on the stage")}
@@ -533,7 +562,8 @@ function renderMats(){const l=$("#splist");l.innerHTML="";
  if(!matOf(curMat))curMat=(P.level.mats[0]||{}).k;
  const er=el("button","sp tool"+(tool==="erase"?" on":""),`<span class="ti">🧽</span><em>Eraser</em>`);er.onclick=()=>{tool="erase";renderMats()};l.appendChild(er);
  P.level.mats.forEach(m=>{const b=el("button","sp"+(tool==="paint"&&m.k===curMat?" on":""),`<img class="mt" src="${matThumb(m)}" alt=""><em>${esc(m.name)}</em><i class="mk">${MAT_ICON[m.kind]||""}</i>`);
-  b.onclick=()=>{if(tool==="paint"&&m.k===curMat)materialSheet(m);else{tool="paint";curMat=m.k;renderMats()}};l.appendChild(b)});
+  if(m.scripts&&m.scripts.length)b.appendChild(el("i","mcode","{ }"));
+  b.onclick=()=>{if(tool==="paint"&&m.k===curMat)materialSheet(m);else{tool="paint";curMat=m.k;renderMats();showCode("mat:"+m.k)}};l.appendChild(b)});
  const nw=el("button","sp tool",`<span class="ti">＋</span><em>New</em>`);nw.onclick=newMaterial;l.appendChild(nw);
  const cl=el("button","sp tool",`<span class="ti">🗑</span><em>Clear level</em>`);
  cl.onclick=()=>{if(P.level.grid.every(r=>/^\.+$/.test(r))&&!P.level.pieces.length){toast("The level is already empty");return}
@@ -645,15 +675,15 @@ function tapBlock(p){
 // strip along the bottom.
 const SW=480,SH=360,FLOOR=SH-36,GRAV=1500;
 const cv=$("#stage"),cx=cv.getContext("2d");
-const RUN={hits:new Map(),movers:[],movOn:false,running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
-const liveOf=sp=>RUN.live.find(l=>l.id===sp.id);
+const RUN={hits:new Map(),groups:{},movers:[],movOn:false,running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
+const liveOf=sp=>isMat(sp)?groupOf(sp):RUN.live.find(l=>l.id===sp.id);
 function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,look:s.look,costume:0,walkT:-9,falls:s.falls,solid:s.solid,visible:s.shown!==false,
  say:"",sayUntil:0,flip:false,rot:0,speed:4,onGround:false,hop:null}}
-function resetLive(){RUN.touching.clear();RUN.live=P.sprites.map(mkLive);RUN.score=0;RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()}
+function resetLive(){RUN.touching.clear();RUN.groups={};RUN.live=P.sprites.map(mkLive);RUN.score=0;RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()}
 function syncLive(){// sprites added, removed or changed in the editor while stopped
  const old=RUN.live;RUN.live=P.sprites.map(s=>{const l=old.find(o=>o.id===s.id);if(l&&RUN.running){l.src=s;return l}return mkLive(s)});
  if(!RUN.running)RUN.backdrop=P.backdrop;RUN.scoreSeen=usesScore()||RUN.score!==0}
-function usesScore(){return JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"setscore"')||JSON.stringify(P.sprites.map(s=>s.scripts)).includes('"op":"addscore"')}
+function usesScore(){const j=JSON.stringify(owners().map(s=>s.scripts));return j.includes('"op":"setscore"')||j.includes('"op":"addscore"')}
 // ================================================================ the level
 // A grid of squares under the sprites, 20 across and 14 up on the floor (the
 // top row is half off the stage). A material is drawn the way the sprites
@@ -701,12 +731,40 @@ function tileAt(c,r){if(c<0||c>=COLS||r<0||r>=ROWS||!P.level)return null;const c
 function setTile(c,r,ch){if(c<0||c>=COLS||r<0||r>=ROWS)return false;const row=P.level.grid[r];if(row[c]===ch)return false;
  P.level.grid[r]=row.slice(0,c)+ch+row.slice(c+1);bumpLevel();return true}
 // everything in the level that a box reaches, squares and pieces, each with its box
+// ------------------------------------------------------------ level code
+// While a game runs, a material with code is one thing that moves, hides
+// and shows: its squares and pieces keep their places relative to each
+// other and are moved together by dx,dy.
+const loose=m=>RUN.running&&!!m.scripts&&m.scripts.length>0&&m.kind!=="push";
+function groupOf(m){let g=RUN.groups[m.k];
+ if(!g)g=RUN.groups[m.k]={id:"mat:"+m.k,src:m,isGroup:true,dx:0,dy:0,visible:true,speed:4,say:"",cells:null};return g}
+// where its squares and pieces are, before moving
+function groupCells(g){if(!g.cells){const k=g.src.k,n=g.src.size||1;g.cells=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(P.level.grid[r][c]===k)g.cells.push({c,r,n:1});
+  for(const pc of P.level.pieces)if(pc.k===k)g.cells.push({c:pc.c,r:pc.r,n,piece:1})}return g.cells}
+function groupBoxes(g){return groupCells(g).map(q=>({l:q.c*TS+g.dx,r:(q.c+q.n)*TS+g.dx,t:GY0+q.r*TS+g.dy,b:GY0+(q.r+q.n)*TS+g.dy}))}
+// does a sprite stand on it
+function ridesOn(l,g){if(!g.visible||g.src.kind==="back"||g.src.kind==="hurts")return false;const a=box(l),f={l:a.l+2,r:a.r-2,t:a.b-1,b:a.b+3};return groupBoxes(g).some(b=>overlap(f,b))}
+// move it, take along whoever stands on it, and shove whoever it runs into
+function shiftGroup(g,ddx,ddy){const riders=RUN.live.filter(l=>l.visible&&l.onGround&&ridesOn(l,g));
+ g.dx+=ddx;g.dy+=ddy;
+ for(const l of riders){l.x+=ddx;l.y+=ddy;settle(l,ddx,0)}
+ if(g.visible&&g.src.kind!=="back"&&g.src.kind!=="hurts"){const bs=groupBoxes(g);
+  for(const l of RUN.live){if(!l.visible||riders.includes(l))continue;const hit=bs.find(b=>overlap(box(l),b));if(!hit)continue;
+   // squeezed: out to the nearer side of what hit it, never through it
+   if(ddy>0&&!ddx){const a=box(l),pl=a.r-hit.l,pr=hit.r-a.l;l.x+=pl<pr?-pl:pr}else if(ddy<0&&!ddx){const a=box(l);l.y-=a.b-hit.t;l.vy=Math.min(0,l.vy);l.onGround=true}
+   else{const a=box(l);l.x+=ddx>0?hit.r-a.l:-(a.r-hit.l)}
+   settle(l,0,0)}}}
+function* moveGroup(t,dx,dy){const g=t.l,dur=Math.max(1/60,Math.hypot(dx,dy)/(g.speed*60));let done=0;
+ while(done<1&&!t.done){const k=Math.min(1,done+RUN.dt/dur),f=k-done;done=k;shiftGroup(g,dx*f,dy*f);if(done<1)yield}}
 function levelIn(b){const out=[];if(!P||!P.level)return out;
  const c0=Math.floor(b.l/TS),c1=Math.floor((b.r-0.001)/TS),r0=Math.floor((b.t-GY0)/TS),r1=Math.floor((b.b-0.001-GY0)/TS);
  for(let r=Math.max(0,r0);r<=Math.min(ROWS-1,r1);r++)for(let c=Math.max(0,c0);c<=Math.min(COLS-1,c1);c++){const m=tileAt(c,r);
-  if(m&&!(RUN.movOn&&m.kind==="push"))out.push({m,l:c*TS,r:c*TS+TS,t:GY0+r*TS,b:GY0+r*TS+TS,key:c+","+r})}
- for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||(RUN.movOn&&m.kind==="push"))continue;const n=m.size||1,l=pc.c*TS,t=GY0+pc.r*TS;
+  if(m&&!(RUN.movOn&&m.kind==="push")&&!loose(m))out.push({m,l:c*TS,r:c*TS+TS,t:GY0+r*TS,b:GY0+r*TS+TS,key:c+","+r})}
+ for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||(RUN.movOn&&m.kind==="push")||loose(m))continue;const n=m.size||1,l=pc.c*TS,t=GY0+pc.r*TS;
   if(l<b.r&&l+n*TS>b.l&&t<b.b&&t+n*TS>b.t)out.push({m,l,r:l+n*TS,t,b:t+n*TS,key:"p"+pc.c+","+pc.r})}
+ if(RUN.running)for(const m of P.level.mats){if(!loose(m))continue;const g=groupOf(m);if(!g.visible)continue;
+  groupBoxes(g).forEach((q,i)=>{if(overlap(q,b))out.push({m,l:q.l,r:q.r,t:q.t,b:q.b,key:"g"+m.k+i})})}
  return out}
 const isFlat=m=>LA.FLAT.has(m.shape);
 const topOf=(s,x)=>LA.topAt(s.m.shape,s.l,s.t,s.r-s.l,s.b-s.t,x,s.m),botOf=(s,x)=>LA.bottomAt(s.m.shape,s.l,s.t,s.r-s.l,s.b-s.t,x,s.m);
@@ -719,18 +777,21 @@ function sameAt(c,r,k){if(c<0||c>=COLS||r<0||r>=ROWS)return false;const ch=P.lev
  if(ch===k)return true;const o=matOf(ch);return!!o&&o.shape==="square"}
 function hitAmt(key){const h=RUN.hits.get(key);if(h==null)return 0;const d=RUN.t-h;return d<0.3?1-d/0.3:0}
 function drawLevelPart(g,anim,t){
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push"))continue;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push")||loose(m))continue;
   const nb=m.shape==="square"?{u:sameAt(c,r-1,m.k),d:sameAt(c,r+1,m.k),l:sameAt(c-1,r,m.k),r:sameAt(c+1,r,m.k)}:null;
   LA.draw(g,m,c*TS,GY0+r*TS,TS,TS,t,{seed:c*31+r*17+1,nb,hit:anim?hitAmt(c+","+r):0})}
- for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push"))continue;const n=m.size||1;
+ for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push")||loose(m))continue;const n=m.size||1;
   LA.draw(g,m,pc.c*TS,GY0+pc.r*TS,n*TS,n*TS,t,{seed:pc.c*13+pc.r*7+3,hit:anim?hitAmt("p"+pc.c+","+pc.r):0})}}
 let lvCanvas=null,lvKey="";
 function drawLevel(){if(!P||!P.level)return;
- const key=levelVer+"|"+cv.width+"x"+cv.height+"|"+(RUN.movOn?1:0);
+ const key=levelVer+"|"+cv.width+"x"+cv.height+"|"+(RUN.movOn?1:0)+"|"+(RUN.running?P.level.mats.filter(loose).map(m=>m.k).join(""):"");
  if(key!==lvKey){lvKey=key;if(!lvCanvas)lvCanvas=document.createElement("canvas");lvCanvas.width=cv.width;lvCanvas.height=cv.height;
   const g=lvCanvas.getContext("2d");g.setTransform(cv.width/SW,0,0,cv.height/SH,0,0);g.clearRect(0,0,SW,SH);drawLevelPart(g,false,0)}
  cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(lvCanvas,0,0);cx.restore();
  drawLevelPart(cx,true,RUN.t);
+ if(RUN.running)for(const m of P.level.mats){if(!loose(m))continue;const g=groupOf(m);if(!g.visible)continue;
+  for(const q of groupCells(g)){const nb=!q.piece&&m.shape==="square"?{u:sameAt(q.c,q.r-1,m.k)&&P.level.grid[q.r-1][q.c]===m.k,d:q.r<ROWS-1&&P.level.grid[q.r+1][q.c]===m.k,l:q.c>0&&P.level.grid[q.r][q.c-1]===m.k,r:q.c<COLS-1&&P.level.grid[q.r][q.c+1]===m.k}:null;
+   LA.draw(cx,m,q.c*TS+g.dx,GY0+q.r*TS+g.dy,q.n*TS,q.n*TS,RUN.t,{seed:q.c*31+q.r*17+1,nb})}}
  for(const mv of RUN.movers)LA.draw(cx,mv.m,mv.x-mv.mw/2,mv.y-mv.mh/2,mv.mw,mv.mh,RUN.t,{seed:mv.seed,rot:mv.rot});
  if(levelMode&&editing()){cx.strokeStyle="rgba(255,255,255,.22)";cx.lineWidth=0.6;cx.beginPath();
   for(let c=1;c<COLS;c++){cx.moveTo(c*TS,0);cx.lineTo(c*TS,FLOOR)}for(let r=1;r<=ROWS;r++){cx.moveTo(0,GY0+r*TS);cx.lineTo(SW,GY0+r*TS)}cx.stroke()}}
@@ -795,6 +856,8 @@ const hw=l=>l.mw?l.mw/2:lookOf(l.look).w*SCALE*l.size/200,hh=l=>l.mh?l.mh/2:look
 function box(l,shrink){const w=hw(l)*(shrink||1),h=hh(l)*(shrink||1);return{l:l.x-w,r:l.x+w,t:l.y-h,b:l.y+h}}
 function overlap(a,b){return a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t}
 function touchingThing(l,what){
+ if(l.isGroup){if(!l.visible)return false;const o=RUN.live.find(q=>q.id===what);if(!o||!o.visible)return false;const b=box(o,.9);
+  return groupBoxes(l).some(q=>overlap(q,b))}
  if(String(what).startsWith("mat:"))return touchesMat(l,what.slice(4));
  if(what==="edge"){const w=hw(l),h=hh(l);return l.x-w<=1||l.x+w>=SW-1||l.y-h<=1}
  if(what==="ground"){return l.onGround||l.y+hh(l)>=FLOOR-0.5}
@@ -806,6 +869,7 @@ function settle(l,dx,dy){const h=hh(l),w=hw(l);
  if(l.y+h>FLOOR){l.y=FLOOR-h;if(l.vy>0)l.vy=0;l.onGround=true}
  if(l.y-h<0){l.y=h;if(l.vy<0)l.vy=0}
  settleTiles(l,dy);
+ l.x=clamp(l.x,w,SW-w);
  if(l.solid)return;
  settleMovers(l,dy);
  for(const o of RUN.live){if(o===l||!o.solid||!o.visible)continue;
@@ -890,7 +954,7 @@ function startThread(l,blocks,key,hatId){
  RUN.threads=RUN.threads.filter(t=>!(t.key===key&&(t.done=true,true)));
  const t={key,hatId,l,done:false,gen:null};t.gen=runList(t,blocks);RUN.threads.push(t);RUN.running=true;RUN.banner="";markRunning();return t}
 function fireHats(pred,restart){
- for(const sp of P.sprites){const l=liveOf(sp);if(!l)continue;
+ for(const sp of owners()){const l=liveOf(sp);if(!l)continue;
   for(const sc of sp.scripts){const h=sc.blocks[0];if(!isHat(h.op)||!pred(h,sp,l))continue;
    const key="script:"+h.id;if(!restart&&RUN.threads.some(t=>t.key===key&&!t.done))continue;
    startThread(l,sc.blocks.slice(1),key,h.id)}}}
@@ -903,6 +967,15 @@ function* moveBy(t,dx,dy){const l=t.l;if(dx)l.flip=dx<0;if(dx||dy)l.walkT=RUN.t;
   l.x+=dx*f;l.y+=dy*f;if(dx||dy)l.walkT=RUN.t;if(dy<0&&l.falls)l.vy=0;settle(l,dx*f,dy*f);if(done<1)yield}}
 function* waitSecs(t,s){const end=RUN.t+s;while(RUN.t<end&&!t.done)yield}
 function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
+ if(l.isGroup){
+  // a material moves all of itself; sprite-only blocks do nothing for it
+  if(!MAT_OPS.has(b.op))return;
+  if(b.op==="right"){yield* moveGroup(t,num(a[0]),0);return}
+  if(b.op==="left"){yield* moveGroup(t,-num(a[0]),0);return}
+  if(b.op==="up"){yield* moveGroup(t,0,-num(a[0]));return}
+  if(b.op==="down"){yield* moveGroup(t,0,num(a[0]));return}
+  if(b.op==="diag"){const d=num(a[1]);yield* moveGroup(t,d*(/r/.test(a[0])?1:-1),d*(/u/.test(a[0])?-1:1));return}
+  if(b.op==="home"){shiftGroup(l,-l.dx,-l.dy);return}}
  switch(b.op){
  case"right":yield* moveBy(t,num(a[0]),0);break;
  case"left":yield* moveBy(t,-num(a[0]),0);break;
@@ -958,14 +1031,14 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
 function setBackdrop(k){if(!BACKDROPS[k]||k===RUN.backdrop)return;RUN.backdrop=k;fireHats(h=>h.op==="bdhat"&&h.a[0]===k,true)}
 function flag(){wake();stopAll(true);resetLive();RUN.running=true;
  fireHats(h=>h.op==="flag",true);$("#go").classList.add("on");if(!RUN.threads.length)toast("Nothing starts with “when ⚑ clicked” yet")}
-function stopAll(quiet){RUN.threads.forEach(t=>t.done=true);RUN.threads=[];RUN.running=false;stopMovers();$("#go").classList.remove("on");
+function stopAll(quiet){RUN.threads.forEach(t=>t.done=true);RUN.threads=[];RUN.running=false;stopMovers();RUN.groups={};$("#go").classList.remove("on");
  RUN.live.forEach(l=>{l.say=l.say&&quiet?"":l.say;l.rot=0;l.hop=null});markRunning()}
 function keyDown(k){if(RUN.keys[k])return;RUN.keys[k]=true;wake();if(!RUN.live.length)return;fireHats(h=>h.op==="key"&&h.a[0]===k,false)}
 function keyUp(k){RUN.keys[k]=false}
 function markRunning(){const ids=new Set(RUN.threads.filter(t=>!t.done).map(t=>t.hatId).filter(Boolean));
  areaEl.querySelectorAll(":scope>.stack").forEach(st=>{const f=st.firstChild;if(f)f.classList.toggle("run",ids.has(f.dataset.id))})}
 function checkTouches(){// "when I touch" fires as the two first meet
- for(const sp of P.sprites){const l=liveOf(sp);if(!l)continue;
+ for(const sp of owners()){const l=liveOf(sp);if(!l)continue;
   for(const sc of sp.scripts){const h=sc.blocks[0];if(h.op!=="touch")continue;const k=h.id,now=touchingThing(l,h.a[0]),was=RUN.touching.get(k);
    RUN.touching.set(k,now);if(now&&!was&&(RUN.running||RUN.threads.length)){const key="script:"+h.id;
     if(!RUN.threads.some(t=>t.key===key&&!t.done))startThread(l,sc.blocks.slice(1),key,h.id)}}}}
@@ -1005,7 +1078,11 @@ function paintAt(p){const c=Math.floor(p.x/TS),r=Math.floor((p.y-GY0)/TS),lv=P.l
 cv.addEventListener("pointerdown",e=>{wake();const p=stagePt(e);
  if(levelMode&&editing()){ldraw={pid:e.pointerId,changed:false};paintAt(p);try{cv.setPointerCapture(e.pointerId)}catch(_){}return}
  if(levelMode&&RUN.running)toast("Press ■ to draw the level");
- const l=spriteAt(p);if(!l)return;
+ const l=spriteAt(p);
+ if(!l){if(RUN.running)for(const m of P.level.mats){if(!loose(m))continue;const g=groupOf(m);
+   if(g.visible&&groupBoxes(g).some(q=>p.x>=q.l&&p.x<=q.r&&p.y>=q.t&&p.y<=q.b))
+    for(const sc of m.scripts){const h=sc.blocks[0];if(h.op==="tap"){const key="script:"+h.id;if(!RUN.threads.some(t=>t.key===key&&!t.done))startThread(g,sc.blocks.slice(1),key,h.id)}}}
+  return}
  if(RUN.running||document.body.classList.contains("big")){
   for(const sc of l.src.scripts){const h=sc.blocks[0];if(h.op==="tap"){const key="script:"+h.id;if(!RUN.threads.some(t=>t.key===key&&!t.done))startThread(l,sc.blocks.slice(1),key,h.id)}}
   return}
@@ -1139,7 +1216,7 @@ const thumbs2=new Map();
 // a material in a little square picture, for buttons
 function matCanvasOf(m,px,t){const c=document.createElement("canvas");c.width=c.height=px;const g=c.getContext("2d"),n=m.size||1,s=(px-8)/(TS*n);
  g.setTransform(s,0,0,s,4,4);LA.draw(g,m,0,0,TS*n,TS*n,t||0.6,{seed:3});return c}
-function matThumb(m){const k=JSON.stringify(m);let u=thumbs2.get(k);if(!u){u=matCanvasOf(m,80).toDataURL();if(thumbs2.size>300)thumbs2.clear();thumbs2.set(k,u)}return u}
+function matThumb(m){const k=JSON.stringify([m.shape,m.size,m.c1,m.c2,m.pat,m.anim,m.px]);let u=thumbs2.get(k);if(!u){u=matCanvasOf(m,80).toDataURL();if(thumbs2.size>300)thumbs2.clear();thumbs2.set(k,u)}return u}
 function newMaterial(){if(P.level.mats.length>=48){toast("Forty-eight materials is the most");return}
  materialSheet({k:null,name:"My material",kind:"solid",shape:"circle",size:1,c1:"#ff6fb5",c2:"#ffffff",pat:"shine",anim:"none",px:"0".repeat(32*32)},true)}
 // when a material changes size, what is already on the level changes with it
@@ -1240,7 +1317,7 @@ function materialSheet(m,isNew){
   $("#mDel").onclick=()=>{const used=P.level.grid.some(r=>r.includes(m.k))||P.level.pieces.some(q=>q.k===m.k);
    if(!confirm(used?"Delete “"+m.name+"” and take it off the level?":"Delete “"+m.name+"”?"))return;
    P.level.grid=P.level.grid.map(r=>r.split(m.k).join("."));P.level.pieces=P.level.pieces.filter(q=>q.k!==m.k);
-   P.level.mats=P.level.mats.filter(x=>x!==m);closeSheet();save();renderMats();renderPalette()}}}
+   P.level.mats=P.level.mats.filter(x=>x!==m);if(curId==="mat:"+m.k)showCode(P.sprites[0].id);closeSheet();save();renderMats();renderPalette()}}}
 function backdropSheet(){openSheet(`<h2>Backdrop</h2><p>The picture behind your game.</p><div class="grid">`+Object.keys(BACKDROPS).map(k=>{const b=BACKDROPS[k];
   return`<button data-bd="${k}" class="${k===P.backdrop?"on":""}"><span style="display:block;width:56px;height:40px;border-radius:8px;background:linear-gradient(${b.top},${b.bot} 75%,${b.ground} 75%)"></span>${b.name}</button>`}).join("")+`</div>`);
  card.querySelectorAll("[data-bd]").forEach(b=>b.onclick=()=>{P.backdrop=b.dataset.bd;RUN.backdrop=P.backdrop;save();closeSheet()})}

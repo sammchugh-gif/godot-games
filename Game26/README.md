@@ -56,6 +56,14 @@ shelf. On the iPhone or iPad: Share → Add to Home Screen.
   place, and keep any they painted themselves.
   The touch blocks (when I touch, if touching, wait till I touch) list the
   materials as well as the sprites.
+- **Level code.** A material can have code too: in ▦ Level, picking a
+  material shows its code, as tapping a sprite does. While the game runs a
+  material with code is one thing: all its squares and pieces move, hide
+  and show together, so it can be a lift, a moving platform or a door.
+  Sprites standing on it ride along, and one it runs into is pushed aside,
+  never through a wall. It has the blocks that make sense for it (events,
+  moving, go to start, speed, control, hide and show, backdrop, sound,
+  score, My Blocks); a { } badge marks materials that have code.
 - **Sprites.** Each sprite has its own scripts. Tap a sprite to choose it, tap
   it again for its settings: name, look, size, whether it falls (gravity) and
   whether it is solid (others can stand on it), and whether it is shown at
@@ -103,7 +111,7 @@ Star Catcher (buttons and score), Frog Jump (a little platformer on a level
 of grass, dirt and brick), Dragon Dance (repeat, diagonals and notes, no buttons) and Ghost
 Chase (forever, `if held`, `step towards`) and Bouncy Hills (hills, a ramp, a
 boulder and a bouncy ball, all drawn in the level), Boulder Step (push the
-boulder to the ledge and climb it) and Day and Night (a red button on
+boulder to the ledge and climb it), Lift Up (a lift with code of its own) and Day and Night (a red button on
 the stage that changes the backdrop when tapped, and sprites that answer
 `when backdrop is`). Opening one makes a copy to change.
 
