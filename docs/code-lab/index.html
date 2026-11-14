@@ -222,7 +222,7 @@ body.big #stagebox{margin:0}
 // scripts. The stage has gravity, a floor and solid sprites to stand on, so
 // "jump", "move right" and the diagonals make a platformer straight away.
 // Sophia, Rory and Dylan Games, Inc.
-const BUILD="2026.11.13-1";
+const BUILD="2026.11.14-1";
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 const $=s=>document.querySelector(s);
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -448,7 +448,16 @@ const EXAMPLES=[
    S(30,330,["key","a"],["jump",110],["sound","jump"]),S(330,330,["key","up"],["jump",110],["sound","jump"])];
   star.scripts=[S(30,70,["touch",dino.id],["sound","tada"],["say","You made it!",3]),S(30,220,["flag"],["forever",[["spin"],["wait",0.5]]])];
   coin.scripts=[S(30,70,["flag"],["show"],["forever",[["nextc"],["wait",0.12]]]),S(30,260,["touch",dino.id],["sound","coin"],["addscore",1],["hide"])];
-  P.sprites.push(dino,star,coin);curId=dino.id;return P}}];
+  P.sprites.push(dino,star,coin);curId=dino.id;return P}},
+ {em:"kid",name:"Boulder Step",about:"The ledge is too high to jump. Push the boulder over to it, climb on, and jump up to the star. Pushable things are a kind of material in ▦ Level.",make(){
+  P={v:1,id:uid(),name:"Boulder Step",backdrop:"desert",sprites:[],level:defaultLevel()};const lv=P.level;
+  for(let r=9;r<=13;r++)paintRow(lv,r,15,19,r===9?"g":"d");
+  lv.pieces.push({k:"r",c:6,r:12});paintRow(lv,8,17,17,"t");paintRow(lv,13,0,0,"u");
+  const kid=mkSprite("kid",40,286,"Kid"),star=mkSprite("star",456,186);
+  kid.scripts=[S(30,70,["flag"],["say","Too high! Push the boulder.",3]),S(30,190,["flag"],["speed","4"],["forever",[["ifkey","right",[["right",4]]],["ifkey","left",[["left",4]]]]]),
+   S(30,450,["key","a"],["jump",110],["sound","jump"]),S(330,450,["key","up"],["jump",110],["sound","jump"])];
+  star.scripts=[S(30,70,["touch",kid.id],["sound","tada"],["say","You did it!",3]),S(30,220,["flag"],["forever",[["spin"],["wait",0.6]]])];
+  P.sprites.push(kid,star);curId=kid.id;return P}}];
 // ------------------------------------------------------------ storage
 const LS="codelab.";
 function lsGet(k,d){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):d}catch(e){return d}}
@@ -636,7 +645,7 @@ function tapBlock(p){
 // strip along the bottom.
 const SW=480,SH=360,FLOOR=SH-36,GRAV=1500;
 const cv=$("#stage"),cx=cv.getContext("2d");
-const RUN={hits:new Map(),running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
+const RUN={hits:new Map(),movers:[],movOn:false,running:false,threads:[],live:[],score:0,scoreSeen:false,keys:{},backdrop:"sky",t:0,touching:new Map()};
 const liveOf=sp=>RUN.live.find(l=>l.id===sp.id);
 function mkLive(s){return{id:s.id,src:s,x:s.x,y:s.y,vy:0,size:s.size,look:s.look,costume:0,walkT:-9,falls:s.falls,solid:s.solid,visible:s.shown!==false,
  say:"",sayUntil:0,flip:false,rot:0,speed:4,onGround:false,hop:null}}
@@ -654,15 +663,15 @@ function usesScore(){return JSON.stringify(P.sprites.map(s=>s.scripts)).includes
 // ones are pieces, {k,c,r} at their top-left square.
 const TS=24,COLS=20,ROWS=14,GY0=FLOOR-ROWS*TS,BOUNCE=820,LA=window.LEVELART;
 const MAT_KINDS=[["solid","Solid","Stand on it, bump into it"],["top","Top only","Stand on top, jump up through it"],
- ["bouncy","Bouncy","Bounces you up high"],["hurts","Hurts","Sends you back to the start"],["back","Background","Just a picture: walk past it"]];
-const MAT_ICON={solid:"■",top:"▔",bouncy:"⤒",hurts:"✖",back:"◌"};
+ ["bouncy","Bouncy","Bounces you up high"],["push","Pushable","Push it along: it slides, rolls and falls"],["hurts","Hurts","Sends you back to the start"],["back","Background","Just a picture: walk past it"]];
+const MAT_ICON={solid:"■",top:"▔",bouncy:"⤒",push:"⇆",hurts:"✖",back:"◌"};
 //            key name        does      shape      size main      second    pattern   moves
 const BUILTINS=[
  ["g","Grass","solid","square",1,"#a8642a","#5ec44a","grass","none"],["d","Dirt","solid","square",1,"#a8642a","#7a4418","stones","none"],
  ["s","Stone","solid","square",1,"#9aa3b5","#6d7688","stones","none"],["b","Brick","solid","square",1,"#d65a32","#8a2f14","bricks","none"],
  ["w","Wood","solid","square",1,"#c98b52","#8a5a32","wood","none"],["i","Ice","solid","rounded",1,"#a8e4ff","#ffffff","shine","sparkle"],
  ["h","Hill","solid","half",3,"#a8642a","#5ec44a","grass","none"],["m","Ramp","solid","rampR",2,"#a8642a","#5ec44a","grass","none"],
- ["n","Slope","solid","rampL",2,"#a8642a","#5ec44a","grass","none"],["r","Boulder","solid","circle",2,"#9aa3b5","#6d7688","stones","none"],
+ ["n","Slope","solid","rampL",2,"#a8642a","#5ec44a","grass","none"],["r","Boulder","push","circle",2,"#9aa3b5","#6d7688","stones","none"],["t","Crate","push","square",1,"#c98b52","#7a4418","wood","none"],
  ["q","Planet","solid","circle",3,"#8a5be0","#ff6fb5","stripes","none"],["x","Crystal","solid","diamond",1,"#b48bff","#ffffff","shine","sparkle"],
  ["c","Cloud","top","cloud",2,"#f4f6fb","#dfe8f5","plain","bob"],["p","Spring","bouncy","rounded",1,"#e14b4b","#c3cad6","coil","none"],
  ["o","Ball","bouncy","circle",1,"#ff6fb5","#ffffff","shine","none"],["e","Mushroom","bouncy","half",2,"#e14b4b","#f4f6fb","spots","none"],
@@ -678,11 +687,12 @@ const OLD_PX={g:"98898988888888888d8d8d8ddddddeddddeddddddddddeddeddddddddddeddd
  l:"7767767766766766665566665666656666656665665666566666666666666666",k:"0002000200030003003300330033003303330333033303333333333344444444",
  u:"0099990009888890988888899898898998888889998888990999999000000000"};
 function builtin(k){const[kk,name,kind,shape,size,c1,c2,pat,anim]=BUILTINS.find(b=>b[0]===k);return{k:kk,name,kind,shape,size,c1,c2,pat,anim}}
-function defaultLevel(){return{v:2,mats:BUILTINS.map(b=>builtin(b[0])),grid:Array(ROWS).fill(".".repeat(COLS)),pieces:[]}}
-function upgradeLevel(lv){if(!lv.pieces)lv.pieces=[];if(lv.v>=2)return lv;
- lv.mats=lv.mats.map(m=>{if(m.shape)return m;if(OLD_PX[m.k]&&OLD_PX[m.k]===m.px){const n=builtin(m.k);n.name=m.name;n.kind=m.kind;return n}
+function defaultLevel(){return{v:3,mats:BUILTINS.map(b=>builtin(b[0])),grid:Array(ROWS).fill(".".repeat(COLS)),pieces:[]}}
+function upgradeLevel(lv){if(!lv.pieces)lv.pieces=[];if(lv.v>=3)return lv;
+ if(!(lv.v>=2))lv.mats=lv.mats.map(m=>{if(m.shape)return m;if(OLD_PX[m.k]&&OLD_PX[m.k]===m.px){const n=builtin(m.k);n.name=m.name;n.kind=m.kind;return n}
   return Object.assign(m,{shape:"pixel",size:1,c1:"#9aa3b5",c2:"#ffffff",pat:"plain",anim:"none"})});
- BUILTINS.forEach(b=>{if(!lv.mats.some(m=>m.k===b[0]))lv.mats.push(builtin(b[0]))});lv.v=2;return lv}
+ // new built-in materials join a saved game (the ones it has keep what they do)
+ BUILTINS.forEach(b=>{if(!lv.mats.some(m=>m.k===b[0]))lv.mats.push(builtin(b[0]))});lv.v=3;return lv}
 function paintRow(lv,r,c0,c1,ch){for(let c=c0;c<=c1;c++)lv.grid[r]=lv.grid[r].slice(0,c)+ch+lv.grid[r].slice(c+1)}
 const matOf=k=>P.level.mats.find(m=>m.k===k);
 // the level is drawn once into a picture and reused until it changes
@@ -694,8 +704,8 @@ function setTile(c,r,ch){if(c<0||c>=COLS||r<0||r>=ROWS)return false;const row=P.
 function levelIn(b){const out=[];if(!P||!P.level)return out;
  const c0=Math.floor(b.l/TS),c1=Math.floor((b.r-0.001)/TS),r0=Math.floor((b.t-GY0)/TS),r1=Math.floor((b.b-0.001-GY0)/TS);
  for(let r=Math.max(0,r0);r<=Math.min(ROWS-1,r1);r++)for(let c=Math.max(0,c0);c<=Math.min(COLS-1,c1);c++){const m=tileAt(c,r);
-  if(m)out.push({m,l:c*TS,r:c*TS+TS,t:GY0+r*TS,b:GY0+r*TS+TS,key:c+","+r})}
- for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m)continue;const n=m.size||1,l=pc.c*TS,t=GY0+pc.r*TS;
+  if(m&&!(RUN.movOn&&m.kind==="push"))out.push({m,l:c*TS,r:c*TS+TS,t:GY0+r*TS,b:GY0+r*TS+TS,key:c+","+r})}
+ for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||(RUN.movOn&&m.kind==="push"))continue;const n=m.size||1,l=pc.c*TS,t=GY0+pc.r*TS;
   if(l<b.r&&l+n*TS>b.l&&t<b.b&&t+n*TS>b.t)out.push({m,l,r:l+n*TS,t,b:t+n*TS,key:"p"+pc.c+","+pc.r})}
  return out}
 const isFlat=m=>LA.FLAT.has(m.shape);
@@ -709,25 +719,79 @@ function sameAt(c,r,k){if(c<0||c>=COLS||r<0||r>=ROWS)return false;const ch=P.lev
  if(ch===k)return true;const o=matOf(ch);return!!o&&o.shape==="square"}
 function hitAmt(key){const h=RUN.hits.get(key);if(h==null)return 0;const d=RUN.t-h;return d<0.3?1-d/0.3:0}
 function drawLevelPart(g,anim,t){
- for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(!m||moving(m)!==anim)continue;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push"))continue;
   const nb=m.shape==="square"?{u:sameAt(c,r-1,m.k),d:sameAt(c,r+1,m.k),l:sameAt(c-1,r,m.k),r:sameAt(c+1,r,m.k)}:null;
   LA.draw(g,m,c*TS,GY0+r*TS,TS,TS,t,{seed:c*31+r*17+1,nb,hit:anim?hitAmt(c+","+r):0})}
- for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||moving(m)!==anim)continue;const n=m.size||1;
+ for(const pc of P.level.pieces){const m=matOf(pc.k);if(!m||moving(m)!==anim||(RUN.movOn&&m.kind==="push"))continue;const n=m.size||1;
   LA.draw(g,m,pc.c*TS,GY0+pc.r*TS,n*TS,n*TS,t,{seed:pc.c*13+pc.r*7+3,hit:anim?hitAmt("p"+pc.c+","+pc.r):0})}}
 let lvCanvas=null,lvKey="";
 function drawLevel(){if(!P||!P.level)return;
- const key=levelVer+"|"+cv.width+"x"+cv.height;
+ const key=levelVer+"|"+cv.width+"x"+cv.height+"|"+(RUN.movOn?1:0);
  if(key!==lvKey){lvKey=key;if(!lvCanvas)lvCanvas=document.createElement("canvas");lvCanvas.width=cv.width;lvCanvas.height=cv.height;
   const g=lvCanvas.getContext("2d");g.setTransform(cv.width/SW,0,0,cv.height/SH,0,0);g.clearRect(0,0,SW,SH);drawLevelPart(g,false,0)}
  cx.save();cx.setTransform(1,0,0,1,0,0);cx.drawImage(lvCanvas,0,0);cx.restore();
  drawLevelPart(cx,true,RUN.t);
+ for(const mv of RUN.movers)LA.draw(cx,mv.m,mv.x-mv.mw/2,mv.y-mv.mh/2,mv.mw,mv.mh,RUN.t,{seed:mv.seed,rot:mv.rot});
  if(levelMode&&editing()){cx.strokeStyle="rgba(255,255,255,.22)";cx.lineWidth=0.6;cx.beginPath();
   for(let c=1;c<COLS;c++){cx.moveTo(c*TS,0);cx.lineTo(c*TS,FLOOR)}for(let r=1;r<=ROWS;r++){cx.moveTo(0,GY0+r*TS);cx.lineTo(SW,GY0+r*TS)}cx.stroke()}}
 // a character in something that hurts goes back to where it started
 function hurtCheck(){for(const l of RUN.live){if(!l.visible||!(l.falls||lookOf(l.look).kind==="char")||RUN.t<(l.hurtT||0))continue;
  const b=box(l,.8);if(levelIn(b).some(s=>s.m.kind==="hurts"&&hitsShape(s,b))){l.hurtT=RUN.t+0.8;sfx("oops");l.x=l.src.x;l.y=l.src.y;l.vy=0;l.hop=null;settle(l,0,0)}}}
-function touchesMat(l,k){if(!l.visible)return false;const b=box(l);b.l+=2;b.r-=2;b.t+=2;b.b+=3;return levelIn(b).some(s=>s.m.k===k&&hitsShape(s,b))}
-const hw=l=>lookOf(l.look).w*SCALE*l.size/200,hh=l=>lookOf(l.look).h*SCALE*l.size/200;
+function touchesMat(l,k){if(!l.visible)return false;const b=box(l);b.l+=2;b.r-=2;b.t+=2;b.b+=3;
+ return levelIn(b).some(s=>s.m.k===k&&hitsShape(s,b))||RUN.movers.some(mv=>mv.m.k===k&&overlap(b,box(mv)))}
+// ------------------------------------------------------------ pushing
+// While a game runs, every pushable thing in the level is a mover: it falls,
+// lands on the level and on other movers, and slides (a round one rolls)
+// when a sprite walks into it, until a wall or something solid stops it.
+// ⚑ and ■ put them all back where they were drawn.
+function startMovers(){RUN.movers=[];RUN.movOn=true;
+ for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const m=tileAt(c,r);if(m&&m.kind==="push")RUN.movers.push(mover(m,c,r,1))}
+ for(const pc of P.level.pieces){const m=matOf(pc.k);if(m&&m.kind==="push")RUN.movers.push(mover(m,pc.c,pc.r,m.size||1))}}
+function mover(m,c,r,n){return{m,mw:n*TS,mh:n*TS,x:c*TS+n*TS/2,y:GY0+r*TS+n*TS/2,vy:0,falls:true,onGround:false,rot:0,seed:c*13+r*7+3,key:"m"+c+","+r,round:["circle","star","heart","diamond"].includes(m.shape)}}
+function stopMovers(){RUN.movers=[];RUN.movOn=false}
+// is a box free of walls, the level's solid things, other movers and solid sprites
+function freeAt(b,self){if(b.l<0||b.r>SW||b.b>FLOOR+0.5)return false;
+ const c={l:b.l,r:b.r,t:b.t,b:b.b-1};
+ if(levelIn(c).some(s=>(s.m.kind==="solid"||s.m.kind==="bouncy")&&hitsShape(s,c)))return false;
+ if(RUN.movers.some(o=>o!==self&&overlap(c,box(o))))return false;
+ return!RUN.live.some(o=>o.solid&&o.visible&&overlap(c,box(o)))}
+// slide a mover up to dx, as far as it can go; returns how far it went
+function pushMover(mv,dx,depth){const step=Math.sign(dx)*0.5;let moved=0;depth=depth||0;
+ while(Math.abs(moved)<Math.abs(dx)){const s=Math.abs(dx-moved)<0.5?dx-moved:step,b=box(mv);b.l+=s;b.r+=s;
+  if(!freeAt(b,mv)){
+   // a mover in the way is pushed too, a few in a row at most
+   const c={l:b.l,r:b.r,t:b.t,b:b.b-1},o=depth<4&&RUN.movers.find(q=>q!==mv&&overlap(c,box(q)));
+   if(!o||!pushMover(o,s,depth+1)||!freeAt(b,mv))break}
+  mv.x+=s;moved+=s}
+ if(moved&&mv.round)mv.rot+=moved/(mv.mw/2);
+ if(moved&&RUN.t-(mv.sndT||0)>0.25){mv.sndT=RUN.t;tone(90+Math.random()*30,60,0.12,"triangle",0.12)}
+ return moved}
+function moverPhysics(dt){for(const mv of RUN.movers){
+ mv.vy=Math.min(900,mv.vy+GRAV*dt);const dy=mv.vy*dt;mv.y+=dy;mv.onGround=false;
+ if(mv.y+mv.mh/2>FLOOR){mv.y=FLOOR-mv.mh/2;mv.vy=0;mv.onGround=true}
+ settleTiles(mv,dy);
+ for(const o of RUN.movers){if(o===mv)continue;const a=box(mv),b=box(o);if(!overlap(a,b))continue;
+  const up=a.b-b.t;if(dy>=0&&up<=Math.max(10,dy+2)){mv.y-=up;mv.vy=0;mv.onGround=true}}
+ if(mv.round&&mv.onGround){
+  // a round one on a slope rolls down it
+  const sl=levelIn({l:mv.x-mv.mw/2,r:mv.x+mv.mw/2,t:mv.y,b:mv.y+mv.mh/2+2}).find(s=>!isFlat(s.m)&&s.m.kind!=="back"&&s.m.kind!=="hurts");
+  if(sl){const l=topOf(sl,mv.x-4),r=topOf(sl,mv.x+4);if(l!=null&&r!=null&&Math.abs(l-r)>1)pushMover(mv,Math.sign(r-l)*-1*Math.min(3,Math.abs(l-r)))}}}}
+// a sprite against a mover: stands on it, or pushes it
+function settleMovers(l,dy){for(const mv of RUN.movers){const a=box(l),b=box(mv);if(!overlap(a,b))continue;
+ const pen={up:a.b-b.t,down:b.b-a.t,left:a.r-b.l,right:b.r-a.l};
+ if(mv.round){
+  // a round one is stood on where its curve is, like a ball in the level
+  const sh={m:mv.m,l:b.l,r:b.r,t:b.t,b:b.b},x0=Math.max(a.l+2,b.l),x1=Math.min(a.r-2,b.r);let surf=null;
+  for(let i=0;i<=4;i++){const t=topOf(sh,x0+(x1-x0)*i/4);if(t!=null&&(surf==null||t<surf))surf=t}
+  if(surf==null||a.b<=surf)continue;
+  if(a.b-surf<=Math.max(14,dy+2)){l.y-=a.b-surf;l.vy=Math.min(0,l.vy);l.onGround=true;continue}}
+ else if((dy>0||l.vy>0)&&pen.up<=Math.max(12,dy+2)){l.y-=pen.up;l.vy=Math.min(0,l.vy);l.onGround=true;continue}
+ const m=Math.min(pen.up,pen.down,pen.left,pen.right);
+ if(m===pen.left){const got=pushMover(mv,pen.left);l.x-=pen.left-got}
+ else if(m===pen.right){const got=pushMover(mv,-pen.right);l.x+=pen.right+got}
+ else if(m===pen.down){l.y+=pen.down;if(l.vy<0)l.vy=0}
+ else{l.y-=pen.up;l.onGround=true}}}
+const hw=l=>l.mw?l.mw/2:lookOf(l.look).w*SCALE*l.size/200,hh=l=>l.mh?l.mh/2:lookOf(l.look).h*SCALE*l.size/200;
 function box(l,shrink){const w=hw(l)*(shrink||1),h=hh(l)*(shrink||1);return{l:l.x-w,r:l.x+w,t:l.y-h,b:l.y+h}}
 function overlap(a,b){return a.l<b.r&&a.r>b.l&&a.t<b.b&&a.b>b.t}
 function touchingThing(l,what){
@@ -743,6 +807,7 @@ function settle(l,dx,dy){const h=hh(l),w=hw(l);
  if(l.y-h<0){l.y=h;if(l.vy<0)l.vy=0}
  settleTiles(l,dy);
  if(l.solid)return;
+ settleMovers(l,dy);
  for(const o of RUN.live){if(o===l||!o.solid||!o.visible)continue;
   const a=box(l),b=box(o);if(!overlap(a,b))continue;
   const pen={up:a.b-b.t,down:b.b-a.t,left:a.r-b.l,right:b.r-a.l};
@@ -893,7 +958,7 @@ function* runBlock(t,b){const l=t.l,a=b.a;t.cur=b.id;
 function setBackdrop(k){if(!BACKDROPS[k]||k===RUN.backdrop)return;RUN.backdrop=k;fireHats(h=>h.op==="bdhat"&&h.a[0]===k,true)}
 function flag(){wake();stopAll(true);resetLive();RUN.running=true;
  fireHats(h=>h.op==="flag",true);$("#go").classList.add("on");if(!RUN.threads.length)toast("Nothing starts with “when ⚑ clicked” yet")}
-function stopAll(quiet){RUN.threads.forEach(t=>t.done=true);RUN.threads=[];RUN.running=false;$("#go").classList.remove("on");
+function stopAll(quiet){RUN.threads.forEach(t=>t.done=true);RUN.threads=[];RUN.running=false;stopMovers();$("#go").classList.remove("on");
  RUN.live.forEach(l=>{l.say=l.say&&quiet?"":l.say;l.rot=0;l.hop=null});markRunning()}
 function keyDown(k){if(RUN.keys[k])return;RUN.keys[k]=true;wake();if(!RUN.live.length)return;fireHats(h=>h.op==="key"&&h.a[0]===k,false)}
 function keyUp(k){RUN.keys[k]=false}
@@ -907,7 +972,7 @@ function checkTouches(){// "when I touch" fires as the two first meet
 let last=0,markT=0;
 function frame(ts){requestAnimationFrame(frame);
  const dt=last?Math.min(0.05,(ts-last)/1000):1/60;last=ts;RUN.dt=dt;RUN.t+=dt;
- if(RUN.running){physics(dt);hurtCheck();
+ if(RUN.running){if(!RUN.movOn)startMovers();moverPhysics(dt);physics(dt);hurtCheck();
   for(const t of RUN.threads.slice()){if(t.done)continue;let steps=0;
    try{const r=t.gen.next();if(r.done)t.done=true}catch(e){t.done=true;console.error(e)}
    steps++}
@@ -1068,7 +1133,7 @@ function editBlockSheet(m){const sp=cur();
  const back=$("#mbBack");if(back)back.onclick=()=>{closeSheet();placeNewScript([newBlock("define",m.id)]);save()};
  $("#mbDel").onclick=()=>{if(!confirm("Throw away “"+m.name+"” and take it out of every script?"))return;removeMyBlock(m);closeSheet();save();renderPalette();renderScripts()}}
 // ------------------------------------------------------------ materials
-const MAT_KEYS="ABCDEFGHIJKLMNOPQRSTUVWXYZfjtvz0123456789";
+const MAT_KEYS="ABCDEFGHIJKLMNOPQRSTUVWXYZfjvz0123456789";
 const ANIM_ICON={none:"■",wobble:"〰",bob:"↕",pulse:"◉",spin:"↻",flow:"→",sparkle:"✦"};
 const thumbs2=new Map();
 // a material in a little square picture, for buttons

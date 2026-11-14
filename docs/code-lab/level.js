@@ -253,6 +253,7 @@ function draw(g, m, x, y, w, h, t, o) {
     else if (a === "pulse") { const k = 1 + 0.06 * Math.sin(t * 4 + ph); g.translate(cx, cy); g.scale(k, k); g.translate(-cx, -cy); }
     else if (a === "spin") { g.translate(cx, cy); g.rotate(t * 2); g.translate(-cx, -cy); }
   }
+  if (o.rot) { g.translate(cx, cy); g.rotate(o.rot); g.translate(-cx, -cy); }
   if (o.hit > 0) { const k = o.hit; g.translate(cx, y + h); g.scale(1 + 0.18 * k, 1 - 0.3 * k); g.translate(-cx, -(y + h)); }
   const dark = shade(m.c1, -0.5);
   if (joined) {
